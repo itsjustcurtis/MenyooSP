@@ -793,6 +793,8 @@
 		<Ped name="mp_s_m_armoured_01" caption="Armoured Van Security Male" />
   		<Ped name="mp_m_weapexp_01" caption="Weapon Exp (Male)" />
   		<Ped name="mp_m_weapwork_01" caption="Weapon Work (Male)" />
+		<Ped name="mp_f_freemode_01" caption="Freemode MP Female" />
+		<Ped name="mp_m_freemode_01" caption="Freemode MP Male" />
 	</Category>
 	<Category name="ScenarioFemale">
 		<Ped name="s_f_m_autoshop_01" caption="Autoshop Worker Female" />
