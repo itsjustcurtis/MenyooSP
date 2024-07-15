@@ -56,7 +56,7 @@ jobs:
             echo "Creating new PR."
             gh pr create --title "Release $VERSION" --body "Merging development into main for release $VERSION" --base main --head development
             exit 1
-          elif [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-(a|b|rc)[0-9]+$ ]]; then
+          if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-(a|b|rc)[0-9]+$ ]]; then
             echo "Version is a pre-release. Proceeding with pre-release build."
           else
             echo "Version is invalid or a development version. Cancelling workflow."
