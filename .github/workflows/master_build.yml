@@ -37,8 +37,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Extracted version: $VERSION"
       
-      - name: Check version pattern and merge
-        id: check_version
+      - name: Debug regex checks
         run: |
           VERSION=${{ env.VERSION }}
           echo "Checking version pattern: $VERSION"
@@ -46,6 +45,28 @@ jobs:
             echo "Already on main branch. Skipping merge check."
             exit 0
           fi
+
+          # Check full release version pattern
+          if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Full release version pattern matched."
+          else
+            echo "Full release version pattern NOT matched."
+          fi
+
+          # Check pre-release version pattern
+          if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-(a|b|rc)[0-9]+$ ]]; then
+            echo "Pre-release version pattern matched."
+          else
+            echo "Pre-release version pattern NOT matched."
+          fi
+
+          # Check if invalid or development version
+          if ! [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && ! [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-(a|b|rc)[0-9]+$ ]]; then
+            echo "Version is invalid or a development version. Cancelling workflow."
+            exit 1
+          fi
+
+          # If it is a full release version, create a pull request to merge into main
           if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Version is a full release. Creating pull request to merge into main."
             echo "## Check for existing PR"
@@ -56,11 +77,11 @@ jobs:
             echo "Creating new PR."
             gh pr create --title "Release $VERSION" --body "Merging development into main for release $VERSION" --base main --head development
             exit 1
-          elif [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-(a|b|rc)[0-9]+$ ]]; then
+          fi
+
+          # If it is a pre-release version, proceed with pre-release build
+          if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-(a|b|rc)[0-9]+$ ]]; then
             echo "Version is a pre-release. Proceeding with pre-release build."
-          else
-            echo "Version is invalid or a development version. Cancelling workflow."
-            exit 1
           fi
         shell: bash
         env:
