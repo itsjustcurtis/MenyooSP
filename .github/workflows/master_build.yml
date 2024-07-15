@@ -2,7 +2,7 @@ name: Master_Build
 
 on:
   push:
-    branches: [ "main", "Development"]
+    branches: [ "main", "Development", "Feature_ReleaseImprovements"]
   #workflow_run:
   #  workflows: ["MSBuild"]
   #  types:
@@ -36,7 +36,18 @@ jobs:
           VERSION=$(grep '#define MENYOO_CURRENT_VER_' Solution/source/macros.h | awk '{print $3}' | tr -d '"')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Extracted version: $VERSION"
-      
+          
+      - name: Check if tag already exists
+        run: |
+          VERSION=${{ env.VERSION }}
+          TAG_EXISTS=$(gh release list | grep -w "$VERSION")
+          if [ -n "$TAG_EXISTS" ]; then
+            echo "Tag $VERSION already exists. Cancelling workflow."
+            exit 1
+          else
+            echo "Tag $VERSION does not exist. Proceeding."
+          fi
+          
       - name: Check version pattern and merge
         id: check_version
         run: |
