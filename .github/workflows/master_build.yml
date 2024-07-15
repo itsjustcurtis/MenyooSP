@@ -47,6 +47,8 @@ jobs:
           else
             echo "Tag $VERSION does not exist. Proceeding."
           fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Check version pattern and merge
         id: check_version
