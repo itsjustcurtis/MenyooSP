@@ -46,7 +46,7 @@ jobs:
             echo "Already on main branch. Skipping merge check."
             exit 0
           fi
-          if [[ $VERSION =~ ^\d+\.\d+\.\d+$ ]]; then
+          if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Version is a full release. Creating pull request to merge into main."
             echo "## Check for existing PR"
             if gh pr list --head development --base main --state open --json number --jq .[0].number; then
@@ -56,7 +56,7 @@ jobs:
             echo "Creating new PR."
             gh pr create --title "Release $VERSION" --body "Merging development into main for release $VERSION" --base main --head development
             exit 1
-          elif [[ $VERSION =~ ^\d+\.\d+\.\d+-(a|b|rc)\d+$ ]]; then
+          elif [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-(a|b|rc)[0-9]+$ ]]; then
             echo "Version is a pre-release. Proceeding with pre-release build."
           else
             echo "Version is invalid or a development version. Cancelling workflow."
