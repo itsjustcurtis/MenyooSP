@@ -40,9 +40,10 @@ jobs:
       - name: Check if tag already exists
         run: |
           VERSION=${{ env.VERSION }}
-          echo "Release list: "
+          echo "Release list:"
           gh release list
-          TAG_EXISTS=$(gh release list | grep -w "$VERSION")
+          TAG_EXISTS=$(gh release list | awk '{print $1}' | grep -w "^$VERSION$")
+          echo "Tag exists check result: '$TAG_EXISTS'"
           if [ -n "$TAG_EXISTS" ]; then
             echo "Tag $VERSION already exists. Cancelling workflow."
             exit 1
