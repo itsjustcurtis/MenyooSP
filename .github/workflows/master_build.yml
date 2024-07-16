@@ -36,12 +36,12 @@ jobs:
           VERSION=$(grep '#define MENYOO_CURRENT_VER_' Solution/source/macros.h | awk '{print $3}' | tr -d '"')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Extracted version: $VERSION"
-          echo "Release list: "
-          gh release list
           
       - name: Check if tag already exists
         run: |
           VERSION=${{ env.VERSION }}
+          echo "Release list: "
+          gh release list
           TAG_EXISTS=$(gh release list | grep -w "$VERSION")
           if [ -n "$TAG_EXISTS" ]; then
             echo "Tag $VERSION already exists. Cancelling workflow."
