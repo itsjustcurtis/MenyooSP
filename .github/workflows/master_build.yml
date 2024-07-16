@@ -2,7 +2,7 @@ name: Master_Build
 
 on:
   push:
-    branches: [ "main", "Development"]
+    branches: [ "main", "Development", "Feature_ReleaseImprovements"]
   #workflow_run:
   #  workflows: ["MSBuild"]
   #  types:
@@ -36,6 +36,7 @@ jobs:
           VERSION=$(grep '#define MENYOO_CURRENT_VER_' Solution/source/macros.h | awk '{print $3}' | tr -d '"')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Extracted version: $VERSION"
+          echo "Release list: " gh release list
           
       - name: Check if tag already exists
         run: |
