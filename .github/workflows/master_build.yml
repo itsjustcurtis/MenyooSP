@@ -42,14 +42,6 @@ jobs:
           VERSION=${{ env.VERSION }}
           echo "Checking for tag: $VERSION"
 
-          echo "Release list:"
-          RELEASE_LIST=$(gh release list)
-          echo "$RELEASE_LIST"
-
-          echo "Extracted tags:"
-          TAGS=$(echo "$RELEASE_LIST" | awk '{print $1}')
-          echo "$TAGS"
-
           if echo "$TAGS" | grep -x "$VERSION"; then
             echo "Tag $VERSION already exists. Cancelling workflow."
             exit 1
