@@ -2,7 +2,7 @@ name: Master_Build
 
 on:
   push:
-    branches: [ "main", "Development"]
+    branches: [ "main", "Development", "fix_masterbuild"]
   #workflow_run:
   #  workflows: ["MSBuild"]
   #  types:
@@ -40,7 +40,11 @@ jobs:
       - name: Check if tag already exists
         run: |
           VERSION=${{ env.VERSION }}
-          echo "Checking for tag: $VERSION"          
+          echo "Checking for tag: $VERSION"  
+          
+          echo "Release list:"
+          RELEASE_LIST=$(gh release list)
+          echo "$RELEASE_LIST"
           
           echo "Extracted tags:"
           TAGS=$(echo "$RELEASE_LIST" | awk '{print $1}')
