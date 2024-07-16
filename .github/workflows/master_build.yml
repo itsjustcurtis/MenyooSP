@@ -145,7 +145,7 @@ jobs:
          #name: MenyooSP
          #skip_unpack: true
       - uses: actions/download-artifact@v3
-
+     
       - name: Extract version from macros.h
         id: extract_version
         run: |
@@ -153,7 +153,7 @@ jobs:
           VERSION="v$VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Extracted version: $VERSION"
-               
+
       - name: Zip artifact for deployment
         run: Compress-Archive -Path "MenyooSP/*" -DestinationPath "MenyooSP.zip"
       - uses: "marvinpinto/action-automatic-releases@latest"
