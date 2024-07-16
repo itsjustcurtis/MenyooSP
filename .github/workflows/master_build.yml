@@ -51,15 +51,15 @@ jobs:
           echo "$TAGS"
           
           echo "Checking if tag exists:"
-          TAG_EXISTS=$(echo "$TAGS" | grep -x "$VERSION")
-          echo "Tag exists check result: '$TAG_EXISTS'"
+          echo "$TAGS" | while IFS= read -r tag; do
+            echo "Comparing tag: '$tag' with version: '$VERSION'"
+            if [ "$tag" = "$VERSION" ]; then
+              echo "Tag $VERSION already exists. Cancelling workflow."
+              exit 1
+            fi
+          done
           
-          if [ -n "$TAG_EXISTS" ]; then
-            echo "Tag $VERSION already exists. Cancelling workflow."
-            exit 1
-          else
-            echo "Tag $VERSION does not exist. Proceeding."
-          fi
+          echo "Tag $VERSION does not exist. Proceeding."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
