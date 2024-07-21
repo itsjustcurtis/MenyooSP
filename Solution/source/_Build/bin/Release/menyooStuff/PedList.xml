@@ -428,11 +428,13 @@
 		<Ped name="csb_jackhowitzer" caption="Jack Howitzer" />
 		<Ped name="csb_jamalamir" caption="Jamal Amir" />
 		<Ped name="csb_janitor" caption="Janitor" />
+		<Ped name="csb_jenettee" caption="Jenette" />
 		<Ped name="csb_jio" caption="Jimmy Lovine" />
 		<Ped name="csb_jonnyguns" caption="Jonny Guns" />
 		<Ped name="csb_juanstrickler" caption="El Rubio" />
 		<Ped name="csb_labrat" caption="Labrat" />
 		<Ped name="csb_maude" caption="Maude" />
+		<Ped name="csb_maude_02" caption="Maude 2" />
 		<Ped name="csb_miguelmadrazo" caption="Miguel Madrazo" />
 		<Ped name="csb_mimi" caption="Mimi" />
 		<Ped name="csb_mjo" caption="DJ Pooh" />
@@ -507,6 +509,9 @@
 		<Ped name="g_m_m_mexboss_01" caption="Mexican Boss" />
 		<Ped name="g_m_m_mexboss_02" caption="Mexican Boss 2" />
 		<Ped name="g_m_m_prisoners_01" caption="Gang Prisoner Male" />
+		<Ped name="g_m_m_zombie_01" caption="Zombie 2" />
+		<Ped name="g_m_m_zombie_02" caption="Zombie 3" />
+		<Ped name="g_m_m_zombie_03" caption="Zombie 4" />
 		<Ped name="g_m_m_slasher_01" caption="Gang Slasher Male" />
 		<Ped name="g_m_y_armgoon_02" caption="Armenian Goon 2" />
 		<Ped name="g_m_y_azteca_01" caption="Azteca" />
@@ -560,6 +565,13 @@
 		<Ped name="ig_benny_02" caption="Benny (Los Santos Tuners)" />
 		<Ped name="ig_bestmen" caption="Best Man" />
 		<Ped name="ig_beverly" caption="Beverly Felton" />
+		<Ped name="ig_billionaire" caption="Billionaire" />
+		<Ped name="ig_bountytarget_01" caption="Bounty Target" />
+		<Ped name="ig_bountytarget_02" caption="Bounty Target 2" />
+		<Ped name="ig_bountytarget_03" caption="Bounty Target 3" />
+		<Ped name="ig_bountytarget_04" caption="Bounty Target 4" />
+		<Ped name="ig_bountytarget_05" caption="Bounty Target 5" />
+		<Ped name="ig_bountytarget_06" caption="Bounty Target 6" />
 		<Ped name="ig_brad" caption="Brad" />
 		<Ped name="ig_bride" caption="Bride" />
 		<Ped name="ig_brucie2" caption="Brucie Kibbutz" />
@@ -620,6 +632,8 @@
 		<Ped name="ig_jamalamir" caption="Jamal Amir" />
 		<Ped name="ig_janet" caption="Janet" />
 		<Ped name="ig_jay_norris" caption="Jay Norris" />
+		<Ped name="ig_jaywalker" caption="Jaywalker" />
+		<Ped name="ig_jenettee" caption="Jenette" />
 		<Ped name="ig_jewelass" caption="Jeweller Assistant" />
 		<Ped name="ig_jimmyboston" caption="Jimmy Boston" />
 		<Ped name="ig_jimmyboston_02" caption="Jimmy Boston 2" />
@@ -652,6 +666,7 @@
 		<Ped name="ig_maude" caption="Maude" />
 		<Ped name="ig_mechanic_01" caption="Mechanic Male (Red's Auto Parts)" />
 		<Ped name="ig_mechanic_02" caption="Mechanic Female (Red's Auto Parts)" />
+		<Ped name="ig_mechanic_03" caption="Mechanic Male (Vinewood Club Garage)" />
 		<Ped name="ig_michelle" caption="Michelle" />
 		<Ped name="ig_milton" caption="Milton McIlroy" />
 		<Ped name="ig_mimi" caption="Mimi" />
@@ -828,6 +843,7 @@
         <Ped name="s_f_y_clubbar_02" caption="Club Bartender Female 2" />
 	</Category>
 	<Category name="ScenarioMale">
+		<Ped name="s_m_m_bailoffice_01" caption="Bail Office Employee" />
 		<Ped name="s_m_m_Autoshop_03" caption="Autoshop Worker 3" />
 		<Ped name="s_m_m_ammucountry" caption="Ammu-Nation Rural Clerk" />
 		<Ped name="s_m_m_armoured_01" caption="Armoured Van Security" />
