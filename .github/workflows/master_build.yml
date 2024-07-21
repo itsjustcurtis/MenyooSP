@@ -84,7 +84,7 @@ jobs:
               exit 0
             fi
             echo "Creating new PR."
-            gh pr create --title "Release $VERSION" --body "Merging development into main for release $VERSION" --base main --head development
+            gh pr create --title "Release $VERSION" --body "Merging development into main for release $VERSION" --base main --head Development
             exit 1
           elif [[ $VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(a|b|rc)[0-9]+$ ]]; then
             echo "Version is a pre-release. Proceeding with pre-release build."
