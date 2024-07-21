@@ -71,7 +71,7 @@ jobs:
 
           # Function to check for existing PR with the same version
           check_pr_exists() {
-            PR_LIST=$(gh pr list --head development --base main --state open --json title,body)
+            PR_LIST=$(gh pr list --head Development --base main --state open --json title,body)
             PR_EXIST=$(echo "$PR_LIST" | jq -r --arg VERSION "$VERSION" '.[] | select((.title | contains($VERSION)) or (.body | contains($VERSION)))')
             [ -n "$PR_EXIST" ]
           }
