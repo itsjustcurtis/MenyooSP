@@ -47,6 +47,8 @@ ScriptHeader* shopController;
 typedef CVehicleModelInfo*(*GetModelInfo_t)(unsigned int modelHash, int* index);
 typedef CVehicleModelInfo*(*InitVehicleArchetype_t)(const char*, bool, unsigned int);
 
+GetModelInfo_t GetModelInfo;
+
 std::unordered_map<unsigned int, std::string> g_vehicleHashes;
 CallHook<InitVehicleArchetype_t> * g_InitVehicleArchetype = nullptr;
 CVehicleModelInfo* initVehicleArchetype_stub(const char* name, bool a2, unsigned int a3) {
@@ -839,6 +841,13 @@ void GTAmemory::Init()
 	address = MemryScan::PatternScanner::FindPattern("48 8B C8 FF 52 30 84 C0 74 05 48");
 	if (address) memset(reinterpret_cast<void*>(address + 0x8), 0x90, 2);
 
+	//GetModelInfo
+	address = FindPattern("\xEB\x09\x41\x3B\x0A\x74\x54", "xxxxxxx");
+	if (address) {
+		address = address - 0x2C;
+		GetModelInfo = (GetModelInfo_t)(address);
+	}
+	
 	_SpSnow = SpSnow();
 
 }
