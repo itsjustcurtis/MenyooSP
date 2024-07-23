@@ -446,7 +446,8 @@ public:
 
 };
 
-
+void setupHooks();
+void removeHooks();
 
 
 

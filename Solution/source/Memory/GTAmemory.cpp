@@ -19,6 +19,7 @@
 * Copyright (C) 2019  MAFINS
 */
 #include "GTAmemory.h"
+#include "Hooking.h"
 
 #include "..\macros.h"
 
@@ -43,6 +44,10 @@ MODULEINFO g_MainModuleInfo = { 0 };
 ScriptTable* scriptTable;
 ScriptHeader* shopController;
 
+void setupHooks() {
+}
+void removeHooks() {
+}
 template<typename R> R GetMultilayerPointer(void* base, const std::vector<DWORD>& offsets)
 {
 	DWORD64 addr = (UINT64)base;
