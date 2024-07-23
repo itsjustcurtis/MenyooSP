@@ -44,9 +44,30 @@ MODULEINFO g_MainModuleInfo = { 0 };
 ScriptTable* scriptTable;
 ScriptHeader* shopController;
 
-void setupHooks() {
+typedef CVehicleModelInfo*(*GetModelInfo_t)(unsigned int modelHash, int* index);
+typedef CVehicleModelInfo*(*InitVehicleArchetype_t)(const char*, bool, unsigned int);
+
+std::unordered_map<unsigned int, std::string> g_vehicleHashes;
+CallHook<InitVehicleArchetype_t> * g_InitVehicleArchetype = nullptr;
+CVehicleModelInfo* initVehicleArchetype_stub(const char* name, bool a2, unsigned int a3) {
+	g_vehicleHashes.insert({ GET_HASH_KEY(name), name });
+	return g_InitVehicleArchetype->fn(name, a2, a3);
 }
+void setupHooks() {
+	auto addr = GTAmemory::FindPattern("\xE8\x00\x00\x00\x00\x48\x8B\x4D\xE0\x48\x8B\x11", "x????xxxxxxx");
+	if (!addr) {
+		addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetype", __FILENAME__);
+		return;
+	}
+	addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetype at "+std::to_string(addr),  __FILENAME__);
+	g_InitVehicleArchetype = HookManager::SetCall(addr, initVehicleArchetype_stub);
+}
+
 void removeHooks() {
+	if (g_InitVehicleArchetype) {
+		delete g_InitVehicleArchetype;
+		g_InitVehicleArchetype = nullptr;
+	}
 }
 template<typename R> R GetMultilayerPointer(void* base, const std::vector<DWORD>& offsets)
 {
