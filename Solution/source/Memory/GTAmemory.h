@@ -610,6 +610,7 @@ public:
 	static uintptr_t FindPattern(const char *pattern, const char *mask);
 	
     static bool FindShopController();
+	static std::string GetVehicleModelName(Hash modelHash);
 
 private:
 	static UINT64 modelHashTable, modelNum2, modelNum3, modelNum4;

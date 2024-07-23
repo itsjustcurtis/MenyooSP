@@ -1890,4 +1890,8 @@ float* GeneralGlobalHax::GetVehicleBoostChargePtr()
 	return nullptr;
 }
 
-
+std::string GTAmemory::GetVehicleModelName(Hash hash) {
+	auto modelIt = g_vehicleHashes.find(hash);
+	if (modelIt != g_vehicleHashes.end()) return modelIt->second;
+	return "NOTFOUND";
+}
