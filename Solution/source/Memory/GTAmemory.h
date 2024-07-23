@@ -37,7 +37,7 @@ typedef unsigned __int64 DWORD64, UINT64;
 typedef void *LPVOID;
 typedef const char *LPCSTR;
 typedef int Entity;
-typedef unsigned long DWORD, Hash;
+typedef unsigned long Hash;
 typedef uint8_t eModelType;
 typedef uint32_t eVehicleType;
 typedef uint32_t eVehicleFlag1;
