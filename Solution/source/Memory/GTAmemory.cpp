@@ -831,8 +831,6 @@ void GTAmemory::Init()
 	address = FindPattern("\x48\x8B\xC8\xEB\x02\x33\xC9\x48\x85\xC9\x74\x26", "xxxxxxxxxxxx") - 9;
 	_cameraPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address) + address + 4);
 
-	GenerateVehicleModelList();
-
 	// Bypass model requests block
 	address = MemryScan::PatternScanner::FindPattern("48 85 C0 0F 84 ? ? ? ? 8B 48 50");
 	if (address) memset(reinterpret_cast<void*>(address), 0x90, 24);
