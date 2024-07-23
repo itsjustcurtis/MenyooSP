@@ -893,8 +893,8 @@ void GTAmemory::GenerateVehicleModelList()
 		HashNode** HashMap = reinterpret_cast<HashNode**>(modelHashTable);
 		//I know 0x20 items are defined but there are only 0x16 vehicle classes.
 		//But keeping it at 0x20 is just being safe as the & 0x1F in theory supports up to 0x20
-		auto& hashes = GTAmemory::vehicleModels;
-		for (auto& vec : hashes)
+		auto& vehicleHashes = GTAmemory::vehicleModels;
+		for (auto& vec : vehicleHashes)
 			vec.clear();
 		for (int i = 0; i < modelHashEntries; i++)
 		{
@@ -909,9 +909,9 @@ void GTAmemory::GenerateVehicleModelList()
 						UINT64 addr2 = *reinterpret_cast<PUINT64>(addr1);
 						if (addr2)
 						{
-							if ((*reinterpret_cast<PBYTE>(addr2 + 157) & 0x1F) == 5)
+							if ((*reinterpret_cast<PBYTE>(addr2 + 157) & 0x1F) == 5) // Vehicle
 							{
-								hashes[*reinterpret_cast<PBYTE>(addr2 + classOffset) & 0x1F].push_back((unsigned int)cur->hash);
+								vehicleHashes[*reinterpret_cast<PBYTE>(addr2 + classOffset) & 0x1F].push_back((unsigned int)cur->hash);
 							}
 						}
 					}
