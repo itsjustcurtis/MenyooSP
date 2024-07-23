@@ -1893,3 +1893,13 @@ std::string GTAmemory::GetVehicleModelName(Hash hash) {
 	if (modelIt != g_vehicleHashes.end()) return modelIt->second;
 	return "NOTFOUND";
 }
+
+//Example for the use of GetModelInfo
+std::string GTAmemory::GetVehicleMakeName(Hash modelHash) {
+	int index = 0xFFFF;
+	void* modelInfo = GetModelInfo(modelHash, &index);
+	if (getGameVersion() < 38) {
+		return ((CVehicleModelInfo*)modelInfo)->m_manufacturerName;
+	}
+	return ((CVehicleModelInfo1290*)modelInfo)->m_manufacturerName;
+}

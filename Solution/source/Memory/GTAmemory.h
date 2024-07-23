@@ -611,6 +611,7 @@ public:
 	
     static bool FindShopController();
 	static std::string GetVehicleModelName(Hash modelHash);
+	static std::string GetVehicleMakeName(Hash modelHash);
 
 private:
 	static UINT64 modelHashTable, modelNum2, modelNum3, modelNum4;
