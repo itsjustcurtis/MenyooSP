@@ -840,11 +840,33 @@ void GTAmemory::Init()
 	if (address) memset(reinterpret_cast<void*>(address + 0x8), 0x90, 2);
 
 	//GetModelInfo
-	address = FindPattern("\xEB\x09\x41\x3B\x0A\x74\x54", "xxxxxxx");
-	if (address) {
-		address = address - 0x2C;
-		GetModelInfo = (GetModelInfo_t)(address);
+	if (getGameVersion() <= 57) {
+		address = FindPattern(
+			"\x0F\xB7\x05\x00\x00\x00\x00"
+			"\x45\x33\xC9\x4C\x8B\xDA\x66\x85\xC0"
+			"\x0F\x84\x00\x00\x00\x00"
+			"\x44\x0F\xB7\xC0\x33\xD2\x8B\xC1\x41\xF7\xF0\x48"
+			"\x8B\x05\x00\x00\x00\x00"
+			"\x4C\x8B\x14\xD0\xEB\x09\x41\x3B\x0A\x74\x54",
+			"xxx????"
+			"xxxxxxxxx"
+			"xx????"
+			"xxxxxxxxxxxx"
+			"xx????"
+			"xxxxxxxxxxx");
+
+		if (!address) {
+			addlog(ige::LogType::LOG_ERROR,  "Couldn't find GetModelInfo", __FILENAME__);
+		}
 	}
+	else {
+		address = FindPattern("\xEB\x09\x41\x3B\x0A\x74\x54", "xxxxxxx");
+		if (!address) {
+			addlog(ige::LogType::LOG_ERROR,   "Couldn't find GetModelInfo (v58+)", __FILENAME__);
+		}
+		address = address - 0x2C;
+	}
+	GetModelInfo = (GetModelInfo_t)(address);
 	
 	_SpSnow = SpSnow();
 
