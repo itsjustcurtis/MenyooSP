@@ -768,6 +768,26 @@ namespace sub
 			{ VEHICLE_ZR3803, "mba_vehicles", "zr3803" },
 
 
+			//Los Santos Drug Wars
+			{ VEHICLE_BRICKADE2,		"candc_xmas_2022", "brickade2" },
+			{ VEHICLE_TAXI,			"candc_xmas_2022", "taxi" },
+			{ VEHICLE_BROADWAY,		"lgm_dlc_xmas_2022", "broadway" },
+			{ VEHICLE_ENTITY3,		"lgm_dlc_xmas_2022", "entity3" },
+			{ VEHICLE_PANTHERE,		"lgm_dlc_xmas_2022", "panthere" },
+			{ VEHICLE_POWERSURGE,		"lgm_dlc_xmas_2022", "powersurge" },
+			{ VEHICLE_R300,			"lgm_dlc_xmas_2022", "r300" },
+			{ VEHICLE_VIRTUE,			"lgm_dlc_xmas_2022", "virtue" },
+			{ VEHICLE_BOOR,			"sssa_dlc_xmas_2022", "boor" },
+			{ VEHICLE_EUDORA,			"sssa_dlc_xmas_2022", "eudora" },
+			{ VEHICLE_EVERON2,		"sssa_dlc_xmas_2022", "everon2" },
+			{ VEHICLE_ISSI8,			"sssa_dlc_xmas_2022", "issi8" },
+			{ VEHICLE_JOURNEY2,		"sssa_dlc_xmas_2022", "journey2" },
+			{ VEHICLE_SURFER3,		"sssa_dlc_xmas_2022", "surfer3" },
+			{ VEHICLE_TAHOMA,			"sssa_dlc_xmas_2022", "tahoma" },
+			{ VEHICLE_TULIP2,			"sssa_dlc_xmas_2022", "tulip2" },
+			{ VEHICLE_MANCHEZ3,		"candc_heist4", "manchez2" },
+			// { VEHICLE_CARGOPLANE2,	"ytd", "vehModel" },
+			
 			//San Andreas Mercenaries
 			{ VEHICLE_CONADA2,		"candc_2023_01", "conada2" },
 			{ VEHICLE_RAIJU,			"candc_2023_01", "raiju" },
