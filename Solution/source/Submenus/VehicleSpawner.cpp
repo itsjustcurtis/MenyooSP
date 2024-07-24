@@ -767,6 +767,25 @@ namespace sub
 			{ VEHICLE_ZR3802, "mba_vehicles", "zr3802" },
 			{ VEHICLE_ZR3803, "mba_vehicles", "zr3803" },
 
+			//The Contract
+			{ VEHICLE_ASTRON,			"lgm_dlc_security", "astron" },
+			{ VEHICLE_BALLER7,		"lgm_dlc_security", "baller7" },
+			{ VEHICLE_CHAMPION,		"lgm_dlc_security", "champion" },
+			{ VEHICLE_CINQUEMILA,		"lgm_dlc_security", "cinquemila" },
+			{ VEHICLE_COMET7,			"lgm_dlc_security", "comet7" },
+			{ VEHICLE_DEITY,			"lgm_dlc_security", "deity" },
+			{ VEHICLE_IGNUS,			"lgm_dlc_security", "ignus" },
+			{ VEHICLE_JUBILEE,		"lgm_dlc_security", "jubilee" },
+			{ VEHICLE_REEVER,			"lgm_dlc_security", "reever" },
+			{ VEHICLE_SHINOBI,		"lgm_dlc_security", "shinobi" },
+			{ VEHICLE_ZENO,			"lgm_dlc_security", "zeno" },
+			{ VEHICLE_BUFFALO4,		"sssa_dlc_security", "buffalo4" },
+			{ VEHICLE_GRANGER2,		"sssa_dlc_security", "granger2" },
+			{ VEHICLE_IWAGEN,			"sssa_dlc_security", "iwagen" },
+			{ VEHICLE_PATRIOT3,		"sssa_dlc_security", "patriot3" },
+			{ VEHICLE_MULE5,			"candc_default", "mule3" },
+			// { VEHICLE_YOUGA4,		"ytd", "vehModel" },
+			
 			//The Criminal Enterprises
 			{ VEHICLE_CONADA,			"elt_dlc_sum2", "conada" },
 			{ VEHICLE_BRIOSO3,		"lsc_dlc_sum2", "brioso2_b" },
