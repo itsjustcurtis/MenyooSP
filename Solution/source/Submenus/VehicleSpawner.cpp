@@ -771,7 +771,6 @@ namespace sub
 			{ VEHICLE_POLDOMINATOR10,	"candc_dlc_2024_1", "poldom10" },
 			{ VEHICLE_POLDORADO,		"candc_dlc_2024_1", "poldorado" },
 			{ VEHICLE_POLGREENWOOD,	"candc_dlc_2024_1", "polgreenw" },
-			//{ VEHICLE_POLICET3,		"dict", "veh" },
 			{ VEHICLE_POLIMPALER5,	"candc_dlc_2024_1", "polimpaler5" },
 			{ VEHICLE_POLIMPALER6,	"candc_dlc_2024_1", "polimpaler6" },
 			{ VEHICLE_COQUETTE5,		"lgm_dlc_2024_1",	"coquette5" },
@@ -789,6 +788,7 @@ namespace sub
 			{ VEHICLE_DRIFTCYPHER,	"lgm_dlc_tuner", "cypher" },
 			{ VEHICLE_DRIFTNEBULA,	"sssa_dlc_vinewood", "nebula" },
 			{ VEHICLE_DRIFTSENTINEL,	"lsc_dlc_sum2", "sentinel3" },
+			//{ VEHICLE_POLICET3,		"ytd", "vehModel" },
 		};
 #pragma endregion
 		void PopulateVehicleBmps()
