@@ -767,6 +767,28 @@ namespace sub
 			{ VEHICLE_ZR3802, "mba_vehicles", "zr3802" },
 			{ VEHICLE_ZR3803, "mba_vehicles", "zr3803" },
 
+			//Bottom Dollar Bounties DLC
+			{ VEHICLE_POLDOMINATOR10,	"candc_dlc_2024_1", "poldom10" },
+			{ VEHICLE_POLDORADO,		"candc_dlc_2024_1", "poldorado" },
+			{ VEHICLE_POLGREENWOOD,	"candc_dlc_2024_1", "polgreenw" },
+			//{ VEHICLE_POLICET3,		"dict", "veh" },
+			{ VEHICLE_POLIMPALER5,	"candc_dlc_2024_1", "polimpaler5" },
+			{ VEHICLE_POLIMPALER6,	"candc_dlc_2024_1", "polimpaler6" },
+			{ VEHICLE_COQUETTE5,		"lgm_dlc_2024_1",	"coquette5" },
+			{ VEHICLE_ENVISAGE,		"lgm_dlc_2024_1", "envisage" },
+			{ VEHICLE_EUROSX32,		"lgm_dlc_2024_1", "eurosx32" },
+			{ VEHICLE_NIOBE,			"lgm_dlc_2024_1", "niobe" },
+			{ VEHICLE_PARAGON3,		"lgm_dlc_2024_1", "paragon3" },
+			{ VEHICLE_PIPISTRELLO,	"lgm_dlc_2024_1", "pipistrello" },
+			{ VEHICLE_CASTIGATOR,		"sssa_dlc_2024_1","castigator" },
+			{ VEHICLE_DOMINATOR10,	"sssa_dlc_2024_1", "dominator10" },
+			{ VEHICLE_PIZZABOY,		"sssa_dlc_2024_1", "pizzaboy" },
+			{ VEHICLE_VORSCHLAGHAMMER,"sssa_dlc_2024_1", "vorschlag" },
+			{ VEHICLE_YOSEMITE1500,	"sssa_dlc_2024_1", "yosemite4" },
+			{ VEHICLE_DRIFTVORSCHLAG,	"sssa_dlc_2024_1", "vorschlag" },
+			{ VEHICLE_DRIFTCYPHER,	"lgm_dlc_tuner", "cypher" },
+			{ VEHICLE_DRIFTNEBULA,	"sssa_dlc_vinewood", "nebula" },
+			{ VEHICLE_DRIFTSENTINEL,	"lsc_dlc_sum2", "sentinel3" },
 		};
 #pragma endregion
 		void PopulateVehicleBmps()
