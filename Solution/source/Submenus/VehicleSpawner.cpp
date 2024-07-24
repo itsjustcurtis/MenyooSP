@@ -767,6 +767,23 @@ namespace sub
 			{ VEHICLE_ZR3802, "mba_vehicles", "zr3802" },
 			{ VEHICLE_ZR3803, "mba_vehicles", "zr3803" },
 			
+			//Los Santos Summer Special DLC
+			{ VEHICLE_COQUETTE4,		"lgm_dlc_summer2020", "coquette4" },
+			{ VEHICLE_OPENWHEEL1,		"lgm_dlc_summer2020", "openwheel1" },
+			{ VEHICLE_OPENWHEEL2,		"lgm_dlc_summer2020", "openwheel2" },
+			{ VEHICLE_TIGON,			"lgm_dlc_summer2020", "tigon" },
+			{ VEHICLE_GAUNTLET5,		"lsc_dlc_summer2020", "gauntlet3_b" },
+			{ VEHICLE_GLENDALE2,		"lsc_dlc_summer2020", "glendale_b" },
+			{ VEHICLE_MANANA2,		"lsc_dlc_summer2020", "manana_b" },
+			{ VEHICLE_PEYOTE3,		"lsc_dlc_summer2020", "peyote_b" },
+			{ VEHICLE_YOSEMITE3,		"lsc_dlc_summer2020", "yosemite_b" },
+			{ VEHICLE_YOUGA3,			"lsc_dlc_summer2020", "youga2_b" },
+			{ VEHICLE_CLUB,			"sssa_dlc_summer2020", "club" },
+			{ VEHICLE_DUKES3,			"sssa_dlc_summer2020", "dukes3" },
+			{ VEHICLE_LANDSTALKER2,	"sssa_dlc_summer2020", "landstlkr2" },
+			{ VEHICLE_PENUMBRA2,		"sssa_dlc_summer2020", "penumbra2" },
+			{ VEHICLE_SEMINOLE2,		"sssa_dlc_summer2020", "seminole2" },
+			
 			//The Cayo Perico Heist
 			{ VEHICLE_KOSATKA,		"candc_sub", "banner1" },
 			{ VEHICLE_ALKONOST,		"candc_dlc_heist4", "alkonost" },
