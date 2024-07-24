@@ -766,7 +766,27 @@ namespace sub
 			{ VEHICLE_ZR380, "mba_vehicles", "zr3801" },
 			{ VEHICLE_ZR3802, "mba_vehicles", "zr3802" },
 			{ VEHICLE_ZR3803, "mba_vehicles", "zr3803" },
-
+			
+			//Los Santos Tuner
+			{ VEHICLE_COMET6,			"lgm_dlc_tuner", "comet6" },
+			{ VEHICLE_CYPHER,			"lgm_dlc_tuner", "cypher" },
+			{ VEHICLE_EUROS,			"lgm_dlc_tuner", "euros" },
+			{ VEHICLE_GROWLER,		"lgm_dlc_tuner", "growler" },
+			{ VEHICLE_JESTER4,		"lgm_dlc_tuner", "jester4" },
+			{ VEHICLE_TAILGATER2,		"lgm_dlc_tuner", "tailgaiter2" },
+			{ VEHICLE_VECTRE,			"lgm_dlc_tuner", "vectre" },
+			{ VEHICLE_ZR350,			"lgm_dlc_tuner", "zr350" },
+			{ VEHICLE_CALICO,			"sssa_dlc_tuner", "calico" },
+			{ VEHICLE_DOMINATOR7,		"sssa_dlc_tuner", "dominator7" },
+			{ VEHICLE_DOMINATOR8,		"sssa_dlc_tuner", "dominator8" },
+			{ VEHICLE_FUTO2,			"sssa_dlc_tuner", "futo2" },
+			{ VEHICLE_PREVION,		"sssa_dlc_tuner", "previon" },
+			{ VEHICLE_REMUS,			"sssa_dlc_tuner", "remus" },
+			{ VEHICLE_RT3000,			"sssa_dlc_tuner", "rt3000" },
+			{ VEHICLE_SULTAN3,		"sssa_dlc_tuner", "sultan3" },
+			{ VEHICLE_WARRENER2,		"sssa_dlc_tuner", "warrener2" },
+			// { VEHICLE_FREIGHTCAR2,	"ytd", "vehModel" },
+			
 			//The Contract
 			{ VEHICLE_ASTRON,			"lgm_dlc_security", "astron" },
 			{ VEHICLE_BALLER7,		"lgm_dlc_security", "baller7" },
