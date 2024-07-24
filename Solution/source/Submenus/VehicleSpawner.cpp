@@ -767,7 +767,26 @@ namespace sub
 			{ VEHICLE_ZR3802, "mba_vehicles", "zr3802" },
 			{ VEHICLE_ZR3803, "mba_vehicles", "zr3803" },
 
-
+			//The Criminal Enterprises
+			{ VEHICLE_CONADA,			"elt_dlc_sum2", "conada" },
+			{ VEHICLE_BRIOSO3,		"lsc_dlc_sum2", "brioso2_b" },
+			{ VEHICLE_SENTINEL4,		"lsc_dlc_sum2", "sentinel3_b" },
+			{ VEHICLE_TENF,			"lsc_dlc_sum2", "tenf" },
+			{ VEHICLE_TENF2,			"lsc_dlc_sum2", "tenf_b" },
+			{ VEHICLE_WEEVIL2,		"lsc_dlc_sum2", "weevil_b" },
+			{ VEHICLE_CORSITA,		"lgm_dlc_sum2", "corsita" },
+			{ VEHICLE_LM87,			"lgm_dlc_sum2", "lm87" },
+			{ VEHICLE_OMNISEGT,		"lgm_dlc_sum2", "omnisegt" },
+			{ VEHICLE_SM722,			"lgm_dlc_sum2", "sm722" },
+			{ VEHICLE_TORERO2,		"lgm_dlc_sum2", "torero2" },
+			{ VEHICLE_DRAUGUR,		"sssa_dlc_sum2", "draugur" },
+			{ VEHICLE_GREENWOOD,		"sssa_dlc_sum2", "greenwood" },
+			{ VEHICLE_KANJOSJ,		"sssa_dlc_sum2", "kanjosj" },
+			{ VEHICLE_POSTLUDE,		"sssa_dlc_sum2", "postlude" },
+			{ VEHICLE_RHINEHART,		"sssa_dlc_sum2", "rhinehart" },
+			{ VEHICLE_RUINER4,		"sssa_dlc_sum2", "ruiner4" },
+			{ VEHICLE_VIGERO2,		"sssa_dlc_sum2", "vigero2" },
+			
 			//Los Santos Drug Wars
 			{ VEHICLE_BRICKADE2,		"candc_xmas_2022", "brickade2" },
 			{ VEHICLE_TAXI,			"candc_xmas_2022", "taxi" },
