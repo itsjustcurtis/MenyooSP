@@ -767,6 +767,28 @@ namespace sub
 			{ VEHICLE_ZR3802, "mba_vehicles", "zr3802" },
 			{ VEHICLE_ZR3803, "mba_vehicles", "zr3803" },
 			
+			//The Diamond Casino Heist
+			{ VEHICLE_ASBO, "sssa_dlc_casinoheist", "asbo" },
+			{ VEHICLE_EVERON, "sssa_dlc_casinoheist", "everon" },
+			{ VEHICLE_KANJO, "sssa_dlc_casinoheist", "kanjo" },
+			{ VEHICLE_OUTLAW, "sssa_dlc_casinoheist", "outlaw" },
+			{ VEHICLE_RETINUE2, "sssa_dlc_casinoheist", "retinue2" },
+			{ VEHICLE_SUGOI, "sssa_dlc_casinoheist", "sugoi" },
+			{ VEHICLE_SULTAN2, "sssa_dlc_casinoheist", "sultan2" },
+			{ VEHICLE_VAGRANT, "sssa_dlc_casinoheist", "vagrant" },
+			{ VEHICLE_YOSEMITE2, "sssa_dlc_casinoheist", "yosemite2" },
+			{ VEHICLE_FORMULA, "lgm_dlc_casinoheist", "formula" },
+			{ VEHICLE_FORMULA2, "lgm_dlc_casinoheist", "formula2" },
+			{ VEHICLE_FURIA, "lgm_dlc_casinoheist", "furia" },
+			{ VEHICLE_IMORGON, "lgm_dlc_casinoheist", "imorgon" },
+			{ VEHICLE_KOMODA, "lgm_dlc_casinoheist", "komoda" },
+			{ VEHICLE_REBLA, "lgm_dlc_casinoheist", "rebla" },
+			{ VEHICLE_STRYDER, "lgm_dlc_casinoheist", "stryder" },
+			{ VEHICLE_VSTR, "lgm_dlc_casinoheist", "vstr" },
+			{ VEHICLE_JB7002, "candc_dlc_casinoheist", "jb7002" },
+			{ VEHICLE_MINITANK, "candc_dlc_casinoheist", "minitank" },
+			{ VEHICLE_ZHABA, "candc_dlc_casinoheist", "thaba" },
+			
 			//Los Santos Summer Special DLC
 			{ VEHICLE_COQUETTE4,		"lgm_dlc_summer2020", "coquette4" },
 			{ VEHICLE_OPENWHEEL1,		"lgm_dlc_summer2020", "openwheel1" },
