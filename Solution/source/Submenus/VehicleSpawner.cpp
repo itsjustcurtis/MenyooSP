@@ -767,6 +767,25 @@ namespace sub
 			{ VEHICLE_ZR3802, "mba_vehicles", "zr3802" },
 			{ VEHICLE_ZR3803, "mba_vehicles", "zr3803" },
 
+
+			//San Andreas Mercenaries
+			{ VEHICLE_CONADA2,		"candc_2023_01", "conada2" },
+			{ VEHICLE_RAIJU,			"candc_2023_01", "raiju" },
+			{ VEHICLE_STREAMER216,	"candc_2023_01", "streamer216" },
+			{ VEHICLE_INDUCTOR,		"pandm_dlc_2023_01", "inductor" },
+			{ VEHICLE_INDUCTOR2,		"pandm_dlc_2023_01", "inductor2" },
+			{ VEHICLE_BUFFALO5,		"lgm_dlc_2023_01", "buffalo5" },
+			{ VEHICLE_COUREUR,		"lgm_dlc_2023_01", "coureur" },
+			{ VEHICLE_STINGERTT,		"lgm_dlc_2023_01", "stingertt" },
+			{ VEHICLE_BRIGHAM,		"sssa_dlc_2023_01", "brigham" },
+			{ VEHICLE_CLIQUE2,		"sssa_dlc_2023_01", "clique2" },
+			{ VEHICLE_GAUNTLET6,		"sssa_dlc_2023_01", "gauntlet6" },
+			{ VEHICLE_L35,			"sssa_dlc_2023_01", "l35" },
+			{ VEHICLE_MONSTROCITI,	"sssa_dlc_2023_01", "monstrociti" },
+			{ VEHICLE_RATEL,			"sssa_dlc_2023_01", "ratel" },
+			// { VEHICLE_AVENGER3,		"ytd", "vehModel" },
+			// { VEHICLE_AVENGER4,		"ytd", "vehModel" },
+			// { VEHICLE_SPEEDO5,		"ytd", "vehModel" },
 			
 			//Chop Shop DLC
 			{ VEHICLE_ALEUTIAN,		"lgm_dlc_2023_2", "veh" },
