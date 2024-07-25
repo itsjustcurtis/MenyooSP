@@ -214,15 +214,7 @@ namespace GTAmodel
 	}
 	bool Model::IsCargobob() const
 	{
-		switch (this->hash)
-		{
-		case VEHICLE_CARGOBOB:
-		case VEHICLE_CARGOBOB2:
-		case VEHICLE_CARGOBOB3:
-		case VEHICLE_CARGOBOB4:
-			return true;
-		}
-		return false;
+		return this->VehicleModelName().find("cargobob") != std::string::npos;
 	}
 	bool Model::IsBus() const
 	{
