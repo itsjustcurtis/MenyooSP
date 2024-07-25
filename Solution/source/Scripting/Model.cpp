@@ -236,21 +236,29 @@ namespace GTAmodel
 	{
 		switch (this->hash)
 		{
-		case VEHICLE_POLICEOLD2:
 		case VEHICLE_FBI:
-		case VEHICLE_RIOT:
 		case VEHICLE_FBI2:
+		case VEHICLE_RIOT:
+		case VEHICLE_RIOT2:
+		case VEHICLE_SHERIFF:
+		case VEHICLE_SHERIFF2:
 		case VEHICLE_PRANGER:
 		case VEHICLE_POLICEOLD1:
-		case VEHICLE_POLICET:
-		case VEHICLE_SHERIFF2:
+		case VEHICLE_POLICEOLD2:
 		case VEHICLE_PBUS:
-		case VEHICLE_POLICE2:
 		case VEHICLE_POLICE:
+		case VEHICLE_POLICE2:
 		case VEHICLE_POLICE3:
-		case VEHICLE_SHERIFF:
 		case VEHICLE_POLICE4:
+		case VEHICLE_POLICE5:
 		case VEHICLE_POLICEB:
+		case VEHICLE_POLICET:
+		case VEHICLE_POLGAUNTLET:
+		case VEHICLE_POLGREENWOOD:
+		case VEHICLE_POLIMPALER5:
+		case VEHICLE_POLIMPALER6:
+		case VEHICLE_POLDORADO:
+		case VEHICLE_POLDOMINATOR10:
 			return true;
 		}
 		return false;
@@ -295,6 +303,7 @@ namespace GTAmodel
 	}
 	bool Model::IsBennySupportedVehicle()
 	{
+		//todo needs update (is there maybe a other way?)
 		switch (this->hash)
 		{
 		case VEHICLE_BUCCANEER2:
