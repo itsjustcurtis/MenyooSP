@@ -140,7 +140,7 @@ namespace sub
 
 		if (myVehicleModel.IsCargobob())
 			AddLocal("Cargobob Magnet", myVehicle.IsCargobobHookActive(CargobobHook::Magnet), bToggleCargobobMagnet, bToggleCargobobMagnet);
-		if (myVehicleModel.hash == VEHICLE_MAVERICK || myVehicleModel.hash == VEHICLE_POLMAV)
+		if (DOES_VEHICLE_ALLOW_RAPPEL(g_myVeh))
 			AddOption("Rappel From Helicopter", VehicleOpsRappelHeli);
 		if (myVehicle.HasSiren_get())
 			AddToggle("Disable Vehicle Siren", loop_vehicle_disableSiren, null, disableSiren_off);
@@ -246,9 +246,7 @@ namespace sub
 		if (VehicleOpsRappelHeli) {
 			if (myPed.IsInVehicle())
 			{
-				if (!myPed.IsInHeli()) Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a helicopter.");
-				else
-					task_rappel(myPed.Handle(), myPed.CurrentVehicle());
+				task_rappel(myPed.Handle(), myPed.CurrentVehicle());
 				return;
 			}
 		}
