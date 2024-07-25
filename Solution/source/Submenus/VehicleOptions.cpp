@@ -138,7 +138,7 @@ namespace sub
 
 		AddTitle("Vehicle Options");
 
-		if (myVehicleModel.VehicleDisplayName(false).find("CARGOBOB") != std::string::npos)
+		if (myVehicleModel.IsCargobob())
 			AddLocal("Cargobob Magnet", myVehicle.IsCargobobHookActive(CargobobHook::Magnet), bToggleCargobobMagnet, bToggleCargobobMagnet);
 		if (myVehicleModel.hash == VEHICLE_MAVERICK || myVehicleModel.hash == VEHICLE_POLMAV)
 			AddOption("Rappel From Helicopter", VehicleOpsRappelHeli);
