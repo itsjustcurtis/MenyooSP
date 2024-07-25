@@ -234,6 +234,7 @@ namespace GTAmodel
 		case VEHICLE_RENTALBUS:
 		case VEHICLE_AIRBUS:
 		case VEHICLE_PBUS:
+		case VEHICLE_PBUS2:
 		case VEHICLE_TOURBUS:
 			return true;
 		}
