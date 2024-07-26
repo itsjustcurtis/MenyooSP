@@ -4338,8 +4338,10 @@ enum class WeatherType : int
 	Snow,
 	Blizzard,
 	SnowLight,
-	//Xmas,
-	Halloween
+	//XMAS,
+	Halloween,
+	SNOW_HALLOWEEN,
+	RAIN_HALLOWEEN
 };
 
 namespace EXPLOSION {

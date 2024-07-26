@@ -805,9 +805,9 @@ namespace sub
 					for (auto& ws : World::sWeatherNames)
 					{
 						bool bWeatherNamePressed = false;
-						AddTickol(ws, weatherToSetStr == ws, bWeatherNamePressed, bWeatherNamePressed); if (bWeatherNamePressed)
+						AddTickol(ws.first, weatherToSetStr == ws.second, bWeatherNamePressed, bWeatherNamePressed); if (bWeatherNamePressed)
 						{
-							nodeWeatherToSet.text() = ws.c_str();
+							nodeWeatherToSet.text() = ws.second.c_str();
 							doc.save_file((const char*)filePath.c_str());
 						}
 					}
