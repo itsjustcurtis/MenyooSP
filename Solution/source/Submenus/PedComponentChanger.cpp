@@ -251,7 +251,8 @@ namespace sub
 	void ComponentChanger2_()
 	{
 		bool compon_plus = 0,
-			compon_minus = 0;
+			compon_minus = 0,
+			compon_input = 0;
 
 		int compon_drawable_current = GET_PED_DRAWABLE_VARIATION(Static_241, Static_12),
 			compon_texture_current = GET_PED_TEXTURE_VARIATION(Static_241, Static_12),
@@ -263,14 +264,31 @@ namespace sub
 
 		AddTitle("Set Variation");
 
-		AddNumber("Type", compon_drawable_current, 0, null, compon_plus, compon_minus);
+		AddNumber("Type", compon_drawable_current, 0, compon_input, compon_plus, compon_minus);
 		AddNumber("Texture", compon_texture_current, 0, null, compon_plus, compon_minus);
 		//AddNumber("Palette", compon_palette_current, 0, null, compon_plus, compon_minus);
 
 		switch (*Menu::currentopATM)
 		{
 		case 1:
-			if (compon_plus)
+			if (compon_input)
+			{ 
+				std::string inputStr = Game::InputBox("", 5U, "", std::to_string(compon_drawable_old));
+				if (inputStr.length() > 0)
+				{
+					try
+					{
+						compon_drawable_current = stoi(inputStr);
+						if (compon_drawable_current > GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, Static_12) - 1)
+						{
+							compon_drawable_current = compon_drawable_old;
+							Game::Print::PrintError_InvalidInput();
+						}							
+					}
+					catch (...) { Game::Print::PrintError_InvalidInput(); }
+				}
+			}
+			else if (compon_plus)
 			{
 				if (compon_drawable_current < GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, Static_12) - 1)
 				{
