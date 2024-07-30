@@ -1371,7 +1371,7 @@ namespace sub
 					if (bWas241) Static_241 = ep.Handle();
 				}
 
-				if (nodePedStuff.child("HasShortHeight").text().as_bool()) SET_PED_CONFIG_FLAG(ep.Handle(), 223, 1);
+				if (nodePedStuff.child("HasShortHeight").text().as_bool()) SET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, 1);
 
 				auto nodePedHeadFeatures = nodePedStuff.child("HeadFeatures");
 				if (sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel) && nodePedHeadFeatures)
