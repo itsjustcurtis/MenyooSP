@@ -53,6 +53,8 @@ std::map<Hash, std::string> WeaponIndivs::vWeaponLabels
 	{ WEAPON_METALDETECTOR, "Metal Detector" }, //2699
 	{ WEAPON_CANDYCANE, "Candy Cane" }, //2802
 	{ WEAPON_STUNROD, "Stun Rod"},
+	{ WEAPON_ANIMAL, "ANIMAL"},
+	{ WEAPON_COUGAR, "COUGAR"},
 	//slot pistol (22)
 	{ WEAPON_PISTOL, "Pistol" },
 	{ WEAPON_PISTOL_MK2, "Pistol Mk2" },
