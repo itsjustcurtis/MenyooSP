@@ -4767,6 +4767,21 @@ namespace MarkerType {
 		HorizontalCircleSkinny_Arrow = 26,
 		HorizontalSplitArrowCircle = 27,
 		DebugSphere = 28
+		DollarSign = 29
+		HorizontalBars = 30
+		Beast = 31
+		QuestionMark = 32
+		Plane = 33
+		Helicopter = 34
+		Boat = 35
+		Car = 36
+		Motorcycle = 37
+		Bicycle = 38
+		Truck = 39
+		Parachute = 40
+		Jetpack = 41
+		SawBlade = 42
+		VerticalCylinder2 = 43
 	};
 
 	extern const std::vector<std::string> vNames;
