@@ -637,7 +637,7 @@ namespace BlipIcon {
 		SeaSparrow2 = 753,
 		Dinghy2 = 754,
 		PatrolBoat = 755,
-		//Deluxo = 756,
+		Deluxo = 756,
 		Squadee = 757,
 		Alkonost = 758,
 		AnnihilatorStealth = 759,
