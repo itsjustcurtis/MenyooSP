@@ -761,6 +761,8 @@
         <Ped name="ig_patricia_02" caption="Patricia 2" />
         <Ped name="ig_pilot" caption="Pilot" />
         <Ped name="ig_sss" caption="Scott Storch" />
+        <Ped name="ig_warehouseboss" caption="Lupe" />
+	<Ped name="ig_mason_duggan" caption="Mason Duggan" />
 	</Category>
 	<Category name="Multiplayer">
 		<Ped name="mp_f_bennymech_01" caption="Benny Mechanic (Female)" />
@@ -1039,7 +1041,7 @@
 		<Ped name="u_m_y_gunvend_01" caption="Gun Vendor" />
 		<Ped name="u_m_y_hippie_01" caption="Hippie Male" />
 		<Ped name="u_m_y_imporage" caption="Impotent Rage" />
-		<Ped name="u_m_y_juggernaut_01" caption="Avon Juggernaut 2" />
+		<Ped name="u_m_y_juggernaut_02" caption="Avon Juggernaut 2" />
 		<Ped name="u_m_y_juggernaut_01" caption="Avon Juggernaut" />
 		<Ped name="u_m_y_justin" caption="Justin Sex Tape Male" />
 		<Ped name="u_m_y_mani" caption="Mani" />
