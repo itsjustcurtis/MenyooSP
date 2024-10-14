@@ -658,7 +658,6 @@ namespace BlipIcon {
 		PowerSwitch = 769,
 		CompoundGate = 770,
 		RappelPoint = 771,
-		Keypad = 772,
 		SubControls = 773,
 		SubPeriscope = 774,
 		SubMissiles = 775,
