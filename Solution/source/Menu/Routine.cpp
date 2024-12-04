@@ -88,7 +88,7 @@
 
 DWORD g_MenyooConfigTick = 0UL;
 DWORD g_FaderTick = 0UL;
-
+bool defaultPedSet = false;
 
 void Menu::justopened()
 {
@@ -2803,7 +2803,11 @@ void Menu::loops()
 	bool gameIsPaused = IS_PAUSE_MENU_ACTIVE() != 0;
 	int iped, player;
 	GTAplayer player2;
-
+	if (!GET_IS_LOADING_SCREEN_ACTIVE() && !defaultPedSet) {//This will load a preset Outfit XML from the menyooStuff folder on startup
+	sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
+	sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);
+	defaultPedSet = true;
+}
 	Game::CustomHelpText::Tick();
 
 	update_nearby_stuff_arrays_tick();
