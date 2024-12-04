@@ -1688,12 +1688,13 @@ namespace sub
 		std::string filePath = _dir + "\\" + _name + ".xml";
 
 		bool outfits2_apply = 0, outfits2_applyAllFeatures = 0, outfits2_applyModel = 0,
-			outfits2_overwrite = 0, outfits2_rename = 0, outfits2_delete = 0;
+			outfits2_overwrite = 0, outfits2_applySetDefault = 0, outfits2_rename = 0, outfits2_delete = 0;
 
 		AddTitle(_name);
 		AddOption("Apply", outfits2_apply);
 		AddOption("Apply Clothing & Attachments", outfits2_applyAllFeatures);
 		AddOption((std::string)"Apply " + (Static_241 == PLAYER_PED_ID() ? "Ped Model" : "Head Features"), outfits2_applyModel);
+		AddOption("Apply and Set as Default", outfits2_applySetDefault);
 		AddOption("Rename File", outfits2_rename);
 		AddOption("Overwrite File", outfits2_overwrite);
 		AddOption("Delete File", outfits2_delete);
@@ -1713,7 +1714,20 @@ namespace sub
 		{
 			ComponentChanger_Outfit_catind::Apply(Static_241, filePath, false, true, true, true, true, true);
 		}
-
+		if (outfits2_applySetDefault)
+		{
+			ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), filePath, true, false, false, false, false, false);
+			ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), filePath, false, true, true, true, true, true);
+			if (ComponentChanger_Outfit_catind::Create(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml"))
+			{
+				Game::Print::PrintBottomLeft("Set as ~b~Default~s~, Outfit will be auto loaded on next game launch.");
+			}
+			else
+			{
+				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to create file.");
+				addlog(ige::LogType::LOG_ERROR, "Attempt to create file menyooStuff/defaultPed.xml failed", __FILENAME__);
+			}
+		}
 		if (outfits2_overwrite)
 		{
 			if (ComponentChanger_Outfit_catind::Create(Static_241, filePath))
