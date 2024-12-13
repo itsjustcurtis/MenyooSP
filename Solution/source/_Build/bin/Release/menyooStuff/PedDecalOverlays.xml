@@ -1002,6 +1002,7 @@
         <OVERLAY collection="mpsum2_overlays" name="MP_Sum2_Hair_003_F" caption="MP_Sum2_Hair_003_F" />
         <OVERLAY collection="mptuner_overlays" name="MP_Tuner_Hair_000_F" caption="MP_Tuner_Hair_000_F" />
         <OVERLAY collection="mp2023_02_overlays" name="MP_2023_02_Hair_001_F" caption="Chop Shop Hair Female" />
+        <OVERLAY collection="mp2024_02_overlays" name="MP_2024_02_Hair_000_F" caption="Agents of Sabotage Hair Female" />
       </ZONE_HEAD>
     </USERTYPE_HAIR>
     <TYPE_BADGE>
@@ -2550,6 +2551,7 @@
         <OVERLAY collection="mpsum2_overlays" name="MP_Sum2_Hair_002_M" caption="MP_Sum2_Hair_002_M" />
         <OVERLAY collection="mptuner_overlays" name="MP_Tuner_Hair_001_M" caption="MP_Tuner_Hair_001_M" />
         <OVERLAY collection="mp2023_02_overlays" name="MP_2023_02_Hair_000_M" caption="Chop Shop Hair Male" />
+        <OVERLAY collection="mp2024_02_overlays" name="MP_2024_02_Hair_001_M" caption="Agents of Sabotage Hair Male" />
       </ZONE_HEAD>
     </USERTYPE_HAIR>
     <TYPE_BADGE>
