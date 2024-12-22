@@ -359,6 +359,7 @@ namespace sub
 			{
 				SET_PED_CONFIG_FLAG(Static_241, ePedConfigFlags::DisableTakeOffScubaGear, true);
 			}
+        	//if (IS_PED_COMPONENT_VARIATION_VALID(Static_241, Static_12, compon_drawable_current, compon_texture_current))
         	SET_PED_COMPONENT_VARIATION(Static_241, Static_12, compon_drawable_current, compon_texture_current, compon_palette_current);
             while (!HasPedSpecificDrawable(compon_drawable_current))
             {
