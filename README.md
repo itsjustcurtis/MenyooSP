@@ -5,9 +5,6 @@
 
 ![image](https://github.com/itsjustcurtis/MenyooSP/assets/70447190/38f28c30-5585-4f77-b204-6a8c8149defe)
 
-
-# Menyoo PC - [DOWNLOAD LATEST RELEASE](https://github.com/itsjustcurtis/MenyooSP/releases/latest/download/MenyooSP.zip)
-# Menyoo PC - [DOWNLOAD LATEST NIGHTLY](https://github.com/itsjustcurtis/MenyooSP/releases/)
 ### a.k.a. MenyooSP
 #### Trainer for Grand Theft Auto V (Single-player and FiveM).
 ---
