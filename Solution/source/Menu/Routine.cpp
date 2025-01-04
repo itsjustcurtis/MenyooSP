@@ -115,9 +115,9 @@ void Menu::justopened()
 		)
 	{
 		Game::Print::PrintBottomCentre("~r~Warning~s~: 9th Gen content detected, Game may crash. Read Menyoolog for fix instructions.");
-		ige::myLog << ige::LogType::LOG_WARNING << "Gen9 Content found in dlcpacks, this can cause instability when attempted to be loaded by Menyoo." << std::endl << "
-			You can find these in your dlclist.xml by searching for \"g9\" and removing these lines or using a comment." << std::endl 
-			<< "				    		For example: <!--<Item>dlcpacks:/mpg9ec/</Item>-->" << std::endl
+		ige::myLog << ige::LogType::LOG_WARNING << "Gen9 Content found in dlcpacks, this can cause instability when attempted to be loaded by Menyoo." << std::endl 
+			<< "			You can find these in your dlclist.xml by searching for \"g9\" and removing these lines or using a comment." << std::endl 
+			<< "				    		For example: <!--<Item>dlcpacks:/mpg9ec/</Item>-->" << std::endl << std::endl
 			<< "				    Current known Gen9 Packs:" << std::endl
 			<< "				    		patchdayg9ecng" << std::endl
 			<< "				    		mpsum2_g9ec" << std::endl
@@ -128,7 +128,7 @@ void Menu::justopened()
 			<< "				   	 	mp2023_02_g9ec" << std::endl
 			<< "				   	 	patch2024_01_g9ec" << std::endl
 			<< "				   	 	mp2024_01_g9ec" << std::endl
-			<< "				  	  	mp2024_02_g9ec" << std::endl
+			<< "				  	  	mp2024_02_g9ec" << std::endl << std::endl
 			<< "				    Note: mp2024_02 also contains bugged content. If you continue to experience issues, removing this may help" << std::endl << std::endl;
 	}
 	else if (
@@ -138,7 +138,7 @@ void Menu::justopened()
 		Game::Print::PrintBottomCentre("~r~Warning~s~: DLCPack mp2024_02 present, Game may crash. Read Menyoolog for fix instructions.");
 		ige::myLog << ige::LogType::LOG_WARNING << "mp2024_02 found in dlcpacks, certain bugged clothing can cause instability when attempted to be loaded by Menyoo." << std::endl 
 			<< "				    You can find this in your dlclist.xml by searching for \"mp2024_02\" and removing these lines or using a comment." << std::endl 
-			<< "				    		For example: <!--<Item>dlcpacks:/mp2024_02/</Item>-->" << std::endl
+			<< "				    		For example: <!--<Item>dlcpacks:/mp2024_02/</Item>-->" << std::endl << std::endl
 			<< "				    Note: this issue can be ignored if bugged content has been fixed by a mod" << std::endl;
 	}
 
