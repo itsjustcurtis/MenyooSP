@@ -41,10 +41,9 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4
       with:
+        # Artifact name
+        name: MenyooSP
         path: |
           Solution/source/_Build/bin/Release/
           !Solution/source/_Build/bin/Release/Trash/
           !Solution/source/_Build/bin/Release/*.map
-        # Artifact name
-        pattern: MenyooSP-*
-        merge-multiple: true
