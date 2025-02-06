@@ -49,12 +49,11 @@ jobs:
           VERSION=${{ env.VERSION }}
           echo "Checking for tag: $VERSION"  
           RELEASE_LIST=$(gh release list)
-          TAGS=$(echo "$RELEASE_LIST" | awk '{print $1}')
+          TAGS=$( "$RELEASE_LIST" | awk '{print $1}')
           echo "$TAGS"
           
            echo "Checking if tag exists:"
           for tag in $TAGS; do
-            echo "Comparing tag: '$tag' with version: '$VERSION'"
             if [ "$tag" = "$VERSION" ]; then
               echo "Tag $VERSION already exists. Cancelling workflow."
               echo "CANCELJOB=true" >> $GITHUB_ENV
