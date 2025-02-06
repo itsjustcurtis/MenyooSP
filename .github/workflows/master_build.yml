@@ -11,7 +11,7 @@ on:
 
 
 env:
-  # Path to the solution file relative to the root of the project.
+  # Path to the solution file relative to the root of the project. 
   SOLUTION_FILE_PATH: ./Solution/Menyoo.sln
 
   # Configuration type to build.
@@ -27,6 +27,8 @@ permissions:
 jobs:
   check-version-and-merge:
     runs-on: ubuntu-latest
+    outputs:
+      CANCELJOB: ${{ steps.set_output.outputs.CANCELJOB }}
 
     steps:
       - name: Checkout repository
@@ -48,11 +50,11 @@ jobs:
           echo "$TAGS"
           
            echo "Checking if tag exists:"
-          echo "$TAGS" | while IFS= read -r tag; do
+          for tag in $TAGS; do
             echo "Comparing tag: '$tag' with version: '$VERSION'"
             if [ "$tag" = "$VERSION" ]; then
               echo "Tag $VERSION already exists. Cancelling workflow."
-              ${{env.CANCELJOB}} = true
+              echo "CANCELJOB=true" >> $GITHUB_ENV
               exit 0
             fi
           done
@@ -83,25 +85,30 @@ jobs:
             echo "## Check for existing PR"
             if check_pr_exists; then
               echo "PR already exists with version $VERSION."
+              echo "CANCELJOB=true" >> $GITHUB_ENV
               exit 0
             fi
             echo "Creating new PR."
             gh pr create --title "Release $VERSION" --body "Merging development into main for release $VERSION" --base main --head Development
-            ${{env.CANCELJOB}} = true
+            echo "CANCELJOB=true" >> $GITHUB_ENV
             exit 0
           elif [[ $VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(a|b|rc)[0-9]+$ ]]; then
             echo "Version is a pre-release. Proceeding with pre-release build."
           else
             echo "Version is invalid or a development version. Cancelling workflow."
-            ${{env.CANCELJOB}} = true
+            echo "CANCELJOB=true" >> $GITHUB_ENV
             exit 0
           fi
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set output
+        id: set_output
+        run: echo "CANCELJOB=${{ env.CANCELJOB }}" >> $GITHUB_OUTPUT
+
   build:
-    if: github.ref == 'refs/heads/main' || (github.ref == 'refs/heads/Development') && ${{env.CANCELJOB}} == false
+    if: github.ref == 'refs/heads/main' || (github.ref == 'refs/heads/Development' && needs.check-version-and-merge.outputs.CANCELJOB != 'true')
     runs-on: windows-latest
     needs: check-version-and-merge
 
