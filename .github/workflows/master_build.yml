@@ -52,7 +52,7 @@ jobs:
             echo "Comparing tag: '$tag' with version: '$VERSION'"
             if [ "$tag" = "$VERSION" ]; then
               echo "Tag $VERSION already exists. Cancelling workflow."
-              CANCEL = TRUE
+              CANCELJOB = TRUE
               exit 0
             fi
           done
@@ -87,13 +87,13 @@ jobs:
             fi
             echo "Creating new PR."
             gh pr create --title "Release $VERSION" --body "Merging development into main for release $VERSION" --base main --head Development
-            CANCEL = TRUE
+            CANCELJOB = TRUE
             exit 0
           elif [[ $VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(a|b|rc)[0-9]+$ ]]; then
             echo "Version is a pre-release. Proceeding with pre-release build."
           else
             echo "Version is invalid or a development version. Cancelling workflow."
-            CANCEL = TRUE
+            CANCELJOB = TRUE
             exit 0
           fi
         shell: bash
@@ -101,7 +101,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build:
-    if: github.ref == 'refs/heads/main' || (github.ref == 'refs/heads/Development') && CANCEL == FALSE
+    if: github.ref == 'refs/heads/main' || (github.ref == 'refs/heads/Development') && CANCELJOB == FALSE
     runs-on: windows-latest
     needs: check-version-and-merge
 
