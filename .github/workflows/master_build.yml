@@ -11,7 +11,7 @@ on:
 
 
 env:
-  # Path to the solution file relative to the root of the project. 
+  # Path to the solution file relative to the root of the project.
   SOLUTION_FILE_PATH: ./Solution/Menyoo.sln
 
   # Configuration type to build.
