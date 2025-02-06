@@ -23,7 +23,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
@@ -39,11 +39,12 @@ jobs:
       # BaseOutputPath should be /Solution/source/_Build/bin/Release/
       
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v4
       with:
-        # Artifact name
-        name: MenyooSP
         path: |
           Solution/source/_Build/bin/Release/
           !Solution/source/_Build/bin/Release/Trash/
           !Solution/source/_Build/bin/Release/*.map
+        # Artifact name
+        pattern: MenyooSP-*
+        merge-multiple: true
