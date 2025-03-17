@@ -1,10 +1,19 @@
 Menyoo 2.0 by ItsJustCurtis et al.
 An Updated version of the original Menyoo trainer by MAFINS.
 
-Installation:
+Single Player Installation:
 	Extract the contents of the download.
 	Place Menyoo.asi and the menyooStuff folder (and any other included files) into your GTA V root directory (where GTA5.exe is located).
 	Launch GTA V and press F8 to launch Menyoo, Press F8 again to open and close Menyoo.
+
+FiveM Installation:
+	Note: Server owner must have sv_scriptHookAllowed set to 1 in server.cfg
+	Extract the contents of the download.
+	Place Menyoo.asi in the plugins folder in your FiveM Application Data directory.
+	Place the menyooStuff folder in FiveM/Fivem.app/data/cache/subprocess folder in yoour appdata local directory.
+	Change the openmenu binding in menyooConfig.ini from 119 (F8 conflicts with FiveM Console). Recommend changing to 121 (F10).
+	Launch FiveM and press your chosen key to launch Menyoo, press again to open and close Menyoo.
+
 
 
 Keyboard
