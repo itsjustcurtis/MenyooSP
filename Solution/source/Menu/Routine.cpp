@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -1514,6 +1514,9 @@ void set_ped_seatbelt_off(Ped ped)
 // Misc - FreeCam
 bool bit_noclip_already_invis, bit_noclip_already_collis, bit_noclip_show_help = true;
 Camera g_cam_noClip;
+float g_freecam_speed = 0.8f; // 默认速度
+bool g_freecam_heightLocked = false;  
+float g_freecam_lockedHeight = 0.0f;
 void set_no_clip_off1()
 {
 	GTAentity myPed = PLAYER_PED_ID();
@@ -1648,14 +1651,92 @@ void set_no_clip()
 			//}
 		}
 		else
-		{
-			float noclip_prec_level = IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT) ? 1.77f : 0.35f;
+		{ 
+			// 处理鼠标滚轮来调整移动速度 - 当不按右键时才调整速度
+			if(!IsKeyDown(VK_SPACE))
+			{
+				// 添加TAB键锁定高度功能
+				if(IsKeyJustUp(VK_TAB)) {
+					g_freecam_heightLocked = !g_freecam_heightLocked;
+					if(g_freecam_heightLocked) {
+						// 锁定时存储当前高度
+						g_freecam_lockedHeight = ent.Position_get().z;
+						Game::Print::PrintBottomCentre("Height Locked");
+					} else {
+						Game::Print::PrintBottomCentre("Height Unlocked"); 
+					}
+				}
+				
+				// 处理鼠标滚轮来调整移动速度
+				if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
+				{
+					g_freecam_speed += 0.1f;
+					if(g_freecam_speed > 10.0f) g_freecam_speed = 10.0f;
+
+                  // 在中间字幕区显示当前速度
+					Game::Print::PrintBottomCentre(oss_ << "FreeCam Speed: " << g_freecam_speed);
+				}
+				if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))  
+				{
+					g_freecam_speed -= 0.1f;
+					if(g_freecam_speed < 0.1f) g_freecam_speed = 0.1f;
+                  // 在中间字幕区显示当前速度
+					Game::Print::PrintBottomCentre(oss_ << "FreeCam Speed: " << g_freecam_speed);
+				}
+			}
+
+			// 按空格键时速度固定为0.2
+			//float current_speed = IsKeyDown(VK_CONTROL) ? 0.2f : g_freecam_speed;
+			float current_speed = IS_DISABLED_CONTROL_PRESSED(2, INPUT_VEH_ATTACK2) ? 0.2f : g_freecam_speed;
+
+			// 让SPRINT基于当前速度增加
+			float noclip_prec_level = IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT) ? current_speed * 2.0f : current_speed;
+
 			Vector3 offset;
 			offset.x = GET_CONTROL_NORMAL(0, INPUT_MOVE_LR) * noclip_prec_level;
 			offset.y = -GET_CONTROL_NORMAL(0, INPUT_MOVE_UD) * noclip_prec_level;
-			offset.z = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? noclip_prec_level : IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -noclip_prec_level : 0.0f;
-			if (!offset.IsZero())
+			
+			if(g_freecam_heightLocked) {
+				// 高度锁定时,只允许通过上升/下降键调整高度
+				float zOffset = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? noclip_prec_level : 
+							   IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -noclip_prec_level : 0.0f;
+				if(zOffset != 0.0f) {
+					g_freecam_lockedHeight += zOffset;
+				}
+				// 使用锁定的高度
+				Vector3 newPos = cam.GetOffsetInWorldCoords(offset - camOffset);
+				newPos.z = g_freecam_lockedHeight;
+				ent.Position_set(newPos);
+			}
+			else {
+				// 未锁定状态下的原始代码
+				offset.z = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? noclip_prec_level : 
+                IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -noclip_prec_level : 0.0f;
+			if(!offset.IsZero())
 				ent.Position_set(cam.GetOffsetInWorldCoords(offset - camOffset));
+}
+
+				// 添加鼠标右键+滚轮控制相机FOV
+				if(IsKeyDown(VK_SPACE)) // 按住鼠标右键
+				{
+					float currentFov = cam.FieldOfView_get();
+					if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP)) // 向上滚动增大FOV
+					{
+						currentFov += 2.0f;
+						if(currentFov > 120.0f) currentFov = 120.0f;
+						cam.FieldOfView_set(currentFov);
+						// 显示当前FOV值
+						Game::Print::PrintBottomCentre(oss_ << "Camera FOV: " << currentFov);
+					}
+					if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN)) // 向下滚动减小FOV 
+					{
+						currentFov -= 2.0f;
+						if(currentFov < 30.0f) currentFov = 30.0f;
+						cam.FieldOfView_set(currentFov);
+						// 显示当前FOV值  
+						Game::Print::PrintBottomCentre(oss_ << "Camera FOV: " << currentFov);
+					}
+				}
 
 			//if (Menu::currentsub == SUB::CLOSED)
 			//{
