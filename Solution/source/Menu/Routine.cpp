@@ -1514,9 +1514,9 @@ void set_ped_seatbelt_off(Ped ped)
 // Misc - FreeCam
 bool bit_noclip_already_invis, bit_noclip_already_collis, bit_noclip_show_help = true;
 Camera g_cam_noClip;
-float g_freecam_speed = 0.8f; // 默认速度
 bool g_freecam_heightLocked = false;  
 float g_freecam_lockedHeight = 0.0f;
+float g_freecam_speed = MenuConfig::FreeCam::defaultSpeed; // 修改默认值
 void set_no_clip_off1()
 {
 	GTAentity myPed = PLAYER_PED_ID();
@@ -1602,7 +1602,7 @@ void set_no_clip()
 			cam.Position_set(GameplayCamera::Position_get());
 			cam.Rotation_set(GameplayCamera::Rotation_get());
 			cam.AttachTo(ent, camOffset);
-			cam.FieldOfView_set(GameplayCamera::FieldOfView_get());
+			cam.FieldOfView_set(MenuConfig::FreeCam::defaultFov); // 使用配置的FOV
 			cam.DepthOfFieldStrength_set(0.0f);
 			World::RenderingCamera_set(cam);
 		}
@@ -1667,27 +1667,38 @@ void set_no_clip()
 					}
 				}
 				
-				// 处理鼠标滚轮来调整移动速度
+				// 处理鼠标滚轮来调整速度
 				if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
 				{
-					g_freecam_speed += 0.1f;
-					if(g_freecam_speed > 10.0f) g_freecam_speed = 10.0f;
+					g_freecam_speed += MenuConfig::FreeCam::speedAdjustStep;
+					if(g_freecam_speed > MenuConfig::FreeCam::maxSpeed) 
+						g_freecam_speed = MenuConfig::FreeCam::maxSpeed;
 
-                  // 在中间字幕区显示当前速度
+					// 保存当前速度为默认值
+					MenuConfig::FreeCam::defaultSpeed = g_freecam_speed;
+					MenuConfig::ConfigSave();
+					
+					// 在中间字幕区显示当前速度
 					Game::Print::PrintBottomCentre(oss_ << "FreeCam Speed: " << g_freecam_speed);
 				}
 				if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))  
 				{
-					g_freecam_speed -= 0.1f;
-					if(g_freecam_speed < 0.1f) g_freecam_speed = 0.1f;
-                  // 在中间字幕区显示当前速度
+					g_freecam_speed -= MenuConfig::FreeCam::speedAdjustStep; 
+					if(g_freecam_speed < MenuConfig::FreeCam::minSpeed)
+						g_freecam_speed = MenuConfig::FreeCam::minSpeed;
+
+					// 保存当前速度为默认值  
+					MenuConfig::FreeCam::defaultSpeed = g_freecam_speed;
+					MenuConfig::ConfigSave();
+					
+					// 在中间字幕区显示当前速度
 					Game::Print::PrintBottomCentre(oss_ << "FreeCam Speed: " << g_freecam_speed);
 				}
 			}
 
 			// 按空格键时速度固定为0.2
 			//float current_speed = IsKeyDown(VK_CONTROL) ? 0.2f : g_freecam_speed;
-			float current_speed = IS_DISABLED_CONTROL_PRESSED(2, INPUT_VEH_ATTACK2) ? 0.2f : g_freecam_speed;
+			float current_speed = IS_DISABLED_CONTROL_PRESSED(2, INPUT_VEH_ATTACK2) ? MenuConfig::FreeCam::defaultSlowSpeed : g_freecam_speed;
 
 			// 让SPRINT基于当前速度增加
 			float noclip_prec_level = IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT) ? current_speed * 2.0f : current_speed;
@@ -1722,17 +1733,29 @@ void set_no_clip()
 					float currentFov = cam.FieldOfView_get();
 					if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP)) // 向上滚动增大FOV
 					{
-						currentFov += 2.0f;
-						if(currentFov > 120.0f) currentFov = 120.0f;
+						currentFov += MenuConfig::FreeCam::fovAdjustStep;
+						if(currentFov > MenuConfig::FreeCam::maxFov)
+							currentFov = MenuConfig::FreeCam::maxFov;
 						cam.FieldOfView_set(currentFov);
+
+						// 保存当前FOV为默认值
+						MenuConfig::FreeCam::defaultFov = currentFov;
+						MenuConfig::ConfigSave();
+						
 						// 显示当前FOV值
 						Game::Print::PrintBottomCentre(oss_ << "Camera FOV: " << currentFov);
 					}
 					if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN)) // 向下滚动减小FOV 
 					{
-						currentFov -= 2.0f;
-						if(currentFov < 30.0f) currentFov = 30.0f;
+						currentFov -= MenuConfig::FreeCam::fovAdjustStep;
+						if(currentFov < MenuConfig::FreeCam::minFov)
+							currentFov = MenuConfig::FreeCam::minFov;
 						cam.FieldOfView_set(currentFov);
+
+						// 保存当前FOV为默认值
+						MenuConfig::FreeCam::defaultFov = currentFov;
+						MenuConfig::ConfigSave();
+						
 						// 显示当前FOV值  
 						Game::Print::PrintBottomCentre(oss_ << "Camera FOV: " << currentFov);
 					}
@@ -2326,7 +2349,7 @@ inline void set_Handling_Mult69_7()
 		if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_SCRIPT_PAD_RIGHT) || IsKeyDown('D'))
 			APPLY_FORCE_TO_ENTITY(g_myVeh, 1, mult69_7 / 220, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1);
 		if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_SCRIPT_PAD_LEFT) || IsKeyDown('A'))
-			APPLY_FORCE_TO_ENTITY(g_myVeh, 1, (0 - mult69_7) / 220, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1);
+		APPLY_FORCE_TO_ENTITY(g_myVeh, 1, (0 - mult69_7) / 220, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1);
 	}
 	else
 	{
@@ -2785,6 +2808,8 @@ void set_vehicle_wheels_invisible(GTAvehicle vehicle, bool enable)
 // Ped - ability (multiplier lists)
 std::map<Ped, std::string> g_pedList_movGrp;
 std::map<Ped, std::string> g_pedList_wmovGrp;
+std::map<Ped, std::string> g_pedList_facial_mood; // 添加这一行
+
 // Spooner/ped - facial mood - getter/setter
 std::map<Ped, std::string> g_pedList_facialMood;
 std::string get_ped_facial_mood(GTAentity ped)

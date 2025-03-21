@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -15,6 +15,19 @@ namespace MenuConfig
 {
 	extern CSimpleIniA iniFile;
 	extern bool bSaveAtIntervals;
+
+    // 相机配置参数 
+    namespace FreeCam {
+        extern float defaultSpeed; // 默认移动速度
+        extern float defaultFov;   // 默认FOV值
+        extern float defaultSlowSpeed; // Speed multiplier when right mouse button is held
+        extern float speedAdjustStep; // 速度调节步进
+        extern float fovAdjustStep;   // FOV调节步进
+        extern float minSpeed;     // 最小速度
+        extern float maxSpeed;     // 最大速度 
+        extern float minFov;      // 最小FOV
+        extern float maxFov;      // 最大FOV
+    }
 
 	void ConfigInit();
 	void ConfigRead();

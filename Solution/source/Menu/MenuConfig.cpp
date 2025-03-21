@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -42,6 +42,21 @@
 
 CSimpleIniA MenuConfig::iniFile;
 bool MenuConfig::bSaveAtIntervals = true;
+
+// 初始化相机参数默认值
+namespace MenuConfig {
+    namespace FreeCam {
+        float defaultSpeed = 0.5f;
+        float defaultFov = 50.0f;
+		float defaultSlowSpeed = 0.2f;
+        float speedAdjustStep = 0.1f;
+        float fovAdjustStep = 1.0f;
+        float minSpeed = 0.1f;
+        float maxSpeed = 10.0f;
+        float minFov = 30.0f;
+        float maxFov = 120.0f;
+    }
+}
 
 void MenuConfig::ConfigInit()
 {
@@ -307,6 +322,44 @@ void MenuConfig::ConfigRead()
 	sub::Speedo_catind::_currentSpeedoBg.fileName = ini.GetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
 	sub::Speedo_catind::SetCurrentBgIdFromBgNameForConfig();
 
+	std::string section_keybinds = "menu-keybinds"; 
+    
+    // 读取按键配置,如果没有配置则使用默认值
+    MenuPressTimer::configBindsUp.first = ini.GetLongValue(section_keybinds.c_str(), "up_game", MenuPressTimer::configBindsUp.first);
+    MenuPressTimer::configBindsUp.second = ini.GetLongValue(section_keybinds.c_str(), "up_key", MenuPressTimer::configBindsUp.second);
+    
+    MenuPressTimer::configBindsDown.first = ini.GetLongValue(section_keybinds.c_str(), "down_game", MenuPressTimer::configBindsDown.first);
+    MenuPressTimer::configBindsDown.second = ini.GetLongValue(section_keybinds.c_str(), "down_key", MenuPressTimer::configBindsDown.second);
+    
+    MenuPressTimer::configBindsLeft.first = ini.GetLongValue(section_keybinds.c_str(), "left_game", MenuPressTimer::configBindsLeft.first);
+    MenuPressTimer::configBindsLeft.second = ini.GetLongValue(section_keybinds.c_str(), "left_key", MenuPressTimer::configBindsLeft.second);
+    
+    MenuPressTimer::configBindsRight.first = ini.GetLongValue(section_keybinds.c_str(), "right_game", MenuPressTimer::configBindsRight.first); 
+    MenuPressTimer::configBindsRight.second = ini.GetLongValue(section_keybinds.c_str(), "right_key", MenuPressTimer::configBindsRight.second);
+    
+    MenuPressTimer::configBindsBack.first = ini.GetLongValue(section_keybinds.c_str(), "back_game", MenuPressTimer::configBindsBack.first);
+    MenuPressTimer::configBindsBack.second = ini.GetLongValue(section_keybinds.c_str(), "back_key", MenuPressTimer::configBindsBack.second);
+    
+    MenuPressTimer::configBindsAccept.first = ini.GetLongValue(section_keybinds.c_str(), "accept_game", MenuPressTimer::configBindsAccept.first);
+    MenuPressTimer::configBindsAccept.second = ini.GetLongValue(section_keybinds.c_str(), "accept_key", MenuPressTimer::configBindsAccept.second);
+
+	std::string section_paging = "menu-paging";/////////
+
+    // 读取翻页设置
+    Menu::enablePaging = ini.GetBoolValue(section_paging.c_str(), "enable_paging", Menu::enablePaging);
+    Menu::itemsPerPage = ini.GetLongValue(section_paging.c_str(), "items_per_page", Menu::itemsPerPage);
+
+    // 读取相机配置
+    std::string section_freecam = "free-camera";
+    FreeCam::defaultSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
+    FreeCam::defaultFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov);
+	FreeCam::defaultSlowSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_slow_speed", FreeCam::defaultSlowSpeed);
+    FreeCam::speedAdjustStep = (float)ini.GetDoubleValue(section_freecam.c_str(), "speed_adjust_step", FreeCam::speedAdjustStep); 
+    FreeCam::fovAdjustStep = (float)ini.GetDoubleValue(section_freecam.c_str(), "fov_adjust_step", FreeCam::fovAdjustStep);
+    FreeCam::minSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "min_speed", FreeCam::minSpeed);
+    FreeCam::maxSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "max_speed", FreeCam::maxSpeed);
+    FreeCam::minFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "min_fov", FreeCam::minFov);
+    FreeCam::maxFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "max_fov", FreeCam::maxFov);
 }
 
 void MenuConfig::ConfigSave()
@@ -555,6 +608,45 @@ void MenuConfig::ConfigSave()
 	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_x", sub::Speedo_catind::_speedoPosition.x);
 	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_y", sub::Speedo_catind::_speedoPosition.y);
 	ini.SetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
+
+	std::string section_keybinds = "menu-keybinds";
+    
+    // 保存当前的按键配置
+    ini.SetLongValue(section_keybinds.c_str(), "up_game", MenuPressTimer::configBindsUp.first);
+    ini.SetLongValue(section_keybinds.c_str(), "up_key", MenuPressTimer::configBindsUp.second);
+    
+    ini.SetLongValue(section_keybinds.c_str(), "down_game", MenuPressTimer::configBindsDown.first);
+    ini.SetLongValue(section_keybinds.c_str(), "down_key", MenuPressTimer::configBindsDown.second);
+    
+    ini.SetLongValue(section_keybinds.c_str(), "left_game", MenuPressTimer::configBindsLeft.first);
+    ini.SetLongValue(section_keybinds.c_str(), "left_key", MenuPressTimer::configBindsLeft.second);
+    
+    ini.SetLongValue(section_keybinds.c_str(), "right_game", MenuPressTimer::configBindsRight.first);
+    ini.SetLongValue(section_keybinds.c_str(), "right_key", MenuPressTimer::configBindsRight.second);
+    
+    ini.SetLongValue(section_keybinds.c_str(), "back_game", MenuPressTimer::configBindsBack.first); 
+    ini.SetLongValue(section_keybinds.c_str(), "back_key", MenuPressTimer::configBindsBack.second);
+    
+    ini.SetLongValue(section_keybinds.c_str(), "accept_game", MenuPressTimer::configBindsAccept.first);
+    ini.SetLongValue(section_keybinds.c_str(), "accept_key", MenuPressTimer::configBindsAccept.second);
+
+	std::string section_paging = "menu-paging";/////////
+
+    // 保存翻页设置
+    ini.SetBoolValue(section_paging.c_str(), "enable_paging", Menu::enablePaging);
+    ini.SetLongValue(section_paging.c_str(), "items_per_page", Menu::itemsPerPage);
+
+    // 保存相机配置
+    std::string section_freecam = "free-camera";
+    ini.SetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
+    ini.SetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov); 
+	ini.SetDoubleValue(section_freecam.c_str(), "right_click_slow_speed", FreeCam::defaultSlowSpeed);
+    ini.SetDoubleValue(section_freecam.c_str(), "speed_adjust_step", FreeCam::speedAdjustStep);
+    ini.SetDoubleValue(section_freecam.c_str(), "fov_adjust_step", FreeCam::fovAdjustStep);
+    ini.SetDoubleValue(section_freecam.c_str(), "min_speed", FreeCam::minSpeed);
+    ini.SetDoubleValue(section_freecam.c_str(), "max_speed", FreeCam::maxSpeed);
+    ini.SetDoubleValue(section_freecam.c_str(), "min_fov", FreeCam::minFov);
+    ini.SetDoubleValue(section_freecam.c_str(), "max_fov", FreeCam::maxFov);
 
 	ini.SaveFile((GetPathffA(Pathff::Main, true) + "menyooConfig.ini").c_str());
 }
