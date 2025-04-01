@@ -32,6 +32,9 @@ namespace BlipIcon {
 	const std::map<int, std::string> vNames
 	{
 		{ BlipIcon::Standard, "Standard" },
+		{ BlipIcon::Enemy, "Enemy" },
+		{ BlipIcon::Friend, "Friend" },
+		{ BlipIcon::VIP, "VIP" },
 		{ BlipIcon::BigBlip, "BigBlip" },
 		{ BlipIcon::PoliceOfficer, "PoliceOfficer" },
 		{ BlipIcon::PoliceArea, "PoliceArea" },
@@ -196,7 +199,6 @@ namespace BlipIcon {
 		{ BlipIcon::PropertyManagement, "PropertyManagement" },
 		{ BlipIcon::GangHighlight, "GangHighlight" },
 		{ BlipIcon::Altruist, "Altruist" },
-		{ BlipIcon::Enemy, "Enemy" },
 		{ BlipIcon::OnMission, "OnMission" },
 		{ BlipIcon::CashPickup, "CashPickup" },
 		{ BlipIcon::Chop, "Chop" },
@@ -205,7 +207,6 @@ namespace BlipIcon {
 		{ BlipIcon::CashPickupVagos, "CashPickupVagos" },
 		{ BlipIcon::CashPickupPolice, "CashPickupPolice" },
 		{ BlipIcon::Hooker, "Hooker" },
-		{ BlipIcon::Friend, "Friend" },
 		{ BlipIcon::CustodyDropoff, "CustodyDropoff" },
 		{ BlipIcon::OnMissionPolice, "OnMissionPolice" },
 		{ BlipIcon::OnMissionLost, "OnMissionLost" },
@@ -348,7 +349,6 @@ namespace BlipIcon {
 		{ BlipIcon::Truck, "Truck" },
 		{ BlipIcon::SpecialCargo, "SpecialCargo" },
 		{ BlipIcon::Trailer, "Trailer" },
-		{ BlipIcon::VIP, "VIP" },
 		{ BlipIcon::Cargobob, "Cargobob" },
 		{ BlipIcon::AreaCutline, "AreaCutline" },
 		{ BlipIcon::Jammed, "Jammed" },
@@ -855,7 +855,32 @@ void GTAblip::ShowRoute(bool value)
 {
 	SET_BLIP_ROUTE(this->mHandle, value);
 }
+// New Blip functions
+void GTAblip::ShowCone(bool toggle, int hudColorIndex)
+{
+    SET_BLIP_SHOW_CONE(this->mHandle, toggle, hudColorIndex);
+}
 
+void GTAblip::SetDisplay(int displayId)
+{
+    SET_BLIP_DISPLAY(this->mHandle, displayId);
+}
+
+void GTAblip::SetPriority(int priority)
+{
+    SET_BLIP_PRIORITY(this->mHandle, priority);
+}
+
+void GTAblip::SetRotationWithFloat(float heading)
+{
+    SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, heading);
+}
+
+void GTAblip::AddBlipForArea(float x, float y, float z, float width, float height)
+{
+    this->mHandle = ADD_BLIP_FOR_AREA(x, y, z, width, height);
+}
+// New Blip functions end here.
 int GTAblip::Icon() const
 {
 	return GET_BLIP_SPRITE(this->mHandle);
