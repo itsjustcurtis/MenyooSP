@@ -895,6 +895,18 @@ public:
 
 	void SetScale(float value);
 
+	void ShowCone(bool toggle, int hudColorIndex);
+
+	void SetDisplay(int displayId);
+
+	void SetPriority(int priority);
+
+	void SetRotationWithFloat(float heading);
+
+	void AddBlipForArea(float x, float y, float z, float width, float height);
+
+	void SyncRotationWithEntity(int entityHandle);
+
 	void ShowRoute(bool value);
 
 	int Icon() const;
