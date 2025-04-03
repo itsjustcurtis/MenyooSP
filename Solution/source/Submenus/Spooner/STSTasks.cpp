@@ -105,6 +105,13 @@ namespace sub::Spooner
 			nodeTask.append_child("IsShortRange").text() = this->isShortRange;
 			nodeTask.append_child("ShowRoute").text() = this->showRoute;
 			nodeTask.append_child("ShowNumber").text() = this->showNumber;
+			// New Functions
+			nodeTask.append_child("ShowCone").text() = this->showCone;
+    			nodeTask.append_child("HudColorIndex").text() = this->hudColorIndex;
+    			nodeTask.append_child("DisplayId").text() = this->displayId;
+    			nodeTask.append_child("Priority").text() = this->priority;
+    			nodeTask.append_child("SyncRotation").text() = this->syncRotation;
+
 		}
 		void AddBlip::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
 		{
@@ -118,6 +125,12 @@ namespace sub::Spooner
 			this->isShortRange = nodeTask.child("IsShortRange").text().as_bool();
 			this->showRoute = nodeTask.child("ShowRoute").text().as_bool();
 			this->showNumber = nodeTask.child("ShowNumber").text().as_int();
+			// New Functions
+			this->showCone = nodeTask.child("ShowCone").text().as_bool();
+    			this->hudColorIndex = nodeTask.child("HudColorIndex").text().as_int();
+    			this->displayId = nodeTask.child("DisplayId").text().as_int();
+    			this->priority = nodeTask.child("Priority").text().as_int();
+    			this->syncRotation = nodeTask.child("SyncRotation").text().as_bool();
 		}
 		void AddBlip::ImportTaskDataSpecific(STSTask* otherTsk)
 		{
@@ -173,7 +186,16 @@ namespace sub::Spooner
 				this->blip.ShowRoute(this->showRoute);
 				if (this->showNumber != 0)
 					this->blip.ShowNumber(this->showNumber);
-			}
+				// New Functions
+        			this->blip.SetBlipShowCone(this->showCone, this->hudColorIndex);
+        			this->blip.SetBlipDisplay(this->displayId);
+        			this->blip.SetBlipPriority(this->priority);
+
+        			if (this->syncRotation)
+        			{
+            			this->blip.SyncRotationWithEntity(e.Handle.Entity());
+        			}
+    			}
 		}
 
 		RemoveBlip::RemoveBlip()
