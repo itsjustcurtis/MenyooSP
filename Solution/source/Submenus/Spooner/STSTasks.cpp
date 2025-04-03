@@ -193,7 +193,7 @@ namespace sub::Spooner
 
         			if (this->syncRotation)
         			{
-            			this->blip.SyncRotationWithEntity(e.mHandle);
+            			this->blip.SyncRotationWithEntity(e.Handle.mHandle);
         			}
     			}
 		}
