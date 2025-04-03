@@ -931,8 +931,6 @@ bool GTAblip::Exists() const
 	return DOES_BLIP_EXIST(this->mHandle) != 0;
 }
 void GTAblip::Remove()
-}
-
 {
 	if (DOES_BLIP_EXIST(this->mHandle))
 	{
