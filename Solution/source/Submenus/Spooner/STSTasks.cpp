@@ -187,13 +187,13 @@ namespace sub::Spooner
 				if (this->showNumber != 0)
 					this->blip.ShowNumber(this->showNumber);
 				// New Functions
-        			this->blip.SetBlipShowCone(this->showCone, this->hudColorIndex);
-        			this->blip.SetBlipDisplay(this->displayId);
-        			this->blip.SetBlipPriority(this->priority);
+        			this->blip.ShowCone(this->showCone, this->hudColorIndex);
+        			this->blip.SetDisplay(this->displayId);
+        			this->blip.SetPriority(this->priority);
 
         			if (this->syncRotation)
         			{
-            			this->blip.SyncRotationWithEntity(e.Handle.Entity());
+            			this->blip.SyncRotationWithEntity(e.Handle);
         			}
     			}
 		}
