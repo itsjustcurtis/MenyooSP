@@ -166,6 +166,20 @@ namespace sub::Spooner
 				AddTexter("Display Number", tskPtr->showNumber, std::vector<std::string>{""}, null, number_plus, number_minus);
 				if (number_plus) { if (tskPtr->showNumber < INT_MAX) tskPtr->showNumber++; }
 				if (number_minus) { if (tskPtr->showNumber > INT_MIN) tskPtr->showNumber--; }
+
+				AddToggle("Show Cone", tskPtr->showCone);
+				
+    				bool displayId_plus = false, displayId_minus = false;
+   				AddNumber("Display ID", tskPtr->displayId, 1, null, displayId_plus, displayId_minus);
+    				if (displayId_plus) { if (tskPtr->displayId < INT_MAX) tskPtr->displayId++; }
+    				if (displayId_minus) { if (tskPtr->displayId > 0) tskPtr->displayId--; }
+
+    				bool priority_plus = false, priority_minus = false;
+    				AddNumber("Priority", tskPtr->priority, 1, null, priority_plus, priority_minus);
+    				if (priority_plus) { if (tskPtr->priority < INT_MAX) tskPtr->priority++; }
+    				if (priority_minus) { if (tskPtr->priority > 0) tskPtr->priority--; }
+
+    AddToggle("Sync Rotation With Entity", tskPtr->syncRotation);
 			}
 			void RemoveBlip()
 			{
