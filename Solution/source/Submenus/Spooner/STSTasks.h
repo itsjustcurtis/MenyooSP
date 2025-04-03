@@ -78,6 +78,12 @@ namespace sub::Spooner
 			bool isShortRange;
 			bool showRoute;
 			int showNumber;
+			// New functions
+    			bool showCone;            
+    			int hudColorIndex;      
+    			int displayId;         
+    			int priority;         
+    			bool syncRotation;  
 			AddBlip();
 			void Run(void* ve) override;
 		};
