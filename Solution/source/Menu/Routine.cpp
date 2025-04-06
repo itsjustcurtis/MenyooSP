@@ -1524,7 +1524,7 @@ bool bit_noclip_already_invis, bit_noclip_already_collis, bit_noclip_show_help =
 Camera g_cam_noClip;
 bool g_freecam_heightLocked = false;  
 float g_freecam_lockedHeight = 0.0f;
-float g_freecam_speed = MenuConfig::FreeCam::defaultSpeed; // 修改默认值
+float g_freecam_speed = MenuConfig::FreeCam::defaultSpeed; // Modify the default value
 void set_no_clip_off1()
 {
 	GTAentity myPed = PLAYER_PED_ID();
@@ -1610,7 +1610,7 @@ void set_no_clip()
 			cam.Position_set(GameplayCamera::Position_get());
 			cam.Rotation_set(GameplayCamera::Rotation_get());
 			cam.AttachTo(ent, camOffset);
-			cam.FieldOfView_set(MenuConfig::FreeCam::defaultFov); // 使用配置的FOV
+			cam.FieldOfView_set(MenuConfig::FreeCam::defaultFov); // Use configured FOV
 			cam.DepthOfFieldStrength_set(0.0f);
 			World::RenderingCamera_set(cam);
 		}
@@ -1660,14 +1660,14 @@ void set_no_clip()
 		}
 		else
 		{ 
-			// 处理鼠标滚轮来调整移动速度 - 当不按右键时才调整速度
+			// Handle mouse wheel to adjust movement speed - only adjust speed when right button is not pressed
 			if(!IsKeyDown(VK_SPACE))
 			{
-				// 添加TAB键锁定高度功能
+				// Add TAB key to lock height function
 				if(IsKeyJustUp(VK_TAB)) {
 					g_freecam_heightLocked = !g_freecam_heightLocked;
 					if(g_freecam_heightLocked) {
-						// 锁定时存储当前高度
+						// Store the current height when locked
 						g_freecam_lockedHeight = ent.Position_get().z;
 						g_lastHeightLockMessage = "Height Locked";
 					} else {
@@ -1675,18 +1675,18 @@ void set_no_clip()
 					}
 					g_lastHeightLockMessageTime = GetTickCount();
 				}
-				// 处理鼠标滚轮来调整速度
+				// Handle mouse wheel to adjust speed
 				if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
 				{
 					g_freecam_speed += MenuConfig::FreeCam::speedAdjustStep;
 					if(g_freecam_speed > MenuConfig::FreeCam::maxSpeed) 
 						g_freecam_speed = MenuConfig::FreeCam::maxSpeed;
 
-					// 保存当前速度为默认值
+					// Save the current speed as the default value
 					MenuConfig::FreeCam::defaultSpeed = g_freecam_speed;
 					MenuConfig::ConfigSave();
 					
-					// 在中间字幕区显示当前速度
+					// Display the current speed
 					Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
 					Game::Print::drawstring(oss_ << "FreeCam Speed: " << g_freecam_speed, 0.5f, 0.95f);
 					
@@ -1699,11 +1699,11 @@ void set_no_clip()
 					if(g_freecam_speed < MenuConfig::FreeCam::minSpeed)
 						g_freecam_speed = MenuConfig::FreeCam::minSpeed;
 
-					// 保存当前速度为默认值  
+					// Save the current speed as the default value 
 					MenuConfig::FreeCam::defaultSpeed = g_freecam_speed;
 					MenuConfig::ConfigSave();
 					
-					// 在中间字幕区显示当前速度
+					// Display the current speed
 					Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
 					Game::Print::drawstring(oss_ << "FreeCam Speed: " << g_freecam_speed, 0.5f, 0.95f);
 					
@@ -1711,7 +1711,7 @@ void set_no_clip()
 					g_lastSpeedDisplayTime = GetTickCount();
 				}
 
-				// 检查是否需要显示速度文字
+				// Check if speed text needs to be displayed
 				if(GetTickCount() - g_lastSpeedDisplayTime < 1000) // 1秒延迟
 				{
 					Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
@@ -1719,11 +1719,11 @@ void set_no_clip()
 				}
 			}
 
-			// 按空格键时速度固定为0.2
+			// When pressing the space bar, the speed is fixed at 0.2
 			//float current_speed = IsKeyDown(VK_CONTROL) ? 0.2f : g_freecam_speed;
 			float current_speed = IS_DISABLED_CONTROL_PRESSED(2, INPUT_VEH_ATTACK2) ? MenuConfig::FreeCam::defaultSlowSpeed : g_freecam_speed;
 
-			// 让SPRINT基于当前速度增加
+			// Make sprint increase based on current speed
 			float noclip_prec_level = IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT) ? current_speed * 2.0f : current_speed;
 
 			Vector3 offset;
@@ -1731,59 +1731,59 @@ void set_no_clip()
 			offset.y = -GET_CONTROL_NORMAL(0, INPUT_MOVE_UD) * noclip_prec_level;
 			
 			if(g_freecam_heightLocked) {
-				// 高度锁定时,只允许通过上升/下降键调整高度
+				// When the height is locked, only the up/down keys are allowed to adjust the height
 				float zOffset = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? noclip_prec_level : 
 							   IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -noclip_prec_level : 0.0f;
 				if(zOffset != 0.0f) {
 					g_freecam_lockedHeight += zOffset;
 				}
-				// 使用锁定的高度
+				// Use locked height
 				Vector3 newPos = cam.GetOffsetInWorldCoords(offset - camOffset);
 				newPos.z = g_freecam_lockedHeight;
 				ent.Position_set(newPos);
 			}
 			else {
-				// 未锁定状态下的原始代码
+				// Original code in unlocked state
 				offset.z = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? noclip_prec_level : 
                 IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -noclip_prec_level : 0.0f;
 			if(!offset.IsZero())
 				ent.Position_set(cam.GetOffsetInWorldCoords(offset - camOffset));
 }
 
-				// 添加鼠标右键+滚轮控制相机FOV
-				if(IsKeyDown(VK_SPACE)) // 按住鼠标右键
+				// Add right mouse button + scroll wheel to control camera FOV
+				if(IsKeyDown(VK_SPACE)) // Press and hold the right mouse button
 				{
 					float currentFov = cam.FieldOfView_get();
-					if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP)) // 向上滚动增大FOV
+					if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP)) // Scroll up to increase FOV
 					{
 						currentFov += MenuConfig::FreeCam::fovAdjustStep;
 						if(currentFov > MenuConfig::FreeCam::maxFov)
 							currentFov = MenuConfig::FreeCam::maxFov;
 						cam.FieldOfView_set(currentFov);
 
-						// 保存当前FOV为默认值
+						// Save the current FOV as the default value
 						MenuConfig::FreeCam::defaultFov = currentFov;
 						MenuConfig::ConfigSave();
             
-						// 显示当前FOV值
+						// Display the current FOV value
 						Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
 						Game::Print::drawstring(oss_ << "Camera FOV: " << currentFov, 0.5f, 0.95f);
 						
 						g_lastFOVValue = currentFov;
 						g_lastFOVDisplayTime = GetTickCount();
 					}
-					if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN)) // 向下滚动减小FOV 
+					if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN)) // Scroll down to reduce FOV
 					{
 						currentFov -= MenuConfig::FreeCam::fovAdjustStep;
 						if(currentFov < MenuConfig::FreeCam::minFov)
 							currentFov = MenuConfig::FreeCam::minFov;
 						cam.FieldOfView_set(currentFov);
 
-						// 保存当前FOV为默认值
+						// Save the current FOV as the default value
 						MenuConfig::FreeCam::defaultFov = currentFov;
 						MenuConfig::ConfigSave();
 						
-						// 显示当前FOV值  
+						// Display the current FOV value
 						Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
 						Game::Print::drawstring(oss_ << "Camera FOV: " << currentFov, 0.5f, 0.95f);
 						
@@ -1791,7 +1791,7 @@ void set_no_clip()
 						g_lastFOVDisplayTime = GetTickCount();
 					}
 
-					// 检查是否需要显示FOV文字
+					// Check if FOV text needs to be displayed
 					if(GetTickCount() - g_lastFOVDisplayTime < 1000) // 1秒延迟
 					{
 						Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
@@ -1814,7 +1814,7 @@ void set_no_clip()
 		}
 	}
 
-	// 检查是否需要显示锁定状态文字
+	// Check whether the lock status text needs to be displayed
 	if(g_lastHeightLockMessage != nullptr && GetTickCount() - g_lastHeightLockMessageTime < 1000)
 	{
 		Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
@@ -2852,7 +2852,7 @@ void set_vehicle_wheels_invisible(GTAvehicle vehicle, bool enable)
 // Ped - ability (multiplier lists)
 std::map<Ped, std::string> g_pedList_movGrp;
 std::map<Ped, std::string> g_pedList_wmovGrp;
-std::map<Ped, std::string> g_pedList_facial_mood; // 添加这一行
+std::map<Ped, std::string> g_pedList_facial_mood;
 
 // Spooner/ped - facial mood - getter/setter
 std::map<Ped, std::string> g_pedList_facialMood;
@@ -3498,7 +3498,7 @@ void Menu::loops()
 			set_vehicle_heavy_mass_tick(g_myVeh);
 
 
-			// ONLY IF PAUSE MENU IS INACTIVE
+		// ONLY IF PAUSE MENU IS INACTIVE
 		if (!gameIsPaused)
 		{
 			// Race boost (self)
