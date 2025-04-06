@@ -43,7 +43,7 @@
 CSimpleIniA MenuConfig::iniFile;
 bool MenuConfig::bSaveAtIntervals = true;
 
-// 初始化相机参数默认值
+// Initialize the default camera parameters
 namespace MenuConfig {
     namespace FreeCam {
         float defaultSpeed = 0.5f;
@@ -322,7 +322,7 @@ void MenuConfig::ConfigRead()
 	sub::Speedo_catind::_currentSpeedoBg.fileName = ini.GetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
 	sub::Speedo_catind::SetCurrentBgIdFromBgNameForConfig();
 
-    // 读取相机配置
+    // Read camera configuration
     std::string section_freecam = "free-camera";
     FreeCam::defaultSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
     FreeCam::defaultFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov);
@@ -582,7 +582,7 @@ void MenuConfig::ConfigSave()
 	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_y", sub::Speedo_catind::_speedoPosition.y);
 	ini.SetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
 
-    // 保存相机配置
+    // Save camera configuration
     std::string section_freecam = "free-camera";
     ini.SetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
     ini.SetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov); 
