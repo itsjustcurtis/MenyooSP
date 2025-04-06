@@ -16,17 +16,17 @@ namespace MenuConfig
 	extern CSimpleIniA iniFile;
 	extern bool bSaveAtIntervals;
 
-    // 相机配置参数 
-    namespace FreeCam {
-        extern float defaultSpeed; // 默认移动速度
-        extern float defaultFov;   // 默认FOV值
-        extern float defaultSlowSpeed; // Speed multiplier when right mouse button is held
-        extern float speedAdjustStep; // 速度调节步进
-        extern float fovAdjustStep;   // FOV调节步进
-        extern float minSpeed;     // 最小速度
-        extern float maxSpeed;     // 最大速度 
-        extern float minFov;      // 最小FOV
-        extern float maxFov;      // 最大FOV
+// Camera configuration parameters
+namespace FreeCam {
+	extern float defaultSpeed; // Default movement speed
+	extern float defaultFov; // Default FOV value
+	extern float defaultSlowSpeed; // Speed ​​multiplier when right mouse button is held
+	extern float speedAdjustStep; // Speed ​​adjustment step
+	extern float fovAdjustStep; // FOV adjustment step
+	extern float minSpeed; // Minimum speed
+	extern float maxSpeed; // Maximum speed
+	extern float minFov; // Minimum FOV
+	extern float maxFov; // Maximum FOV
     }
 
 	void ConfigInit();
