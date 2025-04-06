@@ -324,10 +324,6 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <ResourceCompile />
-    <PostBuildEvent>
-      <Command Condition="'$(GITHUB_ACTIONS)' == ''">if exist "$(OutDir)*.asi" xcopy "$(OutDir)*.asi" "D:\Games\GTAV\" /Y</Command>
-      <Command Condition="'$(GITHUB_ACTIONS)' != ''">echo Skipping xcopy on GitHub Actions</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
