@@ -1504,8 +1504,8 @@ void set_ped_no_ragdoll_on(Ped ped)
 }
 void set_ped_no_ragdoll_off(Ped ped)
 {
-	SET_PED_CAN_RAGDOLL(ped, 1);
-	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 1);
+	SET_PED_CAN_RAGDOLL(ped, 2);
+	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 3);
 }
 void set_ped_seatbelt_on(Ped ped)
 {
