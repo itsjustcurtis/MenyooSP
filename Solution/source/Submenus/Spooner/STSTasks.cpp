@@ -108,7 +108,7 @@ namespace sub::Spooner
 			// New Functions
 			nodeTask.append_child("ShowCone").text() = this->showCone;
     			nodeTask.append_child("HudColorIndex").text() = this->hudColorIndex;
-    			nodeTask.append_child("DisplayId").text() = this->displayId;
+			nodeTask.append_child("IsSelectableOnMap").text() = this->isSelectableOnMap;
     			nodeTask.append_child("Priority").text() = this->priority;
     			nodeTask.append_child("SyncRotation").text() = this->syncRotation;
 
@@ -128,7 +128,7 @@ namespace sub::Spooner
 			// New Functions
 			this->showCone = nodeTask.child("ShowCone").text().as_bool();
     			this->hudColorIndex = nodeTask.child("HudColorIndex").text().as_int();
-    			this->displayId = nodeTask.child("DisplayId").text().as_int();
+			this->isSelectableOnMap = nodeTask.child("IsSelectableOnMap").text().as_bool();
     			this->priority = nodeTask.child("Priority").text().as_int();
     			this->syncRotation = nodeTask.child("SyncRotation").text().as_bool();
 		}
@@ -146,6 +146,7 @@ namespace sub::Spooner
 			this->isShortRange = otherTskT->isShortRange;
 			this->showRoute = otherTskT->showRoute;
 			this->showNumber = otherTskT->showNumber;
+			this->isSelectableOnMap = otherTskT->isSelectableOnMap;
 		}
 		AddBlip::AddBlip()
 		{
@@ -165,6 +166,7 @@ namespace sub::Spooner
 			this->isShortRange = false;
 			this->showRoute = false;
 			this->showNumber = 0;
+			this->isSelectableOnMap = true;
 		}
 		void AddBlip::Run(void* ve)
 		{
@@ -188,7 +190,7 @@ namespace sub::Spooner
 					this->blip.ShowNumber(this->showNumber);
 				// New Functions
         			this->blip.SetBlipShowCone(this->showCone, this->hudColorIndex);
-        			this->blip.SetBlipDisplay(this->displayId);
+				this->blip.SetBlipDisplay(this->isSelectableOnMap ? 2 : 8);
         			this->blip.SetBlipPriority(this->priority);
 
         			if (this->syncRotation)
