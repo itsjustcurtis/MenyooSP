@@ -133,6 +133,8 @@ namespace sub::Spooner
     			this->displayId = nodeTask.child("DisplayId").text().as_int();
     			this->priority = nodeTask.child("Priority").text().as_int();
     			this->syncRotation = nodeTask.child("SyncRotation").text().as_bool();
+			this->coneColour = nodeTask.child("ConeColour").text().as_int(BlipColour::White);
+			this->coneWidth = nodeTask.child("ConeWidth").text().as_float(1.0f);
 		}
 		void AddBlip::ImportTaskDataSpecific(STSTask* otherTsk)
 		{
