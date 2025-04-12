@@ -111,6 +111,8 @@ namespace sub::Spooner
     			nodeTask.append_child("DisplayId").text() = this->displayId;
     			nodeTask.append_child("Priority").text() = this->priority;
     			nodeTask.append_child("SyncRotation").text() = this->syncRotation;
+			nodeTask.append_child("ConeColour").text() = this->coneColour;
+			nodeTask.append_child("ConeWidth").text() = this->coneWidth;
 
 		}
 		void AddBlip::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
