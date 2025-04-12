@@ -111,8 +111,6 @@ namespace sub::Spooner
     			nodeTask.append_child("DisplayId").text() = this->displayId;
     			nodeTask.append_child("Priority").text() = this->priority;
     			nodeTask.append_child("SyncRotation").text() = this->syncRotation;
-			nodeTask.append_child("ConeColour").text() = this->coneColour;
-			nodeTask.append_child("ConeWidth").text() = this->coneWidth;
 
 		}
 		void AddBlip::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
@@ -133,8 +131,6 @@ namespace sub::Spooner
     			this->displayId = nodeTask.child("DisplayId").text().as_int();
     			this->priority = nodeTask.child("Priority").text().as_int();
     			this->syncRotation = nodeTask.child("SyncRotation").text().as_bool();
-			this->coneColour = nodeTask.child("ConeColour").text().as_int(BlipColour::White);
-			this->coneWidth = nodeTask.child("ConeWidth").text().as_float(1.0f);
 		}
 		void AddBlip::ImportTaskDataSpecific(STSTask* otherTsk)
 		{
