@@ -830,6 +830,11 @@ void GTAblip::SetShortRange(bool value)
 {
 	SET_BLIP_AS_SHORT_RANGE(this->mHandle, value);
 }
+bool GTAblip::IsSelectableOnMap() const
+{
+	int displayId = GET_BLIP_DISPLAY(this->mHandle);
+	return displayId == 2;
+}
 
 Vector3 GTAblip::Position_get() const
 {
@@ -858,13 +863,14 @@ void GTAblip::ShowRoute(bool value)
 // New Blip functions
 void GTAblip::ShowCone(bool toggle, int hudColorIndex)
 {
-	mConeColour = hudColorIndex;
-	SET_BLIP_SHOW_CONE(this->mHandle, toggle, mConeColour);
+    mConeColour = hudColorIndex;
+    SET_BLIP_SHOW_CONE(this->mHandle, toggle, mConeColour);
 }
 
-void GTAblip::SetDisplay(int displayId)
+void GTAblip::SetSelectableOnMap(bool selectable)
 {
-    SET_BLIP_DISPLAY(this->mHandle, displayId);
+	// Use ID 2 for selectable, 8 for non-selectable
+    SET_BLIP_DISPLAY(this->mHandle, selectable ? 2 : 8);
 }
 
 void GTAblip::SetPriority(int priority)
@@ -875,11 +881,6 @@ void GTAblip::SetPriority(int priority)
 void GTAblip::SetRotationWithFloat(float heading)
 {
     SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, heading);
-}
-
-void GTAblip::AddBlipForArea(float x, float y, float z, float width, float height)
-{
-    this->mHandle = ADD_BLIP_FOR_AREA(x, y, z, width, height);
 }
 // New Blip functions end here.
 int GTAblip::Icon() const
