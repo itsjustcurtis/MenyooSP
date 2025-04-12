@@ -79,11 +79,13 @@ namespace sub::Spooner
 			bool showRoute;
 			int showNumber;
 			// New functions
-    			bool showCone;            
+    			bool showCone = false;            
     			int hudColorIndex;      
     			int displayId;         
-    			int priority;         
+    			int priority = 2;         
     			bool syncRotation;  
+			int coneColour = BlipColour::blue;   
+			float coneWidth; 
 			AddBlip();
 			void Run(void* ve) override;
 		};
