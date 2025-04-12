@@ -858,7 +858,8 @@ void GTAblip::ShowRoute(bool value)
 // New Blip functions
 void GTAblip::ShowCone(bool toggle, int hudColorIndex)
 {
-    SET_BLIP_SHOW_CONE(this->mHandle, toggle, hudColorIndex);
+	mConeColour = hudColorIndex;
+	SET_BLIP_SHOW_CONE(this->mHandle, toggle, mConeColour);
 }
 
 void GTAblip::SetDisplay(int displayId)
