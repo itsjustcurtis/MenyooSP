@@ -752,7 +752,7 @@ namespace BlipColour {
 		White,
 		Red,
 		Green,
-		Blue,
+		Blue = 3,
 		Yellow = 66,
 		///<summary>The default RGB value of this color is the same as HUD_COLOUR_WHITE, whose default RGB value is #F0F0F0.</summary>
 		WhiteNotPure = 4,
@@ -929,7 +929,7 @@ public:
 private:
 	int mHandle;
 	float mConeWidth = 1.0f;
-	int mConeColour = BlipColour::Blue;
+	int mConeColour = 3;
 };
 
 
