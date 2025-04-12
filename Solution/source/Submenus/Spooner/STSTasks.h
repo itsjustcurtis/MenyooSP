@@ -84,8 +84,6 @@ namespace sub::Spooner
     			int displayId;         
     			int priority = 2;         
     			bool syncRotation;  
-			int coneColour = BlipColour::blue;   
-			float coneWidth; 
 			AddBlip();
 			void Run(void* ve) override;
 		};
