@@ -897,15 +897,13 @@ public:
 
 //New functions
 
-	void ShowCone(bool toggle, int hudColorIndex);
+	void ShowCone (bool toggle, int hudColorIndex, float coneWidth = 1.0f, int coneColour = BlipColour::Blue);
 
 	void SetDisplay(int displayId);
 
 	void SetPriority(int priority);
 
 	void SetRotationWithFloat(float heading);
-
-	void AddBlipForArea(float x, float y, float z, float width, float height);
 
 	void SyncRotationWithEntity(int entityHandle);
 
@@ -930,6 +928,8 @@ public:
 
 private:
 	int mHandle;
+	float mConeWidth = 1.0f;
+	int mConeColour = BlipColour::Blue;
 };
 
 
