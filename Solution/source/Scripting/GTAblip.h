@@ -928,7 +928,6 @@ public:
 
 private:
 	int mHandle;
-	float mConeWidth = 1.0f;
 	int mConeColour = 3;
 };
 
