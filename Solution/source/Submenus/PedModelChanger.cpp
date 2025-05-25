@@ -17,6 +17,7 @@
 #include "..\Natives\natives2.h"
 #include "..\Scripting\Model.h"
 #include "..\Util\ExePath.h"
+#include "..\Util\FileLogger.h"
 #include "..\Util\StringManip.h"
 #include "..\Util\keyboard.h"
 #include "..\Scripting\Game.h"
@@ -340,6 +341,7 @@ namespace sub
 
 	void ModelChanger_()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger", __FILENAME__);
 		bool ModelChangerRandomPedVariation_ = 0,
 			ModelChangerInput_ = 0;
 		//	 ModelChangerVariationWarning_ = 0,
@@ -366,8 +368,9 @@ namespace sub
 		AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
 		AddOption("~b~Input~s~ Model", ModelChangerInput_);
 
-
+		addlog(ige::LogType::LOG_TRACE, "Created ModelChanger Options", __FILENAME__);
 		if (ModelChangerRandomPedVariation_) {
+			addlog(ige::LogType::LOG_TRACE, "Random Ped Selected", __FILENAME__);
 			SET_PED_RANDOM_COMPONENT_VARIATION(Static_241, 0);
 			SET_PED_RANDOM_PROPS(Static_241);
 			return;
@@ -404,6 +407,7 @@ namespace sub
 	// I would really like this whole section to be refactored into one function - IJC
 	void ModelChanger_Player()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Player", __FILENAME__);
 		AddTitle("Player");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -417,6 +421,7 @@ namespace sub
 	}
 	void ModelChanger_Animal()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Animal", __FILENAME__);
 		AddTitle("Animals");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -430,12 +435,19 @@ namespace sub
 	}
 	void ModelChanger_AmbientFemale()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_AmbientFemale", __FILENAME__);
 		AddTitle("Ambient Females");
+		addlog(ige::LogType::LOG_TRACE, "Creating rngped variable", __FILENAME__);
 		std::pair<std::string, std::string> rngped;
+		addlog(ige::LogType::LOG_TRACE, "Getting Ped Model options", __FILENAME__);
 		do {
+			addlog(ige::LogType::LOG_TRACE, "Starting Loop", __FILENAME__);
 			rngped = g_pedModels_AmbientFemale[std::rand() % g_pedModels_AmbientFemale.size()];
+			addlog(ige::LogType::LOG_TRACE, "Got rngped: " + rngped.first + ", " + rngped.second, __FILENAME__);
 		} while (rngped.first == Game::PlayerPed().Model());
+		addlog(ige::LogType::LOG_TRACE, "Creating Random Option", __FILENAME__);
 		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		addlog(ige::LogType::LOG_TRACE, "Creating Ped Model options", __FILENAME__);
 		for (auto& pmn : g_pedModels_AmbientFemale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -443,6 +455,7 @@ namespace sub
 	}
 	void ModelChanger_AmbientMale()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_AmbientMale", __FILENAME__);
 		AddTitle("Ambient Males");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -456,6 +469,7 @@ namespace sub
 	}
 	void ModelChanger_Cutscene()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Cutscene", __FILENAME__);
 		AddTitle("Cutscene Models");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -469,6 +483,7 @@ namespace sub
 	}
 	void ModelChanger_GangFemale()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_GangFemale", __FILENAME__);
 		AddTitle("Gang Females");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -482,6 +497,7 @@ namespace sub
 	}
 	void ModelChanger_GangMale()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_GangMale", __FILENAME__);
 		AddTitle("Gang Males");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -495,6 +511,7 @@ namespace sub
 	}
 	void ModelChanger_Story()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Story", __FILENAME__);
 		AddTitle("Story Models");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -508,6 +525,7 @@ namespace sub
 	}
 	void ModelChanger_Multiplayer()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Multiplayer", __FILENAME__);
 		AddTitle("Multiplayer Models");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -521,6 +539,7 @@ namespace sub
 	}
 	void ModelChanger_ScenarioFemale()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_ScenarioFemale", __FILENAME__);
 		AddTitle("Scenario Females");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -534,6 +553,7 @@ namespace sub
 	}
 	void ModelChanger_ScenarioMale()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_ScenarioMale", __FILENAME__);
 		AddTitle("Scenario Males");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -547,6 +567,7 @@ namespace sub
 	}
 	void ModelChanger_Story_ScenarioFemale()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Story_ScenarioFemale", __FILENAME__);
 		AddTitle("Story Scenario Females");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -560,6 +581,7 @@ namespace sub
 	}
 	void ModelChanger_Story_ScenarioMale()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Story_ScenarioMale", __FILENAME__);
 		AddTitle("Story Scenario Males");
 		std::pair<std::string, std::string> rngped;
 		do {
@@ -573,6 +595,7 @@ namespace sub
 	}
 	void ModelChanger_Others()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Others", __FILENAME__);
 		AddTitle("Others");
 		std::pair<std::string, std::string> rngped;
 		do {

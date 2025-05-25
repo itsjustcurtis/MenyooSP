@@ -58,7 +58,8 @@ CVehicleModelInfo* initVehicleArchetype_stub(const char* name, bool a2, unsigned
 	return g_InitVehicleArchetype->fn(name, a2, a3);
 }
 void setupHooks() {
-	auto addr = GTAmemory::FindPattern("\xE8\x00\x00\x00\x00\x48\x8B\x4D\xE0\x48\x8B\x11", "x????xxxxxxx");
+	addlog(ige::LogType::LOG_TRACE, "Finding InitVehicleArchetype", __FILENAME__);
+	auto addr = (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_812_8) ?GTAmemory::FindPattern("\xE8\x00\x00\x00\x00\x43\x89\x44\x2C", "x????xxxx") : GTAmemory::FindPattern("\xE8\x00\x00\x00\x00\x48\x8B\x4D\xE0\x48\x8B\x11", "x????xxxxxxx");
 	if (!addr) {
 		addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetype", __FILENAME__);
 		return;
@@ -737,111 +738,189 @@ private:
 
 void GTAmemory::Init()
 {
+	addlog(ige::LogType::LOG_TRACE, "Comparing GetGameVersion " + std::to_string(GTAmemory::GetGameVersion()) + " with eGameVersion::VER_1_0_812_8: " + std::to_string(eGameVersion::VER_1_0_812_8), __FILENAME__);
+	
+	if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_812_8)
+	{
+		addlog(ige::LogType::LOG_WARNING, "GTA Enhanced Found. Skipping GTAmemory Init", __FILENAME__);
+		return;
+	}
+
 	UINT64 address;
 
 	// Get relative address and add it to the instruction address.
 	// 3 bytes equal the size of the opcode and its first argument. 7 bytes are the length of opcode and all its parameters.
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _blipList", __FILENAME__);
 	address = FindPattern("\x4C\x8D\x05\x00\x00\x00\x00\x0F\xB7\xC1", "xxx????xxx");
 	if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int *>(address + 3) + address + 7);
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _gxtLabelFromHashFuncAddr", __FILENAME__);
 	address = FindPattern("\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x18\x89\x54\x24\x10\x56\x57\x41\x56\x48\x83\xEC\x20", "xxxxxxxxxxxxxxxxxxxxxx");
-	_gxtLabelFromHashFuncAddr = reinterpret_cast<char*(__fastcall *)(UINT64, unsigned int)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if(address)_gxtLabelFromHashFuncAddr = reinterpret_cast<char*(__fastcall *)(UINT64, unsigned int)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _gxtLabelFromHashAddr1", __FILENAME__);
 	address = FindPattern("\x84\xC0\x74\x34\x48\x8D\x0D\x00\x00\x00\x00\x48\x8B\xD3", "xxxxxxx????xxx");
-	_gxtLabelFromHashAddr1 = *reinterpret_cast<int *>(address + 7) + address + 11;
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_gxtLabelFromHashAddr1 = *reinterpret_cast<int *>(address + 7) + address + 11;
 
 	if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1290_1_STEAM)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Checked game version >= 1290: TRUE", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _entityAddressFunc", __FILENAME__);
 		address = FindPattern("\xE8\x00\x00\x00\x00\x48\x8B\xD8\x48\x85\xC0\x74\x2E\x48\x83\x3D", "x????xxxxxxxxxxx");
-		_entityAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int *>(address + 1) + address + 5);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+		if (address)_entityAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int *>(address + 1) + address + 5);
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _playerAddressFunc", __FILENAME__);
 		address = FindPattern("\xB2\x01\xE8\x00\x00\x00\x00\x48\x85\xC0\x74\x1C\x8A\x88", "xxx????xxxxxxx");
-		_playerAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int *>(address + 3) + address + 7);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+		if (address)_playerAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int *>(address + 3) + address + 7);
 
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _entityPositionFunc", __FILENAME__);
 		address = FindPattern("\x48\x8B\xDA\xE8\x00\x00\x00\x00\xF3\x0F\x10\x44\x24", "xxxx????xxxxx");
-		_entityPositionFunc = reinterpret_cast<UINT64(*)(UINT64, float *)>(address - 6);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+		if (address)_entityPositionFunc = reinterpret_cast<UINT64(*)(UINT64, float *)>(address - 6);
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _entityModel1Func", __FILENAME__);
 		address = FindPattern("\x0F\x85\x00\x00\x00\x00\x48\x8B\x4B\x20\xE8\x00\x00\x00\x00\x48\x8B\xC8", "xx????xxxxx????xxx");
-		_entityModel1Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int *>(address + 11) + address + 15);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+		if (address)_entityModel1Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int *>(address + 11) + address + 15);
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _entityModel2Func", __FILENAME__);
 		address = FindPattern("\x45\x33\xC9\x3B\x05", "xxxxx");
-		_entityModel2Func = reinterpret_cast<UINT64(*)(UINT64)>(address - 0x46);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+		if (address)_entityModel2Func = reinterpret_cast<UINT64(*)(UINT64)>(address - 0x46);
 
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _pickupObjectPoolAddress", __FILENAME__);
 		address = FindPattern("\x4C\x8B\x05\x00\x00\x00\x00\x40\x8A\xF2\x8B\xE9", "xxx????xxxxx");
-		_pickupObjectPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 3) + address + 7);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+		if (address)_pickupObjectPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 3) + address + 7);
 	}
 	else
 	{
+		addlog(ige::LogType::LOG_TRACE, "Checked game version >= 1290: FALSE", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _entityAddressFunc", __FILENAME__);
 		address = FindPattern("\x33\xFF\xE8\x00\x00\x00\x00\x48\x85\xC0\x74\x58", "xxx????xxxxx");
-		_entityAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int *>(address + 3) + address + 7);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false" : std::to_string(address), __FILENAME__);
+		if (address)_entityAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int *>(address + 3) + address + 7);
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _playerAddressFunc", __FILENAME__);
 		address = FindPattern("\xB2\x01\xE8\x00\x00\x00\x00\x33\xC9\x48\x85\xC0\x74\x3B", "xxx????xxxxxxx");
-		_playerAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int *>(address + 3) + address + 7);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+		if (address)_playerAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int *>(address + 3) + address + 7);
 
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _entityPositionFunc", __FILENAME__);
 		address = FindPattern("\x48\x8B\xC8\xE8\x00\x00\x00\x00\xF3\x0F\x10\x54\x24\x00\xF3\x0F\x10\x4C\x24\x00\xF3\x0F\x10", "xxxx????xxxxx?xxxxx?xxx");
-		_entityPositionFunc = reinterpret_cast<UINT64(*)(UINT64, float *)>(*reinterpret_cast<int *>(address + 4) + address + 8);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+		if (address)_entityPositionFunc = reinterpret_cast<UINT64(*)(UINT64, float *)>(*reinterpret_cast<int *>(address + 4) + address + 8);
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _entityModel1Func & _entityModel2Func", __FILENAME__);
 		address = FindPattern("\x25\xFF\xFF\xFF\x3F\x89\x44\x24\x38\xE8\x00\x00\x00\x00\x48\x85\xC0\x74\x03", "xxxxxxxxxx????xxxxx");
-		_entityModel1Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int *>(address - 61) + address - 57);
-		_entityModel2Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int *>(address + 10) + address + 14);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+		if (address)_entityModel1Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int *>(address - 61) + address - 57);
+		if (address)_entityModel2Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int *>(address + 10) + address + 14);
 
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _pickupObjectPoolAddress", __FILENAME__);
 		address = FindPattern("\x8B\xF0\x48\x8B\x05\x00\x00\x00\x00\xF3\x0F\x59\xF6", "xxxxx????xxxx");
-		_pickupObjectPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 5) + address + 9);
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+		if (address)_pickupObjectPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 5) + address + 9);
 	}
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _ptfxAddressFunc", __FILENAME__);
 	address = FindPattern("\x74\x21\x48\x8B\x48\x20\x48\x85\xC9\x74\x18\x48\x8B\xD6\xE8", "xxxxxxxxxxxxxxx") - 10;
-	_ptfxAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int*>(address) + address + 4);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_ptfxAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int*>(address) + address + 4);
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _addEntityToPoolFunc", __FILENAME__);
 	address = FindPattern("\x48\xF7\xF9\x49\x8B\x48\x08\x48\x63\xD0\xC1\xE0\x08\x0F\xB6\x1C\x11\x03\xD8", "xxxxxxxxxxxxxxxxxxx");
-	_addEntityToPoolFunc = reinterpret_cast<int(*)(UINT64)>(address - 0x68);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_addEntityToPoolFunc = reinterpret_cast<int(*)(UINT64)>(address - 0x68);
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _entityPoolAddress", __FILENAME__);
 	address = FindPattern("\x4C\x8B\x0D\x00\x00\x00\x00\x44\x8B\xC1\x49\x8B\x41\x08", "xxx????xxxxxxx");
-	_entityPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 3) + address + 7);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_entityPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 3) + address + 7);
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _vehiclePoolAddress", __FILENAME__);
 	address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\xF3\x0F\x59\xF6\x48\x8B\x08", "xxx????xxxxxxx");
-	_vehiclePoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 3) + address + 7);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_vehiclePoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 3) + address + 7);
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _pedPoolAddress", __FILENAME__);
 	address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\x41\x0F\xBF\xC8\x0F\xBF\x40\x10", "xxx????xxxxxxxx");
-	_pedPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 3) + address + 7);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_pedPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 3) + address + 7);
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _objectPoolAddress", __FILENAME__);
 	address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\x8B\x78\x10\x85\xFF", "xxx????xxxxx");
-	_objectPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 3) + address + 7);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_objectPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 3) + address + 7);
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: CreateNmMessageFunc", __FILENAME__);
 	CreateNmMessageFunc = FindPattern("\x33\xDB\x48\x89\x1D\x00\x00\x00\x00\x85\xFF", "xxxxx????xx") - 0x42;
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: GiveNmMessageFunc", __FILENAME__);
 	GiveNmMessageFunc = FindPattern("\x0F\x84\x00\x00\x00\x00\x48\x8B\x01\xFF\x90\x00\x00\x00\x00\x41\x3B\xC5", "xx????xxxxx????xxx") - 0x78;
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: SetNmBoolAddress", __FILENAME__);
 	address = FindPattern("\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x41\x8A\xF8", "xxxx?xxxxxxxxxxxxxxx");
-	SetNmBoolAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, unsigned char)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)SetNmBoolAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, unsigned char)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: SetNmFloatAddress", __FILENAME__);
 	address = FindPattern("\x40\x53\x48\x83\xEC\x30\x48\x8B\xD9\x48\x63\x49\x0C", "xxxxxxxxxxxxx");
-	SetNmFloatAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, float)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)SetNmFloatAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, float)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: SetNmIntAddress", __FILENAME__);
 	address = FindPattern("\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x41\x8B\xF8", "xxxx?xxxxxxxxxxxxxxx");
-	SetNmIntAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, int)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)SetNmIntAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, int)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: SetNmStringAddress", __FILENAME__);
 	address = FindPattern("\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x49\x8B\xE8", "xxxxxxxxxxxxxxx") - 15;
-	SetNmStringAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, __int64)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)SetNmStringAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, __int64)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: SetNmVec3Address", __FILENAME__);
 	address = FindPattern("\x40\x53\x48\x83\xEC\x40\x48\x8B\xD9\x48\x63\x49\x0C", "xxxxxxxxxxxxx");
-	SetNmVec3Address = reinterpret_cast<unsigned char(*)(__int64, __int64, float, float, float)>(address);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)SetNmVec3Address = reinterpret_cast<unsigned char(*)(__int64, __int64, float, float, float)>(address);
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: Checkpoints", __FILENAME__);
 	address = FindPattern("\x8A\x4C\x24\x60\x8B\x50\x10\x44\x8A\xCE", "xxxxxxxxxx");
-	CheckpointBaseAddr = reinterpret_cast<UINT64(*)()>(*reinterpret_cast<int*>(address - 19) + address - 15);
-	CheckpointHandleAddr = reinterpret_cast<UINT64(*)(UINT64, int)>(*reinterpret_cast<int*>(address - 9) + address - 5);
-	checkpointPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 17) + address + 21);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)CheckpointBaseAddr = reinterpret_cast<UINT64(*)()>(*reinterpret_cast<int*>(address - 19) + address - 15);
+	if (address)CheckpointHandleAddr = reinterpret_cast<UINT64(*)(UINT64, int)>(*reinterpret_cast<int*>(address - 9) + address - 5);
+	if (address)checkpointPoolAddress = reinterpret_cast<UINT64 *>(*reinterpret_cast<int *>(address + 17) + address + 21);
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _getHashKey", __FILENAME__);
 	address = FindPattern("\x48\x8B\x0B\x33\xD2\xE8\x00\x00\x00\x00\x89\x03", "xxxxxx????xx");
-	_getHashKey = reinterpret_cast<unsigned int(*)(const char*, unsigned int)>(*reinterpret_cast<int*>(address + 6) + address + 10);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_getHashKey = reinterpret_cast<unsigned int(*)(const char*, unsigned int)>(*reinterpret_cast<int*>(address + 6) + address + 10);
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _read/writeWorldGravityAddress", __FILENAME__);
 	address = FindPattern("\x48\x63\xC1\x48\x8D\x0D\x00\x00\x00\x00\xF3\x0F\x10\x04\x81\xF3\x0F\x11\x05\x00\x00\x00\x00", "xxxxxx????xxxxxxxxx????");
-	_writeWorldGravityAddress = reinterpret_cast<float *>(*reinterpret_cast<int *>(address + 6) + address + 10);
-	_readWorldGravityAddress = reinterpret_cast<float *>(*reinterpret_cast<int *>(address + 19) + address + 23);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_writeWorldGravityAddress = reinterpret_cast<float *>(*reinterpret_cast<int *>(address + 6) + address + 10);
+	if (address)_readWorldGravityAddress = reinterpret_cast<float *>(*reinterpret_cast<int *>(address + 19) + address + 23);
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _cursorSpriteAddr", __FILENAME__);
 	address = FindPattern("\x74\x11\x8B\xD1\x48\x8D\x0D\x00\x00\x00\x00\x45\x33\xC0", "xxxxxxx????xxx");
-	_cursorSpriteAddr = reinterpret_cast<int *>(*reinterpret_cast<int*>(address - 4) + address);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_cursorSpriteAddr = reinterpret_cast<int *>(*reinterpret_cast<int*>(address - 4) + address);
 
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _gamePlayCameraAddr", __FILENAME__);
 	address = FindPattern("\x48\x8B\xC7\xF3\x0F\x10\x0D", "xxxxxxx") - 0x1D;
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
 	address = address + *reinterpret_cast<int*>(address) + 4;
-	_gamePlayCameraAddr = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+	if (address)_gamePlayCameraAddr = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: _cameraPoolAddress", __FILENAME__);
 	address = FindPattern("\x48\x8B\xC8\xEB\x02\x33\xC9\x48\x85\xC9\x74\x26", "xxxxxxxxxxxx") - 9;
-	_cameraPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address) + address + 4);
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
+	if (address)_cameraPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address) + address + 4);
 
 	// Bypass model requests block
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Bypass model requests block", __FILENAME__);
 	address = MemryScan::PatternScanner::FindPattern("48 85 C0 0F 84 ? ? ? ? 8B 48 50");
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false":std::to_string(address), __FILENAME__);
 	if (address) memset(reinterpret_cast<void*>(address), 0x90, 24);
 
 	// Bypass is player model allowed to spawn checks
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Bypass is player model allowed to spawn checks", __FILENAME__);
 	address = MemryScan::PatternScanner::FindPattern("48 8B C8 FF 52 30 84 C0 74 05 48");
+	addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + !address ? "false" : std::to_string(address), __FILENAME__);
 	if (address) memset(reinterpret_cast<void*>(address + 0x8), 0x90, 2);
 
 	//GetModelInfo
+	addlog(ige::LogType::LOG_TRACE, "Attempting to Find Pattern: GetModelInfo", __FILENAME__);
 	if (getGameVersion() <= 57) {
 		address = FindPattern(
 			"\x0F\xB7\x05\x00\x00\x00\x00"
@@ -856,6 +935,7 @@ void GTAmemory::Init()
 			"xxxxxxxxxxxx"
 			"xx????"
 			"xxxxxxxxxxx");
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + std::to_string(address), __FILENAME__);
 
 		if (!address) {
 			addlog(ige::LogType::LOG_ERROR,  "Couldn't find GetModelInfo", __FILENAME__);
@@ -867,6 +947,7 @@ void GTAmemory::Init()
 			addlog(ige::LogType::LOG_ERROR,   "Couldn't find GetModelInfo (v58+)", __FILENAME__);
 		}
 		address = address - 0x2C;
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + std::to_string(address), __FILENAME__);
 	}
 	GetModelInfo = (GetModelInfo_t)(address);
 	

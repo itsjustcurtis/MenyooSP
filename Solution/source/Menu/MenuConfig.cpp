@@ -69,6 +69,7 @@ void MenuConfig::ConfigInit()
 		addlog(ige::LogType::LOG_ERROR,  "Failed to load menyooConfig from " + GetPathffA(Pathff::Main, true) + "menyooConfig.ini.", __FILENAME__);
 	else {
 		ConfigRead();
+		addlog(ige::LogType::LOG_INFO, "Logging level " + std::to_string(g_loglevel) + " active. Edit loglevel in menyooconfig.ini to change.", __FILENAME__);
 		addlog(ige::LogType::LOG_INFO, "Config loaded from " + GetPathffA(Pathff::Main, true) + "menyooConfig.ini.", __FILENAME__);
 	}
 }

@@ -151,16 +151,28 @@ void Menu::justopened()
 }
 inline void MenyooMain()
 {	
+	bool firstTick = true;
+	addlog(ige::LogType::LOG_TRACE, "Loading Textures", __FILENAME__);
 	DxHookIMG::LoadAllMenyooTexturesInit();
+	addlog(ige::LogType::LOG_TRACE, "Populate Anims List", __FILENAME__);
 	sub::AnimationSub_catind::PopulateAllPedAnimsList();
+	addlog(ige::LogType::LOG_TRACE, "Populate Favourites", __FILENAME__);
 	sub::WeaponFavourites_catind::PopulateFavouritesInfo();
+	addlog(ige::LogType::LOG_TRACE, "Populate Decals", __FILENAME__);
 	sub::PedDecals_catind::PopulateDecalsDict();
+	addlog(ige::LogType::LOG_TRACE, "Populate Animals", __FILENAME__);
 	sub::AnimalRiding_catind::PopulateAnimals();
+	addlog(ige::LogType::LOG_TRACE, "Populate Vehicle Previews", __FILENAME__);
 	sub::SpawnVehicle_catind::PopulateVehicleBmps();
+	addlog(ige::LogType::LOG_TRACE, "Populate Folder Previews", __FILENAME__);
 	sub::FolderPreviewBmps_catind::PopulateFolderBmps();
+	addlog(ige::LogType::LOG_TRACE, "Populate Voice Data", __FILENAME__);
 	sub::Speech_catind::PopulateVoiceData();
+	addlog(ige::LogType::LOG_TRACE, "Populate Timecycle Names", __FILENAME__);
 	TimecycleModification::PopulateTimecycleNames();
+	addlog(ige::LogType::LOG_TRACE, "Populate Global Entity Arrays", __FILENAME__);
 	PopulateGlobalEntityModelsArrays();
+	addlog(ige::LogType::LOG_TRACE, "Populate Cutscene Labels", __FILENAME__);
 	sub::CutscenePlayer_catind::PopulateCutsceneLabels();
 
 	srand(GetTickCount());
@@ -171,25 +183,44 @@ inline void MenyooMain()
 	g_MenyooConfigTick = GetTickCount();
 	g_FaderTick = GetTickCount();
 
-	if (!NETWORK_IS_SESSION_STARTED() && !IS_COMMANDLINE_END_USER_BENCHMARK() && !LANDING_SCREEN_STARTED_END_USER_BENCHMARK())
+	addlog(ige::LogType::LOG_TRACE, "Check Valid for Block Vehicles", __FILENAME__);
+	if (!NETWORK_IS_SESSION_STARTED() && !IS_COMMANDLINE_END_USER_BENCHMARK() && !LANDING_SCREEN_STARTED_END_USER_BENCHMARK() && false)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Valid, Enabling Blocked Vehicles", __FILENAME__);
 		if (GTAmemory::FindShopController())
 			GeneralGlobalHax::EnableBlockedMpVehiclesInSp();
 	}
+	else
+	{
+		addlog(ige::LogType::LOG_TRACE, "Forced false", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Not Valid, Skipping", __FILENAME__);
+	}
 
+	addlog(ige::LogType::LOG_TRACE, "Creating Tick loop", __FILENAME__);
 	for (;;)
 	{
+		if (firstTick)
+			addlog(ige::LogType::LOG_TRACE, "First Tick - Textures", __FILENAME__);
 		DxHookIMG::DxTexture::GlobalDrawOrderRef() = -9999;
-
+		if (firstTick)
+			addlog(ige::LogType::LOG_TRACE, "First Tick - Tick", __FILENAME__);
 		Menu::Tick();
+		if (firstTick)
+			addlog(ige::LogType::LOG_TRACE, "First Tick - MenyooConfig", __FILENAME__);
 		TickMenyooConfig();
+		if (firstTick)
+			addlog(ige::LogType::LOG_TRACE, "First Tick - Rainbow Fader", __FILENAME__);
 		TickRainbowFader();
 		WAIT(0);
+		if (firstTick)
+			addlog(ige::LogType::LOG_TRACE, "First Tick - looping", __FILENAME__);
+		firstTick = false;
 	}
 
 }
 void ThreadMenyooMain()
 {
+	addlog(ige::LogType::LOG_TRACE, "Launching MenyooMain", __FILENAME__);
 	MenyooMain();
 }
 
@@ -382,13 +413,14 @@ void update_nearby_stuff_arrays_tick()
 	_worldVehicles.clear();
 	_worldObjects.clear();
 	_worldEntities.clear();
-
 	//bool alreadyIn;
-	GTAmemory::GetVehicleHandles(_worldVehicles);
-	GTAmemory::GetPedHandles(_worldPeds);
-	GTAmemory::GetPropHandles(_worldObjects);
-	GTAmemory::GetEntityHandles(_worldEntities);
-
+	if(false)
+	{
+		GTAmemory::GetVehicleHandles(_worldVehicles);
+		GTAmemory::GetPedHandles(_worldPeds);
+		GTAmemory::GetPropHandles(_worldObjects);
+		GTAmemory::GetEntityHandles(_worldEntities);
+	}
 	/*INT i, offsettedID, count = 80;
 
 	Ped *peds = new Ped[count * 2 + 2];
@@ -2980,11 +3012,12 @@ void Menu::loops()
 	bool gameIsPaused = IS_PAUSE_MENU_ACTIVE() != 0;
 	int iped, player;
 	GTAplayer player2;
-	if (!GET_IS_LOADING_SCREEN_ACTIVE() && !defaultPedSet) {//This will load a preset Outfit XML from the menyooStuff folder on startup
-	sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
-	sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);
-	defaultPedSet = true;
-}
+	if (!GET_IS_LOADING_SCREEN_ACTIVE() && !defaultPedSet) //This will load a preset Outfit XML from the menyooStuff folder on startup
+	{
+		sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
+		sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);
+		defaultPedSet = true;
+	}
 	Game::CustomHelpText::Tick();
 
 	update_nearby_stuff_arrays_tick();
