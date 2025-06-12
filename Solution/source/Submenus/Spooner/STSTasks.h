@@ -80,8 +80,8 @@ namespace sub::Spooner
 			int showNumber;
 			// New functions
     			bool showCone = false;            
-    			int hudColorIndex;      
-			bool isSelectableOnMap = true; // true = 2, false = 8
+    			int hudColorIndex; 
+				int displayId;
     			int priority = 2;         
     			bool syncRotation;  
 			AddBlip();

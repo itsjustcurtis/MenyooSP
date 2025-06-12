@@ -897,9 +897,8 @@ public:
 
 //New functions
 
-	void ShowCone (bool toggle, int hudColorIndex, float coneWidth = 1.0f, int coneColour = BlipColour::Blue);
+	void ShowCone(bool toggle, int hudColorIndex);
 
-	bool IsSelectableOnMap() const;
 	void SetSelectableOnMap(bool selectable);
 
 	void SetPriority(int priority);
@@ -911,6 +910,7 @@ public:
 //New functions end here
 
 	void ShowRoute(bool value);
+
 
 	int Icon() const;
 	void SetIcon(int value);
@@ -929,7 +929,6 @@ public:
 
 private:
 	int mHandle;
-	int mConeColour = 3;
 };
 
 

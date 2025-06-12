@@ -167,6 +167,8 @@ public:
 	bool IsCollisionEnabled_get() const;
 	void IsCollisionEnabled_set(bool value);
 
+	void ToggleLandingGear();
+
 	virtual int NetID() const;
 
 	bool IsInRangeOf(Vector3 position, float range) const;

@@ -830,11 +830,6 @@ void GTAblip::SetShortRange(bool value)
 {
 	SET_BLIP_AS_SHORT_RANGE(this->mHandle, value);
 }
-bool GTAblip::IsSelectableOnMap() const
-{
-	int displayId = GET_BLIP_DISPLAY(this->mHandle);
-	return displayId == 2;
-}
 
 Vector3 GTAblip::Position_get() const
 {
@@ -863,8 +858,7 @@ void GTAblip::ShowRoute(bool value)
 // New Blip functions
 void GTAblip::ShowCone(bool toggle, int hudColorIndex)
 {
-    mConeColour = hudColorIndex;
-    SET_BLIP_SHOW_CONE(this->mHandle, toggle, mConeColour);
+    SET_BLIP_SHOW_CONE(this->mHandle, toggle, hudColorIndex);
 }
 
 void GTAblip::SetSelectableOnMap(bool selectable)
@@ -933,8 +927,6 @@ bool GTAblip::Exists() const
 	return DOES_BLIP_EXIST(this->mHandle) != 0;
 }
 void GTAblip::Remove()
-}
-
 {
 	if (DOES_BLIP_EXIST(this->mHandle))
 	{
