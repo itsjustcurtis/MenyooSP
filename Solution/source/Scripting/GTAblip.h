@@ -752,7 +752,7 @@ namespace BlipColour {
 		White,
 		Red,
 		Green,
-		Blue,
+		Blue = 3,
 		Yellow = 66,
 		///<summary>The default RGB value of this color is the same as HUD_COLOUR_WHITE, whose default RGB value is #F0F0F0.</summary>
 		WhiteNotPure = 4,
@@ -895,6 +895,21 @@ public:
 
 	void SetScale(float value);
 
+//New functions
+
+	void ShowCone (bool toggle, int hudColorIndex, float coneWidth = 1.0f, int coneColour = BlipColour::Blue);
+
+	bool IsSelectableOnMap() const;
+	void SetSelectableOnMap(bool selectable);
+
+	void SetPriority(int priority);
+
+	void SetRotationWithFloat(float heading);
+
+	void SyncRotationWithEntity(int entityHandle);
+
+//New functions end here
+
 	void ShowRoute(bool value);
 
 	int Icon() const;
@@ -914,6 +929,7 @@ public:
 
 private:
 	int mHandle;
+	int mConeColour = 3;
 };
 
 

@@ -432,7 +432,31 @@ void GTAentity::IsCollisionEnabled_set(bool value)
 {
 	SET_ENTITY_COLLISION(this->mHandle, value, false);
 }
+void GTAentity::ToggleLandingGear()
+{
+	if (!IS_ENTITY_A_VEHICLE(this->mHandle))
+		return;
 
+	int currentState = GET_LANDING_GEAR_STATE(this->mHandle);
+
+	if (currentState == 0) // Deployed
+	{
+		// If in air, animate the retraction
+		if (IS_ENTITY_IN_AIR(this->mHandle))
+			CONTROL_LANDING_GEAR(this->mHandle, 1); // Retracting
+		else
+			CONTROL_LANDING_GEAR(this->mHandle, 3); // Snap to Retracted
+	}
+	else if (currentState == 3) // Retracted
+	{
+		// If in air, animate the deployment
+		if (IS_ENTITY_IN_AIR(this->mHandle))
+			CONTROL_LANDING_GEAR(this->mHandle, 2); // Deploying
+		else
+			CONTROL_LANDING_GEAR(this->mHandle, 0); // Snap to Deployed
+	}
+}
+// Very real chance this won't work, but this is the ability to toggle landing gear which I've been begging for, for a while.
 
 int GTAentity::NetID() const
 {

@@ -32,6 +32,9 @@ namespace BlipIcon {
 	const std::map<int, std::string> vNames
 	{
 		{ BlipIcon::Standard, "Standard" },
+		{ BlipIcon::Enemy, "Enemy" },
+		{ BlipIcon::Friend, "Friend" },
+		{ BlipIcon::VIP, "VIP" },
 		{ BlipIcon::BigBlip, "BigBlip" },
 		{ BlipIcon::PoliceOfficer, "PoliceOfficer" },
 		{ BlipIcon::PoliceArea, "PoliceArea" },
@@ -196,7 +199,6 @@ namespace BlipIcon {
 		{ BlipIcon::PropertyManagement, "PropertyManagement" },
 		{ BlipIcon::GangHighlight, "GangHighlight" },
 		{ BlipIcon::Altruist, "Altruist" },
-		{ BlipIcon::Enemy, "Enemy" },
 		{ BlipIcon::OnMission, "OnMission" },
 		{ BlipIcon::CashPickup, "CashPickup" },
 		{ BlipIcon::Chop, "Chop" },
@@ -205,7 +207,6 @@ namespace BlipIcon {
 		{ BlipIcon::CashPickupVagos, "CashPickupVagos" },
 		{ BlipIcon::CashPickupPolice, "CashPickupPolice" },
 		{ BlipIcon::Hooker, "Hooker" },
-		{ BlipIcon::Friend, "Friend" },
 		{ BlipIcon::CustodyDropoff, "CustodyDropoff" },
 		{ BlipIcon::OnMissionPolice, "OnMissionPolice" },
 		{ BlipIcon::OnMissionLost, "OnMissionLost" },
@@ -348,7 +349,6 @@ namespace BlipIcon {
 		{ BlipIcon::Truck, "Truck" },
 		{ BlipIcon::SpecialCargo, "SpecialCargo" },
 		{ BlipIcon::Trailer, "Trailer" },
-		{ BlipIcon::VIP, "VIP" },
 		{ BlipIcon::Cargobob, "Cargobob" },
 		{ BlipIcon::AreaCutline, "AreaCutline" },
 		{ BlipIcon::Jammed, "Jammed" },
@@ -830,6 +830,11 @@ void GTAblip::SetShortRange(bool value)
 {
 	SET_BLIP_AS_SHORT_RANGE(this->mHandle, value);
 }
+bool GTAblip::IsSelectableOnMap() const
+{
+	int displayId = GET_BLIP_DISPLAY(this->mHandle);
+	return displayId == 2;
+}
 
 Vector3 GTAblip::Position_get() const
 {
@@ -855,7 +860,29 @@ void GTAblip::ShowRoute(bool value)
 {
 	SET_BLIP_ROUTE(this->mHandle, value);
 }
+// New Blip functions
+void GTAblip::ShowCone(bool toggle, int hudColorIndex)
+{
+    mConeColour = hudColorIndex;
+    SET_BLIP_SHOW_CONE(this->mHandle, toggle, mConeColour);
+}
 
+void GTAblip::SetSelectableOnMap(bool selectable)
+{
+	// Use ID 2 for selectable, 8 for non-selectable
+    SET_BLIP_DISPLAY(this->mHandle, selectable ? 2 : 8);
+}
+
+void GTAblip::SetPriority(int priority)
+{
+    SET_BLIP_PRIORITY(this->mHandle, priority);
+}
+
+void GTAblip::SetRotationWithFloat(float heading)
+{
+    SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, heading);
+}
+// New Blip functions end here.
 int GTAblip::Icon() const
 {
 	return GET_BLIP_SPRITE(this->mHandle);
@@ -906,6 +933,8 @@ bool GTAblip::Exists() const
 	return DOES_BLIP_EXIST(this->mHandle) != 0;
 }
 void GTAblip::Remove()
+}
+
 {
 	if (DOES_BLIP_EXIST(this->mHandle))
 	{
@@ -913,4 +942,13 @@ void GTAblip::Remove()
 		REMOVE_BLIP(&id);
 		this->mHandle = id;
 	}
+}
+//New code to add rotational sync with attached entity.
+void GTAblip::SyncRotationWithEntity(int entityHandle)
+{
+    if (DOES_BLIP_EXIST(this->mHandle) && DOES_ENTITY_EXIST(entityHandle))
+    {
+        float entityHeading = GET_ENTITY_HEADING(entityHandle); // Get entity rotation
+        SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, entityHeading); // Set blip rotation
+    }
 }
