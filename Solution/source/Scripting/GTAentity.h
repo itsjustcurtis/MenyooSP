@@ -122,6 +122,9 @@ public:
 	bool IsVisible() const;
 	void SetVisible(bool value);
 
+	int LandingGearState_get() const;
+	void SetLandingGearState(int state);
+
 	int MaxHealth_get() const;
 	void MaxHealth_set(int value);
 
