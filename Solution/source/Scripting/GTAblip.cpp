@@ -878,9 +878,15 @@ void GTAblip::SetPriority(int priority)
     SET_BLIP_PRIORITY(this->mHandle, priority);
 }
 
+
 void GTAblip::SetRotationWithFloat(float heading)
 {
     SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, heading);
+}
+
+void GTAblip::AddBlipForArea(float x, float y, float z, float width, float height)
+{
+    this->mHandle = ADD_BLIP_FOR_AREA(x, y, z, width, height);
 }
 // New Blip functions end here.
 int GTAblip::Icon() const

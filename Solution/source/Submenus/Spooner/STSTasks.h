@@ -82,7 +82,8 @@ namespace sub::Spooner
     			bool showCone = false;            
     			int hudColorIndex;      
 			bool isSelectableOnMap = true; // true = 2, false = 8
-    			int priority = 2;         
+    			int priority = 2;               
+    			int displayId;   
     			bool syncRotation;  
 			AddBlip();
 			void Run(void* ve) override;
