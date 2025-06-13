@@ -28,6 +28,7 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include <json\single_include\nlohmann\json.hpp>
 
 namespace sub
 {
@@ -3280,7 +3281,7 @@ namespace sub
         void LoadFavoritesFromFile(const std::string& filepath) {
             WIN32_FILE_ATTRIBUTE_DATA fileInfo;
             if (!GetFileAttributesExA(filepath.c_str(), GetFileExInfoStandard, &fileInfo)) {
-                Game::Print::PrintBottomLeft("Favorites file not found.");
+                //Game::Print::PrintBottomLeft("Favorites file not found.");
                 return;
             }
 
@@ -3367,10 +3368,10 @@ namespace sub
             }
         }
         bool showOnlyFaves = 0;
-        constexpr int ITEMS_PER_PAGE = 20; // Adjust for your UI size
+        int ITEMS_PER_PAGE = 20; // Adjust for your UI size
+        const int ITEMS_PER_PAGE_MIN = 10;
+        const int ITEMS_PER_PAGE_MAX = 100;
         static int ptfxPage = 0;
-        static std::unordered_set<std::string> favoriteFXNames;  // Store FX names for quick lookup
-
         void PTFXSub()
         {
             if (!g_favoritesLoaded) {
@@ -3394,12 +3395,15 @@ namespace sub
             int totalItems = static_cast<int>(displayedFx.size());
             int totalPages = (totalItems + ITEMS_PER_PAGE - 1) / ITEMS_PER_PAGE;
             int startIndex = ptfxPage * ITEMS_PER_PAGE;
-            int endIndex = std::min(startIndex + ITEMS_PER_PAGE, totalItems);
+            int endIndex = min(startIndex + ITEMS_PER_PAGE, totalItems);
 
+            bool itemChangeLeft = 0;
+            bool itemChangeRight = 0;
             bool detectKeypress = 0;
             bool bShortcutToggleFavesPressed = 0;
             std::string pageLabel = "Page " + std::to_string(ptfxPage + 1) + " / " + std::to_string(totalPages);
             AddTitle("FX - " + pageLabel);
+            AddNumber("Items Per Page", ITEMS_PER_PAGE, 0, null, itemChangeRight, itemChangeLeft);
             AddOption("Favourites", detectKeypress, nullFunc, SUB::PTFX_FAVORITES); if (detectKeypress) 
                 g_lastSubmenuSource = Menu::currentsub_ar[Menu::currentsub_ar_index];
             AddToggle("Only Show Favorites", showOnlyFaves);
@@ -3418,7 +3422,7 @@ namespace sub
                 break; // subception
             }
             }
-
+         
             for (int i = startIndex; i < endIndex; ++i)
             {
                 const auto& current = displayedFx[i];
@@ -3458,14 +3462,26 @@ namespace sub
                     }
                 }
             }
-            // Block navigation input if on first page
-            if (ptfxPage + 1 != 0 && totalPages != 0)
+            // Respond to left/right input for modifying items per page
+            if (itemChangeRight)
             {
-                if (globalLeftPress())
+                if (ITEMS_PER_PAGE < ITEMS_PER_PAGE_MAX)
+                    ITEMS_PER_PAGE += 1;
+            }
+
+            if (itemChangeLeft)
+            {
+                if (ITEMS_PER_PAGE > ITEMS_PER_PAGE_MIN)
+                    ITEMS_PER_PAGE -= 1;
+            }
+            // Block navigation input if on first page
+            if (ptfxPage + 1 != 0 && totalPages != 0 && *Menu::currentopATM != 1)
+            {
+                if (IsOptionLPressed())
                 {
                     ptfxPage = (ptfxPage - 1 + totalPages) % totalPages;
                 }
-                if (globalRightPress())
+                if (IsOptionRPressed())
                 {
                     ptfxPage = (ptfxPage + 1) % totalPages;
                 }
@@ -3473,6 +3489,3 @@ namespace sub
         }
     }
 }
-
-
-
