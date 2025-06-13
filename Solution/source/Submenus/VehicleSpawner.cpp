@@ -47,11 +47,20 @@
 
 namespace sub
 {
+	Blip blip_g;
+	// Call this to get a random number from the list
+	int GetRandomValue()
+	{
+		static const std::vector<int> values = { 396, 303, 304, 397, 394, 462, 42, 58, 60, 85, 141, 136, 163, 164, 197 };
+		int index = std::rand() % values.size();
+		return values[index];
+	}
 	// Vehicle - spawn function
 	int FuncSpawnVehicle_(GTAmodel::Model model, GTAped ped, bool deleteOld, bool warpIntoVehicle)
 	{
 		Vehicle newcar = 0;
-
+		GTAentity selfPed = PLAYER_PED_ID();
+		Vector3 pedsCoords = selfPed.Position_get();
 		Vector3 oldVelocity;
 		Vector3 Pos1, Pos2;
 		Vehicle oldcar = 0;
@@ -168,8 +177,8 @@ namespace sub
 			{
 				if (warpIntoVehicle)
 					SET_PED_INTO_VEHICLE(ped.Handle(), newcar, (int)GTAvehicle(newcar).FirstFreeSeat(SEAT_DRIVER));
-					SET_ENTITY_COLLISION(newcar, true, true);
-					RESET_ENTITY_ALPHA(newcar);
+				SET_ENTITY_COLLISION(newcar, true, true);
+				RESET_ENTITY_ALPHA(newcar);
 			}
 			//SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(newcar, 5);
 			//SET_VEHICLE_NUMBER_PLATE_TEXT(newcar, "MENYOO");
@@ -1154,16 +1163,35 @@ namespace sub
 
 		void AddVSpawnOption_(const std::string& text, const GTAmodel::Model& vehModel, Ped ped)
 		{
+			Vector3 toBeNodeCoordinates = GTAped(ped).Position_get();
 			bool pressed = false;
 			AddOption(text, pressed, nullFunc, -1, false, false); if (pressed)
 			{
 				Vehicle vehicle = FuncSpawnVehicle_(vehModel, ped, _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_autoSit);
-
 				set_vehicle_max_upgrades(vehicle, _globalSpawnVehicle_autoUpgrade, _globalSpawnVehicle_invincible,
 					_globalSpawnVehicle_plateType, _globalSpawnVehicle_plateTexter_value == 0 ? _globalSpawnVehicle_plateText : "", _globalSpawnVehicle_neonToggle,
 					_globalSpawnVehicle_neonCol.R, _globalSpawnVehicle_neonCol.G, _globalSpawnVehicle_neonCol.B,
 					_globalSpawnVehicle_PrimCol, _globalSpawnVehicle_SecCol);
+				if (_globaladdBlip)
+				{
+					blip_g = ADD_BLIP_FOR_ENTITY(vehicle);
+					HUD::SET_BLIP_SPRITE(blip_g, GetRandomValue());
+					Game::Print::PrintBottomLeft("Added a blip.");
+				}
+				if (_globalWarpNear)
+				{
+					Vector3_t outPos;
 
+					for (int i = 1; i < 40; i++)
+					{
+						GET_NTH_CLOSEST_VEHICLE_NODE(toBeNodeCoordinates.x, toBeNodeCoordinates.y, toBeNodeCoordinates.z, i, &outPos, 1, 0x40400000, 0);
+
+						if (!IS_POINT_OBSCURED_BY_A_MISSION_ENTITY(outPos.x, outPos.y, outPos.z, 5.0f, 5.0f, 5.0f, 0))
+						{
+							SET_ENTITY_COORDS(vehicle, outPos.x, outPos.y, outPos.z, 0, 0, 0, 0);
+						}
+					}
+				}
 				if (!NETWORK_IS_IN_SESSION() && !_globalSpawnVehicle_persistent)
 					SET_VEHICLE_AS_NO_LONGER_NEEDED(&vehicle);
 			}
@@ -1283,6 +1311,8 @@ namespace sub
 		AddTitle("Spawn Settings");
 		AddToggle("Delete Old Vehicle", _globalSpawnVehicle_deleteOld);
 		AddToggle("Auto-Sit In Vehicle", _globalSpawnVehicle_autoSit);
+		AddToggle("Add Blip For Spawned Vehicles", _globaladdBlip);
+		AddToggle("Spawn At Nearest Node", _globalWarpNear);
 		AddToggle("Spawn Pre-Upgraded", _globalSpawnVehicle_autoUpgrade);
 		AddToggle("Spawn Invincible", _globalSpawnVehicle_invincible);
 		AddToggle("Spawn Persistent", _globalSpawnVehicle_persistent);
@@ -2692,6 +2722,3 @@ namespace sub
 	}
 
 }
-
-
-
