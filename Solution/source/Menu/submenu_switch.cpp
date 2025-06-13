@@ -79,6 +79,7 @@ void Menu::submenu_switch()
 	case SUB::PEDEXPLOSIONSUB:			sub::PedExplosionSub(); break;
 	case SUB::ATTACHFUNNYOBJECTSUB:		sub::AttachFunnyObjectSub(); break;
 	case SUB::PTFXSUB:					sub::Ptfx_catind::PTFXSub(); break;
+	case SUB::PTFX_FAVORITES:			sub::Ptfx_catind::PTFXFavourites(); break;
 	case SUB::CLEARAREA:				sub::ClearAreaSub(); break;
 	case SUB::PLAYEROPS:				sub::PlayerOps_(); break;
 	case SUB::ANIMATIONSUB:				sub::AnimationSub_(); break;
