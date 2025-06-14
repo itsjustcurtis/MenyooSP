@@ -136,6 +136,8 @@ void Menu::submenu_switch()
 	case SUB::SPAWNVEHICLE:						sub::SpawnVehicle_(); break;
 	case SUB::SPAWNVEHICLE_OPTIONS:				sub::SpawnVehicle_Options(); break;
 	case SUB::SPAWNVEHICLE_ALLCATS:				sub::SpawnVehicle_AllCatsSub(); break;
+	case SUB::SPAWNVEHICLEDLC:				sub::SpawnVehicle_DLC(); break;
+	case SUB::SPAWNVEHICLE_DLC_SELECTION:		sub::SpawnVehicle_DLC_Selection(); break;
 	case SUB::SPAWNVEHICLE_FAVOURITES:			sub::SpawnVehicle_Favourites(); break;
 	case SUB::FUNNYVEHICLES:					sub::FunnyVehicles_catind::Sub_FunnyVehicles(); break;
 	case SUB::MODSHOP:					sub::ModShop_(); break;
