@@ -48,13 +48,6 @@
 namespace sub
 {
 	Blip blip_g;
-	// Call this to get a random number from the list
-	int GetRandomValue()
-	{
-		static const std::vector<int> values = { 396, 303, 304, 397, 394, 462, 42, 58, 60, 85, 141, 136, 163, 164, 197 };
-		int index = std::rand() % values.size();
-		return values[index];
-	}
 	// Vehicle - spawn function
 	int FuncSpawnVehicle_(GTAmodel::Model model, GTAped ped, bool deleteOld, bool warpIntoVehicle)
 	{
