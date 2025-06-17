@@ -1168,7 +1168,7 @@ namespace sub
 				if (_globaladdBlip)
 				{
 					blip_g = ADD_BLIP_FOR_ENTITY(vehicle);
-					HUD::SET_BLIP_SPRITE(blip_g, GetRandomValue());
+					HUD::SET_BLIP_SPRITE(blip_g, GetRandomSpriteId());
 					Game::Print::PrintBottomLeft("Added a blip.");
 				}
 				if (_globalWarpNear)
