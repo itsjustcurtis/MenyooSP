@@ -300,7 +300,7 @@ extern std::map<Ped, std::string> g_pedList_facialMood;
 extern std::string get_ped_facial_mood(GTAentity ped);
 void set_ped_facial_mood(GTAentity ped, const std::string& animName);
 void clear_ped_facial_mood(GTAentity ped);
-
+extern int GetRandomSpriteId();
 
 
 #pragma endregion
