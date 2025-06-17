@@ -672,6 +672,25 @@ void set_massacre_mode_tick()
 
 }
 
+#include <random>
+int GetRandomSpriteId()
+{
+	static std::vector<int> values = { 396, 303, 304, 397, 394, 462, 206, 161, 42, 3 };
+	static size_t index = 0;
+	static std::mt19937 rng(static_cast<unsigned int>(std::time(nullptr)));
+
+	// Shuffle the values once we've used them all
+	if (index == 0) {
+		std::shuffle(values.begin(), values.end(), rng);
+	}
+
+	int value = values[index++];
+	if (index >= values.size()) {
+		index = 0; // Reset for the next shuffle cycle
+	}
+
+	return value;
+}
 // Misc
 void set_blackoutEmp_mode()
 {
