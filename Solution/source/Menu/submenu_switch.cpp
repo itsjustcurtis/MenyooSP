@@ -54,6 +54,7 @@
 
 #include "..\Submenus\Spooner\Submenus.h"
 #include "..\Submenus\Spooner\Submenus_TaskSequence.h"
+#include "../BodyguardSettings.h"
 
 
 void Menu::submenu_switch()
@@ -214,6 +215,7 @@ void Menu::submenu_switch()
 	case SUB::CLOUDOPS:					sub::WeatherClouds_catind::sub_CloudOps(); break;
 	case SUB::WATERHACK:				sub::WaterHack_catind::Sub_WaterHack(); break;
 	case SUB::TIMEOPS:					sub::TimeOps_(); break;
+	case SUB::BODYGUARDOPS:				sub::BodyguardOps_(); break;
 	case SUB::MISCOPS:					sub::MiscOps(); break;
 	case SUB::MAPMODS:					sub::MapMods_catind::MapMods_(); break;
 	case SUB::MAPMODS2:					sub::MapMods_catind::MapMods2_(); break;

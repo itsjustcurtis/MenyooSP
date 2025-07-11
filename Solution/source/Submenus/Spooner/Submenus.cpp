@@ -1149,6 +1149,18 @@ namespace sub
 			{
 				SelectedEntity.Handle.FreezePosition(!SelectedEntity.Handle.IsPositionFrozen());
 			}
+			if (SelectedEntity.Type == EntityType::VEHICLE && SelectedEntity.Handle.GetLandingGearState() != -1)
+			{
+				bool bLandingGearDown = (SelectedEntity.Handle.GetLandingGearState() == 0); // 0 = Deployed
+				bool oldValue = bLandingGearDown;
+
+				AddToggle("Landing Gear", bLandingGearDown);
+
+				if (bLandingGearDown != oldValue)
+				{
+					SelectedEntity.Handle.SetLandingGear(bLandingGearDown);
+				}
+			}
 
 			if (SelectedEntity.Type == EntityType::PROP)
 			{

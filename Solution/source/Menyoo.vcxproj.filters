@@ -313,6 +313,10 @@
     <ClCompile Include="Menu\Language.cpp">
       <Filter>Menu</Filter>
     </ClCompile>
+    <ClCompile Include="Memory\Hooking.cpp" />
+    <ClCompile Include="BodyguardSettings.cpp">
+      <Filter>Submenus\Bodyguards</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util\ExePath.h">
@@ -643,6 +647,10 @@
     <ClInclude Include="Menu\Language.h">
       <Filter>Menu</Filter>
     </ClInclude>
+    <ClInclude Include="Memory\Hooking.h" />
+    <ClInclude Include="BodyguardSettings.h">
+      <Filter>Submenus\Bodyguards</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Submenus">
@@ -704,6 +712,9 @@
     </Filter>
     <Filter Include="_external">
       <UniqueIdentifier>{a78b4725-1807-4c82-90fb-f13301a71b84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Submenus\Bodyguards">
+      <UniqueIdentifier>{5a115989-15da-4184-875e-ad22930d76be}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -288,6 +288,32 @@ void GTAentity::MaxHealth_set(int value)
 	SET_ENTITY_MAX_HEALTH(this->mHandle, value);
 }
 
+void GTAentity::SetLandingGear(bool deployed)
+{
+	if (!IsVehicle())
+		return;
+
+	int state = deployed ? 0 : 3;  // 0 = deployed, 3 = retracted
+	VEHICLE::CONTROL_LANDING_GEAR(this->GetHandle(), state);
+}
+
+int GTAentity::GetLandingGearState() const
+{
+	if (!IsVehicle())
+		return -1;
+
+	return VEHICLE::GET_LANDING_GEAR_STATE(this->GetHandle());
+}
+
+bool GTAentity::HasLandingGear() const
+{
+	if (!IsVehicle())
+		return false;
+
+	int state = VEHICLE::GET_LANDING_GEAR_STATE(this->mHandle);
+	return state >= 0 && state <= 3;
+}
+
 GTAmodel::Model GTAentity::Model() const
 {
 	return GET_ENTITY_MODEL(this->mHandle);
@@ -296,7 +322,7 @@ GTAmodel::ModelDimensions GTAentity::ModelDimensions() const
 {
 	return this->Model().Dimensions();
 }
-void GTAentity::ModelDimensions(Vector3 &dim1, Vector3 &dim2) const
+void GTAentity::ModelDimensions(Vector3& dim1, Vector3& dim2) const
 {
 	this->Model().Dimensions(dim1, dim2);
 }
@@ -370,7 +396,7 @@ int GTAentity::Alpha_get() const
 }
 void GTAentity::Alpha_set(int value)
 {
-	if(value == 255)
+	if (value == 255)
 		RESET_ENTITY_ALPHA(this->mHandle);
 	else
 		SET_ENTITY_ALPHA(this->mHandle, value, 0);
@@ -432,31 +458,7 @@ void GTAentity::IsCollisionEnabled_set(bool value)
 {
 	SET_ENTITY_COLLISION(this->mHandle, value, false);
 }
-void GTAentity::ToggleLandingGear()
-{
-	if (!IS_ENTITY_A_VEHICLE(this->mHandle))
-		return;
 
-	int currentState = GET_LANDING_GEAR_STATE(this->mHandle);
-
-	if (currentState == 0) // Deployed
-	{
-		// If in air, animate the retraction
-		if (IS_ENTITY_IN_AIR(this->mHandle))
-			CONTROL_LANDING_GEAR(this->mHandle, 1); // Retracting
-		else
-			CONTROL_LANDING_GEAR(this->mHandle, 3); // Snap to Retracted
-	}
-	else if (currentState == 3) // Retracted
-	{
-		// If in air, animate the deployment
-		if (IS_ENTITY_IN_AIR(this->mHandle))
-			CONTROL_LANDING_GEAR(this->mHandle, 2); // Deploying
-		else
-			CONTROL_LANDING_GEAR(this->mHandle, 0); // Snap to Deployed
-	}
-}
-// Very real chance this won't work, but this is the ability to toggle landing gear which I've been begging for, for a while.
 
 int GTAentity::NetID() const
 {
@@ -537,7 +539,7 @@ Vector3 GTAentity::GetOffsetFromBoneInWorldCoords(int boneIndex, const Vector3& 
 			const Vector3& front = Vector3(Addr[4], Addr[5], Addr[6]);
 			const Vector3& up = Vector3(Addr[8], Addr[9], Addr[10]);
 			const Vector3& boneOff = Vector3(Addr[12], Addr[13], Addr[14]);
-			const Vector3& vehOffset = boneOff + right*offset.x + front*offset.y + up*offset.z;
+			const Vector3& vehOffset = boneOff + right * offset.x + front * offset.y + up * offset.z;
 			return this->GetOffsetInWorldCoords(vehOffset);
 		}
 	}
@@ -837,5 +839,3 @@ void GTAentity::SetOnlyDamagedByPlayer(bool value)
 
 	SET_ENTITY_ONLY_DAMAGED_BY_PLAYER(this->mHandle, value);
 }
-
-

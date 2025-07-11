@@ -1,3 +1,0 @@
-/menyooStuff/Graphics/Vehicle Previews
-
-Add png files here (recommended size is 256x128) for use with the vehicle spawner's preview imaging.

@@ -27,6 +27,7 @@
 
 #include <string>
 #include <map>
+#include <algorithm>
 
 namespace BlipIcon {
 	const std::map<int, std::string> vNames
@@ -78,6 +79,7 @@ namespace BlipIcon {
 		{ BlipIcon::HeistStore, "HeistStore" },
 		{ BlipIcon::PoliceStation, "PoliceStation" },
 		{ BlipIcon::Hospital, "Hospital" },
+		{ BlipIcon::Elevator,"Elevator"},
 		{ BlipIcon::Helicopter, "Helicopter" },
 		{ BlipIcon::StrangersAndFreaks, "StrangersAndFreaks" },
 		{ BlipIcon::ArmoredTruck, "ArmoredTruck" },
@@ -591,6 +593,8 @@ namespace BlipIcon {
 		{ BlipIcon::SubPeriscope, "Sub Periscope" },
 		{ BlipIcon::SubMissiles, "Sub Missiles" },
 		{ BlipIcon::Painting, "Painting" },
+		{ BlipIcon::LSCarMeet, "LS Car Meet"},
+		{ BlipIcon::CarTest, "Steering Wheel"},
 		{ BlipIcon::AutoShop, "Auto Shop" },
 		{ BlipIcon::Anchor, "Anchor" },
 		{ BlipIcon::PrizeBox, "Prize Box" },
@@ -856,25 +860,20 @@ void GTAblip::ShowRoute(bool value)
 	SET_BLIP_ROUTE(this->mHandle, value);
 }
 // New Blip functions
-void GTAblip::ShowCone(bool toggle, int hudColorIndex)
-{
-    SET_BLIP_SHOW_CONE(this->mHandle, toggle, hudColorIndex);
-}
-
-void GTAblip::SetSelectableOnMap(bool selectable)
-{
-	// Use ID 2 for selectable, 8 for non-selectable
-    SET_BLIP_DISPLAY(this->mHandle, selectable ? 2 : 8);
-}
 
 void GTAblip::SetPriority(int priority)
 {
-    SET_BLIP_PRIORITY(this->mHandle, priority);
+	mPriority = priority;
+	HUD::SET_BLIP_PRIORITY(mHandle, mPriority);
 }
 
-void GTAblip::SetRotationWithFloat(float heading)
+int GTAblip::GetPriority() const
 {
-    SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, heading);
+	return mPriority;
+}
+void GTAblip::SetDisplayMode(int value)
+{
+	SET_BLIP_DISPLAY(this->mHandle, value);
 }
 // New Blip functions end here.
 int GTAblip::Icon() const
@@ -934,13 +933,4 @@ void GTAblip::Remove()
 		REMOVE_BLIP(&id);
 		this->mHandle = id;
 	}
-}
-//New code to add rotational sync with attached entity.
-void GTAblip::SyncRotationWithEntity(int entityHandle)
-{
-    if (DOES_BLIP_EXIST(this->mHandle) && DOES_ENTITY_EXIST(entityHandle))
-    {
-        float entityHeading = GET_ENTITY_HEADING(entityHandle); // Get entity rotation
-        SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, entityHeading); // Set blip rotation
-    }
 }

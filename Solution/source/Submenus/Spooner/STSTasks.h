@@ -79,11 +79,9 @@ namespace sub::Spooner
 			bool showRoute;
 			int showNumber;
 			// New functions
-    			bool showCone = false;            
-    			int hudColorIndex; 
-				int displayId;
-    			int priority = 2;         
-    			bool syncRotation;  
+			int priority = 2;
+			int displayMode = 2;
+			// New functions end here
 			AddBlip();
 			void Run(void* ve) override;
 		};

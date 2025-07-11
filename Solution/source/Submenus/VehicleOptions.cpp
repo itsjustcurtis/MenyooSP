@@ -145,9 +145,9 @@ namespace sub
 			AddTexter("CMOD_MOD_MNT", fixCarTexterVal, fixCarTexter, VehicleOpsFixCar_, bFixCar_plus, bFixCar_minus, true); // Fix & Wash
 		if (myVehicleModel.IsBoat())
 			AddLocal("Anchor Boat", myVehicle.IsBoatAnchored(), bToggleBoatAnchor, bToggleBoatAnchor);
-		AddOption("Teleport Into Closest Vehicle", VehicleOpsTeleportClosestCar_);
 		AddOption("Vehicle Spawner", obj_funny_veh_so_frz__off, nullFunc, SUB::SPAWNVEHICLE);
 		AddOption("Menyoo Customs", VehicleOps_sub_modshop, nullFunc, -1, true);
+		AddOption("Teleport Into Closest Vehicle", VehicleOpsTeleportClosestCar_);
 		AddOption("Vehicle Weapons", null, nullFunc, SUB::VEHICLEWEAPONS);
 		AddOption("Vehicle Multipliers", null, nullFunc, SUB::VEHICLEMULTIPLIERS);
 		AddOption("Speedometers", null, nullFunc, SUB::VEHICLESPEEDOS);

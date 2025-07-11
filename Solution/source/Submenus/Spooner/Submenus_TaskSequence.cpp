@@ -167,19 +167,17 @@ namespace sub::Spooner
 				if (number_plus) { if (tskPtr->showNumber < INT_MAX) tskPtr->showNumber++; }
 				if (number_minus) { if (tskPtr->showNumber > INT_MIN) tskPtr->showNumber--; }
 
-				AddToggle("Show Cone", tskPtr->showCone);
-				
-    				bool displayId_plus = false, displayId_minus = false;
-   				AddNumber("Display ID", tskPtr->displayId, 1, null, displayId_plus, displayId_minus);
-    				if (displayId_plus) { if (tskPtr->displayId < INT_MAX) tskPtr->displayId++; }
-    				if (displayId_minus) { if (tskPtr->displayId > 0) tskPtr->displayId--; }
+				// New functions
+				bool priority_plus = false, priority_minus = false;
+				bool dummy = false;
 
-    				bool priority_plus = false, priority_minus = false;
-    				AddNumber("Priority", tskPtr->priority, 1, null, priority_plus, priority_minus);
-    				if (priority_plus) { if (tskPtr->priority < INT_MAX) tskPtr->priority++; }
-    				if (priority_minus) { if (tskPtr->priority > 0) tskPtr->priority--; }
+				bool nonSelectable = (tskPtr->displayMode == 8);
+				AddToggle("Non-Selectable", nonSelectable);
+				tskPtr->displayMode = nonSelectable ? 8 : 2;
 
-    AddToggle("Sync Rotation With Entity", tskPtr->syncRotation);
+				AddNumber("Priority", tskPtr->priority, 0, dummy, priority_plus, priority_minus);
+				if (priority_plus && tskPtr->priority < 10) tskPtr->priority++;
+				if (priority_minus && tskPtr->priority > 0) tskPtr->priority--;
 			}
 			void RemoveBlip()
 			{
