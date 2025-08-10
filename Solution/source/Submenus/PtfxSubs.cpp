@@ -3477,11 +3477,11 @@ namespace sub
             // Block navigation input if on first page
             if (ptfxPage + 1 != 0 && totalPages != 0 && *Menu::currentopATM != 1)
             {
-                if (IsOptionLPressed())
+                if (itemChangeLeft)
                 {
                     ptfxPage = (ptfxPage - 1 + totalPages) % totalPages;
                 }
-                if (IsOptionRPressed())
+                if (itemChangeRight)
                 {
                     ptfxPage = (ptfxPage + 1) % totalPages;
                 }
