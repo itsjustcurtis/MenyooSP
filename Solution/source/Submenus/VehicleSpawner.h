@@ -56,6 +56,8 @@ namespace sub
 	bool SpawnVehicle_AddVehicleModelToFavourites(GTAmodel::Model vehModel, const std::string& customName);
 	bool SpawnVehicle_RemoveVehicleModelFromFavourites(GTAmodel::Model vehModel);
 
+	void SpawnVehicle_DLC();
+	void SpawnVehicle_DLC_Selection();
 	void SpawnVehicle_AllCatsSub();
 	void SpawnVehicle_Favourites();
 
@@ -77,6 +79,3 @@ namespace sub
 	}
 
 }
-
-
-

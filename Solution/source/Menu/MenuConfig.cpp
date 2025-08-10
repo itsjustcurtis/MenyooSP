@@ -294,6 +294,8 @@ void MenuConfig::ConfigRead()
 	mult69_6 = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_brakes", mult69_6);
 	mult69_7 = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_handling", mult69_7);
 
+	_globaladdBlip = ini.GetBoolValue(section_haxValues.c_str(), "add_blip_to_vehicle", _globaladdBlip);
+	_globalWarpNear = ini.GetBoolValue(section_haxValues.c_str(), "warp_vehicle_nearby", _globalWarpNear);
 	_globalSpawnVehicle_drawBmps = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_previews", _globalSpawnVehicle_drawBmps);
 	_globalSpawnVehicle_plateText = ini.GetValue(section_haxValues.c_str(), "vehicle_spawner_plate_text", _globalSpawnVehicle_plateText.c_str());
 	_globalSpawnVehicle_plateTexter_value = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_text_texter_value", _globalSpawnVehicle_plateTexter_value);
@@ -555,6 +557,8 @@ void MenuConfig::ConfigSave()
 	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_brakes", mult69_6);
 	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_handling", mult69_7);
 
+	ini.SetBoolValue(section_haxValues.c_str(), "add_blip_to_vehicle", _globaladdBlip);
+	ini.SetBoolValue(section_haxValues.c_str(), "warp_vehicle_nearby", _globalWarpNear);
 	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_previews", _globalSpawnVehicle_drawBmps);
 	ini.SetValue(section_haxValues.c_str(), "vehicle_spawner_plate_text", _globalSpawnVehicle_plateText.c_str());
 	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_text_texter_value", _globalSpawnVehicle_plateTexter_value);

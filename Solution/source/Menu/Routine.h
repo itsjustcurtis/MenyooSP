@@ -91,7 +91,7 @@ extern std::string dict, dict2, dict3;
 extern std::string _globalSpawnVehicle_plateText;
 extern INT8 _globalSpawnVehicle_plateType, _globalSpawnVehicle_plateTexter_value;
 extern RgbS _globalSpawnVehicle_neonCol;
-extern bool _globalSpawnVehicle_autoSit, _globalSpawnVehicle_autoUpgrade, _globalSpawnVehicle_invincible, _globalSpawnVehicle_persistent, _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_neonToggle, _globalLSC_Customs;
+extern bool _globalSpawnVehicle_autoSit, _globalWarpNear, _globaladdBlip, _globalSpawnVehicle_autoUpgrade, _globalSpawnVehicle_invincible, _globalSpawnVehicle_persistent, _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_neonToggle, _globalLSC_Customs;
 extern INT16 _globalSpawnVehicle_PrimCol, _globalSpawnVehicle_SecCol;
 extern bool _globalSpawnVehicle_drawBmps;
 extern FLOAT _globalClearArea_radius;
@@ -300,7 +300,7 @@ extern std::map<Ped, std::string> g_pedList_facialMood;
 extern std::string get_ped_facial_mood(GTAentity ped);
 void set_ped_facial_mood(GTAentity ped, const std::string& animName);
 void clear_ped_facial_mood(GTAentity ped);
-
+extern int GetRandomSpriteId();
 
 
 #pragma endregion

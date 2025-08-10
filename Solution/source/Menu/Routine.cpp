@@ -269,7 +269,7 @@ std::string dict, dict2, dict3;
 std::string _globalSpawnVehicle_plateText = "MENYOO";
 INT8 _globalSpawnVehicle_plateType = 5, _globalSpawnVehicle_plateTexter_value = 0;
 RgbS _globalSpawnVehicle_neonCol = { 0, 255, 0 };
-bool _globalSpawnVehicle_autoSit = 1, _globalSpawnVehicle_autoUpgrade = 1, _globalSpawnVehicle_invincible = 1, _globalSpawnVehicle_persistent = 0, _globalSpawnVehicle_deleteOld = 0, _globalSpawnVehicle_neonToggle = 0, _globalLSC_Customs = 1;
+bool _globalSpawnVehicle_autoSit = 1, _globalWarpNear = 0, _globaladdBlip = 0, _globalSpawnVehicle_autoUpgrade = 1, _globalSpawnVehicle_invincible = 1, _globalSpawnVehicle_persistent = 0, _globalSpawnVehicle_deleteOld = 0, _globalSpawnVehicle_neonToggle = 0, _globalLSC_Customs = 1;
 INT16 _globalSpawnVehicle_PrimCol = -3, _globalSpawnVehicle_SecCol = -3;
 bool _globalSpawnVehicle_drawBmps = true;
 
@@ -680,6 +680,25 @@ void set_massacre_mode_tick()
 
 }
 
+#include <random>
+int GetRandomSpriteId()
+{
+	static std::vector<int> values = { 396, 303, 304, 397, 394, 462, 206, 161, 42, 3 };
+	static size_t index = 0;
+	static std::mt19937 rng(static_cast<unsigned int>(std::time(nullptr)));
+
+	// Shuffle the values once we've used them all
+	if (index == 0) {
+		std::shuffle(values.begin(), values.end(), rng);
+	}
+
+	int value = values[index++];
+	if (index >= values.size()) {
+		index = 0; // Reset for the next shuffle cycle
+	}
+
+	return value;
+}
 // Misc
 void set_blackoutEmp_mode()
 {
