@@ -1206,7 +1206,7 @@ namespace sub
 		AddOption("Spawn Settings", null, nullFunc, SUB::SPAWNVEHICLE_OPTIONS);
 		AddOption("Saved Vehicles", null, nullFunc, SUB::VEHICLE_SAVER);
 		AddOption("Favourites", null, nullFunc, SUB::SPAWNVEHICLE_FAVOURITES);
-		AddOption("DLC Vehicles", null, nullFunc, SUB::SPAWNVEHICLE_DLC_SELECTION);
+		//AddOption("DLC Vehicles", null, nullFunc, SUB::SPAWNVEHICLE_DLC_SELECTION);
 		AddOption("Funny Vehicles (Old)", null, nullFunc, SUB::FUNNYVEHICLES);
 
 		AddBreak("---Cars---");
@@ -1751,7 +1751,7 @@ namespace sub
 		//if (Menu::currentop > Menu::printingop) Menu::Up();
 
 	}
-
+	//keeping this code, but purely for future reference, access in the menu has been blocked
 	const std::vector<std::string> CAPTIONS_CUNNINGSTUNTS{ "Nagasaki BF400", "Grotti Brioso R/A", "Vapid Desert Raid", "Emperor ETR1", "Western Gargoyle", "Obey Omnis", "Annis RE-7B", "Vapid Trophy Truck", "Lampadati Tropos Rallye", "Progen Tyrus", "Western Cliffhanger", "Ocelot Lynx", "Declasse Drift Tampa", "MTL Dune", "Vapid Contender" };
 
 	const std::vector<std::string> CAPTIONS_BIKERSUPDATE{ "LCC Avarus", "Nagasaki Chimera", "Shitzu Defiler", "Pegassi Faggio Mod", "Pegassi Faggio Sport", "Shitzu Hakuchou Drag Bike", "Maibatsu Manchez", "Western Nightblade", "Western Rat Bike", "Nagasaki Street Blazer", "Western Wolfsbane", "Western Zombie Bobber", "Western Zombie Chopper", "Western Daemon (Custom)", "BF Raptor", "Pegassi Vortex", "LCC Sanctus", "Declasse Tornado Rat Rod", "Nagasaki Shotaro", "Pegassi Esskey", "Bravado Youga Classic" };
