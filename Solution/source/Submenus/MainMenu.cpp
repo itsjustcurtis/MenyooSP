@@ -29,6 +29,7 @@ namespace sub
 		AddOption("Weapon Options", null, nullFunc, SUB::WEAPONOPS);
 		AddOption("Weather Options", null, nullFunc, SUB::WEATHEROPS);
 		AddOption("Time Options", null, nullFunc, SUB::TIMEOPS);
+		AddOption("Bodyguard Options (pre-alpha)", null, nullFunc, SUB::BODYGUARDOPS);
 		AddOption("Object Spooner", null, nullFunc, SUB::SPOONER_MAIN);
 		//AddOption("Lighting Options", null, nullFunc, SUB::OBJECTSPAWNER_LIGHTINGOPS);
 		AddOption("Misc Options", null, nullFunc, SUB::MISCOPS);
