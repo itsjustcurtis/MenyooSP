@@ -27,15 +27,11 @@
 
 #include <string>
 #include <map>
-#include <algorithm>
 
 namespace BlipIcon {
 	const std::map<int, std::string> vNames
 	{
 		{ BlipIcon::Standard, "Standard" },
-		{ BlipIcon::Enemy, "Enemy" },
-		{ BlipIcon::Friend, "Friend" },
-		{ BlipIcon::VIP, "VIP" },
 		{ BlipIcon::BigBlip, "BigBlip" },
 		{ BlipIcon::PoliceOfficer, "PoliceOfficer" },
 		{ BlipIcon::PoliceArea, "PoliceArea" },
@@ -79,7 +75,6 @@ namespace BlipIcon {
 		{ BlipIcon::HeistStore, "HeistStore" },
 		{ BlipIcon::PoliceStation, "PoliceStation" },
 		{ BlipIcon::Hospital, "Hospital" },
-		{ BlipIcon::Elevator,"Elevator"},
 		{ BlipIcon::Helicopter, "Helicopter" },
 		{ BlipIcon::StrangersAndFreaks, "StrangersAndFreaks" },
 		{ BlipIcon::ArmoredTruck, "ArmoredTruck" },
@@ -201,6 +196,7 @@ namespace BlipIcon {
 		{ BlipIcon::PropertyManagement, "PropertyManagement" },
 		{ BlipIcon::GangHighlight, "GangHighlight" },
 		{ BlipIcon::Altruist, "Altruist" },
+		{ BlipIcon::Enemy, "Enemy" },
 		{ BlipIcon::OnMission, "OnMission" },
 		{ BlipIcon::CashPickup, "CashPickup" },
 		{ BlipIcon::Chop, "Chop" },
@@ -209,6 +205,7 @@ namespace BlipIcon {
 		{ BlipIcon::CashPickupVagos, "CashPickupVagos" },
 		{ BlipIcon::CashPickupPolice, "CashPickupPolice" },
 		{ BlipIcon::Hooker, "Hooker" },
+		{ BlipIcon::Friend, "Friend" },
 		{ BlipIcon::CustodyDropoff, "CustodyDropoff" },
 		{ BlipIcon::OnMissionPolice, "OnMissionPolice" },
 		{ BlipIcon::OnMissionLost, "OnMissionLost" },
@@ -351,6 +348,7 @@ namespace BlipIcon {
 		{ BlipIcon::Truck, "Truck" },
 		{ BlipIcon::SpecialCargo, "SpecialCargo" },
 		{ BlipIcon::Trailer, "Trailer" },
+		{ BlipIcon::VIP, "VIP" },
 		{ BlipIcon::Cargobob, "Cargobob" },
 		{ BlipIcon::AreaCutline, "AreaCutline" },
 		{ BlipIcon::Jammed, "Jammed" },
@@ -593,8 +591,6 @@ namespace BlipIcon {
 		{ BlipIcon::SubPeriscope, "Sub Periscope" },
 		{ BlipIcon::SubMissiles, "Sub Missiles" },
 		{ BlipIcon::Painting, "Painting" },
-		{ BlipIcon::LSCarMeet, "LS Car Meet"},
-		{ BlipIcon::CarTest, "Steering Wheel"},
 		{ BlipIcon::AutoShop, "Auto Shop" },
 		{ BlipIcon::Anchor, "Anchor" },
 		{ BlipIcon::PrizeBox, "Prize Box" },
@@ -859,23 +855,7 @@ void GTAblip::ShowRoute(bool value)
 {
 	SET_BLIP_ROUTE(this->mHandle, value);
 }
-// New Blip functions
 
-void GTAblip::SetPriority(int priority)
-{
-	mPriority = priority;
-	HUD::SET_BLIP_PRIORITY(mHandle, mPriority);
-}
-
-int GTAblip::GetPriority() const
-{
-	return mPriority;
-}
-void GTAblip::SetDisplayMode(int value)
-{
-	SET_BLIP_DISPLAY(this->mHandle, value);
-}
-// New Blip functions end here.
 int GTAblip::Icon() const
 {
 	return GET_BLIP_SPRITE(this->mHandle);
