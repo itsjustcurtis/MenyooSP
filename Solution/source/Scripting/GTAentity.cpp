@@ -310,8 +310,7 @@ bool GTAentity::HasLandingGear() const
 	if (!IsVehicle())
 		return false;
 
-	int state = VEHICLE::GET_LANDING_GEAR_STATE(this->mHandle);
-	return state >= 0 && state <= 3;
+	return VEHICLE::GET_VEHICLE_HAS_LANDING_GEAR(this->mHandle);
 }
 
 GTAmodel::Model GTAentity::Model() const

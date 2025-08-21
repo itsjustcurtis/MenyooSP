@@ -12,6 +12,7 @@
 #include "..\..\Natives\types.h" //RGBA/RgbS
 
 #include "SpoonerSettings.h"
+#include "SpoonerEntity.h"
 
 #include <string>
 

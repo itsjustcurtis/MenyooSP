@@ -12,7 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\external\pugixml\src\pugixml.cpp" />
+    <ClCompile Include="BodyguardManagement.cpp" />
+    <ClCompile Include="BodyguardMenu.cpp" />
     <ClCompile Include="BodyguardSettings.cpp" />
+    <ClCompile Include="BodyguardSpawn.cpp" />
     <ClCompile Include="Memory\Hooking.cpp" />
     <ClCompile Include="Menu\FolderPreviewBmps.cpp" />
     <ClCompile Include="Menu\Language.cpp" />
@@ -124,7 +127,10 @@
   <ItemGroup>
     <ClInclude Include="..\external\pugixml\src\pugiconfig.hpp" />
     <ClInclude Include="..\external\pugixml\src\pugixml.hpp" />
+    <ClInclude Include="BodyguardManagement.h" />
+    <ClInclude Include="BodyguardMenu.h" />
     <ClInclude Include="BodyguardSettings.h" />
+    <ClInclude Include="BodyguardSpawn.h" />
     <ClInclude Include="Memory\Hooking.h" />
     <ClInclude Include="Menu\FolderPreviewBmps.h" />
     <ClInclude Include="Menu\Language.h" />

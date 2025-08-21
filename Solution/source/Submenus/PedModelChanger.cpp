@@ -33,6 +33,8 @@
 #include "..\Submenus\Spooner\Databases.h"
 #include "..\Submenus\Spooner\EntityManagement.h"
 #include "..\Submenus\Spooner\MenuOptions.h"
+#include "..\BodyguardMenu.h"
+#include "..\BodyguardSpawn.h"
 
 #include <string>
 #include <vector>
@@ -330,6 +332,10 @@ namespace sub
 				break;
 			case SUB::SPOONER_SPAWN_PED:
 				sub::Spooner::MenuOptions::AddOption_AddPed(text, model);
+				break;
+			case SUB::BODYGUARD_SPAWN:
+				sub::Bodyguards::BodyguardMenu::AddBodyguard_Ped(text, model);
+
 				break;
 			}
 

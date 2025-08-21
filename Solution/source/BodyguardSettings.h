@@ -1,5 +1,6 @@
 #pragma once
 
-namespace sub {
+namespace sub::BodyguardMenu
+{
 	void BodyguardOps_();
 }

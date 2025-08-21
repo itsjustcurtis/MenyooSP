@@ -8,10 +8,10 @@
 * (at your option) any later version.
 */
 
-namespace sub
+namespace sub::BodyguardMenu
 {
 	void BodyguardOps_()
 	{
-		//tba code
+		// Code
 	}
 }

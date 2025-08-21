@@ -54,8 +54,12 @@
 
 #include "..\Submenus\Spooner\Submenus.h"
 #include "..\Submenus\Spooner\Submenus_TaskSequence.h"
-#include "../BodyguardSettings.h"
+#include "..\BodyguardMenu.h"
+#include "..\BodyguardSettings.h"
+#include "..\BodyguardManagement.h"
+#include "..\BodyguardSpawn.h"
 
+using namespace sub;
 
 void Menu::submenu_switch()
 {
@@ -215,7 +219,6 @@ void Menu::submenu_switch()
 	case SUB::CLOUDOPS:					sub::WeatherClouds_catind::sub_CloudOps(); break;
 	case SUB::WATERHACK:				sub::WaterHack_catind::Sub_WaterHack(); break;
 	case SUB::TIMEOPS:					sub::TimeOps_(); break;
-	case SUB::BODYGUARDOPS:				sub::BodyguardOps_(); break;
 	case SUB::MISCOPS:					sub::MiscOps(); break;
 	case SUB::MAPMODS:					sub::MapMods_catind::MapMods_(); break;
 	case SUB::MAPMODS2:					sub::MapMods_catind::MapMods2_(); break;
@@ -293,6 +296,13 @@ void Menu::submenu_switch()
 	case SUB::SPSTATMANAGER:						sub::SpStatManager_catind::Sub_SpStatManager(); break;
 	case SUB::SPSTATMANAGER_INCHAR:					sub::SpStatManager_catind::Sub_InChar(); break;
 	case SUB::SPSTATMANAGER_INCHAR_INLIST:			sub::SpStatManager_catind::Sub_InChar_InList(); break;
+
+	case SUB::BODYGUARDOPS:				sub::BodyguardMenu::BodyguardMainMenu(); break;
+
+	case SUB::BODYGUARD_SPAWN:			sub::BodyguardMenu::BodyguardSpawn(); break;
+
+	case SUB::BODYGUARD_LIST:			sub::BodyguardMenu::BodyguardList(); break;
+	case SUB::BODYGUARD_SETTINGS:		sub::BodyguardMenu::BodyguardOps_(); break;
 	}
 }
 
