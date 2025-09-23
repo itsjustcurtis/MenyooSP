@@ -153,6 +153,22 @@ void GTAentity::Health_set(int value)
 	SET_ENTITY_HEALTH(this->mHandle, value, 0);
 }
 
+float GTAentity::Vehicle_engine_get() const
+{
+	if (!IsVehicle())
+		return -1.0f;
+
+	return GET_VEHICLE_ENGINE_HEALTH(this->mHandle);
+}
+
+void GTAentity::Vehicle_engine_set(float value)
+{
+	if (!IsVehicle())
+		return;
+
+	SET_VEHICLE_ENGINE_HEALTH(this->mHandle, value);
+}
+
 float GTAentity::HeightAboveGround() const
 {
 	return GET_ENTITY_HEIGHT_ABOVE_GROUND(this->mHandle);
@@ -286,6 +302,31 @@ int GTAentity::MaxHealth_get() const
 void GTAentity::MaxHealth_set(int value)
 {
 	SET_ENTITY_MAX_HEALTH(this->mHandle, value);
+}
+
+void GTAentity::SetLandingGear(bool deployed)
+{
+	if (!IsVehicle())
+		return;
+
+	int state = deployed ? 0 : 3;  // 0 = deployed, 3 = retracted
+	VEHICLE::CONTROL_LANDING_GEAR(this->GetHandle(), state);
+}
+
+int GTAentity::GetLandingGearState() const
+{
+	if (!IsVehicle())
+		return -1;
+
+	return VEHICLE::GET_LANDING_GEAR_STATE(this->GetHandle());
+}
+
+bool GTAentity::HasLandingGear() const
+{
+	if (!IsVehicle())
+		return false;
+
+	return VEHICLE::GET_VEHICLE_HAS_LANDING_GEAR(this->mHandle);
 }
 
 GTAmodel::Model GTAentity::Model() const
