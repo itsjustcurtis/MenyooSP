@@ -40,8 +40,6 @@ namespace sub::BodyguardMenu
 			{
 				_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", _searchStr);
 				boost::to_lower(_searchStr);
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToLower, _searchStr, 126U, std::string(), _searchStr);
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
 			}
 
 			if (!_searchStr.empty())

@@ -29,14 +29,12 @@ namespace GTAmodel {
 
 namespace sub::BodyguardMenu
 {
-	// Full class definition BEFORE the vector
 	class BodyguardEntity
 	{
 	public:
 		BodyguardEntity();
 		~BodyguardEntity();
 
-		// data members
 		int id;
 		GTAentity entityHandle;
 		std::string name;
@@ -61,9 +59,6 @@ namespace sub::BodyguardMenu
 		void DeleteBodyguard(BodyguardEntity& ent);
 		BodyguardEntity AddPed(const GTAmodel::Model& model, const std::string& name, bool unloadModel = true);
 
-		//BodyguardEntity CopyEntity(BodyguardEntity orig, bool isInDb, bool addToDb = true, UINT8 copyAttachments = 0, bool unloadModel = true, UINT8 currAtir = 0);
-
-		// Keyboard input
 		BodyguardEntity InputBodyguardIntoDb(const EntityType& type);
 
 		void ShowBoxAroundEntity(const GTAentity& ent, bool showPoly = true, RgbS colour = { 0, 255, 255 });
