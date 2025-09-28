@@ -89,6 +89,9 @@ public:
 	int Health_get() const;
 	void Health_set(int value);
 
+	float Vehicle_engine_get() const;
+	void Vehicle_engine_set(float value);
+
 	float HeightAboveGround() const;
 	float GetGroundZ() const;
 	virtual void PlaceOnGround();

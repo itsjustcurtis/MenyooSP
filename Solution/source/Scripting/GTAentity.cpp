@@ -153,6 +153,22 @@ void GTAentity::Health_set(int value)
 	SET_ENTITY_HEALTH(this->mHandle, value, 0);
 }
 
+float GTAentity::Vehicle_engine_get() const
+{
+	if (!IsVehicle())
+		return -1.0f;
+
+	return GET_VEHICLE_ENGINE_HEALTH(this->mHandle);
+}
+
+void GTAentity::Vehicle_engine_set(float value)
+{
+	if (!IsVehicle())
+		return;
+
+	SET_VEHICLE_ENGINE_HEALTH(this->mHandle, value);
+}
+
 float GTAentity::HeightAboveGround() const
 {
 	return GET_ENTITY_HEIGHT_ABOVE_GROUND(this->mHandle);
