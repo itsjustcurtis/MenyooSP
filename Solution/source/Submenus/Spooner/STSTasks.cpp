@@ -105,6 +105,8 @@ namespace sub::Spooner
 			nodeTask.append_child("IsShortRange").text() = this->isShortRange;
 			nodeTask.append_child("ShowRoute").text() = this->showRoute;
 			nodeTask.append_child("ShowNumber").text() = this->showNumber;
+			// New Functions
+
 		}
 		void AddBlip::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
 		{
@@ -118,6 +120,9 @@ namespace sub::Spooner
 			this->isShortRange = nodeTask.child("IsShortRange").text().as_bool();
 			this->showRoute = nodeTask.child("ShowRoute").text().as_bool();
 			this->showNumber = nodeTask.child("ShowNumber").text().as_int();
+			// New Functions
+
+
 		}
 		void AddBlip::ImportTaskDataSpecific(STSTask* otherTsk)
 		{
@@ -133,6 +138,8 @@ namespace sub::Spooner
 			this->isShortRange = otherTskT->isShortRange;
 			this->showRoute = otherTskT->showRoute;
 			this->showNumber = otherTskT->showNumber;
+			// New functions
+
 		}
 		AddBlip::AddBlip()
 		{
@@ -152,6 +159,9 @@ namespace sub::Spooner
 			this->isShortRange = false;
 			this->showRoute = false;
 			this->showNumber = 0;
+			// New functions
+			this->priority = 2;
+			this->displayMode = 2;
 		}
 		void AddBlip::Run(void* ve)
 		{
@@ -173,7 +183,12 @@ namespace sub::Spooner
 				this->blip.ShowRoute(this->showRoute);
 				if (this->showNumber != 0)
 					this->blip.ShowNumber(this->showNumber);
+				// New Functions
+				this->blip.SetDisplayMode(this->displayMode);
+
 			}
+
+
 		}
 
 		RemoveBlip::RemoveBlip()

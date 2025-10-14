@@ -166,6 +166,18 @@ namespace sub::Spooner
 				AddTexter("Display Number", tskPtr->showNumber, std::vector<std::string>{""}, null, number_plus, number_minus);
 				if (number_plus) { if (tskPtr->showNumber < INT_MAX) tskPtr->showNumber++; }
 				if (number_minus) { if (tskPtr->showNumber > INT_MIN) tskPtr->showNumber--; }
+
+				// New functions
+				bool priority_plus = false, priority_minus = false;
+				bool dummy = false;
+
+				bool nonSelectable = (tskPtr->displayMode == 8);
+				AddToggle("Non-Selectable", nonSelectable);
+				tskPtr->displayMode = nonSelectable ? 8 : 2;
+
+				AddNumber("Priority", tskPtr->priority, 0, dummy, priority_plus, priority_minus);
+				if (priority_plus && tskPtr->priority < 10) tskPtr->priority++;
+				if (priority_minus && tskPtr->priority > 0) tskPtr->priority--;
 			}
 			void RemoveBlip()
 			{

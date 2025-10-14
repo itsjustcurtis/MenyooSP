@@ -7,23 +7,11 @@
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 */
-#pragma once
 
-//#pragma comment(lib, "$(SolutionDir)\external\ScriptHookV.lib")
-
-#pragma warning(disable : 4244 4305) // double <-> float conversions
-
-#define _CRT_SECURE_NO_WARNINGS
-
-
-#define MENYOO_CURRENT_VER_ "2.2.0a1"
-
-#define GAME_PLAYERCOUNT 30
-
-
-
-
-
-
-
-
+namespace sub::BodyguardMenu
+{
+	void BodyguardOps_()
+	{
+		// Code
+	}
+}
