@@ -105,9 +105,9 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-		  
-      - name: Finalize CANCELJOB
-        id: cancel_output
+
+      - name: Set output
+        id: set_output
         run: echo "CANCELJOB=${{ env.CANCELJOB }}" >> $GITHUB_OUTPUT
   build:
     if: github.ref == 'refs/heads/main' || (github.ref == 'refs/heads/Development' && needs.check-version-and-merge.outputs.CANCELJOB != 'true')

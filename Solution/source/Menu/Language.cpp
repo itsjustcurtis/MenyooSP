@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -15,6 +15,7 @@
 
 #include <fstream>
 #include <json\single_include\nlohmann\json.hpp>
+#include <set>
 using Json = nlohmann::json;
 
 namespace Language
@@ -33,14 +34,20 @@ namespace Language
 
 	std::string Lang::Translate(std::string text)
 	{
-		try
-		{
+		static std::set<std::string> reported_missing;
+
+		try {
 			auto& ret = this->pairs.at(text);
 			return ret;
 		}
-		catch (std::out_of_range)
-		{
-			addlog(ige::LogType::LOG_ERROR, "Translate string out of range: " + text, __FILENAME__);
+		catch (std::out_of_range) {
+			if(reported_missing.insert(text).second) {
+				addlog(ige::LogType::LOG_ERROR, 
+					   "Missing translation for: " + text, 
+					   __FILENAME__);
+			}
+			this->pairs[text] = text;
+
 			return text;
 		}
 	}

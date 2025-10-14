@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -42,6 +42,21 @@
 
 CSimpleIniA MenuConfig::iniFile;
 bool MenuConfig::bSaveAtIntervals = true;
+
+// Initialize the default camera parameters
+namespace MenuConfig {
+    namespace FreeCam {
+        float defaultSpeed = 0.5f;
+        float defaultFov = 50.0f;
+		float defaultSlowSpeed = 0.2f;
+        float speedAdjustStep = 0.1f;
+        float fovAdjustStep = 1.0f;
+        float minSpeed = 0.1f;
+        float maxSpeed = 10.0f;
+        float minFov = 30.0f;
+        float maxFov = 120.0f;
+    }
+}
 
 void MenuConfig::ConfigInit()
 {
@@ -307,6 +322,17 @@ void MenuConfig::ConfigRead()
 	sub::Speedo_catind::_currentSpeedoBg.fileName = ini.GetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
 	sub::Speedo_catind::SetCurrentBgIdFromBgNameForConfig();
 
+    // Read camera configuration
+    std::string section_freecam = "free-camera";
+    FreeCam::defaultSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
+    FreeCam::defaultFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov);
+	FreeCam::defaultSlowSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_slow_speed", FreeCam::defaultSlowSpeed);
+    FreeCam::speedAdjustStep = (float)ini.GetDoubleValue(section_freecam.c_str(), "speed_adjust_step", FreeCam::speedAdjustStep); 
+    FreeCam::fovAdjustStep = (float)ini.GetDoubleValue(section_freecam.c_str(), "fov_adjust_step", FreeCam::fovAdjustStep);
+    FreeCam::minSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "min_speed", FreeCam::minSpeed);
+    FreeCam::maxSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "max_speed", FreeCam::maxSpeed);
+    FreeCam::minFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "min_fov", FreeCam::minFov);
+    FreeCam::maxFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "max_fov", FreeCam::maxFov);
 }
 
 void MenuConfig::ConfigSave()
@@ -555,6 +581,18 @@ void MenuConfig::ConfigSave()
 	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_x", sub::Speedo_catind::_speedoPosition.x);
 	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_y", sub::Speedo_catind::_speedoPosition.y);
 	ini.SetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
+
+    // Save camera configuration
+    std::string section_freecam = "free-camera";
+    ini.SetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
+    ini.SetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov); 
+	ini.SetDoubleValue(section_freecam.c_str(), "right_click_slow_speed", FreeCam::defaultSlowSpeed);
+    ini.SetDoubleValue(section_freecam.c_str(), "speed_adjust_step", FreeCam::speedAdjustStep);
+    ini.SetDoubleValue(section_freecam.c_str(), "fov_adjust_step", FreeCam::fovAdjustStep);
+    ini.SetDoubleValue(section_freecam.c_str(), "min_speed", FreeCam::minSpeed);
+    ini.SetDoubleValue(section_freecam.c_str(), "max_speed", FreeCam::maxSpeed);
+    ini.SetDoubleValue(section_freecam.c_str(), "min_fov", FreeCam::minFov);
+    ini.SetDoubleValue(section_freecam.c_str(), "max_fov", FreeCam::maxFov);
 
 	ini.SaveFile((GetPathffA(Pathff::Main, true) + "menyooConfig.ini").c_str());
 }
