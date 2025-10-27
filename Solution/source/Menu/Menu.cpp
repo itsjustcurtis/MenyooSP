@@ -433,7 +433,7 @@ void Menu::background()
 	float temp;
 	if (totalop > GTA_MAXOP) temp = GTA_MAXOP; else temp = (float)totalop; // Calculate last option number to draw rect
 
-																		   // Calculate Y Coord
+	// Calculate Y Coord
 	float bg_Y = ((temp * 0.035f) / 2.0f) + 0.159f;
 	float bg_length = temp * 0.035f;
 
@@ -526,10 +526,13 @@ void Menu::while_closed()
 {
 	if (isBinds())
 	{
-		if (g_menuNotOpenedYet)
+		if (g_menuNotOpenedYet) {
 			justopened();
+			GTAmemory::InitEnhancedPools();
+		}
 
 		Game::Sound::PlayFrontend("FocusIn", "HintCamSounds");
+
 		currentsub = LOOCsub;
 		if (currentsub == SUB::MAINMENU)
 		{
@@ -596,7 +599,7 @@ void Menu::while_opened()
 	{
 		SetSub_closed();
 	}
-		
+
 }
 void Menu::Up(bool playSound)
 {
@@ -640,7 +643,7 @@ void Menu::SetSub_previous()
 
 	currentsub = currentsub_ar[currentsub_ar_index]; // Get previous submenu from array and set as current submenu
 	currentop = currentop_ar[currentsub_ar_index]; // Get last selected option from array and set as current selected option
-	
+
 	currentsub_ar[currentsub_ar_index] = -2;
 	currentop_ar[currentsub_ar_index] = -2;
 

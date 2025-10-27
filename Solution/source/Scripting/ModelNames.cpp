@@ -120,7 +120,7 @@ void PopulatePedModelsArray()
 			{ "StoryScenarioFemale", &g_pedModels_StoryScenarioFemale },
 			{ "StoryScenarioMale", &g_pedModels_StoryScenarioMale },
 			{ "Others", &g_pedModels_Others },
-		})
+			})
 		{
 			auto nodeCat = nodeRoot.find_child_by_attribute("name", cta.first.c_str());
 			if (nodeCat)
@@ -202,13 +202,14 @@ void PopulateVehicleModelsArray()
 	};
 
 	const bool isMinGameVersion3095 = GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_3095_0;
+	bool tmpEnhanced = GTAmemory::GetIsEnhanced();
 	for (int d = 0x0; d < 0x20; d++)
 	{
 		for (auto& dd : hashes[d])
 		{
 			if (std::find(g_vehHashes.begin(), g_vehHashes.end(), Model(dd)) == g_vehHashes.end())
 			{
-				if (!isMinGameVersion3095 || !IS_VEHICLE_GEN9_EXCLUSIVE_MODEL(dd))
+				if (tmpEnhanced || !isMinGameVersion3095 || !IS_VEHICLE_GEN9_EXCLUSIVE_MODEL(dd))
 				{
 					if (Model(dd).VehicleModelName().starts_with("drift"))
 					{

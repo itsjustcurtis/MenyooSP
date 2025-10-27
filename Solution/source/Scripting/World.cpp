@@ -211,7 +211,7 @@ namespace World
 	void GetNearbyPeds(std::vector<GTAped>& result, GTAped ped, float radius, int maxAmount)
 	{
 		const Vector3 position = ped.Position_get();
-		int *handles = new int[maxAmount * 2 + 2];
+		int* handles = new int[maxAmount * 2 + 2];
 
 		handles[0] = maxAmount;
 
@@ -257,7 +257,7 @@ namespace World
 	void GetNearbyVehicles(std::vector<GTAvehicle>& result, GTAped ped, float radius, int maxAmount)
 	{
 		const Vector3 position = ped.Position_get();
-		int *handles = new int[maxAmount * 2 + 2];
+		int* handles = new int[maxAmount * 2 + 2];
 
 		handles[0] = maxAmount;
 
@@ -687,7 +687,7 @@ namespace World
 
 		const Vector3& originCoord = originPed.Position_get();
 
-		Ped *peds = new Ped[140 * 2 + 2]; // Five minutes into doubled stack size and chill and it gives you that ped handle
+		Ped* peds = new Ped[140 * 2 + 2]; // Five minutes into doubled stack size and chill and it gives you that ped handle
 		peds[0] = 140;
 		INT found = GET_PED_NEARBY_PEDS(originPed.Handle(), (Any*)peds, -1);
 		for (i = 0; i < found; i++)
@@ -761,7 +761,7 @@ namespace World
 // World - clear area
 void clear_area_of_entities(const EntityType& type, const Vector3& coords, float radius, const std::vector<GTAentity>& excludes)
 {
-
+	if (GTAmemory::GetIsEnhanced()) return; // It actually works for enhanced now, but after some time of clearing entities, the game crashes? TODO: investigate why that is.
 	//LOAD_ALL_OBJECTS_NOW();
 	//LOAD_SCENE(coords.x, coords.y, coords.z);
 	//SET_STREAMING(TRUE);
@@ -819,7 +819,7 @@ void clear_area_of_vehicles_around_entity(Entity entity, float radius, bool memr
 			if (IS_PED_SITTING_IN_ANY_VEHICLE(entity))
 				oldcar = GET_VEHICLE_PED_IS_IN(entity, 0);
 
-			Vehicle *vehicles = new Vehicle[160 * 2 + 2];
+			Vehicle* vehicles = new Vehicle[160 * 2 + 2];
 			vehicles[0] = 160;
 			found = GET_PED_NEARBY_VEHICLES(entity, (Any*)vehicles);
 			for (i = 0; i < found; i++)
@@ -865,7 +865,7 @@ void clear_area_of_peds_around_entity(Entity entity, float radius, bool memry)
 		{
 			INT i, offsettedID, found;
 
-			Ped *peds = new Ped[160 * 2 + 2];
+			Ped* peds = new Ped[160 * 2 + 2];
 			peds[0] = 160;
 			found = GET_PED_NEARBY_PEDS(entity, (Any*)peds, -1);
 			for (i = 0; i < found; i++)

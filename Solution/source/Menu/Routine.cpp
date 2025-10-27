@@ -99,49 +99,50 @@ void Menu::justopened()
 	SET_THIS_SCRIPT_CAN_BE_PAUSED(0);
 	SET_THIS_SCRIPT_CAN_REMOVE_BLIPS_CREATED_BY_ANY_SCRIPT(0); // lol poopoo dummy me this isn't a ysc
 
-	if (
-		IS_DLC_PRESENT(GET_HASH_KEY("mp2023_01_g9ec")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("mp2023_02_g9ec")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("mpchristmas3_g9ec")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("mpg9ec")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("mpSum2_G9EC")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("patch2023_01_g9ec")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("patchday27g9ecng")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("patchday28g9ecng")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("patchdayg9ecng")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("patch2024_01_g9ec")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("mp2024_01_g9ec")) or
-		IS_DLC_PRESENT(GET_HASH_KEY("mp2024_02_g9ec"))			//this hardcoding needs to get in the bin.
-		)
-	{
-		Game::Print::PrintBottomCentre("~r~Warning~s~: 9th Gen content detected, Game may crash. Read Menyoolog for fix instructions.");
-		ige::myLog << ige::LogType::LOG_WARNING << "Gen9 Content found in dlcpacks, this can cause instability when attempted to be loaded by Menyoo." << std::endl 
-			<< "			You can find these in your dlclist.xml by searching for \"g9\" and removing these lines or using a comment." << std::endl 
-			<< "				    		For example: <!--<Item>dlcpacks:/mpg9ec/</Item>-->" << std::endl << std::endl
-			<< "				    Current known Gen9 Packs:" << std::endl
-			<< "				    		patchdayg9ecng" << std::endl
-			<< "				    		mpsum2_g9ec" << std::endl
-			<< "				   	 	patchday27g9ecng" << std::endl
-			<< "				   	 	mpchristmas3_g9ec" << std::endl
-			<< "				   	 	patchday28g9ecng" << std::endl
-			<< "				   	 	mp2023_01_g9ec" << std::endl
-			<< "				   	 	mp2023_02_g9ec" << std::endl
-			<< "				   	 	patch2024_01_g9ec" << std::endl
-			<< "				   	 	mp2024_01_g9ec" << std::endl
-			<< "				  	  	mp2024_02_g9ec" << std::endl << std::endl
-			<< "				    Note: mp2024_02 also contains bugged content. If you continue to experience issues, removing this may help" << std::endl << std::endl;
+	if (!GTAmemory::GetIsEnhanced()) {
+		if (
+			IS_DLC_PRESENT(GET_HASH_KEY("mp2023_01_g9ec")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("mp2023_02_g9ec")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("mpchristmas3_g9ec")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("mpg9ec")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("mpSum2_G9EC")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("patch2023_01_g9ec")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("patchday27g9ecng")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("patchday28g9ecng")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("patchdayg9ecng")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("patch2024_01_g9ec")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("mp2024_01_g9ec")) or
+			IS_DLC_PRESENT(GET_HASH_KEY("mp2024_02_g9ec"))			//this hardcoding needs to get in the bin.
+			)
+		{
+			Game::Print::PrintBottomCentre("~r~Warning~s~: 9th Gen content detected, Game may crash. Read Menyoolog for fix instructions.");
+			ige::myLog << ige::LogType::LOG_WARNING << "Gen9 Content found in dlcpacks, this can cause instability when attempted to be loaded by Menyoo." << std::endl
+				<< "			You can find these in your dlclist.xml by searching for \"g9\" and removing these lines or using a comment." << std::endl
+				<< "				    		For example: <!--<Item>dlcpacks:/mpg9ec/</Item>-->" << std::endl << std::endl
+				<< "				    Current known Gen9 Packs:" << std::endl
+				<< "				    		patchdayg9ecng" << std::endl
+				<< "				    		mpsum2_g9ec" << std::endl
+				<< "				   	 	patchday27g9ecng" << std::endl
+				<< "				   	 	mpchristmas3_g9ec" << std::endl
+				<< "				   	 	patchday28g9ecng" << std::endl
+				<< "				   	 	mp2023_01_g9ec" << std::endl
+				<< "				   	 	mp2023_02_g9ec" << std::endl
+				<< "				   	 	patch2024_01_g9ec" << std::endl
+				<< "				   	 	mp2024_01_g9ec" << std::endl
+				<< "				  	  	mp2024_02_g9ec" << std::endl << std::endl
+				<< "				    Note: mp2024_02 also contains bugged content. If you continue to experience issues, removing this may help" << std::endl << std::endl;
+		}
+		else if (
+			IS_DLC_PRESENT(GET_HASH_KEY("mp2024_02")) 		//f*cking rockstar cocked up some clothes, this warning is the only protection. 
+			)
+		{
+			Game::Print::PrintBottomCentre("~r~Warning~s~: DLCPack mp2024_02 present, Game may crash. Read Menyoolog for fix instructions.");
+			ige::myLog << ige::LogType::LOG_WARNING << "mp2024_02 found in dlcpacks, certain bugged clothing can cause instability when attempted to be loaded by Menyoo." << std::endl
+				<< "				    You can find this in your dlclist.xml by searching for \"mp2024_02\" and removing these lines or using a comment." << std::endl
+				<< "				    		For example: <!--<Item>dlcpacks:/mp2024_02/</Item>-->" << std::endl << std::endl
+				<< "				    Note: this issue can be ignored if bugged content has been fixed by a mod" << std::endl;
+		}
 	}
-	else if (
-		IS_DLC_PRESENT(GET_HASH_KEY("mp2024_02")) 		//f*cking rockstar cocked up some clothes, this warning is the only protection. 
-		)
-	{
-		Game::Print::PrintBottomCentre("~r~Warning~s~: DLCPack mp2024_02 present, Game may crash. Read Menyoolog for fix instructions.");
-		ige::myLog << ige::LogType::LOG_WARNING << "mp2024_02 found in dlcpacks, certain bugged clothing can cause instability when attempted to be loaded by Menyoo." << std::endl 
-			<< "				    You can find this in your dlclist.xml by searching for \"mp2024_02\" and removing these lines or using a comment." << std::endl 
-			<< "				    		For example: <!--<Item>dlcpacks:/mp2024_02/</Item>-->" << std::endl << std::endl
-			<< "				    Note: this issue can be ignored if bugged content has been fixed by a mod" << std::endl;
-	}
-
 
 	//sub::SettingsThemes_catind::g_menyooTheme_temp = sub::SettingsThemes_catind::MenyooTheme::CurrentlyActiveTheme();
 
@@ -150,7 +151,7 @@ void Menu::justopened()
 	g_menuNotOpenedYet = false;
 }
 inline void MenyooMain()
-{	
+{
 	DxHookIMG::LoadAllMenyooTexturesInit();
 	sub::AnimationSub_catind::PopulateAllPedAnimsList();
 	sub::WeaponFavourites_catind::PopulateFavouritesInfo();
@@ -196,14 +197,14 @@ void ThreadMenyooMain()
 void TickMenyooConfig()
 {
 	//if (GetTickCount() > g_MenyooConfigOnceTick + 9000U)
-		if (GetTickCount() > g_MenyooConfigTick + 30000U)
+	if (GetTickCount() > g_MenyooConfigTick + 30000U)
+	{
+		if (MenuConfig::bSaveAtIntervals)
 		{
-			if (MenuConfig::bSaveAtIntervals)
-			{
-				MenuConfig::ConfigSave();
-			}
-			g_MenyooConfigTick = GetTickCount();
+			MenuConfig::ConfigSave();
 		}
+		g_MenyooConfigTick = GetTickCount();
+	}
 }
 
 void TickRainbowFader()
@@ -415,7 +416,7 @@ void update_nearby_stuff_arrays_tick()
 
 	INT i, offsettedID, count = 100;
 
-	Ped *peds = new Ped[count * 2 + 2];
+	Ped* peds = new Ped[count * 2 + 2];
 	peds[0] = count;
 	INT found = GET_PED_NEARBY_PEDS(me, (Any*)peds, -1);
 	for (i = 0; i < found; i++)
@@ -438,7 +439,7 @@ void update_nearby_stuff_arrays_tick()
 	delete[] peds;
 
 
-	Vehicle *vehicles = new Vehicle[count * 2 + 2];
+	Vehicle* vehicles = new Vehicle[count * 2 + 2];
 	vehicles[0] = count;
 	found = GET_PED_NEARBY_VEHICLES(me, (Any*)vehicles);
 	for (i = 0; i < found; i++)
@@ -1254,7 +1255,7 @@ void set_forge_gun_dist(float& distance)
 inline void set_forge_gun_rot_hotkeys()
 {
 	Vector3 Rot = GET_ENTITY_ROTATION(targ_slot_entity, 2);
-	FLOAT &precision = _globalForgeGun_prec;
+	FLOAT& precision = _globalForgeGun_prec;
 
 	if (!Menu::bit_controller)
 	{
@@ -2646,11 +2647,11 @@ void set_vehicle_wheels_invisible(GTAvehicle vehicle, bool enable)
 			g_vehWheelsInvisForRussian.insert(vehicle.Handle());
 
 		vehicle.RequestControl(800);
-		vehicle.SetForwardSpeed(DBL_MAX*DBL_MAX);
+		vehicle.SetForwardSpeed(DBL_MAX * DBL_MAX);
 		WAIT(100);
-		SET_VEHICLE_CHEAT_POWER_INCREASE(vehicle.Handle(), DBL_MAX*DBL_MAX);
-		MODIFY_VEHICLE_TOP_SPEED(vehicle.Handle(), DBL_MAX*DBL_MAX);
-		vehicle.ApplyForceRelative(Vector3(0, 0, -DBL_MAX*DBL_MAX));
+		SET_VEHICLE_CHEAT_POWER_INCREASE(vehicle.Handle(), DBL_MAX * DBL_MAX);
+		MODIFY_VEHICLE_TOP_SPEED(vehicle.Handle(), DBL_MAX * DBL_MAX);
+		vehicle.ApplyForceRelative(Vector3(0, 0, -DBL_MAX * DBL_MAX));
 		WAIT(100);
 		if (g_multList_rpm.count(vehicle.Handle()))
 		{
@@ -2736,7 +2737,7 @@ void Set_Walkunderwater(Entity PlayerPed)
 		SET_PED_CONFIG_FLAG(PlayerPed, ePedConfigFlags::IsSwimming, false);
 		SET_PED_CONFIG_FLAG(PlayerPed, ePedConfigFlags::WasSwimming, false);
 		SET_PED_CONFIG_FLAG(PlayerPed, ePedConfigFlags::_0xD8072639, false);
-		
+
 		Vector3 PlayerPos = GET_ENTITY_COORDS(PlayerPed, 0);
 		DRAW_LIGHT_WITH_RANGEEX(PlayerPos.x, PlayerPos.y, (PlayerPos.z + 1.5f), 255, 255, 251, 100.0f, 1.5f, 0.0f);
 		DRAW_LIGHT_WITH_RANGEEX(PlayerPos.x, PlayerPos.y, (PlayerPos.z + 50.0f), 255, 255, 251, 200.0f, 1.0f, 0.0f);
@@ -2756,7 +2757,7 @@ void Set_Walkunderwater(Entity PlayerPed)
 			APPLY_FORCE_TO_ENTITY(PlayerPed, true, 0, 0, -0.7f, 0, 0, 0, true, true, true, true, false, true);
 		}
 
-		if (GET_IS_TASK_ACTIVE(PlayerPed, 281)|| IS_PED_SWIMMING(PlayerPed) || IS_PED_SWIMMING_UNDER_WATER(PlayerPed)) // Stop Swimming
+		if (GET_IS_TASK_ACTIVE(PlayerPed, 281) || IS_PED_SWIMMING(PlayerPed) || IS_PED_SWIMMING_UNDER_WATER(PlayerPed)) // Stop Swimming
 		{
 			CLEAR_PED_TASKS_IMMEDIATELY(PlayerPed);
 		}
@@ -2831,10 +2832,10 @@ void Menu::loops()
 	int iped, player;
 	GTAplayer player2;
 	if (!GET_IS_LOADING_SCREEN_ACTIVE() && !defaultPedSet) {//This will load a preset Outfit XML from the menyooStuff folder on startup
-	sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
-	sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);
-	defaultPedSet = true;
-}
+		sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
+		sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);
+		defaultPedSet = true;
+	}
 	Game::CustomHelpText::Tick();
 
 	update_nearby_stuff_arrays_tick();
@@ -2928,7 +2929,7 @@ void Menu::loops()
 		if (_JumpAroundMode_::bEnabled)
 			_JumpAroundMode_::Tick();
 	}
-	
+
 	if (loop_player_Walkunderwater)
 		Set_Walkunderwater(PLAYER_PED_ID());
 
@@ -3130,7 +3131,7 @@ void Menu::loops()
 
 	if (loop_self_refillHealthInCover)
 		set_self_refill_health_when_in_cover();
-	
+
 	// PLAYER_ID() invincibility
 	if (loop_player_invincibility/* && !GET_PLAYER_INVINCIBLE(PLAYER_ID())*/)
 	{
