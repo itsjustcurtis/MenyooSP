@@ -33,6 +33,7 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved)
 	{
 		//g_MainModule = hInstance;
 		g_MainModule = GetModuleHandle(NULL);
+		MenuConfig::ConfigInit();
 
 		g_isEnhanced = [] {
 			char path[MAX_PATH];
@@ -54,16 +55,21 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved)
 				<< ", SizeOfImage=" << g_MainModuleInfo.SizeOfImage
 				<< ", EntryPoint=" << g_MainModuleInfo.EntryPoint;
 
-			addlog(ige::LogType::LOG_INIT, moduleinfostream.str(), __FILENAME__);
+			addlog(ige::LogType::LOG_INFO, moduleinfostream.str(), __FILENAME__);
 		}
-
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Setup Hooks", __FILENAME__);
 		setupHooks();
+		addlog(ige::LogType::LOG_TRACE, "Initialising GTAmemory", __FILENAME__);
 		GTAmemory::Init();
 
+		addlog(ige::LogType::LOG_TRACE, "Registering Script ThreadMenyooMain", __FILENAME__);
 		scriptRegister(hInstance, ThreadMenyooMain);
+		addlog(ige::LogType::LOG_TRACE, "Registering Script Thread_menu_loops2", __FILENAME__);
 		scriptRegisterAdditionalThread(hInstance, Thread_menu_loops2);
 
+		addlog(ige::LogType::LOG_TRACE, "Registering Keyboard Handler", __FILENAME__);
 		keyboardHandlerRegister(OnKeyboardMessage);
+		addlog(ige::LogType::LOG_TRACE, "Finished Registering scripts", __FILENAME__);
 
 		break;
 	}

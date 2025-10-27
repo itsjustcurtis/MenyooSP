@@ -27,6 +27,7 @@ namespace sub
 {
 	void WeatherOps_()
 	{
+		addlog(ige::LogType::LOG_TRACE, "Entering WeatherOps_()", __FILENAME__);
 		bool spsnow_on = 0,
 			spsnow_off = 0,
 			windSpeed_plus = 0, windSpeed_minus = 0,
@@ -35,6 +36,7 @@ namespace sub
 			gravityLevel_plus = 0, gravityLevel_minus = 0,
 			bClearWeatherOverride = 0;
 
+		addlog(ige::LogType::LOG_TRACE, "Variables Initialised", __FILENAME__);
 		//std::vector<std::string>{"Earth", "Mercury", "Earth's Moon", "Pluto"};
 		std::map<float, std::string> v0gravities
 		{
@@ -49,7 +51,10 @@ namespace sub
 			{ 24.9f, "Jupiter 24.9" },
 			{ 274.0f, "Sun 274.0" }
 		};
-		float mult_0_gravity = GTAmemory::WorldGravity_get();
+		addlog(ige::LogType::LOG_TRACE, "Gravity Initialised", __FILENAME__);
+		//float mult_0_gravity = GTAmemory::WorldGravity_get();
+		float mult_0_gravity = 9.8f;
+		addlog(ige::LogType::LOG_TRACE, "Skipped Got World Gravity", __FILENAME__);
 
 		float windSpeed = GET_WIND_SPEED();
 		float wavesHeight = GET_DEEP_OCEAN_SCALER();
@@ -91,6 +96,7 @@ namespace sub
 		AddOption("Clouds", null, nullFunc, SUB::CLOUDOPS);
 		AddOption("Water Hack (For Waves At Beaches)", null, nullFunc, SUB::WATERHACK);
 
+		addlog(ige::LogType::LOG_TRACE, "Created menu options", __FILENAME__);
 
 		if (spsnow_on || spsnow_off) { _SpSnow.ToggleSnow(spsnow_on); }
 

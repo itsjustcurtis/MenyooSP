@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -151,17 +151,29 @@ void Menu::justopened()
 	g_menuNotOpenedYet = false;
 }
 inline void MenyooMain()
-{
+{	
+	bool firstTick = true;
+	addlog(ige::LogType::LOG_TRACE, "Loading Textures", __FILENAME__);
 	DxHookIMG::LoadAllMenyooTexturesInit();
+	addlog(ige::LogType::LOG_TRACE, "Populate Anims List", __FILENAME__);
 	sub::AnimationSub_catind::PopulateAllPedAnimsList();
+	addlog(ige::LogType::LOG_TRACE, "Populate Favourites", __FILENAME__);
 	sub::WeaponFavourites_catind::PopulateFavouritesInfo();
+	addlog(ige::LogType::LOG_TRACE, "Populate Decals", __FILENAME__);
 	sub::PedDecals_catind::PopulateDecalsDict();
+	addlog(ige::LogType::LOG_TRACE, "Populate Animals", __FILENAME__);
 	sub::AnimalRiding_catind::PopulateAnimals();
+	addlog(ige::LogType::LOG_TRACE, "Populate Vehicle Previews", __FILENAME__);
 	sub::SpawnVehicle_catind::PopulateVehicleBmps();
+	addlog(ige::LogType::LOG_TRACE, "Populate Folder Previews", __FILENAME__);
 	sub::FolderPreviewBmps_catind::PopulateFolderBmps();
+	addlog(ige::LogType::LOG_TRACE, "Populate Voice Data", __FILENAME__);
 	sub::Speech_catind::PopulateVoiceData();
+	addlog(ige::LogType::LOG_TRACE, "Populate Timecycle Names", __FILENAME__);
 	TimecycleModification::PopulateTimecycleNames();
+	addlog(ige::LogType::LOG_TRACE, "Populate Global Entity Arrays", __FILENAME__);
 	PopulateGlobalEntityModelsArrays();
+	addlog(ige::LogType::LOG_TRACE, "Populate Cutscene Labels", __FILENAME__);
 	sub::CutscenePlayer_catind::PopulateCutsceneLabels();
 
 	srand(GetTickCount());
@@ -172,25 +184,45 @@ inline void MenyooMain()
 	g_MenyooConfigTick = GetTickCount();
 	g_FaderTick = GetTickCount();
 
+
+	addlog(ige::LogType::LOG_TRACE, "Check Valid for Block Vehicles", __FILENAME__);
 	if (!NETWORK_IS_SESSION_STARTED() && !IS_COMMANDLINE_END_USER_BENCHMARK() && !LANDING_SCREEN_STARTED_END_USER_BENCHMARK())
 	{
+		addlog(ige::LogType::LOG_TRACE, "Valid, Enabling Blocked Vehicles", __FILENAME__);
 		if (GTAmemory::FindShopController())
 			GeneralGlobalHax::EnableBlockedMpVehiclesInSp();
 	}
+	else
+	{
+		addlog(ige::LogType::LOG_TRACE, "Forced false", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Not Valid, Skipping", __FILENAME__);
+	}
 
+	addlog(ige::LogType::LOG_TRACE, "Creating Tick loop", __FILENAME__);
 	for (;;)
 	{
+		if (firstTick)
+			addlog(ige::LogType::LOG_TRACE, "First Tick - Textures", __FILENAME__);
 		DxHookIMG::DxTexture::GlobalDrawOrderRef() = -9999;
-
+		if (firstTick)
+			addlog(ige::LogType::LOG_TRACE, "First Tick - Tick", __FILENAME__);
 		Menu::Tick();
+		if (firstTick)
+			addlog(ige::LogType::LOG_TRACE, "First Tick - MenyooConfig", __FILENAME__);
 		TickMenyooConfig();
+		if (firstTick)
+			addlog(ige::LogType::LOG_TRACE, "First Tick - Rainbow Fader", __FILENAME__);
 		TickRainbowFader();
 		WAIT(0);
+		if (firstTick)
+			addlog(ige::LogType::LOG_TRACE, "First Tick - looping", __FILENAME__);
+		firstTick = false;
 	}
 
 }
 void ThreadMenyooMain()
 {
+	addlog(ige::LogType::LOG_TRACE, "Launching MenyooMain", __FILENAME__);
 	MenyooMain();
 }
 
@@ -322,6 +354,14 @@ bool bit_grav_gun_disabled = 0;
 float forge_dist = 6.0f, _globalForgeGun_prec = 0.2f, _globalForgeGun_shootForce = 300.0f;
 bool ObjSpawn_forge_assistance = 0;
 
+DWORD g_lastSpeedDisplayTime = 0;
+DWORD g_lastFOVDisplayTime = 0;
+float g_lastSpeedValue = 0.0f;
+float g_lastFOVValue = 0.0f;
+
+DWORD g_lastHeightLockMessageTime = 0;
+const char* g_lastHeightLockMessage = nullptr;
+
 #pragma endregion
 
 #pragma region methods used define // p.s. this ain't it chief
@@ -375,13 +415,14 @@ void update_nearby_stuff_arrays_tick()
 	_worldVehicles.clear();
 	_worldObjects.clear();
 	_worldEntities.clear();
-
 	//bool alreadyIn;
-	GTAmemory::GetVehicleHandles(_worldVehicles);
-	GTAmemory::GetPedHandles(_worldPeds);
-	GTAmemory::GetPropHandles(_worldObjects);
-	GTAmemory::GetEntityHandles(_worldEntities);
-
+	if(false)
+	{
+		GTAmemory::GetVehicleHandles(_worldVehicles);
+		GTAmemory::GetPedHandles(_worldPeds);
+		GTAmemory::GetPropHandles(_worldObjects);
+		GTAmemory::GetEntityHandles(_worldEntities);
+	}
 	/*INT i, offsettedID, count = 80;
 
 	Ped *peds = new Ped[count * 2 + 2];
@@ -1515,6 +1556,9 @@ void set_ped_seatbelt_off(Ped ped)
 // Misc - FreeCam
 bool bit_noclip_already_invis, bit_noclip_already_collis, bit_noclip_show_help = true;
 Camera g_cam_noClip;
+bool g_freecam_heightLocked = false;  
+float g_freecam_lockedHeight = 0.0f;
+float g_freecam_speed = MenuConfig::FreeCam::defaultSpeed; // Modify the default value
 void set_no_clip_off1()
 {
 	GTAentity myPed = PLAYER_PED_ID();
@@ -1600,7 +1644,7 @@ void set_no_clip()
 			cam.Position_set(GameplayCamera::Position_get());
 			cam.Rotation_set(GameplayCamera::Rotation_get());
 			cam.AttachTo(ent, camOffset);
-			cam.FieldOfView_set(GameplayCamera::FieldOfView_get());
+			cam.FieldOfView_set(MenuConfig::FreeCam::defaultFov); // Use configured FOV
 			cam.DepthOfFieldStrength_set(0.0f);
 			World::RenderingCamera_set(cam);
 		}
@@ -1649,14 +1693,145 @@ void set_no_clip()
 			//}
 		}
 		else
-		{
-			float noclip_prec_level = IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT) ? 1.77f : 0.35f;
+		{ 
+			// Handle mouse wheel to adjust movement speed - only adjust speed when right button is not pressed
+			if(!IsKeyDown(VK_SPACE))
+			{
+				// Add TAB key to lock height function
+				if(IsKeyJustUp(VK_TAB)) {
+					g_freecam_heightLocked = !g_freecam_heightLocked;
+					if(g_freecam_heightLocked) {
+						// Store the current height when locked
+						g_freecam_lockedHeight = ent.Position_get().z;
+						g_lastHeightLockMessage = "Height Locked";
+					} else {
+						g_lastHeightLockMessage = "Height Unlocked";
+					}
+					g_lastHeightLockMessageTime = GetTickCount();
+				}
+				// Handle mouse wheel to adjust speed
+				if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
+				{
+					g_freecam_speed += MenuConfig::FreeCam::speedAdjustStep;
+					if(g_freecam_speed > MenuConfig::FreeCam::maxSpeed) 
+						g_freecam_speed = MenuConfig::FreeCam::maxSpeed;
+
+					// Save the current speed as the default value
+					MenuConfig::FreeCam::defaultSpeed = g_freecam_speed;
+					MenuConfig::ConfigSave();
+					
+					// Display the current speed
+					Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+					Game::Print::drawstring(oss_ << "FreeCam Speed: " << g_freecam_speed, 0.5f, 0.95f);
+					
+					g_lastSpeedValue = g_freecam_speed;
+					g_lastSpeedDisplayTime = GetTickCount();
+				}
+				if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))  
+				{
+					g_freecam_speed -= MenuConfig::FreeCam::speedAdjustStep; 
+					if(g_freecam_speed < MenuConfig::FreeCam::minSpeed)
+						g_freecam_speed = MenuConfig::FreeCam::minSpeed;
+
+					// Save the current speed as the default value 
+					MenuConfig::FreeCam::defaultSpeed = g_freecam_speed;
+					MenuConfig::ConfigSave();
+					
+					// Display the current speed
+					Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+					Game::Print::drawstring(oss_ << "FreeCam Speed: " << g_freecam_speed, 0.5f, 0.95f);
+					
+					g_lastSpeedValue = g_freecam_speed;
+					g_lastSpeedDisplayTime = GetTickCount();
+				}
+
+				// Check if speed text needs to be displayed
+				if(GetTickCount() - g_lastSpeedDisplayTime < 1000) // 1秒延迟
+				{
+					Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+					Game::Print::drawstring(oss_ << "FreeCam Speed: " << g_lastSpeedValue, 0.5f, 0.95f);
+				}
+			}
+
+			// When pressing the space bar, the speed is fixed at 0.2
+			//float current_speed = IsKeyDown(VK_CONTROL) ? 0.2f : g_freecam_speed;
+			float current_speed = IS_DISABLED_CONTROL_PRESSED(2, INPUT_VEH_ATTACK2) ? MenuConfig::FreeCam::defaultSlowSpeed : g_freecam_speed;
+
+			// Make sprint increase based on current speed
+			float noclip_prec_level = IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT) ? current_speed * 2.0f : current_speed;
+
 			Vector3 offset;
 			offset.x = GET_CONTROL_NORMAL(0, INPUT_MOVE_LR) * noclip_prec_level;
 			offset.y = -GET_CONTROL_NORMAL(0, INPUT_MOVE_UD) * noclip_prec_level;
-			offset.z = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? noclip_prec_level : IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -noclip_prec_level : 0.0f;
-			if (!offset.IsZero())
+			
+			if(g_freecam_heightLocked) {
+				// When the height is locked, only the up/down keys are allowed to adjust the height
+				float zOffset = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? noclip_prec_level : 
+							   IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -noclip_prec_level : 0.0f;
+				if(zOffset != 0.0f) {
+					g_freecam_lockedHeight += zOffset;
+				}
+				// Use locked height
+				Vector3 newPos = cam.GetOffsetInWorldCoords(offset - camOffset);
+				newPos.z = g_freecam_lockedHeight;
+				ent.Position_set(newPos);
+			}
+			else {
+				// Original code in unlocked state
+				offset.z = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? noclip_prec_level : 
+                IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -noclip_prec_level : 0.0f;
+			if(!offset.IsZero())
 				ent.Position_set(cam.GetOffsetInWorldCoords(offset - camOffset));
+}
+
+				// Add right mouse button + scroll wheel to control camera FOV
+				if(IsKeyDown(VK_SPACE)) // Press and hold the right mouse button
+				{
+					float currentFov = cam.FieldOfView_get();
+					if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP)) // Scroll up to increase FOV
+					{
+						currentFov += MenuConfig::FreeCam::fovAdjustStep;
+						if(currentFov > MenuConfig::FreeCam::maxFov)
+							currentFov = MenuConfig::FreeCam::maxFov;
+						cam.FieldOfView_set(currentFov);
+
+						// Save the current FOV as the default value
+						MenuConfig::FreeCam::defaultFov = currentFov;
+						MenuConfig::ConfigSave();
+            
+						// Display the current FOV value
+						Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+						Game::Print::drawstring(oss_ << "Camera FOV: " << currentFov, 0.5f, 0.95f);
+						
+						g_lastFOVValue = currentFov;
+						g_lastFOVDisplayTime = GetTickCount();
+					}
+					if(IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN)) // Scroll down to reduce FOV
+					{
+						currentFov -= MenuConfig::FreeCam::fovAdjustStep;
+						if(currentFov < MenuConfig::FreeCam::minFov)
+							currentFov = MenuConfig::FreeCam::minFov;
+						cam.FieldOfView_set(currentFov);
+
+						// Save the current FOV as the default value
+						MenuConfig::FreeCam::defaultFov = currentFov;
+						MenuConfig::ConfigSave();
+						
+						// Display the current FOV value
+						Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+						Game::Print::drawstring(oss_ << "Camera FOV: " << currentFov, 0.5f, 0.95f);
+						
+						g_lastFOVValue = currentFov;
+						g_lastFOVDisplayTime = GetTickCount();
+					}
+
+					// Check if FOV text needs to be displayed
+					if(GetTickCount() - g_lastFOVDisplayTime < 1000) // 1秒延迟
+					{
+						Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+						Game::Print::drawstring(oss_ << "Camera FOV: " << g_lastFOVValue, 0.5f, 0.95f);
+					}
+				}
 
 			//if (Menu::currentsub == SUB::CLOSED)
 			//{
@@ -1673,6 +1848,12 @@ void set_no_clip()
 		}
 	}
 
+	// Check whether the lock status text needs to be displayed
+	if(g_lastHeightLockMessage != nullptr && GetTickCount() - g_lastHeightLockMessageTime < 1000)
+	{
+		Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+		Game::Print::drawstring(g_lastHeightLockMessage, 0.5f, 0.95f);
+	}
 }
 
 // Playerped - ability
@@ -2246,7 +2427,7 @@ inline void set_Handling_Mult69_7()
 		if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_SCRIPT_PAD_RIGHT) || IsKeyDown('D'))
 			APPLY_FORCE_TO_ENTITY(g_myVeh, 1, mult69_7 / 220, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1);
 		if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_SCRIPT_PAD_LEFT) || IsKeyDown('A'))
-			APPLY_FORCE_TO_ENTITY(g_myVeh, 1, (0 - mult69_7) / 220, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1);
+			APPLY_FORCE_TO_ENTITY(g_myVeh, 1, (0 - mult69_7) / 220, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0,1);
 	}
 	else
 	{
@@ -2705,6 +2886,8 @@ void set_vehicle_wheels_invisible(GTAvehicle vehicle, bool enable)
 // Ped - ability (multiplier lists)
 std::map<Ped, std::string> g_pedList_movGrp;
 std::map<Ped, std::string> g_pedList_wmovGrp;
+std::map<Ped, std::string> g_pedList_facial_mood;
+
 // Spooner/ped - facial mood - getter/setter
 std::map<Ped, std::string> g_pedList_facialMood;
 std::string get_ped_facial_mood(GTAentity ped)
@@ -2831,7 +3014,8 @@ void Menu::loops()
 	bool gameIsPaused = IS_PAUSE_MENU_ACTIVE() != 0;
 	int iped, player;
 	GTAplayer player2;
-	if (!GET_IS_LOADING_SCREEN_ACTIVE() && !defaultPedSet) {//This will load a preset Outfit XML from the menyooStuff folder on startup
+	if (!GET_IS_LOADING_SCREEN_ACTIVE() && !defaultPedSet) //This will load a preset Outfit XML from the menyooStuff folder on startup
+	{
 		sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
 		sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);
 		defaultPedSet = true;

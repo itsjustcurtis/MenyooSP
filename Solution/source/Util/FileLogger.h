@@ -11,6 +11,7 @@
 
 #include <fstream>
 #include "../Menu/Menu.h"
+#include "../Memory/GTAmemory.h" 
 
 #define __FILENAME__ strrchr("\\" __FILE__, '\\') + 1
 
@@ -38,6 +39,7 @@ namespace ige
 
 	extern FileLogger menyooLogObject;
 	extern std::ofstream& myLog;
+	const char* VersionString(eGameVersion version);
 	extern void addlog(LogType logType, std::string message, std::string filename, int loglevel = g_loglevel);
 	inline void addlog(LogType logType, std::string message) {
 		addlog(logType, message, __FILENAME__, g_loglevel);

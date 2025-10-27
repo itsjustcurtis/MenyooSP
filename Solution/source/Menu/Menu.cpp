@@ -526,7 +526,9 @@ void Menu::while_closed()
 {
 	if (isBinds())
 	{
-		if (g_menuNotOpenedYet) {
+
+		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, opening Menyoo", __FILENAME__);
+		if (g_menuNotOpenedYet)
 			justopened();
 			GTAmemory::InitEnhancedPools();
 		}
@@ -550,7 +552,10 @@ void Menu::while_opened()
 	totalop = printingop; printingop = 0;
 	totalbreaks = breakcount; breakcount = 0; breakscroll = 0;
 
-	if (IS_PAUSE_MENU_ACTIVE()) SetSub_closed();
+	if (IS_PAUSE_MENU_ACTIVE()) {
+		addlog(ige::LogType::LOG_TRACE, "Game Paused, closing Menyoo", __FILENAME__);
+		SetSub_closed();
+	}
 
 	if (IS_GAMEPLAY_HINT_ACTIVE()) STOP_GAMEPLAY_HINT(false);
 	DISPLAY_AMMO_THIS_FRAME(0);
@@ -570,6 +575,7 @@ void Menu::while_opened()
 	// Scroll up
 	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Up))
 	{
+		addlog(ige::LogType::LOG_TRACE, "Up Pressed, moving selection up", __FILENAME__);
 		if (currentop <= 1)
 			Bottom();
 		else
@@ -579,6 +585,7 @@ void Menu::while_opened()
 	// Scroll down
 	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Down))
 	{
+		addlog(ige::LogType::LOG_TRACE, "Down Pressed, moving selection down", __FILENAME__);
 		if (currentop >= totalop)
 			Top();
 		else
@@ -588,6 +595,7 @@ void Menu::while_opened()
 	// B press
 	if (MenuPressTimer::IsButtonTapped(MenuPressTimer::Button::Back))
 	{
+		addlog(ige::LogType::LOG_TRACE, "Back Pressed, returning to previous menu", __FILENAME__);
 		if (currentsub == SUB::MAINMENU)
 			SetSub_closed();
 		else
@@ -597,6 +605,7 @@ void Menu::while_opened()
 	// Binds press
 	if (isBinds())//&& currentsub != SUB::MAINMENU)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, closing Menyoo", __FILENAME__);
 		SetSub_closed();
 	}
 

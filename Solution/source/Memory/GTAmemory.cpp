@@ -56,7 +56,7 @@ std::unordered_map<unsigned int, std::string> g_vehicleHashes;
 CallHook<InitVehicleArchetype_t>* g_InitVehicleArchetype = nullptr;
 CVehicleModelInfo* initVehicleArchetype_stub(const char* name, bool a2, unsigned int a3) {
 	g_vehicleHashes.insert({ GET_HASH_KEY(name), boost::to_lower_copy(name) });
-	return g_InitVehicleArchetype->fn(name, a2, a3);
+	return g_InitVehicleArchetypeLegacy->fn(name, a2, a3);
 }
 
 // InitVehicleArchetype has been inlined in Enhanced, instead we hook one of functions which are called after it and take its first parameter.
@@ -89,9 +89,9 @@ void setupHooks() {
 }
 
 void removeHooks() {
-	if (g_InitVehicleArchetype) {
-		delete g_InitVehicleArchetype;
-		g_InitVehicleArchetype = nullptr;
+	if (g_InitVehicleArchetypeLegacy) {
+		delete g_InitVehicleArchetypeLegacy;
+		g_InitVehicleArchetypeLegacy = nullptr;
 	}
 	if (g_InitVehicleArchetypeEnhanced) {
 		delete g_InitVehicleArchetypeEnhanced;
@@ -1724,6 +1724,12 @@ void GTAmemory::InitEnhancedPools() {
 				}
 			}
 		}
+		address = address - 0x2C;
+		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + std::to_string(address), __FILENAME__);
+	}
+	GetModelInfo = (GetModelInfo_t)(address);
+	
+	_SpSnow = SpSnow();
 
 	}
 }
