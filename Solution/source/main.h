@@ -292,6 +292,8 @@ enum eGameVersion : int
 	VER_1_0_812_8 = 1002,
 
 	VER_1_0_812_9 = 1004,
+
+	VER_1_0_889_22 = 1007,
   
 	VER_SIZE,
 	VER_UNK = -1

@@ -194,8 +194,7 @@ inline void MenyooMain()
 	}
 	else
 	{
-		addlog(ige::LogType::LOG_TRACE, "Forced false", __FILENAME__);
-		addlog(ige::LogType::LOG_TRACE, "Not Valid, Skipping", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR, "Invalid, Unable to Unblock Vehicles", __FILENAME__);
 	}
 
 	addlog(ige::LogType::LOG_TRACE, "Creating Tick loop", __FILENAME__);
@@ -208,7 +207,7 @@ inline void MenyooMain()
 			addlog(ige::LogType::LOG_TRACE, "First Tick - Tick", __FILENAME__);
 		Menu::Tick();
 		if (firstTick)
-			addlog(ige::LogType::LOG_TRACE, "First Tick - MenyooConfig", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "First Tick - Load MenyooConfig", __FILENAME__);
 		TickMenyooConfig();
 		if (firstTick)
 			addlog(ige::LogType::LOG_TRACE, "First Tick - Rainbow Fader", __FILENAME__);
@@ -228,6 +227,9 @@ void ThreadMenyooMain()
 
 void TickMenyooConfig()
 {
+	static bool firstTick = true;
+	if (firstTick)
+		addlog(ige::LogType::LOG_TRACE, "First Tick - Run TickMenyooConfig", __FILENAME__);
 	//if (GetTickCount() > g_MenyooConfigOnceTick + 9000U)
 	if (GetTickCount() > g_MenyooConfigTick + 30000U)
 	{
@@ -237,10 +239,14 @@ void TickMenyooConfig()
 		}
 		g_MenyooConfigTick = GetTickCount();
 	}
+	firstTick = false;
 }
 
 void TickRainbowFader()
 {
+	static bool firstTick = true;
+	if (firstTick)
+		addlog(ige::LogType::LOG_TRACE, "First Tick - Run TickRainbowFader", __FILENAME__);
 	if (GetTickCount() > g_FaderTick + 20U) {
 		auto& colour = g_fadedRGB;
 		if (colour.R > 0 && colour.B == 0)
@@ -258,6 +264,7 @@ void TickRainbowFader()
 			colour.R++;
 			colour.B--;
 		}
+		firstTick = false;
 
 		g_FaderTick = GetTickCount();
 	}

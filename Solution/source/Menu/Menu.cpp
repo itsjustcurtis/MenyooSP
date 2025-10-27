@@ -530,8 +530,8 @@ void Menu::while_closed()
 		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, opening Menyoo", __FILENAME__);
 		if (g_menuNotOpenedYet)
 			justopened();
-			GTAmemory::InitEnhancedPools();
-		}
+		GTAmemory::InitEnhancedPools();
+
 
 		Game::Sound::PlayFrontend("FocusIn", "HintCamSounds");
 
@@ -859,13 +859,20 @@ void Menu::draw_IB()
 
 void Menu::sub_handler()
 {
+	static bool firstRun = true;
+	if(firstRun) 
+	{
+		addlog(ige::LogType::LOG_TRACE, "First Run sub_handler", __FILENAME__);;
+	}
 	if (currentsub == SUB::CLOSED)
 	{
+		if (firstRun)	addlog(ige::LogType::LOG_TRACE, "Sub Currently Closed", __FILENAME__);;
 		while_closed();
 	}
 
 	else
 	{
+		if (firstRun)	addlog(ige::LogType::LOG_TRACE, "Sub Currently Open", __FILENAME__);;
 		submenu_switch();
 
 		if (Menu::currentop > Menu::printingop) { Menu::currentop = Menu::printingop + 1; Menu::Up(false); }
@@ -889,7 +896,7 @@ void Menu::sub_handler()
 		delayedTimer = GET_GAME_TIMER() + 810; // Delay for rainbow related loops
 		if (delayedTimer > INT_MAX - 1000) delayedTimer = 0;
 	}
-
+	firstRun = false;
 }
 
 //--------------------------------MouseSupport---------------------------------------------------

@@ -53,7 +53,7 @@ typedef CVehicleModelInfo* (*InitVehicleArchetypeEnhanced_t)(uint32_t, const cha
 GetModelInfo_t GetModelInfo;
 
 std::unordered_map<unsigned int, std::string> g_vehicleHashes;
-CallHook<InitVehicleArchetype_t>* g_InitVehicleArchetype = nullptr;
+CallHook<InitVehicleArchetype_t>* g_InitVehicleArchetypeLegacy = nullptr;
 CVehicleModelInfo* initVehicleArchetype_stub(const char* name, bool a2, unsigned int a3) {
 	g_vehicleHashes.insert({ GET_HASH_KEY(name), boost::to_lower_copy(name) });
 	return g_InitVehicleArchetypeLegacy->fn(name, a2, a3);
@@ -84,7 +84,7 @@ void setupHooks() {
 			return;
 		}
 		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetype at " + std::to_string(addr), __FILENAME__);
-		g_InitVehicleArchetype = HookManager::SetCall(addr, initVehicleArchetype_stub);
+		g_InitVehicleArchetypeLegacy = HookManager::SetCall(addr, initVehicleArchetype_stub);
 	}
 }
 
@@ -1726,13 +1726,13 @@ void GTAmemory::InitEnhancedPools() {
 		}
 		address = address - 0x2C;
 		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + std::to_string(address), __FILENAME__);
-	}
+	
 	GetModelInfo = (GetModelInfo_t)(address);
 	
 	_SpSnow = SpSnow();
-
-	}
 }
+}
+
 
 Vector3 GTAmemory::ReadVector3(UINT64 address)
 {

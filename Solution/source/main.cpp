@@ -47,7 +47,7 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved)
 		std::string gameName = g_isEnhanced ? "GTA5_Enhanced" : "GTA5";
 
 		if (!GetModuleInformation(GetCurrentProcess(), g_MainModule, &g_MainModuleInfo, sizeof(g_MainModuleInfo)))
-			addlog(ige::LogType::LOG_INIT, "Unable to get MODULEINFO from " + gameName + ".exe", __FILENAME__);
+			addlog(ige::LogType::LOG_ERROR, "Unable to get MODULEINFO from " + gameName + ".exe", __FILENAME__);
 		else
 		{
 			std::ostringstream moduleinfostream;
