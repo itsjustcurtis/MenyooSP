@@ -108,6 +108,7 @@ jobs:
 
       - name: Set output
         id: set_output
+        if: env.CANCELJOB != 'true' 
         run: echo "CANCELJOB=${{ env.CANCELJOB }}" >> $GITHUB_OUTPUT
 
   build:
