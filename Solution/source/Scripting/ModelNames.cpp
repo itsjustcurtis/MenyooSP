@@ -26,6 +26,7 @@
 #include <fstream>
 #include <pugixml\src\pugixml.hpp>
 #include <algorithm> // std::sort, VS 2019 update 16.7.1
+#include "../Util/FileLogger.h"
 
 #pragma region Vehicle model labels
 std::vector<GTAmodel::Model> g_vehHashes;
@@ -188,6 +189,7 @@ void PopulateVehicleModelsArray()
 	g_vehHashes_OTHER.clear();
 	g_vehHashes_DRIFT.clear();
 
+	addlog(ige::LogType::LOG_TRACE, "Call GenerateVehicleModelList()", __FILENAME__);
 	GTAmemory::GenerateVehicleModelList();
 	auto& hashes = GTAmemory::VehicleModels();
 	std::unordered_map<VehicleClass, std::vector<Model>*> vDestMap
@@ -287,9 +289,13 @@ void PopulateObjectModelsArray()
 }
 void PopulateGlobalEntityModelsArrays()
 {
+	addlog(ige::LogType::LOG_TRACE, "Call PopulatePedModelsArray()", __FILENAME__);
 	PopulatePedModelsArray();
+	addlog(ige::LogType::LOG_TRACE, "Call PopulateVehicleModelsArray()", __FILENAME__);
 	PopulateVehicleModelsArray();
+	addlog(ige::LogType::LOG_TRACE, "Call PopulateObjectModelsArray()", __FILENAME__);
 	PopulateObjectModelsArray();
+	addlog(ige::LogType::LOG_TRACE, "Exit PopulateGlobalEntityModelsArrays()", __FILENAME__);
 }
 
 // Model - labels
