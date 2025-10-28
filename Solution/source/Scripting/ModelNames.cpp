@@ -26,6 +26,7 @@
 #include <fstream>
 #include <pugixml\src\pugixml.hpp>
 #include <algorithm> // std::sort, VS 2019 update 16.7.1
+#include "../Util/FileLogger.h"
 
 #pragma region Vehicle model labels
 std::vector<GTAmodel::Model> g_vehHashes;
@@ -120,7 +121,7 @@ void PopulatePedModelsArray()
 			{ "StoryScenarioFemale", &g_pedModels_StoryScenarioFemale },
 			{ "StoryScenarioMale", &g_pedModels_StoryScenarioMale },
 			{ "Others", &g_pedModels_Others },
-		})
+			})
 		{
 			auto nodeCat = nodeRoot.find_child_by_attribute("name", cta.first.c_str());
 			if (nodeCat)
@@ -188,6 +189,7 @@ void PopulateVehicleModelsArray()
 	g_vehHashes_OTHER.clear();
 	g_vehHashes_DRIFT.clear();
 
+	addlog(ige::LogType::LOG_TRACE, "Call GenerateVehicleModelList()", __FILENAME__);
 	GTAmemory::GenerateVehicleModelList();
 	auto& hashes = GTAmemory::VehicleModels();
 	std::unordered_map<VehicleClass, std::vector<Model>*> vDestMap
@@ -202,13 +204,14 @@ void PopulateVehicleModelsArray()
 	};
 
 	const bool isMinGameVersion3095 = GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_3095_0;
+	bool tmpEnhanced = GTAmemory::GetIsEnhanced();
 	for (int d = 0x0; d < 0x20; d++)
 	{
 		for (auto& dd : hashes[d])
 		{
 			if (std::find(g_vehHashes.begin(), g_vehHashes.end(), Model(dd)) == g_vehHashes.end())
 			{
-				if (!isMinGameVersion3095 || !IS_VEHICLE_GEN9_EXCLUSIVE_MODEL(dd))
+				if (tmpEnhanced || !isMinGameVersion3095 || !IS_VEHICLE_GEN9_EXCLUSIVE_MODEL(dd))
 				{
 					if (Model(dd).VehicleModelName().starts_with("drift"))
 					{
@@ -286,9 +289,13 @@ void PopulateObjectModelsArray()
 }
 void PopulateGlobalEntityModelsArrays()
 {
+	addlog(ige::LogType::LOG_TRACE, "Call PopulatePedModelsArray()", __FILENAME__);
 	PopulatePedModelsArray();
+	addlog(ige::LogType::LOG_TRACE, "Call PopulateVehicleModelsArray()", __FILENAME__);
 	PopulateVehicleModelsArray();
+	addlog(ige::LogType::LOG_TRACE, "Call PopulateObjectModelsArray()", __FILENAME__);
 	PopulateObjectModelsArray();
+	addlog(ige::LogType::LOG_TRACE, "Exit PopulateGlobalEntityModelsArrays()", __FILENAME__);
 }
 
 // Model - labels

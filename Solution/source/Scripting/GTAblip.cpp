@@ -878,7 +878,6 @@ void GTAblip::SetPriority(int priority)
     SET_BLIP_PRIORITY(this->mHandle, priority);
 }
 
-
 void GTAblip::SetRotationWithFloat(float heading)
 {
     SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, heading);

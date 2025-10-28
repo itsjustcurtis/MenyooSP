@@ -14,12 +14,19 @@
 #include "..\Menu\Menu.h"
 #include "..\Menu\Routine.h"
 
+
 #include "..\Natives\natives2.h"
+#include "../Util/FileLogger.h"
 
 namespace sub
 {
 	void MainMenu()
 	{
+		static bool firstLoad = true;
+		if(firstLoad) {
+			firstLoad = false;
+			addlog(ige::LogType::LOG_TRACE, "First Load of MainMenu Submenu", __FILENAME__);
+		}
 		AddTitle("MENYOO");
 
 		AddOption("Players", null, nullFunc, SUB::PLAYERSSUB);
