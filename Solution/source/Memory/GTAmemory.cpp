@@ -1732,6 +1732,8 @@ void GTAmemory::InitEnhancedPools() {
 	_SpSnow = SpSnow();
 }
 }
+}
+
 
 
 Vector3 GTAmemory::ReadVector3(UINT64 address)
