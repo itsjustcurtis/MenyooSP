@@ -1732,7 +1732,6 @@ void GTAmemory::InitEnhancedPools() {
 	_SpSnow = SpSnow();
 }
 }
-}
 
 
 
