@@ -7,9 +7,9 @@
 
 namespace sub::BodyguardMenu
 {
-	class BodyguardEntity
-	{
-		void AddEntity_Bodyguard();
+	//class BodyguardEntity
+	//{
+	//	void AddEntity_Bodyguard();
 
-	};
+	//};
 }

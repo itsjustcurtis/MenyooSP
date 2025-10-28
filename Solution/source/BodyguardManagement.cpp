@@ -9,16 +9,24 @@
 #include "Menu/Routine.h"
 #include "Util/StringManip.h"
 
-//namespace sub::BodyguardMenu
-//{
+// Provide equality operators for BodyguardEntity and a single definition for BodyguardDb.
+// std::find and other algorithms require operator== for the element type.
+namespace sub::BodyguardMenu
+{
+	// compare by underlying Handle (GTAentity has operator==)
+	bool operator==(const BodyguardEntity& left, const BodyguardEntity& right)
+	{
+		return left.Handle == right.Handle;
+	}
+	bool operator!=(const BodyguardEntity& left, const BodyguardEntity& right)
+	{
+		return left.Handle != right.Handle;
+	}
 
-	//void BodyguardList()
-	//{
-		//AddTitle("Bodyguard List");
+	// define the storage for the DB (was incorrectly declared in header as "extern;")
+	std::vector<BodyguardEntity> BodyguardDb;
+}
 
-
-	//}
-//}
 namespace sub::BodyguardMenu
 {
 	namespace BodyguardManagement

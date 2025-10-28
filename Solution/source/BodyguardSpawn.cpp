@@ -53,7 +53,7 @@ namespace sub::BodyguardMenu
 
 					if (currentModel.IsInCdImage())
 					{
-						Bodyguards::BodyguardMenu::AddBodyguard_Ped(current.second, currentModel);
+						sub::BodyguardMenu::BodyguardManagement::AddBodyguard_Ped(current.second, currentModel);
 						if (*Menu::currentopATM == Menu::printingop) PedFavourites_catind::ShowInstructionalButton(currentModel);
 					}
 				}
@@ -84,35 +84,37 @@ namespace sub::BodyguardMenu
 		}
 
 }
-namespace sub::Bodyguards::BodyguardMenu
+namespace sub::BodyguardMenu
 {
-	void AddBodyguard_Ped(const std::string& text, const GTAmodel::Model& model)
+	namespace BodyguardManagement
 	{
-
-
-		GTAped player(PLAYER::PLAYER_PED_ID());
-		Vector3 spawnPos = player.GetOffsetInWorldCoords(Vector3(2.0f, 0.0f, 0.0f));
-
-		Ped ped = PED::CREATE_PED(26, model.hash, spawnPos.x, spawnPos.y, spawnPos.z, 0.0f, true, true);
-
-
-		if (!ENTITY::DOES_ENTITY_EXIST(ped))
+		void AddBodyguard_Ped(const std::string& text, const GTAmodel::Model& model)
 		{
-			Game::Print::PrintBottomLeft("Ped creation failed.");
-			return;
+
+			GTAped player(PLAYER::PLAYER_PED_ID());
+			Vector3 spawnPos = player.GetOffsetInWorldCoords(Vector3(2.0f, 0.0f, 0.0f));
+
+			Ped ped = PED::CREATE_PED(26, model.hash, spawnPos.x, spawnPos.y, spawnPos.z, 0.0f, true, true);
+
+
+			if (!ENTITY::DOES_ENTITY_EXIST(ped))
+			{
+				Game::Print::PrintBottomLeft("Ped creation failed.");
+				return;
+			}
+
+			ENTITY::SET_ENTITY_HEALTH(ped, sub::BodyguardMenu::health, 0);
+			ENTITY::SET_ENTITY_MAX_HEALTH(ped, sub::BodyguardMenu::health);
+			PED::SET_PED_ARMOUR(ped, sub::BodyguardMenu::armor);
+			ENTITY::SET_ENTITY_INVINCIBLE(ped, sub::BodyguardMenu::godmode);
+
+			PED::SET_PED_AS_GROUP_MEMBER(ped, PLAYER::GET_PLAYER_GROUP(PLAYER::PLAYER_ID()));
+			PED::SET_PED_NEVER_LEAVES_GROUP(ped, true);
+			PED::SET_PED_COMBAT_ABILITY(ped, 2);
+			PED::SET_PED_COMBAT_MOVEMENT(ped, 2);
+			PED::SET_PED_COMBAT_ATTRIBUTES(ped, 46, true);
+
+			Game::Print::PrintBottomLeft("Bodyguard spawned");
 		}
-
-		ENTITY::SET_ENTITY_HEALTH(ped, sub::BodyguardMenu::health, 0);
-		ENTITY::SET_ENTITY_MAX_HEALTH(ped, sub::BodyguardMenu::health);
-		PED::SET_PED_ARMOUR(ped, sub::BodyguardMenu::armor);
-		ENTITY::SET_ENTITY_INVINCIBLE(ped, sub::BodyguardMenu::godmode);
-
-		PED::SET_PED_AS_GROUP_MEMBER(ped, PLAYER::GET_PLAYER_GROUP(PLAYER::PLAYER_ID()));
-		PED::SET_PED_NEVER_LEAVES_GROUP(ped, true);
-		PED::SET_PED_COMBAT_ABILITY(ped, 2);
-		PED::SET_PED_COMBAT_MOVEMENT(ped, 2);
-		PED::SET_PED_COMBAT_ATTRIBUTES(ped, 46, true);
-
-		Game::Print::PrintBottomLeft("Bodyguard spawned");
 	}
 }

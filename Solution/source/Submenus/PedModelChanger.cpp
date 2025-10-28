@@ -336,7 +336,7 @@ namespace sub
 				sub::Spooner::MenuOptions::AddOption_AddPed(text, model);
 				break;
 			case SUB::BODYGUARD_SPAWN:
-				sub::Bodyguards::BodyguardMenu::AddBodyguard_Ped(text, model);
+				sub::BodyguardMenu::BodyguardManagement::AddBodyguard_Ped(text, model);
 
 				break;
 			}

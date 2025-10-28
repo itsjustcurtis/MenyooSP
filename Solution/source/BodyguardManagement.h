@@ -4,6 +4,8 @@
 
 #include "Submenus/Settings.h"
 #include "Submenus/Spooner/SpoonerSettings.h"
+#include "Natives/types.h"
+#include "BodyguardSpawn.h"
 
 typedef unsigned __int8 UINT8;
 typedef unsigned int UINT;
@@ -32,8 +34,8 @@ namespace sub::BodyguardMenu
 	class BodyguardEntity
 	{
 	public:
-		BodyguardEntity();
-		~BodyguardEntity();
+		//BodyguardEntity();
+		//~BodyguardEntity();
 
 		int id;
 		GTAentity entityHandle;
@@ -44,7 +46,7 @@ namespace sub::BodyguardMenu
 		GTAentity Handle;
 	};
 
-	extern; std::vector<BodyguardEntity> BodyguardDb;
+	extern std::vector<BodyguardEntity> BodyguardDb;
 
 	namespace BodyguardManagement
 	{

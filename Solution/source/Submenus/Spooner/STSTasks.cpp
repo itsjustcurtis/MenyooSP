@@ -184,7 +184,6 @@ namespace sub::Spooner
 				if (this->showNumber != 0)
 					this->blip.ShowNumber(this->showNumber);
 				// New Functions
-				this->blip.SetDisplayMode(this->displayMode);
 
 			}
 
