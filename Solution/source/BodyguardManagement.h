@@ -61,8 +61,6 @@ namespace sub::BodyguardMenu
 		void DeleteBodyguard(BodyguardEntity& ent);
 		BodyguardEntity AddPed(const GTAmodel::Model& model, const std::string& name, bool unloadModel = true);
 
-		BodyguardEntity InputBodyguardIntoDb(const EntityType& type);
-
 		void ShowBoxAroundEntity(const GTAentity& ent, bool showPoly = true, RgbS colour = { 0, 255, 255 });
 		void ShowArrowAboveEntity(const GTAentity& ent, RGBA colour = { 0, 255, 255, 200 });
 		void DrawRadiusDisplayingMarker(const Vector3& pos, float radius, RGBA colour = { 0, 255, 0, 130 });

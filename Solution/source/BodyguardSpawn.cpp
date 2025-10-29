@@ -20,6 +20,7 @@
 #include "Submenus/Spooner/Submenus.h"
 #include "Submenus/PedModelChanger.h"
 #include "Util/StringManip.h"
+#include "Submenus/Spooner/EntityManagement.h"
 
 namespace sub::BodyguardMenu
 {
@@ -79,7 +80,7 @@ namespace sub::BodyguardMenu
 			bool bInputPressed = false;
 			AddOption("INPUT MODEL", bInputPressed); if (bInputPressed)
 			{
-				BodyguardManagement::InputBodyguardIntoDb(EntityType::PED);
+				sub::Spooner::EntityManagement::InputEntityIntoDb(EntityType::PED);
 			}
 		}
 

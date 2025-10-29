@@ -301,7 +301,7 @@ void Menu::submenu_switch()
 
 	case SUB::BODYGUARD_SPAWN:			sub::BodyguardMenu::BodyguardSpawn(); break;
 
-	case SUB::BODYGUARD_LIST:			sub::BodyguardMenu::BodyguardList(); break;
+	//case SUB::BODYGUARD_LIST:			sub::BodyguardMenu::BodyguardList(); break;
 	case SUB::BODYGUARD_SETTINGS:		sub::BodyguardMenu::BodyguardOps_(); break;
 	}
 }
