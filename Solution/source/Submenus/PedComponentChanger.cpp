@@ -94,8 +94,30 @@ namespace sub
 		AddOption("Head Features", null, nullFunc, SUB::PED_HEADFEATURES_MAIN);
 		AddOption("Accessories", null, nullFunc, SUB::COMPONENTSPROPS);
 
+		std::vector<std::string> components
+		{
+			"Head",
+			"Beard/Mask",
+			"Hair",
+			"Torso",
+			"Legs",
+			"Hands/Back",
+			"Shoes",
+			"Teeth/Scarf/Necklace/Bracelets",
+			"Accessory/Tops",
+			"Task/Armour",
+			"Emblem",
+			"Tops2 (Outer)"
+		};
+
 		AddBreak("---Components---");
-		AddpedcomponentOption_("Head", PV_COMP_HEAD);
+
+		for ( int i = 0; i < PV_COMP_MAX; i++)
+		{
+			if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, i) > 0) AddpedcomponentOption_(components[i], i);
+		}
+
+		/*AddpedcomponentOption_("Head", PV_COMP_HEAD);
 		AddpedcomponentOption_("Beard/Mask", PV_COMP_BERD); // Beard // FACE_BRD
 		AddpedcomponentOption_("Hair", PV_COMP_HAIR); // Hair // FACE_HAIR
 		AddpedcomponentOption_("Torso", PV_COMP_UPPR);
@@ -106,7 +128,7 @@ namespace sub
 		AddpedcomponentOption_("Accessory/Tops", PV_COMP_ACCS); // Accessory // PIM_TACCE
 		AddpedcomponentOption_("Task/Armour", PV_COMP_TASK);
 		AddpedcomponentOption_("Emblem", PV_COMP_DECL);
-		AddpedcomponentOption_("Tops2 (Outer)", PV_COMP_JBIB);
+		AddpedcomponentOption_("Tops2 (Outer)", PV_COMP_JBIB);*/
 
 		AddOption("Random Components", ComponentChanger_random);
 		AddOption("Default Components", ComponentChanger_default);
@@ -264,10 +286,11 @@ namespace sub
 
 		AddTitle("Set Variation");
 
-		AddNumber("Type", compon_drawable_current, 0, compon_input, compon_plus, compon_minus);
-		AddNumber("Texture", compon_texture_current, 0, null, compon_plus, compon_minus);
+		if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, Static_12) > 0) AddNumber("Type", compon_drawable_current, 0, compon_input, compon_plus, compon_minus);
+		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(Static_241, Static_12, compon_drawable_current)) AddNumber("Texture", compon_texture_current, 0, null, compon_plus, compon_minus);
 		//AddNumber("Palette", compon_palette_current, 0, null, compon_plus, compon_minus);
 
+		
 		switch (*Menu::currentopATM)
 		{
 		case 1:
@@ -416,10 +439,29 @@ namespace sub
 		}
 
 		bool ComponentChanger_randomProps = 0, ComponentChanger_clearAllProps = 0;
+		std::vector<std::string> components
+		{
+			"Hats",
+			"Glasses",
+			"Ear Pieces",
+			"Unknown 3",
+			"Unknown 4",
+			"Unknown 5",
+			"Watches",
+			"Bangles",
+			"Unknown 8",
+			"Unknown 9"
+		};
 
 		AddTitle("Accessories");
 
-		AddpedpropOption_("Hats", 0);
+		for (int i = 0; i < components.size(); ++i)
+		{
+			if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(Static_241, i) > 0)
+				AddpedpropOption_(components[i], i);
+		}
+
+		/*AddpedpropOption_("Hats", 0);
 		AddpedpropOption_("Glasses", 1);
 		AddpedpropOption_("Ear Pieces", 2);
 		AddpedpropOption_("Watches", 6);
@@ -430,7 +472,7 @@ namespace sub
 		AddpedpropOption_("Unknown 4", 4);
 		AddpedpropOption_("Unknown 5", 5);
 		AddpedpropOption_("Unknown 8", 8);
-		AddpedpropOption_("Unknown 9", 9);
+		AddpedpropOption_("Unknown 9", 9);*/
 
 		AddBreak("---Utilities---");
 		AddOption("Random Accessories", ComponentChanger_randomProps);
@@ -464,9 +506,8 @@ namespace sub
 
 		AddTitle("Set Variation");
 
-		AddNumber("Type", prop_type_current, 0, null, compon_plus, compon_minus);
-		AddNumber("Texture", prop_texture_current, 0, null, compon_plus, compon_minus);
-
+		if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(Static_241, Static_12) > 0) AddNumber("Type", prop_type_current, 0, null, compon_plus, compon_minus);
+		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(Static_241, Static_12, prop_type_current) > 0) AddNumber("Texture", prop_texture_current, 0, null, compon_plus, compon_minus);
 
 		switch (Menu::currentop)
 		{
@@ -553,7 +594,7 @@ namespace sub
 							prop_texture_current = 0;
 						}
 					}
-				SET_PED_PROP_INDEX(ped.Handle(), propId, prop_type_current, prop_texture_current, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+					SET_PED_PROP_INDEX(ped.Handle(), propId, prop_type_current, prop_texture_current, NETWORK_IS_GAME_IN_PROGRESS(), 0);					
 				}
 			}
 		}
