@@ -171,11 +171,11 @@ namespace sub
 							}
 							else Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add ped model.");
 						}
-						else Game::Print::PrintError_InvalidInput();
+						else Game::Print::PrintError_InvalidInput(customNameStr);
 					}
-					else Game::Print::PrintError_InvalidModel();
+					else Game::Print::PrintError_InvalidModel(hashNameStr);
 				}
-				else Game::Print::PrintError_InvalidInput();
+				else Game::Print::PrintError_InvalidInput(hashNameStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouritePedModelEntryName, std::string(), 40U, "Enter model name (e.g. IG_BENNY):");
 			}
 
@@ -384,7 +384,7 @@ namespace sub
 				if (model.IsInCdImage())
 					ChangeModel_(model);
 				else
-					Game::Print::PrintError_InvalidModel();
+					Game::Print::PrintError_InvalidModel(inputStr);
 				return;
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::ModelChangerInput, std::string(), 64U, "Enter ped model name (e.g. IG_BENNY):");

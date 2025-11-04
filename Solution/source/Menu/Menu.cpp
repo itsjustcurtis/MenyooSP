@@ -860,20 +860,28 @@ void Menu::draw_IB()
 
 void Menu::sub_handler()
 {
-	static bool firstRun = true;
+	static bool firstRun = true, isClosed = true;
 	if(firstRun) 
 	{
 		addlog(ige::LogType::LOG_TRACE, "First Run sub_handler", __FILENAME__);;
 	}
 	if (currentsub == SUB::CLOSED)
 	{
-		if (firstRun)	addlog(ige::LogType::LOG_TRACE, "Sub Currently Closed", __FILENAME__);;
+		if (!isClosed)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Sub Closed", __FILENAME__);;
+			isClosed = true;
+		}
 		while_closed();
 	}
 
 	else
 	{
-		if (firstRun)	addlog(ige::LogType::LOG_TRACE, "Sub Currently Open", __FILENAME__);;
+		if (isClosed)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Sub Opened", __FILENAME__);;
+			isClosed = false;
+		}
 		submenu_switch();
 
 		if (Menu::currentop > Menu::printingop) { Menu::currentop = Menu::printingop + 1; Menu::Up(false); }

@@ -23,6 +23,7 @@
 #include <string>
 #include <sstream>
 #include <Windows.h>
+#include "../Util/FileLogger.h"
 
 std::ostream& operator<<(std::ostream& stream, std::wstring& text)
 {
@@ -398,13 +399,15 @@ namespace Game
 		}
 
 		// Messages - Errors
-		void PrintError_InvalidInput()
+		void PrintError_InvalidInput(std::string inputStr)
 		{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Input.");
+			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Input: " + inputStr);
+			addlog(ige::LogType::LOG_ERROR, "Invalid Input: " + inputStr, __FILENAME__);
 		}
-		void PrintError_InvalidModel()
+		void PrintError_InvalidModel(std::string inputStr)
 		{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Model.");
+			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Model: " + inputStr);
+			addlog(ige::LogType::LOG_ERROR, "Invalid Model: " + inputStr, __FILENAME__);
 		}
 
 		// Text width

@@ -195,7 +195,7 @@ namespace sub
 			if (inputStr.length() > 0)
 			{
 				try { _globalForgeGun_shootForce = stof(inputStr); }
-				catch (...) { Game::Print::PrintError_InvalidInput(); }
+				catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 10U, std::to_string(_globalForgeGun_shootForce));
 			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_globalForgeGun_shootForce);
@@ -435,7 +435,7 @@ namespace sub
 				if (inputStr.length() > 0)
 				{
 					try { shootForce = stof(inputStr); }
-					catch (...) { Game::Print::PrintError_InvalidInput(); }
+					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 10U, std::to_string(shootForce));
 				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&shootForce);
@@ -524,7 +524,7 @@ namespace sub
 					kaboom_gun_hash = model.hash;
 					model.Load();
 				}
-				else Game::Print::PrintError_InvalidModel();
+				else Game::Print::PrintError_InvalidModel(inputStr);
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::KaboomGunHash, std::string(), 64U, "Enter vehicle model name:");
 		}
@@ -639,7 +639,7 @@ namespace sub
 					ped_gun_hash = model;
 					model.Load();
 				}
-				else Game::Print::PrintError_InvalidModel();
+				else Game::Print::PrintError_InvalidModel(inputStr);
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::PedGunHash, std::string(), 64U, "Enter ped model name:");
 		}
@@ -735,7 +735,7 @@ namespace sub
 					object_gun_hash = model;
 					model.Load();
 				}
-				else Game::Print::PrintError_InvalidModel();
+				else Game::Print::PrintError_InvalidModel(inputStr);
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::ObjectGunHash, std::string(), 64U, "Enter object/vehicle model name:");
 		}
@@ -925,13 +925,13 @@ namespace sub
 								Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add weapon.");
 						}
 						else
-							Game::Print::PrintError_InvalidInput();
+							Game::Print::PrintError_InvalidInput(customNameStr);
 					}
 					else
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(std::to_string(hashNameHash));
 				}
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(hashNameStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteWeaponEntryName, std::string(), 40U, "Enter name (e.g. WEAPON_FLAMETHROWER):");
 			}
 
@@ -953,7 +953,7 @@ namespace sub
 							Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add weapon.");
 					}
 					else
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(customNameStr);
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteWeaponCurrent, std::string(), 28U, "Enter custom name:");
 					//OnscreenKeyboard::State::arg1._uint = currentPedWeapon;
 				}
@@ -1545,7 +1545,7 @@ namespace sub
 						Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to save loadout.");
 				}
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SaveLoadoutToFile, std::string(), 28U, "Enter loadout name:");
 				//OnscreenKeyboard::State::arg1._int = _ped;
 				//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<std::string*>(&_dir);
@@ -1569,7 +1569,7 @@ namespace sub
 					}
 				}
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				return;
 				// No OnscreenKeyboard!
 			}
@@ -1611,7 +1611,7 @@ namespace sub
 						Game::Print::PrintBottomCentre("~r~Error~s~ renaming file.");
 				}
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameLoadoutFile, std::string(), 28U, "Enter new name:");
 				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_name);
 				//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&_dir);

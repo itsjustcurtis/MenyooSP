@@ -1253,7 +1253,7 @@ namespace sub
 				if (!NETWORK_IS_IN_SESSION() && !_globalSpawnVehicle_persistent)
 					SET_VEHICLE_AS_NO_LONGER_NEEDED(&spawnedVehicle);
 			}
-			else Game::Print::PrintError_InvalidModel();
+			else Game::Print::PrintError_InvalidModel(model.VehicleModelName());
 		}
 		/*if (spawnvehicle_input)
 		{
@@ -1324,7 +1324,7 @@ namespace sub
 				if (inputStr.length() > 0 && inputStr.length() <= 8)
 					_globalSpawnVehicle_plateText = inputStr;
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::GSpawnVehiclePlateText, std::string(), 8U, "CMOD_MOD_18_D", _globalSpawnVehicle_plateText);
 				break;
 			}
@@ -1577,7 +1577,7 @@ namespace sub
 				}
 			}
 			else
-				Game::Print::PrintError_InvalidModel();
+				Game::Print::PrintError_InvalidModel(inputStrModel);
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteVehicleModelEntryName, std::string(), 28U, "Enter model name (e.g. adder):");
 		}
 
@@ -1598,7 +1598,7 @@ namespace sub
 					}
 					else Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add model.");
 				}
-				else Game::Print::PrintError_InvalidInput();
+				else Game::Print::PrintError_InvalidInput(inputStrName);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteVehicleModelCurrent, std::string(), 28U, "Enter custom name:", myVehicleModel.VehicleDisplayName(true));
 				//OnscreenKeyboard::State::arg1._uint = myVehicleModel.hash;
 			}
@@ -1974,7 +1974,7 @@ namespace sub
 			Model eModel = nodeVehicle.child("ModelHash").text().as_uint();
 			if (!eModel.IsInCdImage())
 			{
-				Game::Print::PrintError_InvalidModel();
+				Game::Print::PrintError_InvalidModel(std::to_string(eModel.hash));
 				return;
 			}
 			eModel.Load();
@@ -2537,7 +2537,7 @@ namespace sub
 						VehSaver_SaveToFile(_dir + "\\" + inputStr + ".xml", vehicle);
 					}
 					else
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(inputStr);
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SaveVehicleToFile, std::string(), 28U, "Enter file name:");
 					//OnscreenKeyboard::State::arg1._int = vehicle;
 					//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&_dir);
@@ -2571,7 +2571,7 @@ namespace sub
 					}
 				}
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				return;
 				// No OnscreenKeyboard!
 			}
@@ -2618,7 +2618,7 @@ namespace sub
 						Game::Print::PrintBottomCentre("~r~Error~s~ renaming file.");
 				}
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameVehicleFile, std::string(), 28U, "Enter new name:", _name);
 				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_name);
 				//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&_dir);

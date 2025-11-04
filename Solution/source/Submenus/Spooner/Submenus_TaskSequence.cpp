@@ -86,7 +86,7 @@ namespace sub::Spooner
 					if (inputStr.length())
 					{
 						try { tskPtr->healthValue = stoi(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Int, std::string(), 5U, std::string(), std::to_string(tskPtr->healthValue));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->healthValue);
@@ -611,7 +611,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speed = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speed).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speed);
@@ -627,7 +627,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedMultiplier = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedMultiplier).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedMultiplier);
@@ -980,7 +980,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1016,7 +1016,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1054,7 +1054,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1154,7 +1154,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1451,7 +1451,7 @@ namespace sub::Spooner
 									throw;
 								tskPtr->opacityValue = inputVal;
 							}
-							catch (...) { Game::Print::PrintError_InvalidInput(); }
+							catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 						}
 						//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Int, std::string(), 5U, std::string(), std::to_string(tskPtr->opacityValue));
 						//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->opacityValue);

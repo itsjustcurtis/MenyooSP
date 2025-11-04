@@ -160,8 +160,8 @@ namespace sub
 			try {
 				tempHash = abs(std::stoi(Game::InputBox(std::to_string(*settings_rgba2), 4U, "", std::to_string(*settings_rgba2))));
 			}
-			catch (...) { Game::Print::PrintError_InvalidInput(); }
-			if (!(tempHash >= 0 && tempHash <= 255)) Game::Print::PrintError_InvalidInput();
+			catch (...) { Game::Print::PrintError_InvalidInput(std::to_string(tempHash)); }
+			if (!(tempHash >= 0 && tempHash <= 255)) Game::Print::PrintError_InvalidInput(std::to_string(tempHash));
 			else *settings_rgba2 = tempHash;
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SettingsRgba, std::to_string(*settings_rgba2), 3U, "", std::to_string(*settings_rgba2));
 			return;
@@ -235,7 +235,7 @@ namespace sub
 			auto& settings_font = _g_settings_font;
 			int tempHash = *settings_font;
 			try { tempHash = abs(stoi(inputStr)); }
-			catch (...) { Game::Print::PrintError_InvalidInput(); }
+			catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 			*settings_font = tempHash;
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SettingsFont, std::to_string(*settings_font), 6U, "", std::to_string(*settings_font));
 		}

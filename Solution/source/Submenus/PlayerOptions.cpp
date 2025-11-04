@@ -356,7 +356,7 @@ namespace sub
 					try { flagID = stoi(inputStr); }
 					catch (...) 
 					{ 
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(inputStr);
 						addlog(ige::LogType::LOG_ERROR, "Invalid flagID entered: " + inputStr, __FILENAME__);
 					}
 				}

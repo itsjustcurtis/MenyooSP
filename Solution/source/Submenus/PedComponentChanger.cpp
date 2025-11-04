@@ -282,10 +282,10 @@ namespace sub
 						if (compon_drawable_current > GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, Static_12) - 1)
 						{
 							compon_drawable_current = compon_drawable_old;
-							Game::Print::PrintError_InvalidInput();
+							Game::Print::PrintError_InvalidInput(inputStr);
 						}							
 					}
-					catch (...) { Game::Print::PrintError_InvalidInput(); }
+					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 				}
 			}
 			else if (compon_plus)
@@ -1650,7 +1650,7 @@ namespace sub
 				ComponentChanger_Outfit_catind::Create(Static_241, _dir + "\\" + inputStr + ".xml");
 				Game::Print::PrintBottomLeft("File ~b~created~s~.");
 			}
-			else Game::Print::PrintError_InvalidInput();
+			else Game::Print::PrintError_InvalidInput(inputStr);
 			return;
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SavepIndexOutfitToFile, std::string(), 28U, "FMMC_KEY_TIP9");
 			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_dir);
@@ -1674,7 +1674,7 @@ namespace sub
 					addlog(ige::LogType::LOG_ERROR, "Attempt to create folder " + inputStr + " failed", __FILENAME__);
 				}
 			}
-			else Game::Print::PrintError_InvalidInput();
+			else Game::Print::PrintError_InvalidInput(inputStr);
 			return;
 			// No OnscreenKeyboard!
 		}
@@ -1753,7 +1753,7 @@ namespace sub
 				else Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to rename file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to rename file " + _name + " to " + newName + "failed", __FILENAME__);
 			}
-			else Game::Print::PrintError_InvalidInput();
+			else Game::Print::PrintError_InvalidInput(newName);
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameOutfitFile, std::string(), 28U, "FMMC_KEY_TIP9", _name);
 			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_name);
 			//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&_dir);

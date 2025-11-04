@@ -265,7 +265,7 @@ namespace sub::TeleportLocations_catind
 						Game::Print::PrintBottomLeft("Location ~b~saved~s~.");
 					}
 				}
-				else Game::Print::PrintError_InvalidInput();
+				else Game::Print::PrintError_InvalidInput(inputStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SaveEntityLocation, std::string(), 28U, "Enter name:");
 				//OnscreenKeyboard::State::arg1._int = Static_241;
 			}
