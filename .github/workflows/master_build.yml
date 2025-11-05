@@ -195,4 +195,3 @@ jobs:
           prerelease: ${{ github.ref_name != 'main' }}
           title: ${{ steps.version.outputs.version}}
           files: MenyooSP.zip
-          dry-run: true
