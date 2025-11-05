@@ -1657,17 +1657,21 @@ namespace sub
 
 		WAIT(50);
 
+		int colour1, colour2;
+		GET_VEHICLE_EXTRA_COLOURS(vehicle, &colour1, &colour2);
 		if (prim_col_index != -3) // basic paint primary
 		{
 			CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(vehicle);
 			GET_VEHICLE_COLOURS(vehicle, &i, &inull);
-			SET_VEHICLE_COLOURS(vehicle, prim_col_index, inull);
+			SET_VEHICLE_COLOURS(vehicle, prim_col_index, inull);	
+			SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, colour2);
 		}
 		if (sec_col_index != -3) // basic paint secondary
 		{
 			CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(vehicle);
 			GET_VEHICLE_COLOURS(vehicle, &inull, &i);
 			SET_VEHICLE_COLOURS(vehicle, inull, sec_col_index);
+			SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, colour2);
 		}
 
 		WAIT(40);
