@@ -2784,27 +2784,13 @@ void** GeneralGlobalHax::WorldPtrPtr()
 
 float GeneralGlobalHax::GetPlayerHeight()
 {
-	if (!g_isEnhanced) {
-		auto baddr = *GeneralGlobalHax::WorldPtrPtr();
-		if (baddr)
-		{
-			auto gameVersion = GTAmemory::GetGameVersion();
-			if (gameVersion <= eGameVersion::VER_1_0_2802_0)
-				return *(GetMultilayerPointer<float*>(baddr, std::vector<DWORD>{0x8, 0x88}));
-		}
-	}
-	return 1.0f;
+	auto baddr = *GeneralGlobalHax::WorldPtrPtr();
+	if (baddr)	return *(GetMultilayerPointer<float*>(baddr, std::vector<DWORD>{0x8, 0x88}));
 }
 void GeneralGlobalHax::SetPlayerHeight(float value)
 {
-	if (g_isEnhanced) return;
 	auto baddr = *GeneralGlobalHax::WorldPtrPtr();
-	if (baddr)
-	{
-		auto gameVersion = GTAmemory::GetGameVersion();
-		if (gameVersion <= eGameVersion::VER_1_0_2802_0)
-			*(GetMultilayerPointer<float*>(baddr, std::vector<DWORD>{0x8, 0x88})) = value;
-	}
+	if (baddr)	*(GetMultilayerPointer<float*>(baddr, std::vector<DWORD>{0x8, 0x88})) = value;
 }
 
 // For 3521 (Legacy) and 814.9 (Enhanced), PlayerSwimSpeed is at {0x8, 0x10A8, 0x1C8}. 

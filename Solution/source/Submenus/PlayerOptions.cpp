@@ -140,7 +140,7 @@ namespace sub
 			AddToggle("Never Wanted", loop_never_wanted, PlayerOpsNeverWantedOn_, PlayerOpsNeverWantedOff_);
 		AddToggle("Burn Mode", loop_player_burn, PlayerOpsBurnModeOn_, PlayerOpsBurnModeOff_);
 		//AddToggle("No Gravity (ALPHA)", loop_player_noGravity, null, PlayerOpsNoGravityOff_);
-		AddNumber("Height (Elongation)", fHeight, 2, null, bHeight_plus, bHeight_minus);
+		AddNumber("Height (Elongation) - Experimental", fHeight, 2, null, bHeight_plus, bHeight_minus);
 		//AddNumber("Walk & Run Speed", fMovementSpeed, 2, null, bMovementSpeed_plus, bMovementSpeed_minus);
 		//AddNumber("Swim Speed", fSwimSpeed, 2, null, bSwimSpeed_plus, bSwimSpeed_minus);
 		AddNumber("Movement Speed (Alt)", mult69_0, 2, null, PlayerOps_i69_flt_MovementSpeed, PlayerOps_d69_flt_MovementSpeed);
