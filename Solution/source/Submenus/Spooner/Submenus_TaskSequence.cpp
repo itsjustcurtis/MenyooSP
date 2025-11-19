@@ -1757,7 +1757,7 @@ namespace sub::Spooner
 						{
 							inputVal = thisDuration;
 						}
-						inputVal -= (inputVal % 500);
+						//inputVal -= (inputVal % 500);
 						thisDuration = inputVal;
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::ST_Duration, std::string(), 7U, "Enter duration in seconds:", oldDurationPreText);
