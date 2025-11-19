@@ -56,6 +56,7 @@ namespace sub::BodyguardMenu
 					{
 						sub::BodyguardMenu::BodyguardManagement::AddBodyguard_Ped(current.second, currentModel);
 						if (*Menu::currentopATM == Menu::printingop) PedFavourites_catind::ShowInstructionalButton(currentModel);
+						//For some reason the menu spawns peds every frame instead of waiting for a button press. Annoying.
 					}
 				}
 			}
