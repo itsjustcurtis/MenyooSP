@@ -1874,14 +1874,7 @@ namespace sub
 			AddNumber(Game::GetGXTEntry("Roof Livery", "Roof Livery"), ms_livery2, 0, null, ms_livery2_plus, ms_livery2_minus);
 		AddLocal(Game::GetGXTEntry("CMOD_MOD_TUR", "Turbo"), IS_TOGGLE_MOD_ON(Static_12, VehicleMod::Turbo), ms_turbo_toggle, ms_turbo_toggle); // Turbo
 		AddLocal(Game::GetGXTEntry("CMOD_LGT_1", "Xenon Lights"), IS_TOGGLE_MOD_ON(Static_12, VehicleMod::XenonHeadlights), ms_lights_toggle, ms_lights_toggle); // Xenon lights
-		AddLocal("Lower Suspension", lowersuspension, MSLowerSuspension_, MSLowerSuspension_, true); // Tuners Lower Suspension
-
-		if (MSLowerSuspension_) {
-			vehicle.RequestControlOnce();
-			lowersuspension = !lowersuspension;
-			SET_REDUCED_SUSPENSION_FORCE(Static_12, lowersuspension);
-			return;
-		}
+		AddLocal("Lower Suspension", lowersuspension, MSLowerSuspension_, MSLowerSuspension_); // Tuners Lower Suspension
 
 		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1604_0_STEAM && vehicle.IsToggleModOn(VehicleMod::XenonHeadlights))
 		{ // Xenon Headlight Colours
@@ -2155,6 +2148,13 @@ namespace sub
 		if (ms_turbo_toggle) {
 			if (IS_TOGGLE_MOD_ON(Static_12, 18)) TOGGLE_VEHICLE_MOD(Static_12, 18, 0);
 			else TOGGLE_VEHICLE_MOD(Static_12, 18, 1);
+			return;
+		}
+
+		if (MSLowerSuspension_) {
+			vehicle.RequestControlOnce();
+			lowersuspension = !lowersuspension;
+			SET_REDUCED_SUSPENSION_FORCE(Static_12, lowersuspension);
 			return;
 		}
 
