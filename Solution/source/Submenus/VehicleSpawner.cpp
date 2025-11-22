@@ -2330,7 +2330,7 @@ namespace sub
 				{"2019367074", {"pink", 352}},
 			};
 
-			float minDiff = INFINITY;
+			float minDiff = static_cast<float>(INT_MAX);
 			std::string nearestColour;
 			std::string nearestAudio;
 			for (const auto& colour : ColourNames)
