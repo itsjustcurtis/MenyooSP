@@ -532,13 +532,17 @@ void Menu::while_closed()
 			justopened();
 			GTAmemory::InitEnhancedPools();
 		}
+		else
+			ige::LogType::LOG_TRACE, "Menu has been opened before, skipping initialization", __FILENAME__;
 
 
 		Game::Sound::PlayFrontend("FocusIn", "HintCamSounds");
 
 		currentsub = LOOCsub;
+		ige::LogType::LOG_TRACE, "Setting current submenu to LOOCsub: " + std::to_string(LOOCsub), __FILENAME__;
 		if (currentsub == SUB::MAINMENU)
 		{
+			ige::LogType::LOG_TRACE, "Current is MainMenu", __FILENAME__;
 			currentop = 1;
 			*currentopATM = 1;
 		}
@@ -615,6 +619,7 @@ void Menu::Up(bool playSound)
 {
 	currentop--;
 	currentop_w_breaks--;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 1;
@@ -623,6 +628,7 @@ void Menu::Down(bool playSound)
 {
 	currentop++;
 	currentop_w_breaks++;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
@@ -631,6 +637,7 @@ void Menu::Bottom(bool playSound)
 {
 	currentop = totalop;
 	currentop_w_breaks = totalop;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 1;
@@ -639,6 +646,7 @@ void Menu::Top(bool playSound)
 {
 	currentop = 1;
 	currentop_w_breaks = 1;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
