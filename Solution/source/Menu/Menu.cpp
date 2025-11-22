@@ -533,16 +533,16 @@ void Menu::while_closed()
 			GTAmemory::InitEnhancedPools();
 		}
 		else
-			ige::LogType::LOG_TRACE, "Menu has been opened before, skipping initialization", __FILENAME__;
+			addlog(ige::LogType::LOG_TRACE, "Menu has been opened before, skipping initialization", __FILENAME__);
 
 
 		Game::Sound::PlayFrontend("FocusIn", "HintCamSounds");
 
 		currentsub = LOOCsub;
-		ige::LogType::LOG_TRACE, "Setting current submenu to LOOCsub: " + std::to_string(LOOCsub), __FILENAME__;
+		addlog(ige::LogType::LOG_TRACE, "Setting current submenu to LOOCsub: " + std::to_string(LOOCsub), __FILENAME__);
 		if (currentsub == SUB::MAINMENU)
 		{
-			ige::LogType::LOG_TRACE, "Current is MainMenu", __FILENAME__;
+			addlog(ige::LogType::LOG_TRACE, "Current is MainMenu", __FILENAME__);
 			currentop = 1;
 			*currentopATM = 1;
 		}
