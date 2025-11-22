@@ -369,6 +369,9 @@ float g_lastFOVValue = 0.0f;
 DWORD g_lastHeightLockMessageTime = 0;
 const char* g_lastHeightLockMessage = nullptr;
 
+bool g_unlockMaxIDs = 0;
+UINT8 max_shapeAndSkinIDs = 46;
+
 #pragma endregion
 
 #pragma region methods used define // p.s. this ain't it chief

@@ -972,7 +972,8 @@ namespace sub
 		};
 #pragma endregion
 
-		UINT8 max_shapeAndSkinIDs = 46;
+		//bool unlockMaxIDs = false;
+		//UINT8 max_shapeAndSkinIDs = 46;
 		UINT8 GetPedHeadOverlayColourType(const PedHeadOverlay& overlayIndex)
 		{
 			switch (overlayIndex)
@@ -1281,6 +1282,12 @@ namespace sub
 			float mix_amountToChange = 0.01f;
 
 			AddTitle("Shape & Skin Tone");
+			AddToggle("Unlock ID Limits", g_unlockMaxIDs);
+
+			if (g_unlockMaxIDs)
+				max_shapeAndSkinIDs = 255;
+			else
+				max_shapeAndSkinIDs = 46;
 
 			// Shape IDs
 			bool shapeFirstID_plus = false, shapeFirstID_minus = false;

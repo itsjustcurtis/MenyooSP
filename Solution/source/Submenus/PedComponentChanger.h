@@ -173,7 +173,7 @@ namespace sub
 		extern const std::vector<std::pair<std::string, std::vector<std::string>>> vCaptions_headOverlays;
 		extern const std::vector<std::string> vCaptions_facialFeatures;
 
-		extern UINT8 max_shapeAndSkinIDs;
+		//extern UINT8 max_shapeAndSkinIDs;
 		UINT8 GetPedHeadOverlayColourType(const PedHeadOverlay& overlayIndex);
 		bool DoesPedModelSupportHeadFeatures(const GTAmodel::Model& pedModel);
 		void UpdatePedHeadBlendData(GTAped& ped, const PedHeadBlendData& blendData, bool bUnused);
