@@ -42,7 +42,8 @@ namespace sub
 		AddOption("Menu Colours", null, nullFunc, SUB::SETTINGS_COLOURS);
 		AddOption("Menu Fonts", null, nullFunc, SUB::SETTINGS_FONTS);
 		AddOption("Menu Position", null, nullFunc, SUB::SETTINGS_MENUPOS);
-		//AddToggle("Mouse Support (ALPHA)", Menu::bit_mouse);
+		//
+		// ("Mouse Support (ALPHA)", Menu::bit_mouse);
 		AddToggle("Gradients", Menu::gradients);
 		AddToggle("Titlebox Globe", Menu::bit_glare_test);
 		AddToggle("Centre Title", Menu::bit_centre_title);
