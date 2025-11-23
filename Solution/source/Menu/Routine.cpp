@@ -115,7 +115,8 @@ void Menu::justopened()
 			IS_DLC_PRESENT(GET_HASH_KEY("mp2024_02_g9ec"))			//this hardcoding needs to get in the bin.
 			)
 		{
-			Game::Print::PrintBottomCentre("~r~Warning~s~: 9th Gen content detected, Game may crash. Read Menyoolog for fix instructions.");
+			//Game::Print::PrintBottomCentre("~r~Warning~s~: 9th Gen content detected, Game may crash. Read Menyoolog for fix instructions.");
+				 //Rockstar seems to have fixed the invalid content crash in legacy, removing the on-screen warning, but will keep the log warning.
 			ige::myLog << ige::LogType::LOG_WARNING << "Gen9 Content found in dlcpacks, this can cause instability when attempted to be loaded by Menyoo." << std::endl
 				<< "			You can find these in your dlclist.xml by searching for \"g9\" and removing these lines or using a comment." << std::endl
 				<< "				    		For example: <!--<Item>dlcpacks:/mpg9ec/</Item>-->" << std::endl << std::endl
@@ -136,7 +137,7 @@ void Menu::justopened()
 			IS_DLC_PRESENT(GET_HASH_KEY("mp2024_02")) 		//f*cking rockstar cocked up some clothes, this warning is the only protection. 
 			)
 		{
-			Game::Print::PrintBottomCentre("~r~Warning~s~: DLCPack mp2024_02 present, Game may crash. Read Menyoolog for fix instructions.");
+			//Game::Print::PrintBottomCentre("~r~Warning~s~: DLCPack mp2024_02 present, Game may crash. Read Menyoolog for fix instructions.");
 			ige::myLog << ige::LogType::LOG_WARNING << "mp2024_02 found in dlcpacks, certain bugged clothing can cause instability when attempted to be loaded by Menyoo." << std::endl
 				<< "				    You can find this in your dlclist.xml by searching for \"mp2024_02\" and removing these lines or using a comment." << std::endl
 				<< "				    		For example: <!--<Item>dlcpacks:/mp2024_02/</Item>-->" << std::endl << std::endl
