@@ -315,6 +315,7 @@ namespace sub
 		{
 			PTFX::trigger_ptfx_1("scr_solomon3", "scr_trev4_747_blood_impact", 0, ped.GetOffsetInWorldCoords(0.37, -0.32f, -1.32f), Vector3(90.0f, 0, 0), 0.7f);
 			ChangeModel_(model);
+			addlog(ige::LogType::LOG_TRACE, "Changed model to: " + text, __FILENAME__);
 		}
 	}
 	void AddmodelOption_(const std::string& text, const GTAmodel::Model& model, bool* extra_option_code, int tickTrue)
@@ -339,6 +340,8 @@ namespace sub
 		}
 	}
 
+	std::pair<std::string, std::string> rngped;
+
 	void ModelChanger_()
 	{
 		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger", __FILENAME__);
@@ -347,6 +350,7 @@ namespace sub
 		//	 ModelChangerVariationWarning_ = 0,
 		//	 ModelChangerSlendy_ = 0,
 		//	 ModelChanger_Animal = 0;
+		rngped = { "", "" };
 
 		Static_241 = PLAYER_PED_ID();
 		AddTitle("Model Changer");
@@ -404,16 +408,22 @@ namespace sub
 
 
 	}
+
+
+	GTAmodel::Model ModelChanger_Random(std::vector<std::pair<std::string, std::string>> pedModels)
+	{
+		addlog(ige::LogType::LOG_TRACE, "Getting Random Ped Model", __FILENAME__);		
+		rngped = pedModels[std::rand() % pedModels.size()];
+		addlog(ige::LogType::LOG_TRACE, "Got Random Ped Model: " + rngped.first + ", " + rngped.second, __FILENAME__);
+		return rngped.first;
+	}
+
 	// I would really like this whole section to be refactored into one function - IJC
 	void ModelChanger_Player()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Player", __FILENAME__);
 		AddTitle("Player");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_Player[std::rand() % g_pedModels_Player.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Player);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Player)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -421,13 +431,9 @@ namespace sub
 	}
 	void ModelChanger_Animal()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Animal", __FILENAME__);
 		AddTitle("Animals");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_Animal[std::rand() % g_pedModels_Animal.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Animal);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Animal)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -435,19 +441,9 @@ namespace sub
 	}
 	void ModelChanger_AmbientFemale()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_AmbientFemale", __FILENAME__);
 		AddTitle("Ambient Females");
-		addlog(ige::LogType::LOG_TRACE, "Creating rngped variable", __FILENAME__);
-		std::pair<std::string, std::string> rngped;
-		addlog(ige::LogType::LOG_TRACE, "Getting Ped Model options", __FILENAME__);
-		do {
-			addlog(ige::LogType::LOG_TRACE, "Starting Loop", __FILENAME__);
-			rngped = g_pedModels_AmbientFemale[std::rand() % g_pedModels_AmbientFemale.size()];
-			addlog(ige::LogType::LOG_TRACE, "Got rngped: " + rngped.first + ", " + rngped.second, __FILENAME__);
-		} while (rngped.first == Game::PlayerPed().Model());
-		addlog(ige::LogType::LOG_TRACE, "Creating Random Option", __FILENAME__);
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
-		addlog(ige::LogType::LOG_TRACE, "Creating Ped Model options", __FILENAME__);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_AmbientFemale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_AmbientFemale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -455,13 +451,9 @@ namespace sub
 	}
 	void ModelChanger_AmbientMale()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_AmbientMale", __FILENAME__);
 		AddTitle("Ambient Males");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_AmbientMale[std::rand() % g_pedModels_AmbientMale.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_AmbientMale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_AmbientMale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -469,13 +461,9 @@ namespace sub
 	}
 	void ModelChanger_Cutscene()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Cutscene", __FILENAME__);
 		AddTitle("Cutscene Models");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_Cutscene[std::rand() % g_pedModels_Cutscene.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Cutscene);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Cutscene)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -483,13 +471,9 @@ namespace sub
 	}
 	void ModelChanger_GangFemale()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_GangFemale", __FILENAME__);
 		AddTitle("Gang Females");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_GangFemale[std::rand() % g_pedModels_GangFemale.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_GangFemale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_GangFemale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -497,13 +481,9 @@ namespace sub
 	}
 	void ModelChanger_GangMale()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_GangMale", __FILENAME__);
 		AddTitle("Gang Males");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_GangMale[std::rand() % g_pedModels_GangMale.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_GangMale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_GangMale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -511,13 +491,9 @@ namespace sub
 	}
 	void ModelChanger_Story()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Story", __FILENAME__);
 		AddTitle("Story Models");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_Story[std::rand() % g_pedModels_Story.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Story);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Story)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -525,13 +501,9 @@ namespace sub
 	}
 	void ModelChanger_Multiplayer()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Multiplayer", __FILENAME__);
 		AddTitle("Multiplayer Models");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_Multiplayer[std::rand() % g_pedModels_Multiplayer.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Multiplayer);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Multiplayer)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -539,13 +511,9 @@ namespace sub
 	}
 	void ModelChanger_ScenarioFemale()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_ScenarioFemale", __FILENAME__);
 		AddTitle("Scenario Females");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_ScenarioFemale[std::rand() % g_pedModels_ScenarioFemale.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_ScenarioFemale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_ScenarioFemale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -553,13 +521,9 @@ namespace sub
 	}
 	void ModelChanger_ScenarioMale()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_ScenarioMale", __FILENAME__);
 		AddTitle("Scenario Males");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_ScenarioMale[std::rand() % g_pedModels_ScenarioMale.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_ScenarioMale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_ScenarioMale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -567,13 +531,9 @@ namespace sub
 	}
 	void ModelChanger_Story_ScenarioFemale()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Story_ScenarioFemale", __FILENAME__);
 		AddTitle("Story Scenario Females");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_StoryScenarioFemale[std::rand() % g_pedModels_StoryScenarioFemale.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_StoryScenarioFemale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_StoryScenarioFemale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -581,13 +541,9 @@ namespace sub
 	}
 	void ModelChanger_Story_ScenarioMale()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Story_ScenarioMale", __FILENAME__);
 		AddTitle("Story Scenario Males");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_StoryScenarioMale[std::rand() % g_pedModels_StoryScenarioMale.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_StoryScenarioMale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_StoryScenarioMale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -595,13 +551,9 @@ namespace sub
 	}
 	void ModelChanger_Others()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger_Others", __FILENAME__);
 		AddTitle("Others");
-		std::pair<std::string, std::string> rngped;
-		do {
-			rngped = g_pedModels_Others[std::rand() % g_pedModels_Others.size()];
-		} while (rngped.first == Game::PlayerPed().Model());
-		AddmodelOption_("Random", (rngped.first), nullptr, 0);
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Others);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Others)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
