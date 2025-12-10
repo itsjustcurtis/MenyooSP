@@ -6,6 +6,6 @@
 namespace sub::BodyguardMenu
 {
     void BodyguardMainMenu();
-    void BodyguardSpawn();
+    //void BodyguardSpawn();
     //void BodyguardList();
 }
