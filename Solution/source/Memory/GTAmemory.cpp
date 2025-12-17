@@ -1492,6 +1492,17 @@ void GTAmemory::Init()
 		_gamePlayCameraAddr = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 	}
 
+	// Bypass model requests block
+	if (g_isEnhanced) {
+		address = MemryScan::PatternScanner::FindPattern("44 0f b6 b4 24 ? ? ? ? 41 20 f6");
+		if (address) memset(reinterpret_cast<void*>(address - 20), 0x90, 20);
+	}
+	else {
+		// new pattern that lands outside of the patched bytes, to ensure compatibility with other mods that patch them.
+		address = MemryScan::PatternScanner::FindPattern("45 84 e4 74 ? e8 ? ? ? ? 48 85 c0");
+		if (address) memset(reinterpret_cast<void*>(address - 24), 0x90, 24);
+	}
+
 	//GetModelInfo
 
 	if (g_isEnhanced) {
