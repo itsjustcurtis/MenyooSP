@@ -13,6 +13,7 @@
 		<Ped name="a_c_boar" caption="Boar" />
 		<Ped name="a_c_boar_02" caption="Boar 2 (Halloween)" />
 		<Ped name="a_c_cat_01" caption="Cat" />
+		<Ped name="a_c_cat_02" caption="Cat 2" />
 		<Ped name="a_c_chickenhawk" caption="Hawk" />
 		<Ped name="a_c_chimp" caption="Chimp 2" />
 		<Ped name="a_c_chimp_02" caption="Chimp" />
@@ -281,6 +282,7 @@
 	</Category>
 	<Category name="Cutscene">
 		<Ped name="cs_amandatownley" caption="Amanda De Santa" />
+		<Ped name="cs_amandatownley_02" caption="Amanda Aged" />
 		<Ped name="cs_andreas" caption="Andreas Sanchez" />
 		<Ped name="cs_ashley" caption="Ashley Butler" />
 		<Ped name="cs_bankman" caption="Bank Manager" />
@@ -380,6 +382,7 @@
 		<Ped name="csb_avery" caption="Avery Duggan" />
 		<Ped name="csb_avischwartzman_02" caption="Avi Schwartzman 2" />
 		<Ped name="csb_avischwartzman_03" caption="Avi Schwartzman 3" />
+		<Ped name="csb_avi_04" caption="Avi Schwartzman 4" />
 		<Ped name="csb_avon" caption="Avon Hertz" />
 		<Ped name="csb_ballas_leader" caption="Ballas Leader" />
 		<Ped name="csb_ballasog" caption="Ballas OG" />
@@ -409,6 +412,7 @@
 		<Ped name="csb_drugdealer" caption="Drug Dealer" />
 		<Ped name="csb_englishdave" caption="English Dave" />
 		<Ped name="csb_englishdave_02" caption="English Dave 2" />
+		<Ped name="csb_faber_02" caption="Faber" />
 		<Ped name="csb_fos_rep" caption="Fame Or Shame Rep" />
 		<Ped name="csb_g" caption="Gerald" />
 		<Ped name="csb_georginacheng" caption="Georgina Cheng" />
@@ -556,6 +560,7 @@
         <Ped name="g_m_m_maragrande_01" caption="Mara Grande Gang Male" />
 		<Ped name="g_m_m_genthug_01" caption="Generic Thug" />
 		<Ped name="g_m_m_goons_01" caption="Goon" />
+		<Ped name="g_m_m_knoway_01" caption="KnoWay Goon" />
 	</Category>
 	<Category name="Story"> 
 		<Ped name="ig_abigail" caption="Abigail Mathers" />
@@ -573,6 +578,7 @@
 		<Ped name="ig_avery" caption="Avery Duggan" />
 		<Ped name="ig_avischwartzman_02" caption="Avi Schawrtzman" />
 		<Ped name="ig_avischwartzman_03" caption="Avi Schwartzman 3" />
+		<Ped name="ig_avi_04" caption="Avi Schwartzman 4" />
 		<Ped name="ig_avon" caption="Avon Hertz" />
 		<Ped name="ig_ballas_leader" caption="Ballas Leader" />
 		<Ped name="ig_ballasog" caption="Ballas OG" />
@@ -634,8 +640,10 @@
 		<Ped name="ig_englishdave" caption="English Dave" />
 		<Ped name="ig_entourage_a" caption="Entourage Female 1" />
 		<Ped name="ig_entourage_b" caption="Entourage Female 2" />
+		<Ped name="ig_faber_02" caption="Faber" />
 		<Ped name="ig_fabien" caption="Fabien" />
 		<Ped name="ig_fbisuit_01" caption="FIB Suit" />
+		<Ped name="ig_fibleader_01" caption="FIB Leader" />
 		<Ped name="ig_floyd" caption="Floyd Hebert" />
 		<Ped name="ig_fooliganz_01" caption="Fooliganz Female" />
 		<Ped name="ig_fooliganz_02" caption="Fooliganz 2 Female" />
@@ -766,6 +774,7 @@
 		<Ped name="ig_tylerdix_02" caption="Tyler Dixon 2" />
 		<Ped name="ig_vagos_leader" caption="Vagos Gang Leader" />
 		<Ped name="ig_vagspeak" caption="Vagos Funeral Speaker" />
+		<Ped name="ig_valencheat" caption="Valentine's Cheater Male" />
 		<Ped name="ig_vernon" caption="Vernon" />
 		<Ped name="ig_vincent" caption="Vincent" />
 		<Ped name="ig_vincent_2" caption="Vincent 2" />
@@ -906,6 +915,7 @@
 		<Ped name="s_m_m_highsec_02" caption="High Security 2" />
 		<Ped name="s_m_m_highsec_03" caption="High Security 3" />
 		<Ped name="s_m_m_highsec_05" caption="High Security 5" />
+		<Ped name="s_m_m_highsec_06" caption="High Security 6" />
 		<Ped name="s_m_m_janitor" caption="Janitor" />
 		<Ped name="s_m_m_lathandy_01" caption="Latino Handyman Male" />
 		<Ped name="s_m_m_lifeinvad_01" caption="Life Invader Male" />
@@ -1002,7 +1012,7 @@
 		<Ped name="u_f_m_casinocash_01" caption="Casino Cashier" />
 		<Ped name="u_f_m_casinoshop_01" caption="Casino shop owner" />
 		<Ped name="u_f_m_corpse_01" caption="Corpse Female" />
-		<Ped name="u_f_m_debbie_01" caption="Debbie (AgathaÃ‚Â´s Secretary)" />
+		<Ped name="u_f_m_debbie_01" caption="Debbie (AgathaÃâÃÂ´s Secretary)" />
 		<Ped name="u_f_m_drowned_01" caption="Drowned Victim Female" />
 		<Ped name="u_f_m_miranda" caption="Miranda" />
 		<Ped name="u_f_m_miranda_02" caption="Miranda 2" />
