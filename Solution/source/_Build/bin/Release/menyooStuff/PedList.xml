@@ -45,6 +45,7 @@
 		<Ped name="a_c_retriever" caption="Retriever" />
 		<Ped name="a_c_rhesus" caption="Rhesus The Chimp" />
 		<Ped name="a_c_rottweiler" caption="Rottweiler" />
+		<Ped name="a_c_rottweiler_02" caption="Rottweiler 2" />
 		<Ped name="a_c_seagull" caption="Seagull" />
 		<Ped name="a_c_sharkhammer" caption="Hammerhead Shark" />
 		<Ped name="a_c_sharktiger" caption="Tiger Shark" />
@@ -332,6 +333,7 @@
 		<Ped name="cs_manuel" caption="Manuel" />
 		<Ped name="cs_marnie" caption="Marnie Allen" />
 		<Ped name="cs_martinmadrazo" caption="Martin Madrazo" />
+		<Ped name="cs_martinmadrazo_02" caption="Martin Madrazo 2" />
 		<Ped name="cs_maryann" caption="Mary-Ann Quinn" />
 		<Ped name="cs_michelle" caption="Michelle" />
 		<Ped name="cs_milton" caption="Milton McIlroy" />
@@ -374,6 +376,7 @@
 		<Ped name="csb_abigail" caption="Abigail Mathers" />
 		<Ped name="csb_agatha" caption="Agatha Baker" />
 		<Ped name="csb_agent" caption="Agent" />
+		<Ped name="csb_agent14_02" caption="Agent 14 - Version 2" />
 		<Ped name="csb_alan" caption="Alan Jerome" />
 		<Ped name="csb_anita" caption="Anita Mendoza" />
 		<Ped name="csb_anton" caption="Anton Beaudelaire" />
@@ -468,6 +471,7 @@
 		<Ped name="csb_prologuedriver" caption="Prologue Driver" />
 		<Ped name="csb_prolsec" caption="Prologue Security" />
 		<Ped name="csb_ramp_gang" caption="Families Gang Member" />
+		<Ped name="csb_rafdeangelis" caption="Raf De Angelis" />
 		<Ped name="csb_ramp_hic" caption="Hick" />
 		<Ped name="csb_ramp_hipster" caption="Hipster" />
 		<Ped name="csb_ramp_marine" caption="Marine" />
@@ -492,6 +496,7 @@
 		<Ped name="csb_tonyprince" caption="'Gay' Tony Prince" />
 		<Ped name="csb_trafficwarden" caption="Traffic Warden" />
 		<Ped name="csb_undercover" caption="Undercover Cop" />
+		<Ped name="csb_valentina" caption="Valentina" />
 		<Ped name="csb_vagos_leader" caption="Vagos Gang Leader" />
 		<Ped name="csb_vagspeak" caption="Vagos Funeral Speaker" />
 		<Ped name="csb_vernon" caption="Vernon" />
@@ -499,6 +504,7 @@
 		<Ped name="csb_vincent_2" caption="Vincent" />
 		<Ped name="csb_vincent_4" caption="Vincent 4" />
 		<Ped name="csb_wendy" caption="Wendy" />
+		<Ped name="csb_weiss" caption="Mr Faber" />
 		<Ped name="csb_yusufamir" caption="Yusuf Amir" />
 	</Category>
 	<Category name="GangFemale">
@@ -561,12 +567,14 @@
 		<Ped name="g_m_m_genthug_01" caption="Generic Thug" />
 		<Ped name="g_m_m_goons_01" caption="Goon" />
 		<Ped name="g_m_m_knoway_01" caption="KnoWay Goon" />
+		<Ped name="g_f_m_undeadmage" caption="Undead Mage" />
 	</Category>
 	<Category name="Story"> 
 		<Ped name="ig_abigail" caption="Abigail Mathers" />
 		<Ped name="ig_acidlabcook" caption="Acid Lab Cook" />
 		<Ped name="ig_agatha" caption="Agatha Baker" />
 		<Ped name="ig_agent" caption="Agent Male" />
+		<Ped name="ig_agent14_02" caption="Agent 14 - Version 2" />
 		<Ped name="ig_agent_02" caption="Agent Female" />
 		<Ped name="ig_ahronward" caption="Ahron Ward (Chop Shop)" />
 		<Ped name="ig_amandatownley" caption="Amanda De Santa" />
@@ -693,11 +701,13 @@
 		<Ped name="ig_lifeinvad_02" caption="Life Invader 2" />
 		<Ped name="ig_lildee" caption="Lil Dee" />
 		<Ped name="ig_luchadora" caption="luchadora" />
+		<Ped name="ig_madrazodriver_01" caption="Madrazo's Driver" />
 		<Ped name="ig_magenta" caption="Magenta" />
 		<Ped name="ig_manuel" caption="Manuel" />
 		<Ped name="ig_marnie" caption="Marnie Allen" />
 		<Ped name="ig_maryann" caption="Mary-Ann Quinn" />
-		<Ped name="ig_maude" caption="Maude" />
+		<Ped name="ig_martinmadrazo_02" caption="Martin Madrazo 2" />
+		<Ped name="ig_maude" caption="Maude"/>
 		<Ped name="ig_maudebf" caption="Murph" />
 		<Ped name="ig_mechanic_01" caption="Mechanic Male (Red's Auto Parts)" />
 		<Ped name="ig_mechanic_02" caption="Mechanic Female (Red's Auto Parts)" />
@@ -733,6 +743,7 @@
 		<Ped name="ig_popov" caption="Dima Popov" />
 		<Ped name="ig_priest" caption="Priest" />
 		<Ped name="ig_prolsec_02" caption="Prologue Security 2" />
+		<Ped name="ig_rafdeangelis" caption="Raf De Angelis" />
 		<Ped name="ig_ramp_gang" caption="Families Gang Member?" />
 		<Ped name="ig_ramp_hic" caption="Hick" />
 		<Ped name="ig_ramp_hipster" caption="Hipster" />
@@ -747,6 +758,7 @@
 		<Ped name="ig_security_a" caption="Security Male" />
 		<Ped name="ig_sessanta" caption="Sessanta" />
 		<Ped name="ig_siemonyetarian" caption="Simeon Yetarian" />
+		<Ped name="ig_skeleton_01" caption="Skeleton" />
 		<Ped name="ig_sol" caption="Soloman" />
 		<Ped name="ig_solomon" caption="Solomon Richards" />
 		<Ped name="ig_soundeng_00" caption="Sound Engineer Female" />
@@ -775,6 +787,7 @@
 		<Ped name="ig_vagos_leader" caption="Vagos Gang Leader" />
 		<Ped name="ig_vagspeak" caption="Vagos Funeral Speaker" />
 		<Ped name="ig_valencheat" caption="Valentine's Cheater Male" />
+		<Ped name="ig_valentina" caption="Valentina" />
 		<Ped name="ig_vernon" caption="Vernon" />
 		<Ped name="ig_vincent" caption="Vincent" />
 		<Ped name="ig_vincent_2" caption="Vincent 2" />
@@ -782,11 +795,13 @@
 		<Ped name="ig_vincent_4" caption="Vincent 4" />
 		<Ped name="ig_wade" caption="Wade" />
 		<Ped name="ig_wendy" caption="Wendy" />
+		<Ped name="ig_weiss" caption="Mr Faber" />
 		<Ped name="ig_yusufamir" caption="Yusuf Amir" />
 		<Ped name="ig_zimbor" caption="Zimbor" />
     	<Ped name="ig_malc" caption="Malc" />
         <Ped name="ig_englishdave_02" caption="English Dave 2" />
         <Ped name="ig_gustavo" caption="Gustavo" />
+		<Ped name="ig_gustavo_02" caption="Gustavo 2" />
         <Ped name="ig_helmsmanpavel" caption="Helmsman Pavel 1" />
         <Ped name="ig_helmsmanpavel_02" caption="Helmsman Pavel 2" />
         <Ped name="ig_isldj_00" caption="Island Dj" />
@@ -811,6 +826,7 @@
         <Ped name="ig_sss" caption="Scott Storch" />
         <Ped name="ig_warehouseboss" caption="Lupe" />
 		<Ped name="ig_mason_duggan" caption="Mason Duggan" />
+		<Ped name="ig_zombie_dj_01" caption="Zombie DJ" />
 	</Category>
 	<Category name="Multiplayer">
 		<Ped name="mp_f_bennymech_01" caption="Benny Mechanic (Female)" />
@@ -1115,5 +1131,7 @@
 		<Ped name="g_m_m_zombie_01" caption="Zombie 1" />
 		<Ped name="g_m_m_zombie_02" caption="Zombie 2" />
 		<Ped name="g_m_m_zombie_03" caption="Zombie 3" />
+		<Ped name="g_m_m_zombie_04" caption="Zombie 4" />
+		<Ped name="g_m_m_zombie_05" caption="Zombie 5" />
 	</Category>
 </PedList>
