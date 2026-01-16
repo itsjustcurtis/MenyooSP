@@ -141,7 +141,6 @@ extern float forge_dist, _globalForgeGun_prec, _globalForgeGun_shootForce;
 extern bool ObjSpawn_forge_assistance;
 
 extern bool g_unlockMaxIDs;
-extern UINT8 max_shapeAndSkinIDs;
 
 #pragma endregion
 

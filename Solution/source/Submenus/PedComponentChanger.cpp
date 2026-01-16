@@ -972,8 +972,11 @@ namespace sub
 		};
 #pragma endregion
 
-		//bool unlockMaxIDs = false;
-		//UINT8 max_shapeAndSkinIDs = 46;
+		inline int GetMaxShapeAndSkinIDs()
+		{
+			return g_unlockMaxIDs ? 255 : 46;
+		}
+		
 		UINT8 GetPedHeadOverlayColourType(const PedHeadOverlay& overlayIndex)
 		{
 			switch (overlayIndex)
@@ -1028,10 +1031,12 @@ namespace sub
 
 			_pedHead = &vPedHeads[ped.Handle()];
 
+			int max_ids = GetMaxShapeAndSkinIDs();
+
 			auto headBlend = ped.HeadBlendData_get();
-			if (headBlend.shapeFirstID < 0 || headBlend.shapeFirstID > max_shapeAndSkinIDs || headBlend.shapeSecondID < 0 || headBlend.shapeSecondID > max_shapeAndSkinIDs
-				|| headBlend.shapeThirdID < 0 || headBlend.shapeThirdID > max_shapeAndSkinIDs || headBlend.skinFirstID < 0 || headBlend.skinFirstID > max_shapeAndSkinIDs
-				|| headBlend.skinSecondID < 0 || headBlend.skinSecondID > max_shapeAndSkinIDs || headBlend.skinThirdID < 0 || headBlend.skinThirdID > max_shapeAndSkinIDs
+			if (headBlend.shapeFirstID < 0 || headBlend.shapeFirstID > max_ids || headBlend.shapeSecondID < 0 || headBlend.shapeSecondID > max_ids
+				|| headBlend.shapeThirdID < 0 || headBlend.shapeThirdID > max_ids || headBlend.skinFirstID < 0 || headBlend.skinFirstID > max_ids
+				|| headBlend.skinSecondID < 0 || headBlend.skinSecondID > max_ids || headBlend.skinThirdID < 0 || headBlend.skinThirdID > max_ids
 				)
 			{
 				headBlend.shapeFirstID = 0;
@@ -1275,7 +1280,6 @@ namespace sub
 			PedHeadBlendData blendData;
 			GET_PED_HEAD_BLEND_DATA(ped.Handle(), (Any*)&blendData);
 			std::vector<std::string> vIdNames;//{ "Male Non-DLC", "Female Non-DLC", "Male DLC", "Female DLC" };
-			auto max_ids = max_shapeAndSkinIDs;
 			//for (UINT8 i = 0; i < max_ids - 4; i++) vIdNames.push_back(std::to_string(i));
 			float max_mix = 1.0f;
 			float min_mix = -1.0f;
@@ -1284,10 +1288,7 @@ namespace sub
 			AddTitle("Shape & Skin Tone");
 			AddToggle("Unlock ID Limits", g_unlockMaxIDs);
 
-			if (g_unlockMaxIDs)
-				max_shapeAndSkinIDs = 255;
-			else
-				max_shapeAndSkinIDs = 46;
+			int max_ids = GetMaxShapeAndSkinIDs();
 
 			// Shape IDs
 			bool shapeFirstID_plus = false, shapeFirstID_minus = false;
