@@ -1,70 +1,43 @@
 #pragma once
+
 #include <vector>
-#include <filesystem>
+#include <string>
 
-#include "Submenus/Settings.h"
-#include "Submenus/Spooner/SpoonerSettings.h"
+#include "Scripting/GTAentity.h"
 #include "Natives/types.h"
-#include "BodyguardSpawn.h"
-
-typedef unsigned __int8 UINT8;
-typedef unsigned int UINT;
-enum class BodyguardType : UINT8;
-class Vector3;
-class GTABodyguard;
-namespace GTAmodel {
-	class Model;
-}
-
-//namespace BodyguardMenu
-//{
-	//class BodyguardPed;
-	//void BodyguardList();
-	//void BodyguardGodmode();
-
-	//namespace BodyguardManagement
-	//{
-// Code
-	//}
-
-//}
 
 namespace sub::BodyguardMenu
 {
-	class BodyguardEntity
-	{
-	public:
-		//BodyguardEntity();
-		//~BodyguardEntity();
+    class BodyguardEntity
+    {
+    public:
+        EntityType Type{};
+        std::string Name;
+        std::string HashName;
+        GTAentity Handle;
+    };
 
-		int id;
-		GTAentity entityHandle;
-		std::string name;
+    extern std::vector<BodyguardEntity> BodyguardDb;
 
-		EntityType Type;
-		std::string HashName;
-		GTAentity Handle;
-	};
+    bool operator==(const BodyguardEntity& a, const BodyguardEntity& b);
+    bool operator!=(const BodyguardEntity& a, const BodyguardEntity& b);
 
-	extern std::vector<BodyguardEntity> BodyguardDb;
+    namespace BodyguardManagement
+    {
+        unsigned int GetNumberOfBodyguardsSpawned(const EntityType&);
+        int GetBodyguardIndexInDb(const GTAentity&);
+        int GetBodyguardIndexInDb(const BodyguardEntity&);
+        void RemoveBodyguardFromDb(const BodyguardEntity&);
+        void DeleteBodyguard(BodyguardEntity&);
+        void AddBodyguardToDb(BodyguardEntity ent);
 
-	namespace BodyguardManagement
-	{
-		UINT GetNumberOfBodyguardsSpawned(const EntityType& type);
+        // Draws an arrow above the specified entity to highlight it in the world
+        void ShowArrowAboveEntity(const GTAentity& entity);
+        // Give a weapon directly to a bodyguard entity (safe, ped-targeted native calls).
+        void GiveWeaponToBodyguard(const BodyguardEntity& target, Hash weaponHash, int ammo = 250, bool equip = true);
 
-		int GetBodyguardIndexInDb(const GTAentity& entity);
-		int GetBodyguardIndexInDb(const BodyguardEntity& ent);
-		void AddBodyguardToDb(BodyguardEntity ent, bool missionEnt = sub::Spooner::Settings::bAddToDbAsMissionEntities);
-		void RemoveBodyguardFromDb(const BodyguardEntity& ent);
-
-		void ClearBodyguardDb();
-		void DeleteBodyguard(BodyguardEntity& ent);
-		BodyguardEntity AddPed(const GTAmodel::Model& model, const std::string& name, bool unloadModel = true);
-
-		void ShowBoxAroundEntity(const GTAentity& ent, bool showPoly = true, RgbS colour = { 0, 255, 255 });
-		void ShowArrowAboveEntity(const GTAentity& ent, RGBA colour = { 0, 255, 255, 200 });
-		void DrawRadiusDisplayingMarker(const Vector3& pos, float radius, RGBA colour = { 0, 255, 0, 130 });
-	}
-
+        // Create a menu option that gives the specified weapon to the specified bodyguard when selected.
+        // Mimics the AddOption_* helpers you already use for models.
+        void AddOption_GiveWeaponToBodyguard(const std::string& label, Hash weaponHash, const BodyguardEntity& target);
+    }
 }
-//dong

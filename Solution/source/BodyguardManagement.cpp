@@ -3,27 +3,24 @@
 #include "Menu/Menu.h"
 #include "Scripting/Game.h"
 #include "Scripting/GTAped.h"
-#include "BodyguardMenu.h"
+#include "Scripting/GTAentity.h"
 #include "Natives/natives.h"
-#include <algorithm>
-#include "Menu/Routine.h"
-#include "Util/StringManip.h"
 
-// Provide equality operators for BodyguardEntity and a single definition for BodyguardDb.
-// std::find and other algorithms require operator== for the element type.
+#include <algorithm>
+#include "Util/StringManip.h"
+#include "Scripting/Model.h"
+
 namespace sub::BodyguardMenu
 {
-	// compare by underlying Handle (GTAentity has operator==)
 	bool operator==(const BodyguardEntity& left, const BodyguardEntity& right)
 	{
 		return left.Handle == right.Handle;
 	}
 	bool operator!=(const BodyguardEntity& left, const BodyguardEntity& right)
 	{
-		return left.Handle != right.Handle;
+		return !(left == right);
 	}
 
-	// define the storage for the DB (was incorrectly declared in header as "extern;")
 	std::vector<BodyguardEntity> BodyguardDb;
 }
 
@@ -31,71 +28,92 @@ namespace sub::BodyguardMenu
 {
 	namespace BodyguardManagement
 	{
-		UINT GetNumberOfBodyguardsSpawned(const EntityType& type)
+		// <- changed UINT -> unsigned int
+		unsigned int GetNumberOfBodyguardsSpawned(const EntityType& type)
 		{
 			switch (type)
 			{
 			case EntityType::ALL:
-				return (UINT)BodyguardMenu::BodyguardDb.size();
-				break;
+				return static_cast<unsigned int>(BodyguardDb.size());
 			default:
-				return (UINT)std::count_if(BodyguardMenu::BodyguardDb.begin(), BodyguardMenu::BodyguardDb.end(),
-					[type](const BodyguardEntity& item) {
+				return static_cast<unsigned int>(std::count_if(
+					BodyguardDb.begin(),
+					BodyguardDb.end(),
+					[type](const BodyguardEntity& item)
+					{
 						return item.Type == type;
-					});
-				break;
+					}));
 			}
 		}
 
 		int GetBodyguardIndexInDb(const GTAentity& entity)
 		{
-			for (int i = 0; i < BodyguardMenu::BodyguardDb.size(); i++)
+			for (int i = 0; i < static_cast<int>(BodyguardDb.size()); ++i)
 			{
-				if (BodyguardMenu::BodyguardDb[i].Handle == entity)
+				if (BodyguardDb[i].Handle == entity)
 					return i;
 			}
 			return -1;
 		}
+
 		int GetBodyguardIndexInDb(const BodyguardEntity& ent)
 		{
 			return GetBodyguardIndexInDb(ent.Handle);
 		}
-		void AddBodyguardToDb(BodyguardEntity ent, bool missionEnt)
+
+		void AddBodyguardToDb(BodyguardEntity ent)
 		{
-			if (ent.Handle.Exists())
-			{
-				if (ent.HashName.length() == 0)
-					ent.HashName = int_to_hexstring(ent.Handle.Model().hash, true);
-				if (missionEnt)
-					ent.Handle.MissionEntity_set(true);
-				BodyguardMenu::BodyguardDb.push_back(ent);
-			}
+			if (!ent.Handle.Exists())
+				return;
+
+			if (ent.HashName.empty())
+				ent.HashName = int_to_hexstring(ent.Handle.Model().hash, true);
+
+			BodyguardDb.push_back(std::move(ent));
 		}
+
 		void RemoveBodyguardFromDb(const BodyguardEntity& ent)
 		{
-			GTAentity handle = ent.Handle;
-
-			const auto& eit = std::find(BodyguardMenu::BodyguardDb.begin(), BodyguardMenu::BodyguardDb.end(), ent);
-			if (eit != BodyguardMenu::BodyguardDb.end())
-			{
-				BodyguardMenu::BodyguardDb.erase(eit);
-			}
-
+			const auto it = std::find(BodyguardDb.begin(), BodyguardDb.end(), ent);
+			if (it != BodyguardDb.end())
+				BodyguardDb.erase(it);
 		}
 
-		void ClearBodyguardDb()
-		{
-			BodyguardMenu::BodyguardDb.clear();
-		}
 		void DeleteBodyguard(BodyguardEntity& ent)
 		{
-			GTAentity handle = ent.Handle;
-			for (auto& e : sub::BodyguardMenu::BodyguardDb)
+			if (!ent.Handle.Exists())
+			{
+				RemoveBodyguardFromDb(ent);
+				return;
+			}
 
-				RemoveBodyguardFromDb(ent); // Remove this from db
-			handle.Detach(); // Detach this
-			//GTAblip(handle.CurrentBlip()).Remove();
-			handle.Delete(handle != PLAYER::PLAYER_PED_ID() && handle != g_myVeh);
+			RemoveBodyguardFromDb(ent);
+			ent.Handle.Detach();
+
+			GTAentity playerPed = PLAYER::PLAYER_PED_ID();
+			if (ent.Handle != playerPed)
+				ent.Handle.Delete(true);
 		}
+				
+
+			void ShowArrowAboveEntity(const GTAentity & entity)
+			{
+				if (!entity.Exists())
+					return;
+
+				Vector3 pos = entity.GetOffsetInWorldCoords({ 0.0f, 0.0f, 1.5f });
+				GRAPHICS::DRAW_MARKER(
+					2,              // type
+					pos.x, pos.y, pos.z,
+					0, 0, 0,        // direction
+					0, 0, 0,        // rotation
+					0.3f, 0.3f, 0.3f, // scale
+					255, 0, 0, 200, // color
+					false, false, 2,
+					false, nullptr, nullptr, false
+				);
+			}
+
+		
 	}
 }

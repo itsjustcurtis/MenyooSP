@@ -34,7 +34,6 @@
 #include "..\Submenus\Spooner\Databases.h"
 #include "..\Submenus\Spooner\EntityManagement.h"
 #include "..\Submenus\Spooner\MenuOptions.h"
-#include "..\BodyguardMenu.h"
 #include "..\BodyguardSpawn.h"
 
 #include <string>

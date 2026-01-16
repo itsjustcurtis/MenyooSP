@@ -58,8 +58,17 @@ namespace sub
 		dict2.clear();
 		dict3.clear();
 
-		Static_241 = PLAYER_PED_ID();
-		Static_240 = PLAYER_ID();
+		if (g_WeaponOpsPedOverride != 0)
+		{
+			Static_241 = g_WeaponOpsPedOverride;
+			Static_240 = g_WeaponOpsPlayerOverride;
+		}
+		else
+		{
+			Static_241 = PLAYER_PED_ID();
+			Static_240 = PLAYER_ID();
+		}
+
 
 		std::stringstream wdmg_ss;
 		wdmg_ss << std::fixed << std::setprecision(2) << (loop_weapon_damage_increase / 0.72f);

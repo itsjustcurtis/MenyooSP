@@ -1,4 +1,8 @@
-﻿#include "BodyguardSpawn.h"
+﻿#include "Natives/types.h"
+#include "Natives/natives2.h"
+#include "Natives/natives.h"
+
+#include "BodyguardSpawn.h"
 #include "BodyguardFunction.h"
 #include "BodyguardManagement.h"
 
@@ -6,8 +10,6 @@
 #include "Scripting/Game.h"
 #include "Scripting/GTAped.h"
 #include "Scripting/Model.h"
-#include "Natives/natives2.h"
-#include "Natives/natives.h"
 #include "macros.h"
 #include <vector>
 #include <tuple>
@@ -56,7 +58,6 @@ namespace sub::BodyguardMenu
 					{
 						sub::BodyguardMenu::BodyguardManagement::AddOption_BodyguardPed(current.second, currentModel);
 						if (*Menu::currentopATM == Menu::printingop) PedFavourites_catind::ShowInstructionalButton(currentModel);
-						//For some reason the menu spawns peds every frame instead of waiting for a button press. Annoying.
 
 					}
 				}
@@ -78,13 +79,7 @@ namespace sub::BodyguardMenu
 				AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
 				AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
 			}
-
-			bool bInputPressed = false;
-			AddOption("INPUT MODEL", bInputPressed); if (bInputPressed)
-			{
-				sub::Spooner::EntityManagement::InputEntityIntoDb(EntityType::PED); //This feature isn't implemented yet.
-			}
-		}
+	}
 
 }
 namespace sub::BodyguardMenu::BodyguardManagement
@@ -103,21 +98,37 @@ namespace sub::BodyguardMenu::BodyguardManagement
 			return;
 		}
 
-		GTAped player(PLAYER::PLAYER_PED_ID());
-		Vector3 spawnPos = player.GetOffsetInWorldCoords(Vector3(2.0f, 0.0f, 0.0f));
+		if (!model.IsInCdImage())
+			return;
 
-		Ped ped = PED::CREATE_PED(26, model.hash, spawnPos.x, spawnPos.y, spawnPos.z, 0.0f, true, true);
-
-		if (!ENTITY::DOES_ENTITY_EXIST(ped))
+		if (!model.Load(4000))
 		{
-			Game::Print::PrintBottomLeft("Ped creation failed.");
+			Game::Print::PrintBottomLeft("Failed to load model.");
+			model.Unload();
 			return;
 		}
+
+		int pedType = 26;
+
+		GTAped player(PLAYER::PLAYER_PED_ID());
+		Vector3 pos = player.GetOffsetInWorldCoords(Vector3(2.f, 0.f, 0.f));
+
+		Ped ped = PED::CREATE_PED(
+			pedType,
+			model.hash,
+			pos.x, pos.y, pos.z,
+			0.f,
+			true, true
+		);
 
 		ENTITY::SET_ENTITY_MAX_HEALTH(ped, sub::BodyguardMenu::health);
 		ENTITY::SET_ENTITY_HEALTH(ped, sub::BodyguardMenu::health, 0);
 		PED::SET_PED_ARMOUR(ped, sub::BodyguardMenu::armor);
-		ENTITY::SET_ENTITY_INVINCIBLE(ped, sub::BodyguardMenu::godmode);
+		if (sub::BodyguardMenu::godmode)
+			set_ped_invincible_on(ped);
+		else
+			set_ped_invincible_off(ped);
+
 
 		PED::SET_PED_AS_GROUP_MEMBER(ped, PLAYER::GET_PLAYER_GROUP(PLAYER::PLAYER_ID()));
 		PED::SET_PED_NEVER_LEAVES_GROUP(ped, true);
@@ -125,9 +136,19 @@ namespace sub::BodyguardMenu::BodyguardManagement
 		PED::SET_PED_COMBAT_MOVEMENT(ped, 2);
 		PED::SET_PED_COMBAT_ATTRIBUTES(ped, 46, true);
 
+		BodyguardEntity ent{};
+		ent.Handle = GTAentity(ped);
+		ent.Type = EntityType::PED;
+		ent.Name = text;
+		ent.HashName = int_to_hexstring(model.hash, true);
+
+		sub::BodyguardMenu::BodyguardManagement::AddBodyguardToDb(ent);
+
 		s_bodyguards.push_back(ped);
 
 		Game::Print::PrintBottomLeft("Bodyguard spawned");
+		model.Unload();
 	}
+
 }
 

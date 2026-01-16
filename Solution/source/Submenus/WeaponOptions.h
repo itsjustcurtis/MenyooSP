@@ -12,6 +12,7 @@
 #include "PtfxSubs.h" //PtfxS
 
 #include <string>
+#include "../Menu/Routine.h"
 
 typedef unsigned __int8 UINT8;
 typedef int INT, Entity, Ped, Vehicle, Object, ScrHandle;
@@ -24,6 +25,9 @@ class GTAped;
 namespace GTAmodel {
 	class Model;
 }
+
+extern Ped g_WeaponOpsPedOverride = 0;
+extern Player g_WeaponOpsPlayerOverride = -1;
 
 namespace sub
 {

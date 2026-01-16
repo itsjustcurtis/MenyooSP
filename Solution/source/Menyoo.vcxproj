@@ -16,6 +16,7 @@
     <ClCompile Include="BodyguardMenu.cpp" />
     <ClCompile Include="BodyguardSettings.cpp" />
     <ClCompile Include="BodyguardSpawn.cpp" />
+    <ClCompile Include="BodyguardSubmenu.cpp" />
     <ClCompile Include="Memory\Hooking.cpp" />
     <ClCompile Include="Menu\FolderPreviewBmps.cpp" />
     <ClCompile Include="Menu\Language.cpp" />
@@ -131,6 +132,7 @@
     <ClInclude Include="BodyguardMenu.h" />
     <ClInclude Include="BodyguardSettings.h" />
     <ClInclude Include="BodyguardSpawn.h" />
+    <ClInclude Include="BodyguardSubmenu.h" />
     <ClInclude Include="Memory\Hooking.h" />
     <ClInclude Include="Menu\FolderPreviewBmps.h" />
     <ClInclude Include="Menu\Language.h" />
