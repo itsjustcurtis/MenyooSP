@@ -664,7 +664,34 @@ namespace BlipIcon {
 		{ BlipIcon::FastTravel, "Fast Travel" },
 		{ BlipIcon::Duster300H, "Duster 300-H" },
 		{ BlipIcon::Titan250D, "Titan 250 D" },
-		{ BlipIcon::Collectible, "Collectible" }
+		{ BlipIcon::Collectible, "Collectible" },
+		{ BlipIcon::Dog, "Dog" },
+		{ BlipIcon::BobcatSecurity, "Bobcat Security" },
+		{ BlipIcon::Helitours, "Helitours" },
+		{ BlipIcon::HelitoursBuyable, "Helitours For Sale" },
+		{ BlipIcon::CarWashProperty, "Car Wash" },
+		{ BlipIcon::CarwashPropertyBuyable, "Car Wash For Sale" },
+		{ BlipIcon::AlarmBell, "Alarm Bell" },
+		{ BlipIcon::RealEstate, "Real Estate" },
+		{ BlipIcon::MedicalCourier, "Medical Courier" },
+		{ BlipIcon::GruppeSechs, "Gruppe Sechs" },
+		{ BlipIcon::FireHydrant, "Fire Hydrant" },
+		{ BlipIcon::FireTruck, "Fire Truck" },
+		{ BlipIcon::Forklift, "Forklift" },
+		{ BlipIcon::Newspaper, "News Paper" },
+		//{ BlipIcon::420Survival, "420 Survival" }, //420 breaks the code. Needs an alternative name.
+		{ BlipIcon::CommunityMission, "Community Mission" },
+		{ BlipIcon::PropertyMansion, "Mansion Property" },
+		{ BlipIcon::Keypad2, "Keypad2" },
+		{ BlipIcon::TaxiSelfDestruct, "Taxi Self-Destruct" },
+		{ BlipIcon::SubwayTrain, "Subway Train" },
+		{ BlipIcon::TrashBin, "Trash Bin" },
+		{ BlipIcon::MissionCreator, "Mission Creator" },
+		{ BlipIcon::Cat, "Cat" },
+		{ BlipIcon::Mansion1, "Mansion1" },
+		{ BlipIcon::Mansion2, "Mansion2" },
+		{ BlipIcon::Mansion3, "Mansion3" }
+
 	};
 }
 

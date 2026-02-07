@@ -185,6 +185,8 @@ inline void MenyooMain()
 	g_MenyooConfigTick = GetTickCount();
 	g_FaderTick = GetTickCount();
 
+
+	addlog(ige::LogType::LOG_TRACE, "Check Valid for Block Vehicles", __FILENAME__);
 	if (!NETWORK_IS_SESSION_STARTED() && !IS_COMMANDLINE_END_USER_BENCHMARK() && !LANDING_SCREEN_STARTED_END_USER_BENCHMARK())
 	{
 		addlog(ige::LogType::LOG_TRACE, "Valid, Enabling Blocked Vehicles", __FILENAME__);
