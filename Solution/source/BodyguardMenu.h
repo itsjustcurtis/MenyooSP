@@ -1,11 +1,19 @@
 #pragma once
-#include <vector>
-#include <string>
-#include "..\source\Scripting\GTAped.h"
 
+#include <string>
+#include "Menu/Routine.h"
+
+using TargetPed = int;
+
+TargetPed g_WeaponMenuPedOverride = 0;
+namespace sub
+{ 
+void BodyguardMainMenu();
+}
 namespace sub::BodyguardMenu
 {
-    void BodyguardMainMenu();
-    void BodyguardSpawn();
-    //void BodyguardList();
+    extern int armor;
+    extern int health;
+    extern bool godmode;
+
 }

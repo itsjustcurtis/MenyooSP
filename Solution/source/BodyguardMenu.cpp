@@ -7,7 +7,6 @@
 #include "Submenus/PedAnimation.h"
 #include "Submenus/PedModelChanger.h"
 #include "Submenus/PedSpeech.h"
-#include "Submenus/WeaponOptions.h"
 
 #include <functional>
 #include "Menu/Routine.h"
@@ -27,57 +26,50 @@ using namespace sub::BodyguardMenu;
 
 
 using namespace sub::Spooner::Submenus;
-using namespace Game::Print;
-
 
 namespace sub::BodyguardMenu
 {
-		static bool g_fd_plus = false;
-		static bool g_fd_minus = false;
-		static bool prevGodMode = false;
-		int armor = 200;
-		int health = 200;
-		bool godmode = false;
-	
+    int armor = 200;
+    int health = 200;
+    bool godmode = false;
+}
+namespace sub
+{
+    void BodyguardMainMenu()
+    {
+        AddTitle("Bodyguards");
 
-	void BodyguardMainMenu()
-	{
-		AddTitle("Bodyguards");
+        AddOption("Spawn Bodyguard", null, nullFunc, SUB::BODYGUARD_SPAWN);
+        AddOption("Bodyguard List", null, nullFunc, SUB::BODYGUARD_LIST);
 
-		AddOption("Spawn Bodyguard", null, nullFunc, SUB::BODYGUARD_SPAWN);
-		AddOption("Bodyguard List", null, nullFunc, SUB::BODYGUARD_LIST);
+        static bool bHealth_plus = false, bHealth_minus = false, bHealth_input = false;
+        AddNumber("Default Health", sub::BodyguardMenu::health, 0, bHealth_input, bHealth_plus, bHealth_minus);
+        if (bHealth_plus && sub::BodyguardMenu::health < INT_MAX) ++sub::BodyguardMenu::health;
+        if (bHealth_minus && sub::BodyguardMenu::health > 0) --sub::BodyguardMenu::health;
+        if (bHealth_input)
+        {
+            std::string inputStr = Game::InputBox("", 5U, "", std::to_string(sub::BodyguardMenu::health));
+            if (!inputStr.empty())
+            {
+                try { sub::BodyguardMenu::health = std::stoi(inputStr); }
+                catch (...) { PrintError_InvalidInput(); }
+            }
+        }
 
-		static int health = 200;
-		static bool bHealth_plus = false, bHealth_minus = false, bHealth_input = false;
-		AddNumber("Default Health", health, 0, bHealth_input, bHealth_plus, bHealth_minus);
-		if (bHealth_plus && health < INT_MAX) ++health;
-		if (bHealth_minus && health > 0) --health;
-		if (bHealth_input)
-		{
-			std::string inputStr = Game::InputBox("", 5U, "", std::to_string(health));
-			if (!inputStr.empty())
-			{
-				try { health = std::stoi(inputStr); }
-				catch (...) { PrintError_InvalidInput(); }
-			}
-		}
+        static bool bArmor_plus = false, bArmor_minus = false, bArmor_input = false;
+        AddNumber("Default Armor", sub::BodyguardMenu::armor, 0, bArmor_input, bArmor_plus, bArmor_minus);
+        if (bArmor_plus && sub::BodyguardMenu::armor < INT_MAX) ++sub::BodyguardMenu::armor;
+        if (bArmor_minus && sub::BodyguardMenu::armor > 0) --sub::BodyguardMenu::armor;
+        if (bArmor_input)
+        {
+            std::string inputStr = Game::InputBox("", 5U, "", std::to_string(sub::BodyguardMenu::armor));
+            if (!inputStr.empty())
+            {
+                try { sub::BodyguardMenu::armor = std::stoi(inputStr); }
+                catch (...) { PrintError_InvalidInput(); }
+            }
+        }
 
-		static int armor = 200;
-		static bool bArmor_plus = false, bArmor_minus = false, bArmor_input = false;
-		AddNumber("Default Armor", armor, 0, bArmor_input, bArmor_plus, bArmor_minus);
-		if (bArmor_plus && armor < INT_MAX) ++armor;
-		if (bArmor_minus && armor > 0) --armor;
-		if (bArmor_input)
-		{
-			std::string inputStr = Game::InputBox("", 5U, "", std::to_string(armor));
-			if (!inputStr.empty())
-			{
-				try { armor = std::stoi(inputStr); }
-				catch (...) { PrintError_InvalidInput(); }
-			}
-		}
-
-		static bool godmode = false;
-		AddToggle("Godmode", godmode);
-	}
+        AddToggle("Godmode", sub::BodyguardMenu::godmode);
+    }
 }

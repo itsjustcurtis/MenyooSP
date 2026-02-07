@@ -151,7 +151,7 @@ namespace sub
 							StatSetInt(statName, statValue);
 						}
 						catch (...) { 
-							Game::Print::PrintError_InvalidInput(); 
+							Game::Print::PrintError_InvalidInput(inputStr); 
 							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Integer for " + stat.caption + " Entered", __FILENAME__);
 						}
 					}
@@ -177,7 +177,7 @@ namespace sub
 							StatSetFloat(statName, statValue);
 						}
 						catch (...) { 
-							Game::Print::PrintError_InvalidInput();
+							Game::Print::PrintError_InvalidInput(inputStr);
 							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Float for " + stat.caption + " Entered", __FILENAME__);
 						}
 					}

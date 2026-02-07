@@ -50,7 +50,7 @@ namespace sub::Spooner
 		STSTask* _selectedSTST = nullptr;
 
 		namespace Sub_TaskSequence
-		{
+		{			
 			void Nothing()
 			{
 			}
@@ -86,7 +86,7 @@ namespace sub::Spooner
 					if (inputStr.length())
 					{
 						try { tskPtr->healthValue = stoi(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Int, std::string(), 5U, std::string(), std::to_string(tskPtr->healthValue));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->healthValue);
@@ -623,7 +623,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speed = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speed).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speed);
@@ -639,7 +639,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedMultiplier = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedMultiplier).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedMultiplier);
@@ -992,7 +992,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1028,7 +1028,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1066,7 +1066,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1166,7 +1166,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1463,7 +1463,7 @@ namespace sub::Spooner
 									throw;
 								tskPtr->opacityValue = inputVal;
 							}
-							catch (...) { Game::Print::PrintError_InvalidInput(); }
+							catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 						}
 						//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Int, std::string(), 5U, std::string(), std::to_string(tskPtr->opacityValue));
 						//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->opacityValue);
@@ -1725,9 +1725,11 @@ namespace sub::Spooner
 				}
 			}
 		}
+
 		void Sub_TaskSequence_InTask()
 		{
-			auto tskPtr = _selectedSTST;
+			auto tskPtr = _selectedSTST;			
+
 			if (tskPtr == nullptr)
 			{
 				Menu::SetSub_previous();
@@ -1738,13 +1740,30 @@ namespace sub::Spooner
 			auto& thisDuration = tskPtr->duration;
 			if (thisDuration >= 0) // -1 for tasks with no settings. -2 for tasks with settings but no duration setting.
 			{
-				bool bDuration_plus = false, bDuration_minus = false, bDuration_input = false;
-				AddNumber("Duration (In Seconds)", (float(thisDuration) / 1000), 1, bDuration_input, bDuration_plus, bDuration_minus);
-				if (bDuration_plus) { if (thisDuration < INT_MAX) thisDuration += 500; }
-				if (bDuration_minus) { if (thisDuration > 0) thisDuration -= 500; }
+				bool bDuration_plus = false, bDuration_minus = false, bDuration_input = false, bDurationMult_plus = false, bDurationMult_minus = false, prec_plus = 0, prec_minus = 0;
+				AddNumber("Duration (In Seconds)", (float(thisDuration) / 1000), 3, bDuration_input, bDuration_plus, bDuration_minus);
+				AddNumber("Scroll Sensitivity", (float(_manualPlacementPrecision)), 3, null, prec_minus, prec_plus);
+				if (bDuration_plus) { 
+					addlog(ige::LogType::LOG_TRACE, "Increasing duration by " + std::to_string(_manualPlacementPrecision * 1000) + " milliseconds. Target " + std::to_string(thisDuration + _manualPlacementPrecision * 1000), __FILENAME__);
+					if (thisDuration <= INT_MAX-_manualPlacementPrecision*1000) thisDuration += static_cast<int>(_manualPlacementPrecision*1000);
+					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.", __FILENAME__);
+				}
+				if (bDuration_minus) {
+					addlog(ige::LogType::LOG_TRACE, "Decreasinc duration by " + std::to_string(_manualPlacementPrecision * 1000) + " milliseconds. Target " + std::to_string(thisDuration - _manualPlacementPrecision * 1000), __FILENAME__);
+					if (thisDuration > _manualPlacementPrecision*1000) thisDuration -= static_cast<int>(_manualPlacementPrecision*1000);
+					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.", __FILENAME__);
+				}						
+				if (prec_plus) {
+					addlog(ige::LogType::LOG_TRACE, "Increasing duration scroll sensitivity to " + std::to_string(_manualPlacementPrecision * 10) + " seconds.", __FILENAME__);
+					if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
+				}
+				if (prec_minus) {
+					addlog(ige::LogType::LOG_TRACE, "Decreasing duration scroll sensitivity to " + std::to_string(_manualPlacementPrecision / 10) + " seconds.", __FILENAME__);
+					if (_manualPlacementPrecision > 0.001f) _manualPlacementPrecision /= 10;
+				}
 				if (bDuration_input)
 				{
-					std::string oldDurationPreText = std::to_string(float(thisDuration - (thisDuration % 500)) / 1000);
+					std::string oldDurationPreText = std::to_string(float(thisDuration) / 1000);
 					oldDurationPreText = oldDurationPreText.substr(0, oldDurationPreText.find('.') + 2);
 					std::string inputStr = Game::InputBox("", 7 + 1, "Enter duration in seconds:", oldDurationPreText);
 					if (inputStr.length() > 0)
@@ -1762,7 +1781,6 @@ namespace sub::Spooner
 						{
 							inputVal = thisDuration;
 						}
-						inputVal -= (inputVal % 500);
 						thisDuration = inputVal;
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::ST_Duration, std::string(), 7U, "Enter duration in seconds:", oldDurationPreText);

@@ -140,6 +140,9 @@ extern bool bit_grav_gun_disabled;
 extern float forge_dist, _globalForgeGun_prec, _globalForgeGun_shootForce;
 extern bool ObjSpawn_forge_assistance;
 
+extern bool g_unlockMaxIDs;
+extern UINT8 max_shapeAndSkinIDs;
+
 #pragma endregion
 
 #pragma region methods used declare // p.s. this ain't it chief
@@ -300,6 +303,36 @@ extern std::map<Ped, std::string> g_pedList_facialMood;
 extern std::string get_ped_facial_mood(GTAentity ped);
 void set_ped_facial_mood(GTAentity ped, const std::string& animName);
 void clear_ped_facial_mood(GTAentity ped);
+
+enum class WeaponTargetType
+{
+    TargetPlayer,
+    TargetPed
+};
+
+inline WeaponTargetType g_WeaponTargetType = WeaponTargetType::TargetPlayer;
+inline Ped g_WeaponTargetPed = 0;
+struct ScopedWeaponTargetOverride
+{
+    WeaponTargetType oldType;
+    Ped oldPed;
+
+    ScopedWeaponTargetOverride(Ped ped)
+    {
+        oldType = g_WeaponTargetType;
+        oldPed = g_WeaponTargetPed;
+
+        g_WeaponTargetType = WeaponTargetType::TargetPed;
+        g_WeaponTargetPed = ped;
+    }
+
+    ~ScopedWeaponTargetOverride()
+    {
+        g_WeaponTargetType = oldType;
+        g_WeaponTargetPed = oldPed;
+    }
+};
+
 
 
 

@@ -314,16 +314,20 @@
       <Filter>Menu</Filter>
     </ClCompile>
     <ClCompile Include="Memory\Hooking.cpp" />
+
     <ClCompile Include="BodyguardSettings.cpp">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClCompile>
-    <ClCompile Include="BodyguardMenu.cpp">
       <Filter>Submenus\Bodyguards</Filter>
     </ClCompile>
     <ClCompile Include="BodyguardSpawn.cpp">
       <Filter>Submenus\Bodyguards</Filter>
     </ClCompile>
     <ClCompile Include="BodyguardManagement.cpp">
+      <Filter>Submenus\Bodyguards</Filter>
+    </ClCompile>
+    <ClCompile Include="BodyguardMenu.cpp">
+      <Filter>Submenus\Bodyguards</Filter>
+    </ClCompile>
+    <ClCompile Include="BodyguardSubmenu.cpp">
       <Filter>Submenus\Bodyguards</Filter>
     </ClCompile>
   </ItemGroup>
@@ -660,13 +664,16 @@
     <ClInclude Include="BodyguardSettings.h">
       <Filter>Submenus\Bodyguards</Filter>
     </ClInclude>
-    <ClInclude Include="BodyguardMenu.h">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClInclude>
     <ClInclude Include="BodyguardSpawn.h">
       <Filter>Submenus\Bodyguards</Filter>
     </ClInclude>
     <ClInclude Include="BodyguardManagement.h">
+      <Filter>Submenus\Bodyguards</Filter>
+    </ClInclude>
+    <ClInclude Include="BodyguardMenu.h">
+      <Filter>Submenus\Bodyguards</Filter>
+    </ClInclude>
+    <ClInclude Include="BodyguardSubmenu.h">
       <Filter>Submenus\Bodyguards</Filter>
     </ClInclude>
   </ItemGroup>

@@ -399,7 +399,7 @@ namespace sub
 				}
 				catch (...) 
 				{ 
-					Game::Print::PrintError_InvalidInput(); 
+					Game::Print::PrintError_InvalidInput(inputStr); 
 					addlog(ige::LogType::LOG_ERROR, "Invalid input radius entered: " + inputStr, __FILENAME__);
 				}
 			}

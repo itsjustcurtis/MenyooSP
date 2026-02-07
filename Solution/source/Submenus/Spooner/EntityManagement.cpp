@@ -420,7 +420,8 @@ namespace sub::Spooner
 			}
 			if (!model.IsInCdImage())
 			{
-				Game::Print::PrintError_InvalidModel();
+				Game::Print::PrintError_InvalidModel(name);
+				addlog(ige::LogType::LOG_ERROR, "Failed to spawn ped, invalid model: " + name, __FILENAME__);
 				return SpoonerEntity();
 			}
 
@@ -508,7 +509,8 @@ namespace sub::Spooner
 			}
 			if (!model.IsInCdImage())
 			{
-				Game::Print::PrintError_InvalidModel();
+				Game::Print::PrintError_InvalidModel(name);
+				addlog(ige::LogType::LOG_ERROR, "Failed to spawn vehicle, invalid model: " + name, __FILENAME__);
 				return SpoonerEntity();
 			}
 

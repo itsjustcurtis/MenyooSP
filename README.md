@@ -3,7 +3,7 @@
 [![GitHub latest release](https://img.shields.io/github/downloads/itsjustcurtis/MenyooSP/latest/total?label=Latest%20Downloads&logo=GitHub)](https://github.com/itsjustcurtis/MenyooSP/releases/latest)
 [![GitHub all releases](https://img.shields.io/github/downloads/itsjustcurtis/MenyooSP/total?label=Total%20Downloads&logo=GitHub)](https://github.com/itsjustcurtis/MenyooSP/releases)
 
-![image](https://github.com/itsjustcurtis/MenyooSP/assets/70447190/38f28c30-5585-4f77-b204-6a8c8149defe)
+<img width="1280" height="720" alt="banner_FINALB" src="https://github.com/user-attachments/assets/6ce3c340-a0a3-4f47-90a7-37e1f4d674f3" />
 
 
 # Menyoo PC - [DOWNLOAD LATEST RELEASE](https://github.com/itsjustcurtis/MenyooSP/releases/latest/download/MenyooSP.zip)
@@ -13,17 +13,18 @@
 ---
 
 ## Community
+
 - [Discord](https://discord.gg/v29AwqAemT)
 
 ## Requirements
 - [OpenIV and its ASI Loader](https://openiv.com/)
 - [ScriptHookV by Alexander Blade](http://www.dev-c.com/gtav/scripthookv/)
 - [Battleye disabled in the Rockstar Launcher Settings](https://staticg.sportskeeda.com/editor/2024/11/bdc35-17305620610616-1920.jpg)
-- GTA V Version 3095.0 or newer.
+- GTA V Legacy Version 3095.0 or newer OR GTA V Enhanced
 
 ## Build
 Visual Studio 2022 required
-- I used v17.0.4
+- I used v17.14.19
 
 ## Install
  Copy the Menyoo.asi file along with the menyooStuff folder to the Grand Theft Auto V game directory.  

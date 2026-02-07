@@ -42,7 +42,8 @@ namespace sub::Spooner
 		SpoonerMarkerWithInitHandle SpawnMarkerFromXmlNode(pugi::xml_node& nodeMarker);
 
 		bool SaveDbToFile(const std::string& filePath, bool bForceReferenceCoords);
-		bool SaveWorldToFile(const std::string& filePath, std::vector<Entity>& vEntityHandles, std::vector<SpoonerMarker>& vMarkers);
+		bool SaveWorldToFile(const std::string& filePath, std::vector<Entity>& vEntityHandles, std::vector<SpoonerMarker>& v
+		);
 		bool LoadPlacementsFromFile(const std::string& filePath);
 
 		bool LoadPlacementsFromSP00NFile(const std::string& filePath);

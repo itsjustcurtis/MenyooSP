@@ -58,6 +58,7 @@
 #include "..\BodyguardSettings.h"
 #include "..\BodyguardManagement.h"
 #include "..\BodyguardSpawn.h"
+#include "..\BodyguardSubmenu.h"
 
 using namespace sub;
 
@@ -297,12 +298,14 @@ void Menu::submenu_switch()
 	case SUB::SPSTATMANAGER_INCHAR:					sub::SpStatManager_catind::Sub_InChar(); break;
 	case SUB::SPSTATMANAGER_INCHAR_INLIST:			sub::SpStatManager_catind::Sub_InChar_InList(); break;
 
-	case SUB::BODYGUARDOPS:				sub::BodyguardMenu::BodyguardMainMenu(); break;
-
+	case SUB::BODYGUARDMAINMENU:		sub::BodyguardMainMenu(); break;
 	case SUB::BODYGUARD_SPAWN:			sub::BodyguardMenu::BodyguardSpawn(); break;
 
-	//case SUB::BODYGUARD_LIST:			sub::BodyguardMenu::BodyguardList(); break;
+	case SUB::BODYGUARD_LIST:			sub::BodyguardMenu::BodyguardList(); break;
 	case SUB::BODYGUARD_SETTINGS:		sub::BodyguardMenu::BodyguardOps_(); break;
+	case SUB::BODYGUARD_ENTITYOPS:		sub::BodyguardMenu::BodyguardEntityOps(); break;
+	case SUB::BODYGUARD_WEAPONOPS:		sub::BodyguardMenu::BodyguardWeaponOps(); break;
+	case SUB::BODYGUARD_WARDROBE:		sub::BodyguardMenu::BodyguardWardrobe(); break;
 	}
 }
 

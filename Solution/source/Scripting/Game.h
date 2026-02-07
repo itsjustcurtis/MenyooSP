@@ -115,8 +115,8 @@ namespace Game
 		Notification PrintBottomLeft(std::wostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
 
 		// Messages - Errors
-		void PrintError_InvalidInput();
-		void PrintError_InvalidModel();
+		void PrintError_InvalidInput(std::string inputStr);
+		void PrintError_InvalidModel(std::string inputStr);
 
 		// Text width
 		float GetTextWidth(const std::string& s, bool gxt = false);

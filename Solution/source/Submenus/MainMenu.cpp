@@ -14,12 +14,19 @@
 #include "..\Menu\Menu.h"
 #include "..\Menu\Routine.h"
 
+
 #include "..\Natives\natives2.h"
+#include "../Util/FileLogger.h"
 
 namespace sub
 {
 	void MainMenu()
 	{
+		static bool firstLoad = true;
+		if(firstLoad) {
+			firstLoad = false;
+			addlog(ige::LogType::LOG_TRACE, "First Load of MainMenu Submenu", __FILENAME__);
+		}
 		AddTitle("MENYOO");
 
 		AddOption("Players", null, nullFunc, SUB::PLAYERSSUB);
@@ -29,7 +36,7 @@ namespace sub
 		AddOption("Weapon Options", null, nullFunc, SUB::WEAPONOPS);
 		AddOption("Weather Options", null, nullFunc, SUB::WEATHEROPS);
 		AddOption("Time Options", null, nullFunc, SUB::TIMEOPS);
-		AddOption("Bodyguard Options (pre-alpha)", null, nullFunc, SUB::BODYGUARDOPS);
+		AddOption("Bodyguard Options (beta)", null, nullFunc, SUB::BODYGUARDMAINMENU);
 		AddOption("Object Spooner", null, nullFunc, SUB::SPOONER_MAIN);
 		//AddOption("Lighting Options", null, nullFunc, SUB::OBJECTSPAWNER_LIGHTINGOPS);
 		AddOption("Misc Options", null, nullFunc, SUB::MISCOPS);

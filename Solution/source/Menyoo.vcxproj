@@ -16,6 +16,7 @@
     <ClCompile Include="BodyguardMenu.cpp" />
     <ClCompile Include="BodyguardSettings.cpp" />
     <ClCompile Include="BodyguardSpawn.cpp" />
+    <ClCompile Include="BodyguardSubmenu.cpp" />
     <ClCompile Include="Memory\Hooking.cpp" />
     <ClCompile Include="Menu\FolderPreviewBmps.cpp" />
     <ClCompile Include="Menu\Language.cpp" />
@@ -131,6 +132,7 @@
     <ClInclude Include="BodyguardMenu.h" />
     <ClInclude Include="BodyguardSettings.h" />
     <ClInclude Include="BodyguardSpawn.h" />
+    <ClInclude Include="BodyguardSubmenu.h" />
     <ClInclude Include="Memory\Hooking.h" />
     <ClInclude Include="Menu\FolderPreviewBmps.h" />
     <ClInclude Include="Menu\Language.h" />
@@ -255,13 +257,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
