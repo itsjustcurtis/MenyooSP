@@ -26,12 +26,14 @@ namespace GTAmodel {
 	class Model;
 }
 
-extern Ped g_WeaponOpsPedOverride = 0;
-extern Player g_WeaponOpsPlayerOverride = -1;
+extern Ped g_WeaponOpsPedOverride;
+extern Player g_WeaponOpsPlayerOverride;
+extern Ped g_WeaponMenuPedOverride;
 
 namespace sub
 {
-	void Weaponops();
+    void Weaponops();
+
 
 	void ForgeGun_();
 

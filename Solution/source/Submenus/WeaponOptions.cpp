@@ -51,6 +51,10 @@
 #include <pugixml\src\pugixml.hpp>
 #include <dirent\include\dirent.h>
 
+int g_WeaponOpsPedOverride = 0;
+int g_WeaponOpsPlayerOverride = -1;
+Ped g_WeaponMenuPedOverride = 0;
+
 namespace sub
 {
 	void Weaponops()

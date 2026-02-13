@@ -7,23 +7,6 @@
 #include "BodyguardMenu.h"
 #include "Submenus/WeaponOptions.h"
 
-// Scoped override for Menyoo's global current ped (Static_241)
-struct ScopedPedOverride
-{
-    int oldPed;
-
-    ScopedPedOverride(const GTAentity& newPed)
-    {
-        oldPed = Static_241;
-        Static_241 = newPed.GetHandle();
-    }
-
-    ~ScopedPedOverride()
-    {
-        Static_241 = oldPed;
-    }
-};
-
 namespace sub
 {
     void ComponentChanger_();
@@ -47,7 +30,6 @@ namespace sub::BodyguardMenu
             return;
         }
 
-		//Melee Focus will be added later.
         AddOption("Weapons", null, nullFunc, SUB::BODYGUARD_WEAPONOPS);
         AddOption("Wardrobe", null, nullFunc, SUB::BODYGUARD_WARDROBE);
     }
@@ -57,12 +39,22 @@ namespace sub::BodyguardMenu
         if (!SelectedBodyguard || !SelectedBodyguard->Handle.Exists())
             return;
 
-        g_WeaponOpsPedOverride = SelectedBodyguard->Handle.GetHandle();
+        Ped ped = SelectedBodyguard->Handle.GetHandle();
+
+        g_WeaponOpsPedOverride = ped;
         g_WeaponOpsPlayerOverride = -1;
+        g_WeaponMenuPedOverride = ped;
 
         sub::Weaponops();
 
         g_WeaponOpsPedOverride = 0;
         g_WeaponOpsPlayerOverride = -1;
+        g_WeaponMenuPedOverride = 0;
+    }
+
+    void BodyguardWardrobe()
+    {
+        // TBA
     }
 }
+

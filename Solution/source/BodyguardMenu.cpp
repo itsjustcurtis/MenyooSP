@@ -22,10 +22,6 @@
 
 #include "BodyguardManagement.h"
 #include "BodyguardSpawn.h"
-using namespace sub::BodyguardMenu;
-
-
-using namespace sub::Spooner::Submenus;
 
 namespace sub::BodyguardMenu
 {
@@ -51,9 +47,16 @@ namespace sub
             std::string inputStr = Game::InputBox("", 5U, "", std::to_string(sub::BodyguardMenu::health));
             if (!inputStr.empty())
             {
-                try { sub::BodyguardMenu::health = std::stoi(inputStr); }
-                catch (...) { PrintError_InvalidInput(); }
+                try
+                {
+                    sub::BodyguardMenu::health = std::stoi(inputStr);
+                }
+                catch (...)
+                {
+                    Game::Print::PrintError_InvalidInput(inputStr);
+                }
             }
+
         }
 
         static bool bArmor_plus = false, bArmor_minus = false, bArmor_input = false;
@@ -65,8 +68,14 @@ namespace sub
             std::string inputStr = Game::InputBox("", 5U, "", std::to_string(sub::BodyguardMenu::armor));
             if (!inputStr.empty())
             {
-                try { sub::BodyguardMenu::armor = std::stoi(inputStr); }
-                catch (...) { PrintError_InvalidInput(); }
+                try
+                {
+                    sub::BodyguardMenu::armor = std::stoi(inputStr);
+                }
+                catch (...)
+                {
+                    Game::Print::PrintError_InvalidInput(inputStr);
+                }
             }
         }
 

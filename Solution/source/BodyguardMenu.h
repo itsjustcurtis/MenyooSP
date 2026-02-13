@@ -5,7 +5,7 @@
 
 using TargetPed = int;
 
-TargetPed g_WeaponMenuPedOverride = 0;
+//TargetPed g_WeaponMenuPedOverride = 0;
 namespace sub
 { 
 void BodyguardMainMenu();
