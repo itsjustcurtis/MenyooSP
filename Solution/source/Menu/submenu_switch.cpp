@@ -305,7 +305,6 @@ void Menu::submenu_switch()
 	case SUB::BODYGUARD_SETTINGS:		sub::BodyguardMenu::BodyguardOps_(); break;
 	case SUB::BODYGUARD_ENTITYOPS:		sub::BodyguardMenu::BodyguardEntityOps(); break;
 	case SUB::BODYGUARD_WEAPONOPS:		sub::BodyguardMenu::BodyguardWeaponOps(); break;
-	case SUB::BODYGUARD_WARDROBE:		sub::BodyguardMenu::BodyguardWardrobe(); break;
 	}
 }
 

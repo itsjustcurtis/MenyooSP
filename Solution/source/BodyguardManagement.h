@@ -33,11 +33,5 @@ namespace sub::BodyguardMenu
 
         // Draws an arrow above the specified entity to highlight it in the world
         void ShowArrowAboveEntity(const GTAentity& entity);
-        // Give a weapon directly to a bodyguard entity (safe, ped-targeted native calls).
-        void GiveWeaponToBodyguard(const BodyguardEntity& target, Hash weaponHash, int ammo = 250, bool equip = true);
-
-        // Create a menu option that gives the specified weapon to the specified bodyguard when selected.
-        // Mimics the AddOption_* helpers you already use for models.
-        void AddOption_GiveWeaponToBodyguard(const std::string& label, Hash weaponHash, const BodyguardEntity& target);
     }
 }

@@ -4,6 +4,7 @@
 #include "Scripting/Game.h"
 #include "Scripting/GTAped.h"
 #include "Scripting/GTAentity.h"
+#include "Scripting/GTAblip.h"
 #include "Natives/natives.h"
 
 #include <algorithm>
@@ -74,28 +75,46 @@ namespace sub::BodyguardMenu
 
 		void RemoveBodyguardFromDb(const BodyguardEntity& ent)
 		{
-			const auto it = std::find(BodyguardDb.begin(), BodyguardDb.end(), ent);
+			auto it = std::remove_if(
+				BodyguardDb.begin(),
+				BodyguardDb.end(),
+				[&](const BodyguardEntity& e)
+				{
+					return e.Handle.GetHandle() == ent.Handle.GetHandle();
+				}
+			);
+
 			if (it != BodyguardDb.end())
-				BodyguardDb.erase(it);
+				BodyguardDb.erase(it, BodyguardDb.end());
 		}
 
 		void DeleteBodyguard(BodyguardEntity& ent)
 		{
 			if (!ent.Handle.Exists())
-			{
-				RemoveBodyguardFromDb(ent);
 				return;
-			}
 
-			RemoveBodyguardFromDb(ent);
+			Ped ped = ent.Handle.GetHandle();
+
+			ent.Handle.RequestControl();
+
+			GTAblip blip = ent.Handle.CurrentBlip();
+			if (blip.Exists())
+				blip.Remove();
+
 			ent.Handle.Detach();
 
-			GTAentity playerPed = PLAYER::PLAYER_PED_ID();
-			if (ent.Handle != playerPed)
-				ent.Handle.Delete(true);
+			ent.Handle.MissionEntity_set(false);
+
+			if (ped && ENTITY::DOES_ENTITY_EXIST(ped))
+			{
+				PED::DELETE_PED(&ped);
+			}
+
+			ent.Handle = GTAped();
+
+			RemoveBodyguardFromDb(ent);
 		}
 				
-
 			void ShowArrowAboveEntity(const GTAentity & entity)
 			{
 				if (!entity.Exists())

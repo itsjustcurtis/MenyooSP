@@ -1058,6 +1058,18 @@ namespace sub
 		void Sub_CategoriesList()
 		{
 			int i;
+
+			if (g_WeaponOpsPedOverride != 0)
+			{
+				Static_241 = g_WeaponOpsPedOverride;
+				Static_240 = g_WeaponOpsPlayerOverride;
+			}
+			else
+			{
+				Static_241 = PLAYER_PED_ID();
+				Static_240 = PLAYER_ID();
+			}
+
 			auto& ped = Static_241;
 			Hash pedCurrentWeapon; GET_CURRENT_PED_WEAPON(ped, &pedCurrentWeapon, 1);
 
@@ -1162,6 +1174,11 @@ namespace sub
 			auto& ped = Static_241;
 			NETWORK_REQUEST_CONTROL_OF_ENTITY(ped);
 
+			const bool isBodyguardContext =
+				(g_WeaponTargetType == WeaponTargetType::TargetPed) &&
+				(g_WeaponTargetPed == ped);
+
+
 			Hash pedCurrentWeapon; GET_CURRENT_PED_WEAPON(ped, &pedCurrentWeapon, 1);
 
 			Hash whash;
@@ -1210,7 +1227,6 @@ namespace sub
 					SET_CURRENT_PED_WEAPON(ped, whash, true);
 				}
 			}
-
 			bool it_FillAmmo = 0;
 			AddOption("Fill Ammo", it_FillAmmo); if (it_FillAmmo)
 			{
@@ -1625,6 +1641,17 @@ namespace sub
 
 			if (bLoad)
 			{
+				if (g_WeaponOpsPedOverride != 0)
+				{
+					Static_241 = g_WeaponOpsPedOverride;
+					Static_240 = g_WeaponOpsPlayerOverride;
+				}
+				else
+				{
+					Static_241 = PLAYER_PED_ID();
+					Static_240 = PLAYER_ID();
+				}
+
 				if (WeaponsLoadouts_catind::Apply(_ped, filePath))
 					Game::Print::PrintBottomLeft("Loadout ~b~applied~s~.");
 				else

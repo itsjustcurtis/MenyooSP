@@ -92,7 +92,7 @@ namespace sub::BodyguardMenu::BodyguardManagement
 
 		if (!bPressed) return;
 
-		if (s_bodyguards.size() >= MAX_BODYGUARDS)
+		if (sub::BodyguardMenu::BodyguardDb.size() >= MAX_BODYGUARDS)
 		{
 			Game::Print::PrintBottomLeft("Maximum of 7 bodyguards reached.");
 			return;

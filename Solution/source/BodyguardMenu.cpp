@@ -27,7 +27,7 @@ namespace sub::BodyguardMenu
 {
     int armor = 200;
     int health = 200;
-    bool godmode = false;
+    bool godmode = true;
 }
 namespace sub
 {
@@ -79,6 +79,28 @@ namespace sub
             }
         }
 
+        bool oldGodmode = sub::BodyguardMenu::godmode;
         AddToggle("Godmode", sub::BodyguardMenu::godmode);
+
+        if (oldGodmode != sub::BodyguardMenu::godmode)
+        {
+            for (UINT i = 0; i < sub::BodyguardMenu::BodyguardDb.size(); i++)
+            {
+                auto& bg = sub::BodyguardMenu::BodyguardDb[i];
+
+                if (!bg.Handle.Exists())
+                    continue;
+
+                Ped ped = bg.Handle.GetHandle();
+
+                if (sub::BodyguardMenu::godmode)
+                    set_ped_invincible_on(ped);
+                else
+                    set_ped_invincible_off(ped);
+            }
+        }
+
+
+
     }
 }

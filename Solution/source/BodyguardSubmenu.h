@@ -3,5 +3,4 @@ namespace sub::BodyguardMenu
 {
 void BodyguardEntityOps();
 void BodyguardWeaponOps();
-void BodyguardWardrobe();
 }

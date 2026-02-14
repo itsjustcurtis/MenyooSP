@@ -24,39 +24,30 @@ namespace sub::BodyguardMenu
 
         BodyguardEntity* pBodyguardToDelete = nullptr;
 
-        // Iterate over the DB
         for (UINT i = 0; i < BodyguardDb.size(); i++)
         {
             auto& bg = BodyguardDb[i];
 
-            // Only skip if the ped no longer exists
             if (!bg.Handle.Exists())
                 continue;
 
             bool bPressed = false;
 
-            // Option label: Name or HashName
             std::string label = !bg.Name.empty() ? bg.Name : bg.HashName;
 
-            // --- Important change: pass the submenu id so the menu system knows to route there ---
-            // Use Menyoo's "null" and "nullFunc" as the example elsewhere in your codebase.
             AddOption(label, bPressed, nullFunc, SUB::BODYGUARD_ENTITYOPS);
 
-            // If selected this frame: set selected pointer BEFORE the submenu actually opens
             if (bPressed)
             {
                 SelectedBodyguard = &bg;
             }
 
-            // Highlighted entry actions
             if (*Menu::currentopATM == Menu::printingop)
             {
-                // Show arrow above the ped
                 if (bg.Handle.Exists())
-                    ENTITY::SET_ENTITY_HAS_GRAVITY(bg.Handle.GetHandle(), true); // optional, ensure ped visible
+                    ENTITY::SET_ENTITY_HAS_GRAVITY(bg.Handle.GetHandle(), true);
                 sub::BodyguardMenu::BodyguardManagement::ShowArrowAboveEntity(bg.Handle);
 
-                // Button prompt for deletion
                 bool bDeletePressed = false;
                 if (Menu::bit_controller)
                 {
@@ -76,7 +67,6 @@ namespace sub::BodyguardMenu
             }
         }
 
-        // Perform deletion after iteration to avoid invalidating the loop
         if (pBodyguardToDelete)
         {
             sub::BodyguardMenu::BodyguardManagement::DeleteBodyguard(*pBodyguardToDelete);
