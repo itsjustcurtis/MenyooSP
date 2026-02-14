@@ -1641,17 +1641,6 @@ namespace sub
 
 			if (bLoad)
 			{
-				if (g_WeaponOpsPedOverride != 0)
-				{
-					Static_241 = g_WeaponOpsPedOverride;
-					Static_240 = g_WeaponOpsPlayerOverride;
-				}
-				else
-				{
-					Static_241 = PLAYER_PED_ID();
-					Static_240 = PLAYER_ID();
-				}
-
 				if (WeaponsLoadouts_catind::Apply(_ped, filePath))
 					Game::Print::PrintBottomLeft("Loadout ~b~applied~s~.");
 				else
