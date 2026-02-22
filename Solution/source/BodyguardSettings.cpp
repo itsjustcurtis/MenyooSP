@@ -6,6 +6,7 @@
 
 #include "Util/keyboard.h"
 #include "Scripting/Game.h"
+#include "BodyguardMenu.h"
 
 namespace sub::BodyguardMenu
 {

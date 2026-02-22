@@ -23,12 +23,112 @@
 #include "BodyguardManagement.h"
 #include "BodyguardSpawn.h"
 
+#include "Scripting/GTAblip.h"
+using namespace sub::BodyguardMenu;
+
 namespace sub::BodyguardMenu
 {
     int armor = 200;
     int health = 200;
     bool godmode = true;
+    int blipIcon = 1; // 1 = Standard, 280 = Friend, 480 = VIP
 }
+
+static constexpr int BLIP_COLOUR_BLUELIGHT = 3;
+
+void sub::BodyguardMenu::RemoveBodyguardBlip(Ped ped)
+{
+    if (!ped || !ENTITY::DOES_ENTITY_EXIST(ped))
+        return;
+
+    Blip blip = GET_BLIP_FROM_ENTITY(ped);
+    if (!blip)
+        return;
+
+    GTAblip gtaBlip(blip);
+    if (gtaBlip.Exists())
+        gtaBlip.Remove();
+}
+
+void sub::BodyguardMenu::ApplyBodyguardBlip(Ped ped, int icon)
+{
+    if (!ped || !ENTITY::DOES_ENTITY_EXIST(ped))
+        return;
+
+    RemoveBodyguardBlip(ped);
+
+    Blip blip = ADD_BLIP_FOR_ENTITY(ped);
+    if (!blip)
+        return;
+
+    SET_BLIP_SPRITE(blip, icon);
+    SET_BLIP_SCALE(blip, 0.80f);
+    SET_BLIP_COLOUR(blip, BLIP_COLOUR_BLUELIGHT);
+    SET_BLIP_AS_FRIENDLY(blip, true);
+}
+
+void sub::BodyguardMenu::RefreshAllBodyguardBlips()
+{
+    for (unsigned int i = 0; i < sub::BodyguardMenu::BodyguardDb.size(); ++i)
+    {
+        auto& bg = sub::BodyguardMenu::BodyguardDb[i];
+        if (!bg.Handle.Exists())
+            continue;
+
+        Ped ped = bg.Handle.GetHandle();
+        if (!ped || !ENTITY::DOES_ENTITY_EXIST(ped))
+            continue;
+
+        int hp = ENTITY::GET_ENTITY_HEALTH(ped);
+        if (hp <= 0)
+            ApplyBodyguardBlip(ped, 274); // dead blip
+        else
+            ApplyBodyguardBlip(ped, sub::BodyguardMenu::blipIcon);
+    }
+}
+
+void sub::BodyguardMenu::UpdateBodyguardBlipsOnDeath()
+{
+    for (unsigned int i = 0; i < sub::BodyguardMenu::BodyguardDb.size(); ++i)
+    {
+        auto& bg = sub::BodyguardMenu::BodyguardDb[i];
+        if (!bg.Handle.Exists())
+            continue;
+
+        Ped ped = bg.Handle.GetHandle();
+        if (!ped || !ENTITY::DOES_ENTITY_EXIST(ped))
+            continue;
+
+        int hp = ENTITY::GET_ENTITY_HEALTH(ped);
+        if (hp <= 0)
+        {
+            Blip blip = GET_BLIP_FROM_ENTITY(ped);
+            if (!blip || GET_BLIP_SPRITE(blip) != 274)
+                ApplyBodyguardBlip(ped, 274);
+            RefreshAllBodyguardBlips();
+        }
+    }
+    void sub::BodyguardMenu::RefreshAllBodyguardBlips();
+    {
+        for (auto& bg : BodyguardDb)
+        {
+            if (!bg.Handle.Exists())
+                continue;
+
+            Ped ped = bg.Handle.GetHandle();
+            if (!ped || !ENTITY::DOES_ENTITY_EXIST(ped))
+                continue;
+
+            Blip blip = GET_BLIP_FROM_ENTITY(ped);
+            if (blip)
+            {
+                SET_BLIP_SCALE(blip, 0.8f);
+                SET_BLIP_AS_SHORT_RANGE(blip, true);
+            }
+        }
+    }
+}
+
 namespace sub
 {
     void BodyguardMainMenu()
@@ -47,16 +147,9 @@ namespace sub
             std::string inputStr = Game::InputBox("", 5U, "", std::to_string(sub::BodyguardMenu::health));
             if (!inputStr.empty())
             {
-                try
-                {
-                    sub::BodyguardMenu::health = std::stoi(inputStr);
-                }
-                catch (...)
-                {
-                    Game::Print::PrintError_InvalidInput(inputStr);
-                }
+                try { sub::BodyguardMenu::health = std::stoi(inputStr); }
+                catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
             }
-
         }
 
         static bool bArmor_plus = false, bArmor_minus = false, bArmor_input = false;
@@ -68,14 +161,8 @@ namespace sub
             std::string inputStr = Game::InputBox("", 5U, "", std::to_string(sub::BodyguardMenu::armor));
             if (!inputStr.empty())
             {
-                try
-                {
-                    sub::BodyguardMenu::armor = std::stoi(inputStr);
-                }
-                catch (...)
-                {
-                    Game::Print::PrintError_InvalidInput(inputStr);
-                }
+                try { sub::BodyguardMenu::armor = std::stoi(inputStr); }
+                catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
             }
         }
 
@@ -84,23 +171,45 @@ namespace sub
 
         if (oldGodmode != sub::BodyguardMenu::godmode)
         {
-            for (UINT i = 0; i < sub::BodyguardMenu::BodyguardDb.size(); i++)
+            for (unsigned int i = 0; i < sub::BodyguardMenu::BodyguardDb.size(); ++i)
             {
                 auto& bg = sub::BodyguardMenu::BodyguardDb[i];
-
-                if (!bg.Handle.Exists())
-                    continue;
+                if (!bg.Handle.Exists()) continue;
 
                 Ped ped = bg.Handle.GetHandle();
-
-                if (sub::BodyguardMenu::godmode)
-                    set_ped_invincible_on(ped);
-                else
-                    set_ped_invincible_off(ped);
+                if (sub::BodyguardMenu::godmode) set_ped_invincible_on(ped);
+                else set_ped_invincible_off(ped);
             }
         }
 
+        static int blipIndex = 0;
+        static const std::vector<std::pair<int, std::string>> blipOptions =
+        {
+            { 1,   "Standard" },
+            { 280, "Friend"   },
+            { 480, "VIP"      }
+        };
 
+        // show labels using AddTexter
+        static bool bBlipInput = false;
+        bool icon_plus = false, icon_minus = false;
 
+        // current label from our restricted blipOptions array
+        AddTexter("Bodyguard Blip", 0, { blipOptions[blipIndex].second }, bBlipInput, icon_plus, icon_minus);
+
+        // scroll through our 3-choice array
+        if (icon_plus)
+        {
+            blipIndex = (blipIndex + 1) % blipOptions.size();
+            sub::BodyguardMenu::blipIcon = blipOptions[blipIndex].first;
+            sub::BodyguardMenu::RefreshAllBodyguardBlips();
+        }
+
+        if (icon_minus)
+        {
+            blipIndex = (blipIndex == 0 ? (int)blipOptions.size() - 1 : blipIndex - 1);
+            sub::BodyguardMenu::blipIcon = blipOptions[blipIndex].first;
+            sub::BodyguardMenu::RefreshAllBodyguardBlips();
+        }
     }
 }
