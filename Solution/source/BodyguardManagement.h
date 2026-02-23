@@ -32,6 +32,6 @@ namespace sub::BodyguardMenu
         void AddBodyguardToDb(BodyguardEntity ent);
 
         // Draws an arrow above the specified entity to highlight it in the world
-        void ShowArrowAboveEntity(const GTAentity& entity);
+        void ShowArrowAboveEntity(const GTAentity& ent, RGBA colour = {255, 0, 0, 190});
     }
 }

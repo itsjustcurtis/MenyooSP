@@ -9,6 +9,7 @@
 #include "Scripting/Camera.h"
 #include "Scripting/World.h"
 #include "Natives/natives.h"
+#include "Util/StringManip.h"
 
 namespace sub
 {
@@ -20,8 +21,40 @@ namespace sub::BodyguardMenu
     void SetEnt242() { Static_241= SelectedBodyguard->Handle.Handle(); }
     void BodyguardEntityOps()
     {
-        AddTitle("Bodyguard");
+        // Determine the title dynamically
+        std::string title = "Bodyguard";
 
+        if (SelectedBodyguard)
+        {
+            if (SelectedBodyguard->Handle.Exists())
+            {
+                // Prefer a friendly name if provided
+                if (!SelectedBodyguard->Name.empty())
+                {
+                    title = SelectedBodyguard->Name;
+                }
+                // Otherwise use a stored hash-name (if present)
+                else if (!SelectedBodyguard->HashName.empty())
+                {
+                    title = SelectedBodyguard->HashName;
+                }
+                // Fallback: use the model hash as hex string
+                else
+                {
+                    auto model = SelectedBodyguard->Handle.Model();
+                    title = int_to_hexstring(model.hash, true);
+                }
+            }
+            else
+            {
+                // Ped doesn't exist — show that in the title so it's obvious
+                title = "Bodyguard (missing)";
+            }
+        }
+
+        AddTitle(title);
+
+        // Keep the rest of your existing logic unchanged
         if (!SelectedBodyguard)
         {
             AddOption("No bodyguard selected");
@@ -34,8 +67,6 @@ namespace sub::BodyguardMenu
             return;
         }
 
-        AddOption("Weapons", null, nullFunc, SUB::BODYGUARD_WEAPONOPS);
-        AddOption("Loadouts(Not working yet)", null, nullFunc, SUB::WEAPONOPS_LOADOUTS);
         AddOption("Wardrobe", null, SetEnt242, SUB::COMPONENTS);
         if (g_cam_componentChanger.Exists())
         {
@@ -44,6 +75,8 @@ namespace sub::BodyguardMenu
             World::RenderingCamera_set(0);
         }
         AddOption("Voice Changer", null, SetEnt242, SUB::VOICECHANGER);
+        AddOption("Weapons", null, nullFunc, SUB::BODYGUARD_WEAPONOPS);
+        AddOption("Loadouts", null, SetEnt242, SUB::WEAPONOPS_LOADOUTS);
     }
     void BodyguardWeaponOps()
     {

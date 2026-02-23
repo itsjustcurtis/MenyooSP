@@ -10,6 +10,7 @@
 #include <algorithm>
 #include "Util/StringManip.h"
 #include "Scripting/Model.h"
+#include "Scripting/World.h"
 
 namespace sub::BodyguardMenu
 {
@@ -115,24 +116,17 @@ namespace sub::BodyguardMenu
 			RemoveBodyguardFromDb(ent);
 		}
 				
-			void ShowArrowAboveEntity(const GTAentity & entity)
+		void ShowArrowAboveEntity(const GTAentity& ent, RGBA colour)
+		{
+			if (ent.Exists())
 			{
-				if (!entity.Exists())
-					return;
-
-				Vector3 pos = entity.GetOffsetInWorldCoords({ 0.0f, 0.0f, 1.5f });
-				GRAPHICS::DRAW_MARKER(
-					2,              // type
-					pos.x, pos.y, pos.z,
-					0, 0, 0,        // direction
-					0, 0, 0,        // rotation
-					0.3f, 0.3f, 0.3f, // scale
-					255, 0, 0, 200, // color
-					false, false, 2,
-					false, nullptr, nullptr, false
-				);
+				const auto& soe_pos = ent.Position_get();
+				const auto& soe_md = ent.ModelDimensions();
+				const auto& markerPos = soe_pos + Vector3(0, 0, (std::max)(soe_md.Dim1.z, soe_md.Dim2.z) + 0.20f); // May not be at the right position if the entity is tilted
+				World::DrawMarker(MarkerType::UpsideDownCone, markerPos, Vector3(), Vector3(), Vector3(0.45f, 0.45f, 0.50f), RGBA(190, 0, 0, 190));
 			}
 
 		
+		}
 	}
 }

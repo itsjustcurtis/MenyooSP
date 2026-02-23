@@ -211,5 +211,48 @@ namespace sub
             sub::BodyguardMenu::blipIcon = blipOptions[blipIndex].first;
             sub::BodyguardMenu::RefreshAllBodyguardBlips();
         }
+        bool bTeleportBodyguards = false;
+        AddOption("Bring Bodyguards To Self", bTeleportBodyguards);
+
+        if (bTeleportBodyguards)
+        {
+            Ped playerPed = PLAYER_PED_ID();
+            if (ENTITY::DOES_ENTITY_EXIST(playerPed))
+            {
+                Vector3 playerPos = ENTITY::GET_ENTITY_COORDS(playerPed, true);
+                Vector3 forward = ENTITY::GET_ENTITY_FORWARD_VECTOR(playerPed);
+
+                float baseDist = 3.0f;
+                float spacing = 0.75f;
+                int placed = 0;
+
+                for (unsigned int i = 0; i < sub::BodyguardMenu::BodyguardDb.size(); ++i)
+                {
+                    auto& bg = sub::BodyguardMenu::BodyguardDb[i];
+                    if (!bg.Handle.Exists())
+                        continue;
+
+                    Ped ped = bg.Handle.GetHandle();
+
+                    Vector3 targetPos =
+                        playerPos +
+                        (forward * baseDist) +
+                        Vector3(0.0f, 0.0f, 0.2f) +
+                        (forward * (spacing * placed));
+
+                    ENTITY::SET_ENTITY_COORDS_NO_OFFSET(
+                        ped,
+                        targetPos.x,
+                        targetPos.y,
+                        targetPos.z,
+                        false, false, false
+                    );
+
+                    placed++;
+                }
+
+                Game::Print::PrintBottomLeft("Bodyguards teleported.");
+            }
+        }
     }
 }
