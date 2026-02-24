@@ -679,7 +679,7 @@ namespace BlipIcon {
 		{ BlipIcon::FireTruck, "Fire Truck" },
 		{ BlipIcon::Forklift, "Forklift" },
 		{ BlipIcon::Newspaper, "News Paper" },
-		//{ BlipIcon::420Survival, "420 Survival" }, //420 breaks the code. Needs an alternative name.
+		{ BlipIcon::NarcoSurvival, "420 Survival" }, //420 breaks the code. Needs an alternative name.
 		{ BlipIcon::CommunityMission, "Community Mission" },
 		{ BlipIcon::PropertyMansion, "Mansion Property" },
 		{ BlipIcon::Keypad2, "Keypad2" },
