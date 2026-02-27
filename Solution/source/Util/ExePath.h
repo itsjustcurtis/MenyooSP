@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -49,5 +49,5 @@ bool does_file_exist(const std::string& path);
 
 void get_all_filenames_with_extension(const std::string& directory, const std::string& extension, std::vector<std::string> &results, bool withExtension);
 
-std::string GetClipboardTextA();
+std::string GetClipboardText();
 
