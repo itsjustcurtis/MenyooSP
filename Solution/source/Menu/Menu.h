@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -93,6 +93,7 @@ extern RGBA _globalPedTrackers_Col;
 extern std::pair<UINT16, UINT16> menubindsGamepad;
 extern UINT16 menubinds;
 extern UINT16 respawnbinds;
+extern UINT16 stopanimbinds;
 extern INT8 g_loglevel;
 
 class MenuInput final
@@ -180,6 +181,8 @@ public:
 	static bool isBinds();
 	static void while_closed();
 	static void while_opened();
+	static bool isStopAnimBinds();
+	static void while_stopanim();
 	static void Up(bool playSound = true);
 	static void Down(bool playSound = true);
 	static void Bottom(bool playSound = true);
