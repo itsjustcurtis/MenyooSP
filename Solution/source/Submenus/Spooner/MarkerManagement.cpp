@@ -199,6 +199,7 @@ namespace sub::Spooner
 
 		SpoonerMarker* AddMarker(const std::string& name, const Vector3& position, const Vector3& rotation)
 		{
+			Databases::MarkerDb.reserve(Databases::MarkerDb.size() + 1);
 			Databases::MarkerDb.push_back(SpoonerMarker(name, position, rotation));
 			return &Databases::MarkerDb.back();
 		}
@@ -207,6 +208,7 @@ namespace sub::Spooner
 			std::string inputStr = Game::InputBox("~`", 26U, "Enter custom marker name:");
 			if (inputStr.compare("~`") != 0)
 			{
+				Databases::MarkerDb.reserve(Databases::MarkerDb.size() + 1);
 				Databases::MarkerDb.push_back(SpoonerMarker(inputStr, position, rotation));
 				return &Databases::MarkerDb.back();
 			}
@@ -280,6 +282,7 @@ namespace sub::Spooner
 		SpoonerMarker* CopyMarker(SpoonerMarker& marker)
 		{
 			SpoonerMarker newMarker = marker;
+			Databases::MarkerDb.reserve(Databases::MarkerDb.size() + 1);
 			Databases::MarkerDb.push_back(newMarker);
 			return &Databases::MarkerDb.back();
 		}

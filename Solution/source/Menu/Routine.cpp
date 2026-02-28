@@ -465,9 +465,9 @@ void update_nearby_stuff_arrays_tick()
 
 	INT i, offsettedID, count = 100;
 
-	Ped* peds = new Ped[count * 2 + 2];
+	std::vector<Ped> peds(count * 2 + 2);
 	peds[0] = count;
-	INT found = GET_PED_NEARBY_PEDS(me, (Any*)peds, -1);
+	INT found = GET_PED_NEARBY_PEDS(me, (Any*)peds.data(), -1);
 	for (i = 0; i < found; i++)
 	{
 		offsettedID = i * 2 + 2;
@@ -485,12 +485,11 @@ void update_nearby_stuff_arrays_tick()
 		}
 		if (!alreadyIn) _worldPeds.push_back(peds[offsettedID]);*/
 	}
-	delete[] peds;
 
 
-	Vehicle* vehicles = new Vehicle[count * 2 + 2];
+	std::vector<Vehicle> vehicles(count * 2 + 2);
 	vehicles[0] = count;
-	found = GET_PED_NEARBY_VEHICLES(me, (Any*)vehicles);
+	found = GET_PED_NEARBY_VEHICLES(me, (Any*)vehicles.data());
 	for (i = 0; i < found; i++)
 	{
 		offsettedID = i * 2 + 2;
@@ -508,7 +507,6 @@ void update_nearby_stuff_arrays_tick()
 		}
 		if (!alreadyIn) _worldVehicles.push_back(vehicles[offsettedID]);*/
 	}
-	delete[] vehicles;
 
 	/*for (auto& nv : _nearbyVehicles)
 	{

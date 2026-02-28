@@ -140,7 +140,7 @@ namespace sub::Spooner
 		if (tskPtr != nullptr)
 		{
 			delete tskPtr;
-			//tskPtr = nullptr;
+			tskPtr = nullptr;
 		}
 	}
 	void SpoonerTaskSequence::RemoveTask(UINT16 index)

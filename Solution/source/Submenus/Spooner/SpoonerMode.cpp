@@ -223,7 +223,7 @@ namespace sub::Spooner
 		}
 		SpoonerEntity GetEntityPtrValue(GTAentity& entity)
 		{
-			SpoonerEntity* eifoc;
+			SpoonerEntity* eifoc = nullptr;
 			bool isAlreadyInDb = SpoonerMode::GetEntityPtr(entity, eifoc);
 			SpoonerEntity toReturn = *eifoc;
 			if (!isAlreadyInDb)
@@ -232,7 +232,7 @@ namespace sub::Spooner
 		}
 		inline void SetAsSelectedEntity(GTAentity& entity)
 		{
-			SpoonerEntity* eifoc;
+			SpoonerEntity* eifoc = nullptr;
 			bool isAlreadyInDb = SpoonerMode::GetEntityPtr(entity, eifoc);
 			SelectedEntity = *eifoc;
 			SelectedEntity.Handle.RequestControl();

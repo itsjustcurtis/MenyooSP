@@ -2919,6 +2919,7 @@ namespace sub
 			outfile << "      <colorName> " + std::to_string(static_cast<int>(normalisedcolour)) + " " + customname + " </colorName>\n";
 			outfile << "</Item>\n";
 			outfile << "\n";
+			outfile.close();
 			Game::Print::PrintBottomLeft("Saved Current Colour: " + customname + "\n" + "HSV: " + std::to_string(hsv[0]) + ", " + std::to_string(hsv[1]) + ", " + std::to_string(hsv[2]));
 		}
 
@@ -2944,6 +2945,7 @@ namespace sub
 			outfile << std::to_string(color5) << "\n";
 			outfile << std::to_string(color6) << "\n";
 			outfile << "\n";
+			outfile.close();
 			Game::Print::PrintBottomLeft("Saved Vehicle Carvariations");
 			return 0;
 		}

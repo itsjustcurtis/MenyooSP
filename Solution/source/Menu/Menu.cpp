@@ -690,6 +690,8 @@ void Menu::SetSub_previous()
 
 void Menu::SetSub_new(INT sub_index)
 {
+	if (currentsub_ar_index >= 99)
+		return; // Array bounds safety - max depth reached
 	currentsub_ar_index++; //Increment array index
 	currentsub_ar[currentsub_ar_index] = currentsub; // Store current submenu index in array
 	currentsub = sub_index; // Set new submenu as current submenu
