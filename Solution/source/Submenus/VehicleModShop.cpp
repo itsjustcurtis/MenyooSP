@@ -2952,7 +2952,7 @@ namespace sub
 
 			std::array<int, 5> ids{ 0, 13, 26, 48, ms_max_windices };
 			addlog(ige::LogType::LOG_TRACE, "Adding " + std::to_string(ms_max_windices) + " Wheel Options", __FILENAME__);
-			for (int j = bIsChromeSelected ? 0 : 0; j < ids.size(); j += 1)
+			for (int j = bIsChromeSelected ? 0 : 0; j < ids.size() - 1; j += 1)
 			{
 				for (i = ids[j]; i < ids[j + 1]; i++)
 				{

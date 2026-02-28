@@ -154,7 +154,7 @@ namespace MemryScan
 			{
 				p.push_back(PatternByte());
 			}
-			else if (w.length() == 2 && isxdigit(w.data()[0]) && isxdigit(w.data()[1])) // Hex
+			else if (w.length() == 2 && isxdigit(static_cast<unsigned char>(w.data()[0])) && isxdigit(static_cast<unsigned char>(w.data()[1]))) // Hex
 			{
 				p.push_back(PatternByte(w));
 			}
@@ -1914,7 +1914,7 @@ void GTAmemory::EditGXTLabel(DWORD labelHash, LPCSTR string)
 	{
 		if (entry.labelHash == labelHash)
 		{
-			strcpy_s((char*)(_globalTextBlockAddr + entry.strOffset), strlen(string), string);
+			strcpy_s((char*)(_globalTextBlockAddr + entry.strOffset), strlen(string) + 1, string);
 			//strcpy((char *)(_globalTextBlockAddr + entry.strOffset), string);
 		}
 	}

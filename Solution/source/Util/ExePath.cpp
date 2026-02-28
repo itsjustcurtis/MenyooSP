@@ -111,6 +111,8 @@ void get_all_filenames_with_extension(const std::string& directory, const std::s
 		if (stinfo.st_mode & S_IFDIR) // is folder
 		{
 			DIR* dir_point = opendir(directory.c_str());
+			if (dir_point == nullptr)
+				return;
 			dirent* entry = readdir(dir_point);
 			while (entry)
 			{
