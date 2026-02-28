@@ -53,11 +53,11 @@ typedef CVehicleModelInfo* (*InitVehicleArchetypeEnhanced_t)(uint32_t, const cha
 GetModelInfo_t GetModelInfo;
 
 std::unordered_map<unsigned int, std::string> g_vehicleHashes;
-CallHook<InitVehicleArchetype_t>* g_InitVehicleArchetype = nullptr;
+CallHook<InitVehicleArchetype_t>* g_InitVehicleArchetypeLegacy = nullptr;
 CVehicleModelInfo* initVehicleArchetype_stub(const char* name, bool a2, unsigned int a3) {
 	addlog(ige::LogType::LOG_DEBUG, "getting hashkey for " + std::string(name), __FILENAME__);
 	g_vehicleHashes.insert({ GET_HASH_KEY(name), boost::to_lower_copy(name) });
-	return g_InitVehicleArchetype->fn(name, a2, a3);
+	return g_InitVehicleArchetypeLegacy->fn(name, a2, a3);
 }
 
 // InitVehicleArchetype has been inlined in Enhanced, instead we hook one of functions which are called after it and take its first parameter.
@@ -90,9 +90,13 @@ void setupHooks() {
 }
 
 void removeHooks() {
-	if (g_InitVehicleArchetype) {
-		delete g_InitVehicleArchetype;
-		g_InitVehicleArchetype = nullptr;
+	if (g_InitVehicleArchetypeLegacy) {
+		delete g_InitVehicleArchetypeLegacy;
+		g_InitVehicleArchetypeLegacy = nullptr;
+	}
+	if (g_InitVehicleArchetypeEnhanced) {
+		delete g_InitVehicleArchetypeEnhanced;
+		g_InitVehicleArchetypeEnhanced = nullptr;
 	}
 	if (g_InitVehicleArchetypeEnhanced) {
 		delete g_InitVehicleArchetypeEnhanced;
@@ -1720,6 +1724,9 @@ void GTAmemory::InitEnhancedPools() {
 		_SpSnow = SpSnow();
 	}
 }
+}
+
+
 
 
 
@@ -2776,6 +2783,7 @@ float GeneralGlobalHax::GetPlayerHeight()
 }
 void GeneralGlobalHax::SetPlayerHeight(float value)
 {
+	if (g_isEnhanced) return;
 	auto baddr = *GeneralGlobalHax::WorldPtrPtr();
 	if (baddr)	*(GetMultilayerPointer<float*>(baddr, std::vector<DWORD>{0x8, 0x88})) = value;
 }

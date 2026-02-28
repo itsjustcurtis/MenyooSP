@@ -1149,16 +1149,16 @@ namespace sub
 			{
 				SelectedEntity.Handle.FreezePosition(!SelectedEntity.Handle.IsPositionFrozen());
 			}
-			if (SelectedEntity.Type == EntityType::VEHICLE && SelectedEntity.Handle.HasLandingGear())
+			if (SelectedEntity.Type == EntityType::VEHICLE && SelectedEntity.Handle.GetLandingGearState() != -1)
 			{
-				bool gearDeployed = (SelectedEntity.Handle.GetLandingGearState() == 0); // 0 = deployed
-				bool temp = gearDeployed;
+				bool bLandingGearDown = (SelectedEntity.Handle.GetLandingGearState() == 0); // 0 = Deployed
+				bool oldValue = bLandingGearDown;
 
-				AddToggle("Landing Gear", gearDeployed); // This line modifies `gearDeployed` based on user input
+				AddToggle("Landing Gear", bLandingGearDown);
 
-				if (gearDeployed != temp)
+				if (bLandingGearDown != oldValue)
 				{
-					SelectedEntity.Handle.SetLandingGear(gearDeployed);
+					SelectedEntity.Handle.SetLandingGear(bLandingGearDown);
 				}
 			}
 

@@ -138,6 +138,7 @@ namespace sub::Spooner
 			this->isShortRange = otherTskT->isShortRange;
 			this->showRoute = otherTskT->showRoute;
 			this->showNumber = otherTskT->showNumber;
+			this->isSelectableOnMap = otherTskT->isSelectableOnMap;
 			// New functions
 
 		}
@@ -159,6 +160,7 @@ namespace sub::Spooner
 			this->isShortRange = false;
 			this->showRoute = false;
 			this->showNumber = 0;
+			this->isSelectableOnMap = true;
 			// New functions
 			this->priority = 2;
 			this->displayMode = 2;
@@ -184,9 +186,17 @@ namespace sub::Spooner
 				if (this->showNumber != 0)
 					this->blip.ShowNumber(this->showNumber);
 				// New Functions
+				this->blip.ShowCone(this->showCone, this->hudColorIndex);
+				this->blip.SetSelectableOnMap(this->isSelectableOnMap ? 2 : 8);
+				this->blip.SetPriority(this->priority);
 
-			}
-
+        			if (this->syncRotation)
+        			{
+            			this->blip.SyncRotationWithEntity(e.Handle.GetHandle());
+        			}
+    			}
+				// New Functions
+				this->blip.SetDisplayMode(this->displayMode);
 
 		}
 

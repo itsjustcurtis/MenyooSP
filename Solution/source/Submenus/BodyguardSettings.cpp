@@ -7,20 +7,11 @@
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 */
-#include "_EMPTY.h"
-
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
 
 namespace sub
 {
-	
-
+	void BodyguardOps_()
+	{
+		//tba code
+	}
 }
-
-
-

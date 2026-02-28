@@ -236,6 +236,7 @@ void PopulateVehicleModelsArray()
 	};
 	
 	const bool isMinGameVersion3095 = GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_3095_0;
+	bool tmpEnhanced = GTAmemory::GetIsEnhanced();
 	for (int d = 0x0; d < 0x20; d++)
 	{
 		for (auto& dd : hashes[d])

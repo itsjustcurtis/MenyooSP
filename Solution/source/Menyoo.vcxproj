@@ -42,6 +42,7 @@
     <ClCompile Include="Scripting\DxHookIMG.cpp" />
     <ClCompile Include="Scripting\enums.cpp" />
     <ClCompile Include="Submenus\AnimalRiding.cpp" />
+    <ClCompile Include="Submenus\BodyguardSettings.cpp" />
     <ClCompile Include="Submenus\BreatheStuff.cpp" />
     <ClCompile Include="Submenus\CutscenePlayer.cpp" />
     <ClCompile Include="Submenus\FunnyVehicles.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="Scripting\DxHookIMG.h" />
     <ClInclude Include="Scripting\enums.h" />
     <ClInclude Include="Submenus\AnimalRiding.h" />
+    <ClInclude Include="Submenus\BodyguardSettings.h" />
     <ClInclude Include="Submenus\BreatheStuff.h" />
     <ClInclude Include="Submenus\CutscenePlayer.h" />
     <ClInclude Include="Submenus\FunnyVehicles.h" />
@@ -257,7 +259,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
