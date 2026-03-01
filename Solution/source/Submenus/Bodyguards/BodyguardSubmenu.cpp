@@ -8,7 +8,7 @@
 #include "../../Submenus/WeaponOptions.h"
 #include "../../Scripting/Camera.h"
 #include "../../Scripting/World.h"
-#include "/Natives/natives.h"
+#include "../..//Natives/natives.h"
 #include "../../Util/StringManip.h"
 
 namespace sub

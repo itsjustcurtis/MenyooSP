@@ -1,28 +1,28 @@
-﻿#include "Natives/types.h"
-#include "Natives/natives2.h"
-#include "Natives/natives.h"
+﻿#include "../../Natives/types.h"
+#include "../../Natives/natives2.h"
+#include "../../Natives/natives.h"
 
 #include "BodyguardSpawn.h"
 //#include "BodyguardFunction.h"
 #include "BodyguardManagement.h"
 
-#include "Menu/Menu.h"
-#include "Scripting/Game.h"
-#include "Scripting/GTAped.h"
-#include "Scripting/Model.h"
-#include "macros.h"
+#include "../../Menu/Menu.h"
+#include "../../Scripting/Game.h"
+#include "../../Scripting/GTAped.h"
+#include "../../Scripting/Model.h"
+#include "../../macros.h"
 #include <vector>
 #include <tuple>
 #include <string>
 
-#include "Submenus/Spooner/SpoonerMode.h"
-#include "Scripting/ModelNames.h"
-#include "Menu/Routine.h"
-#include "Submenus/Spooner/MenuOptions.h"
-#include "Submenus/Spooner/Submenus.h"
-#include "Submenus/PedModelChanger.h"
-#include "Util/StringManip.h"
-#include "Submenus/Spooner/EntityManagement.h"
+#include "../../Submenus/Spooner/SpoonerMode.h"
+#include "../../Scripting/ModelNames.h"
+#include "../../Menu/Routine.h"
+#include "../../Submenus/Spooner/MenuOptions.h"
+#include "../../Submenus/Spooner/Submenus.h"
+#include "../../Submenus/PedModelChanger.h"
+#include "../../Util/StringManip.h"
+#include "../../Submenus/Spooner/EntityManagement.h"
 #include "BodyguardMenu.h"
 
 namespace sub::BodyguardMenu
