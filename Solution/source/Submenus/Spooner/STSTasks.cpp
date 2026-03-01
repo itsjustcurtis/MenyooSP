@@ -198,7 +198,7 @@ namespace sub::Spooner
 				// New Functions
 				this->blip.ShowCone(this->showCone, this->hudColorIndex);
 				this->blip.SetSelectableOnMap(this->isSelectableOnMap ? 2 : 8);
-				this->blip.SetPriority(this->priority);
+				//this->blip.SetPriority(this->priority);
 
         			if (this->syncRotation)
         			{
@@ -206,7 +206,7 @@ namespace sub::Spooner
         			}
     			}
 				// New Functions
-				this->blip.SetDisplayMode(this->displayMode);
+				//this->blip.SetDisplayMode(this->displayMode);
 
 		}
 
