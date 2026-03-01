@@ -2379,7 +2379,7 @@ namespace sub
 			//AddOption("Ped Flags (Doesn't Save)", null, SetEnt241, SUB::PEDFLAGMANAGER_NAMEDLIST);
 			//AddOption("Give Vehicle", null, SetEnt241, SUB::SPAWNVEHICLE);
 			AddOption("Attach Objects (Doesn't Save)", null, SetEnt241, SUB::ATTACHFUNNYOBJECTSUB);
-			AddLocal("Companion (7 Max) (Doesn't Save)", myPedGroup.Contains(thisPed), pedops_friend, pedops_friend);
+			AddLocal("Companion (7 Max) (Doesn't Save) (Obsolete)", myPedGroup.Contains(thisPed), pedops_friend, pedops_friend);
 			AddLocal("Burn Ped", thisPed.IsOnFire(), pedops_burn, pedops_burn);
 			if (!isPedMyPed)
 				AddLocal("Piggyback Ride  (Doesn't Save)", (GET_ENTITY_ATTACHED_TO(myPed.Handle() == thisPed.Handle()) && IS_ENTITY_PLAYING_ANIM(myPed.Handle(), "mini@prostitutes@sexnorm_veh", "bj_loop_male", 3)), pedops_piggyback, pedops_piggyback);
