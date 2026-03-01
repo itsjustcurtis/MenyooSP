@@ -134,9 +134,6 @@ namespace sub
 		bool bFixCar_plus = false, bFixCar_minus = false;
 
 		AddTitle("Vehicle Options");
-
-		//AddOption("Vehicle Spawner", obj_funny_veh_so_frz__off, nullFunc, SUB::SPAWNVEHICLE); //why are there duplicates of these?
-		//AddOption("Menyoo Customs", VehicleOps_sub_modshop, nullFunc, -1, true);
 		if (bMyPedIsInVehicle)
 			AddTexter("CMOD_MOD_MNT", fixCarTexterVal, fixCarTexter, VehicleOpsFixCar_, bFixCar_plus, bFixCar_minus, true); // Fix & Wash
 		AddOption("Vehicle Spawner", obj_funny_veh_so_frz__off, nullFunc, SUB::SPAWNVEHICLE);
