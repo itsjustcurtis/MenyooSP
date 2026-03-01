@@ -44,6 +44,7 @@ namespace sub
 		void Sub_AttachmentOps_AttachTo();
 		void Sub_AttachmentOps_SelectBone();
 		void Sub_ManualPlacement();
+		void Sub_SizeManipulation();
 		void Sub_QuickManualPlacement();
 		void Sub_Vector3_ManualPlacement();
 		void Sub_GroupSpoon();
