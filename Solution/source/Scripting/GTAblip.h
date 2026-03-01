@@ -63,15 +63,29 @@ public:
 
 	void SetScale(float value);
 
-	void ShowCone(bool toggle, int hudColorIndex, float coneWidth = 1.0f, int coneColour = BlipColour::Blue);
+//New functions
+
+	void ShowCone (bool toggle, int hudColorIndex = 3, float coneWidth = 1.0f, int coneColour = 3);
 
 	void SetSelectableOnMap(bool selectable);
+
+	void SetPriority(int priority);
 
 	void SetRotationWithFloat(float heading);
 
 	void AddBlipForArea(float x, float y, float z, float width, float height);
 
 	void SyncRotationWithEntity(int entityHandle);
+
+//New functions end here
+
+//New functions
+
+	int GetPriority() const;
+	void SetDisplayMode(int value);
+	//void SetDisplayMode(int value);
+
+//New functions end here
 
 	void ShowRoute(bool value);
 
@@ -93,4 +107,5 @@ public:
 private:
 	int mHandle;
 	int mConeColour = 3;
+	int mPriority = 2;
 };
