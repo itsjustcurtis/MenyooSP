@@ -290,6 +290,7 @@ void Menu::submenu_switch()
 	case SUB::SPOONER_ATTACHMENTOPS_ATTACHTO:		sub::Spooner::Submenus::Sub_AttachmentOps_AttachTo(); break;
 	case SUB::SPOONER_ATTACHMENTOPS_SELECTBONE:		sub::Spooner::Submenus::Sub_AttachmentOps_SelectBone(); break;
 	case SUB::SPOONER_MANUALPLACEMENT:				sub::Spooner::Submenus::Sub_ManualPlacement(); break;
+	case SUB::SPOONER_SIZEMANIPULATION:				sub::Spooner::Submenus::Sub_SizeManipulation(); break;
 
 	case SUB::CLOCK:					sub::Clock_catind::Sub_Clock(); break;
 
