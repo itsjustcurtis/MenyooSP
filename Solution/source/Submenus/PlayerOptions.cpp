@@ -72,10 +72,11 @@ namespace sub
 
 		std::vector<std::string> forcefield_names{ "Off", "Push Out", "Destroy" };
 
+
 		float& fHeight = g_playerVerticalElongationMultiplier;//GeneralGlobalHax::GetPlayerHeight();
-		//float fMovementSpeed = 0.0f, fSwimSpeed = 0.0f;
-		float fMovementSpeed = GeneralGlobalHax::GetPlayerMovementSpeed();
-		float fSwimSpeed = GeneralGlobalHax::GetPlayerSwimSpeed();
+		float fMovementSpeed = 0.0f, fSwimSpeed = 0.0f;
+		//float fMovementSpeed = GeneralGlobalHax::GetPlayerMovementSpeed();		//Memory hax causing crash in enhanced
+		//float fSwimSpeed = GeneralGlobalHax::GetPlayerSwimSpeed();
 
 		bool butAmIOnline = NETWORK_IS_IN_SESSION() != 0;
 
@@ -139,7 +140,7 @@ namespace sub
 			AddToggle("Never Wanted", loop_never_wanted, PlayerOpsNeverWantedOn_, PlayerOpsNeverWantedOff_);
 		AddToggle("Burn Mode", loop_player_burn, PlayerOpsBurnModeOn_, PlayerOpsBurnModeOff_);
 		//AddToggle("No Gravity (ALPHA)", loop_player_noGravity, null, PlayerOpsNoGravityOff_);
-		AddNumber("Height (Elongation)", fHeight, 2, null, bHeight_plus, bHeight_minus);
+		AddNumber("Height (Elongation) - Experimental", fHeight, 2, null, bHeight_plus, bHeight_minus);
 		//AddNumber("Walk & Run Speed", fMovementSpeed, 2, null, bMovementSpeed_plus, bMovementSpeed_minus);
 		//AddNumber("Swim Speed", fSwimSpeed, 2, null, bSwimSpeed_plus, bSwimSpeed_minus);
 		AddNumber("Movement Speed (Alt)", mult69_0, 2, null, PlayerOps_i69_flt_MovementSpeed, PlayerOps_d69_flt_MovementSpeed);
@@ -149,11 +150,13 @@ namespace sub
 		//AddOption("Collision ON", vcollisionon);
 		//AddOption("Collision OFF", vcollisionoff);
 
+
 		if (vcollisionon || vcollisionoff) myPed.IsCollisionEnabled_set(!myPed.IsCollisionEnabled_get());
 		//if (vcollisionon) SET_ENTITY_COLLISION(PLAYER_PED_ID(), TRUE, 0);
 		//if (vcollisionoff) SET_ENTITY_COLLISION(PLAYER_PED_ID(), FALSE, 0);
 
 		if (PlayerOpsReplenishPlayer_) {
+			addlog(ige::LogType::LOG_TRACE, "Replenishing Player", __FILENAME__);
 			myPed.Health_set(myPed.MaxHealth_get());
 			myPed.Armour_set(myPlayer.MaxArmour_get());
 			PedDamageTextures_catind::ClearAllBloodDamage(myPed);
@@ -162,6 +165,7 @@ namespace sub
 		}
 
 		if (PlayerOpsInvincibilityOff_) {
+			addlog(ige::LogType::LOG_TRACE, "Turning Off Invincibility", __FILENAME__);
 			SET_PLAYER_INVINCIBLE(PLAYER_ID(), 0);
 			set_ped_invincible_off(PLAYER_PED_ID());
 			return;
@@ -352,7 +356,7 @@ namespace sub
 					try { flagID = stoi(inputStr); }
 					catch (...) 
 					{ 
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(inputStr);
 						addlog(ige::LogType::LOG_ERROR, "Invalid flagID entered: " + inputStr, __FILENAME__);
 					}
 				}

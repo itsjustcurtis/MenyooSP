@@ -138,7 +138,7 @@ namespace sub
 				if (inputStr.length() > 0)
 				{
 					try { val = stof(inputStr); }
-					catch (...) { Game::Print::PrintError_InvalidInput(); }
+					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 10U, std::to_string(val).substr(0, 10));
 				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&val);
@@ -163,7 +163,7 @@ namespace sub
 				if (inputStr.length() > 0)
 				{
 					try { val = stof(inputStr); }
-					catch (...) { Game::Print::PrintError_InvalidInput(); }
+					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 10U, std::to_string(val).substr(0, 10));
 				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&val);
@@ -320,7 +320,7 @@ namespace sub
 					}
 				}
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				return;
 				// No OnscreenKeyboard!
 			}
@@ -1179,7 +1179,7 @@ namespace sub
 						}
 						ent.Health_set(thisHealth);
 					}
-					catch (...) { Game::Print::PrintError_InvalidInput(); }
+					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerEoHealth, std::string(), 4U, std::string(), std::to_string(thisHealth));
 				//OnscreenKeyboard::State::arg1._int = ent.GetHandle();
@@ -1415,7 +1415,7 @@ namespace sub
 						//		break;
 						//	}
 						//}
-						//if (!found) Game::Print::PrintError_InvalidInput();
+						//if (!found) Game::Print::PrintError_InvalidInput(inputStr);
 						Menu::SetSub_delayed = SUB::SPOONER_ATTACHMENTOPS_SELECTBONE;
 					}
 				}
@@ -1470,7 +1470,7 @@ namespace sub
 						//		break;
 						//	}
 						//}
-						//if (!found) Game::Print::PrintError_InvalidInput();
+						//if (!found) Game::Print::PrintError_InvalidInput(inputStr);
 						Menu::SetSub_delayed = SUB::SPOONER_ATTACHMENTOPS_SELECTBONE;
 					}
 				}
@@ -2292,7 +2292,7 @@ namespace sub
 						thisArmour = stoi(inputStr);
 						thisPed.Armour_set(thisArmour);
 					}
-					catch (...) { Game::Print::PrintError_InvalidInput(); }
+					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerEoArmour, std::string(), 4U, std::string(), std::to_string(thisHealth));
 				//OnscreenKeyboard::State::arg1._int = ent.GetHandle();
@@ -3227,7 +3227,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::AlphaLevelMenuInput, std::string(), 3U, "Enter an alpha level (0-255):", std::to_string(alphaLevel));
@@ -3802,7 +3802,7 @@ namespace sub
 			{
 				Entity tempEntity = Static_241;
 				Hash tempHash = GET_HASH_KEY(inputStr);
-				if (!IS_MODEL_IN_CDIMAGE(tempHash)) Game::Print::PrintError_InvalidModel();
+				if (!IS_MODEL_IN_CDIMAGE(tempHash)) Game::Print::PrintError_InvalidModel(inputStr);
 				else
 				{
 					if (IS_PED_IN_ANY_VEHICLE(Static_241, 0)) tempEntity = GET_VEHICLE_PED_IS_IN(Static_241, 0);
@@ -3857,7 +3857,7 @@ namespace sub
 			if (inputStr.length() > 0)
 			{
 				Hash tempHash = GET_HASH_KEY(inputStr);
-				if (!IS_MODEL_IN_CDIMAGE(tempHash)) Game::Print::PrintError_InvalidModel();
+				if (!IS_MODEL_IN_CDIMAGE(tempHash)) Game::Print::PrintError_InvalidModel(inputStr);
 				else
 				{
 					Entity tempEntity = Static_241;

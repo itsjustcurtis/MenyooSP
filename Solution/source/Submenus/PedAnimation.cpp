@@ -759,7 +759,7 @@ namespace sub
 			std::string inputStr = Game::InputBox(_globalCustomAnim_dict, 126U, "Enter dict:", _globalCustomAnim_dict);
 			if (inputStr.length() > 0)
 				_globalCustomAnim_dict = inputStr;
-			else Game::Print::PrintError_InvalidInput();
+			else Game::Print::PrintError_InvalidInput(inputStr);
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1String, _globalCustomAnim_dict, 126U, "Enter dict:", _globalCustomAnim_dict);
 			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_globalCustomAnim_dict);
 			return;
@@ -770,7 +770,7 @@ namespace sub
 			std::string inputStr = Game::InputBox(_globalCustomAnim_name, 126U, "Enter name:", _globalCustomAnim_name);
 			if (inputStr.length() > 0)
 				_globalCustomAnim_name = inputStr;
-			else Game::Print::PrintError_InvalidInput();
+			else Game::Print::PrintError_InvalidInput(inputStr);
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1String, _globalCustomAnim_name, 126U, "Enter name:", _globalCustomAnim_name);
 			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_globalCustomAnim_name);
 			return;

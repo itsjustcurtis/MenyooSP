@@ -94,8 +94,30 @@ namespace sub
 		AddOption("Head Features", null, nullFunc, SUB::PED_HEADFEATURES_MAIN);
 		AddOption("Accessories", null, nullFunc, SUB::COMPONENTSPROPS);
 
+		std::vector<std::string> components
+		{
+			"Head",
+			"Beard/Mask",
+			"Hair",
+			"Torso",
+			"Legs",
+			"Hands/Back",
+			"Shoes",
+			"Teeth/Scarf/Necklace/Bracelets",
+			"Accessory/Tops",
+			"Task/Armour",
+			"Emblem",
+			"Tops2 (Outer)"
+		};
+
 		AddBreak("---Components---");
-		AddpedcomponentOption_("Head", PV_COMP_HEAD);
+
+		for ( int i = 0; i < PV_COMP_MAX; i++)
+		{
+			if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, i) > 0) AddpedcomponentOption_(components[i], i);
+		}
+
+		/*AddpedcomponentOption_("Head", PV_COMP_HEAD);
 		AddpedcomponentOption_("Beard/Mask", PV_COMP_BERD); // Beard // FACE_BRD
 		AddpedcomponentOption_("Hair", PV_COMP_HAIR); // Hair // FACE_HAIR
 		AddpedcomponentOption_("Torso", PV_COMP_UPPR);
@@ -106,7 +128,7 @@ namespace sub
 		AddpedcomponentOption_("Accessory/Tops", PV_COMP_ACCS); // Accessory // PIM_TACCE
 		AddpedcomponentOption_("Task/Armour", PV_COMP_TASK);
 		AddpedcomponentOption_("Emblem", PV_COMP_DECL);
-		AddpedcomponentOption_("Tops2 (Outer)", PV_COMP_JBIB);
+		AddpedcomponentOption_("Tops2 (Outer)", PV_COMP_JBIB);*/
 
 		AddOption("Random Components", ComponentChanger_random);
 		AddOption("Default Components", ComponentChanger_default);
@@ -264,10 +286,11 @@ namespace sub
 
 		AddTitle("Set Variation");
 
-		AddNumber("Type", compon_drawable_current, 0, compon_input, compon_plus, compon_minus);
-		AddNumber("Texture", compon_texture_current, 0, null, compon_plus, compon_minus);
+		if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, Static_12) > 0) AddNumber("Type", compon_drawable_current, 0, compon_input, compon_plus, compon_minus);
+		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(Static_241, Static_12, compon_drawable_current)) AddNumber("Texture", compon_texture_current, 0, null, compon_plus, compon_minus);
 		//AddNumber("Palette", compon_palette_current, 0, null, compon_plus, compon_minus);
 
+		
 		switch (*Menu::currentopATM)
 		{
 		case 1:
@@ -282,10 +305,10 @@ namespace sub
 						if (compon_drawable_current > GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, Static_12) - 1)
 						{
 							compon_drawable_current = compon_drawable_old;
-							Game::Print::PrintError_InvalidInput();
+							Game::Print::PrintError_InvalidInput(inputStr);
 						}							
 					}
-					catch (...) { Game::Print::PrintError_InvalidInput(); }
+					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
 				}
 			}
 			else if (compon_plus)
@@ -416,10 +439,29 @@ namespace sub
 		}
 
 		bool ComponentChanger_randomProps = 0, ComponentChanger_clearAllProps = 0;
+		std::vector<std::string> components
+		{
+			"Hats",
+			"Glasses",
+			"Ear Pieces",
+			"Unknown 3",
+			"Unknown 4",
+			"Unknown 5",
+			"Watches",
+			"Bangles",
+			"Unknown 8",
+			"Unknown 9"
+		};
 
 		AddTitle("Accessories");
 
-		AddpedpropOption_("Hats", 0);
+		for (int i = 0; i < components.size(); ++i)
+		{
+			if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(Static_241, i) > 0)
+				AddpedpropOption_(components[i], i);
+		}
+
+		/*AddpedpropOption_("Hats", 0);
 		AddpedpropOption_("Glasses", 1);
 		AddpedpropOption_("Ear Pieces", 2);
 		AddpedpropOption_("Watches", 6);
@@ -430,7 +472,7 @@ namespace sub
 		AddpedpropOption_("Unknown 4", 4);
 		AddpedpropOption_("Unknown 5", 5);
 		AddpedpropOption_("Unknown 8", 8);
-		AddpedpropOption_("Unknown 9", 9);
+		AddpedpropOption_("Unknown 9", 9);*/
 
 		AddBreak("---Utilities---");
 		AddOption("Random Accessories", ComponentChanger_randomProps);
@@ -464,9 +506,8 @@ namespace sub
 
 		AddTitle("Set Variation");
 
-		AddNumber("Type", prop_type_current, 0, null, compon_plus, compon_minus);
-		AddNumber("Texture", prop_texture_current, 0, null, compon_plus, compon_minus);
-
+		if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(Static_241, Static_12) > 0) AddNumber("Type", prop_type_current, 0, null, compon_plus, compon_minus);
+		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(Static_241, Static_12, prop_type_current) > 0) AddNumber("Texture", prop_texture_current, 0, null, compon_plus, compon_minus);
 
 		switch (Menu::currentop)
 		{
@@ -553,7 +594,7 @@ namespace sub
 							prop_texture_current = 0;
 						}
 					}
-				SET_PED_PROP_INDEX(ped.Handle(), propId, prop_type_current, prop_texture_current, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+					SET_PED_PROP_INDEX(ped.Handle(), propId, prop_type_current, prop_texture_current, NETWORK_IS_GAME_IN_PROGRESS(), 0);					
 				}
 			}
 		}
@@ -931,7 +972,8 @@ namespace sub
 		};
 #pragma endregion
 
-		UINT8 max_shapeAndSkinIDs = 46;
+		//bool unlockMaxIDs = false;
+		//UINT8 max_shapeAndSkinIDs = 46;
 		UINT8 GetPedHeadOverlayColourType(const PedHeadOverlay& overlayIndex)
 		{
 			switch (overlayIndex)
@@ -1077,6 +1119,15 @@ namespace sub
 				}
 			}
 		}
+
+		void ApplyHeadOverlayTint(GTAped ped, int overlayIndex, int colourType, int primary, int secondary)
+		{
+			if (primary < 0 || colourType == 0)
+				SET_PED_HEAD_OVERLAY_TINT(ped.Handle(), overlayIndex, 0, 0, 0);
+			else
+				SET_PED_HEAD_OVERLAY_TINT(ped.Handle(), overlayIndex, colourType, primary, secondary);
+		}
+
 		void Sub_HeadOverlays_InItem()
 		{
 			auto& overlayIndex = Static_12;
@@ -1102,30 +1153,27 @@ namespace sub
 				if (currentOverlayValue < max_overlays)
 				{
 					currentOverlayValue++;
-					SET_PED_HEAD_OVERLAY(ped.Handle(), overlayIndex, currentOverlayValue, currentOverlayData.opacity);
-					SET_PED_HEAD_OVERLAY_TINT(ped.Handle(), overlayIndex, 0, currentOverlayData.colour=0, currentOverlayData.colourSecondary=0);
 				}
 				else
 				{
 					currentOverlayValue = currentOverlayValue == 255 ? 0 : 255;
-					SET_PED_HEAD_OVERLAY(ped.Handle(), overlayIndex, currentOverlayValue, currentOverlayData.opacity);
-					SET_PED_HEAD_OVERLAY_TINT(ped.Handle(), overlayIndex, 0, currentOverlayData.colour=0, currentOverlayData.colourSecondary=0);
+					
 				}
+				SET_PED_HEAD_OVERLAY(ped.Handle(), overlayIndex, currentOverlayValue, currentOverlayData.opacity);
+				ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour = -1, currentOverlayData.colourSecondary = -1);
 			}
 			if (overlay_minus)
 			{
 				if (currentOverlayValue > 0)
 				{
 					currentOverlayValue = currentOverlayValue > max_overlays ? max_overlays : currentOverlayValue - 1;
-					SET_PED_HEAD_OVERLAY(ped.Handle(), overlayIndex, currentOverlayValue, currentOverlayData.opacity);
-					SET_PED_HEAD_OVERLAY_TINT(ped.Handle(), overlayIndex, 0, currentOverlayData.colour=0, currentOverlayData.colourSecondary=0);
 				}
 				else
 				{
 					currentOverlayValue = 255;
-					SET_PED_HEAD_OVERLAY(ped.Handle(), overlayIndex, currentOverlayValue, currentOverlayData.opacity);
-					SET_PED_HEAD_OVERLAY_TINT(ped.Handle(), overlayIndex, 0, currentOverlayData.colour=0, currentOverlayData.colourSecondary=0);
 				}
+				SET_PED_HEAD_OVERLAY(ped.Handle(), overlayIndex, currentOverlayValue, currentOverlayData.opacity);
+				ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour = -1, currentOverlayData.colourSecondary = -1);
 			}
 
 			// OPACITY
@@ -1157,39 +1205,39 @@ namespace sub
 				if (colour_plus)
 				{
 					if (currentOverlayData.colour < max_colours)
-					{
 						currentOverlayData.colour++;
-						SET_PED_HEAD_OVERLAY_TINT(ped.Handle(), overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
-					}
+					else
+						currentOverlayData.colour = -1;
+
+					ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
 				}
 				if (colour_minus)
 				{
-					if (currentOverlayData.colour > 0)
-					{
+					if (currentOverlayData.colour > -1)
 						currentOverlayData.colour--;
-						SET_PED_HEAD_OVERLAY_TINT(ped.Handle(), overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
-					}
+					else
+						currentOverlayData.colour = max_colours;
+
+					ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
 				}
 
 				// SECONDARY COLOUR
-				AddNumber(Game::GetGXTEntry("CMOD_COL0_1", "Secondary Colour"), currentOverlayData.colourSecondary, 0, null, colourSecondary_plus, colourSecondary_minus);
+				if(currentOverlayData.colour > -1)
+					AddNumber(Game::GetGXTEntry("CMOD_COL0_1", "Secondary Colour"), currentOverlayData.colourSecondary, 0, null, colourSecondary_plus, colourSecondary_minus);
 				if (colourSecondary_plus)
 				{
 					if (currentOverlayData.colourSecondary < max_colours)
-					{
 						currentOverlayData.colourSecondary++;
-						SET_PED_HEAD_OVERLAY_TINT(ped.Handle(), overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
-					}
+
+					ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
 				}
 				if (colourSecondary_minus)
 				{
-					if (currentOverlayData.colourSecondary > 0)
-					{
+					if (currentOverlayData.colourSecondary > -1)
 						currentOverlayData.colourSecondary--;
-						SET_PED_HEAD_OVERLAY_TINT(ped.Handle(), overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
-					}
-				}
 
+					ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
+				}
 			}
 		}
 		void Sub_FaceFeatures()
@@ -1234,6 +1282,12 @@ namespace sub
 			float mix_amountToChange = 0.01f;
 
 			AddTitle("Shape & Skin Tone");
+			AddToggle("Unlock ID Limits", g_unlockMaxIDs);
+
+			if (g_unlockMaxIDs)
+				max_shapeAndSkinIDs = 255;
+			else
+				max_shapeAndSkinIDs = 46;
 
 			// Shape IDs
 			bool shapeFirstID_plus = false, shapeFirstID_minus = false;
@@ -1468,7 +1522,14 @@ namespace sub
 					int pedCompIdValueDrawable = stoi(pedCompIdValueStr.substr(0, pedCompIdValueStr.find(",")));
 					int pedCompIdValueTexture = stoi(pedCompIdValueStr.substr(pedCompIdValueStr.find(",") + 1));
 
-					SET_PED_COMPONENT_VARIATION(ep.Handle(), pedCompId, pedCompIdValueDrawable, pedCompIdValueTexture, 0);
+					if (GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(ep.Handle(), pedCompId) >= pedCompIdValueDrawable && GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(ep.Handle(), pedCompId, pedCompIdValueDrawable) >= pedCompIdValueTexture)
+					{
+						SET_PED_COMPONENT_VARIATION(ep.Handle(), pedCompId, pedCompIdValueDrawable, pedCompIdValueTexture, 0);
+						addlog(ige::LogType::LOG_DEBUG, "Applied ped component " + std::to_string(pedCompId) + " with drawable " + std::to_string(pedCompIdValueDrawable) + " and texture " + std::to_string(pedCompIdValueTexture), __FILENAME__);
+					}
+					else
+						addlog(ige::LogType::LOG_WARNING, "Ped comp " + std::to_string(pedCompId) + " out of range - Drawable " + std::to_string(pedCompIdValueDrawable) + " and texture " + std::to_string(pedCompIdValueTexture), __FILENAME__);
+
 				}
 			}
 			if (applyProps)
@@ -1650,7 +1711,7 @@ namespace sub
 				ComponentChanger_Outfit_catind::Create(Static_241, _dir + "\\" + inputStr + ".xml");
 				Game::Print::PrintBottomLeft("File ~b~created~s~.");
 			}
-			else Game::Print::PrintError_InvalidInput();
+			else Game::Print::PrintError_InvalidInput(inputStr);
 			return;
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SavepIndexOutfitToFile, std::string(), 28U, "FMMC_KEY_TIP9");
 			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_dir);
@@ -1674,7 +1735,7 @@ namespace sub
 					addlog(ige::LogType::LOG_ERROR, "Attempt to create folder " + inputStr + " failed", __FILENAME__);
 				}
 			}
-			else Game::Print::PrintError_InvalidInput();
+			else Game::Print::PrintError_InvalidInput(inputStr);
 			return;
 			// No OnscreenKeyboard!
 		}
@@ -1753,7 +1814,7 @@ namespace sub
 				else Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to rename file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to rename file " + _name + " to " + newName + "failed", __FILENAME__);
 			}
-			else Game::Print::PrintError_InvalidInput();
+			else Game::Print::PrintError_InvalidInput(newName);
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameOutfitFile, std::string(), 28U, "FMMC_KEY_TIP9", _name);
 			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_name);
 			//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&_dir);

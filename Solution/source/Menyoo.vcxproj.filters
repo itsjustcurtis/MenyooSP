@@ -313,6 +313,7 @@
     <ClCompile Include="Menu\Language.cpp">
       <Filter>Menu</Filter>
     </ClCompile>
+    <ClCompile Include="Memory\Hooking.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util\ExePath.h">
@@ -643,6 +644,7 @@
     <ClInclude Include="Menu\Language.h">
       <Filter>Menu</Filter>
     </ClInclude>
+    <ClInclude Include="Memory\Hooking.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Submenus">

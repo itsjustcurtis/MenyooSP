@@ -2,6 +2,7 @@
 <PedList>
 	<Category name="Player">
 		<Ped name="player_zero" caption="Michael" />
+		<Ped name="p_michael_02" caption="Michael Aged" />
 		<Ped name="player_one" caption="Franklin" />
 		<Ped name="p_franklin_02" caption="Franklin Aged" />
 		<Ped name="player_two" caption="Trevor" />

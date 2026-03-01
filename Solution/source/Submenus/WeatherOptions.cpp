@@ -49,7 +49,8 @@ namespace sub
 			{ 24.9f, "Jupiter 24.9" },
 			{ 274.0f, "Sun 274.0" }
 		};
-		float mult_0_gravity = GTAmemory::WorldGravity_get();
+		//float mult_0_gravity = GTAmemory::WorldGravity_get();
+		float mult_0_gravity = 9.8f;
 
 		float windSpeed = GET_WIND_SPEED();
 		float wavesHeight = GET_DEEP_OCEAN_SCALER();
@@ -96,39 +97,46 @@ namespace sub
 
 		if (windSpeed_plus)
 		{
+			addlog(ige::LogType::LOG_TRACE, "windSpeed_plus", __FILENAME__);
 			windSpeed += 0.1f;
 			SET_WIND_SPEED(windSpeed);
 		}
 		if (windSpeed_minus)
 		{
+			addlog(ige::LogType::LOG_TRACE, "windSpeed_minus", __FILENAME__);
 			windSpeed -= 0.1f;
 			SET_WIND_SPEED(windSpeed);
 		}
 
 		if (wavesHeight_plus)
 		{
+			addlog(ige::LogType::LOG_TRACE, "wavesHeight_plus", __FILENAME__);
 			wavesHeight += 0.1f;
 			WATER::SET_DEEP_OCEAN_SCALER(wavesHeight);
 		}
 		if (wavesHeight_minus)
 		{
+			addlog(ige::LogType::LOG_TRACE, "wavesHeight_minus", __FILENAME__);
 			wavesHeight -= 0.1f;
 			WATER::SET_DEEP_OCEAN_SCALER(wavesHeight);
 		}
 
 		if (rainfxi_plus)
 		{
+			addlog(ige::LogType::LOG_TRACE, "rainfxit_plus", __FILENAME__);
 			if (_globalRainFXIntensity < 45.0f) _globalRainFXIntensity += 0.1f;
 			SET_RAIN(_globalRainFXIntensity);
 		}
 		if (rainfxi_minus)
 		{
+			addlog(ige::LogType::LOG_TRACE, "rainfxit_minus", __FILENAME__);
 			if (_globalRainFXIntensity > 0.0f) _globalRainFXIntensity -= 0.1f;
 			SET_RAIN(_globalRainFXIntensity);
 		}
 
 		if (gravityLevel_plus)
 		{
+			addlog(ige::LogType::LOG_TRACE, "gravityLevel_plus", __FILENAME__);
 			auto git = v0gravities.find(mult_0_gravity);
 			git++;
 			if (git != v0gravities.end())
@@ -139,6 +147,7 @@ namespace sub
 		}
 		if (gravityLevel_minus)
 		{
+			addlog(ige::LogType::LOG_TRACE, "gravityLevel_minus", __FILENAME__);
 			auto git = std::map<float, std::string>::reverse_iterator(v0gravities.find(mult_0_gravity));
 			git++;
 			if (git != v0gravities.rend())
@@ -194,6 +203,7 @@ namespace sub
 				bool bPressed = false;
 				AddOption(name, bPressed); if (bPressed)
 				{
+					addlog(ige::LogType::LOG_DEBUG, "Set Clouds: " + name, __FILENAME__);
 					LOAD_CLOUD_HAT(name.c_str(), 0.5f);
 				}
 			}

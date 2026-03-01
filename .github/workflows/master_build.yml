@@ -108,11 +108,9 @@ jobs:
 
       - name: Set output
         id: set_output
-        if: env.CANCELJOB != 'true' 
         run: echo "CANCELJOB=${{ env.CANCELJOB }}" >> $GITHUB_OUTPUT
 
   build:
-    if: github.ref == 'refs/heads/main' || (github.ref == 'refs/heads/Development' && needs.check-version-and-merge.outputs.CANCELJOB != 'true')
     runs-on: windows-latest
     needs: check-version-and-merge
 
@@ -152,6 +150,7 @@ jobs:
 
 
   pre-release:
+    if: github.ref == 'refs/heads/main' || (github.ref == 'refs/heads/Development' && needs.check-version-and-merge.outputs.CANCELJOB != 'true')
     needs: build
     permissions: write-all
     name: "Pre Release"
@@ -196,4 +195,3 @@ jobs:
           prerelease: ${{ github.ref_name != 'main' }}
           title: ${{ steps.version.outputs.version}}
           files: MenyooSP.zip
-          dry-run: true

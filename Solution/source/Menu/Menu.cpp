@@ -433,7 +433,7 @@ void Menu::background()
 	float temp;
 	if (totalop > GTA_MAXOP) temp = GTA_MAXOP; else temp = (float)totalop; // Calculate last option number to draw rect
 
-																		   // Calculate Y Coord
+	// Calculate Y Coord
 	float bg_Y = ((temp * 0.035f) / 2.0f) + 0.159f;
 	float bg_length = temp * 0.035f;
 
@@ -526,13 +526,23 @@ void Menu::while_closed()
 {
 	if (isBinds())
 	{
-		if (g_menuNotOpenedYet)
+
+		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, opening Menyoo", __FILENAME__);
+		if (g_menuNotOpenedYet) {
 			justopened();
+			GTAmemory::InitEnhancedPools();
+		}
+		else
+			addlog(ige::LogType::LOG_TRACE, "Menu has been opened before, skipping initialization", __FILENAME__);
+
 
 		Game::Sound::PlayFrontend("FocusIn", "HintCamSounds");
+
 		currentsub = LOOCsub;
+		addlog(ige::LogType::LOG_TRACE, "Setting current submenu to LOOCsub: " + std::to_string(LOOCsub), __FILENAME__);
 		if (currentsub == SUB::MAINMENU)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Current is MainMenu", __FILENAME__);
 			currentop = 1;
 			*currentopATM = 1;
 		}
@@ -547,7 +557,10 @@ void Menu::while_opened()
 	totalop = printingop; printingop = 0;
 	totalbreaks = breakcount; breakcount = 0; breakscroll = 0;
 
-	if (IS_PAUSE_MENU_ACTIVE()) SetSub_closed();
+	if (IS_PAUSE_MENU_ACTIVE()) {
+		addlog(ige::LogType::LOG_TRACE, "Game Paused, closing Menyoo", __FILENAME__);
+		SetSub_closed();
+	}
 
 	if (IS_GAMEPLAY_HINT_ACTIVE()) STOP_GAMEPLAY_HINT(false);
 	DISPLAY_AMMO_THIS_FRAME(0);
@@ -567,6 +580,7 @@ void Menu::while_opened()
 	// Scroll up
 	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Up))
 	{
+		addlog(ige::LogType::LOG_TRACE, "Up Pressed, moving selection up", __FILENAME__);
 		if (currentop <= 1)
 			Bottom();
 		else
@@ -576,6 +590,7 @@ void Menu::while_opened()
 	// Scroll down
 	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Down))
 	{
+		addlog(ige::LogType::LOG_TRACE, "Down Pressed, moving selection down", __FILENAME__);
 		if (currentop >= totalop)
 			Top();
 		else
@@ -585,6 +600,7 @@ void Menu::while_opened()
 	// B press
 	if (MenuPressTimer::IsButtonTapped(MenuPressTimer::Button::Back))
 	{
+		addlog(ige::LogType::LOG_TRACE, "Back Pressed, returning to previous menu", __FILENAME__);
 		if (currentsub == SUB::MAINMENU)
 			SetSub_closed();
 		else
@@ -594,14 +610,16 @@ void Menu::while_opened()
 	// Binds press
 	if (isBinds())//&& currentsub != SUB::MAINMENU)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, closing Menyoo", __FILENAME__);
 		SetSub_closed();
 	}
-		
+
 }
 void Menu::Up(bool playSound)
 {
 	currentop--;
 	currentop_w_breaks--;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 1;
@@ -610,6 +628,7 @@ void Menu::Down(bool playSound)
 {
 	currentop++;
 	currentop_w_breaks++;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
@@ -618,6 +637,7 @@ void Menu::Bottom(bool playSound)
 {
 	currentop = totalop;
 	currentop_w_breaks = totalop;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 1;
@@ -626,6 +646,7 @@ void Menu::Top(bool playSound)
 {
 	currentop = 1;
 	currentop_w_breaks = 1;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
@@ -640,7 +661,7 @@ void Menu::SetSub_previous()
 
 	currentsub = currentsub_ar[currentsub_ar_index]; // Get previous submenu from array and set as current submenu
 	currentop = currentop_ar[currentsub_ar_index]; // Get last selected option from array and set as current selected option
-	
+
 	currentsub_ar[currentsub_ar_index] = -2;
 	currentop_ar[currentsub_ar_index] = -2;
 
@@ -847,13 +868,28 @@ void Menu::draw_IB()
 
 void Menu::sub_handler()
 {
+	static bool firstRun = true, isClosed = true;
+	if(firstRun) 
+	{
+		addlog(ige::LogType::LOG_TRACE, "First Run sub_handler", __FILENAME__);;
+	}
 	if (currentsub == SUB::CLOSED)
 	{
+		if (!isClosed)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Sub Closed", __FILENAME__);;
+			isClosed = true;
+		}
 		while_closed();
 	}
 
 	else
 	{
+		if (isClosed)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Sub Opened", __FILENAME__);;
+			isClosed = false;
+		}
 		submenu_switch();
 
 		if (Menu::currentop > Menu::printingop) { Menu::currentop = Menu::printingop + 1; Menu::Up(false); }
@@ -877,7 +913,7 @@ void Menu::sub_handler()
 		delayedTimer = GET_GAME_TIMER() + 810; // Delay for rainbow related loops
 		if (delayedTimer > INT_MAX - 1000) delayedTimer = 0;
 	}
-
+	firstRun = false;
 }
 
 //--------------------------------MouseSupport---------------------------------------------------

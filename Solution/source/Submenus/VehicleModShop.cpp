@@ -721,7 +721,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			return;
@@ -825,7 +825,7 @@ namespace sub
 		AddOption("Matte", null, nullFunc, SUB::MSPAINTS2_MATTE, true, true); // CMOD_COL1_5
 		AddOption("Metallic", null, nullFunc, SUB::MSPAINTS2_METALLIC, true, true); // CMOD_COL1_3
 		AddOption("Metal", null, nullFunc, SUB::MSPAINTS2_METAL, true, true); // CMOD_COL1_4
-		if(IS_DLC_PRESENT(GET_HASH_KEY("spchameleon")))
+		if(g_isEnhanced||IS_DLC_PRESENT(GET_HASH_KEY("spchameleon")))
 			AddOption("Chameleon", null, nullFunc, SUB::MSPAINTS2_CHAMELEON, true, true); // CMOD_COL1_4
 		AddOption("Utility", null, nullFunc, SUB::MSPAINTS2_UTIL);
 		AddOption("Worn", null, nullFunc, SUB::MSPAINTS2_WORN);
@@ -919,7 +919,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			return;
@@ -1010,7 +1010,7 @@ namespace sub
 					}
 					catch (...)
 					{
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(inputStr);
 					}
 				}
 				return;
@@ -1346,7 +1346,7 @@ namespace sub
 				{
 					int newVal = abs(stoi(inputStr));
 					if (newVal < 0 || newVal > 255)
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(inputStr);
 					else
 					{
 						ms_paints_rgb_r = newVal;
@@ -1355,7 +1355,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsRgbR, std::string(), 3U, std::string(), std::to_string(ms_paints_rgb_r));
@@ -1384,7 +1384,7 @@ namespace sub
 				{
 					int newVal = abs(stoi(inputStr));
 					if (newVal < 0 || newVal > 255)
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(inputStr);
 					else
 					{
 						ms_paints_rgb_g = newVal;
@@ -1393,7 +1393,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsRgbG, std::string(), 3U, std::string(), std::to_string(ms_paints_rgb_g));
@@ -1422,7 +1422,7 @@ namespace sub
 				{
 					int newVal = abs(stoi(inputStr));
 					if (newVal < 0 || newVal > 255)
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(inputStr);
 					else
 					{
 						ms_paints_rgb_b = newVal;
@@ -1431,7 +1431,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsRgbB, std::string(), 3U, std::string(), std::to_string(ms_paints_rgb_b));
@@ -1460,7 +1460,7 @@ namespace sub
 				{
 					int newVal = abs(stoi(inputStr));
 					if (newVal < 0 || newVal > 255)
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(inputStr);
 					else
 					{
 						ms_paints_rgb_a = newVal;
@@ -1469,7 +1469,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsRgbA, std::string(), 3U, std::string(), std::to_string(ms_paints_rgb_a));
@@ -1506,15 +1506,15 @@ namespace sub
 						rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, 255);
 					}
 					else
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintError_InvalidInput(inputStr);
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			else
-				Game::Print::PrintError_InvalidInput();
+				Game::Print::PrintError_InvalidInput(inputStr);
 		}
 
 		if (settings_hud_c_plus) {
@@ -1531,7 +1531,7 @@ namespace sub
 			/*int tempHash = settings_hud_c;
 			try{ tempHash = abs(stoi(Game::InputBox(std::to_string(settings_hud_c)))); }
 			catch (...){ tempHash = settings_hud_c; }
-			if (!(tempHash >= 0 && tempHash <= 180)) Game::Print::PrintError_InvalidInput();
+			if (!(tempHash >= 0 && tempHash <= 180)) Game::Print::PrintError_InvalidInput(inputStr);
 			else
 			{
 			settings_hud_c = tempHash;
@@ -1657,17 +1657,21 @@ namespace sub
 
 		WAIT(50);
 
+		int colour1, colour2;
+		GET_VEHICLE_EXTRA_COLOURS(vehicle, &colour1, &colour2);
 		if (prim_col_index != -3) // basic paint primary
 		{
 			CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(vehicle);
 			GET_VEHICLE_COLOURS(vehicle, &i, &inull);
-			SET_VEHICLE_COLOURS(vehicle, prim_col_index, inull);
+			SET_VEHICLE_COLOURS(vehicle, prim_col_index, inull);	
+			SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, colour2);
 		}
 		if (sec_col_index != -3) // basic paint secondary
 		{
 			CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(vehicle);
 			GET_VEHICLE_COLOURS(vehicle, &inull, &i);
 			SET_VEHICLE_COLOURS(vehicle, inull, sec_col_index);
+			SET_VEHICLE_EXTRA_COLOURS(vehicle, 0, colour2);
 		}
 
 		WAIT(40);
@@ -1870,14 +1874,7 @@ namespace sub
 			AddNumber(Game::GetGXTEntry("Roof Livery", "Roof Livery"), ms_livery2, 0, null, ms_livery2_plus, ms_livery2_minus);
 		AddLocal(Game::GetGXTEntry("CMOD_MOD_TUR", "Turbo"), IS_TOGGLE_MOD_ON(Static_12, VehicleMod::Turbo), ms_turbo_toggle, ms_turbo_toggle); // Turbo
 		AddLocal(Game::GetGXTEntry("CMOD_LGT_1", "Xenon Lights"), IS_TOGGLE_MOD_ON(Static_12, VehicleMod::XenonHeadlights), ms_lights_toggle, ms_lights_toggle); // Xenon lights
-		AddLocal("Lower Suspension", lowersuspension, MSLowerSuspension_, MSLowerSuspension_, true); // Tuners Lower Suspension
-
-		if (MSLowerSuspension_) {
-			vehicle.RequestControlOnce();
-			lowersuspension = !lowersuspension;
-			SET_REDUCED_SUSPENSION_FORCE(Static_12, lowersuspension);
-			return;
-		}
+		AddLocal("Lower Suspension", lowersuspension, MSLowerSuspension_, MSLowerSuspension_); // Tuners Lower Suspension
 
 		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1604_0_STEAM && vehicle.IsToggleModOn(VehicleMod::XenonHeadlights))
 		{ // Xenon Headlight Colours
@@ -2154,6 +2151,13 @@ namespace sub
 			return;
 		}
 
+		if (MSLowerSuspension_) {
+			vehicle.RequestControlOnce();
+			lowersuspension = !lowersuspension;
+			SET_REDUCED_SUSPENSION_FORCE(Static_12, lowersuspension);
+			return;
+		}
+
 		if (SubMS_Extra) {
 			for (i = 0; i <= 12; i++)
 				if (DOES_EXTRA_EXIST(Static_12, i)) { Menu::SetSub_new(SUB::MSEXTRA); break; }
@@ -2191,7 +2195,7 @@ namespace sub
 				vehicle.NumberPlateText_set(inputStr);
 				Game::Print::PrintBottomLeft("CMOD_PLATEFIT", true);
 			}
-			else Game::Print::PrintError_InvalidInput();
+			else Game::Print::PrintError_InvalidInput(inputStr);
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsPlateText, std::string(), 8U, "CMOD_MOD_18_D", ms_plateText);
 			//OnscreenKeyboard::State::arg1._int = vehicle.Handle();
 			return;
@@ -2218,7 +2222,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			return;
@@ -2275,7 +2279,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			return;
@@ -2332,7 +2336,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			return;
@@ -2389,7 +2393,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				}
 			}
 			return;
@@ -2626,42 +2630,50 @@ namespace sub
 		}
 		void __AddOption(const std::string& text, Vehicle vehicle, INT8 wheelType, INT16 wheelIndex, bool isBikeBack)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Starting Addoption", __FILENAME__);
 			if (_globalLSC_Customs)
 			{
 				auto& lastwheelRelevant = isBikeBack ? lastbwheel : lastfwheel;
 				bool pressed = false;
+				addlog(ige::LogType::LOG_TRACE, "Got lastwheelRelevant: " + std::to_string(lastwheelRelevant),__FILENAME__);
 				AddTickol(text, lastwheelRelevant == wheelIndex && lastwheeltype == wheelType, pressed, pressed,
 					IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING, TICKOL::NONE, true);
 
 				bool allowSettingWheelPreview = GET_VEHICLE_WHEEL_TYPE(vehicle) != wheelType ||
 					(wheelType == WheelType::BikeWheels && isBikeBack ? GET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels) != wheelIndex
 						: GET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels) != wheelIndex);
+				addlog(ige::LogType::LOG_TRACE, "allowSettingWheelPreview: " + std::to_string(allowSettingWheelPreview), __FILENAME__);
 
+				addlog(ige::LogType::LOG_TRACE, "Comparing currrentopATM: " + std::to_string((int)(*Menu::currentopATM)) + " to printingop: " + std::to_string((int)(Menu::printingop)), __FILENAME__);
 				if (*Menu::currentopATM == Menu::printingop && allowSettingWheelPreview)
 				{
+					addlog(ige::LogType::LOG_TRACE, "Setting wheel preview: type " + std::to_string(wheelType) + ", index " + std::to_string(wheelIndex), __FILENAME__);
 					GTAvehicle(vehicle).RequestControlOnce();
 					SET_VEHICLE_WHEEL_TYPE(vehicle, wheelType);
 					if (wheelType == WheelType::BikeWheels)
 					{
-						isBikeBack ? SET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::BackWheels))	//for some reason, inverting this allows the previews to work, albeit reversed.
-							: SET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::FrontWheels));		//but as it stands now, refuses to preview the wheels at all. 
+						addlog(ige::LogType::LOG_TRACE, "Setting Bike Wheels", __FILENAME__);
+						isBikeBack ? SET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::BackWheels))
+							: SET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::FrontWheels));
 					}
 					else
 					{
+						addlog(ige::LogType::LOG_TRACE, "Setting Car Wheels", __FILENAME__);
 						SET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::FrontWheels));
 						//SET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::BackWheels)); //redundant on non-bike tuning
 					}
 				}
-
+				addlog(ige::LogType::LOG_TRACE, "ended comparison, waiting for selection", __FILENAME__);
 				if (pressed)
 				{
+					addlog(ige::LogType::LOG_TRACE, "Selection made", __FILENAME__);
 					lastwheeltype = wheelType;
 					lastfwheel = GET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels);
 					lastbwheel = GET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels);
+					addlog(ige::LogType::LOG_DEBUG, "Wheels Set, lastwheeltype = " + std::to_string(lastwheeltype) + ", lastfwheel = " + std::to_string(lastfwheel) + ", lastbwheel = " + std::to_string(lastbwheel), __FILENAME__);
 					//Menu::SetSub_previous();
 					return;
 				}
-
 			}
 			else ///lsccustoms off
 			{
@@ -2692,6 +2704,7 @@ namespace sub
 					//ms_wheel_windice_pressed = true;
 				}
 			}
+			addlog(ige::LogType::LOG_TRACE, "Looping Addoption", __FILENAME__);
 		}
 	}
 
@@ -2929,15 +2942,16 @@ namespace sub
 		//}
 		//max -= 1;
 
-
 		int windices2;
 		if (wtype == WheelType::BikeWheels) // Bike Normal/Chrome
 		{
+			addlog(ige::LogType::LOG_TRACE, "Entering Bike Wheels section MSWheels3_ with vehicle handle: {}" + std::to_string(Static_12), __FILENAME__);
 			bool bIsChromeSelected = chrtype == 1 || chrtype == 3;
 
 			AddTitle(bIsChromeSelected ? "Chrome Wheels" : "Bike Wheels");
-			
+
 			std::array<int, 5> ids{ 0, 13, 26, 48, ms_max_windices };
+			addlog(ige::LogType::LOG_TRACE, "Adding " + std::to_string(ms_max_windices) + " Wheel Options", __FILENAME__);
 			for (int j = bIsChromeSelected ? 0 : 0; j < ids.size(); j += 1)
 			{
 				for (i = ids[j]; i < ids[j + 1]; i++)
@@ -2945,7 +2959,7 @@ namespace sub
 					__AddOption(get_mod_text_label(Static_12, VehicleMod::FrontWheels, i, false), Static_12, wtype, i, chrtype == 2);
 				}
 			}
-
+			addlog(ige::LogType::LOG_TRACE, "Finished Adding Wheel Options", __FILENAME__);
 			if (_globalLSC_Customs && Menu::OnSubBack == nullptr) // this has been split out for bikes, see further comments on the original section below (line 2575)
 			{
 				Menu::OnSubBack = [&]()
@@ -2954,6 +2968,7 @@ namespace sub
 						: SET_VEHICLE_MOD(Static_12, VehicleMod::FrontWheels, lastfwheel, GET_VEHICLE_MOD_VARIATION(Static_12, VehicleMod::FrontWheels));
 				};
 			}
+			addlog(ige::LogType::LOG_TRACE, "Exiting Bike Wheels section MSWheels3_", __FILENAME__);
 			return;
 		}
 		else //if (wtype == WheelType::Bennys || wtype == WheelType::BennysBespoke) // Benny's
@@ -3396,7 +3411,7 @@ namespace sub
 			if (inputStr.length())
 			{
 				if (!Model(inputStr).IsVehicle())
-					Game::Print::PrintError_InvalidModel();
+					Game::Print::PrintError_InvalidInput(inputStr);
 				else
 				{
 					GTAvehicle vehicle = Static_12;
