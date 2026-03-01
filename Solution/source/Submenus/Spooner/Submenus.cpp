@@ -1320,7 +1320,7 @@ namespace sub
 
 			AddOption("Attachment Options", null, nullFunc, SUB::SPOONER_ATTACHMENTOPS);
 			AddOption("Manual Placement", null, nullFunc, SUB::SPOONER_MANUALPLACEMENT);
-			AddOption("Size Manipulation", null, nullFunc, SUB::SPOONER_SIZEMANIPULATION);
+			AddOption("Manual Resize (beta)", null, nullFunc, SUB::SPOONER_SIZEMANIPULATION);
 
 		}
 		void Sub_AttachmentOps()
