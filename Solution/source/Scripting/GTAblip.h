@@ -927,11 +927,11 @@ public:
 
 //New functions
 
-	void ShowCone (bool toggle, int hudColorIndex, float coneWidth = 1.0f, int coneColour = BlipColour::Blue);
+	void ShowCone (bool toggle, int hudColorIndex = 3, float coneWidth = 1.0f, int coneColour = 3);
 
 	void SetSelectableOnMap(bool selectable);
 
-	//void SetPriority(int priority);
+	void SetPriority(int priority);
 
 	void SetRotationWithFloat(float heading);
 
@@ -943,7 +943,8 @@ public:
 
 //New functions
 
-	//int GetPriority() const;
+	int GetPriority() const;
+	void SetDisplayMode(int value);
 	//void SetDisplayMode(int value);
 
 //New functions end here
@@ -969,7 +970,7 @@ public:
 private:
 	int mHandle;
 	int mConeColour = 3;
-	//int mPriority = 2;
+	int mPriority = 2;
 };
 
 
