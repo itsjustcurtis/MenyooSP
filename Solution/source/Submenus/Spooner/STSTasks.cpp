@@ -109,9 +109,9 @@ namespace sub::Spooner
 			nodeTask.append_child("ShowCone").text() = this->showCone;
     	nodeTask.append_child("HudColorIndex").text() = this->hudColorIndex;
 			nodeTask.append_child("IsSelectableOnMap").text() = this->isSelectableOnMap;
-    	nodeTask.append_child("DisplayId").text() = this->displayId;
-    	nodeTask.append_child("Priority").text() = this->priority;
-    	nodeTask.append_child("SyncRotation").text() = this->syncRotation;
+    	//nodeTask.append_child("DisplayId").text() = this->displayId;
+    	//nodeTask.append_child("Priority").text() = this->priority;
+    	//nodeTask.append_child("SyncRotation").text() = this->syncRotation;
 
 		}
 		void AddBlip::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
@@ -130,9 +130,9 @@ namespace sub::Spooner
 			this->showCone = nodeTask.child("ShowCone").text().as_bool();
     	this->hudColorIndex = nodeTask.child("HudColorIndex").text().as_int();
 			this->isSelectableOnMap = nodeTask.child("IsSelectableOnMap").text().as_bool();
-    	this->displayId = nodeTask.child("DisplayId").text().as_int();
-    	this->priority = nodeTask.child("Priority").text().as_int();
-    	this->syncRotation = nodeTask.child("SyncRotation").text().as_bool();
+    	//this->displayId = nodeTask.child("DisplayId").text().as_int();
+    	//this->priority = nodeTask.child("Priority").text().as_int();
+    	//this->syncRotation = nodeTask.child("SyncRotation").text().as_bool();
 		}
 		void AddBlip::ImportTaskDataSpecific(STSTask* otherTsk)
 		{
@@ -172,8 +172,8 @@ namespace sub::Spooner
 			this->showNumber = 0;
 			this->isSelectableOnMap = true;
 			// New functions
-			this->priority = 2;
-			this->displayMode = 2;
+			//this->priority = 2;
+			//this->displayMode = 2;
 		}
 		void AddBlip::Run(void* ve)
 		{
@@ -200,11 +200,11 @@ namespace sub::Spooner
 				this->blip.SetSelectableOnMap(this->isSelectableOnMap ? 2 : 8);
 				//this->blip.SetPriority(this->priority);
 
-        			if (this->syncRotation)
-        			{
-            			this->blip.SyncRotationWithEntity(e.Handle.GetHandle());
-        			}
-    			}
+        			//if (this->syncRotation)
+        			//{
+            			//this->blip.SyncRotationWithEntity(e.Handle.GetHandle());
+        			//}
+    		}
 				// New Functions
 				//this->blip.SetDisplayMode(this->displayMode);
 
