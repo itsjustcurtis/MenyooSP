@@ -899,20 +899,20 @@ void GTAblip::SetSelectableOnMap(bool selectable)
     SET_BLIP_DISPLAY(this->mHandle, selectable ? 2 : 8);
 }
 
-void GTAblip::SetPriority(int priority)
-{
-    SET_BLIP_PRIORITY(this->mHandle, priority);
-}
+//void GTAblip::SetPriority(int priority)
+//{
+    //SET_BLIP_PRIORITY(this->mHandle, priority);
+//}
 // New Blip functions
 
-int GTAblip::GetPriority() const
-{
-	return mPriority;
-}
-void GTAblip::SetDisplayMode(int value)
-{
-	SET_BLIP_DISPLAY(this->mHandle, value);
-}
+//int GTAblip::GetPriority() const
+//{
+	//return mPriority;
+//}
+//void GTAblip::SetDisplayMode(int value)
+//{
+	//SET_BLIP_DISPLAY(this->mHandle, value);
+//}
 // New Blip functions end here.
 void GTAblip::SetRotationWithFloat(float heading)
 {
