@@ -54,11 +54,11 @@
 
 #include "..\Submenus\Spooner\Submenus.h"
 #include "..\Submenus\Spooner\Submenus_TaskSequence.h"
-#include "..\BodyguardMenu.h"
-#include "..\BodyguardSettings.h"
-#include "..\BodyguardManagement.h"
-#include "..\BodyguardSpawn.h"
-#include "..\BodyguardSubmenu.h"
+#include "..\Submenus\Bodyguards\BodyguardMenu.h"
+#include "..\Submenus\Bodyguards\BodyguardSettings.h"
+#include "..\Submenus\Bodyguards\BodyguardManagement.h"
+#include "..\Submenus\Bodyguards\BodyguardSpawn.h"
+#include "..\Submenus\Bodyguards\BodyguardSubmenu.h"
 
 using namespace sub;
 

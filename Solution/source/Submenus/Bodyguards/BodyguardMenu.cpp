@@ -1,29 +1,29 @@
 #include "BodyguardMenu.h"
 
-#include "Menu\Menu.h"
-#include "Scripting\Game.h"
-#include "Natives\natives2.h"
-#include "Submenus/Spooner/Submenus.h"
-#include "Submenus/PedAnimation.h"
-#include "Submenus/PedModelChanger.h"
-#include "Submenus/PedSpeech.h"
+#include "../../Menu/Menu.h"
+#include "../../Scripting/Game.h"
+#include "../../Natives/natives2.h"
+#include "../../Submenus/Spooner/Submenus.h"
+#include "../../Submenus/PedAnimation.h"
+#include "../../Submenus/PedModelChanger.h"
+#include "../../Submenus/PedSpeech.h"
 
 #include <functional>
-#include "Menu/Routine.h"
-#include "Misc/MeteorShower.h"
-#include "Scripting/GTAvehicle.h"
-#include "Scripting/Model.h"
-#include "Submenus/Spooner/MenuOptions.h"
-#include "Scripting/ModelNames.h"
-#include "Util/StringManip.h"
-#include "Util\ExePath.h"
-#include "Submenus/Spooner/EntityManagement.h"
-#include "Submenus/Spooner/SpoonerEntity.h"
+#include "../../Menu/Routine.h"
+#include "../../Misc/MeteorShower.h"
+#include "../../Scripting/GTAvehicle.h"
+#include "../../Scripting/Model.h"
+#include "../../Submenus/Spooner/MenuOptions.h"
+#include "../../Scripting/ModelNames.h"
+#include "../../Util/StringManip.h"
+#include "../../Util\ExePath.h"
+#include "../../Submenus/Spooner/EntityManagement.h"
+#include "../../Submenus/Spooner/SpoonerEntity.h"
 
 #include "BodyguardManagement.h"
 #include "BodyguardSpawn.h"
 
-#include "Scripting/GTAblip.h"
+#include "../../Scripting/GTAblip.h"
 using namespace sub::BodyguardMenu;
 
 namespace sub::BodyguardMenu

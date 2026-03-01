@@ -3,8 +3,8 @@
 #include <vector>
 #include <string>
 
-#include "Scripting/GTAentity.h"
-#include "Natives/types.h"
+#include "..\..\Scripting/GTAentity.h"
+#include "..\..\Natives/types.h"
 
 namespace sub::BodyguardMenu
 {

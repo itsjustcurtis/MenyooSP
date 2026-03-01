@@ -1,15 +1,15 @@
 #include "BodyguardManagement.h"
 #include "BodyguardSettings.h"
 #include "BodyguardSpawn.h"
-#include "Menu/submenu_enum.h"
-#include "Scripting/GTAped.h"
-#include "Submenus/PedComponentChanger.h"
+#include "../../Menu/submenu_enum.h"
+#include "../../Scripting/GTAped.h"
+#include "../../Submenus/PedComponentChanger.h"
 #include "BodyguardMenu.h"
-#include "Submenus/WeaponOptions.h"
-#include "Scripting/Camera.h"
-#include "Scripting/World.h"
-#include "Natives/natives.h"
-#include "Util/StringManip.h"
+#include "../../Submenus/WeaponOptions.h"
+#include "../../Scripting/Camera.h"
+#include "../../Scripting/World.h"
+#include "../../Natives/natives.h"
+#include "../../Util/StringManip.h"
 
 namespace sub
 {

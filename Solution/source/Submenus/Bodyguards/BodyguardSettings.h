@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BodyguardManagement.h"
-#include "Menu/Menu.h"
+#include "../../Menu/Menu.h"
 
 namespace sub::BodyguardMenu
 {

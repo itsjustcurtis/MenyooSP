@@ -12,11 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\external\pugixml\src\pugixml.cpp" />
-    <ClCompile Include="BodyguardManagement.cpp" />
-    <ClCompile Include="BodyguardMenu.cpp" />
-    <ClCompile Include="BodyguardSettings.cpp" />
-    <ClCompile Include="BodyguardSpawn.cpp" />
-    <ClCompile Include="BodyguardSubmenu.cpp" />
     <ClCompile Include="Memory\Hooking.cpp" />
     <ClCompile Include="Menu\FolderPreviewBmps.cpp" />
     <ClCompile Include="Menu\Language.cpp" />
@@ -42,6 +37,11 @@
     <ClCompile Include="Scripting\DxHookIMG.cpp" />
     <ClCompile Include="Scripting\enums.cpp" />
     <ClCompile Include="Submenus\AnimalRiding.cpp" />
+    <ClCompile Include="Submenus\Bodyguards\BodyguardManagement.cpp" />
+    <ClCompile Include="Submenus\Bodyguards\BodyguardMenu.cpp" />
+    <ClCompile Include="Submenus\Bodyguards\BodyguardSettings.cpp" />
+    <ClCompile Include="Submenus\Bodyguards\BodyguardSpawn.cpp" />
+    <ClCompile Include="Submenus\Bodyguards\BodyguardSubmenu.cpp" />
     <ClCompile Include="Submenus\BreatheStuff.cpp" />
     <ClCompile Include="Submenus\CutscenePlayer.cpp" />
     <ClCompile Include="Submenus\FunnyVehicles.cpp" />
@@ -128,11 +128,6 @@
   <ItemGroup>
     <ClInclude Include="..\external\pugixml\src\pugiconfig.hpp" />
     <ClInclude Include="..\external\pugixml\src\pugixml.hpp" />
-    <ClInclude Include="BodyguardManagement.h" />
-    <ClInclude Include="BodyguardMenu.h" />
-    <ClInclude Include="BodyguardSettings.h" />
-    <ClInclude Include="BodyguardSpawn.h" />
-    <ClInclude Include="BodyguardSubmenu.h" />
     <ClInclude Include="Memory\Hooking.h" />
     <ClInclude Include="Menu\FolderPreviewBmps.h" />
     <ClInclude Include="Menu\Language.h" />
@@ -159,6 +154,11 @@
     <ClInclude Include="Scripting\DxHookIMG.h" />
     <ClInclude Include="Scripting\enums.h" />
     <ClInclude Include="Submenus\AnimalRiding.h" />
+    <ClInclude Include="Submenus\Bodyguards\BodyguardManagement.h" />
+    <ClInclude Include="Submenus\Bodyguards\BodyguardMenu.h" />
+    <ClInclude Include="Submenus\Bodyguards\BodyguardSettings.h" />
+    <ClInclude Include="Submenus\Bodyguards\BodyguardSpawn.h" />
+    <ClInclude Include="Submenus\Bodyguards\BodyguardSubmenu.h" />
     <ClInclude Include="Submenus\BreatheStuff.h" />
     <ClInclude Include="Submenus\CutscenePlayer.h" />
     <ClInclude Include="Submenus\FunnyVehicles.h" />

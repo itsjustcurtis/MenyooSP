@@ -1,16 +1,16 @@
 #include "BodyguardManagement.h"
 
-#include "Menu/Menu.h"
-#include "Scripting/Game.h"
-#include "Scripting/GTAped.h"
-#include "Scripting/GTAentity.h"
-#include "Scripting/GTAblip.h"
-#include "Natives/natives.h"
+#include "../../Menu/Menu.h"
+#include "../../Scripting/Game.h"
+#include "../../Scripting/GTAped.h"
+#include "../../Scripting/GTAentity.h"
+#include "../../Scripting/GTAblip.h"
+#include "../../Natives/natives.h"
 
 #include <algorithm>
-#include "Util/StringManip.h"
-#include "Scripting/Model.h"
-#include "Scripting/World.h"
+#include "../../Util/StringManip.h"
+#include "../../Scripting/Model.h"
+#include "../../Scripting/World.h"
 
 namespace sub::BodyguardMenu
 {

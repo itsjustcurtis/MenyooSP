@@ -314,22 +314,11 @@
       <Filter>Menu</Filter>
     </ClCompile>
     <ClCompile Include="Memory\Hooking.cpp" />
-
-    <ClCompile Include="BodyguardSettings.cpp">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClCompile>
-    <ClCompile Include="BodyguardSpawn.cpp">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClCompile>
-    <ClCompile Include="BodyguardManagement.cpp">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClCompile>
-    <ClCompile Include="BodyguardMenu.cpp">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClCompile>
-    <ClCompile Include="BodyguardSubmenu.cpp">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClCompile>
+    <ClCompile Include="Submenus\Bodyguards\BodyguardManagement.cpp" />
+    <ClCompile Include="Submenus\Bodyguards\BodyguardMenu.cpp" />
+    <ClCompile Include="Submenus\Bodyguards\BodyguardSettings.cpp" />
+    <ClCompile Include="Submenus\Bodyguards\BodyguardSpawn.cpp" />
+    <ClCompile Include="Submenus\Bodyguards\BodyguardSubmenu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util\ExePath.h">
@@ -661,21 +650,11 @@
       <Filter>Menu</Filter>
     </ClInclude>
     <ClInclude Include="Memory\Hooking.h" />
-    <ClInclude Include="BodyguardSettings.h">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClInclude>
-    <ClInclude Include="BodyguardSpawn.h">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClInclude>
-    <ClInclude Include="BodyguardManagement.h">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClInclude>
-    <ClInclude Include="BodyguardMenu.h">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClInclude>
-    <ClInclude Include="BodyguardSubmenu.h">
-      <Filter>Submenus\Bodyguards</Filter>
-    </ClInclude>
+    <ClInclude Include="Submenus\Bodyguards\BodyguardManagement.h" />
+    <ClInclude Include="Submenus\Bodyguards\BodyguardMenu.h" />
+    <ClInclude Include="Submenus\Bodyguards\BodyguardSettings.h" />
+    <ClInclude Include="Submenus\Bodyguards\BodyguardSpawn.h" />
+    <ClInclude Include="Submenus\Bodyguards\BodyguardSubmenu.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Submenus">

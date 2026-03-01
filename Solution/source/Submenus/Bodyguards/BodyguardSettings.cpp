@@ -1,11 +1,11 @@
 #include "BodyguardSettings.h"
 #include "BodyguardManagement.h"
-#include "Menu/Menu.h"
-#include "Natives/natives.h"
-#include "Natives/natives2.h"
+#include "../../Menu/Menu.h"
+#include "../../Natives/natives.h"
+#include "../../Natives/natives2.h"
 
-#include "Util/keyboard.h"
-#include "Scripting/Game.h"
+#include "../../Util/keyboard.h"
+#include "../../Scripting/Game.h"
 #include "BodyguardMenu.h"
 
 namespace sub::BodyguardMenu
