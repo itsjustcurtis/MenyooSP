@@ -211,6 +211,32 @@ namespace sub
             sub::BodyguardMenu::blipIcon = blipOptions[blipIndex].first;
             sub::BodyguardMenu::RefreshAllBodyguardBlips();
         }
+
+        static int formationIndex = 0;
+        static const std::vector<std::pair<int, std::string>> formationOptions =
+        {
+            { 0, "Default Formation" },
+            { 1, "Circle (Inward)" },
+            { 2, "Circle (North)" },
+            { 3, "Line" }
+        };
+
+        static bool bFormationInput = false;
+        bool form_plus = false, form_minus = false;
+
+        AddTexter("Formation", 0, { formationOptions[formationIndex].second }, bFormationInput, form_plus, form_minus);
+
+        if (form_plus || form_minus)
+        {
+            if (form_plus)
+                formationIndex = (formationIndex + 1) % formationOptions.size();
+            else
+                formationIndex = (formationIndex == 0 ? (int)formationOptions.size() - 1 : formationIndex - 1);
+
+            int playerGroup = PLAYER::GET_PLAYER_GROUP(PLAYER::PLAYER_ID());
+            PED::SET_GROUP_FORMATION(playerGroup, formationOptions[formationIndex].first);
+        }
+
         bool bTeleportBodyguards = false;
         AddOption("Bring Bodyguards To Self", bTeleportBodyguards);
 
