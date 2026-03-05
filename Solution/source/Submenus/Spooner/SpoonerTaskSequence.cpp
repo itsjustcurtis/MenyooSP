@@ -30,13 +30,27 @@ namespace sub::Spooner
 		this->progress = -1;
 		this->timer = GetTickCount();
 	}
+	SpoonerTaskSequence::~SpoonerTaskSequence()
+	{
+		this->Reset(true);
+	}
 
 	void SpoonerTaskSequence::operator = (const SpoonerTaskSequence& right)
 	{
+		this->Reset(true);
 		this->bJustJumpedToNext = right.bJustJumpedToNext;
 		this->progress = right.progress;
 		this->timer = right.timer;
-		this->tasks = right.tasks;
+		this->tasks.reserve(right.tasks.size());
+		for (auto* tsk : right.tasks)
+		{
+			if (tsk != nullptr)
+			{
+				STSTask* copy = this->AddTask(tsk->type);
+				if (copy != nullptr)
+					copy->Assign(tsk);
+			}
+		}
 	}
 
 	bool SpoonerTaskSequence::ContainsType(const STSTaskType& value)

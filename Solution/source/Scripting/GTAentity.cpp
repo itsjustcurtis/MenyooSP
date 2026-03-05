@@ -94,17 +94,23 @@ GTAblip GTAentity::CurrentBlip() const
 Vector3 GTAentity::ForwardVector() const
 {
 	//return GET_ENTITY_FORWARD_VECTOR(this->mHandle);
-	return GTAmemory::ReadVector3(this->MemoryAddress() + 0x70);
+	auto addr = this->MemoryAddress();
+	if (!addr) return Vector3();
+	return GTAmemory::ReadVector3(addr + 0x70);
 }
 Vector3 GTAentity::RightVector() const
 {
 	//return Vector3::Cross(ForwardVector(), Vector3::WorldUp());
-	return GTAmemory::ReadVector3(this->MemoryAddress() + 0x60);
+	auto addr = this->MemoryAddress();
+	if (!addr) return Vector3();
+	return GTAmemory::ReadVector3(addr + 0x60);
 }
 Vector3 GTAentity::UpVector() const
 {
 	//return Vector3::Cross(RightVector(), ForwardVector());
-	return GTAmemory::ReadVector3(this->MemoryAddress() + 0x80);
+	auto addr = this->MemoryAddress();
+	if (!addr) return Vector3();
+	return GTAmemory::ReadVector3(addr + 0x80);
 }
 
 bool GTAentity::IsPositionFrozen() const
@@ -718,10 +724,11 @@ void GTAentity::Delete(bool tele)
 
 	if (tele) SET_ENTITY_COORDS_NO_OFFSET(this->mHandle, 32.2653f, 7683.5249f, 0.5696f, 0, 0, 0);
 
+	auto type = (EntityType)this->Type();
 	auto handle = this->mHandle;
 	this->mHandle = 0;
 
-	switch ((EntityType)this->Type())
+	switch (type)
 	{
 	case EntityType::PROP: DELETE_OBJECT(&handle); break;
 	case EntityType::VEHICLE: DELETE_VEHICLE(&handle); break;

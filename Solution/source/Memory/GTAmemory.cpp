@@ -210,7 +210,7 @@ namespace MemryScan
 	{
 		DWORD64 i;
 		DWORD64 size;
-		DWORD64 address;
+		DWORD64 address = (DWORD64)g_MainModule;
 
 		MODULEINFO info = g_MainModuleInfo;
 		size = (DWORD64)info.SizeOfImage;
@@ -970,7 +970,7 @@ struct GenericTask
 {
 public:
 	typedef UINT64(*func)(UINT64);
-	GenericTask(func pFunc, UINT64 Arg) : _toRun(pFunc), _arg(Arg)
+	GenericTask(func pFunc, UINT64 Arg) : _toRun(pFunc), _arg(Arg), _res(0)
 	{
 	}
 	virtual void Run()
@@ -1712,10 +1712,16 @@ void GTAmemory::InitEnhancedPools() {
 				}
 			}
 		}
-		address = address - 0x2C;
-		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + std::to_string(address), __FILENAME__);
-
-		GetModelInfo = (GetModelInfo_t)(address);
+		if (address)
+		{
+			address = address - 0x2C;
+			addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + std::to_string(address), __FILENAME__);
+			GetModelInfo = (GetModelInfo_t)(address);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo pattern", __FILENAME__);
+		}
 
 		_SpSnow = SpSnow();
 	}
@@ -1766,10 +1772,13 @@ void GTAmemory::GenerateVehicleModelList()
 				modelHashEntries = *reinterpret_cast<UINT16*>(address + *(int*)(address - 7) - 3);
 				// Pattern scan to avoid having offsets accross labels.
 				address = MemryScan::PatternScanner::FindPattern("\x3B\x05\x00\x00\x00\x00\x7D\x00\x48\x8B\x0D", "xx????x?xxx", address, 200); // TODO: use the findpattern with legacy patterns, because it supports a start address.
-				modelNum1 = *reinterpret_cast<int*>(*(int*)(address + 2) + address + 6);
-				modelNum2 = *reinterpret_cast<PUINT64>(*(int*)(address + 11) + address + 15);
-				modelNum3 = *reinterpret_cast<PUINT64>(*(int*)(address + 48) + address + 52);
-				modelNum4 = *reinterpret_cast<PUINT64>(*(int*)(address + 33) + address + 37);
+				if (address)
+				{
+					modelNum1 = *reinterpret_cast<int*>(*(int*)(address + 2) + address + 6);
+					modelNum2 = *reinterpret_cast<PUINT64>(*(int*)(address + 11) + address + 15);
+					modelNum3 = *reinterpret_cast<PUINT64>(*(int*)(address + 48) + address + 52);
+					modelNum4 = *reinterpret_cast<PUINT64>(*(int*)(address + 33) + address + 37);
+				}
 			}
 		}
 	}
@@ -1949,6 +1958,7 @@ UINT64 GTAmemory::GetPtfxAddress(int handle)
 int GTAmemory::GetEntityBoneCount(int handle)
 {
 	UINT64 MemAddress = _entityAddressFunc(handle);
+	if (!MemAddress) return 0;
 	UINT64 Addr2 = (*(UINT64(__fastcall**)(__int64))(*(UINT64*)MemAddress + 88i64))(MemAddress);
 	UINT64 Addr3;
 	if (!Addr2)
@@ -1987,6 +1997,7 @@ UINT64 GTAmemory::GetEntityBoneMatrixAddress(int handle, int boneIndex)
 		return 0;
 
 	UINT64 MemAddress = _entityAddressFunc(handle);
+	if (!MemAddress) return 0;
 	UINT64 Addr2 = (*(UINT64(__fastcall**)(__int64))(*(UINT64*)MemAddress + 88i64))(MemAddress);
 	UINT64 Addr3;
 	if (!Addr2)
