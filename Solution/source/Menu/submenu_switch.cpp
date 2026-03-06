@@ -59,6 +59,7 @@
 #include "..\Submenus\Bodyguards\BodyguardManagement.h"
 #include "..\Submenus\Bodyguards\BodyguardSpawn.h"
 #include "..\Submenus\Bodyguards\BodyguardSubmenu.h"
+#include "../SpoonerBlips.h"
 
 using namespace sub;
 
@@ -265,6 +266,12 @@ void Menu::submenu_switch()
 	case SUB::SPOONER_MANAGEMARKERS_INMARKER_ATTACH:			sub::Spooner::Submenus::Sub_ManageMarkers_InMarker_Attach(); break;
 	case SUB::SPOONER_MANAGEDB:						sub::Spooner::Submenus::Sub_ManageEntities(); break;
 	case SUB::SPOONER_MANAGEDB_REMOVAL:				sub::Spooner::Submenus::Sub_ManageEntities_Removal(); break;
+	case SUB::SPOONER_BLIPS:						sub::Spooner::Submenus::Sub_Blip_Management(); break;
+	case SUB::SPOONER_BLIPS_ADD_SELECT:				sub::Spooner::Submenus::Sub_Blip_Select(); break;
+	case SUB::SPOONER_BLIPS_ADD_RADIAL:				sub::Spooner::Submenus::Sub_Blip_Radial(); break;
+	case SUB::SPOONER_BLIPS_ADD_ENTITY:				sub::Spooner::Submenus::Sub_Blip_Entity(); break;
+	case SUB::SPOONER_BLIPS_ADD_COORD:				sub::Spooner::Submenus::Sub_Blip_Coord(); break;
+	case SUB::SPOONER_BLIPS_RADIALINBLIP:			sub::Spooner::Submenus::Sub_Blip_RadialInBlip(); break;
 	case SUB::SPOONER_SAVEFILES:					sub::Spooner::Submenus::Sub_SaveFiles(); break;
 	case SUB::SPOONER_SAVEFILES_LOAD:				sub::Spooner::Submenus::Sub_SaveFiles_Load(); break;
 	case SUB::SPOONER_SAVEFILES_LOAD_LEGACYSP00N:	sub::Spooner::Submenus::Sub_SaveFiles_Load_LegacySP00N(); break;

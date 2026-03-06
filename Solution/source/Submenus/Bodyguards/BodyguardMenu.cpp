@@ -185,6 +185,7 @@ namespace sub
         static int blipIndex = 0;
         static const std::vector<std::pair<int, std::string>> blipOptions =
         {
+			{ 270, "Ally"     },  
             { 1,   "Standard" },
             { 280, "Friend"   },
             { 480, "VIP"      }

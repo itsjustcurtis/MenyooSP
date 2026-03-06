@@ -128,6 +128,7 @@
   <ItemGroup>
     <ClInclude Include="..\external\pugixml\src\pugiconfig.hpp" />
     <ClInclude Include="..\external\pugixml\src\pugixml.hpp" />
+    <ClInclude Include="BlipCustoms.h" />
     <ClInclude Include="Memory\Hooking.h" />
     <ClInclude Include="Menu\FolderPreviewBmps.h" />
     <ClInclude Include="Menu\Language.h" />
@@ -153,6 +154,7 @@
     <ClInclude Include="Scripting\CustomHelpText.h" />
     <ClInclude Include="Scripting\DxHookIMG.h" />
     <ClInclude Include="Scripting\enums.h" />
+    <ClInclude Include="SpoonerBlips.h" />
     <ClInclude Include="Submenus\AnimalRiding.h" />
     <ClInclude Include="Submenus\Bodyguards\BodyguardManagement.h" />
     <ClInclude Include="Submenus\Bodyguards\BodyguardMenu.h" />

@@ -655,6 +655,12 @@
     <ClInclude Include="Submenus\Bodyguards\BodyguardSettings.h" />
     <ClInclude Include="Submenus\Bodyguards\BodyguardSpawn.h" />
     <ClInclude Include="Submenus\Bodyguards\BodyguardSubmenu.h" />
+    <ClInclude Include="SpoonerBlips.h">
+      <Filter>Submenus\Spooner</Filter>
+    </ClInclude>
+    <ClInclude Include="BlipCustoms.h">
+      <Filter>Submenus\Spooner</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Submenus">
