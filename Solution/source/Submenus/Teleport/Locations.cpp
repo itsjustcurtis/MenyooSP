@@ -298,7 +298,7 @@ namespace sub::TeleportLocations_catind
 			TeleLocation("Palmer-Taylor Power Station Chimney", 2732.931f, 1577.540f, 83.671f),
 			TeleLocation("Sandy Shores Building Site Crane", 1051.209f, 2280.452f, 89.727f),
 			TeleLocation("Satellite Dish", 2034.988f, 2953.105f, 74.602f),
-			TeleLocation("Sky High", -119.879f, -977.357f, 10000.0f),
+			TeleLocation("Sky High", -119.879f, -977.357f, 2500.0f),
 			TeleLocation("UFO (Fort Zancudo)", -2052.000f, 3237.000f, 1456.973f,{ "ufo"_sv, "ufo_lod"_sv, "ufo_eye"_sv },{}),
 			TeleLocation("Windmill Top", 2026.677f, 1842.684f, 133.313f),
 		};
