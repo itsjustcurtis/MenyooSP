@@ -207,7 +207,7 @@ namespace sub
 					else
 					{
 						Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
-						addlog(ige::LogType::LOG_ERROR, "Attempt to save Database file " + inputStr + ".xml failed", __FILENAME__);
+						addlog(ige::LogType::LOG_ERROR, "Attempt to save Database file " + inputStr + ".xml failed");
 					}
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerSaveDbToFile, std::string(), 28U, "Enter file name:");
@@ -227,7 +227,7 @@ namespace sub
 					else
 					{
 						Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
-						addlog(ige::LogType::LOG_ERROR, "Attempt to save World file " + inputStr + ".xml failed", __FILENAME__);
+						addlog(ige::LogType::LOG_ERROR, "Attempt to save World file " + inputStr + ".xml failed");
 					}
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerSaveWorldToFile, std::string(), 28U, "Enter file name:");
@@ -257,7 +257,7 @@ namespace sub
 					else
 					{
 						Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
-						addlog(ige::LogType::LOG_ERROR, "Attempt to save Range Markers file " + inputStr + ".xml failed", __FILENAME__);
+						addlog(ige::LogType::LOG_ERROR, "Attempt to save Range Markers file " + inputStr + ".xml failed");
 					}
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerSaveRangeToFile, std::string(), 28U, "Enter file name:");
@@ -316,7 +316,7 @@ namespace sub
 					else
 					{
 						Game::Print::PrintBottomCentre("~r~Failed~s~ to create folder.");
-						addlog(ige::LogType::LOG_ERROR, "Attempt to create new folder " + inputStr + " failed", __FILENAME__);
+						addlog(ige::LogType::LOG_ERROR, "Attempt to create new folder " + inputStr + " failed");
 					}
 				}
 				else
@@ -450,7 +450,7 @@ namespace sub
 				else
 				{
 					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load file.");
-					addlog(ige::LogType::LOG_ERROR, "Attempt to load placements from " + filePath + ".xml failed", __FILENAME__);
+					addlog(ige::LogType::LOG_ERROR, "Attempt to load placements from " + filePath + ".xml failed");
 				}
 			}
 
@@ -468,7 +468,7 @@ namespace sub
 					else
 					{
 						Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to rename file.");
-						addlog(ige::LogType::LOG_ERROR, "Attempt to rename file " + _name + ".xml to " + inputStr + " failed", __FILENAME__);
+						addlog(ige::LogType::LOG_ERROR, "Attempt to rename file " + _name + ".xml to " + inputStr + " failed");
 					}
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameSpoonerFile, std::string(), 28U, "Enter new name:", fileName);
@@ -486,7 +486,7 @@ namespace sub
 				else
 				{
 					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to overwrite file.");
-					addlog(ige::LogType::LOG_ERROR, "Attempt to overwrite " + filePath + " failed", __FILENAME__);
+					addlog(ige::LogType::LOG_ERROR, "Attempt to overwrite " + filePath + " failed");
 				}
 			}
 
@@ -500,7 +500,7 @@ namespace sub
 				else
 				{
 					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to delete file.");
-					addlog(ige::LogType::LOG_ERROR, "Attempt to delete file " + filePath + " failed", __FILENAME__);
+					addlog(ige::LogType::LOG_ERROR, "Attempt to delete file " + filePath + " failed");
 				}
 				Menu::SetSub_previous();
 				Menu::Up();
@@ -834,7 +834,7 @@ namespace sub
 				else
 				{
 					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load file.");
-					addlog(ige::LogType::LOG_ERROR, "Attempt to load Placements file from" + filePath + " failed", __FILENAME__);
+					addlog(ige::LogType::LOG_ERROR, "Attempt to load Placements file from" + filePath + " failed");
 				}
 			}
 
@@ -851,7 +851,7 @@ namespace sub
 					}
 					else
 					{
-						addlog(ige::LogType::LOG_ERROR, "Attempt to rename file from" + _name + " to " + inputStr +".SP00N failed", __FILENAME__);
+						addlog(ige::LogType::LOG_ERROR, "Attempt to rename file from" + _name + " to " + inputStr +".SP00N failed");
 					}
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameSp00nFile, std::string(), 28U, "Enter new name:", fileName);
@@ -869,7 +869,7 @@ namespace sub
 				else
 				{
 					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to delete file.");
-					addlog(ige::LogType::LOG_ERROR, "Attempt to delete file" + filePath + " failed", __FILENAME__);
+					addlog(ige::LogType::LOG_ERROR, "Attempt to delete file" + filePath + " failed");
 				}
 				Menu::SetSub_previous();
 				Menu::Up();

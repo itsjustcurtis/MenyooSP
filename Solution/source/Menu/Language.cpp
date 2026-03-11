@@ -40,11 +40,11 @@ namespace Language
 			auto& ret = this->pairs.at(text);
 			return ret;
 		}
-		catch (std::out_of_range) {
-			if(reported_missing.insert(text).second) {
-				addlog(ige::LogType::LOG_ERROR, 
-					   "Missing translation for: " + text, 
-					   __FILENAME__);
+		catch (std::out_of_range) 
+		{
+			if(reported_missing.insert(text).second) 
+			{
+				addlog(ige::LogType::LOG_ERROR, "Missing translation for: " + text);
 			}
 			this->pairs[text] = text;
 
@@ -111,11 +111,11 @@ namespace Language
 				{
 					Json doc = Json::parse(stream);
 					lang.Dictionary() = doc;
-					addlog(ige::LogType::LOG_INFO,  "Loaded language file " + lang.GetFilePath(), __FILENAME__);
+					addlog(ige::LogType::LOG_INFO,  "Loaded language file " + lang.GetFilePath());
 				}
 				catch (...)
 				{
-					addlog(ige::LogType::LOG_ERROR,  "Unable to load language file " + lang.GetFilePath(), __FILENAME__);
+					addlog(ige::LogType::LOG_ERROR,  "Unable to load language file " + lang.GetFilePath());
 					return -1;
 				}
 
@@ -123,7 +123,7 @@ namespace Language
 			}
 		}
 
-		addlog(ige::LogType::LOG_ERROR,  "Cannot find selected language in memory. Resetting to default", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR,  "Cannot find selected language in memory. Resetting to default");
 		ResetSelectedLang();
 		return -1;
 	}

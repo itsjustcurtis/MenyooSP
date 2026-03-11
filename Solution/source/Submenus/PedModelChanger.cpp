@@ -316,7 +316,7 @@ namespace sub
 		{
 			PTFX::trigger_ptfx_1("scr_solomon3", "scr_trev4_747_blood_impact", 0, ped.GetOffsetInWorldCoords(0.37, -0.32f, -1.32f), Vector3(90.0f, 0, 0), 0.7f);
 			ChangeModel_(model);
-			addlog(ige::LogType::LOG_TRACE, "Changed model to: " + text, __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Changed model to: " + text);
 		}
 	}
 	void AddmodelOption_(const std::string& text, const GTAmodel::Model& model, bool* extra_option_code, int tickTrue)
@@ -349,7 +349,7 @@ namespace sub
 
 	void ModelChanger_()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger");
 		bool ModelChangerRandomPedVariation_ = 0,
 			ModelChangerInput_ = 0;
 		//	 ModelChangerVariationWarning_ = 0,
@@ -377,9 +377,9 @@ namespace sub
 		AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
 		AddOption("~b~Input~s~ Model", ModelChangerInput_);
 
-		addlog(ige::LogType::LOG_TRACE, "Created ModelChanger Options", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Created ModelChanger Options");
 		if (ModelChangerRandomPedVariation_) {
-			addlog(ige::LogType::LOG_TRACE, "Random Ped Selected", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Random Ped Selected");
 			SET_PED_RANDOM_COMPONENT_VARIATION(Static_241, 0);
 			SET_PED_RANDOM_PROPS(Static_241);
 			return;
@@ -417,9 +417,9 @@ namespace sub
 
 	GTAmodel::Model ModelChanger_Random(std::vector<std::pair<std::string, std::string>> pedModels)
 	{
-		addlog(ige::LogType::LOG_TRACE, "Getting Random Ped Model", __FILENAME__);		
+		addlog(ige::LogType::LOG_TRACE, "Getting Random Ped Model");		
 		rngped = pedModels[std::rand() % pedModels.size()];
-		addlog(ige::LogType::LOG_TRACE, "Got Random Ped Model: " + rngped.first + ", " + rngped.second, __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Got Random Ped Model: " + rngped.first + ", " + rngped.second);
 		return rngped.first;
 	}
 

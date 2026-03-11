@@ -66,11 +66,11 @@ void MenuConfig::ConfigInit()
 	SetFileAttributesW(GetPathffW(Pathff::Main, false).c_str(), GetFileAttributes(GetPathffW(Pathff::Main, false).c_str()) & ~FILE_ATTRIBUTE_READONLY);
 
 	if (MenuConfig::iniFile.LoadFile((GetPathffA(Pathff::Main, true) + "menyooConfig.ini").c_str()) < 0)
-		addlog(ige::LogType::LOG_ERROR,  "Failed to load menyooConfig from " + GetPathffA(Pathff::Main, true) + "menyooConfig.ini.", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR,  "Failed to load menyooConfig from " + GetPathffA(Pathff::Main, true) + "menyooConfig.ini.");
 	else {
 		ConfigRead();
-		addlog(ige::LogType::LOG_INFO, "Logging level " + std::to_string(g_loglevel) + " active. Edit loglevel in menyooconfig.ini to change.", __FILENAME__);
-		addlog(ige::LogType::LOG_INFO, "Config loaded from " + GetPathffA(Pathff::Main, true) + "menyooConfig.ini.", __FILENAME__);
+		addlog(ige::LogType::LOG_INFO, "Logging level " + std::to_string(g_loglevel) + " active. Edit loglevel in menyooconfig.ini to change.");
+		addlog(ige::LogType::LOG_INFO, "Config loaded from " + GetPathffA(Pathff::Main, true) + "menyooConfig.ini.");
 	}
 }
 
@@ -226,11 +226,6 @@ void MenuConfig::ConfigRead()
 	sub::GravityGun_catind::ShootForce() = ini.GetDoubleValue(section_haxValues.c_str(), "gravity_gun_shoot_force", sub::GravityGun_catind::ShootForce());
 	_MagnetGun_::g_magnetGun.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "magnet_gun", _MagnetGun_::g_magnetGun.Enabled());
 	loop_teleport_gun = ini.GetBoolValue(section_haxValues.c_str(), "teleport_gun", loop_teleport_gun);
-	//loop_kaboom_gun = ini.GetBoolValue(section_haxValues.c_str(), "kaboom_gun", loop_kaboom_gun);
-	//loop_triggerfx_gun = ini.GetBoolValue(section_haxValues.c_str(), "triggerfx_gun", loop_triggerfx_gun);
-	//loop_bullet_gun = ini.GetBoolValue(section_haxValues.c_str(), "bullet_gun", loop_bullet_gun);
-	//loop_ped_gun = ini.GetBoolValue(section_haxValues.c_str(), "ped_gun", loop_ped_gun);
-	//loop_object_gun = ini.GetBoolValue(section_haxValues.c_str(), "object_vehicle_gun", loop_object_gun);
 	loop_light_gun = ini.GetBoolValue(section_haxValues.c_str(), "light_gun", loop_light_gun);
 	_RopeGun_::g_ropeGun.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "rope_gun", _RopeGun_::g_ropeGun.Enabled());
 	loop_bullet_time = ini.GetBoolValue(section_haxValues.c_str(), "bullet_time", loop_bullet_time);
@@ -270,8 +265,6 @@ void MenuConfig::ConfigRead()
 	loop_ignored_by_everyone = ini.GetBoolValue(section_haxValues.c_str(), "player_ignored_by_everyone", loop_ignored_by_everyone);
 	loop_never_wanted = ini.GetBoolValue(section_haxValues.c_str(), "player_never_wanted", loop_never_wanted);
 	loop_player_burn = ini.GetBoolValue(section_haxValues.c_str(), "player_burn_mode", loop_player_burn);
-	//sub::GhostRiderMode_catind::g_ghostRiderMode.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "player_ghost_rider_mode", sub::GhostRiderMode_catind::g_ghostRiderMode.Enabled());
-	//loop_player_noGravity = ini.GetBoolValue(section_haxValues.c_str(), "player_no_gravity", loop_player_noGravity);
 
 	loop_vehicle_invincibility = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_invincibility", loop_vehicle_invincibility);
 	loop_vehicle_heavymass = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_increased_mass", loop_vehicle_heavymass);
@@ -492,11 +485,6 @@ void MenuConfig::ConfigSave()
 	ini.SetDoubleValue(section_haxValues.c_str(), "gravity_gun_shoot_force", sub::GravityGun_catind::ShootForce());
 	ini.SetBoolValue(section_haxValues.c_str(), "magnet_gun", _MagnetGun_::g_magnetGun.Enabled());
 	ini.SetBoolValue(section_haxValues.c_str(), "teleport_gun", loop_teleport_gun);
-	//ini.SetBoolValue(section_haxValues.c_str(), "kaboom_gun", loop_kaboom_gun);
-	//ini.SetBoolValue(section_haxValues.c_str(), "triggerfx_gun", loop_triggerfx_gun);
-	//ini.SetBoolValue(section_haxValues.c_str(), "bullet_gun", loop_bullet_gun);
-	//ini.SetBoolValue(section_haxValues.c_str(), "ped_gun", loop_ped_gun);
-	//ini.SetBoolValue(section_haxValues.c_str(), "object_vehicle_gun", loop_object_gun);
 	ini.SetBoolValue(section_haxValues.c_str(), "light_gun", loop_light_gun);
 	ini.SetBoolValue(section_haxValues.c_str(), "rope_gun", _RopeGun_::g_ropeGun.Enabled());
 	ini.SetBoolValue(section_haxValues.c_str(), "bullet_time", loop_bullet_time);
@@ -535,8 +523,6 @@ void MenuConfig::ConfigSave()
 	ini.SetBoolValue(section_haxValues.c_str(), "player_ignored_by_everyone", loop_ignored_by_everyone);
 	ini.SetBoolValue(section_haxValues.c_str(), "player_never_wanted", loop_never_wanted);
 	ini.SetBoolValue(section_haxValues.c_str(), "player_burn_mode", loop_player_burn);
-	//ini.SetBoolValue(section_haxValues.c_str(), "player_ghost_rider_mode", sub::GhostRiderMode_catind::g_ghostRiderMode.Enabled());
-	//ini.SetBoolValue(section_haxValues.c_str(), "player_no_gravity", loop_player_noGravity);
 
 	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_invincibility", loop_vehicle_invincibility);
 	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_increased_mass", loop_vehicle_heavymass);

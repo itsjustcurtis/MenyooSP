@@ -2630,47 +2630,47 @@ namespace sub
 		}
 		void __AddOption(const std::string& text, Vehicle vehicle, INT8 wheelType, INT16 wheelIndex, bool isBikeBack)
 		{
-			addlog(ige::LogType::LOG_TRACE, "Starting Addoption", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Starting Addoption");
 			if (_globalLSC_Customs)
 			{
 				auto& lastwheelRelevant = isBikeBack ? lastbwheel : lastfwheel;
 				bool pressed = false;
-				addlog(ige::LogType::LOG_TRACE, "Got lastwheelRelevant: " + std::to_string(lastwheelRelevant),__FILENAME__);
+				addlog(ige::LogType::LOG_TRACE, "Got lastwheelRelevant: " + std::to_string(lastwheelRelevant));
 				AddTickol(text, lastwheelRelevant == wheelIndex && lastwheeltype == wheelType, pressed, pressed,
 					IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING, TICKOL::NONE, true);
 
 				bool allowSettingWheelPreview = GET_VEHICLE_WHEEL_TYPE(vehicle) != wheelType ||
 					(wheelType == WheelType::BikeWheels && isBikeBack ? GET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels) != wheelIndex
 						: GET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels) != wheelIndex);
-				addlog(ige::LogType::LOG_TRACE, "allowSettingWheelPreview: " + std::to_string(allowSettingWheelPreview), __FILENAME__);
+				addlog(ige::LogType::LOG_TRACE, "allowSettingWheelPreview: " + std::to_string(allowSettingWheelPreview));
 
-				addlog(ige::LogType::LOG_TRACE, "Comparing currrentopATM: " + std::to_string((int)(*Menu::currentopATM)) + " to printingop: " + std::to_string((int)(Menu::printingop)), __FILENAME__);
+				addlog(ige::LogType::LOG_TRACE, "Comparing currrentopATM: " + std::to_string((int)(*Menu::currentopATM)) + " to printingop: " + std::to_string((int)(Menu::printingop)));
 				if (*Menu::currentopATM == Menu::printingop && allowSettingWheelPreview)
 				{
-					addlog(ige::LogType::LOG_TRACE, "Setting wheel preview: type " + std::to_string(wheelType) + ", index " + std::to_string(wheelIndex), __FILENAME__);
+					addlog(ige::LogType::LOG_TRACE, "Setting wheel preview: type " + std::to_string(wheelType) + ", index " + std::to_string(wheelIndex));
 					GTAvehicle(vehicle).RequestControlOnce();
 					SET_VEHICLE_WHEEL_TYPE(vehicle, wheelType);
 					if (wheelType == WheelType::BikeWheels)
 					{
-						addlog(ige::LogType::LOG_TRACE, "Setting Bike Wheels", __FILENAME__);
+						addlog(ige::LogType::LOG_TRACE, "Setting Bike Wheels");
 						isBikeBack ? SET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::BackWheels))
 							: SET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::FrontWheels));
 					}
 					else
 					{
-						addlog(ige::LogType::LOG_TRACE, "Setting Car Wheels", __FILENAME__);
+						addlog(ige::LogType::LOG_TRACE, "Setting Car Wheels");
 						SET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::FrontWheels));
 						//SET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::BackWheels)); //redundant on non-bike tuning
 					}
 				}
-				addlog(ige::LogType::LOG_TRACE, "ended comparison, waiting for selection", __FILENAME__);
+				addlog(ige::LogType::LOG_TRACE, "ended comparison, waiting for selection");
 				if (pressed)
 				{
-					addlog(ige::LogType::LOG_TRACE, "Selection made", __FILENAME__);
+					addlog(ige::LogType::LOG_TRACE, "Selection made");
 					lastwheeltype = wheelType;
 					lastfwheel = GET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels);
 					lastbwheel = GET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels);
-					addlog(ige::LogType::LOG_DEBUG, "Wheels Set, lastwheeltype = " + std::to_string(lastwheeltype) + ", lastfwheel = " + std::to_string(lastfwheel) + ", lastbwheel = " + std::to_string(lastbwheel), __FILENAME__);
+					addlog(ige::LogType::LOG_DEBUG, "Wheels Set, lastwheeltype = " + std::to_string(lastwheeltype) + ", lastfwheel = " + std::to_string(lastfwheel) + ", lastbwheel = " + std::to_string(lastbwheel));
 					//Menu::SetSub_previous();
 					return;
 				}
@@ -2704,7 +2704,7 @@ namespace sub
 					//ms_wheel_windice_pressed = true;
 				}
 			}
-			addlog(ige::LogType::LOG_TRACE, "Looping Addoption", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Looping Addoption");
 		}
 	}
 
@@ -2945,13 +2945,13 @@ namespace sub
 		int windices2;
 		if (wtype == WheelType::BikeWheels) // Bike Normal/Chrome
 		{
-			addlog(ige::LogType::LOG_TRACE, "Entering Bike Wheels section MSWheels3_ with vehicle handle: {}" + std::to_string(Static_12), __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Entering Bike Wheels section MSWheels3_ with vehicle handle: {}" + std::to_string(Static_12));
 			bool bIsChromeSelected = chrtype == 1 || chrtype == 3;
 
 			AddTitle(bIsChromeSelected ? "Chrome Wheels" : "Bike Wheels");
 
 			std::array<int, 5> ids{ 0, 13, 26, 48, ms_max_windices };
-			addlog(ige::LogType::LOG_TRACE, "Adding " + std::to_string(ms_max_windices) + " Wheel Options", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Adding " + std::to_string(ms_max_windices) + " Wheel Options");
 			for (int j = bIsChromeSelected ? 0 : 0; j < ids.size() - 1; j += 1)
 			{
 				for (i = ids[j]; i < ids[j + 1]; i++)
@@ -2959,7 +2959,7 @@ namespace sub
 					__AddOption(get_mod_text_label(Static_12, VehicleMod::FrontWheels, i, false), Static_12, wtype, i, chrtype == 2);
 				}
 			}
-			addlog(ige::LogType::LOG_TRACE, "Finished Adding Wheel Options", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Finished Adding Wheel Options");
 			if (_globalLSC_Customs && Menu::OnSubBack == nullptr) // this has been split out for bikes, see further comments on the original section below (line 2575)
 			{
 				Menu::OnSubBack = [&]()
@@ -2968,7 +2968,7 @@ namespace sub
 						: SET_VEHICLE_MOD(Static_12, VehicleMod::FrontWheels, lastfwheel, GET_VEHICLE_MOD_VARIATION(Static_12, VehicleMod::FrontWheels));
 				};
 			}
-			addlog(ige::LogType::LOG_TRACE, "Exiting Bike Wheels section MSWheels3_", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Exiting Bike Wheels section MSWheels3_");
 			return;
 		}
 		else //if (wtype == WheelType::Bennys || wtype == WheelType::BennysBespoke) // Benny's

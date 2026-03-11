@@ -53,7 +53,7 @@ namespace DxHookIMG
 	{
 		if (does_file_exist(file))
 		{
-			addlog(ige::LogType::LOG_INFO,  "[DX-HOOK] Loading texture: " + file, __FILENAME__);
+			addlog(ige::LogType::LOG_INFO,  "[DX-HOOK] Loading texture: " + file);
 			this->id = createTexture(file.c_str());
 
 			/*auto slashPos = file.rfind("\\");
@@ -63,7 +63,7 @@ namespace DxHookIMG
 		}
 		else
 		{
-			addlog(ige::LogType::LOG_ERROR,  "[DX-HOOK] Unable to find: " + file, __FILENAME__);
+			addlog(ige::LogType::LOG_ERROR,  "[DX-HOOK] Unable to find: " + file);
 			this->id = 0;
 		}
 	}

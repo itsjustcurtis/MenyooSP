@@ -676,7 +676,7 @@ namespace sub
 			pugi::xml_document doc;
 			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + "PedDecalOverlays.xml").c_str()).status != pugi::status_ok)
 			{
-				addlog(ige::LogType::LOG_ERROR,  "Unable to open PedDecalOverlays.xml", __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR,  "Unable to open PedDecalOverlays.xml");
 				return;
 			}
 
@@ -1526,10 +1526,10 @@ namespace sub
 					if (GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(ep.Handle(), pedCompId) >= pedCompIdValueDrawable && GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(ep.Handle(), pedCompId, pedCompIdValueDrawable) >= pedCompIdValueTexture)
 					{
 						SET_PED_COMPONENT_VARIATION(ep.Handle(), pedCompId, pedCompIdValueDrawable, pedCompIdValueTexture, 0);
-						addlog(ige::LogType::LOG_DEBUG, "Applied ped component " + std::to_string(pedCompId) + " with drawable " + std::to_string(pedCompIdValueDrawable) + " and texture " + std::to_string(pedCompIdValueTexture), __FILENAME__);
+						addlog(ige::LogType::LOG_DEBUG, "Applied ped component " + std::to_string(pedCompId) + " with drawable " + std::to_string(pedCompIdValueDrawable) + " and texture " + std::to_string(pedCompIdValueTexture));
 					}
 					else
-						addlog(ige::LogType::LOG_WARNING, "Ped comp " + std::to_string(pedCompId) + " out of range - Drawable " + std::to_string(pedCompIdValueDrawable) + " and texture " + std::to_string(pedCompIdValueTexture), __FILENAME__);
+						addlog(ige::LogType::LOG_WARNING, "Ped comp " + std::to_string(pedCompId) + " out of range - Drawable " + std::to_string(pedCompIdValueDrawable) + " and texture " + std::to_string(pedCompIdValueTexture));
 
 				}
 			}
@@ -1733,7 +1733,7 @@ namespace sub
 				else
 				{
 					Game::Print::PrintBottomCentre("~r~Failed~s~ to create folder.");
-					addlog(ige::LogType::LOG_ERROR, "Attempt to create folder " + inputStr + " failed", __FILENAME__);
+					addlog(ige::LogType::LOG_ERROR, "Attempt to create folder " + inputStr + " failed");
 				}
 			}
 			else Game::Print::PrintError_InvalidInput(inputStr);
@@ -1788,7 +1788,7 @@ namespace sub
 			else
 			{
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to create file.");
-				addlog(ige::LogType::LOG_ERROR, "Attempt to create file menyooStuff/defaultPed.xml failed", __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR, "Attempt to create file menyooStuff/defaultPed.xml failed");
 			}
 		}
 		if (outfits2_overwrite)
@@ -1798,7 +1798,7 @@ namespace sub
 			else
 			{
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to overwrite file.");
-				addlog(ige::LogType::LOG_ERROR, "Attempt to overwrite file " + filePath + " failed", __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR, "Attempt to overwrite file " + filePath + " failed");
 			}
 		}
 
@@ -1813,7 +1813,7 @@ namespace sub
 					Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
 				}
 				else Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to rename file.");
-				addlog(ige::LogType::LOG_ERROR, "Attempt to rename file " + _name + " to " + newName + "failed", __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR, "Attempt to rename file " + _name + " to " + newName + "failed");
 			}
 			else Game::Print::PrintError_InvalidInput(newName);
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameOutfitFile, std::string(), 28U, "FMMC_KEY_TIP9", _name);
@@ -1828,7 +1828,7 @@ namespace sub
 			else
 			{
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to delete file.");
-				addlog(ige::LogType::LOG_ERROR, "Attempt to delete file " + filePath + " failed", __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR, "Attempt to delete file " + filePath + " failed");
 			}
 			Menu::SetSub_previous();
 			Menu::Up();

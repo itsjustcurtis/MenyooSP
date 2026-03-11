@@ -1576,7 +1576,7 @@ namespace sub::Spooner
 			if (!isThisEntityInDb)
 			{
 				Game::Print::PrintBottomLeft("~r~Error:~s~ Entity is not in the Spooner Database");
-				addlog(ige::LogType::LOG_WARNING, "Cannot display task list, Entity not in Spooner Database",__FILENAME__);
+				addlog(ige::LogType::LOG_WARNING, "Cannot display task list, Entity not in Spooner Database");
 				Menu::SetSub_previous();
 				return;
 			}
@@ -1602,7 +1602,7 @@ namespace sub::Spooner
 				else
 				{
 					Game::Print::PrintBottomCentre("~r~Error:~s~ Task list is empty.");
-					addlog(ige::LogType::LOG_WARNING, "Cannot start tasks, Task list is empty", __FILENAME__);
+					addlog(ige::LogType::LOG_WARNING, "Cannot start tasks, Task list is empty");
 				}
 			}
 			else if (bStopPressed)
@@ -1750,21 +1750,21 @@ namespace sub::Spooner
 				AddNumber("Duration (In Seconds)", (float(thisDuration) / 1000), 3, bDuration_input, bDuration_plus, bDuration_minus);
 				AddNumber("Scroll Sensitivity", (float(_manualPlacementPrecision)), 3, null, prec_minus, prec_plus);
 				if (bDuration_plus) { 
-					addlog(ige::LogType::LOG_TRACE, "Increasing duration by " + std::to_string(_manualPlacementPrecision * 1000) + " milliseconds. Target " + std::to_string(thisDuration + _manualPlacementPrecision * 1000), __FILENAME__);
+					addlog(ige::LogType::LOG_TRACE, "Increasing duration by " + std::to_string(_manualPlacementPrecision * 1000) + " milliseconds. Target " + std::to_string(thisDuration + _manualPlacementPrecision * 1000));
 					if (thisDuration <= INT_MAX-_manualPlacementPrecision*1000) thisDuration += static_cast<int>(_manualPlacementPrecision*1000);
-					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.", __FILENAME__);
+					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.");
 				}
 				if (bDuration_minus) {
-					addlog(ige::LogType::LOG_TRACE, "Decreasinc duration by " + std::to_string(_manualPlacementPrecision * 1000) + " milliseconds. Target " + std::to_string(thisDuration - _manualPlacementPrecision * 1000), __FILENAME__);
+					addlog(ige::LogType::LOG_TRACE, "Decreasinc duration by " + std::to_string(_manualPlacementPrecision * 1000) + " milliseconds. Target " + std::to_string(thisDuration - _manualPlacementPrecision * 1000));
 					if (thisDuration > _manualPlacementPrecision*1000) thisDuration -= static_cast<int>(_manualPlacementPrecision*1000);
-					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.", __FILENAME__);
+					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.");
 				}						
 				if (prec_plus) {
-					addlog(ige::LogType::LOG_TRACE, "Increasing duration scroll sensitivity to " + std::to_string(_manualPlacementPrecision * 10) + " seconds.", __FILENAME__);
+					addlog(ige::LogType::LOG_TRACE, "Increasing duration scroll sensitivity to " + std::to_string(_manualPlacementPrecision * 10) + " seconds.");
 					if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
 				}
 				if (prec_minus) {
-					addlog(ige::LogType::LOG_TRACE, "Decreasing duration scroll sensitivity to " + std::to_string(_manualPlacementPrecision / 10) + " seconds.", __FILENAME__);
+					addlog(ige::LogType::LOG_TRACE, "Decreasing duration scroll sensitivity to " + std::to_string(_manualPlacementPrecision / 10) + " seconds.");
 					if (_manualPlacementPrecision > 0.001f) _manualPlacementPrecision /= 10;
 				}
 				if (bDuration_input)

@@ -156,7 +156,7 @@ namespace sub
 		//if (vcollisionoff) SET_ENTITY_COLLISION(PLAYER_PED_ID(), FALSE, 0);
 
 		if (PlayerOpsReplenishPlayer_) {
-			addlog(ige::LogType::LOG_TRACE, "Replenishing Player", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Replenishing Player");
 			myPed.Health_set(myPed.MaxHealth_get());
 			myPed.Armour_set(myPlayer.MaxArmour_get());
 			PedDamageTextures_catind::ClearAllBloodDamage(myPed);
@@ -165,7 +165,7 @@ namespace sub
 		}
 
 		if (PlayerOpsInvincibilityOff_) {
-			addlog(ige::LogType::LOG_TRACE, "Turning Off Invincibility", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Turning Off Invincibility");
 			SET_PLAYER_INVINCIBLE(PLAYER_ID(), 0);
 			set_ped_invincible_off(PLAYER_PED_ID());
 			return;
@@ -357,7 +357,7 @@ namespace sub
 					catch (...) 
 					{ 
 						Game::Print::PrintError_InvalidInput(inputStr);
-						addlog(ige::LogType::LOG_ERROR, "Invalid flagID entered: " + inputStr, __FILENAME__);
+						addlog(ige::LogType::LOG_ERROR, "Invalid flagID entered: " + inputStr);
 					}
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::PedFlagIdInput, "", 9U);
@@ -377,7 +377,7 @@ namespace sub
 		if (!playerPed.Exists())
 		{
 			Game::Print::PrintBottomCentre("~r~Error:~s~ No longer in memory.");
-			addlog(ige::LogType::LOG_WARNING, "Cannot start clone menu, playerPed No longer in memory", __FILENAME__);
+			addlog(ige::LogType::LOG_WARNING, "Cannot start clone menu, playerPed No longer in memory");
 			Menu::SetSub_previous();
 			return;
 		}

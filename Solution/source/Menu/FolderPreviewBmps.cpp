@@ -46,16 +46,16 @@ namespace sub
 
 		void GetThisFolderBmpPaths(const std::string& path, decltype(vFolderBmps)& newBmps)
 		{
-			//addlog(ige::LogType::LOG_INFO,  "GetThisFolderBmpPaths in " + path, __FILENAME__);
+			//addlog(ige::LogType::LOG_INFO,  "GetThisFolderBmpPaths in " + path);
 			std::vector<std::string> fileNames;
 			get_all_filenames_with_extension(path, std::string(), fileNames, false);
 
-			//for(auto& s : fileNames) addlog(ige::LogType::LOG_INFO,  "In " + path + ", found " +  s, __FILENAME__);
+			//for(auto& s : fileNames) addlog(ige::LogType::LOG_INFO,  "In " + path + ", found " +  s);
 
 			if (std::find(fileNames.begin(), fileNames.end(), previewPng) != fileNames.end())
 			{
 				std::string pathBmp = path + "\\" + previewPng;
-				//addlog(ige::LogType::LOG_INFO,  "Registering " + previewPng + " in " + pathBmp, __FILENAME__);
+				//addlog(ige::LogType::LOG_INFO,  "Registering " + previewPng + " in " + pathBmp);
 				newBmps.push_back(std::make_pair(pathBmp, DxHookIMG::DxTexture()));
 			}
 

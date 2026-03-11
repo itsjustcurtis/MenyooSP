@@ -12,7 +12,6 @@
 #include "..\macros.h"
 
 #include "Menu.h"
-//#include "submenu_enum.h"
 
 #include "..\Submenus\MainMenu.h"
 #include "..\Submenus\Settings.h"
@@ -62,253 +61,311 @@
 
 using namespace sub;
 
-void Menu::submenu_switch()
+std::unordered_map<int, SubmenuHandler>& SubMenuRegistry::GetMap()
 {
-	switch (currentsub)
+	static std::unordered_map<int, SubmenuHandler> map;
+	return map;
+}
+
+void SubMenuRegistry::Register(int sub, SubmenuHandler handler)
+{
+	GetMap()[sub] = handler;
+}
+
+void SubMenuRegistry::Dispatch(int sub)
+{
+	auto& map = GetMap();
+	auto it = map.find(sub);
+	if (it != map.end())
 	{
-	case SUB::MAINMENU:					sub::MainMenu(); break;
-	case SUB::SETTINGS:					sub::Settings(); break;
-	case SUB::SETTINGS_MENUPOS:			sub::SettingsMenuPos_(); break;
-	case SUB::SETTINGS_THEMES:			sub::SettingsThemes_catind::Sub_Main(); break;
-	case SUB::SETTINGS_COLOURS:			sub::SettingsColours(); break;
-	case SUB::SETTINGS_COLOURS2:		sub::SettingsColours2(); break;
-	case SUB::SETTINGS_FONTS:			sub::SettingsFonts(); break;
-	case SUB::SETTINGS_FONTS2:			sub::SettingsFonts2(); break;
-	case SUB::SETTINGS_LANGUAGE:		sub::SettingsLanguage(); break;
-	case SUB::TIMECYCLES:				sub::Timecycles_(); break;
-
-	case SUB::OBJECTSPAWNER_OBJS:		sub::ObjectSpawner_objs(); break;
-
-	case SUB::PLAYERSSUB:				sub::PlayersSub_(); break;
-	case SUB::PLAYERSSUBAMENU:			sub::PlayersSubAMenu_(); break;
-	case SUB::CLONECOMPANIONSUB:		sub::CloneCompanionSub(); break;
-	case SUB::PEDEXPLOSIONSUB:			sub::PedExplosionSub(); break;
-	case SUB::ATTACHFUNNYOBJECTSUB:		sub::AttachFunnyObjectSub(); break;
-	case SUB::PTFXSUB:					sub::Ptfx_catind::PTFXSub(); break;
-	case SUB::PTFX_FAVORITES:			sub::Ptfx_catind::PTFXFavourites(); break;
-	case SUB::CLEARAREA:				sub::ClearAreaSub(); break;
-	case SUB::PLAYEROPS:				sub::PlayerOps_(); break;
-	case SUB::ANIMATIONSUB:				sub::AnimationSub_(); break;
-	case SUB::ANIMATIONSUB_SETTINGS:	sub::AnimationSub_Settings(); break;
-	case SUB::ANIMATIONSUB_FAVOURITES:	sub::AnimationSub_Favourites(); break;
-	case SUB::ANIMATIONSUB_CUSTOM:		sub::AnimationSub_Custom(); break;
-	case SUB::ANIMATIONSUB_DEER:		sub::AnimationSub_Deer(); break;
-	case SUB::ANIMATIONSUB_SHARK:		sub::AnimationSub_Shark(); break;
-	case SUB::ANIMATIONSUB_MISSRAPPEL:	sub::AnimationSub_MissRappel(); break;
-	case SUB::ANIMATIONSUB_GESTSIT:		sub::AnimationSub_GestSit(); break;
-	case SUB::ANIMATIONSUB_SWAT:		sub::AnimationSub_Swat(); break;
-	case SUB::ANIMATIONSUB_GUARDREAC:	sub::AnimationSub_GuardReac(); break;
-	case SUB::ANIMATIONSUB_RANDARREST:	sub::AnimationSub_RandArrest(); break;
-	case SUB::ANIMATIONSUB_ALLPEDANIMS:			sub::AnimationSub_catind::Sub_AllPedAnims(); break;
-	case SUB::ANIMATIONSUB_ALLPEDANIMS_INDICT:	sub::AnimationSub_catind::Sub_AllPedAnims_InDict(); break;
-	case SUB::ANIMATIONSUB_TASKSCENARIOS:			sub::AnimationSub_TaskScenarios::AnimationSub_TaskScenarios(); break;
-	case SUB::ANIMATIONSUB_TASKSCENARIOS2:			sub::AnimationSub_TaskScenarios::AnimationSub_TaskScenarios2(); break;
-	case SUB::FACIALMOOD:				sub::FacialAnims_catind::Sub_FacialMood(); break;
-	case SUB::MOVEMENTGROUP:			sub::MovementGroup_(); break;
-	case SUB::MODELCHANGER:							sub::ModelChanger_(); break;
-	case SUB::MODELCHANGER_FAVOURITES:				sub::PedFavourites_catind::Sub_PedFavourites(); break;
-	case SUB::MODELCHANGER_PLAYER:					sub::ModelChanger_Player(); break;
-	case SUB::MODELCHANGER_ANIMAL:					sub::ModelChanger_Animal(); break;
-	case SUB::MODELCHANGER_AMBFEMALES:				sub::ModelChanger_AmbientFemale(); break;
-	case SUB::MODELCHANGER_AMBMALES:				sub::ModelChanger_AmbientMale(); break;
-	case SUB::MODELCHANGER_CS:						sub::ModelChanger_Cutscene(); break;
-	case SUB::MODELCHANGER_GANGFEMALES:				sub::ModelChanger_GangFemale(); break;
-	case SUB::MODELCHANGER_GANGMALES:				sub::ModelChanger_GangMale(); break;
-	case SUB::MODELCHANGER_STORY:					sub::ModelChanger_Story(); break;
-	case SUB::MODELCHANGER_MP:						sub::ModelChanger_Multiplayer(); break;
-	case SUB::MODELCHANGER_SCENARIOFEMALES:			sub::ModelChanger_ScenarioFemale(); break;
-	case SUB::MODELCHANGER_SCENARIOMALES:			sub::ModelChanger_ScenarioMale(); break;
-	case SUB::MODELCHANGER_ST_SCENARIOFEMALES:		sub::ModelChanger_Story_ScenarioFemale(); break;
-	case SUB::MODELCHANGER_ST_SCENARIOMALES:		sub::ModelChanger_Story_ScenarioMale(); break;
-	case SUB::MODELCHANGER_OTHERS:					sub::ModelChanger_Others(); break;
-	case SUB::COMPONENTS:				sub::ComponentChanger_(); break;
-	case SUB::COMPONENTS2:				sub::ComponentChanger2_(); break;
-	case SUB::COMPONENTSPROPS:			sub::ComponentChangerProps_(); break;
-	case SUB::COMPONENTSPROPS2:			sub::ComponentChangerProps2_(); break;
-	case SUB::COMPONENTS_OUTFITS:		sub::ComponentChanger_Outfits(); break;
-	case SUB::COMPONENTS_OUTFITS2:		sub::ComponentChanger_Outfits2(); break;
-	case SUB::PEDDECALS_TYPES:			sub::PedDecals_catind::Sub_Decals_Types(); break;
-	case SUB::PEDDECALS_ZONES:			sub::PedDecals_catind::Sub_Decals_Zones(); break;
-	case SUB::PEDDECALS_INZONE:			sub::PedDecals_catind::Sub_Decals_InZone(); break;
-	case SUB::VEHICLEOPS:				sub::VehicleOps(); break;
-	case SUB::PVOPS:					sub::PVOpsSub_(); break;
-	case SUB::VEHICLEWEAPONS:			sub::VehicleWeapons_(); break;
-	case SUB::VEHICLEMULTIPLIERS:		sub::VehicleMultipliers_(); break;
-	case SUB::VEHICLESPEEDOS:			sub::Speedo_catind::Sub_Main(); break;
-	case SUB::VEHICLESPEEDOS_LIGHT:		sub::Speedo_catind::Sub_Themes_Light(); break;
-	case SUB::VEHICLESPEEDOS_DARK:		sub::Speedo_catind::Sub_Themes_Dark(); break;
-	case SUB::MULTIPLATNEONS:			sub::VehicleMultiPlatNeons_Sub(); break;
-	case SUB::VEHICLESLAM:				sub::VehicleSlam_catind::Sub_VehicleSlam(); break;
-	case SUB::SPAWNVEHICLE:						sub::SpawnVehicle_(); break;
-	case SUB::SPAWNVEHICLE_OPTIONS:				sub::SpawnVehicle_Options(); break;
-	case SUB::SPAWNVEHICLE_ALLCATS:				sub::SpawnVehicle_AllCatsSub(); break;
-	case SUB::SPAWNVEHICLEDLC:				sub::SpawnVehicle_DLC(); break;
-	case SUB::SPAWNVEHICLE_DLC_SELECTION:		sub::SpawnVehicle_DLC_Selection(); break;
-	case SUB::SPAWNVEHICLE_FAVOURITES:			sub::SpawnVehicle_Favourites(); break;
-	case SUB::FUNNYVEHICLES:					sub::FunnyVehicles_catind::Sub_FunnyVehicles(); break;
-	case SUB::MODSHOP:					sub::ModShop_(); break;
-	case SUB::MS_BENNYS:				sub::Bennys_catind::Sub_BennysMain(); break;
-	case SUB::MS_EMBLEM:				sub::MSEmblem_(); break;
-	case SUB::MSWHEELS:					sub::MSWheels_(); break;
-	case SUB::MSWHEELS2:				sub::MSWheels2_(); break;
-	case SUB::MSWHEELS3:				sub::MSWheels3_(); break;
-	case SUB::MS_TYRESBURST:			sub::MSTyresBurst_(); break;
-	case SUB::MSPAINTS:					sub::MSPaints_(); break;
-	case SUB::MSPAINTS2:				sub::MSPaints2_(); break; // will do prim/sec/prespawn
-	case SUB::MSPAINTS2_CHROME:			sub::MSPaints_catind::Sub_Chrome(); break;
-	case SUB::MSPAINTS2_MATTE:			sub::MSPaints_catind::Sub_Matte(); break;
-	case SUB::MSPAINTS2_METAL:			sub::MSPaints_catind::Sub_Metal(); break;
-	case SUB::MSPAINTS2_CHAMELEON:		sub::MSPaints_catind::Sub_Chameleon(); break;
-	case SUB::MSPAINTS2_PEARL:			sub::MSPaints_catind::Sub_Pearl(); break;
-	case SUB::MSPAINTS2_METALLIC:		sub::MSPaints_catind::Sub_Metallic(); break;
-	case SUB::MSPAINTS2_NORMAL:			sub::MSPaints_catind::Sub_Normal(); break;
-	case SUB::MSPAINTS2_UTIL:			sub::MSPaints_catind::Sub_Util(); break;
-	case SUB::MSPAINTS2_WORN:			sub::MSPaints_catind::Sub_Worn(); break;
-	case SUB::MSPAINTS2_SHARED:			sub::MSPaints_catind::Sub_Shared(); break; // will do wheels, interior and Dashboard
-	case SUB::MSPAINTS_RGB:				sub::MSPaints_RGB(); break;
-	case SUB::MSCATALL:					sub::MSCatall_(); break;
-	case SUB::MSWINDOWS:				sub::MSWindows_catind::MSWindows_(); break;
-	case SUB::MSENGINESOUND:			sub::MSEngineSound_(); break;
-	case SUB::MSLIGHTS:					sub::MSLights_(); break;
-	case SUB::MSDOORS:					sub::MSDoors_(); break;
-	case SUB::MSNEONS:					sub::MSNeons_(); break;
-	case SUB::MSEXTRA:					sub::MSExtra_(); break;
-	case SUB::TELEPORTOPS:					sub::TeleportLocations_catind::Submenus::Sub_TeleportMain(); break;
-	case SUB::TELEPORTOPS_CUSTOMCOORDS:		sub::TeleportLocations_catind::Submenus::Sub_CustomCoords(); break;
-	case SUB::TELEPORTOPS_SELECTEDCATEGORY:	sub::TeleportLocations_catind::Submenus::Sub_SelectedCategory(); break;
-	case SUB::TELEPORTOPS_BLIPLIST:			sub::TeleportLocations_catind::Submenus::Sub_BlipList(); break;
-	case SUB::TELEPORTOPS_SAVEDLOCATIONS:	sub::TeleportLocations_catind::Submenus::Sub_SavedLocations(); break;
-	case SUB::TELEPORTOPS_OFFICEGARAGES:			sub::TeleportLocations_catind::OfficeGarages::Sub_OfficeGarages(); break;
-	case SUB::TELEPORTOPS_OFFICEGARAGES_INLOC:		sub::TeleportLocations_catind::OfficeGarages::Sub_OfficeGarages_InLoc(); break;
-	case SUB::TELEPORTOPS_IEVEHICLEWAREHOUSES:		sub::TeleportLocations_catind::IeVehicleWarehouses::Sub_IeVehicleWarehouses(); break;
-	case SUB::TELEPORTOPS_IEVEHICLEWAREHOUSES_INLOC:sub::TeleportLocations_catind::IeVehicleWarehouses::Sub_IeVehicleWarehouses_InLoc(); break;
-	case SUB::TELEPORTOPS_BIKERCLUBHOUSES:			sub::TeleportLocations_catind::BikerInteriors::Clubhouses::Sub_Clubhouses(); break;
-	case SUB::TELEPORTOPS_BIKERCLUBHOUSES_INLOC:	sub::TeleportLocations_catind::BikerInteriors::Clubhouses::Sub_Clubhouses_InLoc(); break;
-	case SUB::TELEPORTOPS_BUSINESSES:				sub::TeleportLocations_catind::BikerInteriors::Businesses::Sub_Businesses(); break;
-	case SUB::TELEPORTOPS_BUSINESSES_INLOC:			sub::TeleportLocations_catind::BikerInteriors::Businesses::Sub_Businesses_InLoc(); break;
-	case SUB::TELEPORTOPS_BUNKERS:					sub::TeleportLocations_catind::GunRunningInteriors::Bunkers::Sub_Bunkers(); break;
-	case SUB::TELEPORTOPS_BUNKERS_INLOC:			sub::TeleportLocations_catind::GunRunningInteriors::Bunkers::Sub_Bunkers_InLoc(); break;
-	case SUB::TELEPORTOPS_MOC:						sub::TeleportLocations_catind::GunRunningInteriors::Moc::Sub_Moc(); break;
-	case SUB::TELEPORTOPS_MOC_INLOC:				sub::TeleportLocations_catind::GunRunningInteriors::Moc::Sub_Moc_InLoc(); break;
-	case SUB::TELEPORTOPS_HANGARS:					sub::TeleportLocations_catind::Hangars::Sub_Hangars(); break;
-	case SUB::TELEPORTOPS_HANGARS_INLOC:			sub::TeleportLocations_catind::Hangars::Sub_Hangars_InLoc(); break;
-	case SUB::TELEPORTOPS_HANGARS_INOPTION:			sub::TeleportLocations_catind::Hangars::Sub_Hangars_InOption(); break;
-	case SUB::TELEPORTOPS_FACILITIES:				sub::TeleportLocations_catind::Facilities::Sub_Facilities(); break;
-	case SUB::TELEPORTOPS_FACILITIES_INLOC:			sub::TeleportLocations_catind::Facilities::Sub_Facilities_InLoc(); break;
-	case SUB::TELEPORTOPS_FACILITIES_INOPTION:		sub::TeleportLocations_catind::Facilities::Sub_Facilities_InOption(); break;
-	case SUB::TELEPORTOPS_NIGHTCLUBS:				sub::TeleportLocations_catind::Nightclubs::Sub_Nightclubs(); break;
-	case SUB::TELEPORTOPS_ARENAWAR:					sub::TeleportLocations_catind::ArenaWar::Sub_ArenaWar(); break;
-	case SUB::TELEPORTOPS_YACHTS:					sub::TeleportLocations_catind::Yachts::Sub_Yachts(); break;
-	case SUB::TELEPORTOPS_YACHTS_INGRP:				sub::TeleportLocations_catind::Yachts::Sub_Yachts_InGrp(); break;
-	case SUB::WEAPONOPS:				sub::Weaponops(); break;
-	case SUB::WEAPONOPS_WEAPONFAVOURITES:	sub::WeaponFavourites_catind::Sub_WeaponFavourites(); break;
-	case SUB::WEAPONOPS_INDIVS_CATEGORIES:	sub::WeaponIndivs_catind::Sub_CategoriesList(); break;
-	case SUB::WEAPONOPS_INDIVS_CATEGORY:	sub::WeaponIndivs_catind::Sub_InCategory(); break;
-	case SUB::WEAPONOPS_INDIVS_ITEM:		sub::WeaponIndivs_catind::Sub_InItem(); break;
-	case SUB::WEAPONOPS_INDIVS_ITEM_MODS:	sub::WeaponIndivs_catind::Sub_InItem_Mods(); break;
-	case SUB::WEAPONOPS_LOADOUTS:			sub::WeaponsLoadouts_catind::Sub_Loadouts(); break;
-	case SUB::WEAPONOPS_LOADOUTS_INITEM:	sub::WeaponsLoadouts_catind::Sub_Loadouts_InItem(); break;
-	case SUB::WEAPONOPS_PARACHUTE:			sub::WeaponIndivs_catind::Sub_Parachute(); break;
-	case SUB::WEAPONOPS_LASERSIGHT:		sub::LaserSight_catind::Sub_LaserSight(); break;
-	case SUB::FORGEGUN:					sub::ForgeGun_(); break;
-	case SUB::GRAVITYGUN:				sub::GravityGun_catind::Sub_GravityGun(); break;
-	case SUB::KABOOMGUN:				sub::KaboomGun_(); break;
-	case SUB::TRIGGERFXGUN:				sub::TriggerFxGun_catind::Sub_GunMain(); break;
-	case SUB::BULLETGUN:				sub::BulletGun_(); break;
-	case SUB::PEDGUN:					sub::PedGun_(); break;
-	case SUB::PEDGUN_ALLPEDS:			sub::PedGun_AllPeds(); break;
-	case SUB::OBJECTGUN:				sub::ObjectGun_(); break;
-	case SUB::LIST_VEHICLECATS:			sub::List_VehicleCats_Sub(); break;
-	case SUB::WEATHEROPS:				sub::WeatherOps_(); break;
-	case SUB::CLOUDOPS:					sub::WeatherClouds_catind::sub_CloudOps(); break;
-	case SUB::WATERHACK:				sub::WaterHack_catind::Sub_WaterHack(); break;
-	case SUB::TIMEOPS:					sub::TimeOps_(); break;
-	case SUB::MISCOPS:					sub::MiscOps(); break;
-	case SUB::MAPMODS:					sub::MapMods_catind::MapMods_(); break;
-	case SUB::MAPMODS2:					sub::MapMods_catind::MapMods2_(); break;
-	case SUB::VOICECHANGER:				sub::Speech_catind::Sub_VoiceChanger(); break;
-	case SUB::SPEECHPLAYER:				sub::Speech_catind::Sub_AmbientSpeechPlayer(); break;
-	case SUB::SPEECHPLAYER_INVOICE:		sub::Speech_catind::Sub_AmbientSpeechPlayer_InVoice(); break;
-	case SUB::BREATHESTUFF:				sub::BreatheStuff_catind::BreatheStuffSub_(); break;
-	case SUB::VEHICLE_SAVER:			sub::VehicleSaver_catind::Sub_VehSaver(); break;
-	case SUB::VEHICLE_SAVER_INITEM:		sub::VehicleSaver_catind::Sub_VehSaver_InItem(); break;
-	case SUB::RADIOSUB:					sub::RadioSub_(); break;
-	case SUB::AUTODRIVESUB:				sub::VehicleAutoDrive_catind::Sub_AutoDrive(); break;
-	case SUB::CUTSCENEPLAYER:			sub::CutscenePlayer_catind::Sub_CutsceneList(); break;
-	case SUB::PEDFLAGMANAGER_NAMEDLIST:	sub::PedConfigFlagManager_catind::Sub_FlagList(); break;
-	case SUB::PEDFLAGMANAGER_CUSTOM:	sub::PedConfigFlagManager_catind::Sub_CustomFlagSetter(); break;
-	case SUB::GHOSTRIDERMODE:			sub::GhostRiderMode_catind::Sub_GhostRiderMode(); break;
-	case SUB::PEDDAMAGET_CATEGORYLIST:	sub::PedDamageTextures_catind::Sub_CategoryList(); break;
-	case SUB::PEDDAMAGET_BONESELECTION:	sub::PedDamageTextures_catind::Sub_BoneSelection(); break;
-	case SUB::PEDDAMAGET_BLOOD:			sub::PedDamageTextures_catind::Sub_Blood(); break;
-	case SUB::PEDDAMAGET_DAMAGEDECALS:	sub::PedDamageTextures_catind::Sub_DamageDecals(); break;
-	case SUB::PEDDAMAGET_DAMAGEPACKS:	sub::PedDamageTextures_catind::Sub_DamagePacks(); break;
-	case SUB::PED_HEADFEATURES_MAIN:				sub::PedHeadFeatures_catind::Sub_Main(); break;
-	case SUB::PED_HEADFEATURES_HEADOVERLAYS:		sub::PedHeadFeatures_catind::Sub_HeadOverlays(); break;
-	case SUB::PED_HEADFEATURES_HEADOVERLAYS_INITEM:	sub::PedHeadFeatures_catind::Sub_HeadOverlays_InItem(); break;
-	case SUB::PED_HEADFEATURES_FACEFEATURES:		sub::PedHeadFeatures_catind::Sub_FaceFeatures(); break;
-	case SUB::PED_HEADFEATURES_SKINTONE:			sub::PedHeadFeatures_catind::Sub_SkinTone(); break;
-	case SUB::ENTITYALPHALEVEL:			sub::EntityAlphaLevelSub_(); break;
-	case SUB::ANIMALRIDING:				sub::AnimalRiding_catind::Sub_AnimalRiding(); break;
-	case SUB::TVCHANNELSTUFF_TV:		sub::TVChannelStuff_catind::Sub_TV(); break;
-
-	case SUB::SPOONER_MAIN:							sub::Spooner::Submenus::Sub_SpoonerMain(); break;
-	case SUB::SPOONER_SPAWN_CATEGORIES:				sub::Spooner::Submenus::Sub_SpawnCategories(); break;
-	case SUB::SPOONER_SPAWN_PROP:					sub::Spooner::Submenus::Sub_SpawnProp(); break;
-	case SUB::SPOONER_SPAWN_PROP_FAVOURITES:		sub::Spooner::Submenus::Sub_SpawnProp_Favourites(); break;
-	case SUB::SPOONER_SPAWN_PED:					sub::Spooner::Submenus::Sub_SpawnPed(); break;
-	case SUB::SPOONER_SPAWN_VEHICLE:				sub::Spooner::Submenus::Sub_SpawnVehicle(); break;
-	case SUB::SPOONER_MANAGEMARKERS:							sub::Spooner::Submenus::Sub_ManageMarkers(); break;
-	case SUB::SPOONER_MANAGEMARKERS_REMOVAL:					sub::Spooner::Submenus::Sub_ManageMarkers_Removal(); break;
-	case SUB::SPOONER_MANAGEMARKERS_INMARKER:					sub::Spooner::Submenus::Sub_ManageMarkers_InMarker(); break;
-	case SUB::SPOONER_MANAGEMARKERS_INMARKER_DEST2MARKER:		sub::Spooner::Submenus::Sub_ManageMarkers_InMarker_Dest2Marker(); break;
-	case SUB::SPOONER_MANAGEMARKERS_INMARKER_ATTACH:			sub::Spooner::Submenus::Sub_ManageMarkers_InMarker_Attach(); break;
-	case SUB::SPOONER_MANAGEDB:						sub::Spooner::Submenus::Sub_ManageEntities(); break;
-	case SUB::SPOONER_MANAGEDB_REMOVAL:				sub::Spooner::Submenus::Sub_ManageEntities_Removal(); break;
-	case SUB::SPOONER_SAVEFILES:					sub::Spooner::Submenus::Sub_SaveFiles(); break;
-	case SUB::SPOONER_SAVEFILES_LOAD:				sub::Spooner::Submenus::Sub_SaveFiles_Load(); break;
-	case SUB::SPOONER_SAVEFILES_LOAD_LEGACYSP00N:	sub::Spooner::Submenus::Sub_SaveFiles_Load_LegacySP00N(); break;
-	case SUB::SPOONER_VECTOR3_MANUALPLACEMENT:		sub::Spooner::Submenus::Sub_Vector3_ManualPlacement(); break;
-	case SUB::SPOONER_QUICKMANUALPLACEMENT:			sub::Spooner::Submenus::Sub_QuickManualPlacement(); break;
-	case SUB::SPOONER_GROUPSPOON:					sub::Spooner::Submenus::Sub_GroupSpoon(); break;
-	case SUB::SPOONER_GROUPSPOON_SELECTENTITIES:	sub::Spooner::Submenus::Sub_GroupSpoon_SelectEntities(); break;
-	case SUB::SPOONER_GROUPSPOON_ATTACHTO:			sub::Spooner::Submenus::Sub_GroupSpoon_AttachTo(); break;
-	case SUB::SPOONER_SETTINGS:						sub::Spooner::Submenus::Sub_Settings(); break;
-	case SUB::SPOONER_SELECTEDENTITYOPS:			sub::Spooner::Submenus::Sub_SelectedEntityOps(); break;
-	case SUB::SPOONER_PEDOPS:						sub::Spooner::Submenus::Sub_PedOps(); break;
-	case SUB::SPOONER_PEDOPS_WEAPON:				sub::Spooner::Submenus::Sub_PedOps_Weapon(); break;
-	case SUB::SPOONER_PEDOPS_WEAPON_INCATEGORY:		sub::Spooner::Submenus::Sub_PedOps_Weapon_InCategory(); break;
-	case SUB::SPOONER_TASKSEQUENCE_TASKLIST:								sub::Spooner::Submenus::Sub_TaskSequence_TaskList(); break;
-	case SUB::SPOONER_TASKSEQUENCE_ADDTASK:									sub::Spooner::Submenus::Sub_TaskSequence_AddTask(); break;
-	case SUB::SPOONER_TASKSEQUENCE_INTASK:									sub::Spooner::Submenus::Sub_TaskSequence_InTask(); break;
-	case SUB::SPOONER_TASKSEQUENCE_TASKSUB_SCENARIOACTION_LIST:				sub::Spooner::Submenus::Sub_TaskSequence::ScenarioAction_list(); break;
-	case SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_SETTINGS:			sub::Spooner::Submenus::Sub_TaskSequence::PlayAnimation_settings(); break;
-	case SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS:		sub::Spooner::Submenus::Sub_TaskSequence::PlayAnimation_allPedAnims(); break;
-	case SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS_INDICT:sub::Spooner::Submenus::Sub_TaskSequence::PlayAnimation_allPedAnims_inDict(); break;
-	case SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYSPEECHWITHVOICE_INVOICE:		sub::Spooner::Submenus::Sub_TaskSequence::PlaySpeechWithVoice_inVoice(); break;
-	case SUB::SPOONER_ATTACHMENTOPS:				sub::Spooner::Submenus::Sub_AttachmentOps(); break;
-	case SUB::SPOONER_ATTACHMENTOPS_ATTACHTO:		sub::Spooner::Submenus::Sub_AttachmentOps_AttachTo(); break;
-	case SUB::SPOONER_ATTACHMENTOPS_SELECTBONE:		sub::Spooner::Submenus::Sub_AttachmentOps_SelectBone(); break;
-	case SUB::SPOONER_MANUALPLACEMENT:				sub::Spooner::Submenus::Sub_ManualPlacement(); break;
-	case SUB::SPOONER_SIZEMANIPULATION:				sub::Spooner::Submenus::Sub_SizeManipulation(); break;
-
-	case SUB::CLOCK:					sub::Clock_catind::Sub_Clock(); break;
-
-	case SUB::HUDOPTIONS:				sub::HudOptions_catind::Sub_HudOptions(); break;
-	case SUB::GAMECAMOPTIONS:			sub::GameCamOptions_catind::Sub_GameCamOptions(); break;
-
-	case SUB::SPSTATMANAGER:						sub::SpStatManager_catind::Sub_SpStatManager(); break;
-	case SUB::SPSTATMANAGER_INCHAR:					sub::SpStatManager_catind::Sub_InChar(); break;
-	case SUB::SPSTATMANAGER_INCHAR_INLIST:			sub::SpStatManager_catind::Sub_InChar_InList(); break;
-
-	case SUB::BODYGUARDMAINMENU:		sub::BodyguardMainMenu(); break;
-	case SUB::BODYGUARD_SPAWN:			sub::BodyguardMenu::BodyguardSpawn(); break;
-
-	case SUB::BODYGUARD_LIST:			sub::BodyguardMenu::BodyguardList(); break;
-	case SUB::BODYGUARD_SETTINGS:		sub::BodyguardMenu::BodyguardOps_(); break;
-	case SUB::BODYGUARD_ENTITYOPS:		sub::BodyguardMenu::BodyguardEntityOps(); break;
-	case SUB::BODYGUARD_WEAPONOPS:		sub::BodyguardMenu::BodyguardWeaponOps(); break;
+		it->second();
 	}
 }
 
+bool SubMenuRegistry::IsRegistered(int sub)
+{
+	auto& map = GetMap();
+	return map.find(sub) != map.end();
+}
 
+// Submenu registration
+// Main & Settings
+REGISTER_SUBMENU(MAINMENU,            MainMenu)
+REGISTER_SUBMENU(SETTINGS,            Settings)
+REGISTER_SUBMENU(SETTINGS_MENUPOS,    SettingsMenuPos_)
+REGISTER_SUBMENU(SETTINGS_THEMES,     SettingsThemes_catind::Sub_Main)
+REGISTER_SUBMENU(SETTINGS_COLOURS,    SettingsColours)
+REGISTER_SUBMENU(SETTINGS_COLOURS2,   SettingsColours2)
+REGISTER_SUBMENU(SETTINGS_FONTS,      SettingsFonts)
+REGISTER_SUBMENU(SETTINGS_FONTS2,     SettingsFonts2)
+REGISTER_SUBMENU(SETTINGS_LANGUAGE,   SettingsLanguage)
+REGISTER_SUBMENU(TIMECYCLES,          Timecycles_)
+
+// Players
+REGISTER_SUBMENU(PLAYERSSUB,           PlayersSub_)
+REGISTER_SUBMENU(PLAYERSSUBAMENU,      PlayersSubAMenu_)
+REGISTER_SUBMENU(CLONECOMPANIONSUB,    CloneCompanionSub)
+REGISTER_SUBMENU(PEDEXPLOSIONSUB,      PedExplosionSub)
+REGISTER_SUBMENU(ATTACHFUNNYOBJECTSUB, AttachFunnyObjectSub)
+REGISTER_SUBMENU(CLEARAREA,            ClearAreaSub)
+REGISTER_SUBMENU(PLAYEROPS,            PlayerOps_)
+
+// PTFX
+REGISTER_SUBMENU(PTFXSUB,        Ptfx_catind::PTFXSub)
+REGISTER_SUBMENU(PTFX_FAVORITES, Ptfx_catind::PTFXFavourites)
+
+// Animations
+REGISTER_SUBMENU(ANIMATIONSUB,                     AnimationSub_)
+REGISTER_SUBMENU(ANIMATIONSUB_SETTINGS,            AnimationSub_Settings)
+REGISTER_SUBMENU(ANIMATIONSUB_FAVOURITES,          AnimationSub_Favourites)
+REGISTER_SUBMENU(ANIMATIONSUB_CUSTOM,              AnimationSub_Custom)
+REGISTER_SUBMENU(ANIMATIONSUB_DEER,                AnimationSub_Deer)
+REGISTER_SUBMENU(ANIMATIONSUB_SHARK,               AnimationSub_Shark)
+REGISTER_SUBMENU(ANIMATIONSUB_MISSRAPPEL,          AnimationSub_MissRappel)
+REGISTER_SUBMENU(ANIMATIONSUB_GESTSIT,             AnimationSub_GestSit)
+REGISTER_SUBMENU(ANIMATIONSUB_SWAT,                AnimationSub_Swat)
+REGISTER_SUBMENU(ANIMATIONSUB_GUARDREAC,           AnimationSub_GuardReac)
+REGISTER_SUBMENU(ANIMATIONSUB_RANDARREST,          AnimationSub_RandArrest)
+REGISTER_SUBMENU(ANIMATIONSUB_ALLPEDANIMS,         AnimationSub_catind::Sub_AllPedAnims)
+REGISTER_SUBMENU(ANIMATIONSUB_ALLPEDANIMS_INDICT,  AnimationSub_catind::Sub_AllPedAnims_InDict)
+REGISTER_SUBMENU(ANIMATIONSUB_TASKSCENARIOS,       AnimationSub_TaskScenarios::AnimationSub_TaskScenarios)
+REGISTER_SUBMENU(ANIMATIONSUB_TASKSCENARIOS2,      AnimationSub_TaskScenarios::AnimationSub_TaskScenarios2)
+REGISTER_SUBMENU(FACIALMOOD,                       FacialAnims_catind::Sub_FacialMood)
+REGISTER_SUBMENU(MOVEMENTGROUP,                    MovementGroup_)
+
+// Model Changer
+REGISTER_SUBMENU(MODELCHANGER,                     ModelChanger_)
+REGISTER_SUBMENU(MODELCHANGER_FAVOURITES,          PedFavourites_catind::Sub_PedFavourites)
+REGISTER_SUBMENU(MODELCHANGER_PLAYER,              ModelChanger_Player)
+REGISTER_SUBMENU(MODELCHANGER_ANIMAL,              ModelChanger_Animal)
+REGISTER_SUBMENU(MODELCHANGER_AMBFEMALES,          ModelChanger_AmbientFemale)
+REGISTER_SUBMENU(MODELCHANGER_AMBMALES,            ModelChanger_AmbientMale)
+REGISTER_SUBMENU(MODELCHANGER_CS,                  ModelChanger_Cutscene)
+REGISTER_SUBMENU(MODELCHANGER_GANGFEMALES,         ModelChanger_GangFemale)
+REGISTER_SUBMENU(MODELCHANGER_GANGMALES,           ModelChanger_GangMale)
+REGISTER_SUBMENU(MODELCHANGER_STORY,               ModelChanger_Story)
+REGISTER_SUBMENU(MODELCHANGER_MP,                  ModelChanger_Multiplayer)
+REGISTER_SUBMENU(MODELCHANGER_SCENARIOFEMALES,     ModelChanger_ScenarioFemale)
+REGISTER_SUBMENU(MODELCHANGER_SCENARIOMALES,       ModelChanger_ScenarioMale)
+REGISTER_SUBMENU(MODELCHANGER_ST_SCENARIOFEMALES,  ModelChanger_Story_ScenarioFemale)
+REGISTER_SUBMENU(MODELCHANGER_ST_SCENARIOMALES,    ModelChanger_Story_ScenarioMale)
+REGISTER_SUBMENU(MODELCHANGER_OTHERS,              ModelChanger_Others)
+
+// Components / Appearance
+REGISTER_SUBMENU(COMPONENTS,           ComponentChanger_)
+REGISTER_SUBMENU(COMPONENTS2,          ComponentChanger2_)
+REGISTER_SUBMENU(COMPONENTSPROPS,      ComponentChangerProps_)
+REGISTER_SUBMENU(COMPONENTSPROPS2,     ComponentChangerProps2_)
+REGISTER_SUBMENU(COMPONENTS_OUTFITS,   ComponentChanger_Outfits)
+REGISTER_SUBMENU(COMPONENTS_OUTFITS2,  ComponentChanger_Outfits2)
+REGISTER_SUBMENU(PEDDECALS_TYPES,      PedDecals_catind::Sub_Decals_Types)
+REGISTER_SUBMENU(PEDDECALS_ZONES,      PedDecals_catind::Sub_Decals_Zones)
+REGISTER_SUBMENU(PEDDECALS_INZONE,     PedDecals_catind::Sub_Decals_InZone)
+
+// Vehicle Options
+REGISTER_SUBMENU(VEHICLEOPS,           VehicleOps)
+REGISTER_SUBMENU(PVOPS,                PVOpsSub_)
+REGISTER_SUBMENU(VEHICLEWEAPONS,       VehicleWeapons_)
+REGISTER_SUBMENU(VEHICLEMULTIPLIERS,   VehicleMultipliers_)
+REGISTER_SUBMENU(VEHICLESPEEDOS,       Speedo_catind::Sub_Main)
+REGISTER_SUBMENU(VEHICLESPEEDOS_LIGHT, Speedo_catind::Sub_Themes_Light)
+REGISTER_SUBMENU(VEHICLESPEEDOS_DARK,  Speedo_catind::Sub_Themes_Dark)
+REGISTER_SUBMENU(MULTIPLATNEONS,       VehicleMultiPlatNeons_Sub)
+REGISTER_SUBMENU(VEHICLESLAM,          VehicleSlam_catind::Sub_VehicleSlam)
+
+// Vehicle Spawner
+REGISTER_SUBMENU(SPAWNVEHICLE,               SpawnVehicle_)
+REGISTER_SUBMENU(SPAWNVEHICLE_OPTIONS,       SpawnVehicle_Options)
+REGISTER_SUBMENU(SPAWNVEHICLE_ALLCATS,       SpawnVehicle_AllCatsSub)
+REGISTER_SUBMENU(SPAWNVEHICLEDLC,            SpawnVehicle_DLC)
+REGISTER_SUBMENU(SPAWNVEHICLE_DLC_SELECTION, SpawnVehicle_DLC_Selection)
+REGISTER_SUBMENU(SPAWNVEHICLE_FAVOURITES,    SpawnVehicle_Favourites)
+REGISTER_SUBMENU(FUNNYVEHICLES,              FunnyVehicles_catind::Sub_FunnyVehicles)
+
+// Mod Shop
+REGISTER_SUBMENU(MODSHOP,              ModShop_)
+REGISTER_SUBMENU(MS_BENNYS,            Bennys_catind::Sub_BennysMain)
+REGISTER_SUBMENU(MS_EMBLEM,            MSEmblem_)
+REGISTER_SUBMENU(MSWHEELS,             MSWheels_)
+REGISTER_SUBMENU(MSWHEELS2,            MSWheels2_)
+REGISTER_SUBMENU(MSWHEELS3,            MSWheels3_)
+REGISTER_SUBMENU(MS_TYRESBURST,        MSTyresBurst_)
+REGISTER_SUBMENU(MSPAINTS,             MSPaints_)
+REGISTER_SUBMENU(MSPAINTS2,            MSPaints2_)
+REGISTER_SUBMENU(MSPAINTS2_CHROME,     MSPaints_catind::Sub_Chrome)
+REGISTER_SUBMENU(MSPAINTS2_MATTE,      MSPaints_catind::Sub_Matte)
+REGISTER_SUBMENU(MSPAINTS2_METAL,      MSPaints_catind::Sub_Metal)
+REGISTER_SUBMENU(MSPAINTS2_CHAMELEON,  MSPaints_catind::Sub_Chameleon)
+REGISTER_SUBMENU(MSPAINTS2_PEARL,      MSPaints_catind::Sub_Pearl)
+REGISTER_SUBMENU(MSPAINTS2_METALLIC,   MSPaints_catind::Sub_Metallic)
+REGISTER_SUBMENU(MSPAINTS2_NORMAL,     MSPaints_catind::Sub_Normal)
+REGISTER_SUBMENU(MSPAINTS2_UTIL,       MSPaints_catind::Sub_Util)
+REGISTER_SUBMENU(MSPAINTS2_WORN,       MSPaints_catind::Sub_Worn)
+REGISTER_SUBMENU(MSPAINTS2_SHARED,     MSPaints_catind::Sub_Shared)
+REGISTER_SUBMENU(MSPAINTS_RGB,         MSPaints_RGB)
+REGISTER_SUBMENU(MSCATALL,             MSCatall_)
+REGISTER_SUBMENU(MSWINDOWS,            MSWindows_catind::MSWindows_)
+REGISTER_SUBMENU(MSENGINESOUND,        MSEngineSound_)
+REGISTER_SUBMENU(MSLIGHTS,             MSLights_)
+REGISTER_SUBMENU(MSDOORS,              MSDoors_)
+REGISTER_SUBMENU(MSNEONS,              MSNeons_)
+REGISTER_SUBMENU(MSEXTRA,              MSExtra_)
+
+// Teleport
+REGISTER_SUBMENU(TELEPORTOPS,                           TeleportLocations_catind::Submenus::Sub_TeleportMain)
+REGISTER_SUBMENU(TELEPORTOPS_CUSTOMCOORDS,              TeleportLocations_catind::Submenus::Sub_CustomCoords)
+REGISTER_SUBMENU(TELEPORTOPS_SELECTEDCATEGORY,          TeleportLocations_catind::Submenus::Sub_SelectedCategory)
+REGISTER_SUBMENU(TELEPORTOPS_BLIPLIST,                  TeleportLocations_catind::Submenus::Sub_BlipList)
+REGISTER_SUBMENU(TELEPORTOPS_SAVEDLOCATIONS,            TeleportLocations_catind::Submenus::Sub_SavedLocations)
+REGISTER_SUBMENU(TELEPORTOPS_OFFICEGARAGES,             TeleportLocations_catind::OfficeGarages::Sub_OfficeGarages)
+REGISTER_SUBMENU(TELEPORTOPS_OFFICEGARAGES_INLOC,       TeleportLocations_catind::OfficeGarages::Sub_OfficeGarages_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_IEVEHICLEWAREHOUSES,       TeleportLocations_catind::IeVehicleWarehouses::Sub_IeVehicleWarehouses)
+REGISTER_SUBMENU(TELEPORTOPS_IEVEHICLEWAREHOUSES_INLOC, TeleportLocations_catind::IeVehicleWarehouses::Sub_IeVehicleWarehouses_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_BIKERCLUBHOUSES,           TeleportLocations_catind::BikerInteriors::Clubhouses::Sub_Clubhouses)
+REGISTER_SUBMENU(TELEPORTOPS_BIKERCLUBHOUSES_INLOC,     TeleportLocations_catind::BikerInteriors::Clubhouses::Sub_Clubhouses_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_BUSINESSES,                TeleportLocations_catind::BikerInteriors::Businesses::Sub_Businesses)
+REGISTER_SUBMENU(TELEPORTOPS_BUSINESSES_INLOC,          TeleportLocations_catind::BikerInteriors::Businesses::Sub_Businesses_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_BUNKERS,                   TeleportLocations_catind::GunRunningInteriors::Bunkers::Sub_Bunkers)
+REGISTER_SUBMENU(TELEPORTOPS_BUNKERS_INLOC,             TeleportLocations_catind::GunRunningInteriors::Bunkers::Sub_Bunkers_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_MOC,                       TeleportLocations_catind::GunRunningInteriors::Moc::Sub_Moc)
+REGISTER_SUBMENU(TELEPORTOPS_MOC_INLOC,                 TeleportLocations_catind::GunRunningInteriors::Moc::Sub_Moc_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_HANGARS,                   TeleportLocations_catind::Hangars::Sub_Hangars)
+REGISTER_SUBMENU(TELEPORTOPS_HANGARS_INLOC,             TeleportLocations_catind::Hangars::Sub_Hangars_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_HANGARS_INOPTION,          TeleportLocations_catind::Hangars::Sub_Hangars_InOption)
+REGISTER_SUBMENU(TELEPORTOPS_FACILITIES,                TeleportLocations_catind::Facilities::Sub_Facilities)
+REGISTER_SUBMENU(TELEPORTOPS_FACILITIES_INLOC,          TeleportLocations_catind::Facilities::Sub_Facilities_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_FACILITIES_INOPTION,       TeleportLocations_catind::Facilities::Sub_Facilities_InOption)
+REGISTER_SUBMENU(TELEPORTOPS_NIGHTCLUBS,                TeleportLocations_catind::Nightclubs::Sub_Nightclubs)
+REGISTER_SUBMENU(TELEPORTOPS_ARENAWAR,                  TeleportLocations_catind::ArenaWar::Sub_ArenaWar)
+REGISTER_SUBMENU(TELEPORTOPS_YACHTS,                    TeleportLocations_catind::Yachts::Sub_Yachts)
+REGISTER_SUBMENU(TELEPORTOPS_YACHTS_INGRP,              TeleportLocations_catind::Yachts::Sub_Yachts_InGrp)
+
+// Weapons
+REGISTER_SUBMENU(WEAPONOPS,                    Weaponops)
+REGISTER_SUBMENU(WEAPONOPS_WEAPONFAVOURITES,   WeaponFavourites_catind::Sub_WeaponFavourites)
+REGISTER_SUBMENU(WEAPONOPS_INDIVS_CATEGORIES,  WeaponIndivs_catind::Sub_CategoriesList)
+REGISTER_SUBMENU(WEAPONOPS_INDIVS_CATEGORY,    WeaponIndivs_catind::Sub_InCategory)
+REGISTER_SUBMENU(WEAPONOPS_INDIVS_ITEM,        WeaponIndivs_catind::Sub_InItem)
+REGISTER_SUBMENU(WEAPONOPS_INDIVS_ITEM_MODS,   WeaponIndivs_catind::Sub_InItem_Mods)
+REGISTER_SUBMENU(WEAPONOPS_LOADOUTS,           WeaponsLoadouts_catind::Sub_Loadouts)
+REGISTER_SUBMENU(WEAPONOPS_LOADOUTS_INITEM,    WeaponsLoadouts_catind::Sub_Loadouts_InItem)
+REGISTER_SUBMENU(WEAPONOPS_PARACHUTE,          WeaponIndivs_catind::Sub_Parachute)
+REGISTER_SUBMENU(WEAPONOPS_LASERSIGHT,         LaserSight_catind::Sub_LaserSight)
+REGISTER_SUBMENU(FORGEGUN,                     ForgeGun_)
+REGISTER_SUBMENU(GRAVITYGUN,                   GravityGun_catind::Sub_GravityGun)
+REGISTER_SUBMENU(KABOOMGUN,                    KaboomGun_)
+REGISTER_SUBMENU(TRIGGERFXGUN,                 TriggerFxGun_catind::Sub_GunMain)
+REGISTER_SUBMENU(BULLETGUN,                    BulletGun_)
+REGISTER_SUBMENU(PEDGUN,                       PedGun_)
+REGISTER_SUBMENU(PEDGUN_ALLPEDS,               PedGun_AllPeds)
+REGISTER_SUBMENU(OBJECTGUN,                    ObjectGun_)
+REGISTER_SUBMENU(LIST_VEHICLECATS,             List_VehicleCats_Sub)
+
+// World
+REGISTER_SUBMENU(WEATHEROPS, WeatherOps_)
+REGISTER_SUBMENU(CLOUDOPS,   WeatherClouds_catind::sub_CloudOps)
+REGISTER_SUBMENU(WATERHACK,  WaterHack_catind::Sub_WaterHack)
+REGISTER_SUBMENU(TIMEOPS,    TimeOps_)
+
+// Misc
+REGISTER_SUBMENU(MISCOPS,            MiscOps)
+REGISTER_SUBMENU(MAPMODS,            MapMods_catind::MapMods_)
+REGISTER_SUBMENU(MAPMODS2,           MapMods_catind::MapMods2_)
+REGISTER_SUBMENU(OBJECTSPAWNER_OBJS, ObjectSpawner_objs)
+
+// Ped features
+REGISTER_SUBMENU(VOICECHANGER,            Speech_catind::Sub_VoiceChanger)
+REGISTER_SUBMENU(SPEECHPLAYER,            Speech_catind::Sub_AmbientSpeechPlayer)
+REGISTER_SUBMENU(SPEECHPLAYER_INVOICE,    Speech_catind::Sub_AmbientSpeechPlayer_InVoice)
+REGISTER_SUBMENU(BREATHESTUFF,            BreatheStuff_catind::BreatheStuffSub_)
+REGISTER_SUBMENU(GHOSTRIDERMODE,          GhostRiderMode_catind::Sub_GhostRiderMode)
+REGISTER_SUBMENU(PEDFLAGMANAGER_NAMEDLIST, PedConfigFlagManager_catind::Sub_FlagList)
+REGISTER_SUBMENU(PEDFLAGMANAGER_CUSTOM,    PedConfigFlagManager_catind::Sub_CustomFlagSetter)
+
+// Ped damage / head features
+REGISTER_SUBMENU(PEDDAMAGET_CATEGORYLIST,              PedDamageTextures_catind::Sub_CategoryList)
+REGISTER_SUBMENU(PEDDAMAGET_BONESELECTION,             PedDamageTextures_catind::Sub_BoneSelection)
+REGISTER_SUBMENU(PEDDAMAGET_BLOOD,                     PedDamageTextures_catind::Sub_Blood)
+REGISTER_SUBMENU(PEDDAMAGET_DAMAGEDECALS,              PedDamageTextures_catind::Sub_DamageDecals)
+REGISTER_SUBMENU(PEDDAMAGET_DAMAGEPACKS,               PedDamageTextures_catind::Sub_DamagePacks)
+REGISTER_SUBMENU(PED_HEADFEATURES_MAIN,                PedHeadFeatures_catind::Sub_Main)
+REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS,        PedHeadFeatures_catind::Sub_HeadOverlays)
+REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS_INITEM, PedHeadFeatures_catind::Sub_HeadOverlays_InItem)
+REGISTER_SUBMENU(PED_HEADFEATURES_FACEFEATURES,        PedHeadFeatures_catind::Sub_FaceFeatures)
+REGISTER_SUBMENU(PED_HEADFEATURES_SKINTONE,            PedHeadFeatures_catind::Sub_SkinTone)
+
+// Vehicle saver / misc vehicle
+REGISTER_SUBMENU(VEHICLE_SAVER,        VehicleSaver_catind::Sub_VehSaver)
+REGISTER_SUBMENU(VEHICLE_SAVER_INITEM, VehicleSaver_catind::Sub_VehSaver_InItem)
+REGISTER_SUBMENU(RADIOSUB,             RadioSub_)
+REGISTER_SUBMENU(AUTODRIVESUB,         VehicleAutoDrive_catind::Sub_AutoDrive)
+
+// Misc utilities
+REGISTER_SUBMENU(CUTSCENEPLAYER,       CutscenePlayer_catind::Sub_CutsceneList)
+REGISTER_SUBMENU(ENTITYALPHALEVEL,     EntityAlphaLevelSub_)
+REGISTER_SUBMENU(ANIMALRIDING,         AnimalRiding_catind::Sub_AnimalRiding)
+REGISTER_SUBMENU(TVCHANNELSTUFF_TV,    TVChannelStuff_catind::Sub_TV)
+REGISTER_SUBMENU(CLOCK,                Clock_catind::Sub_Clock)
+REGISTER_SUBMENU(HUDOPTIONS,           HudOptions_catind::Sub_HudOptions)
+REGISTER_SUBMENU(GAMECAMOPTIONS,       GameCamOptions_catind::Sub_GameCamOptions)
+
+// Stat Manager
+REGISTER_SUBMENU(SPSTATMANAGER,               SpStatManager_catind::Sub_SpStatManager)
+REGISTER_SUBMENU(SPSTATMANAGER_INCHAR,        SpStatManager_catind::Sub_InChar)
+REGISTER_SUBMENU(SPSTATMANAGER_INCHAR_INLIST, SpStatManager_catind::Sub_InChar_InList)
+
+// Spooner
+REGISTER_SUBMENU(SPOONER_MAIN,                                        Spooner::Submenus::Sub_SpoonerMain)
+REGISTER_SUBMENU(SPOONER_SPAWN_CATEGORIES,                            Spooner::Submenus::Sub_SpawnCategories)
+REGISTER_SUBMENU(SPOONER_SPAWN_PROP,                                  Spooner::Submenus::Sub_SpawnProp)
+REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES,                       Spooner::Submenus::Sub_SpawnProp_Favourites)
+REGISTER_SUBMENU(SPOONER_SPAWN_PED,                                   Spooner::Submenus::Sub_SpawnPed)
+REGISTER_SUBMENU(SPOONER_SPAWN_VEHICLE,                               Spooner::Submenus::Sub_SpawnVehicle)
+REGISTER_SUBMENU(SPOONER_MANAGEMARKERS,                               Spooner::Submenus::Sub_ManageMarkers)
+REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_REMOVAL,                       Spooner::Submenus::Sub_ManageMarkers_Removal)
+REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER,                      Spooner::Submenus::Sub_ManageMarkers_InMarker)
+REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER_DEST2MARKER,          Spooner::Submenus::Sub_ManageMarkers_InMarker_Dest2Marker)
+REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER_ATTACH,               Spooner::Submenus::Sub_ManageMarkers_InMarker_Attach)
+REGISTER_SUBMENU(SPOONER_MANAGEDB,                                    Spooner::Submenus::Sub_ManageEntities)
+REGISTER_SUBMENU(SPOONER_MANAGEDB_REMOVAL,                            Spooner::Submenus::Sub_ManageEntities_Removal)
+REGISTER_SUBMENU(SPOONER_SAVEFILES,                                   Spooner::Submenus::Sub_SaveFiles)
+REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD,                              Spooner::Submenus::Sub_SaveFiles_Load)
+REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD_LEGACYSP00N,                  Spooner::Submenus::Sub_SaveFiles_Load_LegacySP00N)
+REGISTER_SUBMENU(SPOONER_VECTOR3_MANUALPLACEMENT,                     Spooner::Submenus::Sub_Vector3_ManualPlacement)
+REGISTER_SUBMENU(SPOONER_QUICKMANUALPLACEMENT,                        Spooner::Submenus::Sub_QuickManualPlacement)
+REGISTER_SUBMENU(SPOONER_GROUPSPOON,                                  Spooner::Submenus::Sub_GroupSpoon)
+REGISTER_SUBMENU(SPOONER_GROUPSPOON_SELECTENTITIES,                   Spooner::Submenus::Sub_GroupSpoon_SelectEntities)
+REGISTER_SUBMENU(SPOONER_GROUPSPOON_ATTACHTO,                         Spooner::Submenus::Sub_GroupSpoon_AttachTo)
+REGISTER_SUBMENU(SPOONER_SETTINGS,                                    Spooner::Submenus::Sub_Settings)
+REGISTER_SUBMENU(SPOONER_SELECTEDENTITYOPS,                           Spooner::Submenus::Sub_SelectedEntityOps)
+REGISTER_SUBMENU(SPOONER_PEDOPS,                                      Spooner::Submenus::Sub_PedOps)
+REGISTER_SUBMENU(SPOONER_PEDOPS_WEAPON,                               Spooner::Submenus::Sub_PedOps_Weapon)
+REGISTER_SUBMENU(SPOONER_PEDOPS_WEAPON_INCATEGORY,                    Spooner::Submenus::Sub_PedOps_Weapon_InCategory)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKLIST,                       Spooner::Submenus::Sub_TaskSequence_TaskList)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_ADDTASK,                        Spooner::Submenus::Sub_TaskSequence_AddTask)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_INTASK,                         Spooner::Submenus::Sub_TaskSequence_InTask)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKSUB_SCENARIOACTION_LIST,    Spooner::Submenus::Sub_TaskSequence::ScenarioAction_list)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_SETTINGS, Spooner::Submenus::Sub_TaskSequence::PlayAnimation_settings)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS,        Spooner::Submenus::Sub_TaskSequence::PlayAnimation_allPedAnims)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS_INDICT, Spooner::Submenus::Sub_TaskSequence::PlayAnimation_allPedAnims_inDict)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKSUB_PLAYSPEECHWITHVOICE_INVOICE,      Spooner::Submenus::Sub_TaskSequence::PlaySpeechWithVoice_inVoice)
+REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS,                               Spooner::Submenus::Sub_AttachmentOps)
+REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_ATTACHTO,                      Spooner::Submenus::Sub_AttachmentOps_AttachTo)
+REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_SELECTBONE,                    Spooner::Submenus::Sub_AttachmentOps_SelectBone)
+REGISTER_SUBMENU(SPOONER_MANUALPLACEMENT,                             Spooner::Submenus::Sub_ManualPlacement)
+REGISTER_SUBMENU(SPOONER_SIZEMANIPULATION,                            Spooner::Submenus::Sub_SizeManipulation)
+
+// Bodyguards
+REGISTER_SUBMENU(BODYGUARDMAINMENU,  BodyguardMainMenu)
+REGISTER_SUBMENU(BODYGUARD_SPAWN,    BodyguardMenu::BodyguardSpawn)
+REGISTER_SUBMENU(BODYGUARD_LIST,     BodyguardMenu::BodyguardList)
+REGISTER_SUBMENU(BODYGUARD_SETTINGS, BodyguardMenu::BodyguardOps_)
+REGISTER_SUBMENU(BODYGUARD_ENTITYOPS, BodyguardMenu::BodyguardEntityOps)
+REGISTER_SUBMENU(BODYGUARD_WEAPONOPS, BodyguardMenu::BodyguardWeaponOps)
+
+// Menu dispatch
+
+void Menu::submenu_switch()
+{
+	SubMenuRegistry::Dispatch(currentsub);
+}

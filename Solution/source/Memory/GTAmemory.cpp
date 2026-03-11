@@ -55,7 +55,7 @@ GetModelInfo_t GetModelInfo;
 std::unordered_map<unsigned int, std::string> g_vehicleHashes;
 CallHook<InitVehicleArchetype_t>* g_InitVehicleArchetype = nullptr;
 CVehicleModelInfo* initVehicleArchetype_stub(const char* name, bool a2, unsigned int a3) {
-	addlog(ige::LogType::LOG_DEBUG, "getting hashkey for " + std::string(name), __FILENAME__);
+	addlog(ige::LogType::LOG_DEBUG, "getting hashkey for " + std::string(name));
 	g_vehicleHashes.insert({ GET_HASH_KEY(name), boost::to_lower_copy(name) });
 	return g_InitVehicleArchetype->fn(name, a2, a3);
 }
@@ -72,19 +72,19 @@ void setupHooks() {
 	if (g_isEnhanced) {
 		auto addr = MemryScan::PatternScanner::FindPattern("e8 ? ? ? ? 43 89 44 2c");
 		if (!addr) {
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetypeEnahnced", __FILENAME__);
+			addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetypeEnahnced");
 			return;
 		}
-		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetypeEnhanced at " + std::to_string(addr), __FILENAME__);
+		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetypeEnhanced at " + std::to_string(addr));
 		g_InitVehicleArchetypeEnhanced = HookManager::SetCall(addr, initVehicleArchetypeEnhanced_stub);
 	}
 	else {
 		auto addr = GTAmemory::FindPattern("\xE8\x00\x00\x00\x00\x48\x8B\x4D\xE0\x48\x8B\x11", "x????xxxxxxx");
 		if (!addr) {
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetype", __FILENAME__);
+			addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetype");
 			return;
 		}
-		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetype at " + std::to_string(addr), __FILENAME__);
+		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetype at " + std::to_string(addr));
 		g_InitVehicleArchetype = HookManager::SetCall(addr, initVehicleArchetype_stub);
 	}
 }
@@ -185,7 +185,7 @@ namespace MemryScan
 			}
 		}
 
-		addlog(ige::LogType::LOG_ERROR, "Pattern " + s + " not found", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR, "Pattern " + s + " not found");
 
 		return NULL;
 	}
@@ -1512,7 +1512,7 @@ void GTAmemory::Init()
 			address = address - 8;
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo (Enhanced)", __FILENAME__);
+			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo (Enhanced)");
 		}
 	}
 	else {
@@ -1532,7 +1532,7 @@ void GTAmemory::Init()
 				"xxxxxxxxxxx");
 
 			if (!address) {
-				addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo", __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo");
 			}
 		}
 		else {
@@ -1542,7 +1542,7 @@ void GTAmemory::Init()
 				address = address - 0x2C;
 			}
 			else {
-				addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo (v58+)", __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo (v58+)");
 			}
 		}
 	}
@@ -1551,7 +1551,7 @@ void GTAmemory::Init()
 	}
 
 	_SpSnow = SpSnow();
-	addlog(ige::LogType::LOG_INIT, "GTAMemory Init Done", __FILENAME__);
+	addlog(ige::LogType::LOG_INIT, "GTAMemory Init Done");
 }
 
 void GTAmemory::InitEnhancedPools() {
@@ -1715,12 +1715,12 @@ void GTAmemory::InitEnhancedPools() {
 		if (address)
 		{
 			address = address - 0x2C;
-			addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + std::to_string(address), __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + std::to_string(address));
 			GetModelInfo = (GetModelInfo_t)(address);
 		}
 		else
 		{
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo pattern", __FILENAME__);
+			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo pattern");
 		}
 
 		_SpSnow = SpSnow();
@@ -1751,18 +1751,18 @@ struct HashNode
 };
 void GTAmemory::GenerateVehicleModelList()
 {
-	addlog(ige::LogType::LOG_DEBUG, "Generating Vehicle Model List. isEnhanced = " + std::to_string(g_isEnhanced), __FILENAME__);
+	addlog(ige::LogType::LOG_DEBUG, "Generating Vehicle Model List. isEnhanced = " + std::to_string(g_isEnhanced));
 
 	int classOffset;
 	uintptr_t address;
 	HashNode** HashMap;
 	//Zorg
 	if (g_isEnhanced) {
-		addlog(ige::LogType::LOG_TRACE, "Scanning Enhanced Address", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Scanning Enhanced Address");
 		address = MemryScan::PatternScanner::FindPattern("0f b6 88 ? ? ? ? 83 e1 ? e9");
 		if (address)
 		{
-			addlog(ige::LogType::LOG_TRACE, "Found Address, scanning for Hashes", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Found Address, scanning for Hashes");
 			classOffset = *(uint*)(address + 3);
 
 			address = MemryScan::PatternScanner::FindPattern("74 ? 49 89 d0 4c 8b 1d");
@@ -1785,7 +1785,7 @@ void GTAmemory::GenerateVehicleModelList()
 	else {
 		address = FindPattern("\x66\x81\xF9\x00\x00\x74\x10\x4D\x85\xC0", "xxx??xxxxx");
 		if (address) {
-			addlog(ige::LogType::LOG_TRACE, "Found Address, scanning for Hashes", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Found Address, scanning for Hashes");
 			address = address - 0x21;
 			//UINT64 baseFuncAddr = *reinterpret_cast<int*>(address - 0x21) + address - 0x1D;
 			UINT64 baseFuncAddr = address + *reinterpret_cast<int*>(address) + 0x4;
@@ -1801,7 +1801,7 @@ void GTAmemory::GenerateVehicleModelList()
 		}
 	}
 
-	addlog(ige::LogType::LOG_TRACE, "Patterns Scanned Success", __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Patterns Scanned Success");
 	HashMap = reinterpret_cast<HashNode**>(modelHashTable);
 	//I know 0x20 items are defined but there are only 0x16 vehicle classes.
 	//But keeping it at 0x20 is just being safe as the & 0x1F in theory supports up to 0x20
@@ -1830,7 +1830,7 @@ void GTAmemory::GenerateVehicleModelList()
 			}
 		}
 	}
-	addlog(ige::LogType::LOG_TRACE, "Exiting GenerateVehicleModelList()", __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Exiting GenerateVehicleModelList()");
 }
 
 bool GTAmemory::IsModelAPed(unsigned int modelHash)
@@ -2711,14 +2711,14 @@ void GeneralGlobalHax::EnableBlockedMpVehiclesInSp()
 			if (address)
 			{
 				int globalindex = *(int*)(address + offset) & 0xFFFFFF;
-				addlog(ige::LogType::LOG_INFO, "Setting Global Variable " + std::to_string(globalindex) + " to true", __FILENAME__);
+				addlog(ige::LogType::LOG_INFO, "Setting Global Variable " + std::to_string(globalindex) + " to true");
 				*GTAmemory::GetGlobalPtr<INT32>(globalindex) = 1;
 				return;
 			}
 		}
 	}
 
-	addlog(ige::LogType::LOG_ERROR, "Global Variable not found, check game version >= 1.0.678.1", __FILENAME__);
+	addlog(ige::LogType::LOG_ERROR, "Global Variable not found, check game version >= 1.0.678.1");
 }
 
 // from EnableMPCars by drp4lyf
@@ -2736,16 +2736,16 @@ bool GTAmemory::FindScript(int hash) {
 	}
 
 	if (!patternAddr) {
-		addlog(ige::LogType::LOG_ERROR, "ERROR: finding address 1", __FILENAME__);
-		addlog(ige::LogType::LOG_ERROR, "Aborting...", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR, "ERROR: finding address 1");
+		addlog(ige::LogType::LOG_ERROR, "Aborting...");
 		return false;
 	}
 	scriptTable = (ScriptTable*)(patternAddr + *(int*)(patternAddr + 3) + 7);
 
 	ScriptTableItem* Item = scriptTable->FindScript(hash);
 	if (Item == NULL) {
-		addlog(ige::LogType::LOG_ERROR, "ERROR: finding script shop_controller ", __FILENAME__);
-		addlog(ige::LogType::LOG_ERROR, "Aborting...", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR, "ERROR: finding script shop_controller ");
+		addlog(ige::LogType::LOG_ERROR, "Aborting...");
 		return false;
 	}
 	while (!Item->IsLoaded())
@@ -2753,7 +2753,7 @@ bool GTAmemory::FindScript(int hash) {
 
 	shopController = Item->Header;
 
-	//addlog(ige::LogType::LOG_INFO,  "Found shopcontroller", __FILENAME__);
+	//addlog(ige::LogType::LOG_INFO,  "Found shopcontroller");
 	return true;
 }
 
@@ -2927,7 +2927,7 @@ float* GeneralGlobalHax::GetVehicleBoostChargePtr()
 
 std::string GTAmemory::GetVehicleModelName(Hash hash) {
 	if(g_vehicleHashes.empty()) {
-		addlog(ige::LogType::LOG_ERROR, "g_vehicleHashes Empty", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR, "g_vehicleHashes Empty");
 	}
 	auto modelIt = g_vehicleHashes.find(hash);
 	if (modelIt != g_vehicleHashes.end()) return modelIt->second;

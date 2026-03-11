@@ -25,7 +25,7 @@ namespace sub
 		static bool firstLoad = true;
 		if(firstLoad) {
 			firstLoad = false;
-			addlog(ige::LogType::LOG_TRACE, "First Load of MainMenu Submenu", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "First Load of MainMenu Submenu");
 		}
 		AddTitle("MENYOO");
 
