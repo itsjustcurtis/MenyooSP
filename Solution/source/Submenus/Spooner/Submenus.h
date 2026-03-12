@@ -22,6 +22,14 @@ typedef unsigned long DWORD, Hash;
 
 class GTAentity;
 
+#include "../../Scripting/GTAblip.h"
+
+namespace sub {
+	namespace Spooner::Submenus {
+		extern GTAblip SelectedBlip;
+	}
+}
+
 namespace sub
 {
 	namespace Spooner::Submenus
