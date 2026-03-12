@@ -55,8 +55,8 @@
 #include "..\..\Submenus\FunnyVehicles.h"
 #include "..\..\Util\FileLogger.h"
 
-#include "..\..\BlipCustoms.h"
-#include "..\..\SpoonerBlips.h"
+#include "BlipCustoms.h"
+#include "SpoonerBlips.h"
 
 #include <Shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
@@ -79,6 +79,7 @@ namespace sub
 		UINT8 _entTypeToShowTexterValue = 0;
 		void SetEnt241() { Static_241 = SelectedEntity.Handle.Handle(); }
 		void SetEnt12() { Static_12 = SelectedEntity.Handle.Handle(); }
+		GTAblip SelectedBlip;
 
 		void Sub_SpoonerMain()
 		{
@@ -2998,6 +2999,87 @@ namespace sub
 			}
 
 		}
+		void Sub_Blip_Management()
+		{
+			AddTitle("Blip Management");
+
+			AddOption("Add Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_SELECT);
+		}
+		//sub::Spooner::SpoonerBlip* SelectedBlip = nullptr;
+		void Sub_Blip_Select()
+		{
+			AddTitle("Select Blip Type");
+
+			bool bAddNewRadialBlipPressed = false;
+
+			AddTickol("Create Radial Blip", true, bAddNewRadialBlipPressed, bAddNewRadialBlipPressed, TICKOL::SMALLNEWSTAR);
+			if (bAddNewRadialBlipPressed)
+			{
+				auto& spoocam = SpoonerMode::spoonerModeCamera;
+
+				if (!spoocam.IsActive())
+				{
+					GTAentity myPed = PLAYER_PED_ID();
+					Vector3 myPos = myPed.Position_get();
+
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
+				}
+				else
+				{
+					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+				}
+
+				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
+			}
+
+			AddOption("Attach Blip to Entity", null, nullFunc, SUB::SPOONER_BLIPS_ADD_ENTITY);
+			AddOption("Create Coord Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_COORD);
+		}
+		void Sub_Blip_Radial()
+		{
+			AddTitle("Radial Blip");
+
+			bool bDeletePressed = false;
+			AddOption("Delete Blip", bDeletePressed);
+			if (bDeletePressed)
+			{
+				sub::Spooner::BlipCustoms::RemoveBlip(*sub::Spooner::SelectedBlip);
+				sub::Spooner::SelectedBlip = nullptr;
+				Menu::SetSub_previous();
+			}
+		}
+
+		void Sub_Blip_Entity()
+		{
+			AddTitle("Entity Blip");
+		}
+
+		void Sub_Blip_Coord()
+		{
+			AddTitle("Coord Blip");
+		}
+
+		void Sub_Blip_RadialInBlip()
+		{
+			if (sub::Spooner::SelectedBlip == nullptr)
+			{
+				Menu::SetSub_previous();
+				return;
+			}
+
+			AddTitle("Radial Blip Options");
+
+			bool bDeletePressed = false;
+			AddOption("Delete Blip", bDeletePressed);
+			if (bDeletePressed)
+			{
+				sub::Spooner::BlipCustoms::RemoveBlip(*sub::Spooner::SelectedBlip);
+				sub::Spooner::SelectedBlip = nullptr;
+				Menu::SetSub_previous();
+			}
+		}
 
 		void Sub_SpawnCategories()
 		{
@@ -3949,46 +4031,17 @@ namespace sub
 			return;
 		}
 
-		void Sub_Blip_Management();
-		{
-			AddTitle("Blip Management");
-
-			AddOption("Add Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_SELECT);
-		}
-
-		void Sub_Blip_Select();
-		{
-			AddTitle("Select Blip Type");
-
-			bool bAddNewRadialBlipPressed = false;
-			AddTickol("Create Radial Blip", true, bAddNewRadialBlipPressed, bAddNewRadialBlipPressed, TICKOL::SMALLNEWSTAR);
-			if (bAddNewRadialBlipPressed)
-			{
-				auto& spoocam = SpoonerMode::spoonerModeCamera;
-				if (!spoocam.IsActive())
-				{
-					GTAentity myPed = PLAYER_PED_ID();
-					Vector3 myPos = myPed.Position_get();
-					SelectedBlip = BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
-				}
-				else
-				{
-					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + SpoonerBlip().m_scale / 2);
-					spawnPos.z += SpoonerBlip().m_scale / 2;
-					SelectedBlip = BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
-				}
-				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
-			}
-
-			AddOption("Attach Blip to Entity", null, nullFunc, SUB::SPOONER_BLIPS_ADD_ENTITY);
-
-			AddOption("Create Coord Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_COORD);
-		}
-
-
+		
 	}
 
 }
 
 
 
+// forward-declare the SpoonerBlip pointer so we can reference it in this file unambiguously
+namespace sub {
+	namespace Spooner {
+		struct SpoonerBlip;         // forward declaration of the struct/class
+		extern SpoonerBlip* SelectedBlip; // extern declaration (definition is later in file)
+	}
+}

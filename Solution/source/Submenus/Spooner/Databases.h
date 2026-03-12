@@ -21,6 +21,7 @@ namespace sub::Spooner
 {
 	class SpoonerEntity;
 	class SpoonerMarker;
+	class SpoonerBlip;
 
 	namespace Databases
 	{
@@ -28,6 +29,7 @@ namespace sub::Spooner
 		extern std::vector<std::pair<GTAentity, Hash>> RelationshipDb; // Why did I make this?
 		extern std::vector<std::pair<GTAblip, std::string>> RefBlipDb;
 		extern std::vector<SpoonerMarker> MarkerDb;
+		extern std::vector<SpoonerBlip> BlipDb;
 	}
 
 }

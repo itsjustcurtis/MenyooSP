@@ -319,6 +319,7 @@
     <ClCompile Include="Submenus\Bodyguards\BodyguardSettings.cpp" />
     <ClCompile Include="Submenus\Bodyguards\BodyguardSpawn.cpp" />
     <ClCompile Include="Submenus\Bodyguards\BodyguardSubmenu.cpp" />
+    <ClCompile Include="Submenus\Spooner\BlipCustoms.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util\ExePath.h">
@@ -655,12 +656,8 @@
     <ClInclude Include="Submenus\Bodyguards\BodyguardSettings.h" />
     <ClInclude Include="Submenus\Bodyguards\BodyguardSpawn.h" />
     <ClInclude Include="Submenus\Bodyguards\BodyguardSubmenu.h" />
-    <ClInclude Include="SpoonerBlips.h">
-      <Filter>Submenus\Spooner</Filter>
-    </ClInclude>
-    <ClInclude Include="BlipCustoms.h">
-      <Filter>Submenus\Spooner</Filter>
-    </ClInclude>
+    <ClInclude Include="Submenus\Spooner\BlipCustoms.h" />
+    <ClInclude Include="Submenus\Spooner\SpoonerBlips.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Submenus">

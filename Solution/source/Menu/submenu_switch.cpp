@@ -59,7 +59,7 @@
 #include "..\Submenus\Bodyguards\BodyguardManagement.h"
 #include "..\Submenus\Bodyguards\BodyguardSpawn.h"
 #include "..\Submenus\Bodyguards\BodyguardSubmenu.h"
-#include "../SpoonerBlips.h"
+#include "..\Submenus\Spooner\SpoonerBlips.h"
 
 using namespace sub;
 
