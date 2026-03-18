@@ -14,6 +14,8 @@ FiveM Installation:
 	Change the openmenu binding in menyooConfig.ini from 119 (F8 conflicts with FiveM Console). Recommend changing to 121 (F10).
 	Launch FiveM and press your chosen key to launch Menyoo, press again to open and close Menyoo.
 
+
+
 Keyboard
 	F8: Open/Close Menyoo.
 	F9: Open/Close Spooner Mode
