@@ -1295,7 +1295,7 @@ void GTAmemory::Init()
 	_vehiclePoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 
 	if (!g_isEnhanced) {
-		address = FindPattern("\x4C\x8B\x0D\x00\x00\x00\x00\x44\x8B\xC1\x49\x8B\x41\x08", "xxx????xxxxxxx");
+		address = FindPattern("\x4C\x8B\x05\x00\x00\x00\x00\x41\x3B\x50\x00\x7D\x00\x49\x8B\x40","xxx????xxx?x?xxx");
 		_entityPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 
 		address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\x41\x0F\xBF\xC8\x0F\xBF\x40\x10", "xxx????xxxxxxxx");
