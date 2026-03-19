@@ -91,7 +91,7 @@ extern std::string dict, dict2, dict3;
 extern std::string _globalSpawnVehicle_plateText;
 extern INT8 _globalSpawnVehicle_plateType, _globalSpawnVehicle_plateTexter_value;
 extern RgbS _globalSpawnVehicle_neonCol;
-extern bool _globalSpawnVehicle_autoSit, _globalSpawnVehicle_autoUpgrade, _globalSpawnVehicle_invincible, _globalSpawnVehicle_persistent, _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_neonToggle, _globalLSC_Customs;
+extern bool _globalSpawnVehicle_autoSit, _globalWarpNear, _globaladdBlip, _globalSpawnVehicle_autoUpgrade, _globalSpawnVehicle_invincible, _globalSpawnVehicle_persistent, _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_neonToggle, _globalLSC_Customs;
 extern INT16 _globalSpawnVehicle_PrimCol, _globalSpawnVehicle_SecCol;
 extern bool _globalSpawnVehicle_drawBmps;
 extern FLOAT _globalClearArea_radius;
@@ -304,6 +304,37 @@ extern std::string get_ped_facial_mood(GTAentity ped);
 void set_ped_facial_mood(GTAentity ped, const std::string& animName);
 void clear_ped_facial_mood(GTAentity ped);
 
+enum class WeaponTargetType
+{
+    TargetPlayer,
+    TargetPed
+};
+
+inline WeaponTargetType g_WeaponTargetType = WeaponTargetType::TargetPlayer;
+inline Ped g_WeaponTargetPed = 0;
+struct ScopedWeaponTargetOverride
+{
+    WeaponTargetType oldType;
+    Ped oldPed;
+
+    ScopedWeaponTargetOverride(Ped ped)
+    {
+        oldType = g_WeaponTargetType;
+        oldPed = g_WeaponTargetPed;
+
+        g_WeaponTargetType = WeaponTargetType::TargetPed;
+        g_WeaponTargetPed = ped;
+    }
+
+    ~ScopedWeaponTargetOverride()
+    {
+        g_WeaponTargetType = oldType;
+        g_WeaponTargetPed = oldPed;
+    }
+};
+
+
+extern int GetRandomSpriteId();
 
 
 #pragma endregion

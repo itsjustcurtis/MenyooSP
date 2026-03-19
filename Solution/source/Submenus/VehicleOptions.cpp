@@ -78,6 +78,7 @@ namespace sub
 	void VehicleOps()
 	{
 		bool set_ent_12 = 0,
+			VehicleOpsFixCar_ = 0,
 			bToggleCargobobMagnet = 0,
 			bToggleBoatAnchor = 0,
 			goToSlamItSub = 0,
@@ -87,7 +88,6 @@ namespace sub
 			VehicleOps_sub_alphaLevel = 0,
 			VehicleOpsRappelHeli = 0,
 			VehicleOpsTeleportClosestCar_ = 0,
-			VehicleOpsFixCar_ = 0,
 			damageAndDefense_plus = 0, damageAndDefense_minus = 0, damageAndDefense_custom = 0,
 			//VehicleOpsInvincibilityOn_ = 0,
 			VehicleOpsInvincibilityOff_ = 0,
@@ -134,20 +134,19 @@ namespace sub
 		bool bFixCar_plus = false, bFixCar_minus = false;
 
 		AddTitle("Vehicle Options");
-
+		if (bMyPedIsInVehicle)
+			AddTexter("CMOD_MOD_MNT", fixCarTexterVal, fixCarTexter, VehicleOpsFixCar_, bFixCar_plus, bFixCar_minus, true); // Fix & Wash
+		AddOption("Vehicle Spawner", obj_funny_veh_so_frz__off, nullFunc, SUB::SPAWNVEHICLE);
+		AddOption("Menyoo Customs", VehicleOps_sub_modshop, nullFunc, -1, true);
 		if (myVehicleModel.IsCargobob())
 			AddLocal("Cargobob Magnet", myVehicle.IsCargobobHookActive(CargobobHook::Magnet), bToggleCargobobMagnet, bToggleCargobobMagnet);
 		if (DOES_VEHICLE_ALLOW_RAPPEL(g_myVeh))
 			AddOption("Rappel From Helicopter", VehicleOpsRappelHeli);
 		if (myVehicle.HasSiren_get())
 			AddToggle("Disable Vehicle Siren", loop_vehicle_disableSiren, null, disableSiren_off);
-		if (bMyPedIsInVehicle)
-			AddTexter("CMOD_MOD_MNT", fixCarTexterVal, fixCarTexter, VehicleOpsFixCar_, bFixCar_plus, bFixCar_minus, true); // Fix & Wash
 		if (myVehicleModel.IsBoat())
 			AddLocal("Anchor Boat", myVehicle.IsBoatAnchored(), bToggleBoatAnchor, bToggleBoatAnchor);
 		AddOption("Teleport Into Closest Vehicle", VehicleOpsTeleportClosestCar_);
-		AddOption("Vehicle Spawner", obj_funny_veh_so_frz__off, nullFunc, SUB::SPAWNVEHICLE);
-		AddOption("Menyoo Customs", VehicleOps_sub_modshop, nullFunc, -1, true);
 		AddOption("Vehicle Weapons", null, nullFunc, SUB::VEHICLEWEAPONS);
 		AddOption("Vehicle Multipliers", null, nullFunc, SUB::VEHICLEMULTIPLIERS);
 		AddOption("Speedometers", null, nullFunc, SUB::VEHICLESPEEDOS);

@@ -51,6 +51,10 @@
 #include <pugixml\src\pugixml.hpp>
 #include <dirent\include\dirent.h>
 
+int g_WeaponOpsPedOverride = 0;
+int g_WeaponOpsPlayerOverride = -1;
+Ped g_WeaponMenuPedOverride = 0;
+
 namespace sub
 {
 	void Weaponops()
@@ -58,8 +62,17 @@ namespace sub
 		dict2.clear();
 		dict3.clear();
 
-		Static_241 = PLAYER_PED_ID();
-		Static_240 = PLAYER_ID();
+		if (g_WeaponOpsPedOverride != 0)
+		{
+			Static_241 = g_WeaponOpsPedOverride;
+			Static_240 = g_WeaponOpsPlayerOverride;
+		}
+		else
+		{
+			Static_241 = PLAYER_PED_ID();
+			Static_240 = PLAYER_ID();
+		}
+
 
 		std::stringstream wdmg_ss;
 		wdmg_ss << std::fixed << std::setprecision(2) << (loop_weapon_damage_increase / 0.72f);
@@ -1045,6 +1058,18 @@ namespace sub
 		void Sub_CategoriesList()
 		{
 			int i;
+
+			if (g_WeaponOpsPedOverride != 0)
+			{
+				Static_241 = g_WeaponOpsPedOverride;
+				Static_240 = g_WeaponOpsPlayerOverride;
+			}
+			else
+			{
+				Static_241 = PLAYER_PED_ID();
+				Static_240 = PLAYER_ID();
+			}
+
 			auto& ped = Static_241;
 			Hash pedCurrentWeapon; GET_CURRENT_PED_WEAPON(ped, &pedCurrentWeapon, 1);
 
@@ -1149,6 +1174,11 @@ namespace sub
 			auto& ped = Static_241;
 			NETWORK_REQUEST_CONTROL_OF_ENTITY(ped);
 
+			const bool isBodyguardContext =
+				(g_WeaponTargetType == WeaponTargetType::TargetPed) &&
+				(g_WeaponTargetPed == ped);
+
+
 			Hash pedCurrentWeapon; GET_CURRENT_PED_WEAPON(ped, &pedCurrentWeapon, 1);
 
 			Hash whash;
@@ -1197,7 +1227,6 @@ namespace sub
 					SET_CURRENT_PED_WEAPON(ped, whash, true);
 				}
 			}
-
 			bool it_FillAmmo = 0;
 			AddOption("Fill Ammo", it_FillAmmo); if (it_FillAmmo)
 			{
@@ -1266,26 +1295,44 @@ namespace sub
 
 			AddTitle("Attachments & Tints");
 
+			WEAPON::GIVE_WEAPON_TO_PED(ped, whash, 9999, false, true);
+			WEAPON::SET_CURRENT_PED_WEAPON(ped, whash, true);
+
 			for (auto& comp : *selWeaponComponents)
 			{
-				//if (!comp.name.length()) continue; // Some problem due to initializer lists/ operator= happened. Blank first element idk.
 				bool bAttachmentPressed = false;
+
+				if (!WEAPON::DOES_WEAPON_TAKE_WEAPON_COMPONENT(whash, comp.hash))
+					continue;
+
 				bool bHasComponent = HAS_PED_GOT_WEAPON_COMPONENT(ped, whash, comp.hash) != 0;
+
 				if (bHasComponent && boost::to_upper_copy(comp.name).find("CAMO") != std::string::npos)
 				{
 					bool bLiveryPressed = false, bLivery_plus = false, bLivery_minus = false;
 					int currentLivery = GET_PED_WEAPON_COMPONENT_TINT_INDEX(ped, whash, comp.hash);
-					AddTexter(comp.name, 0, std::vector<std::string>{Game::GetGXTEntry("WCT_C_TINT_" + std::to_string(currentLivery))}, bLiveryPressed, bLivery_plus, bLivery_minus);
+
+					AddTexter(comp.name, 0,
+						std::vector<std::string>{Game::GetGXTEntry("WCT_C_TINT_" + std::to_string(currentLivery))},
+						bLiveryPressed, bLivery_plus, bLivery_minus);
+
 					if (bLivery_plus && currentLivery < 31) { currentLivery++; bLiveryPressed = true; }
 					else if (bLivery_minus && currentLivery > 0) { currentLivery--; bLiveryPressed = true; }
-					if (bLiveryPressed) { SET_PED_WEAPON_COMPONENT_TINT_INDEX(ped, whash, comp.hash, currentLivery); }
+
+					if (bLiveryPressed)
+					{
+						SET_PED_WEAPON_COMPONENT_TINT_INDEX(ped, whash, comp.hash, currentLivery);
+					}
 				}
 				else
 				{
-					AddTickol(comp.name, bHasComponent, bAttachmentPressed, bAttachmentPressed, TICKOL::WEAPONTHING); if (bAttachmentPressed)
+					AddTickol(comp.name, bHasComponent, bAttachmentPressed, bAttachmentPressed, TICKOL::WEAPONTHING);
+
+					if (bAttachmentPressed)
 					{
-						bHasComponent ?
-							REMOVE_WEAPON_COMPONENT_FROM_PED(ped, whash, comp.hash) :
+						if (bHasComponent)
+							REMOVE_WEAPON_COMPONENT_FROM_PED(ped, whash, comp.hash);
+						else
 							GIVE_WEAPON_COMPONENT_TO_PED(ped, whash, comp.hash);
 					}
 				}
@@ -1299,12 +1346,15 @@ namespace sub
 				for (int i = 0; i < selWeaponTints->size(); i++)
 				{
 					bool bTintPressed = false;
-					AddTickol(selWeaponTints->at(i), (currentTint == i), bTintPressed, null, TICKOL::WEAPONTHING); if (bTintPressed)
+					AddTickol(selWeaponTints->at(i), (currentTint == i), bTintPressed, null, TICKOL::WEAPONTHING);
+
+					if (bTintPressed)
 					{
 						SET_PED_WEAPON_TINT_INDEX(ped, whash, i);
 					}
 				}
 			}
+
 
 		}
 		void Sub_Parachute()

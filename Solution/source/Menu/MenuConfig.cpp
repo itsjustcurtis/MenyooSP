@@ -87,6 +87,7 @@ void MenuConfig::ConfigRead()
 	menubindsGamepad.first = ini.GetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
 	menubindsGamepad.second = ini.GetLongValue(section_settings.c_str(), "open_button_for_gamepad_2", menubindsGamepad.second);
 	respawnbinds = ini.GetLongValue(section_settings.c_str(), "manual_respawn_button", respawnbinds);
+	stopanimbinds = ini.GetLongValue(section_settings.c_str(), "stop_animation_key", stopanimbinds);
 	menuPos.x = ini.GetDoubleValue(section_settings.c_str(), "menuPosX", (menuPos.x + 0.0598f) * 100); menuPos.x = menuPos.x / 100 - 0.0598f;
 	menuPos.y = ini.GetDoubleValue(section_settings.c_str(), "menuPosY", (menuPos.y + 0.074f) * 100); menuPos.y = menuPos.y / 100 - 0.074f;
 	Menu::bit_glare_test = ini.GetBoolValue(section_settings.c_str(), "Titlebox_Globe", Menu::bit_glare_test);
@@ -295,6 +296,8 @@ void MenuConfig::ConfigRead()
 	mult69_6 = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_brakes", mult69_6);
 	mult69_7 = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_handling", mult69_7);
 
+	_globaladdBlip = ini.GetBoolValue(section_haxValues.c_str(), "add_blip_to_vehicle", _globaladdBlip);
+	_globalWarpNear = ini.GetBoolValue(section_haxValues.c_str(), "warp_vehicle_nearby", _globalWarpNear);
 	_globalSpawnVehicle_drawBmps = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_previews", _globalSpawnVehicle_drawBmps);
 	_globalSpawnVehicle_plateText = ini.GetValue(section_haxValues.c_str(), "vehicle_spawner_plate_text", _globalSpawnVehicle_plateText.c_str());
 	_globalSpawnVehicle_plateTexter_value = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_text_texter_value", _globalSpawnVehicle_plateTexter_value);
@@ -311,6 +314,7 @@ void MenuConfig::ConfigRead()
 	_globalSpawnVehicle_PrimCol = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_primary_colour", _globalSpawnVehicle_PrimCol);
 	_globalSpawnVehicle_SecCol = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_secondary_colour", _globalSpawnVehicle_SecCol);
 	_globalLSC_Customs = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_menyoo_customs_lsc", _globalLSC_Customs);
+	g_unlockMaxIDs = ini.GetBoolValue(section_haxValues.c_str(), "unlock_max_head_ids", g_unlockMaxIDs);
 
 	sub::Clock_catind::loop_clock = ini.GetDoubleValue(section_haxValues.c_str(), "clock", sub::Clock_catind::loop_clock);
 	sub::Clock_catind::_analogueClockPos.x = (float)ini.GetDoubleValue(section_haxValues.c_str(), "clock_screen_pos_x", sub::Clock_catind::_analogueClockPos.x);
@@ -350,6 +354,7 @@ void MenuConfig::ConfigSave()
 	ini.SetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
 	ini.SetLongValue(section_settings.c_str(), "open_button_for_gamepad_2", menubindsGamepad.second);
 	ini.SetLongValue(section_settings.c_str(), "manual_respawn_button", respawnbinds);
+	ini.SetLongValue(section_settings.c_str(), "stop_animation_key", stopanimbinds);
 	ini.SetDoubleValue(section_settings.c_str(), "menuPosX", (menuPos.x + 0.0598f) * 100);
 	ini.SetDoubleValue(section_settings.c_str(), "menuPosY", (menuPos.y + 0.074f) * 100);
 	ini.SetBoolValue(section_settings.c_str(), "Titlebox_Globe", Menu::bit_glare_test);
@@ -556,6 +561,8 @@ void MenuConfig::ConfigSave()
 	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_brakes", mult69_6);
 	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_handling", mult69_7);
 
+	ini.SetBoolValue(section_haxValues.c_str(), "add_blip_to_vehicle", _globaladdBlip);
+	ini.SetBoolValue(section_haxValues.c_str(), "warp_vehicle_nearby", _globalWarpNear);
 	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_previews", _globalSpawnVehicle_drawBmps);
 	ini.SetValue(section_haxValues.c_str(), "vehicle_spawner_plate_text", _globalSpawnVehicle_plateText.c_str());
 	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_text_texter_value", _globalSpawnVehicle_plateTexter_value);
@@ -582,6 +589,7 @@ void MenuConfig::ConfigSave()
 	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_x", sub::Speedo_catind::_speedoPosition.x);
 	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_y", sub::Speedo_catind::_speedoPosition.y);
 	ini.SetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
+	ini.SetBoolValue(section_haxValues.c_str(), "unlock_max_head_ids", g_unlockMaxIDs);
 
     // Save camera configuration
     std::string section_freecam = "free-camera";
@@ -621,6 +629,7 @@ void MenuConfig::ConfigResetHaxValues()
 	ini.SetLongValue(section_haxValues.c_str(), "laser_sight_A", sub::LaserSight_catind::_colour.A);
 
 	ini.SetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
+	ini.SetBoolValue(section_haxValues.c_str(), "unlock_max_head_ids", false);
 
 	MenuConfig::ConfigRead();
 

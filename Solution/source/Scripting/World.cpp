@@ -211,11 +211,11 @@ namespace World
 	void GetNearbyPeds(std::vector<GTAped>& result, GTAped ped, float radius, int maxAmount)
 	{
 		const Vector3 position = ped.Position_get();
-		int* handles = new int[maxAmount * 2 + 2];
+		std::vector<int> handles(maxAmount * 2 + 2);
 
 		handles[0] = maxAmount;
 
-		const int amount = GET_PED_NEARBY_PEDS(ped.Handle(), (Any*)handles, -1);
+		const int amount = GET_PED_NEARBY_PEDS(ped.Handle(), (Any*)handles.data(), -1);
 
 		int index;
 		int* currped;
@@ -234,8 +234,6 @@ namespace World
 				}
 			}
 		}
-
-		delete[] handles;
 	}
 	void GetNearbyPeds(std::vector<GTAped>& result, const Vector3& position, float radius)
 	{
@@ -257,11 +255,11 @@ namespace World
 	void GetNearbyVehicles(std::vector<GTAvehicle>& result, GTAped ped, float radius, int maxAmount)
 	{
 		const Vector3 position = ped.Position_get();
-		int* handles = new int[maxAmount * 2 + 2];
+		std::vector<int> handles(maxAmount * 2 + 2);
 
 		handles[0] = maxAmount;
 
-		const int amount = GET_PED_NEARBY_VEHICLES(ped.Handle(), (Any*)handles);
+		const int amount = GET_PED_NEARBY_VEHICLES(ped.Handle(), (Any*)handles.data());
 
 		int index;
 		GTAvehicle currveh;
@@ -280,8 +278,6 @@ namespace World
 				}
 			}
 		}
-
-		delete[] handles;
 	}
 	void GetNearbyVehicles(std::vector<GTAvehicle>& result, const Vector3& position, float radius)
 	{
@@ -689,9 +685,9 @@ namespace World
 
 		const Vector3& originCoord = originPed.Position_get();
 
-		Ped* peds = new Ped[140 * 2 + 2]; // Five minutes into doubled stack size and chill and it gives you that ped handle
+		std::vector<Ped> peds(140 * 2 + 2); // Five minutes into doubled stack size and chill and it gives you that ped handle
 		peds[0] = 140;
-		INT found = GET_PED_NEARBY_PEDS(originPed.Handle(), (Any*)peds, -1);
+		INT found = GET_PED_NEARBY_PEDS(originPed.Handle(), (Any*)peds.data(), -1);
 		for (i = 0; i < found; i++)
 		{
 			j = i * 2 + 2;
@@ -720,7 +716,6 @@ namespace World
 			EXPLODE_PED_HEAD(ped.Handle(), WEAPON_HEAVYSNIPER);
 
 		}
-		delete[] peds;
 
 		/*bool originPedExists = originPed.Exists();
 
@@ -821,9 +816,9 @@ void clear_area_of_vehicles_around_entity(Entity entity, float radius, bool memr
 			if (IS_PED_SITTING_IN_ANY_VEHICLE(entity))
 				oldcar = GET_VEHICLE_PED_IS_IN(entity, 0);
 
-			Vehicle* vehicles = new Vehicle[160 * 2 + 2];
+			std::vector<Vehicle> vehicles(160 * 2 + 2);
 			vehicles[0] = 160;
-			found = GET_PED_NEARBY_VEHICLES(entity, (Any*)vehicles);
+			found = GET_PED_NEARBY_VEHICLES(entity, (Any*)vehicles.data());
 			for (i = 0; i < found; i++)
 			{
 				offsettedID = i * 2 + 2;
@@ -842,7 +837,6 @@ void clear_area_of_vehicles_around_entity(Entity entity, float radius, bool memr
 
 				CLEAR_AREA_OF_VEHICLES(Pos.x, Pos.y, Pos.z, radius, 0, 0, 1, 1, 0, 0, 0);
 			}
-			delete[] vehicles;
 		}
 	}
 
@@ -867,9 +861,9 @@ void clear_area_of_peds_around_entity(Entity entity, float radius, bool memry)
 		{
 			INT i, offsettedID, found;
 
-			Ped* peds = new Ped[160 * 2 + 2];
+			std::vector<Ped> peds(160 * 2 + 2);
 			peds[0] = 160;
-			found = GET_PED_NEARBY_PEDS(entity, (Any*)peds, -1);
+			found = GET_PED_NEARBY_PEDS(entity, (Any*)peds.data(), -1);
 			for (i = 0; i < found; i++)
 			{
 				offsettedID = i * 2 + 2;
@@ -886,7 +880,6 @@ void clear_area_of_peds_around_entity(Entity entity, float radius, bool memry)
 
 				CLEAR_AREA_OF_PEDS(Pos.x, Pos.y, Pos.z, radius, 0);
 			}
-			delete[] peds;
 		}
 	}
 

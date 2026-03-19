@@ -89,6 +89,9 @@ public:
 	int Health_get() const;
 	void Health_set(int value);
 
+	float Vehicle_engine_get() const;
+	void Vehicle_engine_set(float value);
+
 	float HeightAboveGround() const;
 	float GetGroundZ() const;
 	virtual void PlaceOnGround();
@@ -122,8 +125,16 @@ public:
 	bool IsVisible() const;
 	void SetVisible(bool value);
 
+	int LandingGearState_get() const;
+	void SetLandingGearState(int state);
+
 	int MaxHealth_get() const;
 	void MaxHealth_set(int value);
+
+	bool ToggleLandingGear() const;
+	void SetLandingGear(bool value);
+	int GetLandingGearState() const;
+	bool HasLandingGear() const;
 
 	GTAmodel::Model Model() const;
 	GTAmodel::ModelDimensions ModelDimensions() const;
@@ -163,6 +174,7 @@ public:
 	void HasCollisionWithEntity_set(const GTAentity& ent, bool value);
 	bool IsCollisionEnabled_get() const;
 	void IsCollisionEnabled_set(bool value);
+	void ToggleLandingGear();
 
 	virtual int NetID() const;
 
@@ -238,12 +250,9 @@ public:
 
 	bool IsOnlyDamagedByPlayer() const;
 	void SetOnlyDamagedByPlayer(bool value);
-	
+
 
 protected:
 	int mHandle;
-	
+
 };
-
-
-

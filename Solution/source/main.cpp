@@ -76,7 +76,7 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved)
 	case DLL_PROCESS_DETACH:
 		scriptUnregister(hInstance);
 		keyboardHandlerUnregister(OnKeyboardMessage);
-
+		removeHooks();
 		break;
 	}
 	return TRUE;

@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -111,6 +111,8 @@ void get_all_filenames_with_extension(const std::string& directory, const std::s
 		if (stinfo.st_mode & S_IFDIR) // is folder
 		{
 			DIR* dir_point = opendir(directory.c_str());
+			if (dir_point == nullptr)
+				return;
 			dirent* entry = readdir(dir_point);
 			while (entry)
 			{
@@ -125,7 +127,7 @@ void get_all_filenames_with_extension(const std::string& directory, const std::s
 	}
 }
 
-std::string GetClipboardTextA()
+std::string GetClipboardText()
 {
 	// Try opening the clipboard
 	if (!OpenClipboard(nullptr))
@@ -134,21 +136,23 @@ std::string GetClipboardTextA()
 	}
 
 	// Get handle of clipboard object for ANSI text
-	HANDLE hData = GetClipboardData(CF_TEXT);
+	HANDLE hData = GetClipboardData(CF_UNICODETEXT);
 	if (hData == nullptr)
 	{
+		CloseClipboard();
 		return std::string();
 	}
 
 	// Lock the handle to get the actual text pointer
-	char * pszText = static_cast<char*>(GlobalLock(hData));
+	wchar_t* pszText = static_cast<wchar_t*>(GlobalLock(hData));
 	if (pszText == nullptr)
 	{
+		CloseClipboard();
 		return std::string();
 	}
 
 	// Save text in a string class instance
-	std::string text(pszText);
+	std::wstring wtext(pszText);
 
 	// Release the lock
 	GlobalUnlock(hData);
@@ -156,5 +160,11 @@ std::string GetClipboardTextA()
 	// Release the clipboard
 	CloseClipboard();
 
-	return text;
+	int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), (int)wtext.size(), nullptr, 0, nullptr, nullptr);
+
+	std::string result(sizeNeeded, 0);
+
+	WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), (int)wtext.size(), &result[0], sizeNeeded, nullptr, nullptr);
+
+	return result;
 }

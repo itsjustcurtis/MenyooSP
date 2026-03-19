@@ -1149,6 +1149,18 @@ namespace sub
 			{
 				SelectedEntity.Handle.FreezePosition(!SelectedEntity.Handle.IsPositionFrozen());
 			}
+			if (SelectedEntity.Type == EntityType::VEHICLE && SelectedEntity.Handle.GetLandingGearState() != -1)
+			{
+				bool bLandingGearDown = (SelectedEntity.Handle.GetLandingGearState() == 0); // 0 = Deployed
+				bool oldValue = bLandingGearDown;
+
+				AddToggle("Landing Gear", bLandingGearDown);
+
+				if (bLandingGearDown != oldValue)
+				{
+					SelectedEntity.Handle.SetLandingGear(bLandingGearDown);
+				}
+			}
 
 			if (SelectedEntity.Type == EntityType::PROP)
 			{
@@ -1308,6 +1320,8 @@ namespace sub
 
 			AddOption("Attachment Options", null, nullFunc, SUB::SPOONER_ATTACHMENTOPS);
 			AddOption("Manual Placement", null, nullFunc, SUB::SPOONER_MANUALPLACEMENT);
+			AddOption("Manual Resize (beta)", null, nullFunc, SUB::SPOONER_SIZEMANIPULATION);
+
 		}
 		void Sub_AttachmentOps()
 		{
@@ -1749,6 +1763,54 @@ namespace sub
 					World::DrawLine(attBase.Position_get(), currPos, RGBA::AllWhite()); // Just pointing out that it's attached
 			}
 		}
+
+		void Sub_SizeManipulation()
+		{
+			if (!SelectedEntity.Handle.Exists())
+			{
+				Menu::SetSub_previous();
+				return;
+			}
+			SelectedEntity.Handle.RequestControlOnce();
+
+			AddTitle("Size Manipulation");
+
+			UINT64 ptr = GTAmemory::_entityAddressFunc(SelectedEntity.Handle.Handle());
+			if (!ptr) return;
+
+			float length = GTAmemory::ReadFloat(ptr + 0x60);
+			float width = GTAmemory::ReadFloat(ptr + 0x74);
+			float height = GTAmemory::ReadFloat(ptr + 0x88);
+
+			bool prec_plus = false, prec_minus = false;
+			bool x_plus = false, x_minus = false;
+			bool y_plus = false, y_minus = false;
+			bool z_plus = false, z_minus = false;
+
+			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
+			AddNumber("Length (Y)", length, 4, null, y_plus, y_minus);
+			AddNumber("Width (X)", width, 4, null, x_plus, x_minus);
+			AddNumber("Height (Z)", height, 4, null, z_plus, z_minus);
+
+			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
+			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
+
+			if (y_plus) length += (_manualPlacementPrecision * 25.0f);
+			if (y_minus) length -= (_manualPlacementPrecision * 25.0f);
+			if (x_plus) width += (_manualPlacementPrecision * 25.0f);
+			if (x_minus) width -= (_manualPlacementPrecision * 25.0f);
+			if (z_plus) height += (_manualPlacementPrecision * 25.0f);
+			if (z_minus) height -= (_manualPlacementPrecision * 25.0f);
+
+			if (length < 0.01f) length = 0.01f;
+			if (width < 0.01f) width = 0.01f;
+			if (height < 0.01f) height = 0.01f;
+
+			GTAmemory::WriteFloat(ptr + 0x60, length);
+			GTAmemory::WriteFloat(ptr + 0x74, width);
+			GTAmemory::WriteFloat(ptr + 0x88, height);
+		}
+
 		void Sub_QuickManualPlacement()
 		{
 			if (SpoonerMode::bIsSomethingHeld)
@@ -2317,7 +2379,7 @@ namespace sub
 			//AddOption("Ped Flags (Doesn't Save)", null, SetEnt241, SUB::PEDFLAGMANAGER_NAMEDLIST);
 			//AddOption("Give Vehicle", null, SetEnt241, SUB::SPAWNVEHICLE);
 			AddOption("Attach Objects (Doesn't Save)", null, SetEnt241, SUB::ATTACHFUNNYOBJECTSUB);
-			AddLocal("Companion (7 Max) (Doesn't Save)", myPedGroup.Contains(thisPed), pedops_friend, pedops_friend);
+			AddLocal("Companion (7 Max) (Doesn't Save) (Obsolete)", myPedGroup.Contains(thisPed), pedops_friend, pedops_friend);
 			AddLocal("Burn Ped", thisPed.IsOnFire(), pedops_burn, pedops_burn);
 			if (!isPedMyPed)
 				AddLocal("Piggyback Ride  (Doesn't Save)", (GET_ENTITY_ATTACHED_TO(myPed.Handle() == thisPed.Handle()) && IS_ENTITY_PLAYING_ANIM(myPed.Handle(), "mini@prostitutes@sexnorm_veh", "bj_loop_male", 3)), pedops_piggyback, pedops_piggyback);

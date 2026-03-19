@@ -36,10 +36,13 @@ namespace sub::Spooner
 
 	SpoonerEntity::SpoonerEntity()
 	{
+		this->Type = (EntityType)0;
 		this->Dynamic = false;
 		//this->Door = false;
 		this->AttachmentArgs.isAttached = false;
 		this->AttachmentArgs.boneIndex = 0;
+		this->AttachmentArgs.offset = Vector3();
+		this->AttachmentArgs.rotation = Vector3();
 		this->TextureVariation = 0;
 		this->IsStill = false;
 	}

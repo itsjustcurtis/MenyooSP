@@ -1381,13 +1381,19 @@ void GTAvehicle::FixDoor(VehicleDoor door)
 		typedef void CVehicleDoor;
 		// EB 03 49 8B C0 0F BF 40 0C - 0x25
 		typedef CVehicleDoor*(__thiscall * tCVehicle__GetDoorByID)(CVehicle* This, uint32_t doorId);
-		static tCVehicle__GetDoorByID CVehicle__GetDoorByID = (tCVehicle__GetDoorByID)(MemryScan::PatternScanner::FindPattern("EB 03 49 8B C0 0F BF 40 0C") - 0x25);
+		static auto doorByIdPattern = MemryScan::PatternScanner::FindPattern("EB 03 49 8B C0 0F BF 40 0C");
+		static tCVehicle__GetDoorByID CVehicle__GetDoorByID = doorByIdPattern ? (tCVehicle__GetDoorByID)(doorByIdPattern - 0x25) : nullptr;
 		// C1 E8 14 A8 01 0F 85 ? ? ? ? 33 DB - 0x1A
 		typedef void(__thiscall * tCVehicleDoor__Fix)(CVehicleDoor* This, CVehicle* veh);
-		static tCVehicleDoor__Fix CVehicleDoor__Fix = (tCVehicleDoor__Fix)(MemryScan::PatternScanner::FindPattern("C1 E8 14 A8 01 0F 85 ? ? ? ? 33 DB") - 0x1A);
+		static auto doorFixPattern = MemryScan::PatternScanner::FindPattern("C1 E8 14 A8 01 0F 85 ? ? ? ? 33 DB");
+		static tCVehicleDoor__Fix CVehicleDoor__Fix = doorFixPattern ? (tCVehicleDoor__Fix)(doorFixPattern - 0x1A) : nullptr;
+
+		if (!CVehicle__GetDoorByID || !CVehicleDoor__Fix) return;
 
 		CVehicle* veh = (CVehicle*)this->MemoryAddress();
+		if (!veh) return;
 		CVehicleDoor* vehDoor = CVehicle__GetDoorByID(veh, doorId);
+		if (!vehDoor) return;
 		CVehicleDoor__Fix(vehDoor, veh);
 	}
 }

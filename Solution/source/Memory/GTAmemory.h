@@ -112,7 +112,7 @@ namespace rage {
 			pad2 = 0;
 			clipDictionary = 0;
 			physicsDictionary = 0;
-			memset(pad5, 0, sizeof(physicsDictionary));
+			memset(pad5, 0, sizeof(pad5));
 		}
 	};
 
@@ -285,7 +285,7 @@ struct ScriptHeader {
 	int GetCodePageSize(int page) const {
 		return (page < 0 || page >= CodePageCount() ? 0 : (page == CodePageCount() - 1) ? codeLength & 0x3FFF : 0x4000);
 	}
-	unsigned char* GetCodePageAddress(int page) const { return codeBlocksOffset[page]; }
+	unsigned char* GetCodePageAddress(int page) const { return (page < 0 || page >= CodePageCount()) ? nullptr : codeBlocksOffset[page]; }
 	unsigned char* GetCodePositionAddress(int codePosition) const {
 		return codePosition < 0 || codePosition >= codeLength ? NULL : &codeBlocksOffset[codePosition >> 14][codePosition & 0x3FFF];
 	}

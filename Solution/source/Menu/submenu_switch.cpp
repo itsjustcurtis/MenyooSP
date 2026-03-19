@@ -54,7 +54,13 @@
 
 #include "..\Submenus\Spooner\Submenus.h"
 #include "..\Submenus\Spooner\Submenus_TaskSequence.h"
+#include "..\Submenus\Bodyguards\BodyguardMenu.h"
+#include "..\Submenus\Bodyguards\BodyguardSettings.h"
+#include "..\Submenus\Bodyguards\BodyguardManagement.h"
+#include "..\Submenus\Bodyguards\BodyguardSpawn.h"
+#include "..\Submenus\Bodyguards\BodyguardSubmenu.h"
 
+using namespace sub;
 
 void Menu::submenu_switch()
 {
@@ -79,6 +85,7 @@ void Menu::submenu_switch()
 	case SUB::PEDEXPLOSIONSUB:			sub::PedExplosionSub(); break;
 	case SUB::ATTACHFUNNYOBJECTSUB:		sub::AttachFunnyObjectSub(); break;
 	case SUB::PTFXSUB:					sub::Ptfx_catind::PTFXSub(); break;
+	case SUB::PTFX_FAVORITES:			sub::Ptfx_catind::PTFXFavourites(); break;
 	case SUB::CLEARAREA:				sub::ClearAreaSub(); break;
 	case SUB::PLAYEROPS:				sub::PlayerOps_(); break;
 	case SUB::ANIMATIONSUB:				sub::AnimationSub_(); break;
@@ -135,6 +142,8 @@ void Menu::submenu_switch()
 	case SUB::SPAWNVEHICLE:						sub::SpawnVehicle_(); break;
 	case SUB::SPAWNVEHICLE_OPTIONS:				sub::SpawnVehicle_Options(); break;
 	case SUB::SPAWNVEHICLE_ALLCATS:				sub::SpawnVehicle_AllCatsSub(); break;
+	case SUB::SPAWNVEHICLEDLC:				sub::SpawnVehicle_DLC(); break;
+	case SUB::SPAWNVEHICLE_DLC_SELECTION:		sub::SpawnVehicle_DLC_Selection(); break;
 	case SUB::SPAWNVEHICLE_FAVOURITES:			sub::SpawnVehicle_Favourites(); break;
 	case SUB::FUNNYVEHICLES:					sub::FunnyVehicles_catind::Sub_FunnyVehicles(); break;
 	case SUB::MODSHOP:					sub::ModShop_(); break;
@@ -256,7 +265,6 @@ void Menu::submenu_switch()
 	case SUB::SPOONER_MANAGEMARKERS_INMARKER_ATTACH:			sub::Spooner::Submenus::Sub_ManageMarkers_InMarker_Attach(); break;
 	case SUB::SPOONER_MANAGEDB:						sub::Spooner::Submenus::Sub_ManageEntities(); break;
 	case SUB::SPOONER_MANAGEDB_REMOVAL:				sub::Spooner::Submenus::Sub_ManageEntities_Removal(); break;
-		//case SUB::SPOONER_MANAGEDB_REMOVAL_FROMDB:		sub::Spooner::Submenus::Sub_ManageEntities_Removal_FromDb(); break;
 	case SUB::SPOONER_SAVEFILES:					sub::Spooner::Submenus::Sub_SaveFiles(); break;
 	case SUB::SPOONER_SAVEFILES_LOAD:				sub::Spooner::Submenus::Sub_SaveFiles_Load(); break;
 	case SUB::SPOONER_SAVEFILES_LOAD_LEGACYSP00N:	sub::Spooner::Submenus::Sub_SaveFiles_Load_LegacySP00N(); break;
@@ -282,6 +290,7 @@ void Menu::submenu_switch()
 	case SUB::SPOONER_ATTACHMENTOPS_ATTACHTO:		sub::Spooner::Submenus::Sub_AttachmentOps_AttachTo(); break;
 	case SUB::SPOONER_ATTACHMENTOPS_SELECTBONE:		sub::Spooner::Submenus::Sub_AttachmentOps_SelectBone(); break;
 	case SUB::SPOONER_MANUALPLACEMENT:				sub::Spooner::Submenus::Sub_ManualPlacement(); break;
+	case SUB::SPOONER_SIZEMANIPULATION:				sub::Spooner::Submenus::Sub_SizeManipulation(); break;
 
 	case SUB::CLOCK:					sub::Clock_catind::Sub_Clock(); break;
 
@@ -291,6 +300,14 @@ void Menu::submenu_switch()
 	case SUB::SPSTATMANAGER:						sub::SpStatManager_catind::Sub_SpStatManager(); break;
 	case SUB::SPSTATMANAGER_INCHAR:					sub::SpStatManager_catind::Sub_InChar(); break;
 	case SUB::SPSTATMANAGER_INCHAR_INLIST:			sub::SpStatManager_catind::Sub_InChar_InList(); break;
+
+	case SUB::BODYGUARDMAINMENU:		sub::BodyguardMainMenu(); break;
+	case SUB::BODYGUARD_SPAWN:			sub::BodyguardMenu::BodyguardSpawn(); break;
+
+	case SUB::BODYGUARD_LIST:			sub::BodyguardMenu::BodyguardList(); break;
+	case SUB::BODYGUARD_SETTINGS:		sub::BodyguardMenu::BodyguardOps_(); break;
+	case SUB::BODYGUARD_ENTITYOPS:		sub::BodyguardMenu::BodyguardEntityOps(); break;
+	case SUB::BODYGUARD_WEAPONOPS:		sub::BodyguardMenu::BodyguardWeaponOps(); break;
 	}
 }
 

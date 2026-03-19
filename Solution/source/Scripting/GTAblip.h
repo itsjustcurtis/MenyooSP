@@ -45,6 +45,9 @@ namespace BlipIcon {
 		///<summary>The default English text for this value is "Destination".</summary>
 		BigBlip = 2,
 		///<summary>The default English text for this value is "Police".</summary>
+		Enemy = 270,
+		Friend = 280,
+		VIP = 480,
 		PoliceOfficer = 3,
 		///<summary>When this value is set, the blip will flash. The default English text for this value is "Objective".</summary>
 		PoliceArea = 4,
@@ -97,6 +100,7 @@ namespace BlipIcon {
 		HeistStore = 59,
 		PoliceStation = 60,
 		Hospital = 61,
+		Elevator = 63,
 		Helicopter = 64,
 		StrangersAndFreaks = 66,
 		ArmoredTruck = 67,
@@ -230,7 +234,6 @@ namespace BlipIcon {
 		PropertyManagement = 267,
 		GangHighlight = 268,
 		Altruist = 269,
-		Enemy = 270,
 		OnMission = 271,
 		CashPickup = 272,
 		Chop = 273,
@@ -240,7 +243,6 @@ namespace BlipIcon {
 		CashPickupPolice = 278,
 		///<summary>The default English text for this value is "Drop Off Hooker".</summary>
 		Hooker = 279,
-		Friend = 280,
 		CustodyDropoff = 285,
 		OnMissionPolice = 286,
 		OnMissionLost = 287,
@@ -405,7 +407,6 @@ namespace BlipIcon {
 		Truck,
 		SpecialCargo,
 		Trailer,
-		VIP,
 		Cargobob,
 		AreaCutline,
 		Jammed,
@@ -662,6 +663,8 @@ namespace BlipIcon {
 		SubPeriscope = 774,
 		SubMissiles = 775,
 		Painting = 776,
+		LSCarMeet = 777,
+		CarTest = 778,
 		AutoShop = 779,
 		Anchor = 780,
 		PrizeBox = 781,
@@ -738,6 +741,33 @@ namespace BlipIcon {
 		Duster300H = 916,
 		Titan250D = 917,
 		Collectible = 918,
+		Dog = 923,
+		BobcatSecurity = 924,
+		Helitours = 928,
+		HelitoursBuyable = 929,
+		CarWashProperty = 931,
+		CarwashPropertyBuyable = 932,
+		AttentionAlert = 934,
+		AlarmBell = 935,
+		RealEstate = 939,
+		MedicalCourier = 940,
+		GruppeSechs = 941,
+		FireHydrant = 942,
+		FireTruck = 943,
+		Forklift = 944,
+		Newspaper = 945,
+		NarcoSurvival = 946, //420 breaks the code. Needs an alternative name.
+		CommunityMission = 947,
+		PropertyMansion = 948,
+		Keypad2 = 949,
+		TaxiSelfDestruct = 950,
+		SubwayTrain = 951,
+		TrashBin = 952,
+		MissionCreator = 953,
+		Cat = 954,
+		Mansion1 = 955,
+		Mansion2 = 956,
+		Mansion3 = 957,
 	};
 
 	extern const std::map<int, std::string> vNames;
@@ -752,7 +782,7 @@ namespace BlipColour {
 		White,
 		Red,
 		Green,
-		Blue,
+		Blue = 3,
 		Yellow = 66,
 		///<summary>The default RGB value of this color is the same as HUD_COLOUR_WHITE, whose default RGB value is #F0F0F0.</summary>
 		WhiteNotPure = 4,
@@ -895,7 +925,31 @@ public:
 
 	void SetScale(float value);
 
+//New functions
+
+	void ShowCone (bool toggle, int hudColorIndex, float coneWidth = 1.0f, int coneColour = BlipColour::Blue);
+
+	void SetSelectableOnMap(bool selectable);
+
+	//void SetPriority(int priority);
+
+	void SetRotationWithFloat(float heading);
+
+	void AddBlipForArea(float x, float y, float z, float width, float height);
+
+	void SyncRotationWithEntity(int entityHandle);
+
+//New functions end here
+
+//New functions
+
+	//int GetPriority() const;
+	//void SetDisplayMode(int value);
+
+//New functions end here
+
 	void ShowRoute(bool value);
+
 
 	int Icon() const;
 	void SetIcon(int value);
@@ -914,6 +968,8 @@ public:
 
 private:
 	int mHandle;
+	int mConeColour = 3;
+	//int mPriority = 2;
 };
 
 

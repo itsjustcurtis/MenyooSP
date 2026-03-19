@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -24,6 +24,7 @@
 #include "Language.h"
 #include "..\Util\FileLogger.h"
 #include "..\Menu\Menu.h"
+#include "..\Submenus\PedAnimation.h"
 
 #include <Windows.h>
 #include <utility>
@@ -162,6 +163,7 @@ RGBA _globalPedTrackers_Col(0, 255, 255, 205);
 std::pair<UINT16, UINT16> menubindsGamepad = { INPUT_FRONTEND_RB, INPUT_FRONTEND_LEFT };
 UINT16 menubinds = VirtualKey::F8;
 UINT16 respawnbinds = INPUT_LOOK_BEHIND;
+UINT16 stopanimbinds = VirtualKey::J;
 
 UINT16 Menu::currentsub = 0, Menu::LOOCsub = SUB::MAINMENU;
 INT Menu::currentop = 0, * Menu::currentopATM = &currentop;
@@ -552,6 +554,7 @@ void Menu::while_closed()
 		currentop = 1;*/
 	}
 }
+
 void Menu::while_opened()
 {
 	totalop = printingop; printingop = 0;
@@ -615,6 +618,17 @@ void Menu::while_opened()
 	}
 
 }
+bool Menu::isStopAnimBinds()
+{
+	return IsKeyJustUp(stopanimbinds); // J
+}
+void Menu::while_stopanim()
+{
+	if (isStopAnimBinds())
+	{
+		sub::AnimationSub_StopAnimationCallback();
+	}
+}
 void Menu::Up(bool playSound)
 {
 	currentop--;
@@ -676,6 +690,8 @@ void Menu::SetSub_previous()
 
 void Menu::SetSub_new(INT sub_index)
 {
+	if (currentsub_ar_index >= 99)
+		return; // Array bounds safety - max depth reached
 	currentsub_ar_index++; //Increment array index
 	currentsub_ar[currentsub_ar_index] = currentsub; // Store current submenu index in array
 	currentsub = sub_index; // Set new submenu as current submenu
@@ -882,7 +898,6 @@ void Menu::sub_handler()
 		}
 		while_closed();
 	}
-
 	else
 	{
 		if (isClosed)
@@ -907,6 +922,8 @@ void Menu::sub_handler()
 
 		while_opened();
 	}
+
+	while_stopanim();
 
 	if (GET_GAME_TIMER() >= delayedTimer)
 	{

@@ -310,7 +310,7 @@ std::string dict, dict2, dict3;
 std::string _globalSpawnVehicle_plateText = "MENYOO";
 INT8 _globalSpawnVehicle_plateType = 5, _globalSpawnVehicle_plateTexter_value = 0;
 RgbS _globalSpawnVehicle_neonCol = { 0, 255, 0 };
-bool _globalSpawnVehicle_autoSit = 1, _globalSpawnVehicle_autoUpgrade = 1, _globalSpawnVehicle_invincible = 1, _globalSpawnVehicle_persistent = 0, _globalSpawnVehicle_deleteOld = 0, _globalSpawnVehicle_neonToggle = 0, _globalLSC_Customs = 1;
+bool _globalSpawnVehicle_autoSit = 1, _globalWarpNear = 0, _globaladdBlip = 0, _globalSpawnVehicle_autoUpgrade = 1, _globalSpawnVehicle_invincible = 1, _globalSpawnVehicle_persistent = 0, _globalSpawnVehicle_deleteOld = 0, _globalSpawnVehicle_neonToggle = 0, _globalLSC_Customs = 1;
 INT16 _globalSpawnVehicle_PrimCol = -3, _globalSpawnVehicle_SecCol = -3;
 bool _globalSpawnVehicle_drawBmps = true;
 
@@ -465,9 +465,9 @@ void update_nearby_stuff_arrays_tick()
 
 	INT i, offsettedID, count = 100;
 
-	Ped* peds = new Ped[count * 2 + 2];
+	std::vector<Ped> peds(count * 2 + 2);
 	peds[0] = count;
-	INT found = GET_PED_NEARBY_PEDS(me, (Any*)peds, -1);
+	INT found = GET_PED_NEARBY_PEDS(me, (Any*)peds.data(), -1);
 	for (i = 0; i < found; i++)
 	{
 		offsettedID = i * 2 + 2;
@@ -485,12 +485,11 @@ void update_nearby_stuff_arrays_tick()
 		}
 		if (!alreadyIn) _worldPeds.push_back(peds[offsettedID]);*/
 	}
-	delete[] peds;
 
 
-	Vehicle* vehicles = new Vehicle[count * 2 + 2];
+	std::vector<Vehicle> vehicles(count * 2 + 2);
 	vehicles[0] = count;
-	found = GET_PED_NEARBY_VEHICLES(me, (Any*)vehicles);
+	found = GET_PED_NEARBY_VEHICLES(me, (Any*)vehicles.data());
 	for (i = 0; i < found; i++)
 	{
 		offsettedID = i * 2 + 2;
@@ -508,7 +507,6 @@ void update_nearby_stuff_arrays_tick()
 		}
 		if (!alreadyIn) _worldVehicles.push_back(vehicles[offsettedID]);*/
 	}
-	delete[] vehicles;
 
 	/*for (auto& nv : _nearbyVehicles)
 	{
@@ -722,6 +720,25 @@ void set_massacre_mode_tick()
 
 }
 
+#include <random>
+int GetRandomSpriteId()
+{
+	static std::vector<int> values = { 396, 303, 304, 397, 394, 462, 206, 161, 42, 3 };
+	static size_t index = 0;
+	static std::mt19937 rng(static_cast<unsigned int>(std::time(nullptr)));
+
+	// Shuffle the values once we've used them all
+	if (index == 0) {
+		std::shuffle(values.begin(), values.end(), rng);
+	}
+
+	int value = values[index++];
+	if (index >= values.size()) {
+		index = 0; // Reset for the next shuffle cycle
+	}
+
+	return value;
+}
 // Misc
 void set_blackoutEmp_mode()
 {
@@ -1541,13 +1558,13 @@ void set_ped_invincible_off(Ped ped)
 }
 void set_ped_no_ragdoll_on(Ped ped)
 {
-	SET_PED_CAN_RAGDOLL(ped, 0);
-	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 0);
+	SET_PED_CAN_RAGDOLL(ped, 2);
+	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 2);
 }
 void set_ped_no_ragdoll_off(Ped ped)
 {
-	SET_PED_CAN_RAGDOLL(ped, 1);
-	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 1);
+	SET_PED_CAN_RAGDOLL(ped, 0);
+	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 0);
 }
 void set_ped_seatbelt_on(Ped ped)
 {
