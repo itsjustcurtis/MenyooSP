@@ -152,7 +152,7 @@ namespace sub
 						}
 						catch (...) { 
 							Game::Print::PrintError_InvalidInput(inputStr); 
-							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Integer for " + stat.caption + " Entered", __FILENAME__);
+							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Integer for " + stat.caption + " Entered");
 						}
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpStatManagerInputInt, std::string(), (int)std::to_string((int)stat.max).length(), "Enter integer value:", std::to_string(statValue));
@@ -178,7 +178,7 @@ namespace sub
 						}
 						catch (...) { 
 							Game::Print::PrintError_InvalidInput(inputStr);
-							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Float for " + stat.caption + " Entered", __FILENAME__);
+							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Float for " + stat.caption + " Entered");
 						}
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpStatManagerInputFloat, std::string(), 13U, "Enter floating point value:", std::to_string(statValue));

@@ -303,38 +303,6 @@ void Menu::DisableControls()
 	DISABLE_CONTROL_ACTION(0, INPUT_VEH_HEADLIGHT, 1);
 	DISABLE_CONTROL_ACTION(0, INPUT_VEH_PUSHBIKE_SPRINT, 1);
 	DISABLE_CONTROL_ACTION(0, INPUT_VEH_PUSHBIKE_PEDAL, 1);
-
-	// pi_menu
-	/*	if (CONTROLS::_0xA571D46727E2B718(2)) {
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 237);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 238);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 241);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 242);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 239);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 240);
-	CONTROLS::ENABLE_CONTROL_ACTION(2, 176, 1);
-	}
-	else {
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 176);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 177);
-	}
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 172);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 173);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 174);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 175);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_UNARMED, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_MELEE, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_HANDGUN, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_SHOTGUN, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_SMG, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_AUTO_RIFLE, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_SNIPER, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_HEAVY, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_SPECIAL, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_VEH_RADIO_WHEEL, 1);*/
-
-
 }
 void Menu::base()
 {
@@ -343,8 +311,6 @@ void Menu::base()
 	{
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("MenyooExtras")) REQUEST_STREAMED_TEXTURE_DICT("MenyooExtras", 0);
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu")) REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
-		//if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shared")) REQUEST_STREAMED_TEXTURE_DICT("shared", 0);
-		//if (!HAS_STREAMED_TEXTURE_DICT_LOADED("mpsafecracking")) REQUEST_STREAMED_TEXTURE_DICT("mpsafecracking", 0);
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendsalon")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendsalon", 0);
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendfashion", 0);
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_midfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_midfashion", 0);
@@ -482,12 +448,6 @@ void Menu::background()
 	float width = Game::Print::GetTextWidth(toPrint);
 	Game::Print::setupdraw(GTAfont::Arial, Vector2(0.0f, 0.26f), false, false, false, optioncount);
 	Game::Print::drawstring(toPrint, get_xcoord_at_menu_rightEdge(width, 0.0f, false), temp + menuPos.y);
-
-	//BEGIN_TEXT_COMMAND_DISPLAY_TEXT("CM_ITEM_COUNT");
-	//ADD_TEXT_COMPONENT_INTEGER(*currentopATM); // ! currentop_w_breaks
-	//ADD_TEXT_COMPONENT_INTEGER(totalop); // ! totalop - totalbreaks
-	//if (totalop < 1000) END_TEXT_COMMAND_DISPLAY_TEXT(0.219f + menuPos.x, temp + menuPos.y); // < 1000
-	//else END_TEXT_COMMAND_DISPLAY_TEXT(0.212f + menuPos.x, temp + menuPos.y); // >= 1000
 }
 void Menu::optionhi()
 {
@@ -529,29 +489,25 @@ void Menu::while_closed()
 	if (isBinds())
 	{
 
-		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, opening Menyoo", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, opening Menyoo");
 		if (g_menuNotOpenedYet) {
 			justopened();
 			GTAmemory::InitEnhancedPools();
 		}
 		else
-			addlog(ige::LogType::LOG_TRACE, "Menu has been opened before, skipping initialization", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Menu has been opened before, skipping initialization");
 
 
 		Game::Sound::PlayFrontend("FocusIn", "HintCamSounds");
 
 		currentsub = LOOCsub;
-		addlog(ige::LogType::LOG_TRACE, "Setting current submenu to LOOCsub: " + std::to_string(LOOCsub), __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Setting current submenu to LOOCsub: " + std::to_string(LOOCsub));
 		if (currentsub == SUB::MAINMENU)
 		{
-			addlog(ige::LogType::LOG_TRACE, "Current is MainMenu", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Current is MainMenu");
 			currentop = 1;
 			*currentopATM = 1;
 		}
-		//currentop = currentop;
-		/*currentsub = SUB::MAINMENU;
-		currentsub_ar_index = 0;
-		currentop = 1;*/
 	}
 }
 
@@ -561,7 +517,7 @@ void Menu::while_opened()
 	totalbreaks = breakcount; breakcount = 0; breakscroll = 0;
 
 	if (IS_PAUSE_MENU_ACTIVE()) {
-		addlog(ige::LogType::LOG_TRACE, "Game Paused, closing Menyoo", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Game Paused, closing Menyoo");
 		SetSub_closed();
 	}
 
@@ -583,7 +539,7 @@ void Menu::while_opened()
 	// Scroll up
 	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Up))
 	{
-		addlog(ige::LogType::LOG_TRACE, "Up Pressed, moving selection up", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Up Pressed, moving selection up");
 		if (currentop <= 1)
 			Bottom();
 		else
@@ -593,7 +549,7 @@ void Menu::while_opened()
 	// Scroll down
 	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Down))
 	{
-		addlog(ige::LogType::LOG_TRACE, "Down Pressed, moving selection down", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Down Pressed, moving selection down");
 		if (currentop >= totalop)
 			Top();
 		else
@@ -603,7 +559,7 @@ void Menu::while_opened()
 	// B press
 	if (MenuPressTimer::IsButtonTapped(MenuPressTimer::Button::Back))
 	{
-		addlog(ige::LogType::LOG_TRACE, "Back Pressed, returning to previous menu", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Back Pressed, returning to previous menu");
 		if (currentsub == SUB::MAINMENU)
 			SetSub_closed();
 		else
@@ -613,7 +569,7 @@ void Menu::while_opened()
 	// Binds press
 	if (isBinds())//&& currentsub != SUB::MAINMENU)
 	{
-		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, closing Menyoo", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, closing Menyoo");
 		SetSub_closed();
 	}
 
@@ -633,7 +589,7 @@ void Menu::Up(bool playSound)
 {
 	currentop--;
 	currentop_w_breaks--;
-	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 1;
@@ -642,7 +598,7 @@ void Menu::Down(bool playSound)
 {
 	currentop++;
 	currentop_w_breaks++;
-	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
@@ -651,7 +607,7 @@ void Menu::Bottom(bool playSound)
 {
 	currentop = totalop;
 	currentop_w_breaks = totalop;
-	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 1;
@@ -660,7 +616,7 @@ void Menu::Top(bool playSound)
 {
 	currentop = 1;
 	currentop_w_breaks = 1;
-	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop), __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
@@ -749,33 +705,6 @@ void Menu::glare_test()
 	//Vector2& size = _global_glare_size;
 
 	scaleform_menuGlare.Render2DScreenSpace(pos, size, { titletext.R, titletext.G, titletext.A, titlebox.A });
-
-
-	/*if (!HAS_SCALEFORM_MOVIE_LOADED(scaleform_menuGlare)){ scaleform_menuGlare = REQUEST_SCALEFORM_MOVIE("MP_MENU_GLARE"); return; }
-
-	Vector3 camstuff = _0x5B4E4C817FCC2DFB(2);
-	FLOAT tempFloat = sub_2cbfc(camstuff.z, 0.0, 360.0); // WHAT ARE Vector3 STRUCT ITEMS NAMED AS?? ._f2
-
-	BEGIN_SCALEFORM_MOVIE_METHOD(scaleform_menuGlare, "SET_DATA_SLOT");
-	SCALEFORM_MOVIE_METHOD_ADD_PARAM_FLOAT(0);
-	//SCALEFORM_MOVIE_METHOD_ADD_PARAM_FLOAT(tempFloat);
-	END_SCALEFORM_MOVIE_METHOD();
-
-	BEGIN_SCALEFORM_MOVIE_METHOD(scaleform_menuGlare, "SET_MAX_WIDTH");
-	SCALEFORM_MOVIE_METHOD_ADD_PARAM_FLOAT(0.2f);
-	END_SCALEFORM_MOVIE_METHOD();
-
-	//Int2 res;
-	//GET_ACTUAL_SCREEN_RESOLUTION(&res.x, &res.y);
-	//if (res == toInt2(1920, 1080)) END_SCALEFORM_MOVIE_METHOD();
-
-	SET_SCRIPT_GFX_ALIGN(76, 84);
-	SET_SCRIPT_GFX_ALIGN_PARAMS(0.008 + menuPos.x, 0.045f + menuPos.y, 0.0f, -0.5f);
-	RESET_SCRIPT_GFX_ALIGN();
-
-	_0x0DF606929C105BE1(scaleform_menuGlare, titletext.R, titletext.G, titletext.A, titlebox.A);
-	//DRAW_SCALEFORM_MOVIE(scaleform_menuGlare, 0.5f, 0.5f, 0.2f, 0.1f, 255, 255, 255, 255);*/
-
 }
 
 void Menu::set_opened_IB()
@@ -786,16 +715,6 @@ void Menu::set_opened_IB()
 		add_IB(INPUT_FRONTEND_RRIGHT, "ITEM_BACK");
 	else
 		add_IB(INPUT_FRONTEND_RRIGHT, "ITEM_EXIT");
-	/*if (bit_frontend_addnumber_selected)
-	{
-	Menu::add_IB(INPUT_FRONTEND_RIGHT, "Right");
-	Menu::add_IB(INPUT_FRONTEND_LEFT, "Left");
-	}
-	if (Menu::totalop > 1)
-	{
-	add_IB(INPUT_FRONTEND_DOWN, "Down");
-	add_IB(INPUT_FRONTEND_UP, "Up");
-	}*/
 
 	bit_frontend_addnumber_selected = false;
 }
@@ -887,13 +806,13 @@ void Menu::sub_handler()
 	static bool firstRun = true, isClosed = true;
 	if(firstRun) 
 	{
-		addlog(ige::LogType::LOG_TRACE, "First Run sub_handler", __FILENAME__);;
+		addlog(ige::LogType::LOG_TRACE, "First Run sub_handler");;
 	}
 	if (currentsub == SUB::CLOSED)
 	{
 		if (!isClosed)
 		{
-			addlog(ige::LogType::LOG_TRACE, "Sub Closed", __FILENAME__);;
+			addlog(ige::LogType::LOG_TRACE, "Sub Closed");;
 			isClosed = true;
 		}
 		while_closed();
@@ -902,7 +821,7 @@ void Menu::sub_handler()
 	{
 		if (isClosed)
 		{
-			addlog(ige::LogType::LOG_TRACE, "Sub Opened", __FILENAME__);;
+			addlog(ige::LogType::LOG_TRACE, "Sub Opened");;
 			isClosed = false;
 		}
 		submenu_switch();
@@ -938,23 +857,6 @@ void Menu::sub_handler()
 bool MouseSupport::pressedSelectAfterSelect = 0;
 INT MouseSupport::currentopM = -1;
 std::vector<MouseSupport::ItemNumber> MouseSupport::vItems;
-
-//INT MouseSupport::ItemNumberToItemNumberOnScreen(INT itemNumber)
-//{
-//	if (itemNumber <= GTA_SCROLLOP)
-//	{
-//		return itemNumber;
-//	}
-//	else if (itemNumber >= (Menu::totalop - GTA_BETOP))
-//	{
-//		return GTA_SCROLLOP + (GTA_BETOP - (Menu::totalop - itemNumber));
-//	}
-//	else // itemNumber > GTA_SCROLLOP && itemNumber < (menu::totalop - GTA_BETOP)
-//	{
-//		INT result = GTA_SCROLLOP + (itemNumber % GTA_SCROLLOP); // wrong m9
-//	}
-//
-//}
 INT MouseSupport::ItemNumberToItemNumberOnScreen(INT itemNumber)
 {
 	/*if (itemNumber >= vItems.size() + Menu::breakcount)
@@ -1327,30 +1229,6 @@ void OptionStatus(BOOL status)
 {
 	if (OptionY < 0.6325f && OptionY > 0.1425f)
 	{
-		//char* tempChar;
-		//SET_TEXT_FONT(4);
-		//SET_TEXT_SCALE(0.34f, 0.34f);
-		//SET_TEXT_CENTRE(1); SET_TEXT_OUTLINE();
-
-		//if (status == 0){
-		//	SET_TEXT_COLOUR(255, 102, 102, 250); //RED
-		//	tempChar = "OFF";
-		//}
-		//else if (status == 1){
-		//	SET_TEXT_COLOUR(102, 255, 102, 250); //GREEN
-		//	tempChar = "ON";
-		//}
-		//else{
-		//	SET_TEXT_COLOUR(255, 255, 102, 250); //YELLOW
-		//	tempChar = "??";
-		//}
-		//Game::Print::drawstring(tempChar, 0.233f + menuPos.x, OptionY + menuPos.y);
-
-		//char* tempChar = "000";
-		//SET_TEXT_FONT(0);
-		//SET_TEXT_SCALE(0.28f, 0.28f);
-		//SET_TEXT_CENTRE(1);
-
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("mprankbadge")) REQUEST_STREAMED_TEXTURE_DICT("mprankbadge", 0);
 
 		Vector2 res = { 0.022f, 0.03f };
@@ -1358,27 +1236,11 @@ void OptionStatus(BOOL status)
 		if (status == 0)
 		{
 			DRAW_SPRITE("mprankbadge", "rankglobe_21x21_colour", get_xcoord_at_menu_rightEdge(res.x, 0.0f, true), OptionY + 0.0166f + menuPos.y, res.x, res.y, 0.0f, 255, 102, 102, 250, false, 0);
-			// medaldot_32
-			//DRAW_SPRITE("mpsafecracking", "dial_bg", get_xcoord_at_menu_rightEdge(res.x, 0.0f, true), OptionY + 0.0166f, res.x, res.y, 0.0f, 255, 102, 102, 250);
-			//DRAW_RECT(0.233 + menuPos.x, OptionY + 0.0147f + menuPos.y, 0.05, 0.0315, 255, 102, 102, 250);
-			//DRAW_SPRITE("CommonMenu", "shop_box_blank", 0.233f + menuPos.x, OptionY + 0.0147f + menuPos.y, 0.06f, 0.037f, 0.0f, 255, 102, 102, 250);
-			//SET_TEXT_COLOUR(255, 102, 102, 250); //RED
-			//tempChar = "OFF";
 		}
 		else
 		{
 			DRAW_SPRITE("mprankbadge", "rankglobe_21x21_colour", get_xcoord_at_menu_rightEdge(res.x, 0.0f, true), OptionY + 0.0166f + menuPos.y, res.x, res.y, 0.0f, 102, 255, 102, 250, false, 0);
-			// medaldot_32 + emptydot_32
-			//DRAW_SPRITE("mpsafecracking", "dial_bg", get_xcoord_at_menu_rightEdge(res.x, 0.0f, true), OptionY + 0.0166f, res.x, res.y, 0.0f, 102, 255, 102, 250);
-			//DRAW_SPRITE("mpsafecracking", "dial_bg", 0.233f + menuPos.x, OptionY + 0.0146f + menuPos.y, 0.03f, 0.03f, 0.0f, 255, 102, 102, 250);
-			//DRAW_RECT(0.233 + menuPos.x, OptionY + 0.0147f + menuPos.y, 0.05, 0.0315, 102, 255, 102, 250);
-			//DRAW_SPRITE("CommonMenu", "shop_box_blank", 0.233f + menuPos.x, OptionY + 0.0147f + menuPos.y, 0.06f, 0.037f, 0.0f, 102, 255, 102, 250);
-			//SET_TEXT_COLOUR(102, 255, 102, 250); //GREEN
-			//tempChar = "ON";
 		}
-
-		//Game::Print::drawstring(tempChar, 0.233f + menuPos.x, OptionY + menuPos.y);
-
 	}
 }
 void AddToggle(const std::string& text, bool& loop_variable, bool& extra_option_code_ON, bool& extra_option_code_OFF, bool gxt)
@@ -1475,14 +1337,6 @@ void AddBreak(std::string text)
 			if (Menu::currentop >= Menu::totalop) Menu::Top();
 			else Menu::Down();
 			break;
-			//case 3: // Bottom
-			//	Menu::currentop_w_breaks = Menu::totalop - (Menu::totalbreaks - 1);
-			//	Menu::currentop--;
-			//	break;
-			//case 4: // Top
-			//	Menu::currentop_w_breaks = 1;
-			//	Menu::currentop++;
-			//	break;
 		}
 
 	}
@@ -1759,10 +1613,6 @@ void AddTexter(const std::string& text, int selectedindex, const std::vector<std
 void Add_preset_colour_options_previews(UINT8 const r, UINT8 const g, UINT8 const b)
 {
 	Vector2 res = { 0.1f, 0.0889f };
-
-	/*res = GET_TEXTURE_RESOLUTION("lgm_dlc_luxe", "t20");
-	res.x = res.x * 0.5f / Game::defaultScreenRes.first;
-	res.y = res.y * 0.5f / Game::defaultScreenRes.second;*/
 
 	FLOAT x_coord = 0.324f + menuPos.x;
 	if (menuPos.x > 0.45f) x_coord = menuPos.x - 0.003f;

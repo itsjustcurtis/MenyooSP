@@ -161,17 +161,15 @@ namespace ige
 
 	}
 
-	void addlog(LogType logType, std::string message, std::string filename, int loglevel)
+	void AddLogWithLocation(const char* file, int line, LogType logType, const std::string& message)
 	{
-		if (static_cast<int>(logType) <= loglevel)
+		if (static_cast<int>(logType) <= g_loglevel)
 		{
-			ige::myLog << logType << (loglevel >= 3 ? filename : "") << ": " << message << std::endl;
+			const char* basename = strrchr(file, '\\');
+			basename = basename ? basename + 1 : file;
+			std::string location = g_loglevel >= 3 ? std::string(basename) + ":" + std::to_string(line) + " - " : "";
+			ige::myLog << logType << location << message << std::endl;
 		}
-	}
-
-	//overloaded function to define default file and loglevels unless otherwise specified
-	void addlog(LogType logType, std::string& message) {
-		addlog(logType, message, "", g_loglevel);
 	}
 }
 

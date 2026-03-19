@@ -2474,12 +2474,12 @@ namespace sub
 			if (doc.save_file((const char*)filePath.c_str()))
 			{
 				Game::Print::PrintBottomLeft("File ~b~saved~s~.");
-				addlog(ige::LogType::LOG_INFO,  "Vehicle saved - " + eModel.VehicleDisplayName(false) + " in " + filePath, __FILENAME__);
+				addlog(ige::LogType::LOG_INFO,  "Vehicle saved - " + eModel.VehicleDisplayName(false) + " in " + filePath);
 			}
 			else
 			{
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
-				addlog(ige::LogType::LOG_ERROR,  "Unable to save vehicle.", __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR,  "Unable to save vehicle.");
 			}
 		}
 		void VehSaver_ReadFromFile(std::string filePath, GTAentity ped)
@@ -2487,7 +2487,7 @@ namespace sub
 			pugi::xml_document doc;
 			if (doc.load_file((const char*)filePath.c_str()).status != pugi::status_ok)
 			{
-				addlog(ige::LogType::LOG_ERROR,  "Unable to load vehicle file " + filePath, __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR,  "Unable to load vehicle file " + filePath);
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load file.");
 			}
 
@@ -2821,7 +2821,7 @@ namespace sub
 			for (auto& amh : vModelHashes) Model(amh).Unload();
 			eModel.Unload();
 
-			addlog(ige::LogType::LOG_INFO,  "Loaded vehicle file " + filePath, __FILENAME__);
+			addlog(ige::LogType::LOG_INFO,  "Loaded vehicle file " + filePath);
 			std::ostringstream ss;
 			ss << "Spawned vehicle from file with " << (vSpawnedAttachments.size() - 1) << " attachments. ";
 			if (bAddAttachmentsToSpoonerDb)

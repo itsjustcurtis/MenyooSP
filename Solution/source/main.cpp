@@ -47,7 +47,7 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved)
 		std::string gameName = g_isEnhanced ? "GTA5_Enhanced" : "GTA5";
 
 		if (!GetModuleInformation(GetCurrentProcess(), g_MainModule, &g_MainModuleInfo, sizeof(g_MainModuleInfo)))
-			addlog(ige::LogType::LOG_ERROR, "Unable to get MODULEINFO from " + gameName + ".exe", __FILENAME__);
+			addlog(ige::LogType::LOG_ERROR, "Unable to get MODULEINFO from " + gameName + ".exe");
 		else
 		{
 			std::ostringstream moduleinfostream;
@@ -55,21 +55,21 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved)
 				<< ", SizeOfImage=" << g_MainModuleInfo.SizeOfImage
 				<< ", EntryPoint=" << g_MainModuleInfo.EntryPoint;
 
-			addlog(ige::LogType::LOG_INFO, moduleinfostream.str(), __FILENAME__);
+			addlog(ige::LogType::LOG_INFO, moduleinfostream.str());
 		}
-		addlog(ige::LogType::LOG_TRACE, "Attempting to Setup Hooks", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Setup Hooks");
 		setupHooks();
-		addlog(ige::LogType::LOG_TRACE, "Initialising GTAmemory", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Initialising GTAmemory");
 		GTAmemory::Init();
 
-		addlog(ige::LogType::LOG_TRACE, "Registering Script ThreadMenyooMain", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Registering Script ThreadMenyooMain");
 		scriptRegister(hInstance, ThreadMenyooMain);
-		addlog(ige::LogType::LOG_TRACE, "Registering Script Thread_menu_loops2", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Registering Script Thread_menu_loops2");
 		scriptRegisterAdditionalThread(hInstance, Thread_menu_loops2);
 
-		addlog(ige::LogType::LOG_TRACE, "Registering Keyboard Handler", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Registering Keyboard Handler");
 		keyboardHandlerRegister(OnKeyboardMessage);
-		addlog(ige::LogType::LOG_TRACE, "Finished Registering scripts", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Finished Registering scripts");
 
 		break;
 	}

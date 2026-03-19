@@ -221,7 +221,7 @@ void PopulateVehicleModelsArray()
 	g_vehHashes_OTHER.clear();
 	g_vehHashes_DRIFT.clear();
 
-	addlog(ige::LogType::LOG_TRACE, "Call GenerateVehicleModelList()", __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Call GenerateVehicleModelList()");
 	GTAmemory::GenerateVehicleModelList();
 	auto& hashes = GTAmemory::VehicleModels();
 	std::unordered_map<VehicleClass, std::vector<Model>*> vDestMap
@@ -240,14 +240,14 @@ void PopulateVehicleModelsArray()
 	{
 		for (auto& dd : hashes[d])
 		{
-			addlog(ige::LogType::LOG_TRACE, "Read vehicle model: " + std::to_string(Model(dd).hash) + " - " + Model(dd).VehicleModelName(), __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Read vehicle model: " + std::to_string(Model(dd).hash) + " - " + Model(dd).VehicleModelName());
 			if (std::find(g_vehHashes.begin(), g_vehHashes.end(), Model(dd)) == g_vehHashes.end())
 			{
 				if (g_isEnhanced || !isMinGameVersion3095 || !IS_VEHICLE_GEN9_EXCLUSIVE_MODEL(dd))
 				{
 					if (Model(dd).VehicleModelName().starts_with("drift"))
 					{
-						addlog(ige::LogType::LOG_TRACE, "  - Add to Vehicle Class Drift", __FILENAME__);
+						addlog(ige::LogType::LOG_TRACE, "  - Add to Vehicle Class Drift");
 						g_vehHashes_DRIFT.push_back(dd);
 					}
 					else
@@ -255,7 +255,7 @@ void PopulateVehicleModelsArray()
 						if (g_loglevel == 4)
 						{
 							std::string vclassName = getVehicleClassName(VehicleClass(d));
-							addlog(ige::LogType::LOG_TRACE, "  - Add to Vehicle Class " + vclassName, __FILENAME__);
+							addlog(ige::LogType::LOG_TRACE, "  - Add to Vehicle Class " + vclassName);
 						}
 						auto dit = vDestMap.find(VehicleClass(d));
 						if (dit != vDestMap.end())
@@ -330,13 +330,13 @@ void PopulateObjectModelsArray()
 }
 void PopulateGlobalEntityModelsArrays()
 {
-	addlog(ige::LogType::LOG_TRACE, "Call PopulatePedModelsArray()", __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Call PopulatePedModelsArray()");
 	PopulatePedModelsArray();
-	addlog(ige::LogType::LOG_TRACE, "Call PopulateVehicleModelsArray()", __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Call PopulateVehicleModelsArray()");
 	PopulateVehicleModelsArray();
-	addlog(ige::LogType::LOG_TRACE, "Call PopulateObjectModelsArray()", __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Call PopulateObjectModelsArray()");
 	PopulateObjectModelsArray();
-	addlog(ige::LogType::LOG_TRACE, "Exit PopulateGlobalEntityModelsArrays()", __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Exit PopulateGlobalEntityModelsArrays()");
 }
 
 // Model - labels

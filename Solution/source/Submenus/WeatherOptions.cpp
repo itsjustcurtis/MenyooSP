@@ -65,7 +65,7 @@ namespace sub
 			bool bWeatherPressed = false;
 			AddTickol(weatherName.first, GET_PREV_WEATHER_TYPE_HASH_NAME() == GET_HASH_KEY(weatherName.second), bWeatherPressed, bWeatherPressed); if (bWeatherPressed)
 			{
-				addlog(ige::LogType::LOG_DEBUG, "Setting weather to " + weatherName.first, __FILENAME__);
+				addlog(ige::LogType::LOG_DEBUG, "Setting weather to " + weatherName.first);
 				World::SetWeatherOverride(weatherName.second);
 			}
 		}
@@ -97,46 +97,46 @@ namespace sub
 
 		if (windSpeed_plus)
 		{
-			addlog(ige::LogType::LOG_TRACE, "windSpeed_plus", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "windSpeed_plus");
 			windSpeed += 0.1f;
 			SET_WIND_SPEED(windSpeed);
 		}
 		if (windSpeed_minus)
 		{
-			addlog(ige::LogType::LOG_TRACE, "windSpeed_minus", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "windSpeed_minus");
 			windSpeed -= 0.1f;
 			SET_WIND_SPEED(windSpeed);
 		}
 
 		if (wavesHeight_plus)
 		{
-			addlog(ige::LogType::LOG_TRACE, "wavesHeight_plus", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "wavesHeight_plus");
 			wavesHeight += 0.1f;
 			WATER::SET_DEEP_OCEAN_SCALER(wavesHeight);
 		}
 		if (wavesHeight_minus)
 		{
-			addlog(ige::LogType::LOG_TRACE, "wavesHeight_minus", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "wavesHeight_minus");
 			wavesHeight -= 0.1f;
 			WATER::SET_DEEP_OCEAN_SCALER(wavesHeight);
 		}
 
 		if (rainfxi_plus)
 		{
-			addlog(ige::LogType::LOG_TRACE, "rainfxit_plus", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "rainfxit_plus");
 			if (_globalRainFXIntensity < 45.0f) _globalRainFXIntensity += 0.1f;
 			SET_RAIN(_globalRainFXIntensity);
 		}
 		if (rainfxi_minus)
 		{
-			addlog(ige::LogType::LOG_TRACE, "rainfxit_minus", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "rainfxit_minus");
 			if (_globalRainFXIntensity > 0.0f) _globalRainFXIntensity -= 0.1f;
 			SET_RAIN(_globalRainFXIntensity);
 		}
 
 		if (gravityLevel_plus)
 		{
-			addlog(ige::LogType::LOG_TRACE, "gravityLevel_plus", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "gravityLevel_plus");
 			auto git = v0gravities.find(mult_0_gravity);
 			git++;
 			if (git != v0gravities.end())
@@ -147,7 +147,7 @@ namespace sub
 		}
 		if (gravityLevel_minus)
 		{
-			addlog(ige::LogType::LOG_TRACE, "gravityLevel_minus", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "gravityLevel_minus");
 			auto git = std::map<float, std::string>::reverse_iterator(v0gravities.find(mult_0_gravity));
 			git++;
 			if (git != v0gravities.rend())
@@ -203,7 +203,7 @@ namespace sub
 				bool bPressed = false;
 				AddOption(name, bPressed); if (bPressed)
 				{
-					addlog(ige::LogType::LOG_DEBUG, "Set Clouds: " + name, __FILENAME__);
+					addlog(ige::LogType::LOG_DEBUG, "Set Clouds: " + name);
 					LOAD_CLOUD_HAT(name.c_str(), 0.5f);
 				}
 			}

@@ -40,11 +40,10 @@ namespace ige
 	extern FileLogger menyooLogObject;
 	extern std::ofstream& myLog;
 	const char* VersionString(eGameVersion version);
-	extern void addlog(LogType logType, std::string message, std::string filename, int loglevel = g_loglevel);
-	inline void addlog(LogType logType, std::string message) {
-		addlog(logType, message, __FILENAME__, g_loglevel);
-	}
+	void AddLogWithLocation(const char* file, int line, LogType logType, const std::string& message);
 }
+
+#define addlog(logType, msg) ige::AddLogWithLocation(__FILE__, __LINE__, logType, msg)
 
 std::ofstream& operator << (std::ofstream& stream, ige::LogType logType);
 
