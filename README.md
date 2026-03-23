@@ -12,6 +12,10 @@
 #### Trainer for Grand Theft Auto V (Single-player and FiveM).
 ---
 
+> **⚠ This fork contains an incomplete fix** for the language system crash with ScriptHookVDotNet. See branch `fix/language-shvdn-crash`. Still testing.
+>
+> **⚠ このフォークにはScriptHookVDotNetとの言語システムクラッシュの不完全な修正が含まれています。** `fix/language-shvdn-crash` ブランチを参照。テスト中。
+
 ## Community
 
 - [Discord](https://discord.gg/v29AwqAemT)
