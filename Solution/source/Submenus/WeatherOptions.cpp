@@ -36,6 +36,7 @@ namespace sub
 			bClearWeatherOverride = 0;
 
 		//std::vector<std::string>{"Earth", "Mercury", "Earth's Moon", "Pluto"};
+		// unused
 		std::map<float, std::string> v0gravities
 		{
 			{ 0.0f, "Zero 0.0" },
@@ -49,9 +50,8 @@ namespace sub
 			{ 24.9f, "Jupiter 24.9" },
 			{ 274.0f, "Sun 274.0" }
 		};
-		//float mult_0_gravity = GTAmemory::WorldGravity_get();
-		float mult_0_gravity = 9.8f;
 
+		float mult_0_gravity = GTAmemory::WorldGravity_get();
 		float windSpeed = GET_WIND_SPEED();
 		float wavesHeight = GET_DEEP_OCEAN_SCALER();
 
@@ -88,7 +88,7 @@ namespace sub
 		AddNumber("Wind Speed", windSpeed, 2, null, windSpeed_plus, windSpeed_minus);
 		AddNumber("Ocean Wave Strength", wavesHeight, 2, null, wavesHeight_plus, wavesHeight_minus);
 		AddNumber("Rain Puddles Multiplier", _globalRainFXIntensity, 2, null, rainfxi_plus, rainfxi_minus);
-		AddTexter("Gravity Level", 0, std::vector<std::string>{v0gravities[mult_0_gravity]}, null, gravityLevel_plus, gravityLevel_minus);
+		AddNumber("Gravity", mult_0_gravity, 2, null, gravityLevel_plus, gravityLevel_minus);
 		AddOption("Clouds", null, nullFunc, SUB::CLOUDOPS);
 		AddOption("Water Hack (For Waves At Beaches)", null, nullFunc, SUB::WATERHACK);
 
@@ -137,24 +137,14 @@ namespace sub
 		if (gravityLevel_plus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "gravityLevel_plus");
-			auto git = v0gravities.find(mult_0_gravity);
-			git++;
-			if (git != v0gravities.end())
-			{
-				mult_0_gravity = git->first;
-				GTAmemory::WorldGravity_set(mult_0_gravity);
-			}
+			mult_0_gravity += 0.1;
+			GTAmemory::WorldGravity_set(mult_0_gravity);
 		}
 		if (gravityLevel_minus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "gravityLevel_minus");
-			auto git = std::map<float, std::string>::reverse_iterator(v0gravities.find(mult_0_gravity));
-			git++;
-			if (git != v0gravities.rend())
-			{
-				mult_0_gravity = git->first;
-				GTAmemory::WorldGravity_set(mult_0_gravity);
-			}
+			mult_0_gravity -= 0.1;
+			GTAmemory::WorldGravity_set(mult_0_gravity);
 		}
 		
 		//if (gravityLevel_plus && mult_0_gravity < 3){ mult_0_gravity++; SET_GRAVITY_LEVEL(mult_0_gravity); return; }
