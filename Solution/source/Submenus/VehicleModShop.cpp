@@ -1620,11 +1620,11 @@ namespace sub
 		SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, plateType);
 
 
-		if (upgradeIt) // upgrade
+		//if (upgradeIt) // upgrade
 		{
-			TOGGLE_VEHICLE_MOD(vehicle, 18, 1);
-			TOGGLE_VEHICLE_MOD(vehicle, 20, 1);
-			TOGGLE_VEHICLE_MOD(vehicle, 22, 1);
+			TOGGLE_VEHICLE_MOD(vehicle, 18, 1*upgradeIt);
+			TOGGLE_VEHICLE_MOD(vehicle, 20, 1 * upgradeIt);
+			TOGGLE_VEHICLE_MOD(vehicle, 22, 1 * upgradeIt);
 
 			for (i = 0; i < vValues_ModSlotNames.size(); i++)
 			{
@@ -1633,7 +1633,7 @@ namespace sub
 				if (i == 24)
 				{
 					UINT8 modIndex = GET_VEHICLE_MOD(vehicle, 23);
-					SET_VEHICLE_MOD(vehicle, i, modIndex, 0);
+					SET_VEHICLE_MOD(vehicle, i, upgradeIt?modIndex:-1, 0);
 					continue;
 				}
 				UINT8 modIndex = GET_NUM_VEHICLE_MODS(vehicle, i) - 1;				
@@ -1641,9 +1641,9 @@ namespace sub
 					modIndex = std::rand() % (modIndex + 2) - 1;
 				if (11 <= i && 16 >= i)
 					modIndex = GET_NUM_VEHICLE_MODS(vehicle, i) - 1;
-				SET_VEHICLE_MOD(vehicle, i, modIndex, 0);
+				SET_VEHICLE_MOD(vehicle, i, upgradeIt ? modIndex : -1, 0);
 			}
-			SET_VEHICLE_WINDOW_TINT(vehicle, 1);
+			SET_VEHICLE_WINDOW_TINT(vehicle, 1 * upgradeIt);
 
 			SET_VEHICLE_TYRES_CAN_BURST(vehicle, false);
 		}
@@ -1703,6 +1703,7 @@ namespace sub
 		INT i, veh_plate_current = GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(Static_12);
 
 		bool veh_static12_autoUpgrade = 0,
+			veh_static12_stockParts = 0,
 			aileron_on = 0,
 			aileron_off = 0,
 			SubMS_Paints = 0,
@@ -1806,10 +1807,8 @@ namespace sub
 
 		AddTitle("Menyoo Customs");
 
-		if (Static_12_veh_model.IsPlane()) {
-			AddOption("Plane Aileron On", aileron_on);
-			AddOption("Plane Aileron Off", aileron_off);
-		}
+		AddOption("Random Upgrades", veh_static12_autoUpgrade);
+		AddOption("Return to Stock", veh_static12_stockParts);
 
 		if (true) // Display Benny's sub ptr if veh is supported Static_12_veh_model.IsBennySupportedVehicle()
 		{
@@ -1931,6 +1930,11 @@ namespace sub
 		bool bEngineOnTogglePressed = false; AddTickol(Game::GetGXTEntry("CMM_MOD_G3", "Engine"), vehicle.EngineRunning_get(), bEngineOnTogglePressed, bEngineOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bEngineOnTogglePressed) vehicle.EngineRunning_set(!vehicle.EngineRunning_get());
 		//bool bLoudRadioTogglePressed = false; AddTickol("Loud Radio", vehicle.LoudRadioActive_get(), bLoudRadioTogglePressed, bLoudRadioTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bLoudRadioTogglePressed) vehicle.LoudRadioActive_set(!vehicle.LoudRadioActive_get());
 
+		if (Static_12_veh_model.IsPlane()) {
+			AddOption("Plane Aileron On", aileron_on);
+			AddOption("Plane Aileron Off", aileron_off);
+		}
+
 		if (vehicle.HasSiren_get())
 		{
 			bool bSirenOnTogglePressed = false;
@@ -1938,7 +1942,6 @@ namespace sub
 				vehicle.SirenActive_set(!vehicle.SirenActive_get());
 		}
 
-		AddOption("AUTO UPGRADE", veh_static12_autoUpgrade);
 		AddToggle("LSC Style Part Selection", _globalLSC_Customs);
 
 		if (GET_VEHICLE_MOD_KIT != 0)
@@ -2433,6 +2436,13 @@ namespace sub
 			vehicle.RequestControl(400);
 			set_vehicle_max_upgrades(Static_12, true, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(Static_12));
 			SET_VEHICLE_TYRES_CAN_BURST(Static_12, false);
+		}
+
+		if (veh_static12_stockParts)
+		{
+			vehicle.RequestControl(400);
+			set_vehicle_max_upgrades(Static_12, false, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(Static_12));
+			SET_VEHICLE_TYRES_CAN_BURST(Static_12, true);
 		}
 	}
 
