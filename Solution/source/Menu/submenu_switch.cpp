@@ -152,10 +152,10 @@ REGISTER_SUBMENU(MODELCHANGER_ST_SCENARIOMALES,    ModelChanger_Story_ScenarioMa
 REGISTER_SUBMENU(MODELCHANGER_OTHERS,              ModelChanger_Others)
 
 // Components / Appearance
-REGISTER_SUBMENU(COMPONENTS,           ComponentChanger_)
-REGISTER_SUBMENU(COMPONENTS2,          ComponentChanger2_)
-REGISTER_SUBMENU(COMPONENTSPROPS,      ComponentChangerProps_)
-REGISTER_SUBMENU(COMPONENTSPROPS2,     ComponentChangerProps2_)
+REGISTER_SUBMENU(COMPONENTS,           ComponentChanger)
+REGISTER_SUBMENU(COMPONENTS2,          ComponentChanger2)
+REGISTER_SUBMENU(COMPONENTSPROPS,      ComponentChangerProps)
+REGISTER_SUBMENU(COMPONENTSPROPS2,     ComponentChangerProps2)
 REGISTER_SUBMENU(COMPONENTS_OUTFITS,   ComponentChanger_Outfits)
 REGISTER_SUBMENU(COMPONENTS_OUTFITS2,  ComponentChanger_Outfits2)
 REGISTER_SUBMENU(PEDDECALS_TYPES,      PedDecals_catind::Sub_Decals_Types)
