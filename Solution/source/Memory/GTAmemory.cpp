@@ -1178,11 +1178,12 @@ void GTAmemory::Init()
 
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("48 8d 3d ? ? ? ? 48 8b 04 f7");
+		if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 	}
 	else {
-		address = FindPattern("\x4C\x8D\x05\x00\x00\x00\x00\x0F\xB7\xC1", "xxx????xxx");
+		address = MemryScan::PatternScanner::FindPattern("3b 35 ? ? ? ? 74 ? 48 81 fd");
+		if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address - 4) + address);
 	}
-	if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("41 57 41 56 56 57 53 48 83 ec ? 89 d7 49 89 ce");
