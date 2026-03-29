@@ -23,6 +23,7 @@
 #include "..\..\Scripting\Camera.h"
 #include "..\..\Memory\GTAmemory.h"
 #include "..\..\Scripting\GTAblip.h"
+#include <Util/FileLogger.h>
 
 #include "..\Spooner\SpoonerMode.h"
 #include "TeleLocation.h"
@@ -92,12 +93,14 @@ void teleport_net_ped(GTAentity ped, const Vector3& pos, bool bWait, bool bPtfx)
 void teleport_to_missionBlip(GTAped ped)
 {
 	//GTAblip blip;
-
+	addlog(ige::LogType::LOG_DEBUG, "Teleporting to Mission Objective");
 	//for (int i = 0; i <= 521; i++)
 	BlipList* blipList = GTAmemory::GetBlipList();
 	for (UINT16 i = 0; i <= 1000; i++)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Iterating Blip ID: " + std::to_string(i));
 		Blipx* blip = blipList->m_Blips[i];
+
 		if (blip)
 		{
 			/*blip.Handle() = GET_FIRST_BLIP_INFO_ID(i);
@@ -110,7 +113,7 @@ void teleport_to_missionBlip(GTAped ped)
 			auto icon = blip.Icon();*/
 			auto colour = blip->dwColor;
 			auto icon = blip->iIcon;
-
+			addlog(ige::LogType::LOG_TRACE, "Blip Found - Colour: " + std::to_string(colour) + ", Icon: " + std::to_string(icon));
 			if ((icon == BlipIcon::CrateDrop) ||
 				(colour == BlipColour::Yellow && icon == BlipIcon::Standard) ||
 				(colour == BlipColour::Yellow3 && icon == BlipIcon::Standard) ||
@@ -122,15 +125,17 @@ void teleport_to_missionBlip(GTAped ped)
 			{
 				//Vector3 coord = blip.Position_get();
 				Vector3 coord = Vector3(blip->x, blip->y, blip->z);
-
+				addlog(ige::LogType::LOG_DEBUG, "Mission Blip Found - Co-ord: " + std::to_string(coord.x)+"," + std::to_string(coord.y) + "," + std::to_string(coord.z));
 				if (ped.IsInVehicle())
 				{
+					addlog(ige::LogType::LOG_TRACE, "Teleporting Vehicle");
 					auto vehicle = ped.CurrentVehicle();
 					if (vehicle.RequestControl(1000))
 						vehicle.Position_set(coord);
 				}
 				else
 				{
+					addlog(ige::LogType::LOG_TRACE, "Teleporting Ped");
 					if (ped.RequestControl(1000))
 						ped.Position_set(coord);
 				}
@@ -138,6 +143,7 @@ void teleport_to_missionBlip(GTAped ped)
 			}
 		}
 	}
+	addlog(ige::LogType::LOG_DEBUG, "Teleported to Mission Objective");
 }
 
 namespace sub::TeleportLocations_catind
