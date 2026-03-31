@@ -151,7 +151,7 @@ namespace sub
 							StatSetInt(statName, statValue);
 						}
 						catch (...) { 
-							Game::Print::PrintError_InvalidInput(inputStr); 
+							Game::Print::PrintErrorInvalidInput(inputStr); 
 							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Integer for " + stat.caption + " Entered");
 						}
 					}
@@ -177,7 +177,7 @@ namespace sub
 							StatSetFloat(statName, statValue);
 						}
 						catch (...) { 
-							Game::Print::PrintError_InvalidInput(inputStr);
+							Game::Print::PrintErrorInvalidInput(inputStr);
 							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Float for " + stat.caption + " Entered");
 						}
 					}
@@ -204,13 +204,6 @@ namespace sub
 					selectedCharName = &charName;
 				}
 			}
-
-			/*AddBreak("---Others---");
-			int statExclus = StatGetInt("SP_UNLOCK_EXCLUS_CONTENT");
-			bool bExclus_plus = false, bExclus_minus = false;
-			AddNumber("Exclusive Content", statExclus, 0, null, bExclus_plus, bExclus_minus);
-			if (bExclus_plus) { if (statExclus < 100) { statExclus++; StatSetInt("SP_UNLOCK_EXCLUS_CONTENT", statExclus); } }
-			if (bExclus_minus) { if (statExclus > 0) { statExclus--; StatSetInt("SP_UNLOCK_EXCLUS_CONTENT", statExclus); } }*/
 
 			// Is this legal?
 			AddBreak("---Achievements---");
@@ -345,4 +338,8 @@ namespace sub
 }
 
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(SPSTATMANAGER,               	sub::SpStatManager_catind::Sub_SpStatManager)
+REGISTER_SUBMENU(SPSTATMANAGER_INCHAR,        	sub::SpStatManager_catind::Sub_InChar)
+REGISTER_SUBMENU(SPSTATMANAGER_INCHAR_INLIST, 	sub::SpStatManager_catind::Sub_InChar_InList)

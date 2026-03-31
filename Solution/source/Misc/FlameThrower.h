@@ -18,7 +18,7 @@ typedef char *PCHAR;
 
 class GTAplayer;
 
-namespace _FlameThrower_
+namespace FlameThrower
 {
 	extern Hash _whash;
 

@@ -150,7 +150,7 @@ void GTAentity::Heading_set(float value)
 	SET_ENTITY_HEADING(this->mHandle, value);
 }
 
-int GTAentity::Health_get() const
+int GTAentity::GetHealth() const
 {
 	return GET_ENTITY_HEALTH(this->mHandle);
 }
@@ -181,24 +181,24 @@ float GTAentity::HeightAboveGround() const
 }
 float GTAentity::GetGroundZ() const
 {
-	Vector3 pos = this->Position_get();
+	Vector3 pos = this->GetPosition();
 	GET_GROUND_Z_FOR_3D_COORD(pos.x, pos.y, 1100.0f, &pos.z, 0, 0);
 	return pos.z;
 }
 void GTAentity::PlaceOnGround()
 {
-	Vector3 pos = this->Position_get();
+	Vector3 pos = this->GetPosition();
 
 	RaycastResult ray1 = RaycastResult::Raycast(pos, Vector3(0, 0, -1.0f), 10000.0f, IntersectOptions::Map);
 	if (ray1.DidHitAnything())
 	{
-		this->Position_set(ray1.HitCoords() + Vector3(0, 0, this->Dim1().z));
+		this->SetPosition(ray1.HitCoords() + Vector3(0, 0, this->Dim1().z));
 		return;
 	}
 	RaycastResult ray2 = RaycastResult::Raycast(pos, Vector3(0, 0, 1.0f), 10000.0f, IntersectOptions::Map);
 	if (ray2.DidHitAnything())
 	{
-		this->Position_set(ray2.HitCoords() + Vector3(0, 0, this->Dim1().z));
+		this->SetPosition(ray2.HitCoords() + Vector3(0, 0, this->Dim1().z));
 		return;
 	}
 
@@ -301,7 +301,7 @@ void GTAentity::SetVisible(bool value)
 	SET_ENTITY_VISIBLE(this->mHandle, value, false);
 }
 
-int GTAentity::MaxHealth_get() const
+int GTAentity::GetMaxHealth() const
 {
 	return GET_ENTITY_MAX_HEALTH(this->mHandle);
 }
@@ -358,11 +358,11 @@ Vector3 GTAentity::Dim2() const
 }
 
 
-Vector3 GTAentity::Position_get() const
+Vector3 GTAentity::GetPosition() const
 {
 	return GET_ENTITY_COORDS(this->mHandle, 1);
 }
-void GTAentity::Position_set(Vector3 value)
+void GTAentity::SetPosition(Vector3 value)
 {
 	SET_ENTITY_COORDS_NO_OFFSET(this->mHandle, value.x, value.y, value.z, 1, 1, 1);
 }
@@ -371,7 +371,7 @@ Vector3 GTAentity::Rotation_get() const
 {
 	return GET_ENTITY_ROTATION(this->mHandle, 2);
 }
-void GTAentity::Rotation_set(Vector3 value)
+void GTAentity::SetRotation(Vector3 value)
 {
 	SET_ENTITY_ROTATION(this->mHandle, value.x, value.y, value.z, 2, 1);
 }
@@ -399,7 +399,7 @@ Vector3 GTAentity::RotationVelocity_get() const
 {
 	return GET_ENTITY_ROTATION_VELOCITY(this->mHandle);
 }
-float GTAentity::Speed_get() const
+float GTAentity::GetSpeed() const
 {
 	return GET_ENTITY_SPEED(this->mHandle);
 }
@@ -472,11 +472,11 @@ void GTAentity::HasCollisionWithEntity_set(const GTAentity& ent, bool value)
 {
 	SET_ENTITY_NO_COLLISION_ENTITY(this->mHandle, ent.mHandle, value);
 }
-bool GTAentity::IsCollisionEnabled_get() const
+bool GTAentity::GetIsCollisionEnabled() const
 {
 	return !GET_ENTITY_COLLISION_DISABLED(this->mHandle);
 }
-void GTAentity::IsCollisionEnabled_set(bool value)
+void GTAentity::SetIsCollisionEnabled(bool value)
 {
 	SET_ENTITY_COLLISION(this->mHandle, value, false);
 }
@@ -513,7 +513,7 @@ int GTAentity::NetID() const
 
 bool GTAentity::IsInRangeOf(Vector3 position, float range) const
 {
-	return ((Vector3::Subtract(this->Position_get(), position).Length()) < range);
+	return ((Vector3::Subtract(this->GetPosition(), position).Length()) < range);
 }
 bool GTAentity::IsInArea(Vector3 pos1, Vector3 pos2) const
 {
@@ -649,7 +649,7 @@ void GTAentity::SetMass(float mass)
 void GTAentity::Oscillate(const Vector3& position, float angleFreq, float dampRatio)
 {
 	//Zorg93 - bring entity to position without lerp function using applyforce
-	this->ApplyForce(((position - this->Position_get()) * (angleFreq * angleFreq)) -
+	this->ApplyForce(((position - this->GetPosition()) * (angleFreq * angleFreq)) -
 		(2.0f * angleFreq * dampRatio * this->Velocity_get()) + Vector3(0.0f, 0.0f, 0.1f), ForceType::MaxForceRot2);
 }
 void OscillateEntity(GTAentity entity, const Vector3& position, float angleFreq, float dampRatio)

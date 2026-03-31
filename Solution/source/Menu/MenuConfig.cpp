@@ -82,7 +82,7 @@ void MenuConfig::ConfigRead()
 	std::string section_settings = "settings";/////////
 
 	MenuConfig::bSaveAtIntervals = ini.GetBoolValue(section_settings.c_str(), "sync_with_config_at_intervals", MenuConfig::bSaveAtIntervals);
-	loop_Check_self_death_model = ini.GetBoolValue(section_settings.c_str(), "DeathModelReset", loop_Check_self_death_model);
+	checkSelfDeathModel = ini.GetBoolValue(section_settings.c_str(), "DeathModelReset", checkSelfDeathModel);
 	menubinds = ini.GetLongValue(section_settings.c_str(), "open_key", menubinds);
 	menubindsGamepad.first = ini.GetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
 	menubindsGamepad.second = ini.GetLongValue(section_settings.c_str(), "open_button_for_gamepad_2", menubindsGamepad.second);
@@ -102,15 +102,15 @@ void MenuConfig::ConfigRead()
 	std::string section_general = "general";/////////
 
 
-	bind_no_clip = ini.GetLongValue(section_general.c_str(), "FreeCamButton", bind_no_clip);
+	BindNoClip = ini.GetLongValue(section_general.c_str(), "FreeCamButton", BindNoClip);
 
 
 	std::string section_colours = "colours";/////////
 
 
 	Menu::gradients = ini.GetBoolValue(section_colours.c_str(), "gradients", Menu::gradients);
-	loop_RainbowBoxes = ini.GetBoolValue(section_colours.c_str(), "rainbow_mode", loop_RainbowBoxes);
-	Menu::thin_line_over_screct = ini.GetBoolValue(section_colours.c_str(), "thin_line_over_footer", Menu::thin_line_over_screct);
+	rainbowBoxes = ini.GetBoolValue(section_colours.c_str(), "rainbow_mode", rainbowBoxes);
+	Menu::thinLineOverScrect = ini.GetBoolValue(section_colours.c_str(), "thin_line_over_footer", Menu::thinLineOverScrect);
 
 	titlebox.R = ini.GetLongValue(section_colours.c_str(), "titlebox_R", titlebox.R);
 	titlebox.G = ini.GetLongValue(section_colours.c_str(), "titlebox_G", titlebox.G);
@@ -196,52 +196,52 @@ void MenuConfig::ConfigRead()
 
 
 	 //loop_hide_hud = ini.GetBoolValue(section_haxValues.c_str(), "hide_hud", loop_hide_hud);
-	loop_showFullHud = ini.GetBoolValue(section_haxValues.c_str(), "show_full_hud", loop_showFullHud);
-	_ManualRespawn_::g_manualRespawn.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "manual_respawn", _ManualRespawn_::g_manualRespawn.Enabled());
-	loop_no_clip = ini.GetBoolValue(section_haxValues.c_str(), "freecam", loop_no_clip);
-	loop_XYZHcoords = ini.GetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", loop_XYZHcoords);
-	_FpsCounter_::bDisplayFps = ini.GetBoolValue(section_haxValues.c_str(), "display_fps", _FpsCounter_::bDisplayFps);
+	showFullHUD = ini.GetBoolValue(section_haxValues.c_str(), "show_full_hud", showFullHUD);
+	ManualRespawn::g_manualRespawn.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "manual_respawn", ManualRespawn::g_manualRespawn.Enabled());
+	noClip = ini.GetBoolValue(section_haxValues.c_str(), "freecam", noClip);
+	xyzhCoords = ini.GetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", xyzhCoords);
+	FPSCounter::bDisplayFps = ini.GetBoolValue(section_haxValues.c_str(), "display_fps", FPSCounter::bDisplayFps);
 	sub::TVChannelStuff_catind::loop_basictv = ini.GetBoolValue(section_haxValues.c_str(), "basic_tv_player", sub::TVChannelStuff_catind::loop_basictv);
-	loop_sync_clock = ini.GetBoolValue(section_haxValues.c_str(), "sync_clock", loop_sync_clock);
-	loop_pause_clock = ini.GetBoolValue(section_haxValues.c_str(), "pause_clock", loop_pause_clock);
-	pause_clock_H = ini.GetLongValue(section_haxValues.c_str(), "pause_clock_hour", pause_clock_H);
-	pause_clock_M = ini.GetLongValue(section_haxValues.c_str(), "pause_clock_minute", pause_clock_M);
-	loop_ped_population = ini.GetBoolValue(section_haxValues.c_str(), "decreased_ped_population", loop_ped_population);
-	loop_vehicle_population = ini.GetBoolValue(section_haxValues.c_str(), "decreased_veh_population", loop_vehicle_population);
-	loop_clearWeaponPickups = ini.GetBoolValue(section_haxValues.c_str(), "decreased_weapon_pickups", loop_clearWeaponPickups);
-	_globalClearArea_radius = ini.GetDoubleValue(section_haxValues.c_str(), "clear_area_radius", _globalClearArea_radius);
-	loop_restricted_areas_access = ini.GetBoolValue(section_haxValues.c_str(), "restricted_area_access", loop_restricted_areas_access);
-	loop_fireworksDisplay = ini.GetBoolValue(section_haxValues.c_str(), "fireworks_ahoy", loop_fireworksDisplay);
-	loop_blackout_mode = ini.GetBoolValue(section_haxValues.c_str(), "emp_mode", loop_blackout_mode);
-	loop_simple_blackout_mode = ini.GetBoolValue(section_haxValues.c_str(), "simple_blackout_mode", loop_simple_blackout_mode);
-	loop_massacre_mode = ini.GetBoolValue(section_haxValues.c_str(), "massacre_mode", loop_massacre_mode);
-	_JumpAroundMode_::bEnabled = ini.GetBoolValue(section_haxValues.c_str(), "jump_around_mode", _JumpAroundMode_::bEnabled);
+	syncClock = ini.GetBoolValue(section_haxValues.c_str(), "sync_clock", syncClock);
+	pauseClock = ini.GetBoolValue(section_haxValues.c_str(), "pause_clock", pauseClock);
+	pauseClockH = ini.GetLongValue(section_haxValues.c_str(), "pause_clock_hour", pauseClockH);
+	pauseClockM = ini.GetLongValue(section_haxValues.c_str(), "pause_clock_minute", pauseClockM);
+	pedPopulation = ini.GetBoolValue(section_haxValues.c_str(), "decreased_ped_population", pedPopulation);
+	vehiclePopulation = ini.GetBoolValue(section_haxValues.c_str(), "decreased_veh_population", vehiclePopulation);
+	clearWeaponPickups = ini.GetBoolValue(section_haxValues.c_str(), "decreased_weapon_pickups", clearWeaponPickups);
+	g_clearAreaRadius = ini.GetDoubleValue(section_haxValues.c_str(), "clear_area_radius", g_clearAreaRadius);
+	restrictedAreasAccess = ini.GetBoolValue(section_haxValues.c_str(), "restricted_area_access", restrictedAreasAccess);
+	fireworksDisplay = ini.GetBoolValue(section_haxValues.c_str(), "fireworks_ahoy", fireworksDisplay);
+	blackoutMode = ini.GetBoolValue(section_haxValues.c_str(), "emp_mode", blackoutMode);
+	simpleBlackoutMode = ini.GetBoolValue(section_haxValues.c_str(), "simple_blackout_mode", simpleBlackoutMode);
+	massacreMode = ini.GetBoolValue(section_haxValues.c_str(), "massacre_mode", massacreMode);
+	JumpAroundMode::bEnabled = ini.GetBoolValue(section_haxValues.c_str(), "jump_around_mode", JumpAroundMode::bEnabled);
 	g_frozenRadioStation = (INT16)ini.GetLongValue(section_haxValues.c_str(), "frozen_radio_station", g_frozenRadioStation);
-	_SpSnow.ToggleSnow(ini.GetBoolValue(section_haxValues.c_str(), "snow_on_terrain", _SpSnow.IsSnow()));
+	g_spSnow.ToggleSnow(ini.GetBoolValue(section_haxValues.c_str(), "snow_on_terrain", g_spSnow.IsSnow()));
 	sub::AnimalRiding_catind::Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "animal_riding_mode", sub::AnimalRiding_catind::Enabled());
 
-	loop_forge_gun = ini.GetBoolValue(section_haxValues.c_str(), "forge_gun", loop_forge_gun);
-	_globalForgeGun_shootForce = ini.GetDoubleValue(section_haxValues.c_str(), "forge_gun_shoot_force", _globalForgeGun_shootForce);
+	forgeGun = ini.GetBoolValue(section_haxValues.c_str(), "forge_gun", forgeGun);
+	g_forgeGunShootForce = ini.GetDoubleValue(section_haxValues.c_str(), "forge_gun_shoot_force", g_forgeGunShootForce);
 	sub::GravityGun_catind::Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "gravity_gun", sub::GravityGun_catind::Enabled());
 	sub::GravityGun_catind::ShootForce() = ini.GetDoubleValue(section_haxValues.c_str(), "gravity_gun_shoot_force", sub::GravityGun_catind::ShootForce());
-	_MagnetGun_::g_magnetGun.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "magnet_gun", _MagnetGun_::g_magnetGun.Enabled());
-	loop_teleport_gun = ini.GetBoolValue(section_haxValues.c_str(), "teleport_gun", loop_teleport_gun);
-	loop_light_gun = ini.GetBoolValue(section_haxValues.c_str(), "light_gun", loop_light_gun);
-	_RopeGun_::g_ropeGun.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "rope_gun", _RopeGun_::g_ropeGun.Enabled());
-	loop_bullet_time = ini.GetBoolValue(section_haxValues.c_str(), "bullet_time", loop_bullet_time);
-	loop_weapon_damage_increase = ini.GetDoubleValue(section_haxValues.c_str(), "weapon_damage_multiplier", loop_weapon_damage_increase);
-	loop_explosive_rounds = ini.GetBoolValue(section_haxValues.c_str(), "explosive_bullets", loop_explosive_rounds);
-	loop_flaming_rounds = ini.GetBoolValue(section_haxValues.c_str(), "flaming_bullets", loop_flaming_rounds);
-	loop_explosive_melee = ini.GetBoolValue(section_haxValues.c_str(), "explosive_melee", loop_explosive_melee);
-	loop_triple_bullets = ini.GetBoolValue(section_haxValues.c_str(), "triple_bullets", loop_triple_bullets);
-	loop_self_triggerbot = ini.GetBoolValue(section_haxValues.c_str(), "self_triggerbot", loop_self_triggerbot);
-	loop_rapid_fire = ini.GetBoolValue(section_haxValues.c_str(), "rapid_fire", loop_rapid_fire);
-	loop_soulswitch_gun = ini.GetBoolValue(section_haxValues.c_str(), "soul_switch_gun", loop_soulswitch_gun);
-	loop_self_resurrectionGun = ini.GetBoolValue(section_haxValues.c_str(), "self_revival_gun", loop_self_resurrectionGun);
-	loop_self_deleteGun = ini.GetBoolValue(section_haxValues.c_str(), "self_delete_gun", loop_self_deleteGun);
-	bit_infinite_ammo = ini.GetBoolValue(section_haxValues.c_str(), "self_infinite_ammo_clip", bit_infinite_ammo);
-	loop_self_inf_parachutes = ini.GetBoolValue(section_haxValues.c_str(), "infinite_parachutes", loop_self_inf_parachutes);
-	loop_autoKillEnemies = ini.GetLongValue(section_haxValues.c_str(), "auto_kill_enemies", loop_autoKillEnemies);
+	MagnetGun::g_magnetGun.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "magnet_gun", MagnetGun::g_magnetGun.Enabled());
+	teleportGun = ini.GetBoolValue(section_haxValues.c_str(), "teleport_gun", teleportGun);
+	lightGun = ini.GetBoolValue(section_haxValues.c_str(), "light_gun", lightGun);
+	RopeGun::g_ropeGun.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "rope_gun", RopeGun::g_ropeGun.Enabled());
+	bulletTime = ini.GetBoolValue(section_haxValues.c_str(), "bullet_time", bulletTime);
+	weaponDamageIncrease = ini.GetDoubleValue(section_haxValues.c_str(), "weapon_damage_multiplier", weaponDamageIncrease);
+	explosiveRounds = ini.GetBoolValue(section_haxValues.c_str(), "explosive_bullets", explosiveRounds);
+	flamingRounds = ini.GetBoolValue(section_haxValues.c_str(), "flaming_bullets", flamingRounds);
+	explosiveMelee = ini.GetBoolValue(section_haxValues.c_str(), "explosive_melee", explosiveMelee);
+	tripleBullets = ini.GetBoolValue(section_haxValues.c_str(), "triple_bullets", tripleBullets);
+	selfTriggerbot = ini.GetBoolValue(section_haxValues.c_str(), "self_triggerbot", selfTriggerbot);
+	rapidFire = ini.GetBoolValue(section_haxValues.c_str(), "rapid_fire", rapidFire);
+	soulSwitchGun = ini.GetBoolValue(section_haxValues.c_str(), "soul_switch_gun", soulSwitchGun);
+	selfResurrectionGun = ini.GetBoolValue(section_haxValues.c_str(), "self_revival_gun", selfResurrectionGun);
+	selfDeleteGun = ini.GetBoolValue(section_haxValues.c_str(), "self_delete_gun", selfDeleteGun);
+	bitInfiniteAmmo = ini.GetBoolValue(section_haxValues.c_str(), "self_infinite_ammo_clip", bitInfiniteAmmo);
+	selfInfiniteParachutes = ini.GetBoolValue(section_haxValues.c_str(), "infinite_parachutes", selfInfiniteParachutes);
+	autoKillEnemies = ini.GetLongValue(section_haxValues.c_str(), "auto_kill_enemies", autoKillEnemies);
 
 	sub::LaserSight_catind::bEnabled = ini.GetBoolValue(section_haxValues.c_str(), "laser_sight_toggle", sub::LaserSight_catind::bEnabled);
 	sub::LaserSight_catind::_colour.R = ini.GetLongValue(section_haxValues.c_str(), "laser_sight_R", sub::LaserSight_catind::_colour.R);
@@ -249,64 +249,64 @@ void MenuConfig::ConfigRead()
 	sub::LaserSight_catind::_colour.B = ini.GetLongValue(section_haxValues.c_str(), "laser_sight_B", sub::LaserSight_catind::_colour.B);
 	sub::LaserSight_catind::_colour.A = ini.GetLongValue(section_haxValues.c_str(), "laser_sight_A", sub::LaserSight_catind::_colour.A);
 
-	loop_self_refillHealthInCover = ini.GetBoolValue(section_haxValues.c_str(), "player_refill_health_when_in_cover", loop_self_refillHealthInCover);
-	loop_player_invincibility = ini.GetBoolValue(section_haxValues.c_str(), "player_invincibility", loop_player_invincibility);
-	loop_player_noRagdoll = ini.GetBoolValue(section_haxValues.c_str(), "player_no_ragdoll", loop_player_noRagdoll);
-	loop_player_seatbelt = ini.GetBoolValue(section_haxValues.c_str(), "player_seatbelt", loop_player_seatbelt);
-	loop_player_unlimSpecialAbility = ini.GetBoolValue(section_haxValues.c_str(), "player_unlimited_special_ab", loop_player_unlimSpecialAbility);
-	loop_player_autoClean = ini.GetBoolValue(section_haxValues.c_str(), "player_auto_clean", loop_player_autoClean);
+	selfRefillHealthInCover = ini.GetBoolValue(section_haxValues.c_str(), "player_refill_health_when_in_cover", selfRefillHealthInCover);
+	playerInvincibility = ini.GetBoolValue(section_haxValues.c_str(), "player_invincibility", playerInvincibility);
+	playerNoRagdoll = ini.GetBoolValue(section_haxValues.c_str(), "player_no_ragdoll", playerNoRagdoll);
+	playerSeatbelt = ini.GetBoolValue(section_haxValues.c_str(), "player_seatbelt", playerSeatbelt);
+	playerUnlimitedAbility = ini.GetBoolValue(section_haxValues.c_str(), "player_unlimited_special_ab", playerUnlimitedAbility);
+	playerAutoClean = ini.GetBoolValue(section_haxValues.c_str(), "player_auto_clean", playerAutoClean);
 
-	loop_super_jump = ini.GetBoolValue(section_haxValues.c_str(), "player_super_jump", loop_super_jump);
-	loop_super_run = ini.GetBoolValue(section_haxValues.c_str(), "player_super_run", loop_super_run);
-	loop_superman = ini.GetBoolValue(section_haxValues.c_str(), "player_superman_manual", loop_superman);
-	loop_superman_auto = ini.GetBoolValue(section_haxValues.c_str(), "player_superman_auto", loop_superman_auto);
-	loop_forcefield = ini.GetLongValue(section_haxValues.c_str(), "player_forcefield", loop_forcefield);
-	_SmashAbility_::g_smashAbility.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "player_smash_ability", _SmashAbility_::g_smashAbility.Enabled());
-	loop_ignored_by_everyone = ini.GetBoolValue(section_haxValues.c_str(), "player_ignored_by_everyone", loop_ignored_by_everyone);
-	loop_never_wanted = ini.GetBoolValue(section_haxValues.c_str(), "player_never_wanted", loop_never_wanted);
-	loop_player_burn = ini.GetBoolValue(section_haxValues.c_str(), "player_burn_mode", loop_player_burn);
+	superJump = ini.GetBoolValue(section_haxValues.c_str(), "player_super_jump", superJump);
+	superRun = ini.GetBoolValue(section_haxValues.c_str(), "player_super_run", superRun);
+	superman = ini.GetBoolValue(section_haxValues.c_str(), "player_superman_manual", superman);
+	supermanAuto = ini.GetBoolValue(section_haxValues.c_str(), "player_superman_auto", supermanAuto);
+	forceField = ini.GetLongValue(section_haxValues.c_str(), "player_forcefield", forceField);
+	SmashAbility::g_smashAbility.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "player_smash_ability", SmashAbility::g_smashAbility.Enabled());
+	ignoredByEveryone = ini.GetBoolValue(section_haxValues.c_str(), "player_ignored_by_everyone", ignoredByEveryone);
+	neverWanted = ini.GetBoolValue(section_haxValues.c_str(), "player_never_wanted", neverWanted);
+	playerBurn = ini.GetBoolValue(section_haxValues.c_str(), "player_burn_mode", playerBurn);
 
-	loop_vehicle_invincibility = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_invincibility", loop_vehicle_invincibility);
-	loop_vehicle_heavymass = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_increased_mass", loop_vehicle_heavymass);
-	loop_race_boost = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_horn_boost", loop_race_boost);
-	loop_unlimVehBoost = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_unlim_native_boost", loop_unlimVehBoost);
-	loop_car_jump = ini.GetLongValue(section_haxValues.c_str(), "vehicle_jump", loop_car_jump);
-	loop_car_hydraulics = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_hydraulics", loop_car_hydraulics);
-	loop_super_grip = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_glue_to_ground", loop_super_grip);
-	loop_SuprKarMode = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_SuprKar_mode", loop_SuprKarMode);
-	loop_car_colour_change = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_rainbow_mode", loop_car_colour_change);
-	loop_vehicle_fixloop = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_auto_fix", loop_vehicle_fixloop);
-	loop_vehicle_fliploop = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_auto_flip", loop_vehicle_fliploop);
-	loop_self_engineOn = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_keep_engine_running", loop_self_engineOn);
-	_VehicleTow_::g_vehicleTow.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_tow_mode", _VehicleTow_::g_vehicleTow.Enabled());
-	_VehicleFly_::g_vehicleFly.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_fly_mode", _VehicleFly_::g_vehicleFly.Enabled());
-	loop_multiplat_neons = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_multiplat_neons", loop_multiplat_neons);
-	loop_multiplat_neons_rainbow = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_multiplat_neons_rainbow", loop_multiplat_neons_rainbow);
-	_global_MultiPlatNeons_Col.R = ini.GetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_R", _global_MultiPlatNeons_Col.R);
-	_global_MultiPlatNeons_Col.G = ini.GetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_G", _global_MultiPlatNeons_Col.G);
-	_global_MultiPlatNeons_Col.B = ini.GetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_B", _global_MultiPlatNeons_Col.B);
-	mult69_5 = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_acceleration", mult69_5);
-	mult69_6 = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_brakes", mult69_6);
-	mult69_7 = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_handling", mult69_7);
+	vehicleInvincibility = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_invincibility", vehicleInvincibility);
+	vehicleHeavyMass = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_increased_mass", vehicleHeavyMass);
+	raceBoost = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_horn_boost", raceBoost);
+	unlimitedVehicleBoost = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_unlim_native_boost", unlimitedVehicleBoost);
+	carJump = ini.GetLongValue(section_haxValues.c_str(), "vehicle_jump", carJump);
+	carHydraulics = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_hydraulics", carHydraulics);
+	superGrip = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_glue_to_ground", superGrip);
+	superCarMode = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_SuprKar_mode", superCarMode);
+	carColorChange = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_rainbow_mode", carColorChange);
+	vehicleFixLoop = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_auto_fix", vehicleFixLoop);
+	vehicleFlipLoop = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_auto_flip", vehicleFlipLoop);
+	selfEngineOn = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_keep_engine_running", selfEngineOn);
+	VehicleTow::g_vehicleTow.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_tow_mode", VehicleTow::g_vehicleTow.Enabled());
+	VehicleFly::g_vehicleFly.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_fly_mode", VehicleFly::g_vehicleFly.Enabled());
+	multiPlatNeons = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_multiplat_neons", multiPlatNeons);
+	multiPlatNeonsRainbow = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_multiplat_neons_rainbow", multiPlatNeonsRainbow);
+	g_multiPlatNeonsColor.R = ini.GetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_R", g_multiPlatNeonsColor.R);
+	g_multiPlatNeonsColor.G = ini.GetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_G", g_multiPlatNeonsColor.G);
+	g_multiPlatNeonsColor.B = ini.GetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_B", g_multiPlatNeonsColor.B);
+	accelMult = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_acceleration", accelMult);
+	brakeMult = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_brakes", brakeMult);
+	handlingMult = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_handling", handlingMult);
 
-	_globaladdBlip = ini.GetBoolValue(section_haxValues.c_str(), "add_blip_to_vehicle", _globaladdBlip);
-	_globalWarpNear = ini.GetBoolValue(section_haxValues.c_str(), "warp_vehicle_nearby", _globalWarpNear);
-	_globalSpawnVehicle_drawBmps = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_previews", _globalSpawnVehicle_drawBmps);
-	_globalSpawnVehicle_plateText = ini.GetValue(section_haxValues.c_str(), "vehicle_spawner_plate_text", _globalSpawnVehicle_plateText.c_str());
-	_globalSpawnVehicle_plateTexter_value = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_text_texter_value", _globalSpawnVehicle_plateTexter_value);
-	_globalSpawnVehicle_plateType = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_type", _globalSpawnVehicle_plateType);
-	_globalSpawnVehicle_autoSit = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_auto_sit", _globalSpawnVehicle_autoSit);
-	_globalSpawnVehicle_autoUpgrade = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_auto_upgrade", _globalSpawnVehicle_autoUpgrade);
-	_globalSpawnVehicle_invincible = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_invincible", _globalSpawnVehicle_invincible);
-	_globalSpawnVehicle_persistent = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_persistent", _globalSpawnVehicle_persistent);
-	_globalSpawnVehicle_deleteOld = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_delete_old", _globalSpawnVehicle_deleteOld);
-	_globalSpawnVehicle_neonToggle = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_neons_on", _globalSpawnVehicle_neonToggle);
-	_globalSpawnVehicle_neonCol.R = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_R", _globalSpawnVehicle_neonCol.R);
-	_globalSpawnVehicle_neonCol.G = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_G", _globalSpawnVehicle_neonCol.G);
-	_globalSpawnVehicle_neonCol.B = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_B", _globalSpawnVehicle_neonCol.B);
-	_globalSpawnVehicle_PrimCol = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_primary_colour", _globalSpawnVehicle_PrimCol);
-	_globalSpawnVehicle_SecCol = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_secondary_colour", _globalSpawnVehicle_SecCol);
-	_globalLSC_Customs = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_menyoo_customs_lsc", _globalLSC_Customs);
+	g_addBlip = ini.GetBoolValue(section_haxValues.c_str(), "add_blip_to_vehicle", g_addBlip);
+	g_warpNear = ini.GetBoolValue(section_haxValues.c_str(), "warp_vehicle_nearby", g_warpNear);
+	g_spawnVehicleDrawBMPs = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_previews", g_spawnVehicleDrawBMPs);
+	g_spawnVehiclePlateText = ini.GetValue(section_haxValues.c_str(), "vehicle_spawner_plate_text", g_spawnVehiclePlateText.c_str());
+	g_spawnVehiclePlateTexterValue = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_text_texter_value", g_spawnVehiclePlateTexterValue);
+	g_spawnVehiclePlateType = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_type", g_spawnVehiclePlateType);
+	g_spawnVehicleAutoSit = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_auto_sit", g_spawnVehicleAutoSit);
+	g_spawnVehicleAutoUpgrade = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_auto_upgrade", g_spawnVehicleAutoUpgrade);
+	g_spawnVehicleInvincible = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_invincible", g_spawnVehicleInvincible);
+	g_spawnVehiclePersistent = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_persistent", g_spawnVehiclePersistent);
+	g_spawnVehicleDeleteOld = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_delete_old", g_spawnVehicleDeleteOld);
+	g_spawnVehicleNeonToggle = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_neons_on", g_spawnVehicleNeonToggle);
+	g_spawnVehicleNeonColor.R = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_R", g_spawnVehicleNeonColor.R);
+	g_spawnVehicleNeonColor.G = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_G", g_spawnVehicleNeonColor.G);
+	g_spawnVehicleNeonColor.B = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_B", g_spawnVehicleNeonColor.B);
+	g_spawnVehiclePrimaryColor = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_primary_colour", g_spawnVehiclePrimaryColor);
+	g_spawnVehicleSecondaryColor = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_secondary_colour", g_spawnVehicleSecondaryColor);
+	g_LSCCustoms = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_menyoo_customs_lsc", g_LSCCustoms);
 	g_unlockMaxIDs = ini.GetBoolValue(section_haxValues.c_str(), "unlock_max_head_ids", g_unlockMaxIDs);
 
 	sub::Clock_catind::loop_clock = ini.GetDoubleValue(section_haxValues.c_str(), "clock", sub::Clock_catind::loop_clock);
@@ -333,7 +333,7 @@ void MenuConfig::ConfigRead()
     FreeCam::maxFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "max_fov", FreeCam::maxFov);
 }
 
-void MenuConfig::ConfigSave()
+void MenuConfig::SaveConfig()
 {
 	auto& ini = MenuConfig::iniFile;
 
@@ -342,7 +342,7 @@ void MenuConfig::ConfigSave()
 
 
 	ini.SetBoolValue(section_settings.c_str(), "sync_with_config_at_intervals", MenuConfig::bSaveAtIntervals);
-	ini.SetBoolValue(section_settings.c_str(), "DeathModelReset", loop_Check_self_death_model);
+	ini.SetBoolValue(section_settings.c_str(), "DeathModelReset", checkSelfDeathModel);
 	ini.SetLongValue(section_settings.c_str(), "open_key", menubinds);
 	ini.SetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
 	ini.SetLongValue(section_settings.c_str(), "open_button_for_gamepad_2", menubindsGamepad.second);
@@ -361,15 +361,15 @@ void MenuConfig::ConfigSave()
 	std::string section_general = "general";/////////
 
 
-	ini.SetLongValue(section_general.c_str(), "FreeCamButton", bind_no_clip);
+	ini.SetLongValue(section_general.c_str(), "FreeCamButton", BindNoClip);
 
 
 	std::string section_colours = "colours";/////////
 
 
 	ini.SetBoolValue(section_colours.c_str(), "gradients", Menu::gradients);
-	ini.SetBoolValue(section_colours.c_str(), "rainbow_mode", loop_RainbowBoxes);
-	ini.SetBoolValue(section_colours.c_str(), "thin_line_over_footer", Menu::thin_line_over_screct);
+	ini.SetBoolValue(section_colours.c_str(), "rainbow_mode", rainbowBoxes);
+	ini.SetBoolValue(section_colours.c_str(), "thin_line_over_footer", Menu::thinLineOverScrect);
 
 	ini.SetLongValue(section_colours.c_str(), "titlebox_R", titlebox.R);
 	ini.SetLongValue(section_colours.c_str(), "titlebox_G", titlebox.G);
@@ -455,52 +455,52 @@ void MenuConfig::ConfigSave()
 
 
 										   //ini.SetBoolValue(section_haxValues.c_str(), "hide_hud", loop_hide_hud);
-	ini.SetBoolValue(section_haxValues.c_str(), "show_full_hud", loop_showFullHud);
-	ini.SetBoolValue(section_haxValues.c_str(), "manual_respawn", _ManualRespawn_::g_manualRespawn.Enabled());
-	ini.SetBoolValue(section_haxValues.c_str(), "freecam", loop_no_clip);
-	ini.SetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", loop_XYZHcoords);
-	ini.SetBoolValue(section_haxValues.c_str(), "display_fps", _FpsCounter_::bDisplayFps);
+	ini.SetBoolValue(section_haxValues.c_str(), "show_full_hud", showFullHUD);
+	ini.SetBoolValue(section_haxValues.c_str(), "manual_respawn", ManualRespawn::g_manualRespawn.Enabled());
+	ini.SetBoolValue(section_haxValues.c_str(), "freecam", noClip);
+	ini.SetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", xyzhCoords);
+	ini.SetBoolValue(section_haxValues.c_str(), "display_fps", FPSCounter::bDisplayFps);
 	ini.SetBoolValue(section_haxValues.c_str(), "basic_tv_player", sub::TVChannelStuff_catind::loop_basictv);
-	ini.SetBoolValue(section_haxValues.c_str(), "sync_clock", loop_sync_clock);
-	ini.SetBoolValue(section_haxValues.c_str(), "pause_clock", loop_pause_clock);
-	ini.SetLongValue(section_haxValues.c_str(), "pause_clock_hour", pause_clock_H);
-	ini.SetLongValue(section_haxValues.c_str(), "pause_clock_minute", pause_clock_M);
-	ini.SetBoolValue(section_haxValues.c_str(), "decreased_ped_population", loop_ped_population);
-	ini.SetBoolValue(section_haxValues.c_str(), "decreased_veh_population", loop_vehicle_population);
-	ini.SetBoolValue(section_haxValues.c_str(), "decreased_weapon_pickups", loop_clearWeaponPickups);
-	ini.SetDoubleValue(section_haxValues.c_str(), "clear_area_radius", _globalClearArea_radius);
-	ini.SetBoolValue(section_haxValues.c_str(), "restricted_area_access", loop_restricted_areas_access);
-	ini.SetBoolValue(section_haxValues.c_str(), "fireworks_ahoy", loop_fireworksDisplay);
-	ini.SetBoolValue(section_haxValues.c_str(), "emp_mode", loop_blackout_mode);
-	ini.SetBoolValue(section_haxValues.c_str(), "simple_blackout_mode", loop_simple_blackout_mode);
-	ini.SetBoolValue(section_haxValues.c_str(), "massacre_mode", loop_massacre_mode);
-	ini.SetBoolValue(section_haxValues.c_str(), "jump_around_mode", _JumpAroundMode_::bEnabled);
+	ini.SetBoolValue(section_haxValues.c_str(), "sync_clock", syncClock);
+	ini.SetBoolValue(section_haxValues.c_str(), "pause_clock", pauseClock);
+	ini.SetLongValue(section_haxValues.c_str(), "pause_clock_hour", pauseClockH);
+	ini.SetLongValue(section_haxValues.c_str(), "pause_clock_minute", pauseClockM);
+	ini.SetBoolValue(section_haxValues.c_str(), "decreased_ped_population", pedPopulation);
+	ini.SetBoolValue(section_haxValues.c_str(), "decreased_veh_population", vehiclePopulation);
+	ini.SetBoolValue(section_haxValues.c_str(), "decreased_weapon_pickups", clearWeaponPickups);
+	ini.SetDoubleValue(section_haxValues.c_str(), "clear_area_radius", g_clearAreaRadius);
+	ini.SetBoolValue(section_haxValues.c_str(), "restricted_area_access", restrictedAreasAccess);
+	ini.SetBoolValue(section_haxValues.c_str(), "fireworks_ahoy", fireworksDisplay);
+	ini.SetBoolValue(section_haxValues.c_str(), "emp_mode", blackoutMode);
+	ini.SetBoolValue(section_haxValues.c_str(), "simple_blackout_mode", simpleBlackoutMode);
+	ini.SetBoolValue(section_haxValues.c_str(), "massacre_mode", massacreMode);
+	ini.SetBoolValue(section_haxValues.c_str(), "jump_around_mode", JumpAroundMode::bEnabled);
 	ini.SetLongValue(section_haxValues.c_str(), "frozen_radio_station", g_frozenRadioStation);
-	ini.SetBoolValue(section_haxValues.c_str(), "snow_on_terrain", _SpSnow.IsSnow());
+	ini.SetBoolValue(section_haxValues.c_str(), "snow_on_terrain", g_spSnow.IsSnow());
 	ini.SetBoolValue(section_haxValues.c_str(), "animal_riding_mode", sub::AnimalRiding_catind::Enabled());
 
-	ini.SetBoolValue(section_haxValues.c_str(), "forge_gun", loop_forge_gun);
-	ini.SetDoubleValue(section_haxValues.c_str(), "forge_gun_shoot_force", _globalForgeGun_shootForce);
+	ini.SetBoolValue(section_haxValues.c_str(), "forge_gun", forgeGun);
+	ini.SetDoubleValue(section_haxValues.c_str(), "forge_gun_shoot_force", g_forgeGunShootForce);
 	ini.SetBoolValue(section_haxValues.c_str(), "gravity_gun", sub::GravityGun_catind::Enabled());
 	ini.SetDoubleValue(section_haxValues.c_str(), "gravity_gun_shoot_force", sub::GravityGun_catind::ShootForce());
-	ini.SetBoolValue(section_haxValues.c_str(), "magnet_gun", _MagnetGun_::g_magnetGun.Enabled());
-	ini.SetBoolValue(section_haxValues.c_str(), "teleport_gun", loop_teleport_gun);
-	ini.SetBoolValue(section_haxValues.c_str(), "light_gun", loop_light_gun);
-	ini.SetBoolValue(section_haxValues.c_str(), "rope_gun", _RopeGun_::g_ropeGun.Enabled());
-	ini.SetBoolValue(section_haxValues.c_str(), "bullet_time", loop_bullet_time);
-	ini.SetDoubleValue(section_haxValues.c_str(), "weapon_damage_multiplier", loop_weapon_damage_increase);
-	ini.SetBoolValue(section_haxValues.c_str(), "explosive_bullets", loop_explosive_rounds);
-	ini.SetBoolValue(section_haxValues.c_str(), "flaming_bullets", loop_flaming_rounds);
-	ini.SetBoolValue(section_haxValues.c_str(), "explosive_melee", loop_explosive_melee);
-	ini.SetBoolValue(section_haxValues.c_str(), "triple_bullets", loop_triple_bullets);
-	ini.SetBoolValue(section_haxValues.c_str(), "self_triggerbot", loop_self_triggerbot);
-	ini.SetBoolValue(section_haxValues.c_str(), "rapid_fire", loop_rapid_fire);
-	ini.SetBoolValue(section_haxValues.c_str(), "soul_switch_gun", loop_soulswitch_gun);
-	ini.SetBoolValue(section_haxValues.c_str(), "self_revival_gun", loop_self_resurrectionGun);
-	ini.SetBoolValue(section_haxValues.c_str(), "self_delete_gun", loop_self_deleteGun);
-	ini.SetBoolValue(section_haxValues.c_str(), "self_infinite_ammo_clip", bit_infinite_ammo);
-	ini.SetBoolValue(section_haxValues.c_str(), "infinite_parachutes", loop_self_inf_parachutes);
-	ini.SetLongValue(section_haxValues.c_str(), "auto_kill_enemies", loop_autoKillEnemies);
+	ini.SetBoolValue(section_haxValues.c_str(), "magnet_gun", MagnetGun::g_magnetGun.Enabled());
+	ini.SetBoolValue(section_haxValues.c_str(), "teleport_gun", teleportGun);
+	ini.SetBoolValue(section_haxValues.c_str(), "light_gun", lightGun);
+	ini.SetBoolValue(section_haxValues.c_str(), "rope_gun", RopeGun::g_ropeGun.Enabled());
+	ini.SetBoolValue(section_haxValues.c_str(), "bullet_time", bulletTime);
+	ini.SetDoubleValue(section_haxValues.c_str(), "weapon_damage_multiplier", weaponDamageIncrease);
+	ini.SetBoolValue(section_haxValues.c_str(), "explosive_bullets", explosiveRounds);
+	ini.SetBoolValue(section_haxValues.c_str(), "flaming_bullets", flamingRounds);
+	ini.SetBoolValue(section_haxValues.c_str(), "explosive_melee", explosiveMelee);
+	ini.SetBoolValue(section_haxValues.c_str(), "triple_bullets", tripleBullets);
+	ini.SetBoolValue(section_haxValues.c_str(), "self_triggerbot", selfTriggerbot);
+	ini.SetBoolValue(section_haxValues.c_str(), "rapid_fire", rapidFire);
+	ini.SetBoolValue(section_haxValues.c_str(), "soul_switch_gun", soulSwitchGun);
+	ini.SetBoolValue(section_haxValues.c_str(), "self_revival_gun", selfResurrectionGun);
+	ini.SetBoolValue(section_haxValues.c_str(), "self_delete_gun", selfDeleteGun);
+	ini.SetBoolValue(section_haxValues.c_str(), "self_infinite_ammo_clip", bitInfiniteAmmo);
+	ini.SetBoolValue(section_haxValues.c_str(), "infinite_parachutes", selfInfiniteParachutes);
+	ini.SetLongValue(section_haxValues.c_str(), "auto_kill_enemies", autoKillEnemies);
 
 	ini.SetBoolValue(section_haxValues.c_str(), "laser_sight_toggle", sub::LaserSight_catind::bEnabled);
 	ini.SetLongValue(section_haxValues.c_str(), "laser_sight_R", sub::LaserSight_catind::_colour.R);
@@ -508,63 +508,63 @@ void MenuConfig::ConfigSave()
 	ini.SetLongValue(section_haxValues.c_str(), "laser_sight_B", sub::LaserSight_catind::_colour.B);
 	ini.SetLongValue(section_haxValues.c_str(), "laser_sight_A", sub::LaserSight_catind::_colour.A);
 
-	ini.SetBoolValue(section_haxValues.c_str(), "player_refill_health_when_in_cover", loop_self_refillHealthInCover);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_invincibility", loop_player_invincibility);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_no_ragdoll", loop_player_noRagdoll);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_seatbelt", loop_player_seatbelt);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_unlimited_special_ab", loop_player_unlimSpecialAbility);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_auto_clean", loop_player_autoClean);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_super_jump", loop_super_jump);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_super_run", loop_super_run);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_superman_manual", loop_superman);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_superman_auto", loop_superman_auto);
-	ini.SetLongValue(section_haxValues.c_str(), "player_forcefield", loop_forcefield);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_smash_ability", _SmashAbility_::g_smashAbility.Enabled());
-	ini.SetBoolValue(section_haxValues.c_str(), "player_ignored_by_everyone", loop_ignored_by_everyone);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_never_wanted", loop_never_wanted);
-	ini.SetBoolValue(section_haxValues.c_str(), "player_burn_mode", loop_player_burn);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_refill_health_when_in_cover", selfRefillHealthInCover);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_invincibility", playerInvincibility);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_no_ragdoll", playerNoRagdoll);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_seatbelt", playerSeatbelt);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_unlimited_special_ab", playerUnlimitedAbility);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_auto_clean", playerAutoClean);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_super_jump", superJump);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_super_run", superRun);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_superman_manual", superman);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_superman_auto", supermanAuto);
+	ini.SetLongValue(section_haxValues.c_str(), "player_forcefield", forceField);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_smash_ability", SmashAbility::g_smashAbility.Enabled());
+	ini.SetBoolValue(section_haxValues.c_str(), "player_ignored_by_everyone", ignoredByEveryone);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_never_wanted", neverWanted);
+	ini.SetBoolValue(section_haxValues.c_str(), "player_burn_mode", playerBurn);
 
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_invincibility", loop_vehicle_invincibility);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_increased_mass", loop_vehicle_heavymass);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_horn_boost", loop_race_boost);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_unlim_native_boost", loop_unlimVehBoost);
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_jump", loop_car_jump);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_hydraulics", loop_car_hydraulics);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_glue_to_ground", loop_super_grip);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_SuprKar_mode", loop_SuprKarMode);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_rainbow_mode", loop_car_colour_change);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_auto_fix", loop_vehicle_fixloop);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_auto_flip", loop_vehicle_fliploop);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_keep_engine_running", loop_self_engineOn);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_tow_mode", _VehicleTow_::g_vehicleTow.Enabled());
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_fly_mode", _VehicleFly_::g_vehicleFly.Enabled());
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_multiplat_neons", loop_multiplat_neons);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_multiplat_neons_rainbow", loop_multiplat_neons_rainbow);
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_R", _global_MultiPlatNeons_Col.R);
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_G", _global_MultiPlatNeons_Col.G);
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_B", _global_MultiPlatNeons_Col.B);
-	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_acceleration", mult69_5);
-	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_brakes", mult69_6);
-	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_handling", mult69_7);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_invincibility", vehicleInvincibility);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_increased_mass", vehicleHeavyMass);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_horn_boost", raceBoost);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_unlim_native_boost", unlimitedVehicleBoost);
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_jump", carJump);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_hydraulics", carHydraulics);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_glue_to_ground", superGrip);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_SuprKar_mode", superCarMode);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_rainbow_mode", carColorChange);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_auto_fix", vehicleFixLoop);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_auto_flip", vehicleFlipLoop);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_keep_engine_running", selfEngineOn);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_tow_mode", VehicleTow::g_vehicleTow.Enabled());
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_fly_mode", VehicleFly::g_vehicleFly.Enabled());
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_multiplat_neons", multiPlatNeons);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_multiplat_neons_rainbow", multiPlatNeonsRainbow);
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_R", g_multiPlatNeonsColor.R);
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_G", g_multiPlatNeonsColor.G);
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_multiplat_neons_B", g_multiPlatNeonsColor.B);
+	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_acceleration", accelMult);
+	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_brakes", brakeMult);
+	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_multiplier_handling", handlingMult);
 
-	ini.SetBoolValue(section_haxValues.c_str(), "add_blip_to_vehicle", _globaladdBlip);
-	ini.SetBoolValue(section_haxValues.c_str(), "warp_vehicle_nearby", _globalWarpNear);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_previews", _globalSpawnVehicle_drawBmps);
-	ini.SetValue(section_haxValues.c_str(), "vehicle_spawner_plate_text", _globalSpawnVehicle_plateText.c_str());
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_text_texter_value", _globalSpawnVehicle_plateTexter_value);
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_type", _globalSpawnVehicle_plateType);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_auto_sit", _globalSpawnVehicle_autoSit);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_auto_upgrade", _globalSpawnVehicle_autoUpgrade);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_invincible", _globalSpawnVehicle_invincible);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_persistent", _globalSpawnVehicle_persistent);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_delete_old", _globalSpawnVehicle_deleteOld);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_neons_on", _globalSpawnVehicle_neonToggle);
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_R", _globalSpawnVehicle_neonCol.R);
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_G", _globalSpawnVehicle_neonCol.G);
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_B", _globalSpawnVehicle_neonCol.B);
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_primary_colour", _globalSpawnVehicle_PrimCol);
-	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_secondary_colour", _globalSpawnVehicle_SecCol);
-	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_menyoo_customs_lsc", _globalLSC_Customs);
+	ini.SetBoolValue(section_haxValues.c_str(), "add_blip_to_vehicle", g_addBlip);
+	ini.SetBoolValue(section_haxValues.c_str(), "warp_vehicle_nearby", g_warpNear);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_previews", g_spawnVehicleDrawBMPs);
+	ini.SetValue(section_haxValues.c_str(), "vehicle_spawner_plate_text", g_spawnVehiclePlateText.c_str());
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_text_texter_value", g_spawnVehiclePlateTexterValue);
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_type", g_spawnVehiclePlateType);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_auto_sit", g_spawnVehicleAutoSit);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_auto_upgrade", g_spawnVehicleAutoUpgrade);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_invincible", g_spawnVehicleInvincible);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_persistent", g_spawnVehiclePersistent);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_delete_old", g_spawnVehicleDeleteOld);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_neons_on", g_spawnVehicleNeonToggle);
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_R", g_spawnVehicleNeonColor.R);
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_G", g_spawnVehicleNeonColor.G);
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_neons_B", g_spawnVehicleNeonColor.B);
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_primary_colour", g_spawnVehiclePrimaryColor);
+	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_secondary_colour", g_spawnVehicleSecondaryColor);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_menyoo_customs_lsc", g_LSCCustoms);
 
 	ini.SetDoubleValue(section_haxValues.c_str(), "clock", sub::Clock_catind::loop_clock);
 	ini.SetDoubleValue(section_haxValues.c_str(), "clock_screen_pos_x", sub::Clock_catind::_analogueClockPos.x);

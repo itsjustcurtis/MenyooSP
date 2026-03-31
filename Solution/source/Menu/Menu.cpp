@@ -178,9 +178,9 @@ INT Menu::currentsub_ar[100] = {};
 INT Menu::currentop_ar[100] = {};
 INT Menu::SetSub_delayed = 0;
 int Menu::delayedTimer = 0;
-bool Menu::bit_controller = 0, Menu::bit_mouse = 0;
+bool Menu::bitController = 0, Menu::bit_mouse = 0;
 bool Menu::bit_centre_title = 1, Menu::bit_centre_options = 0, Menu::bit_centre_breaks = 1,
-Menu::gradients = 1, Menu::thin_line_over_screct = 1, Menu::bit_glare_test = 1;
+Menu::gradients = 1, Menu::thinLineOverScrect = 1, Menu::bit_glare_test = 1;
 Scaleform Menu::scaleform_menuGlare;
 Scaleform Menu::instructional_buttons;
 std::vector<Scaleform_IbT> Menu::vIB;
@@ -190,12 +190,12 @@ INT8 g_loglevel = 2;
 
 void Menu::SetInputMethods()
 {
-	bit_controller = MenuInput::IsUsingController();
+	bitController = MenuInput::IsUsingController();
 }
 void Menu::DisableControls()
 {
 	// Keyboard
-	if (!bit_controller)
+	if (!bitController)
 	{
 		//DISPLAY_HUD(0);
 		HIDE_HELP_TEXT_THIS_FRAME();
@@ -417,7 +417,7 @@ void Menu::background()
 	else DRAW_RECT(0.16f + menuPos.x, scr_rect_Y + menuPos.y, 0.20f, 0.0345f, titlebox.R, titlebox.G, titlebox.B, titlebox.A, false);
 
 	// Draw thin line over scroller indicator rect
-	if (thin_line_over_screct)
+	if (thinLineOverScrect)
 	{
 		if (totalop < GTA_MAXOP) DRAW_RECT(0.16f + menuPos.x, (totalop * 0.035f + 0.1589f) + menuPos.y, 0.20f, 0.0011f, 255, 255, 255, 255, false);
 		else DRAW_RECT(0.16f + menuPos.x, (14.0f * 0.035f + 0.1589f) + menuPos.y, 0.20f, 0.0011f, 255, 255, 255, 255, false);
@@ -444,9 +444,9 @@ void Menu::background()
 
 	std::string toPrint = std::to_string(*currentopATM) + " / " + std::to_string(totalop);
 
-	Game::Print::setupdraw(GTAfont::Arial, Vector2(0.0f, 0.26f), false, false, false, optioncount);
+	Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.0f, 0.26f), false, false, false, optioncount);
 	float width = Game::Print::GetTextWidth(toPrint);
-	Game::Print::setupdraw(GTAfont::Arial, Vector2(0.0f, 0.26f), false, false, false, optioncount);
+	Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.0f, 0.26f), false, false, false, optioncount);
 	Game::Print::drawstring(toPrint, get_xcoord_at_menu_rightEdge(width, 0.0f, false), temp + menuPos.y);
 }
 void Menu::optionhi()
@@ -482,7 +482,7 @@ bool Menu::isBinds()
 	// Open menu - RB + Left / F8
 	UINT8 index1 = menubindsGamepad.first < 50 ? 0 : 2;
 	UINT8 index2 = menubindsGamepad.second < 50 ? 0 : 2;
-	return bit_controller ? (IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, menubindsGamepad.second)) : IsKeyJustUp(menubinds); // F8
+	return bitController ? (IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, menubindsGamepad.second)) : IsKeyJustUp(menubinds); // F8
 }
 void Menu::while_closed()
 {
@@ -683,7 +683,7 @@ void Menu::SetSub_closed()
 
 void Menu::glare_test()
 {
-	if (loop_no_clip_toggle)
+	if (noClipToggle)
 	{
 		//Label_unloadglare:;
 		scaleform_menuGlare.Unload();
@@ -744,7 +744,7 @@ std::string Menu::get_key_IB(const Scaleform_IbT& ib)
 }
 void Menu::draw_IB()
 {
-	if (vIB.empty() || UPDATE_ONSCREEN_KEYBOARD() == 0 || loop_hide_hud)//IS_HUD_HIDDEN())
+	if (vIB.empty() || UPDATE_ONSCREEN_KEYBOARD() == 0 || hideHUD)//IS_HUD_HIDDEN())
 	{
 		//instructional_buttons.Unload();
 		return;
@@ -1091,7 +1091,7 @@ void AddTitle(std::string text)
 
 	if (titletext_ALPHA_DIS_TEMP)
 	{
-		Game::Print::setupdraw(font_title, Vector2(0.26, 0.26), true, false, false, titletext);
+		Game::Print::SetupDraw(font_title, Vector2(0.26, 0.26), true, false, false, titletext);
 		Game::Print::drawstringGXT(text, 0.16f + menuPos.x, 0.1406f + menuPos.y);
 		return;
 	}
@@ -1362,7 +1362,7 @@ void AddNumber(const std::string& text, float value, __int8 decimal_places, bool
 	if (OptionY < 0.6325f && OptionY > 0.1425f)
 	{
 		FLOAT newXpos;
-		Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
 		if (Menu::printingop == *Menu::currentopATM)
 		{
 			if (&RIGHT_PRESS != &null && &LEFT_PRESS != &null)
@@ -1375,20 +1375,20 @@ void AddNumber(const std::string& text, float value, __int8 decimal_places, bool
 				newXpos = get_xcoord_at_menu_rightEdge(textureRes.x - 0.005, textureRes.x - 0.005 + Game::Print::GetTextWidth(value, decimal_places), true);
 				DRAW_SPRITE("CommonMenu", "arrowleft", newXpos, OptionY + 0.016f + menuPos.y, textureRes.x, textureRes.y, 0.0f, selectedtext.R, selectedtext.G, selectedtext.B, selectedtext.A, false, 0); // Left
 
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), textureRes.x - 0.005, true);
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 			}
 			else
 			{
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), 0.0024f, true);
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 			}
 		}
 		else
 		{
 			newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), 0.0024f, true);
-			Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
 		}
 
 		Game::Print::drawfloat(value, decimal_places, newXpos, OptionY + 0.0056 + menuPos.y);
@@ -1558,7 +1558,7 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 
 		chartickStr = DOES_TEXT_LABEL_EXIST(chartickStr.c_str()) ? GET_FILENAME_FOR_AUDIO_CONVERSATION(chartickStr.c_str()) : Language::TranslateToSelected(chartickStr);
 		FLOAT newXpos;
-		Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
 
 		if (Menu::printingop == *Menu::currentopATM)
 		{
@@ -1572,20 +1572,20 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 				newXpos = get_xcoord_at_menu_rightEdge(textureRes.x - 0.005, textureRes.x - 0.005 + Game::Print::GetTextWidth(chartickStr), true);
 				DRAW_SPRITE("CommonMenu", "arrowleft", newXpos, OptionY + 0.016f + menuPos.y, textureRes.x, textureRes.y, 0.0f, selectedtext.R, selectedtext.G, selectedtext.B, selectedtext.A, false, 0); // Left
 
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), textureRes.x - 0.005, true);
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 			}
 			else
 			{
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), 0.0024f, true);
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 			}
 		}
 		else
 		{
 			newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), 0.0024f, true);
-			Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
 		}
 
 		Game::Print::drawstring(chartickStr, newXpos, OptionY + 0.0056 + menuPos.y);
@@ -1610,7 +1610,7 @@ void AddTexter(const std::string& text, int selectedindex, const std::vector<std
 
 
 
-void Add_preset_colour_options_previews(UINT8 const r, UINT8 const g, UINT8 const b)
+void AddPresetColourOptionsPreviews(UINT8 const r, UINT8 const g, UINT8 const b)
 {
 	Vector2 res = { 0.1f, 0.0889f };
 
@@ -1623,13 +1623,13 @@ void Add_preset_colour_options_previews(UINT8 const r, UINT8 const g, UINT8 cons
 }
 void Add_preset_colour_options_previews(const RgbS& rgb)
 {
-	Add_preset_colour_options_previews(rgb.R, rgb.G, rgb.B);
+	AddPresetColourOptionsPreviews(rgb.R, rgb.G, rgb.B);
 }
-void Add_preset_colour_options_previews(const RGBA& rgb)
+void AddPresetColourOptionsPreviews(const RGBA& rgb)
 {
-	Add_preset_colour_options_previews(rgb.R, rgb.G, rgb.B);
+	AddPresetColourOptionsPreviews(rgb.R, rgb.G, rgb.B);
 }
-bool Add_preset_colour_options(INT& r, INT& g, INT& b)
+bool AddPresetColourOptions(INT& r, INT& g, INT& b)
 {
 	bool bPressed = false;
 	for (auto& colol : _vNeonColours)
@@ -1645,7 +1645,7 @@ bool Add_preset_colour_options(INT& r, INT& g, INT& b)
 		}
 
 		if (Menu::printingop == *Menu::currentopATM)
-			Add_preset_colour_options_previews(colol.rgb.R, colol.rgb.G, colol.rgb.B);
+			AddPresetColourOptionsPreviews(colol.rgb.R, colol.rgb.G, colol.rgb.B);
 	}
 	return bPressed;
 }

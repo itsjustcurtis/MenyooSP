@@ -47,7 +47,7 @@ namespace sub::Spooner
 
 			std::vector<Vector3> vCoordsToCheckPed
 			{
-				myPed.Position_get(),
+				myPed.GetPosition(),
 				//myPed.GetOffsetInWorldCoords(0, myDim1.y, -(myDim1.z / 2)),
 				//myPed.GetOffsetInWorldCoords(0, -myDim1.y, -(myDim1.z / 2)),
 				//myPed.GetOffsetInWorldCoords(myDim1.x, 0, -(myDim1.z / 2)),
@@ -62,7 +62,7 @@ namespace sub::Spooner
 
 				vCoordsToCheckVehicle =
 				{
-					myVehicle.Position_get(),
+					myVehicle.GetPosition(),
 					myVehicle.GetOffsetInWorldCoords(0, myVehicleDim1.y, -(myVehicleDim1.z / 2)),
 					myVehicle.GetOffsetInWorldCoords(0, -myVehicleDim1.y, -(myVehicleDim1.z / 2)),
 					myVehicle.GetOffsetInWorldCoords(myVehicleDim1.x, 0, -(myVehicleDim1.z / 2)),
@@ -71,7 +71,7 @@ namespace sub::Spooner
 			}
 
 			const auto& renderingCam = World::RenderingCamera_get();
-			const Vector3& camPos = (renderingCam == 0 ? GameplayCamera::Position_get() : renderingCam.Position_get());
+			const Vector3& camPos = (renderingCam == 0 ? GameplayCamera::GetPosition() : renderingCam.Position_get());
 
 			for (auto& marker : Databases::MarkerDb)
 			{
@@ -112,7 +112,7 @@ namespace sub::Spooner
 						Vector2 scrnPos;
 						if (World::WorldToScreen(finalPosition, scrnPos))
 						{
-							Game::Print::setupdraw(GTAfont::Impact, Vector2(0.3f, 0.3f), true, false, true);
+							Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.3f, 0.3f), true, false, true);
 							Game::Print::drawstring(marker.m_name, scrnPos.x, scrnPos.y);
 						}
 					}
@@ -148,7 +148,7 @@ namespace sub::Spooner
 										finalDestHeading = marker.m_destinationHeading;
 									}
 
-									entityToTeleport->Position_set(finalDest);
+									entityToTeleport->SetPosition(finalDest);
 									entityToTeleport->Heading_set(finalDestHeading);
 									switch ((EntityType)entityToTeleport->Type())
 									{

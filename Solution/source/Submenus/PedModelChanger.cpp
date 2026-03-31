@@ -102,7 +102,7 @@ namespace sub
 		void ShowInstructionalButton(GTAmodel::Model model)
 		{
 			bool bIsAFav = IsPedAFavourite(model);
-			if (Menu::bit_controller)
+			if (Menu::bitController)
 			{
 				Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -172,11 +172,11 @@ namespace sub
 							}
 							else Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add ped model.");
 						}
-						else Game::Print::PrintError_InvalidInput(customNameStr);
+						else Game::Print::PrintErrorInvalidInput(customNameStr);
 					}
 					else Game::Print::PrintError_InvalidModel(hashNameStr);
 				}
-				else Game::Print::PrintError_InvalidInput(hashNameStr);
+				else Game::Print::PrintErrorInvalidInput(hashNameStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouritePedModelEntryName, std::string(), 40U, "Enter model name (e.g. IG_BENNY):");
 			}
 
@@ -242,16 +242,16 @@ namespace sub
 				if (wasInVehicle)
 				{
 					vehicle = playerPed.CurrentVehicle();
-					currentVehSeat = playerPed.CurrentVehicleSeat_get();
+					currentVehSeat = playerPed.GetCurrentVehicleSeat();
 				}
 
-				bool bHasCollision = playerPed.IsCollisionEnabled_get();
+				bool bHasCollision = playerPed.GetIsCollisionEnabled();
 
 				SET_PLAYER_MODEL(PLAYER_ID(), model.hash);
 
 				playerPed = PLAYER_PED_ID();
 
-				playerPed.IsCollisionEnabled_set(bHasCollision);
+				playerPed.SetIsCollisionEnabled(bHasCollision);
 
 				SET_PED_DEFAULT_COMPONENT_VARIATION(playerPed.Handle());
 				//SET_PED_RANDOM_COMPONENT_VARIATION(playerPed.Handle(), 0);
@@ -274,7 +274,7 @@ namespace sub
 				if (IS_WEAPON_VALID(currWeaponHash))
 					playerPed.Weapon_set(currWeaponHash);
 
-				SET_PED_INFINITE_AMMO_CLIP(playerPed.Handle(), bit_infinite_ammo);
+				SET_PED_INFINITE_AMMO_CLIP(playerPed.Handle(), bitInfiniteAmmo);
 
 				if (spi >= 0)
 				{
@@ -287,7 +287,7 @@ namespace sub
 					spe.LastAnimation.dict.clear();
 					spe.LastAnimation.name.clear();
 					if (att.Exists() && spe.AttachmentArgs.isAttached)
-						spe.Handle.AttachTo(att, spe.AttachmentArgs.boneIndex, spe.Handle.IsCollisionEnabled_get(), spe.AttachmentArgs.offset, spe.AttachmentArgs.rotation);
+						spe.Handle.AttachTo(att, spe.AttachmentArgs.boneIndex, spe.Handle.GetIsCollisionEnabled(), spe.AttachmentArgs.offset, spe.AttachmentArgs.rotation);
 					spe.TaskSequence.Reset();
 					if (sub::Spooner::SelectedEntity.Handle.Equals(oldPlayerPed))
 					{
@@ -314,7 +314,7 @@ namespace sub
 		bool pressed = false;
 		AddTickol(text, model.Equals(pedModel), pressed, pressed, static_cast<TICKOL>(tickTrue)); if (pressed)
 		{
-			PTFX::trigger_ptfx_1("scr_solomon3", "scr_trev4_747_blood_impact", 0, ped.GetOffsetInWorldCoords(0.37, -0.32f, -1.32f), Vector3(90.0f, 0, 0), 0.7f);
+			PTFX::TriggerPTFX("scr_solomon3", "scr_trev4_747_blood_impact", 0, ped.GetOffsetInWorldCoords(0.37, -0.32f, -1.32f), Vector3(90.0f, 0, 0), 0.7f);
 			ChangeModel_(model);
 			addlog(ige::LogType::LOG_TRACE, "Changed model to: " + text);
 		}
@@ -350,14 +350,10 @@ namespace sub
 	void ModelChanger_()
 	{
 		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger");
-		bool ModelChangerRandomPedVariation_ = 0,
-			ModelChangerInput_ = 0;
-		//	 ModelChangerVariationWarning_ = 0,
-		//	 ModelChangerSlendy_ = 0,
-		//	 ModelChanger_Animal = 0;
+		bool ModelChangerRandomPedVariation_ = 0, ModelChangerInput_ = 0;
 		rngped = { "", "" };
 
-		Static_241 = PLAYER_PED_ID();
+		g_Ped1 = PLAYER_PED_ID();
 		AddTitle("Model Changer");
 		AddOption("Randomize Ped Variation", ModelChangerRandomPedVariation_);
 		AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
@@ -380,8 +376,8 @@ namespace sub
 		addlog(ige::LogType::LOG_TRACE, "Created ModelChanger Options");
 		if (ModelChangerRandomPedVariation_) {
 			addlog(ige::LogType::LOG_TRACE, "Random Ped Selected");
-			SET_PED_RANDOM_COMPONENT_VARIATION(Static_241, 0);
-			SET_PED_RANDOM_PROPS(Static_241);
+			SET_PED_RANDOM_COMPONENT_VARIATION(g_Ped1, 0);
+			SET_PED_RANDOM_PROPS(g_Ped1);
 			return;
 		}
 
@@ -396,22 +392,7 @@ namespace sub
 					Game::Print::PrintError_InvalidModel(inputStr);
 				return;
 			}
-			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::ModelChangerInput, std::string(), 64U, "Enter ped model name (e.g. IG_BENNY):");
 		}
-
-		//if (ModelChangerVariationWarning_){
-		//	Game::Print::PrintBottomCentre("~r~Warning:~s~ Do not change ped variation.");
-		//	ModelChangerVariationWarning_ = false;
-		//}
-
-		//if (ModelChangerSlendy_){
-		//	SET_PED_COMPONENT_VARIATION(Static_241, 0, 0, 3, 0);
-		//	SET_PED_COMPONENT_VARIATION(Static_241, 0, 3, 3, 0);
-		//	ModelChangerSlendy_ = false;
-		//}
-
-
-
 	}
 
 
@@ -567,4 +548,21 @@ namespace sub
 
 }
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(MODELCHANGER,                     sub::ModelChanger_)
+REGISTER_SUBMENU(MODELCHANGER_FAVOURITES,          sub::PedFavourites_catind::Sub_PedFavourites)
+REGISTER_SUBMENU(MODELCHANGER_PLAYER,              sub::ModelChanger_Player)
+REGISTER_SUBMENU(MODELCHANGER_ANIMAL,              sub::ModelChanger_Animal)
+REGISTER_SUBMENU(MODELCHANGER_AMBFEMALES,          sub::ModelChanger_AmbientFemale)
+REGISTER_SUBMENU(MODELCHANGER_AMBMALES,            sub::ModelChanger_AmbientMale)
+REGISTER_SUBMENU(MODELCHANGER_CS,                  sub::ModelChanger_Cutscene)
+REGISTER_SUBMENU(MODELCHANGER_GANGFEMALES,         sub::ModelChanger_GangFemale)
+REGISTER_SUBMENU(MODELCHANGER_GANGMALES,           sub::ModelChanger_GangMale)
+REGISTER_SUBMENU(MODELCHANGER_STORY,               sub::ModelChanger_Story)
+REGISTER_SUBMENU(MODELCHANGER_MP,                  sub::ModelChanger_Multiplayer)
+REGISTER_SUBMENU(MODELCHANGER_SCENARIOFEMALES,     sub::ModelChanger_ScenarioFemale)
+REGISTER_SUBMENU(MODELCHANGER_SCENARIOMALES,       sub::ModelChanger_ScenarioMale)
+REGISTER_SUBMENU(MODELCHANGER_ST_SCENARIOFEMALES,  sub::ModelChanger_Story_ScenarioFemale)
+REGISTER_SUBMENU(MODELCHANGER_ST_SCENARIOMALES,    sub::ModelChanger_Story_ScenarioMale)
+REGISTER_SUBMENU(MODELCHANGER_OTHERS,              sub::ModelChanger_Others)

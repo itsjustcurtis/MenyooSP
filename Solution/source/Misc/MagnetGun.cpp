@@ -24,7 +24,7 @@
 
 #include "..\Menu\Routine.h"
 
-namespace _MagnetGun_
+namespace MagnetGun
 {
 	MagnetGun::MagnetGun()
 		: bGunActive(false),
@@ -58,9 +58,9 @@ namespace _MagnetGun_
 			{
 				//Vector3& pedPos = ped.Position_get();
 
-				set_forge_gun_dist(distanceFromCam); // Use buttons to change the hold distance value
+				SetForgeGunDist(distanceFromCam); // Use buttons to change the hold distance value
 
-				Vector3 targetPos = GameplayCamera::Position_get() + (GameplayCamera::Direction_get() * distanceFromCam);
+				Vector3 targetPos = GameplayCamera::GetPosition() + (GameplayCamera::Direction_get() * distanceFromCam);
 
 				World::DrawMarker(MarkerType::DebugSphere, targetPos, Vector3(), Vector3(), Vector3(0.5f, 0.5f, 0.5f), g_fadedRGB.ToRGBA(150));
 
@@ -99,7 +99,7 @@ namespace _MagnetGun_
 	void MagnetGun::DisplayMagnetGunHelp()
 	{
 		Game::Print::PrintBottomLeft(oss_ << "Use the ~b~" << get_weapon_label(_whash, true), "~s~ to use the magnet ability.");
-		Game::Print::PrintBottomLeft(oss_ << "Use the ~b~ " << (Menu::bit_controller ? "L and R Sticks" : "Mouse Scroll") << "~s~ to alter the magnet gun distance.");
+		Game::Print::PrintBottomLeft(oss_ << "Use the ~b~ " << (Menu::bitController ? "L and R Sticks" : "Mouse Scroll") << "~s~ to alter the magnet gun distance.");
 	}
 
 

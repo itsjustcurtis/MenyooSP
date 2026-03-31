@@ -322,7 +322,7 @@ namespace sub::Spooner
 		}
 		void FaceDirection::RunP(GTAped& ep)
 		{
-			ep.Task().TurnTo(ep.Position_get().PointOnCircle(2.0f, this->heading), this->durationAfterLife > 0 ? -1 : this->duration + 200);
+			ep.Task().TurnTo(ep.GetPosition().PointOnCircle(2.0f, this->heading), this->durationAfterLife > 0 ? -1 : this->duration + 200);
 		}
 
 		void FaceEntity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -487,12 +487,12 @@ namespace sub::Spooner
 			if (takeVehicleToo)
 			{
 				GTAvehicle veh = ep.CurrentVehicle();
-				(veh.Exists() ? (GTAentity)veh : (GTAentity)ep).Position_set(this->destination);
+				(veh.Exists() ? (GTAentity)veh : (GTAentity)ep).SetPosition(this->destination);
 				//SET_PED_COORDS_KEEP_VEHICLE(ep.Handle(), this->destination.x, this->destination.y, this->destination.z);
 			}
 			else
 			{
-				ep.Position_set(this->destination);
+				ep.SetPosition(this->destination);
 			}
 		}
 
@@ -617,7 +617,7 @@ namespace sub::Spooner
 		}
 		void GoToCoord::RunP(GTAped& ep)
 		{
-			TASK_GO_STRAIGHT_TO_COORD(ep.Handle(), this->destination.x, this->destination.y, this->destination.z, this->speed, this->durationAfterLife > 0 ? -1 : this->duration, Vector3::DirectionToRotation(Vector3::Normalize(this->destination - ep.Position_get())).z, 0.0f);
+			TASK_GO_STRAIGHT_TO_COORD(ep.Handle(), this->destination.x, this->destination.y, this->destination.z, this->speed, this->durationAfterLife > 0 ? -1 : this->duration, Vector3::DirectionToRotation(Vector3::Normalize(this->destination - ep.GetPosition())).z, 0.0f);
 		}
 
 		void FollowRoute::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -746,7 +746,7 @@ namespace sub::Spooner
 		}
 		void PatrolInRange::RunP(GTAped& ep)
 		{
-			ep.Task().WanderAround(this->coord.IsZero() ? ep.Position_get()/*Legacy/bugged PatrolInRange behaviour*/ : this->coord, this->radius);
+			ep.Task().WanderAround(this->coord.IsZero() ? ep.GetPosition()/*Legacy/bugged PatrolInRange behaviour*/ : this->coord, this->radius);
 		}
 
 		WanderFreely::	WanderFreely()
@@ -1136,7 +1136,7 @@ namespace sub::Spooner
 		{
 			std::vector<GTAped> pedHandles;
 			//GTAmemory::GetPedHandles(pedHandles, ep.Position_get(), this->radius);
-			World::GetNearbyPeds(pedHandles, ep.Position_get(), this->radius);
+			World::GetNearbyPeds(pedHandles, ep.GetPosition(), this->radius);
 
 			TaskSequence squ;
 
@@ -1916,7 +1916,7 @@ namespace sub::Spooner
 			if (e.AttachmentArgs.isAttached && sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.Handle, att))
 				EntityManagement::AttachEntity(e, att, e.AttachmentArgs.boneIndex, e.AttachmentArgs.offset, (this->isRelative ? e.AttachmentArgs.rotation : Vector3()) + rotationValue);
 			else
-				e.Handle.Rotation_set((this->isRelative ? e.Handle.Rotation_get() : Vector3()) + rotationValue);
+				e.Handle.SetRotation((this->isRelative ? e.Handle.Rotation_get() : Vector3()) + rotationValue);
 		}
 
 		void ChangeOpacity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const

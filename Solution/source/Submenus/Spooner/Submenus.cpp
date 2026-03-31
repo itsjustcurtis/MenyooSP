@@ -74,8 +74,8 @@ namespace sub
 		float _fSaveRangeRadius = 5.0f;
 		UINT8 _copyEntTexterValue = 0;
 		UINT8 _entTypeToShowTexterValue = 0;
-		void SetEnt241() { Static_241 = SelectedEntity.Handle.Handle(); }
-		void SetEnt12() { Static_12 = SelectedEntity.Handle.Handle(); }
+		void SetEnt241() { g_Ped1 = SelectedEntity.Handle.Handle(); }
+		void SetEnt12() { g_Ped4 = SelectedEntity.Handle.Handle(); }
 
 		void Sub_SpoonerMain()
 		{
@@ -115,7 +115,7 @@ namespace sub
 			AddToggle("Teleport To Reference When Loading File", Settings::bTeleportToReferenceWhenLoadingFile);
 			AddTexter("Spooner Mode Method", static_cast<UINT8>(Settings::SpoonerModeMode), vSpoonerModeMode, null, bSmm_plus, bSmm_minus);
 
-			if (Menu::bit_controller)
+			if (Menu::bitController)
 			{
 				AddNumber("Movement Sensitivity (Gamepad)", Settings::CameraMovementSensitivityGamepad, 4, movsensG_input, movsensG_plus, movsensG_minus);
 				AddNumber("Rotation Sensitivity (Gamepad)", Settings::CameraRotationSensitivityGamepad, 4, rotsensG_input, rotsensG_plus, rotsensG_minus);
@@ -138,7 +138,7 @@ namespace sub
 				if (inputStr.length() > 0)
 				{
 					try { val = stof(inputStr); }
-					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
+					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 10U, std::to_string(val).substr(0, 10));
 				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&val);
@@ -163,7 +163,7 @@ namespace sub
 				if (inputStr.length() > 0)
 				{
 					try { val = stof(inputStr); }
-					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
+					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 10U, std::to_string(val).substr(0, 10));
 				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&val);
@@ -189,7 +189,7 @@ namespace sub
 			std::string& _dir = dict3;
 
 			GTAentity myPed = PLAYER_PED_ID();
-			const Vector3& myPos = myPed.Position_get();
+			const Vector3& myPos = myPed.GetPosition();
 			auto& fSaveRangeRadius = _fSaveRangeRadius;
 
 			AddTitle("Manage Saved Files");
@@ -215,12 +215,12 @@ namespace sub
 			}
 
 			bool bSaveWorld = false;
-			AddOption("Save World To File (" + std::to_string(_worldEntities.size()) + ")", bSaveWorld); if (bSaveWorld)
+			AddOption("Save World To File (" + std::to_string(worldEntities.size()) + ")", bSaveWorld); if (bSaveWorld)
 			{
 				std::string inputStr = Game::InputBox("", 28U, "Enter file name:");
 				if (inputStr.length() > 0)
 				{
-					if (FileManagement::SaveWorldToFile(_dir + "\\" + inputStr + ".xml", _worldEntities, Databases::MarkerDb))
+					if (FileManagement::SaveWorldToFile(_dir + "\\" + inputStr + ".xml", worldEntities, Databases::MarkerDb))
 					{
 						Game::Print::PrintBottomLeft("File ~b~saved~s~.");
 					}
@@ -320,7 +320,7 @@ namespace sub
 					}
 				}
 				else
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				return;
 				// No OnscreenKeyboard!
 			}
@@ -604,7 +604,7 @@ namespace sub
 						Vector2 scrnPos;
 						if (World::WorldToScreen(*nas.first, scrnPos))
 						{
-							Game::Print::setupdraw(GTAfont::Impact, Vector2(0.3f, 0.3f), true, false, true);
+							Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.3f, 0.3f), true, false, true);
 							Game::Print::drawstring(nas.second->name(), scrnPos.x, scrnPos.y);
 						}
 					}
@@ -638,7 +638,7 @@ namespace sub
 						bool bSetPosToMe = false;
 						AddOption("Set To Player Position", bSetPosToMe); if (bSetPosToMe)
 						{
-							Vector3 myPos = GTAentity(PLAYER_PED_ID()).Position_get();
+							Vector3 myPos = GTAentity(PLAYER_PED_ID()).GetPosition();
 							*std::get<1>(nas) = myPos;
 							if (!xNode)
 							{
@@ -778,7 +778,7 @@ namespace sub
 					{
 						if (timecycModStrength > 0.0f)
 						{
-							menu_current_timecycle_strength -= 0.02f;
+							currentTimecycleStrength -= 0.02f;
 							nodeTimecycMod.attribute("strength") = timecycModStrength;
 							doc.save_file((const char*)filePath.c_str());
 						}
@@ -941,7 +941,7 @@ namespace sub
 						EntityManagement::ShowArrowAboveEntity(e.Handle);
 
 						bool bShortcutDeletePressed;
-						if (Menu::bit_controller)
+						if (Menu::bitController)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, bEntityExists ? "Delete Entity" : "Remove Invalid Entity From DB");
 							bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -996,10 +996,10 @@ namespace sub
 			AddOption("Delete All Invalid Entities In Database", null, EntityManagement::DeleteInvalidEntitiesInDb);
 
 			AddBreak("---World---");
-			AddOption("Delete All Entities In World (" + std::to_string(_worldEntities.size()) + ")", null, EntityManagement::DeleteAllEntitiesInWorld);
-			AddOption("Delete All Objects In World (" + std::to_string(_worldObjects.size()) + ")", null, EntityManagement::DeleteAllPropsInWorld);
-			AddOption("Delete All Peds In World (" + std::to_string(_worldPeds.size()) + ")", null, EntityManagement::DeleteAllPedsInWorld);
-			AddOption("Delete All Vehicles In World (" + std::to_string(_worldVehicles.size()) + ")", null, EntityManagement::DeleteAllVehiclesInWorld);
+			AddOption("Delete All Entities In World (" + std::to_string(worldEntities.size()) + ")", null, EntityManagement::DeleteAllEntitiesInWorld);
+			AddOption("Delete All Objects In World (" + std::to_string(worldObjects.size()) + ")", null, EntityManagement::DeleteAllPropsInWorld);
+			AddOption("Delete All Peds In World (" + std::to_string(worldPeds.size()) + ")", null, EntityManagement::DeleteAllPedsInWorld);
+			AddOption("Delete All Vehicles In World (" + std::to_string(worldVehicles.size()) + ")", null, EntityManagement::DeleteAllVehiclesInWorld);
 
 			AddOption("Clear Entity Database (And Keep Entities)", null, EntityManagement::ClearDb);
 		}
@@ -1171,11 +1171,11 @@ namespace sub
 				if (bTextureVariation_minus) { if (thisTextureVariation > 0) { thisTextureVariation--; SET_OBJECT_TINT_INDEX(SelectedEntity.Handle.Handle(), thisTextureVariation); } }
 			}
 
-			int thisHealth = SelectedEntity.Handle.Health_get();
+			int thisHealth = SelectedEntity.Handle.GetHealth();
 			bool bHealth_plus = false, bHealth_minus = false, bHealth_input = false;
 			AddNumber("Health", thisHealth, 0, bHealth_input, bHealth_plus, bHealth_minus);
-			if (bHealth_plus) { if (thisHealth < INT_MAX) { thisHealth++; if (SelectedEntity.Handle.MaxHealth_get() < thisHealth) { SelectedEntity.Handle.MaxHealth_set(thisHealth); } SelectedEntity.Handle.Health_set(thisHealth); } }
-			if (bHealth_minus) { if (thisHealth > 0) { thisHealth--; if (SelectedEntity.Handle.MaxHealth_get() > thisHealth + 30) { SelectedEntity.Handle.MaxHealth_set(thisHealth + 30); } SelectedEntity.Handle.Health_set(thisHealth); } }
+			if (bHealth_plus) { if (thisHealth < INT_MAX) { thisHealth++; if (SelectedEntity.Handle.GetMaxHealth() < thisHealth) { SelectedEntity.Handle.MaxHealth_set(thisHealth); } SelectedEntity.Handle.Health_set(thisHealth); } }
+			if (bHealth_minus) { if (thisHealth > 0) { thisHealth--; if (SelectedEntity.Handle.GetMaxHealth() > thisHealth + 30) { SelectedEntity.Handle.MaxHealth_set(thisHealth + 30); } SelectedEntity.Handle.Health_set(thisHealth); } }
 			if (bHealth_input)
 			{
 				GTAentity& ent = SelectedEntity.Handle;
@@ -1185,13 +1185,13 @@ namespace sub
 					try
 					{
 						thisHealth = stoi(inputStr);
-						if (ent.MaxHealth_get() < thisHealth)
+						if (ent.GetMaxHealth() < thisHealth)
 						{
 							ent.MaxHealth_set(thisHealth);
 						}
 						ent.Health_set(thisHealth);
 					}
-					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
+					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerEoHealth, std::string(), 4U, std::string(), std::to_string(thisHealth));
 				//OnscreenKeyboard::State::arg1._int = ent.GetHandle();
@@ -1228,11 +1228,11 @@ namespace sub
 			AddOption("Opacity (Local)", null, SetEnt12, SUB::ENTITYALPHALEVEL);
 
 			bool bCollisionPressed = false;
-			AddLocal("Collision", SelectedEntity.Handle.IsCollisionEnabled_get(), bCollisionPressed, bCollisionPressed); if (bCollisionPressed)
+			AddLocal("Collision", SelectedEntity.Handle.GetIsCollisionEnabled(), bCollisionPressed, bCollisionPressed); if (bCollisionPressed)
 			{
 				GTAentity attBaseEnt;
 				EntityManagement::GetEntityThisEntityIsAttachedTo(SelectedEntity.Handle, attBaseEnt);
-				SelectedEntity.Handle.IsCollisionEnabled_set(!SelectedEntity.Handle.IsCollisionEnabled_get());
+				SelectedEntity.Handle.SetIsCollisionEnabled(!SelectedEntity.Handle.GetIsCollisionEnabled());
 				if (SelectedEntity.AttachmentArgs.isAttached)
 				{
 					EntityManagement::AttachEntity(SelectedEntity, attBaseEnt, SelectedEntity.AttachmentArgs.boneIndex, SelectedEntity.AttachmentArgs.offset, SelectedEntity.AttachmentArgs.rotation);
@@ -1259,12 +1259,12 @@ namespace sub
 				if (SpoonerMode::spoonerModeCamera.IsActive())
 				{
 					auto& cam = SpoonerMode::spoonerModeCamera;
-					cam.Position_set(SelectedEntity.Handle.GetOffsetInWorldCoords(0, -5.0f - SelectedEntity.Handle.Dim2().y, 0));
+					cam.SetPosition(SelectedEntity.Handle.GetOffsetInWorldCoords(0, -5.0f - SelectedEntity.Handle.Dim2().y, 0));
 				}
 				else
 				{
 					GTAped myPed = PLAYER_PED_ID();
-					myPed.Position_set(SelectedEntity.Handle.Position_get());
+					myPed.SetPosition(SelectedEntity.Handle.GetPosition());
 				}
 			}
 
@@ -1280,12 +1280,12 @@ namespace sub
 				if (SpoonerMode::spoonerModeCamera.IsActive())
 				{
 					auto& cam = SpoonerMode::spoonerModeCamera;
-					SelectedEntity.Handle.Position_set(cam.GetOffsetInWorldCoords(0, 5.0f + SelectedEntity.Handle.Dim2().y, 0));
+					SelectedEntity.Handle.SetPosition(cam.GetOffsetInWorldCoords(0, 5.0f + SelectedEntity.Handle.Dim2().y, 0));
 				}
 				else
 				{
 					GTAped myPed = PLAYER_PED_ID();
-					SelectedEntity.Handle.Position_set(myPed.Position_get() + (myPed.ForwardVector() * (SelectedEntity.Handle.Dim1().y + 4.0f)));
+					SelectedEntity.Handle.SetPosition(myPed.GetPosition() + (myPed.ForwardVector() * (SelectedEntity.Handle.Dim1().y + 4.0f)));
 				}
 			}
 
@@ -1298,7 +1298,7 @@ namespace sub
 			bool bResetRotation = false;
 			AddOption("Reset rotation", bResetRotation); if (bResetRotation)
 			{
-				SelectedEntity.Handle.Rotation_set(Vector3::Zero());
+				SelectedEntity.Handle.SetRotation(Vector3::Zero());
 			}
 
 			AddOption("TriggerFX", null, SetEnt241, SUB::PTFXSUB);
@@ -1694,7 +1694,7 @@ namespace sub
 			SelectedEntity.Handle.RequestControlOnce();
 
 			GTAped thisPed = SelectedEntity.Handle;
-			Vector3 currPos = SelectedEntity.Handle.Position_get();
+			Vector3 currPos = SelectedEntity.Handle.GetPosition();
 			Vector3 currRot = SelectedEntity.Handle.Rotation_get();
 			Vector3 nextPos = currPos;
 			Vector3 nextRot = currRot;
@@ -1735,11 +1735,11 @@ namespace sub
 
 			if (nextPos != currPos)
 			{
-				SelectedEntity.Handle.Position_set(nextPos);
-				currPos = SelectedEntity.Handle.Position_get();
+				SelectedEntity.Handle.SetPosition(nextPos);
+				currPos = SelectedEntity.Handle.GetPosition();
 				GTAentity attBase;
 				if (EntityManagement::GetEntityThisEntityIsAttachedTo(SelectedEntity.Handle, attBase))
-					World::DrawLine(attBase.Position_get(), currPos, RGBA::AllWhite()); // Just pointing out that it's attached
+					World::DrawLine(attBase.GetPosition(), currPos, RGBA::AllWhite()); // Just pointing out that it's attached
 			}
 			if (nextRot != currRot)
 			{
@@ -1756,11 +1756,11 @@ namespace sub
 					else thisPed.Task().ClearAnimation("idle", "mp_sleep");
 				}*/
 
-				SelectedEntity.Handle.Rotation_set(nextRot);
+				SelectedEntity.Handle.SetRotation(nextRot);
 				currRot = SelectedEntity.Handle.Rotation_get();
 				GTAentity attBase;
 				if (EntityManagement::GetEntityThisEntityIsAttachedTo(SelectedEntity.Handle, attBase))
-					World::DrawLine(attBase.Position_get(), currPos, RGBA::AllWhite()); // Just pointing out that it's attached
+					World::DrawLine(attBase.GetPosition(), currPos, RGBA::AllWhite()); // Just pointing out that it's attached
 			}
 		}
 
@@ -1886,7 +1886,7 @@ namespace sub
 
 			SelectedEntity.Handle.RequestControlOnce();
 
-			Vector3 currPos = SelectedEntity.Handle.Position_get();
+			Vector3 currPos = SelectedEntity.Handle.GetPosition();
 			Vector3 currRot = SelectedEntity.Handle.Rotation_get();
 			Vector3 nextPos = currPos;
 			Vector3 nextRot = currRot;
@@ -1925,8 +1925,8 @@ namespace sub
 			if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
 			if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
 
-			if (nextPos != currPos) SelectedEntity.Handle.Position_set(nextPos);
-			if (nextRot != currRot) SelectedEntity.Handle.Rotation_set(nextRot);
+			if (nextPos != currPos) SelectedEntity.Handle.SetPosition(nextPos);
+			if (nextRot != currRot) SelectedEntity.Handle.SetRotation(nextRot);
 		}
 		void Sub_Vector3_ManualPlacement()
 		{
@@ -2023,7 +2023,7 @@ namespace sub
 				AddBreak("---Place---");
 
 				bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
-				Vector3 refPos = refEnt.Handle.Position_get();
+				Vector3 refPos = refEnt.Handle.GetPosition();
 				Vector3 refRot = refEnt.Handle.Rotation_get();
 				Vector3 nextPosOffset;
 				Vector3 nextRotOffset;
@@ -2067,7 +2067,7 @@ namespace sub
 					{
 						if (isOnTheLine)
 							e.Handle.RequestControl(100);
-						e.Handle.Position_set(e.Handle.Position_get() + nextPosOffset);
+						e.Handle.SetPosition(e.Handle.GetPosition() + nextPosOffset);
 					}
 				}
 				if (!nextRotOffset.IsZero())
@@ -2076,7 +2076,7 @@ namespace sub
 					{
 						if (isOnTheLine)
 							e.Handle.RequestControl(100);
-						e.Handle.Rotation_set(e.Handle.Rotation_get() + nextRotOffset);
+						e.Handle.SetRotation(e.Handle.Rotation_get() + nextRotOffset);
 					}
 				}
 
@@ -2354,7 +2354,7 @@ namespace sub
 						thisArmour = stoi(inputStr);
 						thisPed.Armour_set(thisArmour);
 					}
-					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
+					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 				}
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerEoArmour, std::string(), 4U, std::string(), std::to_string(thisHealth));
 				//OnscreenKeyboard::State::arg1._int = ent.GetHandle();
@@ -2461,7 +2461,7 @@ namespace sub
 
 			if (pedops_warp_nearest)
 			{
-				const auto& closestVeh = World::GetClosestVehicle(thisPed.Position_get(), 100.0f);
+				const auto& closestVeh = World::GetClosestVehicle(thisPed.GetPosition(), 100.0f);
 				if (closestVeh.Exists())
 					thisPed.SetIntoVehicle(closestVeh, closestVeh.FirstFreeSeat(SEAT_DRIVER));
 				else
@@ -2480,12 +2480,12 @@ namespace sub
 				}
 			}
 
-			if (pedops_become_ped) { set_become_ped(thisPed); }
+			if (pedops_become_ped) { SetBecomePed(thisPed); }
 
 		}
 		void Sub_PedOps_Weapon()
 		{
-			auto& selectedCategoryIndex = ms_curr_paint_index;
+			auto& selectedCategoryIndex = msCurrentPaintIndex;
 			GTAped myPed = PLAYER_PED_ID();
 			GTAped thisPed = SelectedEntity.Handle;
 			Hash pedCurrWeapon = thisPed.Weapon_get();
@@ -2527,7 +2527,7 @@ namespace sub
 		}
 		void Sub_PedOps_Weapon_InCategory()
 		{
-			auto& selectedCategoryIndex = ms_curr_paint_index;
+			auto& selectedCategoryIndex = msCurrentPaintIndex;
 			AddTitle(WeaponIndivs::vCategoryNames[selectedCategoryIndex]);
 
 			GTAped thisPed = SelectedEntity.Handle;
@@ -2575,7 +2575,7 @@ namespace sub
 					m.m_selectedInSub = true;
 
 					bool bShortcutDeletePressed;
-					if (Menu::bit_controller)
+					if (Menu::bitController)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Marker");
 						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -2600,7 +2600,7 @@ namespace sub
 				if (!spoocam.IsActive())
 				{
 					GTAentity myPed = PLAYER_PED_ID();
-					Vector3 myPos = myPed.Position_get();
+					Vector3 myPos = myPed.GetPosition();
 					SelectedMarker = MarkerManagement::AddMarker(myPos, Vector3(0, 0, myPed.Heading_get()));
 				}
 				else
@@ -2626,7 +2626,7 @@ namespace sub
 		{
 			auto& fMarkerRemovalRadius = _fSaveRangeRadius;
 			GTAentity myPed = PLAYER_PED_ID();
-			const Vector3& myPos = myPed.Position_get();
+			const Vector3& myPos = myPed.GetPosition();
 
 			AddTitle("Removal");
 
@@ -2729,7 +2729,7 @@ namespace sub
 					bool bSetPosToMe = false;
 					AddOption("Set To Player Position", bSetPosToMe); if (bSetPosToMe)
 					{
-						Vector3 myPos = GTAentity(PLAYER_PED_ID()).Position_get();
+						Vector3 myPos = GTAentity(PLAYER_PED_ID()).GetPosition();
 						SelectedMarker->m_position = myPos;
 						SelectedMarker->m_attachmentArgs.attachedTo = 0;
 					}
@@ -2797,7 +2797,7 @@ namespace sub
 					bool bSetPosToMe = false;
 					AddOption("Set To Player Position", bSetPosToMe); if (bSetPosToMe)
 					{
-						Vector3 myPos = GTAentity(PLAYER_PED_ID()).Position_get();
+						Vector3 myPos = GTAentity(PLAYER_PED_ID()).GetPosition();
 						SelectedMarker->m_destinationVal.m_position = myPos;
 						SelectedMarker->m_destinationVal.m_attachmentArgs.attachedTo = 0;
 						SelectedMarker->m_destinationPtr = nullptr;
@@ -3031,7 +3031,7 @@ namespace sub
 				if (Menu::printingop == *Menu::currentopATM)
 				{
 					bool bIsAFav = FavouritesManagement::IsPropAFavourite(current, currentModel.hash);
-					if (Menu::bit_controller)
+					if (Menu::bitController)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -3107,7 +3107,7 @@ namespace sub
 
 					if (Menu::printingop == *Menu::currentopATM)
 					{
-						if (Menu::bit_controller)
+						if (Menu::bitController)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 
@@ -3198,7 +3198,7 @@ namespace sub
 			using SpawnVehicle_catind::AddvcatOption_;
 			typedef SpawnVehicle_catind::Indices Indices;
 
-			Static_241 = PLAYER_PED_ID();
+			g_Ped1 = PLAYER_PED_ID();
 
 			AddTitle("Spawn Vehicle");
 			AddOption("Favourites", null, nullFunc, SUB::SPAWNVEHICLE_FAVOURITES);
@@ -3245,7 +3245,7 @@ namespace sub
 
 	void EntityAlphaLevelSub_()
 	{
-		GTAentity entity = Static_12;
+		GTAentity entity = g_Ped4;
 		auto alphaLevel = entity.Alpha_get();
 
 		AddTitle("Opacity");
@@ -3289,7 +3289,7 @@ namespace sub
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::AlphaLevelMenuInput, std::string(), 3U, "Enter an alpha level (0-255):", std::to_string(alphaLevel));
@@ -3301,7 +3301,7 @@ namespace sub
 
 	void PedExplosionSub()
 	{
-		GTAped thisPed = Static_241;
+		GTAped thisPed = g_Ped1;
 
 		if (!thisPed.Exists())
 		{
@@ -3336,14 +3336,14 @@ namespace sub
 			bool bPressed = false;
 			AddOption(i.second, bPressed); if (bPressed)
 			{
-				World::AddExplosion(thisPed.Position_get(), i.first, 10.0f, 1.5f, true, true);
+				World::AddExplosion(thisPed.GetPosition(), i.first, 10.0f, 1.5f, true, true);
 			}
 		}
 
 		bool bInvisible_pressed = false;
 		AddOption("Invisible", bInvisible_pressed); if (bInvisible_pressed)
 		{
-			World::AddExplosion(thisPed.Position_get(), EXPLOSION::BLIMP, 10.0f, 0.1f, false, false);
+			World::AddExplosion(thisPed.GetPosition(), EXPLOSION::BLIMP, 10.0f, 0.1f, false, false);
 		}
 
 		bool bTaze_pressed = false;
@@ -3351,7 +3351,7 @@ namespace sub
 		{
 			auto& ped = thisPed;
 			Vector3 startPos = ped.GetOffsetInWorldCoords(0.5f, 2.8f, 1.0f);
-			Vector3 targPos = ped.Position_get(); //GET_PED_BONE_COORDS(ped.Handle(), Bone::Chest, 0, 0, 0);
+			Vector3 targPos = ped.GetPosition(); //GET_PED_BONE_COORDS(ped.Handle(), Bone::Chest, 0, 0, 0);
 			 //ped.RequestControl();
 			CLEAR_AREA_OF_PROJECTILES(startPos.x, startPos.y, startPos.z, 4.0f, 0);
 			World::ShootBullet(startPos, targPos, 0, WEAPON_STUNGUN, 5, 2000.0f, false, true);
@@ -3445,9 +3445,9 @@ namespace sub
 			float att_ry = 181.0f;
 			float att_rz = 0.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3462,9 +3462,9 @@ namespace sub
 			float att_ry = -92.0f;
 			float att_rz = 176.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3479,9 +3479,9 @@ namespace sub
 			float att_ry = 0.0f;
 			float att_rz = 283.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3498,7 +3498,7 @@ namespace sub
 			Model(tempHash).Load(2000);
 			//tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3513,9 +3513,9 @@ namespace sub
 			float att_ry = 90.0f;
 			float att_rz = 0.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3530,9 +3530,9 @@ namespace sub
 			float att_ry = 90.0f;
 			float att_rz = 0.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3547,9 +3547,9 @@ namespace sub
 			float att_ry = 90.0f;
 			float att_rz = 0.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3564,9 +3564,9 @@ namespace sub
 			float att_ry = 0.0f;
 			float att_rz = 0.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3581,9 +3581,9 @@ namespace sub
 			float att_ry = 92.7292f;
 			float att_rz = -0.39f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3598,9 +3598,9 @@ namespace sub
 			float att_ry = 86.0f;
 			float att_rz = 2.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3615,9 +3615,9 @@ namespace sub
 			float att_ry = 90.0f;
 			float att_rz = -11.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3632,9 +3632,9 @@ namespace sub
 			float att_ry = 85.0f;
 			float att_rz = -11.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3649,9 +3649,9 @@ namespace sub
 			float att_ry = 0.0f;
 			float att_rz = -32.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3666,9 +3666,9 @@ namespace sub
 			float att_ry = 90.0f;
 			float att_rz = -11.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3683,9 +3683,9 @@ namespace sub
 			float att_ry = 90.0f;
 			float att_rz = 0.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3700,9 +3700,9 @@ namespace sub
 			float att_ry = 90.0f;
 			float att_rz = 0.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			tempBone = Bone::LeftHand;
 			att_x = -0.05f;
@@ -3712,9 +3712,9 @@ namespace sub
 			att_ry = 90.0f;
 			att_rz = 0.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			SET_MODEL_AS_NO_LONGER_NEEDED(tempHash);
 			return;
@@ -3730,9 +3730,9 @@ namespace sub
 			float att_ry = 10.6f;
 			float att_rz = 0.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			tempHash = 3803840879;
 			tempBone = 60309;
@@ -3743,9 +3743,9 @@ namespace sub
 			att_ry = 0.0000f;
 			att_rz = 0.0000f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3762,9 +3762,9 @@ namespace sub
 				float att_ry = 90.0f;
 				float att_rz = 0.0f;
 				Model(tempHash).Load(2000);
-				tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+				tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 				int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-				ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+				ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 				SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			}
 			return;
@@ -3780,9 +3780,9 @@ namespace sub
 			float att_ry = 93.0001f;
 			float att_rz = -3.0011f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3797,9 +3797,9 @@ namespace sub
 			float att_ry = 88.4692f;
 			float att_rz = 6.7001f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3814,9 +3814,9 @@ namespace sub
 			float att_ry = 92.0799f;
 			float att_rz = -10.92f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3831,9 +3831,9 @@ namespace sub
 			float att_ry = 85.0f;
 			float att_rz = -11.0f;
 			Model(tempHash).Load(2000);
-			tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+			tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 			int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-			ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+			ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 			SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			return;
 		}
@@ -3850,9 +3850,9 @@ namespace sub
 				float att_ry = 0.0f;
 				float att_rz = 0.0f;
 				Model(tempHash).Load(2000);
-				tempBone = GET_PED_BONE_INDEX(Static_241, tempBone);
+				tempBone = GET_PED_BONE_INDEX(g_Ped1, tempBone);
 				int tempObject = CREATE_OBJECT(tempHash, 0.0f, 0.0f, 0.0f, 1, 1, 0);
-				ATTACH_ENTITY_TO_ENTITY(tempObject, Static_241, tempBone, att_x, att_y, att_z - 0.26f, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
+				ATTACH_ENTITY_TO_ENTITY(tempObject, g_Ped1, tempBone, att_x, att_y, att_z - 0.26f, att_rx, att_ry, att_rz, 1, 1, 0, 0, 2, 1, 0);
 				SET_OBJECT_AS_NO_LONGER_NEEDED(&tempObject);
 			}
 			return;
@@ -3862,12 +3862,12 @@ namespace sub
 			std::string inputStr = Game::InputBox("", 64U, "Enter prop name:");
 			if (inputStr.length() > 0)
 			{
-				Entity tempEntity = Static_241;
+				Entity tempEntity = g_Ped1;
 				Hash tempHash = GET_HASH_KEY(inputStr);
 				if (!IS_MODEL_IN_CDIMAGE(tempHash)) Game::Print::PrintError_InvalidModel(inputStr);
 				else
 				{
-					if (IS_PED_IN_ANY_VEHICLE(Static_241, 0)) tempEntity = GET_VEHICLE_PED_IS_IN(Static_241, 0);
+					if (IS_PED_IN_ANY_VEHICLE(g_Ped1, 0)) tempEntity = GET_VEHICLE_PED_IS_IN(g_Ped1, 0);
 
 					float att_x = 0.0f;
 					float att_y = 0.0f;
@@ -3888,29 +3888,29 @@ namespace sub
 		}
 
 		if (Network_ObjectSub_Clear) {
-			Vector3 temp = GET_ENTITY_COORDS(Static_241, 1);
-			clear_attachments_off_entity(Static_241, EntityType::PROP);
+			Vector3 temp = GET_ENTITY_COORDS(g_Ped1, 1);
+			clear_attachments_off_entity(g_Ped1, EntityType::PROP);
 			CLEAR_AREA_OF_OBJECTS(temp.x, temp.y, temp.z, 2.5f, 0);
 			return;
 		}
 
 		if (Network_ObjectSub_Mani) {
-			att_ped_to_veh(PedHash::Mani, Static_241, Vector3(), Vector3(), false, true);
+			att_ped_to_veh(PedHash::Mani, g_Ped1, Vector3(), Vector3(), false, true);
 			return;
 		}
 
 		if (Network_ObjectSub_Chop) {
-			att_ped_to_veh(PedHash::Chop, Static_241, Vector3(), Vector3(), false, true);
+			att_ped_to_veh(PedHash::Chop, g_Ped1, Vector3(), Vector3(), false, true);
 			return;
 		}
 
 		if (Network_ObjectSub_Alien) {
-			att_ped_to_veh(PedHash::MovAlien01, Static_241, Vector3(), Vector3(), false, true);
+			att_ped_to_veh(PedHash::MovAlien01, g_Ped1, Vector3(), Vector3(), false, true);
 			return;
 		}
 
 		if (Network_ObjectSub_Cow) {
-			att_ped_to_veh(PedHash::Cow, Static_241, Vector3(), Vector3(), false, false);
+			att_ped_to_veh(PedHash::Cow, g_Ped1, Vector3(), Vector3(), false, false);
 			return;
 		}
 
@@ -3922,8 +3922,8 @@ namespace sub
 				if (!IS_MODEL_IN_CDIMAGE(tempHash)) Game::Print::PrintError_InvalidModel(inputStr);
 				else
 				{
-					Entity tempEntity = Static_241;
-					if (IS_PED_IN_ANY_VEHICLE(Static_241, 0)) tempEntity = GET_VEHICLE_PED_IS_IN(Static_241, 0);
+					Entity tempEntity = g_Ped1;
+					if (IS_PED_IN_ANY_VEHICLE(g_Ped1, 0)) tempEntity = GET_VEHICLE_PED_IS_IN(g_Ped1, 0);
 					att_ped_to_veh(tempHash, tempEntity, Vector3(), Vector3(), false, true);
 				}
 			}
@@ -3932,15 +3932,15 @@ namespace sub
 		}
 
 		if (Network_ObjectSub_ClearPeds) {
-			Vector3 temp = GET_ENTITY_COORDS(Static_241, 1);
-			clear_attachments_off_entity(Static_241, EntityType::PED);
+			Vector3 temp = GET_ENTITY_COORDS(g_Ped1, 1);
+			clear_attachments_off_entity(g_Ped1, EntityType::PED);
 			CLEAR_AREA_OF_PEDS(temp.x, temp.y, temp.z, 2.5f, 0);
 			return;
 		}
 
 		if (Network_ObjectSub_ClearVehicles) {
-			Vector3 temp = GET_ENTITY_COORDS(Static_241, 1);
-			clear_attachments_off_entity(Static_241, EntityType::VEHICLE);
+			Vector3 temp = GET_ENTITY_COORDS(g_Ped1, 1);
+			clear_attachments_off_entity(g_Ped1, EntityType::VEHICLE);
 			CLEAR_AREA_OF_PEDS(temp.x, temp.y, temp.z, 2.5f, 0);
 			return;
 		}
@@ -3952,4 +3952,39 @@ namespace sub
 }
 
 
-
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(PEDEXPLOSIONSUB,      									sub::PedExplosionSub)
+REGISTER_SUBMENU(ATTACHFUNNYOBJECTSUB, 									sub::AttachFunnyObjectSub)
+REGISTER_SUBMENU(ENTITYALPHALEVEL,     									sub::EntityAlphaLevelSub_)
+REGISTER_SUBMENU(SPOONER_MAIN,                                        	sub::Spooner::Submenus::Sub_SpoonerMain)
+REGISTER_SUBMENU(SPOONER_SPAWN_CATEGORIES,                            	sub::Spooner::Submenus::Sub_SpawnCategories)
+REGISTER_SUBMENU(SPOONER_SPAWN_PROP,                                  	sub::Spooner::Submenus::Sub_SpawnProp)
+REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES,                       	sub::Spooner::Submenus::Sub_SpawnProp_Favourites)
+REGISTER_SUBMENU(SPOONER_SPAWN_PED,                                   	sub::Spooner::Submenus::Sub_SpawnPed)
+REGISTER_SUBMENU(SPOONER_SPAWN_VEHICLE,                               	sub::Spooner::Submenus::Sub_SpawnVehicle)
+REGISTER_SUBMENU(SPOONER_MANAGEMARKERS,                               	sub::Spooner::Submenus::Sub_ManageMarkers)
+REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_REMOVAL,                       	sub::Spooner::Submenus::Sub_ManageMarkers_Removal)
+REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER,                      	sub::Spooner::Submenus::Sub_ManageMarkers_InMarker)
+REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER_DEST2MARKER,          	sub::Spooner::Submenus::Sub_ManageMarkers_InMarker_Dest2Marker)
+REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER_ATTACH,               	sub::Spooner::Submenus::Sub_ManageMarkers_InMarker_Attach)
+REGISTER_SUBMENU(SPOONER_MANAGEDB,                                    	sub::Spooner::Submenus::Sub_ManageEntities)
+REGISTER_SUBMENU(SPOONER_MANAGEDB_REMOVAL,                            	sub::Spooner::Submenus::Sub_ManageEntities_Removal)
+REGISTER_SUBMENU(SPOONER_SAVEFILES,                                   	sub::Spooner::Submenus::Sub_SaveFiles)
+REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD,                              	sub::Spooner::Submenus::Sub_SaveFiles_Load)
+REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD_LEGACYSP00N,                  	sub::Spooner::Submenus::Sub_SaveFiles_Load_LegacySP00N)
+REGISTER_SUBMENU(SPOONER_VECTOR3_MANUALPLACEMENT,                     	sub::Spooner::Submenus::Sub_Vector3_ManualPlacement)
+REGISTER_SUBMENU(SPOONER_QUICKMANUALPLACEMENT,                        	sub::Spooner::Submenus::Sub_QuickManualPlacement)
+REGISTER_SUBMENU(SPOONER_GROUPSPOON,                                  	sub::Spooner::Submenus::Sub_GroupSpoon)
+REGISTER_SUBMENU(SPOONER_GROUPSPOON_SELECTENTITIES,                   	sub::Spooner::Submenus::Sub_GroupSpoon_SelectEntities)
+REGISTER_SUBMENU(SPOONER_GROUPSPOON_ATTACHTO,                         	sub::Spooner::Submenus::Sub_GroupSpoon_AttachTo)
+REGISTER_SUBMENU(SPOONER_SETTINGS,                                    	sub::Spooner::Submenus::Sub_Settings)
+REGISTER_SUBMENU(SPOONER_SELECTEDENTITYOPS,                           	sub::Spooner::Submenus::Sub_SelectedEntityOps)
+REGISTER_SUBMENU(SPOONER_PEDOPS,                                      	sub::Spooner::Submenus::Sub_PedOps)
+REGISTER_SUBMENU(SPOONER_PEDOPS_WEAPON,                               	sub::Spooner::Submenus::Sub_PedOps_Weapon)
+REGISTER_SUBMENU(SPOONER_PEDOPS_WEAPON_INCATEGORY,                   	sub::Spooner::Submenus::Sub_PedOps_Weapon_InCategory)
+REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS,                               	sub::Spooner::Submenus::Sub_AttachmentOps)
+REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_ATTACHTO,                      	sub::Spooner::Submenus::Sub_AttachmentOps_AttachTo)
+REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_SELECTBONE,                    	sub::Spooner::Submenus::Sub_AttachmentOps_SelectBone)
+REGISTER_SUBMENU(SPOONER_MANUALPLACEMENT,                             	sub::Spooner::Submenus::Sub_ManualPlacement)
+REGISTER_SUBMENU(SPOONER_SIZEMANIPULATION,                            	sub::Spooner::Submenus::Sub_SizeManipulation)
