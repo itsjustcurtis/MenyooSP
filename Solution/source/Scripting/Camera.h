@@ -61,7 +61,7 @@ public:
 	void DepthOfFieldStrength_set(float value);
 
 	float FieldOfView_get() const;
-	void FieldOfView_set(float value);
+	void SetFieldOfView(float value);
 
 	float FarClip_get() const;
 	void FarClip_set(float value);
@@ -84,11 +84,11 @@ public:
 	void MotionBlurStrength_set(float value);
 
 	Vector3 Position_get() const;
-	void Position_set(Vector3 coord);
+	void SetPosition(Vector3 coord);
 	void Position_set(float X, float Y, float Z);
 
 	Vector3 Rotation_get(__int8 unk = 2) const;
-	void Rotation_set(const Vector3& rot, __int8 unk = 2);
+	void SetRotation(const Vector3& rot, __int8 unk = 2);
 	void Rotation_set(float X, float Y, float Z, __int8 unk = 2);
 
 

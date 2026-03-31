@@ -172,7 +172,7 @@ namespace sub::TeleportLocations_catind
 					Menu::SetSub_previous();
 					return;
 				}
-				GTAped ped = Static_241;
+				GTAped ped = g_Ped1;
 				AddTitle(currentClubhouseInfo.location->name);
 
 				for (auto& o : vOptionArrays)
@@ -328,7 +328,7 @@ namespace sub::TeleportLocations_catind
 					Menu::SetSub_previous();
 					return;
 				}
-				GTAped ped = Static_241;
+				GTAped ped = g_Ped1;
 				AddTitle(currentBusinessInfo.location->name);
 
 				bool bOption_plus = false, bOption_minus = false;
@@ -353,5 +353,9 @@ namespace sub::TeleportLocations_catind
 
 }
 
-
-
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TELEPORTOPS_BIKERCLUBHOUSES,           sub::TeleportLocations_catind::BikerInteriors::Clubhouses::Sub_Clubhouses)
+REGISTER_SUBMENU(TELEPORTOPS_BIKERCLUBHOUSES_INLOC,     sub::TeleportLocations_catind::BikerInteriors::Clubhouses::Sub_Clubhouses_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_BUSINESSES,                sub::TeleportLocations_catind::BikerInteriors::Businesses::Sub_Businesses)
+REGISTER_SUBMENU(TELEPORTOPS_BUSINESSES_INLOC,          sub::TeleportLocations_catind::BikerInteriors::Businesses::Sub_Businesses_InLoc)

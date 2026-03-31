@@ -65,7 +65,7 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved)
 		addlog(ige::LogType::LOG_TRACE, "Registering Script ThreadMenyooMain");
 		scriptRegister(hInstance, ThreadMenyooMain);
 		addlog(ige::LogType::LOG_TRACE, "Registering Script Thread_menu_loops2");
-		scriptRegisterAdditionalThread(hInstance, Thread_menu_loops2);
+		scriptRegisterAdditionalThread(hInstance, ThreadMenuLoops2);
 
 		addlog(ige::LogType::LOG_TRACE, "Registering Keyboard Handler");
 		keyboardHandlerRegister(OnKeyboardMessage);

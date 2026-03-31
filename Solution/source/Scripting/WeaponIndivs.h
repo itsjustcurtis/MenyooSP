@@ -79,7 +79,7 @@ namespace WeaponIndivs
 std::string get_weapon_label(Hash hash, bool gxt);
 
 // Weapon - give
-void give_ped_parachute(GTAentity ped);
+void GivePedParachute(GTAentity ped);
 void give_ped_max_ammo(GTAentity ped);
 void give_all_weapons_to_ped(GTAentity ped, bool bInfAmmo = false);
 

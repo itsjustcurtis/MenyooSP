@@ -359,7 +359,7 @@ namespace PTFX
 	}
 #pragma endregion
 
-	void trigger_ptfx_1(const std::string& asset, const std::string& name, GTAentity entity, Vector3 position, Vector3 rotation, float scale, int pedBone)
+	void TriggerPTFX(const std::string& asset, const std::string& name, GTAentity entity, Vector3 position, Vector3 rotation, float scale, int pedBone)
 	{
 
 		REQUEST_NAMED_PTFX_ASSET(asset.c_str());

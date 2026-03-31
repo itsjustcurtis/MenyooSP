@@ -153,7 +153,7 @@ public:
 	static INT currentop_ar[100];
 	static INT SetSub_delayed;
 	static int delayedTimer;
-	static bool bit_controller, bit_mouse, bit_centre_title, bit_centre_options, bit_centre_breaks, gradients, thin_line_over_screct, bit_glare_test;
+	static bool bitController, bit_mouse, bit_centre_title, bit_centre_options, bit_centre_breaks, gradients, thinLineOverScrect, bit_glare_test;
 	static Scaleform scaleform_menuGlare, instructional_buttons;
 	static std::vector<Scaleform_IbT> vIB;
 	static std::function<void()> OnSubBack;
@@ -253,10 +253,10 @@ void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), vo
 void AddTexter(const std::string& text, int selectedindex, const std::vector<std::string>& textarray, bool &A_PRESS = null, bool &RIGHT_PRESS = null, bool &LEFT_PRESS = null, bool gxt = 0);
 
 
-void Add_preset_colour_options_previews(UINT8 const r, UINT8 const g, UINT8 const b);
+void AddPresetColourOptionsPreviews(UINT8 const r, UINT8 const g, UINT8 const b);
 void Add_preset_colour_options_previews(const RgbS& rgb);
-void Add_preset_colour_options_previews(const RGBA& rgb);
-bool Add_preset_colour_options(INT& r, INT& g, INT& b);
+void AddPresetColourOptionsPreviews(const RGBA& rgb);
+bool AddPresetColourOptions(INT& r, INT& g, INT& b);
 
 
 

@@ -223,13 +223,13 @@ namespace sub::Spooner
 				nodePedStuff.append_child("RelationshipGroupAltered").text() = bRelationshipGroupAltered;
 				nodePedStuff.append_child("RelationshipGroup").text() = int_to_hexstring(relationshipGroupHash, true).c_str();
 
-				auto movGrpIter = g_pedList_movGrp.find(ep.Handle());
-				if (movGrpIter != g_pedList_movGrp.end())
+				auto movGrpIter = g_pedListMovGroup.find(ep.Handle());
+				if (movGrpIter != g_pedListMovGroup.end())
 				{
 					nodePedStuff.append_child("MovementGroupName").text() = movGrpIter->second.c_str();
 				}
-				auto wmovGrpIter = g_pedList_wmovGrp.find(ep.Handle());
-				if (wmovGrpIter != g_pedList_wmovGrp.end())
+				auto wmovGrpIter = g_pedListWMovGroup.find(ep.Handle());
+				if (wmovGrpIter != g_pedListWMovGroup.end())
 				{
 					nodePedStuff.append_child("WeaponMovementGroupName").text() = wmovGrpIter->second.c_str();
 				}
@@ -257,7 +257,7 @@ namespace sub::Spooner
 					nodePedStuff.append_child("AnimActive").text() = false;
 				}
 
-				const auto& facialMoodStr = get_ped_facial_mood(ep);
+				const auto& facialMoodStr = GetPedFacialMood(ep);
 				if (!facialMoodStr.empty())
 				{
 					nodePedStuff.append_child("FacialMood").text() = facialMoodStr.c_str();
@@ -317,16 +317,16 @@ namespace sub::Spooner
 				nodeVehicleStuff.append_child("NumberPlateIndex").text() = ev.NumberPlateTextIndex_get();
 				nodeVehicleStuff.append_child("WheelType").text() = ev.WheelType_get();
 				nodeVehicleStuff.append_child("WheelsInvisible").text() = are_vehicle_wheels_invisible(ev);
-				nodeVehicleStuff.append_child("EngineSoundName").text() = get_vehicle_engine_sound_name(ev).c_str();
+				nodeVehicleStuff.append_child("EngineSoundName").text() = GetVehicleEngineSoundName(ev).c_str();
 				nodeVehicleStuff.append_child("WindowTint").text() = ev.WindowTint_get();
 				nodeVehicleStuff.append_child("BulletProofTyres").text() = !ev.CanTyresBurst_get();
 				nodeVehicleStuff.append_child("DirtLevel").text() = ev.DirtLevel_get();
 				nodeVehicleStuff.append_child("PaintFade").text() = ev.PaintFade_get();
 				nodeVehicleStuff.append_child("RoofState").text() = (int)ev.RoofState_get();
 				nodeVehicleStuff.append_child("SirenActive").text() = ev.SirenActive_get();
-				nodeVehicleStuff.append_child("EngineOn").text() = ev.EngineRunning_get();
+				nodeVehicleStuff.append_child("EngineOn").text() = ev.GetEngineRunning();
 				nodeVehicleStuff.append_child("EngineHealth").text() = ev.EngineHealth_get();
-				nodeVehicleStuff.append_child("LightsOn").text() = ev.LightsOn_get();
+				nodeVehicleStuff.append_child("LightsOn").text() = ev.GetLightsOn();
 				nodeVehicleStuff.append_child("IsRadioLoud").text() = CAN_VEHICLE_RECEIVE_CB_RADIO(ev.Handle());// != 0;
 				nodeVehicleStuff.append_child("LockStatus").text() = (int)ev.LockStatus_get();
 
@@ -372,10 +372,10 @@ namespace sub::Spooner
 				nodeVehicleTyresBursted.append_child("_8").text() = ev.IsTyreBursted(8);
 
 				// Multipliers
-				if (g_multList_rpm.count(ev.Handle())) nodeVehicleStuff.append_child("RpmMultiplier").text() = g_multList_rpm[ev.Handle()];
-				if (g_multList_torque.count(ev.Handle())) nodeVehicleStuff.append_child("TorqueMultiplier").text() = g_multList_torque[ev.Handle()];
-				if (g_multList_maxSpeed.count(ev.Handle())) nodeVehicleStuff.append_child("MaxSpeed").text() = g_multList_maxSpeed[ev.Handle()];
-				if (g_multList_headlights.count(ev.Handle())) nodeVehicleStuff.append_child("HeadlightIntensity").text() = g_multList_headlights[ev.Handle()];
+				if (g_multListRPM.count(ev.Handle())) nodeVehicleStuff.append_child("RpmMultiplier").text() = g_multListRPM[ev.Handle()];
+				if (g_multListTorque.count(ev.Handle())) nodeVehicleStuff.append_child("TorqueMultiplier").text() = g_multListTorque[ev.Handle()];
+				if (g_multListMaxSpeed.count(ev.Handle())) nodeVehicleStuff.append_child("MaxSpeed").text() = g_multListMaxSpeed[ev.Handle()];
+				if (g_multListHeadLights.count(ev.Handle())) nodeVehicleStuff.append_child("HeadlightIntensity").text() = g_multListHeadLights[ev.Handle()];
 
 				// Extras (modExtras)
 				auto nodeVehicleModExtras = nodeVehicleStuff.append_child("ModExtras");
@@ -396,7 +396,7 @@ namespace sub::Spooner
 			}
 
 			// fx lops
-			for (auto& ptfxlop : sub::Ptfx_catind::_fxlops)
+			for (auto& ptfxlop : sub::Ptfx_catind::fxLops)
 			{
 				if (ptfxlop.entity == e.Handle)
 				{
@@ -410,21 +410,21 @@ namespace sub::Spooner
 			nodeEntity.append_child("LodDistance").text() = e.Handle.LodDistance_get();
 			nodeEntity.append_child("IsVisible").text() = e.Handle.IsVisible();
 			//nodeEntity.append_child("IsDead").text() = e.Handle.IsDead();
-			nodeEntity.append_child("MaxHealth").text() = e.Handle.MaxHealth_get();
-			nodeEntity.append_child("Health").text() = e.Handle.Health_get();
+			nodeEntity.append_child("MaxHealth").text() = e.Handle.GetMaxHealth();
+			nodeEntity.append_child("Health").text() = e.Handle.GetHealth();
 
 			nodeEntity.append_child("HasGravity").text() = e.Handle.HasGravity_get();
 			nodeEntity.append_child("IsOnFire").text() = e.Handle.IsOnFire();
 			nodeEntity.append_child("IsInvincible").text() = e.Handle.IsInvincible();
 			nodeEntity.append_child("IsBulletProof").text() = e.Handle.IsBulletProof();
-			nodeEntity.append_child("IsCollisionProof").text() = !e.Handle.IsCollisionEnabled_get();
+			nodeEntity.append_child("IsCollisionProof").text() = !e.Handle.GetIsCollisionEnabled();
 			nodeEntity.append_child("IsExplosionProof").text() = e.Handle.IsExplosionProof();
 			nodeEntity.append_child("IsFireProof").text() = e.Handle.IsFireProof();
 			nodeEntity.append_child("IsMeleeProof").text() = e.Handle.IsMeleeProof();
 			nodeEntity.append_child("IsOnlyDamagedByPlayer").text() = e.Handle.IsOnlyDamagedByPlayer();
 
 			auto nodeEntityPosRot = nodeEntity.append_child("PositionRotation");
-			const Vector3& epos = e.Handle.Position_get();
+			const Vector3& epos = e.Handle.GetPosition();
 			const Vector3& erot = e.Handle.Rotation_get();
 			nodeEntityPosRot.append_child("X").text() = epos.x;
 			nodeEntityPosRot.append_child("Y").text() = epos.y;
@@ -651,7 +651,7 @@ namespace sub::Spooner
 					//set_ped_movement_clipset(ep, movGrpName);
 					Game::RequestAnimSet(movGrpName);
 					SET_PED_MOVEMENT_CLIPSET(ep.Handle(), movGrpName.c_str(), 0x3E800000);
-					g_pedList_movGrp[ep.Handle()] = movGrpName;
+					g_pedListMovGroup[ep.Handle()] = movGrpName;
 				}
 				auto nodeWmovGrpName = nodePedStuff.child("WeaponMovementGroupName");
 				if (nodeWmovGrpName)
@@ -660,12 +660,12 @@ namespace sub::Spooner
 					//set_ped_weapon_movement_clipset(ep, wmovGrpName);
 					Game::RequestAnimSet(wmovGrpName);
 					SET_PED_WEAPON_MOVEMENT_CLIPSET(ep.Handle(), wmovGrpName.c_str());
-					g_pedList_wmovGrp[ep.Handle()] = wmovGrpName;
+					g_pedListWMovGroup[ep.Handle()] = wmovGrpName;
 				}
 				if (nodeMovGrpName || nodeWmovGrpName)
 				{
 					WAIT(30);
-					const Vector3& coord = ep.Position_get();
+					const Vector3& coord = ep.GetPosition();
 					SET_ENTITY_COORDS(ep.Handle(), coord.x, coord.y, coord.z + 0.05f, 0, 0, 0, 1);
 					FREEZE_ENTITY_POSITION(ep.Handle(), !bFrozenPos);
 				}
@@ -689,7 +689,7 @@ namespace sub::Spooner
 				auto nodeFacialMood = nodePedStuff.child("FacialMood");
 				if (nodeFacialMood)
 				{
-					set_ped_facial_mood(ep, nodeFacialMood.text().as_string());
+					SetPedFacialMood(ep, nodeFacialMood.text().as_string());
 				}
 
 				if (!isPtfxLopAdded)
@@ -766,9 +766,9 @@ namespace sub::Spooner
 				ev.PaintFade_set(nodeVehicleStuff.child("PaintFade").text().as_float());
 				ev.RoofState_set((VehicleRoofState)nodeVehicleStuff.child("RoofState").text().as_int());
 				ev.SirenActive_set(nodeVehicleStuff.child("SirenActive").text().as_bool());
-				if (nodeVehicleStuff.child("EngineOn")) ev.EngineRunning_set(nodeVehicleStuff.child("EngineOn").text().as_bool());
+				if (nodeVehicleStuff.child("EngineOn")) ev.SetEngineRunning(nodeVehicleStuff.child("EngineOn").text().as_bool());
 				if (nodeVehicleStuff.child("EngineHealth")) ev.EngineHealth_set(nodeVehicleStuff.child("EngineHealth").text().as_int());
-				if (nodeVehicleStuff.child("LightsOn")) ev.LightsOn_set(nodeVehicleStuff.child("LightsOn").text().as_bool());
+				if (nodeVehicleStuff.child("LightsOn")) ev.SetLightsOn(nodeVehicleStuff.child("LightsOn").text().as_bool());
 				if (nodeVehicleStuff.child("IsRadioLoud").text().as_int(0))
 				{
 					SET_VEHICLE_RADIO_LOUD(ev.Handle(), nodeVehicleStuff.child("IsRadioLoud").text().as_int());
@@ -856,9 +856,9 @@ namespace sub::Spooner
 					if (nodeVehicleTyresBursted.child("_8").text().as_bool()) ev.BurstTyre(8);
 				}
 
-				if (nodeVehicleStuff.child("WheelsInvisible").text().as_bool()) set_vehicle_wheels_invisible(ev, true);
+				if (nodeVehicleStuff.child("WheelsInvisible").text().as_bool()) SetVehicleWheelsInvisible(ev, true);
 				std::string engSoundName = nodeVehicleStuff.child("EngineSoundName").text().as_string();
-				if (engSoundName.length()) set_vehicle_engine_sound_name(ev, engSoundName);
+				if (engSoundName.length()) SetVehicleEngineSoundName(ev, engSoundName);
 
 				// Multipliers
 				auto nodeVehicleRpmMultiplier = nodeVehicleStuff.child("RpmMultiplier");
@@ -868,22 +868,22 @@ namespace sub::Spooner
 				if (nodeVehicleRpmMultiplier)
 				{
 					MODIFY_VEHICLE_TOP_SPEED(ev.Handle(), nodeVehicleRpmMultiplier.text().as_float());
-					g_multList_rpm[ev.Handle()] = nodeVehicleRpmMultiplier.text().as_float();
+					g_multListRPM[ev.Handle()] = nodeVehicleRpmMultiplier.text().as_float();
 				}
 				if (nodeVehicleTorqueMultiplier)
 				{
 					SET_VEHICLE_CHEAT_POWER_INCREASE(ev.Handle(), nodeVehicleTorqueMultiplier.text().as_float());
-					g_multList_torque[ev.Handle()] = nodeVehicleTorqueMultiplier.text().as_float();
+					g_multListTorque[ev.Handle()] = nodeVehicleTorqueMultiplier.text().as_float();
 				}
 				if (nodeVehicleMaxSpeed)
 				{
 					SET_ENTITY_MAX_SPEED(ev.Handle(), nodeVehicleMaxSpeed.text().as_float());
-					g_multList_maxSpeed[ev.Handle()] = nodeVehicleMaxSpeed.text().as_float();
+					g_multListMaxSpeed[ev.Handle()] = nodeVehicleMaxSpeed.text().as_float();
 				}
 				if (nodeVehicleHeadlightIntensity)
 				{
 					SET_VEHICLE_LIGHT_MULTIPLIER(ev.Handle(), nodeVehicleHeadlightIntensity.text().as_float());
-					g_multList_headlights[ev.Handle()] = nodeVehicleHeadlightIntensity.text().as_float();
+					g_multListHeadLights[ev.Handle()] = nodeVehicleHeadlightIntensity.text().as_float();
 				}
 
 			}
@@ -936,7 +936,7 @@ namespace sub::Spooner
 			e.e.Handle.SetOnlyDamagedByPlayer(nodeEntity.child("IsOnlyDamagedByPlayer").text().as_bool());
 
 			eModel.LoadCollision(100);
-			e.e.Handle.IsCollisionEnabled_set(!nodeEntity.child("IsCollisionProof").text().as_bool());
+			e.e.Handle.SetIsCollisionEnabled(!nodeEntity.child("IsCollisionProof").text().as_bool());
 			e.e.Handle.SetVisible(nodeEntity.child("IsVisible").text().as_bool());
 
 			auto nodeEntityAttachment = nodeEntity.child("Attachment");
@@ -1335,7 +1335,7 @@ namespace sub::Spooner
 					SpoonerMode::Tick();
 					bSpoocamIsActive = spoocam.IsActive();
 
-					Game::Print::setupdraw(GTAfont::Caps, Vector2(0.9f, 0.9f), true, false, false);
+					Game::Print::SetupDraw(GTAfont::Caps, Vector2(0.9f, 0.9f), true, false, false);
 					Game::Print::drawstring("SET A WAYPOINT AS A MAP REFERENCE", 0.5f, 0.5f);
 
 					Game::CustomHelpText::ShowThisFrame(oss_ << "Press ~INPUT_LOOK_BEHIND~ to save " << (bSpoocamIsActive ? "the camera target position" : "your current position") << " as the map reference.");
@@ -1358,7 +1358,7 @@ namespace sub::Spooner
 							}
 							else
 							{
-								wpCoords = myPed.Position_get();
+								wpCoords = myPed.GetPosition();
 							}
 						}
 						else
@@ -1671,7 +1671,7 @@ namespace sub::Spooner
 
 			GTAentity myPed = PLAYER_PED_ID();
 			GTAentity myVehicle = g_myVeh;
-			const Vector3& myPos = myPed.Position_get();
+			const Vector3& myPos = myPed.GetPosition();
 
 			pugi::xml_node nodeRoot = doc.child("SpoonerPlacements");
 
@@ -2089,7 +2089,7 @@ namespace sub::Spooner
 				if (opacityLevel < 255) e.Handle.Alpha_set(opacityLevel);
 				e.Handle.LodDistance_set(1000000);
 				eModel.LoadCollision(100);
-				e.Handle.IsCollisionEnabled_set(true);
+				e.Handle.SetIsCollisionEnabled(true);
 
 				vModelHashes.insert(eModel.hash);
 				Databases::EntityDb.push_back(e);

@@ -36,20 +36,17 @@ namespace Language
 	{
 		static std::set<std::string> reported_missing;
 
-		try {
-			auto& ret = this->pairs.at(text);
-			return ret;
+		auto it = this->pairs.find(text);
+		if (it != this->pairs.end()) {
+			return it->second;
 		}
-		catch (std::out_of_range) 
-		{
-			if(reported_missing.insert(text).second) 
-			{
-				addlog(ige::LogType::LOG_ERROR, "Missing translation for: " + text);
-			}
-			this->pairs[text] = text;
 
-			return text;
+		if (reported_missing.insert(text).second)
+		{
+			addlog(ige::LogType::LOG_ERROR, "Missing translation for: " + text);
 		}
+		this->pairs[text] = text;
+		return text;
 	}
 
 	std::string TranslateToSelected(std::string text)

@@ -36,6 +36,7 @@ namespace sub
 			bClearWeatherOverride = 0;
 
 		//std::vector<std::string>{"Earth", "Mercury", "Earth's Moon", "Pluto"};
+		// unused
 		std::map<float, std::string> v0gravities
 		{
 			{ 0.0f, "Zero 0.0" },
@@ -49,9 +50,8 @@ namespace sub
 			{ 24.9f, "Jupiter 24.9" },
 			{ 274.0f, "Sun 274.0" }
 		};
-		//float mult_0_gravity = GTAmemory::WorldGravity_get();
-		float mult_0_gravity = 9.8f;
 
+		float mult_0_gravity = GTAmemory::WorldGravity_get();
 		float windSpeed = GET_WIND_SPEED();
 		float wavesHeight = GET_DEEP_OCEAN_SCALER();
 
@@ -84,16 +84,16 @@ namespace sub
 		//AddweatherOption_("SnowLight");
 		//AddweatherOption_("Blizzard");
 		//AddweatherOption_("Xmas");
-		AddLocal("Snow On Terrain", _SpSnow.IsSnow(), spsnow_on, spsnow_off);
+		AddLocal("Snow On Terrain", g_spSnow.IsSnow(), spsnow_on, spsnow_off);
 		AddNumber("Wind Speed", windSpeed, 2, null, windSpeed_plus, windSpeed_minus);
 		AddNumber("Ocean Wave Strength", wavesHeight, 2, null, wavesHeight_plus, wavesHeight_minus);
-		AddNumber("Rain Puddles Multiplier", _globalRainFXIntensity, 2, null, rainfxi_plus, rainfxi_minus);
-		AddTexter("Gravity Level", 0, std::vector<std::string>{v0gravities[mult_0_gravity]}, null, gravityLevel_plus, gravityLevel_minus);
+		AddNumber("Rain Puddles Multiplier", g_rainFXIntensity, 2, null, rainfxi_plus, rainfxi_minus);
+		AddNumber("Gravity", mult_0_gravity, 2, null, gravityLevel_plus, gravityLevel_minus);
 		AddOption("Clouds", null, nullFunc, SUB::CLOUDOPS);
 		AddOption("Water Hack (For Waves At Beaches)", null, nullFunc, SUB::WATERHACK);
 
 
-		if (spsnow_on || spsnow_off) { _SpSnow.ToggleSnow(spsnow_on); }
+		if (spsnow_on || spsnow_off) { g_spSnow.ToggleSnow(spsnow_on); }
 
 		if (windSpeed_plus)
 		{
@@ -124,37 +124,27 @@ namespace sub
 		if (rainfxi_plus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "rainfxit_plus");
-			if (_globalRainFXIntensity < 45.0f) _globalRainFXIntensity += 0.1f;
-			SET_RAIN(_globalRainFXIntensity);
+			if (g_rainFXIntensity < 45.0f) g_rainFXIntensity += 0.1f;
+			SET_RAIN(g_rainFXIntensity);
 		}
 		if (rainfxi_minus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "rainfxit_minus");
-			if (_globalRainFXIntensity > 0.0f) _globalRainFXIntensity -= 0.1f;
-			SET_RAIN(_globalRainFXIntensity);
+			if (g_rainFXIntensity > 0.0f) g_rainFXIntensity -= 0.1f;
+			SET_RAIN(g_rainFXIntensity);
 		}
 
 		if (gravityLevel_plus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "gravityLevel_plus");
-			auto git = v0gravities.find(mult_0_gravity);
-			git++;
-			if (git != v0gravities.end())
-			{
-				mult_0_gravity = git->first;
-				GTAmemory::WorldGravity_set(mult_0_gravity);
-			}
+			mult_0_gravity += 0.1;
+			GTAmemory::WorldGravity_set(mult_0_gravity);
 		}
 		if (gravityLevel_minus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "gravityLevel_minus");
-			auto git = std::map<float, std::string>::reverse_iterator(v0gravities.find(mult_0_gravity));
-			git++;
-			if (git != v0gravities.rend())
-			{
-				mult_0_gravity = git->first;
-				GTAmemory::WorldGravity_set(mult_0_gravity);
-			}
+			mult_0_gravity -= 0.1;
+			GTAmemory::WorldGravity_set(mult_0_gravity);
 		}
 		
 		//if (gravityLevel_plus && mult_0_gravity < 3){ mult_0_gravity++; SET_GRAVITY_LEVEL(mult_0_gravity); return; }
@@ -213,4 +203,7 @@ namespace sub
 
 }
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(WEATHEROPS, 	sub::WeatherOps_)
+REGISTER_SUBMENU(CLOUDOPS,   	sub::WeatherClouds_catind::sub_CloudOps)

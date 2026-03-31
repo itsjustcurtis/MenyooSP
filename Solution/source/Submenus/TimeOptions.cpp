@@ -41,11 +41,11 @@ namespace sub
 
 		AddTitle("Time");
 		AddOption("Clock (System Time)", null, nullFunc, SUB::CLOCK);
-		AddToggle("Pause Clock Time", loop_pause_clock, WeatherOps_pause_clock_toggle);
-		AddToggle("Sync With System Time", loop_sync_clock);
+		AddToggle("Pause Clock Time", pauseClock, WeatherOps_pause_clock_toggle);
+		AddToggle("Sync With System Time", syncClock);
 		AddNumber("Hour", WeatherOps_hour, 0, null, WeatherOps_hour_plus, WeatherOps_hour_minus);
 		AddNumber("Minute", WeatherOps_minute, 0, null, WeatherOps_minute_plus, WeatherOps_minute_minus);
-		AddNumber("World Speed", current_timescale, 1, null, timescale_plus, timescale_minus);
+		AddNumber("World Speed", currentTimescale, 1, null, timescale_plus, timescale_minus);
 
 		if (WeatherOps_hour_plus) {
 			if ((WeatherOps_hour + 1) == 24)
@@ -115,10 +115,10 @@ namespace sub
 			return;
 		}
 
-		if (timescale_plus && current_timescale < 1.1f) { current_timescale += 0.1f; SET_TIME_SCALE(current_timescale); return; }
-		if (timescale_minus && current_timescale > 0.0f) { current_timescale -= 0.1f; SET_TIME_SCALE(current_timescale); return; }
+		if (timescale_plus && currentTimescale < 1.1f) { currentTimescale += 0.1f; SET_TIME_SCALE(currentTimescale); return; }
+		if (timescale_minus && currentTimescale > 0.0f) { currentTimescale -= 0.1f; SET_TIME_SCALE(currentTimescale); return; }
 
-		if (WeatherOps_pause_clock_toggle) { pause_clock_H = GET_CLOCK_HOURS(); pause_clock_M = GET_CLOCK_MINUTES(); return; }
+		if (WeatherOps_pause_clock_toggle) { pauseClockH = GET_CLOCK_HOURS(); pauseClockM = GET_CLOCK_MINUTES(); return; }
 
 
 	}
@@ -139,8 +139,8 @@ namespace sub
 			char mintBuff[3];
 			sprintf_s(mintBuff, "%02d", t.tm_min);
 
-			Game::Print::setupdraw(GTAfont::Arial, Vector2(0.3f, 0.3f), true, false, true, RGBA(255, 255, 255, 210));
-			Game::Print::drawstring(oss_ << vWeekDayNames[t.tm_wday] << " - " << (t.tm_hour < 13 ? t.tm_hour : t.tm_hour - 12) << ':' << mintBuff << (t.tm_hour < 12 ? " am" : " pm"), 0.5f, 0.007f);//0.01f, 0.8f);
+			Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.3f, 0.3f), true, false, true, RGBA(255, 255, 255, 210));
+			Game::Print::DrawString(oss_ << vWeekDayNames[t.tm_wday] << " - " << (t.tm_hour < 13 ? t.tm_hour : t.tm_hour - 12) << ':' << mintBuff << (t.tm_hour < 12 ? " am" : " pm"), 0.5f, 0.007f);//0.01f, 0.8f);
 		}
 
 		//struct sClockImage { std::string name; DxHookIMG::DxTexture faceId, hourId, minuteId; };
@@ -238,4 +238,7 @@ namespace sub
 
 }
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TIMEOPS,   	sub::TimeOps_)
+REGISTER_SUBMENU(CLOCK,         sub::Clock_catind::Sub_Clock)

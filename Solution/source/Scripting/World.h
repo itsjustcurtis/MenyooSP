@@ -54,7 +54,7 @@ namespace PedRelationship {
 	enum PedRelationship : int;
 }
 
-extern std::vector<Entity> _nearbyPeds, _nearbyVehicles, _worldPeds, _worldVehicles, _worldObjects, _worldEntities;
+extern std::vector<Entity> nearbyPeds, nearbyVehicles, worldPeds, worldVehicles, worldObjects, worldEntities;
 
 namespace World
 {

@@ -1178,11 +1178,12 @@ void GTAmemory::Init()
 
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("48 8d 3d ? ? ? ? 48 8b 04 f7");
+		if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 	}
 	else {
-		address = FindPattern("\x4C\x8D\x05\x00\x00\x00\x00\x0F\xB7\xC1", "xxx????xxx");
+		address = MemryScan::PatternScanner::FindPattern("3b 35 ? ? ? ? 74 ? 48 81 fd");
+		if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address - 4) + address);
 	}
-	if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("41 57 41 56 56 57 53 48 83 ec ? 89 d7 49 89 ce");
@@ -1555,7 +1556,7 @@ void GTAmemory::Init()
 		GetModelInfo = (GetModelInfo_t)(address);
 	}
 
-	_SpSnow = SpSnow();
+	g_spSnow = SpSnow();
 	addlog(ige::LogType::LOG_INIT, "GTAMemory Init Done");
 }
 
@@ -1728,7 +1729,7 @@ void GTAmemory::InitEnhancedPools() {
 			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo pattern");
 		}
 
-		_SpSnow = SpSnow();
+		g_spSnow = SpSnow();
 	}
 }
 
@@ -2322,7 +2323,7 @@ uintptr_t GTAmemory::FindPattern(const char* pattern, const char* mask)
 
 //--------------------------------SpSnow---------------------------------------------------------
 
-SpSnow _SpSnow;
+SpSnow g_spSnow;
 
 void SpSnow::EnableSnow(bool bEnable)
 {

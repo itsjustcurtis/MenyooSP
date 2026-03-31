@@ -13,12 +13,12 @@
 
 namespace sub
 {
-    void ComponentChanger_();
+    void ComponentChanger();
 }
 
 namespace sub::BodyguardMenu
 {
-    void SetEnt242() { Static_241= SelectedBodyguard->Handle.Handle(); }
+    void SetEnt242() { g_Ped1= SelectedBodyguard->Handle.Handle(); }
     void BodyguardEntityOps()
     {
         // Determine the title dynamically
@@ -109,13 +109,13 @@ namespace sub::BodyguardMenu
 
         if (g_WeaponOpsPedOverride != 0)
         {
-            Static_241 = g_WeaponOpsPedOverride;
-            Static_240 = g_WeaponOpsPlayerOverride;
+            g_Ped1 = g_WeaponOpsPedOverride;
+            g_Ped2 = g_WeaponOpsPlayerOverride;
         }
         else
         {
-            Static_241 = PLAYER::PLAYER_PED_ID();
-            Static_240 = PLAYER::PLAYER_ID();
+            g_Ped1 = PLAYER::PLAYER_PED_ID();
+            g_Ped2 = PLAYER::PLAYER_ID();
         }
 
         WeaponsLoadouts_catind::Sub_Loadouts_InItem();
@@ -126,3 +126,8 @@ namespace sub::BodyguardMenu
     }
 
 }
+
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(BODYGUARD_ENTITYOPS,   sub::BodyguardMenu::BodyguardEntityOps)
+REGISTER_SUBMENU(BODYGUARD_WEAPONOPS,   sub::BodyguardMenu::BodyguardWeaponOps)
