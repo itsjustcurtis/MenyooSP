@@ -45,7 +45,7 @@ namespace sub
 {
 	void MiscOps()
 	{
-		Static_241 = PLAYER_PED_ID();
+		g_Ped1 = PLAYER_PED_ID();
 
 		const std::vector<std::string> explosions_wp_names{ "Off", "Visible & Shaky", "Visible", "Invisible" };
 
@@ -64,21 +64,21 @@ namespace sub
 
 		AddTitle("Misc Options");
 		//	AddToggle("First Person View", loop_fps_cam_rot, fps_mode_on, fps_mode_on);
-		AddToggle("FreeCam (No-Clip)", loop_no_clip, misc_freecam_on, misc_freecam_off);
-		AddLocal("Top-Down View", _Gta2Cam_::g_gta2Cam.Enabled(), _Gta2Cam_::ToggleOnOff, _Gta2Cam_::ToggleOnOff);
-		AddLocal("Manual Respawn", _ManualRespawn_::g_manualRespawn.Enabled(), _ManualRespawn_::ToggleOnOff, _ManualRespawn_::ToggleOnOff);
-		AddTexter("Auto-kill Enemies", loop_autoKillEnemies, std::vector<std::string>{"Off", "Weak", "Radical"}, null, autokill_plus, autokill_minus);
-		AddLocal("Meteor Shower Mode", _MeteorShower_::g_meteorShower.Enabled(), _MeteorShower_::ToggleOnOff, _MeteorShower_::ToggleOnOff);
-		AddToggle("EMP Mode (For Night-time)", loop_blackout_mode, null, blackout_off);
-		AddToggle("Simple Blackout Mode (For Night-time)", loop_simple_blackout_mode, null, blackout_off);
-		AddToggle("Jump-Around Mode", _JumpAroundMode_::bEnabled, jumpAround_on, jumpAround_off);
-		AddToggle("Fireworks Ahoy", loop_fireworksDisplay);
-		AddToggle("Massacre Mode", loop_massacre_mode, misc_massacre_mode_on, misc_massacre_mode_off);
-		AddToggle("Restricted Area Access", loop_restricted_areas_access);
-		AddTexter("Explosions At Waypoint", loop_explosion_wp, explosions_wp_names, null, explosions_wp_plus, explosions_wp_minus);
-		AddToggle("Decreased Ped Population", loop_ped_population, null, misc_pedPopu_off);
-		AddToggle("Decreased Vehicle Population", loop_vehicle_population, null, misc_vehPopu_off);
-		AddToggle("Decreased Weapon Pickups", loop_clearWeaponPickups);
+		AddToggle("FreeCam (No-Clip)", noClip, misc_freecam_on, misc_freecam_off);
+		AddLocal("Top-Down View", GTA2Cam::g_gta2Cam.Enabled(), GTA2Cam::ToggleOnOff, GTA2Cam::ToggleOnOff);
+		AddLocal("Manual Respawn", ManualRespawn::g_manualRespawn.Enabled(), ManualRespawn::ToggleOnOff, ManualRespawn::ToggleOnOff);
+		AddTexter("Auto-kill Enemies", autoKillEnemies, std::vector<std::string>{"Off", "Weak", "Radical"}, null, autokill_plus, autokill_minus);
+		AddLocal("Meteor Shower Mode", MeteorShower::g_meteorShower.Enabled(), MeteorShower::ToggleOnOff, MeteorShower::ToggleOnOff);
+		AddToggle("EMP Mode (For Night-time)", blackoutMode, null, blackout_off);
+		AddToggle("Simple Blackout Mode (For Night-time)", simpleBlackoutMode, null, blackout_off);
+		AddToggle("Jump-Around Mode", JumpAroundMode::bEnabled, jumpAround_on, jumpAround_off);
+		AddToggle("Fireworks Ahoy", fireworksDisplay);
+		AddToggle("Massacre Mode", massacreMode, misc_massacre_mode_on, misc_massacre_mode_off);
+		AddToggle("Restricted Area Access", restrictedAreasAccess);
+		AddTexter("Explosions At Waypoint", explostionWP, explosions_wp_names, null, explosions_wp_plus, explosions_wp_minus);
+		AddToggle("Decreased Ped Population", pedPopulation, null, misc_pedPopu_off);
+		AddToggle("Decreased Vehicle Population", vehiclePopulation, null, misc_vehPopu_off);
+		AddToggle("Decreased Weapon Pickups", clearWeaponPickups);
 		AddOption("Cutscene Player", null, nullFunc, SUB::CUTSCENEPLAYER);
 		AddOption("TV Player", null, nullFunc, SUB::TVCHANNELSTUFF_TV);
 		AddOption("Radio", null, nullFunc, SUB::RADIOSUB);
@@ -225,22 +225,22 @@ namespace sub
 
 		if (misc_freecam_on)
 		{
-			loop_no_clip_toggle = false;
-			Game::Print::PrintBottomCentre("Press ~b~" + VkCodeToStr(bind_no_clip) + "~s~ OR ~b~X+LS~s~ OR ~b~Square+L3~s~ to toggle FreeCam.");
+			noClipToggle = false;
+			Game::Print::PrintBottomCentre("Press ~b~" + VkCodeToStr(BindNoClip) + "~s~ OR ~b~X+LS~s~ OR ~b~Square+L3~s~ to toggle FreeCam.");
 			return;
 		}
 
-		if (misc_freecam_off) { if (loop_no_clip_toggle) set_no_clip_off1(); set_no_clip_off2(); return; }
+		if (misc_freecam_off) { if (noClipToggle) SetNoclipOff1(); SetNoclipOff2(); return; }
 
-		if (autokill_plus) { if (loop_autoKillEnemies < 2) loop_autoKillEnemies++; return; }
-		if (autokill_minus) { if (loop_autoKillEnemies > 0) loop_autoKillEnemies--; return; }
+		if (autokill_plus) { if (autoKillEnemies < 2) autoKillEnemies++; return; }
+		if (autokill_minus) { if (autoKillEnemies > 0) autoKillEnemies--; return; }
 
 		if (misc_massacre_mode_on) { World::ClearWeatherOverride(); World::SetWeatherOverTime(WeatherType::Thunder, 4000); return; }
 		if (misc_massacre_mode_off) { World::ClearWeatherOverride(); World::SetWeatherOverTime(WeatherType::ExtraSunny, 4000); return; }
 
 		if (jumpAround_on || jumpAround_off)
 		{
-			_JumpAroundMode_::StartJumping(jumpAround_on);
+			JumpAroundMode::StartJumping(jumpAround_on);
 		}
 
 		if (blackout_off)
@@ -249,15 +249,15 @@ namespace sub
 			SET_ARTIFICIAL_VEHICLE_LIGHTS_STATE(TRUE);
 		}
 
-		if (explosions_wp_plus) { if (loop_explosion_wp < explosions_wp_names.size() - 1) loop_explosion_wp++; return; }
-		if (explosions_wp_minus) { if (loop_explosion_wp > 0) loop_explosion_wp--; return; }
+		if (explosions_wp_plus) { if (explostionWP < explosions_wp_names.size() - 1) explostionWP++; return; }
+		if (explosions_wp_minus) { if (explostionWP > 0) explostionWP--; return; }
 
 		if (misc_pedPopu_off) { SET_PED_POPULATION_BUDGET(1); return; }
 		if (misc_vehPopu_off) { SET_VEHICLE_POPULATION_BUDGET(1); return; }
 
 	}
 
-	void Timecycles_()
+	void Timecycles()
 	{
 		bool timecycles_reset = 0, timecycles_input = 0,
 			heat_vision_on = 0, night_vision_on = 0, night_vision_off = 0,
@@ -265,53 +265,12 @@ namespace sub
 
 		AddTitle("Vision Hax");
 		AddLocal("Heat Vision", GET_USINGSEETHROUGH(), heat_vision_on, heat_vision_on);
-		AddToggle("Heat Vision On Aim", loop_HVSnipers);
-		AddToggle("Night Vision (SP)", bit_night_vision, night_vision_on, night_vision_off);
+		AddToggle("Heat Vision On Aim", hvSnipers);
+		AddToggle("Night Vision (SP)", bitNightVision, night_vision_on, night_vision_off);
 
 		AddBreak("---Timecycle Hax---");
-		AddNumber("Timecycle Strength", menu_current_timecycle_strength, 2, null, strength_plus, strength_minus);
+		AddNumber("Timecycle Strength", currentTimecycleStrength, 2, null, strength_plus, strength_minus);
 		AddOption("Reset", timecycles_reset);
-
-		/*AddtimcycOption_("Default", "DEFAULT");
-		AddtimcycOption_("White Out", "WhiteOut");
-		AddtimcycOption_("Mild Red Mist", "REDMIST_blend");
-		AddtimcycOption_("Depth Of Field", "WATER_silty");
-		AddtimcycOption_("Film", "Bikers");
-		AddtimcycOption_("Blue Action", "CopsSPLASH");
-		AddtimcycOption_("Wobbly", "drug_wobbly");
-		AddtimcycOption_("Drunk", "Drunk");
-		AddtimcycOption_("Sepia", "dying");
-		AddtimcycOption_("Obfuscate View", "Hicksbar");
-		AddtimcycOption_("Black and White", "hud_def_desatcrunch");
-		AddtimcycOption_("Green Filmic", "hud_def_Franklin");
-		AddtimcycOption_("Warm", "INT_streetlighting");
-		AddtimcycOption_("Dark Blue", "introblue");
-		AddtimcycOption_("Day For Night", "METRO_Tunnels");
-		AddtimcycOption_("Stoned", "michealspliff");
-		AddtimcycOption_("Colourful", "MP_Killstreak");
-		AddtimcycOption_("Hazy Sky", "NeutralColorCode");
-		AddtimcycOption_("Black Sky", "New_sewers");
-		AddtimcycOption_("Yellow Sky", "phone_cam1");
-		AddtimcycOption_("Red", "TrevorColorCode");
-		AddtimcycOption_("Underwater", "underwater");
-		AddtimcycOption_("Water Port", "WATER_port");
-		// Bikers DLC
-		AddtimcycOption_("PPFilter");
-		AddtimcycOption_("BikerFilter");
-		AddtimcycOption_("LostTimeLight");
-		AddtimcycOption_("LostTimeDark");
-		AddtimcycOption_("LostTimeFlash");
-		AddtimcycOption_("DeadlineNeon01");
-		AddtimcycOption_("BikerFormFlash");
-		AddtimcycOption_("BikerForm01");
-		// Import/Export DLC
-		AddtimcycOption_("mp_imx_intwaremed");
-		AddtimcycOption_("mp_imx_intwaremed_office");
-		AddtimcycOption_("mp_imx_mod_int_01");
-		AddtimcycOption_("IMpExt_Interior_02");
-		AddtimcycOption_("ImpExp_Interior_01");
-		AddtimcycOption_("impexp_interior_01_lift");
-		AddtimcycOption_("IMpExt_Interior_02_stair_cage");*/
 
 		for (auto& i : TimecycleModification::vTimecycles)
 		{
@@ -319,7 +278,7 @@ namespace sub
 			AddOption(i.second, bModPressed); if (bModPressed)
 			{
 				TimecycleModification::SetMod(i.first);
-				TimecycleModification::SetModStrength(menu_current_timecycle_strength);
+				TimecycleModification::SetModStrength(currentTimecycleStrength);
 			}
 		}
 
@@ -335,7 +294,7 @@ namespace sub
 		if (timecycles_reset)
 		{
 			TimecycleModification::ClearMod();
-			menu_current_timecycle_strength = 0.9f;
+			currentTimecycleStrength = 0.9f;
 			return;
 		}
 		if (timecycles_input)
@@ -344,7 +303,7 @@ namespace sub
 			if (inputStr.length())
 			{
 				SET_TIMECYCLE_MODIFIER(inputStr.c_str());
-				SET_TIMECYCLE_MODIFIER_STRENGTH(menu_current_timecycle_strength);
+				SET_TIMECYCLE_MODIFIER_STRENGTH(currentTimecycleStrength);
 			}
 			return;
 		}
@@ -352,14 +311,14 @@ namespace sub
 
 		if (strength_plus)
 		{
-			if (menu_current_timecycle_strength < 3.0f) menu_current_timecycle_strength += 0.02f;
-			TimecycleModification::SetModStrength(menu_current_timecycle_strength);
+			if (currentTimecycleStrength < 3.0f) currentTimecycleStrength += 0.02f;
+			TimecycleModification::SetModStrength(currentTimecycleStrength);
 			return;
 		}
 		if (strength_minus)
 		{
-			if (menu_current_timecycle_strength > 0.0f) menu_current_timecycle_strength -= 0.02f;
-			TimecycleModification::SetModStrength(menu_current_timecycle_strength);
+			if (currentTimecycleStrength > 0.0f) currentTimecycleStrength -= 0.02f;
+			TimecycleModification::SetModStrength(currentTimecycleStrength);
 			return;
 		}
 
@@ -372,9 +331,9 @@ namespace sub
 
 		AddTitle("Clear Area");
 
-		AddNumber("Range To Clear", _globalClearArea_radius, 2, cleararea_radius_input, cleararea_radius_plus, cleararea_radius_minus);
+		AddNumber("Range To Clear", g_clearAreaRadius, 2, cleararea_radius_input, cleararea_radius_plus, cleararea_radius_minus);
 		if (*Menu::currentopATM == Menu::printingop)
-			sub::Spooner::EntityManagement::DrawRadiusDisplayingMarker(GET_ENTITY_COORDS(Static_241, 1), _globalClearArea_radius);
+			sub::Spooner::EntityManagement::DrawRadiusDisplayingMarker(GET_ENTITY_COORDS(g_Ped1, 1), g_clearAreaRadius);
 
 		AddOption("Vehicles", cleararea_vehicles);
 		AddOption("Peds", cleararea_peds);
@@ -383,31 +342,31 @@ namespace sub
 
 		//if (cleararea_vehicles){ clear_area_of_vehicles_around_entity(Static_241, _globalClearArea_radius); return; }
 		//if (cleararea_peds){ clear_area_of_peds_around_entity(Static_241, _globalClearArea_radius); return; }
-		if (cleararea_vehicles) { clear_area_of_entities(EntityType::VEHICLE, GET_ENTITY_COORDS(Static_241, 1), _globalClearArea_radius, { GET_VEHICLE_PED_IS_IN(Static_241, 0) }); return; }
-		if (cleararea_peds) { clear_area_of_entities(EntityType::PED, GET_ENTITY_COORDS(Static_241, 1), _globalClearArea_radius, { Static_241 }); return; }
-		if (cleararea_objects) { clear_area_of_entities(EntityType::PROP, GET_ENTITY_COORDS(Static_241, 1), _globalClearArea_radius, {}); return; }
-		if (cleararea_all) { clear_area_of_entities(EntityType::ALL, GET_ENTITY_COORDS(Static_241, 1), _globalClearArea_radius, { Static_241, GET_VEHICLE_PED_IS_IN(Static_241, 0) }); return; }
+		if (cleararea_vehicles) { clear_area_of_entities(EntityType::VEHICLE, GET_ENTITY_COORDS(g_Ped1, 1), g_clearAreaRadius, { GET_VEHICLE_PED_IS_IN(g_Ped1, 0) }); return; }
+		if (cleararea_peds) { clear_area_of_entities(EntityType::PED, GET_ENTITY_COORDS(g_Ped1, 1), g_clearAreaRadius, { g_Ped1 }); return; }
+		if (cleararea_objects) { clear_area_of_entities(EntityType::PROP, GET_ENTITY_COORDS(g_Ped1, 1), g_clearAreaRadius, {}); return; }
+		if (cleararea_all) { clear_area_of_entities(EntityType::ALL, GET_ENTITY_COORDS(g_Ped1, 1), g_clearAreaRadius, { g_Ped1, GET_VEHICLE_PED_IS_IN(g_Ped1, 0) }); return; }
 
 		if (cleararea_radius_input)
 		{
-			std::string inputStr = Game::InputBox("", 6U, "", std::to_string(_globalClearArea_radius).substr(0, 5));
+			std::string inputStr = Game::InputBox("", 6U, "", std::to_string(g_clearAreaRadius).substr(0, 5));
 			if (inputStr.length() > 0)
 			{
 				try
 				{
-					_globalClearArea_radius = stof(inputStr);
+					g_clearAreaRadius = stof(inputStr);
 				}
 				catch (...) 
 				{ 
-					Game::Print::PrintError_InvalidInput(inputStr); 
+					Game::Print::PrintErrorInvalidInput(inputStr); 
 					addlog(ige::LogType::LOG_ERROR, "Invalid input radius entered: " + inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(_globalClearArea_radius).substr(0, 5));
 			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_globalClearArea_radius);
 		}
-		if (cleararea_radius_plus) { if (_globalClearArea_radius < FLT_MAX) _globalClearArea_radius += 0.5f; return; }
-		if (cleararea_radius_minus) { if (_globalClearArea_radius > 0.0f) _globalClearArea_radius -= 0.5f; return; }
+		if (cleararea_radius_plus) { if (g_clearAreaRadius < FLT_MAX) g_clearAreaRadius += 0.5f; return; }
+		if (cleararea_radius_minus) { if (g_clearAreaRadius > 0.0f) g_clearAreaRadius -= 0.5f; return; }
 
 	}
 
@@ -441,24 +400,24 @@ namespace sub
 
 
 			DRAW_SPRITE("CommonMenu", "Gradient_Bgd", 0.90, 0.14, 0.15, 0.15, 0, 255, 255, 255, 210, false, 0);
-			Game::Print::setupdraw(7, Vector2(0.4, 0.4), true, false, false);
+			Game::Print::SetupDraw(7, Vector2(0.4, 0.4), true, false, false);
 			Game::Print::drawstring("Details", 0.90, 0.0675);
 
 			char str[30];
 
-			Game::Print::setupdraw(0, Vector2(0, 0.33), true, false, false);
+			Game::Print::SetupDraw(0, Vector2(0, 0.33), true, false, false);
 			sprintf_s(str, "X - %f", startPos.x + sizePos.x);
 			Game::Print::drawstring(str, 0.90, 0.0975);
 
-			Game::Print::setupdraw(0, Vector2(0, 0.33), true, false, false);
+			Game::Print::SetupDraw(0, Vector2(0, 0.33), true, false, false);
 			sprintf_s(str, "Y - %f", startPos.y + sizePos.y);
 			Game::Print::drawstring(str, 0.90, 0.1275);
 
-			Game::Print::setupdraw(0, Vector2(0, 0.33), true, false, false);
+			Game::Print::SetupDraw(0, Vector2(0, 0.33), true, false, false);
 			sprintf_s(str, "SizeX - %f", sizePos.x);
 			Game::Print::drawstring(str, 0.90, 0.1575);
 
-			Game::Print::setupdraw(0, Vector2(0, 0.33), true, false, false);
+			Game::Print::SetupDraw(0, Vector2(0, 0.33), true, false, false);
 			sprintf_s(str, "SizeY - %f", sizePos.y);
 			Game::Print::drawstring(str, 0.90, 0.1875);
 
@@ -471,7 +430,7 @@ namespace sub
 
 	void RadioSub_()
 	{
-		GTAped ped = Static_241;
+		GTAped ped = g_Ped1;
 		GTAvehicle vehicle = ped.CurrentVehicle();
 		bool mobile_radio_on = 0, mobile_radio_off = 0,
 			radio_forward = 0;
@@ -505,7 +464,7 @@ namespace sub
 				if (Menu::printingop == *Menu::currentopATM)
 				{
 					bool bIsCurrentlyFrozen = frozenStation == i;
-					if (Menu::bit_controller)
+					if (Menu::bitController)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsCurrentlyFrozen ? "Freeze" : "Unfreeze") + (std::string)" station");
 
@@ -557,13 +516,13 @@ namespace sub
 			SET_FRONTEND_RADIO_ACTIVE(true);
 			SET_MOBILE_RADIO_ENABLED_DURING_GAMEPLAY(true);
 			SET_MOBILE_PHONE_RADIO_STATE(1);
-			PLAY_SOUND_FROM_ENTITY(-1, "Radio_On", Static_241, "TAXI_SOUNDS", 0, 0);
+			PLAY_SOUND_FROM_ENTITY(-1, "Radio_On", g_Ped1, "TAXI_SOUNDS", 0, 0);
 		}
 		if (mobile_radio_off) {
 			//SET_FRONTEND_RADIO_ACTIVE(false);
 			SET_MOBILE_RADIO_ENABLED_DURING_GAMEPLAY(false);
 			SET_MOBILE_PHONE_RADIO_STATE(0);
-			PLAY_SOUND_FROM_ENTITY(-1, "Radio_Off", Static_241, "TAXI_SOUNDS", 0, 0);
+			PLAY_SOUND_FROM_ENTITY(-1, "Radio_Off", g_Ped1, "TAXI_SOUNDS", 0, 0);
 		}
 
 		if (radio_forward) {
@@ -601,7 +560,7 @@ namespace sub
 			{
 				GTAped ped = PLAYER_PED_ID();
 
-				const Vector3& centre = ped.Position_get();
+				const Vector3& centre = ped.GetPosition();
 
 				std::vector<Vector3> points;
 				centre.PointsOnCircle(points, this->radius, this->radius < 10.0f ? 60.0f : 13.0f, 3.5f, true);
@@ -734,24 +693,11 @@ namespace sub
 			Vector2 pos = { menuPos.x > 0.45f ? 0.0f + scale.x / 2 : 1.0f - scale.x / 2, 0.1f + scale.y / 2 };
 
 			GRAPHICS::SET_TV_AUDIO_FRONTEND(true);
-			//GRAPHICS::ENABLE_MOVIE_SUBTITLES(true);
-
-			//_0x61BB1D9B3A95D802(4); //0xADF81D24
-			//_0xC6372ECD45D73BCD(1); //0xF8FBCC25
-			//GRAPHICS::DRAW_TV_CHANNEL(pos.x, pos.y, scale.x, scale.y, 0.0f, 255, 255, 255, 200);
-
-			//if (_0x0AD973CA1E077B60(80996397)) //0x4D1EB0FB // movie_arthouse
-			//{
-			//	GRAPHICS::DRAW_TV_CHANNEL(0.5f, 0.5f, 0.7375f, 1.0f, 0.0f, 255, 255, 255, 255);
-			//}
-			//else
 			GRAPHICS::DRAW_TV_CHANNEL(pos.x, pos.y, scale.x, scale.y, 0.0f, 255, 255, 255, 250);
 		}
 
 		void Sub_TV()
 		{
-			//UINT8 min_channels = -1;
-			//UINT8 max_channels = 1;
 			float min_volume = -36.0f;
 			float max_volume = 0.0f;
 			auto currentChannel = GRAPHICS::GET_TV_CHANNEL();
@@ -760,11 +706,6 @@ namespace sub
 			AddTitle("TV");
 
 			AddToggle("Toggle Player", loop_basictv);
-
-			/*bool bChannel_plus = false, bChannel_minus = false;
-			AddTexter("Channel", currentChannel, vTvChannelLabels, null, bChannel_plus, bChannel_minus);
-			if (bChannel_plus){ if (currentChannel < max_channels) currentChannel++; SET_TV_CHANNEL(currentChannel); }
-			if (bChannel_minus){ if (currentChannel > min_channels) currentChannel--; SET_TV_CHANNEL(currentChannel); }*/
 
 			bool bVolume_plus = false, bVolume_minus = false;
 			AddNumber("Volume", currentVolume + (max_volume - min_volume), 0, null, bVolume_plus, bVolume_minus);
@@ -800,10 +741,10 @@ namespace sub
 				SET_MINIMAP_HIDE_FOW(loop_revealMinimap);
 			}
 
-			AddToggle("Display XYZH Coords", loop_XYZHcoords);
-			AddToggle("Display FPS", _FpsCounter_::bDisplayFps);
-			AddToggle("Hide HUD", loop_hide_hud);
-			AddToggle("Show Full HUD", loop_showFullHud);
+			AddToggle("Display XYZH Coords", xyzhCoords);
+			AddToggle("Display FPS", FPSCounter::bDisplayFps);
+			AddToggle("Hide HUD", hideHUD);
+			AddToggle("Show Full HUD", showFullHUD);
 
 			AddBreak("Component Colours");
 			for (auto& h : std::vector<std::pair<int, std::string>>
@@ -823,8 +764,8 @@ namespace sub
 				bool bCompSelected = false;
 				AddOption(h.second, bCompSelected, nullFunc, SUB::MSPAINTS_RGB); if (bCompSelected)
 				{
-					Static_12 = h.first;
-					bit_MSPaints_RGB_mode = 10;
+					g_Ped4 = h.first;
+					bitMSPaintsRGBMode = 10;
 				}
 			}
 
@@ -834,8 +775,8 @@ namespace sub
 				bool bCompSelected = false;
 				AddOption(HudColour::vHudColours[i], bCompSelected, nullFunc, SUB::MSPAINTS_RGB); if (bCompSelected)
 				{
-					Static_12 = i;
-					bit_MSPaints_RGB_mode = 10;
+					g_Ped4 = i;
+					bitMSPaintsRGBMode = 10;
 				}
 			}
 		}
@@ -863,8 +804,18 @@ namespace sub
 			if (bShakeAmp_minus) { _shakeAmplitude -= 0.05f; if (!GameplayCamera::IsShaking()) { GameplayCamera::Shake(static_cast<CameraShake>(_shakeId), _shakeAmplitude); } else GameplayCamera::ShakeAmplitude_set(_shakeAmplitude); }
 		}
 	}
-
 }
+
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TIMECYCLES,  			sub::Timecycles)
+REGISTER_SUBMENU(CLEARAREA,   			sub::ClearAreaSub)
+REGISTER_SUBMENU(WATERHACK,   			sub::WaterHack_catind::Sub_WaterHack)
+REGISTER_SUBMENU(MISCOPS,     			sub::MiscOps)
+REGISTER_SUBMENU(TVCHANNELSTUFF_TV,    	sub::TVChannelStuff_catind::Sub_TV)
+REGISTER_SUBMENU(HUDOPTIONS,           	sub::HudOptions_catind::Sub_HudOptions)
+REGISTER_SUBMENU(GAMECAMOPTIONS,       	sub::GameCamOptions_catind::Sub_GameCamOptions)
+REGISTER_SUBMENU(RADIOSUB,             	sub::RadioSub_)
 
 
 

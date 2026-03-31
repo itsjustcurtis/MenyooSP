@@ -63,7 +63,7 @@ namespace sub::Spooner
 			{
 				UINT8 index1 = bindsGamepad.first < 50 ? 0 : 2;
 				UINT8 index2 = bindsGamepad.second < 50 ? 0 : 2;
-				return Menu::bit_controller ? (IS_DISABLED_CONTROL_PRESSED(index1, bindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, bindsGamepad.second)) : IsKeyJustUp(bindsKeyboard);
+				return Menu::bitController ? (IS_DISABLED_CONTROL_PRESSED(index1, bindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, bindsGamepad.second)) : IsKeyJustUp(bindsKeyboard);
 			}
 			return false;
 		}
@@ -125,7 +125,7 @@ namespace sub::Spooner
 
 					Vector3 spawnRot(0, 0, spoonerModeCamera.Rotation_get().z);
 
-					const Vector3& geSep = info.entity.Position_get();
+					const Vector3& geSep = info.entity.GetPosition();
 					//auto& geGroundRay = RaycastResult::Raycast(geSep, Vector3::WorldDown(), max(max(dimensions.Dim1.x, dimensions.Dim2.x), max(max(dimensions.Dim1.y, dimensions.Dim2.y), max(dimensions.Dim1.z, dimensions.Dim2.z))) + 2.0f, IntersectOptions::Everything, info.entity);
 					float geGroundZ = dimensions.Dim1.z;
 					//if (geGroundRay.DidHitAnything()){
@@ -144,8 +144,8 @@ namespace sub::Spooner
 
 					if (bOnTheLine)
 						info.entity.RequestControlOnce();
-					info.entity.Rotation_set(spawnRot);
-					info.entity.Position_set(spawnPos);
+					info.entity.SetRotation(spawnRot);
+					info.entity.SetPosition(spawnPos);
 					EntityManagement::ShowBoxAroundEntity(info.entity, false, RGBA::AllWhite());
 				}
 				else
@@ -165,7 +165,7 @@ namespace sub::Spooner
 							break;
 						}
 						info.entity.FreezePosition(true);
-						info.entity.IsCollisionEnabled_set(false);
+						info.entity.SetIsCollisionEnabled(false);
 						info.entity.Alpha_set(120);
 						//info.entity.Rotation_set()
 						//info.entity.Position_set(spawnPos);
@@ -270,19 +270,19 @@ namespace sub::Spooner
 					}
 					bool bRightJus = get_xcoord_at_menu_leftEdge(0.0f, false) < 0.5f; // left edge of menu is on the left of the centre of the screen
 					float infoX = bRightJus ? 0.94f : 0.008f;
-					Game::Print::setupdraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
+					Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
 					Game::Print::drawstring("Total Entities Spawned: " + std::to_string(totalNumEntities), infoX, 0.064f);
-					Game::Print::setupdraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
+					Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
 					Game::Print::drawstring("Objects Spawned: " + std::to_string(totalNumProps), infoX, 0.094f);
-					Game::Print::setupdraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
+					Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
 					Game::Print::drawstring("Peds Spawned: " + std::to_string(totalNumPeds), infoX, 0.124f);
-					Game::Print::setupdraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
+					Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
 					Game::Print::drawstring("Vehicles Spawned: " + std::to_string(totalNumVehicles), infoX, 0.154f);
 				}
 
 				if (!freeCam.Exists())
 				{
-					const Vector3& myPos = myPed.Position_get();
+					const Vector3& myPos = myPed.GetPosition();
 					freeCam = World::CreateCamera(myPos + Vector3(0, 0, 2.8f), Vector3(0, 0, myPed.Rotation_get().z), 73.f);
 					freeCam.SetActive(false);
 				}
@@ -303,7 +303,7 @@ namespace sub::Spooner
 				const Vector3& coordInFrontOfCam = freeCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 				GTAentity entityInFrontOfCam = freeCam.RaycastForEntity(Vector2(0.0f, 0.0f), 0, 160.0f);
 
-				if (Menu::bit_controller) // If controller
+				if (Menu::bitController) // If controller
 				{
 					float movementSensitivity = Settings::CameraMovementSensitivityGamepad;
 					//if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS)) movementSensitivity += 1.36f * movementSensitivity;
@@ -321,7 +321,7 @@ namespace sub::Spooner
 						if (!bIsSomethingHeld)
 							nextRot.y = -freeCam.Rotation_get().y; // Roll should be 0 when no entity is held
 						if (nextOffset.x || nextOffset.y)
-							freeCam.Position_set(freeCam.GetOffsetInWorldCoords(nextOffset.x, nextOffset.y, 0));
+							freeCam.SetPosition(freeCam.GetOffsetInWorldCoords(nextOffset.x, nextOffset.y, 0));
 
 						if (!bIsSomethingHeld && Settings::bShowModelPreviews)
 							SpoonerMode::SpawnModelPreview();
@@ -342,7 +342,7 @@ namespace sub::Spooner
 						case eSpoonerModeMode::Precision:
 							break;
 						}
-						freeCam.Rotation_set(nextRotFinal);
+						freeCam.SetRotation(nextRotFinal);
 					}
 
 					if (Menu::currentsub == SUB::CLOSED)
@@ -403,12 +403,12 @@ namespace sub::Spooner
 								case eSpoonerModeMode::GroundEase:
 									freeCam.PointAt(SelectedEntity.Handle);
 									freeCam.StopPointing();
-									bHeldEntityHasCollision = SelectedEntity.Handle.IsCollisionEnabled_get();
+									bHeldEntityHasCollision = SelectedEntity.Handle.GetIsCollisionEnabled();
 									SET_ENTITY_COLLISION(SelectedEntity.Handle.Handle(), false, false);
 									break;
 								case eSpoonerModeMode::Precision:
-									bHeldEntityHasCollision = SelectedEntity.Handle.IsCollisionEnabled_get();
-									freeCam.Rotation_set(SelectedEntity.Handle.Rotation_get());
+									bHeldEntityHasCollision = SelectedEntity.Handle.GetIsCollisionEnabled();
+									freeCam.SetRotation(SelectedEntity.Handle.Rotation_get());
 									break;
 								}
 							}
@@ -427,10 +427,10 @@ namespace sub::Spooner
 									r_sl.x += 2.0f; // Increase pitch LS
 								r_sl.y += nextRot.y; // Increase/Decrease pitch using RB/LB
 								r_sl.z += nextRot.z; // Relative yaw kept constant
-								SelectedEntity.Handle.Rotation_set(r_sl);
+								SelectedEntity.Handle.SetRotation(r_sl);
 								break;
 							case eSpoonerModeMode::Precision:
-								SelectedEntity.Handle.Rotation_set(r_fc);
+								SelectedEntity.Handle.SetRotation(r_fc);
 								break;
 							}
 							r_sl = SelectedEntity.Handle.Rotation_get(); // To get -180 to 180 values
@@ -455,7 +455,7 @@ namespace sub::Spooner
 									geGroundZ = md_SelectedEntity.Dim1.y;
 								else if (abs(r_sl.y) > 70.0f)
 									geGroundZ = md_SelectedEntity.Dim1.x;
-								SelectedEntity.Handle.Position_set(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), SelectedEntity.Handle, 90.0f, 15.0f + md_SelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ));
+								SelectedEntity.Handle.SetPosition(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), SelectedEntity.Handle, 90.0f, 15.0f + md_SelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ));
 								break;
 							}
 							case eSpoonerModeMode::Precision:
@@ -465,7 +465,7 @@ namespace sub::Spooner
 									freeCamCamDistance += 0.1f; // Zoom out LS
 								Vector3 attachmentOffset = { 0.0f, -md_SelectedEntity.Dim2.y - freeCamCamDistance, 0.0f };
 								freeCam.AttachTo(SelectedEntity.Handle, attachmentOffset);
-								SelectedEntity.Handle.Position_set(SelectedEntity.Handle.GetOffsetInWorldCoords(nextOffset));
+								SelectedEntity.Handle.SetPosition(SelectedEntity.Handle.GetOffsetInWorldCoords(nextOffset));
 								if (Settings::bFreezeEntityWhenMovingIt)
 									SelectedEntity.Handle.FreezePosition(Settings::bFreezeEntityWhenMovingIt);
 								break;
@@ -600,7 +600,7 @@ namespace sub::Spooner
 						if (!bIsSomethingHeld)
 							nextRot.y = -freeCam.Rotation_get().y; // Roll should be 0 when no entity is held
 						if (!nextOffset.IsZero())
-							freeCam.Position_set(freeCam.GetOffsetInWorldCoords(nextOffset));
+							freeCam.SetPosition(freeCam.GetOffsetInWorldCoords(nextOffset));
 
 						if (!bIsSomethingHeld && Settings::bShowModelPreviews)
 							SpoonerMode::SpawnModelPreview();
@@ -621,7 +621,7 @@ namespace sub::Spooner
 						case eSpoonerModeMode::Precision:
 							break;
 						}
-						freeCam.Rotation_set(nextRotFinal);
+						freeCam.SetRotation(nextRotFinal);
 					}
 
 					if (Menu::currentsub == SUB::CLOSED)
@@ -682,12 +682,12 @@ namespace sub::Spooner
 								case eSpoonerModeMode::GroundEase:
 									freeCam.PointAt(SelectedEntity.Handle);
 									freeCam.StopPointing();
-									bHeldEntityHasCollision = SelectedEntity.Handle.IsCollisionEnabled_get();
+									bHeldEntityHasCollision = SelectedEntity.Handle.GetIsCollisionEnabled();
 									SET_ENTITY_COLLISION(SelectedEntity.Handle.Handle(), false, false);
 									break;
 								case eSpoonerModeMode::Precision:
-									bHeldEntityHasCollision = SelectedEntity.Handle.IsCollisionEnabled_get();
-									freeCam.Rotation_set(SelectedEntity.Handle.Rotation_get());
+									bHeldEntityHasCollision = SelectedEntity.Handle.GetIsCollisionEnabled();
+									freeCam.SetRotation(SelectedEntity.Handle.Rotation_get());
 									break;
 								}
 							}
@@ -706,10 +706,10 @@ namespace sub::Spooner
 									r_sl.x += 2.0f; // Increase pitch ScrollUp
 								r_sl.y += nextRot.y; // Increase/Decrease pitch using RB/LB
 								r_sl.z += nextRot.z; // Relative yaw kept constant
-								SelectedEntity.Handle.Rotation_set(r_sl);
+								SelectedEntity.Handle.SetRotation(r_sl);
 								break;
 							case eSpoonerModeMode::Precision:
-								SelectedEntity.Handle.Rotation_set(r_fc);
+								SelectedEntity.Handle.SetRotation(r_fc);
 								break;
 							}
 							r_sl = SelectedEntity.Handle.Rotation_get(); // To get -180 to 180 values
@@ -734,7 +734,7 @@ namespace sub::Spooner
 									geGroundZ = md_SelectedEntity.Dim1.y;
 								else if (abs(r_sl.y) > 70.0f)
 									geGroundZ = md_SelectedEntity.Dim1.x;
-								SelectedEntity.Handle.Position_set(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), SelectedEntity.Handle, 90.0f, 15.0f + md_SelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ));
+								SelectedEntity.Handle.SetPosition(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), SelectedEntity.Handle, 90.0f, 15.0f + md_SelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ));
 								break;
 							}
 							case eSpoonerModeMode::Precision:
@@ -744,7 +744,7 @@ namespace sub::Spooner
 									freeCamCamDistance += 0.23f; // Zoom out LS
 								Vector3 attachmentOffset = { 0.0f, -md_SelectedEntity.Dim2.y - freeCamCamDistance, 0.0f };
 								freeCam.AttachTo(SelectedEntity.Handle, attachmentOffset);
-								SelectedEntity.Handle.Position_set(SelectedEntity.Handle.GetOffsetInWorldCoords(nextOffset));
+								SelectedEntity.Handle.SetPosition(SelectedEntity.Handle.GetOffsetInWorldCoords(nextOffset));
 								if (Settings::bFreezeEntityWhenMovingIt)
 									SelectedEntity.Handle.FreezePosition(Settings::bFreezeEntityWhenMovingIt);
 								break;

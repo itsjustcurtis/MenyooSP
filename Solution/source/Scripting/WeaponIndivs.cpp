@@ -1304,7 +1304,7 @@ std::string get_weapon_label(Hash hash, bool gxt)
 }
 
 // Weapon - give
-void give_ped_parachute(GTAentity ped)
+void GivePedParachute(GTAentity ped)
 {
 	if (ped.Exists())
 	{

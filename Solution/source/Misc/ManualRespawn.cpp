@@ -29,7 +29,7 @@
 
 #include <vector>
 
-namespace _ManualRespawn_
+namespace ManualRespawn
 {
 	ManualRespawn::ManualRespawn()
 		: inRespawn(false)
@@ -64,7 +64,7 @@ namespace _ManualRespawn_
 			addlog(ige::LogType::LOG_ERROR, "Unable to set new bindsname, respawnbinds = " + std::to_string(respawnbinds));
 		}
 
-		Game::Print::setupdraw(GTAfont::Arial, Vector2(0, 0.4f), false, true, false, RGBA(255, 255, 255, 190));
+		Game::Print::SetupDraw(GTAfont::Arial, Vector2(0, 0.4f), false, true, false, RGBA(255, 255, 255, 190));
 		Game::Print::drawstring("Press ~b~[" + bindsname + "]~s~ to respawn.", NULL, 0.1f);
 		//Game::CustomHelpText::ShowTimedText(oss_ << "Press " << "~INPUT_LOOK_BEHIND~" << " to respawn.", 100);
 	}
@@ -117,7 +117,7 @@ namespace _ManualRespawn_
 	}
 
 
-	void Check_self_death_model()
+	void CheckSelfDealthModel()
 	{
 		GTAped playerPed = PLAYER_PED_ID();
 		
@@ -129,7 +129,7 @@ namespace _ManualRespawn_
 		bool is_death = playerPed.IsDead();
 		bool is_arrest = IS_PLAYER_BEING_ARRESTED(player.Handle(), true) != 0;
 
-		if ((!is_death && !is_arrest) || _ManualRespawn_::g_manualRespawn.InRespawn())
+		if ((!is_death && !is_arrest) || g_manualRespawn.InRespawn())
 			return;
 		if (GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(0xCAC8014F) > 0)//director_mode.ysc
 			return;

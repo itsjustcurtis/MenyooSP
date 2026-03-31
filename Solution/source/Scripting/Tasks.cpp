@@ -329,11 +329,11 @@ void Tasks::StartScenario(const std::string& name, int unkDelay, bool playEnterA
 }
 void Tasks::UseNearestScenario(bool warp)
 {
-	this->UseNearestScenario(_ped.Position_get(), 15.0f, warp);
+	this->UseNearestScenario(_ped.GetPosition(), 15.0f, warp);
 }
 void Tasks::UseNearestScenario(float radius, bool warp)
 {
-	this->UseNearestScenario(_ped.Position_get(), radius, warp);
+	this->UseNearestScenario(_ped.GetPosition(), radius, warp);
 }
 void Tasks::UseNearestScenario(const Vector3& pos, float radius, bool warp)
 {

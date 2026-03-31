@@ -79,9 +79,9 @@ namespace Game
 	{
 		// Game - Print/draw
 		void setupdraw();
-		void setupdraw(INT8 font, const Vector2& scale, bool centred, bool right_justified, bool outline, RGBA colour = { 255, 255, 255, 255 }, Vector2 wrap = { 0, 1 });
+		void SetupDraw(INT8 font, const Vector2& scale, bool centred, bool right_justified, bool outline, RGBA colour = { 255, 255, 255, 255 }, Vector2 wrap = { 0, 1 });
 		void drawstring(const std::string& s, float X, float Y);
-		void drawstring(std::ostream& os, float X, float Y);
+		void DrawString(std::ostream& os, float X, float Y);
 		void drawstringGXT(const std::string& s, float X, float Y);
 		void drawstringGXT(std::ostream& os, float X, float Y);
 		void drawinteger(int text, float X, float Y);
@@ -115,7 +115,7 @@ namespace Game
 		Notification PrintBottomLeft(std::wostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
 
 		// Messages - Errors
-		void PrintError_InvalidInput(std::string inputStr);
+		void PrintErrorInvalidInput(std::string inputStr);
 		void PrintError_InvalidModel(std::string inputStr);
 
 		// Text width

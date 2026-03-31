@@ -28,7 +28,7 @@ namespace sub
 		extern const std::vector<PtfxS> vPTFX;
 
 		typedef struct { GTAentity entity; std::string asset, fx; } PtfxlopS;
-		extern std::vector<PtfxlopS> _fxlops;
+		extern std::vector<PtfxlopS> fxLops;
 
 		void AddEntityToPtfxLops(const PtfxS& effect, const GTAentity& entity);
 
