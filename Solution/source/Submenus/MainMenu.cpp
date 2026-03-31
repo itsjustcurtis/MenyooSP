@@ -14,6 +14,7 @@
 #include "..\Menu\Menu.h"
 #include "..\Menu\Routine.h"
 
+
 #include "..\Natives\natives2.h"
 #include "../Util/FileLogger.h"
 
@@ -41,16 +42,15 @@ namespace sub
 		AddOption("Misc Options", null, nullFunc, SUB::MISCOPS);
 		AddOption("Settings", null, nullFunc, SUB::SETTINGS);
 
-		g_Ped2 = PLAYER_ID();
-		g_Ped1 = PLAYER_PED_ID();
-		g_PlayerName = GET_PLAYER_NAME(g_Ped2);
-		g_Ped3 = GET_PLAYER_GROUP(g_Ped2);
+		Static_240 = PLAYER_ID();
+		Static_241 = PLAYER_PED_ID();
+		Static_239 = GET_PLAYER_NAME(Static_240);
+		Static_242 = GET_PLAYER_GROUP(Static_240);
+
 	}
+
 }
 
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(MAINMENU, sub::MainMenu)
 
 
 

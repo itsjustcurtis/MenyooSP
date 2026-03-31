@@ -50,7 +50,7 @@ void teleport_net_ped(GTAentity ped, float X, float Y, float Z, bool bWait, bool
 			ped.RequestControlOnce();
 		//if (NETWORK_HAS_CONTROL_OF_ENTITY(ped))
 		{
-			ped.SetPosition(Vector3(X, Y, Z));
+			ped.Position_set(Vector3(X, Y, Z));
 			if (bPtfx && ped.IsVisible())
 			{
 				const PTFX::sFxData ptfx = { "scr_rcbarry2", "scr_clown_death" };
@@ -72,7 +72,7 @@ void teleport_net_ped(GTAentity ped, float X, float Y, float Z, bool bWait, bool
 			vehicle.RequestControl(1000);
 		else
 			vehicle.RequestControlOnce();
-		vehicle.SetPosition(Vector3(X, Y, Z));
+		vehicle.Position_set(Vector3(X, Y, Z));
 	}
 
 	if (ped.Equals(myPed) || ped.Equals(myVeh))
@@ -131,13 +131,13 @@ void teleport_to_missionBlip(GTAped ped)
 					addlog(ige::LogType::LOG_TRACE, "Teleporting Vehicle");
 					auto vehicle = ped.CurrentVehicle();
 					if (vehicle.RequestControl(1000))
-						vehicle.SetPosition(coord);
+						vehicle.Position_set(coord);
 				}
 				else
 				{
 					addlog(ige::LogType::LOG_TRACE, "Teleporting Ped");
 					if (ped.RequestControl(1000))
-						ped.SetPosition(coord);
+						ped.Position_set(coord);
 				}
 				break;
 			}
@@ -185,25 +185,25 @@ namespace sub::TeleportLocations_catind
 		}
 		void ToWaypoint241()
 		{
-			TeleMethods::ToWaypoint(g_Ped1);
+			TeleMethods::ToWaypoint(Static_241);
 		}
 		void ToMissionBlip241()
 		{
-			teleport_to_missionBlip(g_Ped1);
+			teleport_to_missionBlip(Static_241);
 		}
 		void ToForward241()
 		{
-			auto& entityToTeleport = g_Ped1;
+			auto& entityToTeleport = Static_241;
 			Vector3 yoffsetforward = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(entityToTeleport, 0.0f, 3.5f, 0.0f);
 			teleport_net_ped(entityToTeleport, yoffsetforward.x, yoffsetforward.y, yoffsetforward.z, true, false);
 		}
 		void ToCoordinates241(const Vector3& coord)
 		{
-			teleport_net_ped(g_Ped1, coord.x, coord.y, coord.z);
+			teleport_net_ped(Static_241, coord.x, coord.y, coord.z);
 		}
 		void ToTeleLocation241(const TeleLocation& loc)
 		{
-			auto& entityToTeleport = g_Ped1;
+			auto& entityToTeleport = Static_241;
 
 			bool isOnline = NETWORK_IS_IN_SESSION() != 0;
 			if (loc.bOnTheLine && loc.bOffTheLine)

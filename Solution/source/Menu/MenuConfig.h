@@ -31,7 +31,7 @@ namespace FreeCam {
 
 	void ConfigInit();
 	void ConfigRead();
-	void SaveConfig();
+	void ConfigSave();
 	void ConfigResetHaxValues();
 }
 

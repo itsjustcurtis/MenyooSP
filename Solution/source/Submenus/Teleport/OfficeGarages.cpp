@@ -263,7 +263,7 @@ namespace sub::TeleportLocations_catind
 				Menu::SetSub_previous();
 				return;
 			}
-			GTAped ped = g_Ped1;
+			GTAped ped = Static_241;
 
 			AddTitle(currentGarageInfo.location->first);
 
@@ -312,8 +312,3 @@ namespace sub::TeleportLocations_catind
 	}
 
 }
-
-#include "..\..\Menu\submenu_switch.h"
-#include "..\..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(TELEPORTOPS_OFFICEGARAGES,             sub::TeleportLocations_catind::OfficeGarages::Sub_OfficeGarages)
-REGISTER_SUBMENU(TELEPORTOPS_OFFICEGARAGES_INLOC,       sub::TeleportLocations_catind::OfficeGarages::Sub_OfficeGarages_InLoc)

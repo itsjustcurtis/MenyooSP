@@ -18,7 +18,7 @@
 #include <Windows.h> // GetTickCount
 #include <string>
 
-namespace FPSCounter
+namespace _FpsCounter_
 {
 	FpsCounter::FpsCounter()
 		: fpsValue(0), frameCounter(0), timer(GetTickCount())
@@ -55,7 +55,7 @@ namespace FPSCounter
 	void DisplayFps()
 	{
 		g_fpsCounter.Tick();
-		Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.4f, 0.4f), false, false, false);
+		Game::Print::setupdraw(GTAfont::Impact, Vector2(0.4f, 0.4f), false, false, false);
 		Game::Print::drawstring("~y~" + g_fpsCounter.GetString() + " FPS", 0.945f, 0.034f);
 	}
 

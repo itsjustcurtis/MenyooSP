@@ -1234,6 +1234,5 @@ namespace sub::TeleportLocations_catind
 
 }
 
-#include "..\..\Menu\submenu_switch.h"
-#include "..\..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(TELEPORTOPS_NIGHTCLUBS,                sub::TeleportLocations_catind::Nightclubs::Sub_Nightclubs)
+
+

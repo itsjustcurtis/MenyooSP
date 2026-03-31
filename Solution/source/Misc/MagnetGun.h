@@ -13,7 +13,7 @@
 
 typedef unsigned long Hash;
 
-namespace MagnetGun
+namespace _MagnetGun_
 {
 	class MagnetGun final : public GenericLoopedMode
 	{

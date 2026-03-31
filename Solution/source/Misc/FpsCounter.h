@@ -15,7 +15,7 @@
 
 typedef unsigned long DWORD;
 
-namespace FPSCounter
+namespace _FpsCounter_
 {
 	class FpsCounter final
 	{

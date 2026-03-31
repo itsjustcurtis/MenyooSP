@@ -365,7 +365,7 @@ public:
 	bool IsInVehicle(GTAvehicle vehicle) const;
 	GTAvehicle CurrentVehicle() const;
 
-	VehicleSeat GetCurrentVehicleSeat();
+	VehicleSeat CurrentVehicleSeat_get();
 
 	int GetRelationshipWithPed(GTAentity otherPed) const;
 

@@ -121,7 +121,4 @@ namespace sub
 }
 
 
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(CUTSCENEPLAYER,       sub::CutscenePlayer_catind::Sub_CutsceneList)
 

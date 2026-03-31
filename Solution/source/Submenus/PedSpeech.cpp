@@ -383,7 +383,7 @@ namespace sub
 
 		void Sub_VoiceChanger()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = Static_241;
 			if (!ped.Exists())
 			{
 				Menu::SetSub_previous();
@@ -420,7 +420,7 @@ namespace sub
 
 		void Sub_AmbientSpeechPlayer()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = Static_241;
 			_currVoiceInfo = nullptr;
 			if (!ped.Exists())
 			{
@@ -435,6 +435,8 @@ namespace sub
 			{
 				_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", boost::to_lower_copy(_searchStr));
 				boost::to_upper(_searchStr);
+				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToUpper, _searchStr, 126U, std::string(), _searchStr);
+				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
 			}
 
 			for (auto& v : vVoiceData)
@@ -452,7 +454,7 @@ namespace sub
 		}
 		void Sub_AmbientSpeechPlayer_InVoice()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = Static_241;
 			if (_currVoiceInfo == nullptr || !ped.Exists())
 			{
 				Menu::SetSub_previous();
@@ -483,8 +485,4 @@ namespace sub
 
 
 
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(VOICECHANGER,            sub::Speech_catind::Sub_VoiceChanger)
-REGISTER_SUBMENU(SPEECHPLAYER,            sub::Speech_catind::Sub_AmbientSpeechPlayer)
-REGISTER_SUBMENU(SPEECHPLAYER_INVOICE,    sub::Speech_catind::Sub_AmbientSpeechPlayer_InVoice)
+

@@ -99,14 +99,14 @@ namespace sub
 			inline void DoAnimalRidingTick()
 			{
 				GTAped myPed = PLAYER_PED_ID();
-				const auto& myPos = myPed.GetPosition();
+				const auto& myPos = myPed.Position_get();
 
 				if ((myPed.Handle() != myAnimalPed.Handle()))
 				{
 					//std::vector<Entity> closestPeds;
 					//GTAmemory::GetPedHandles(closestPeds, myPos, 1.0f);
 
-					for (auto& ped : nearbyPeds)
+					for (auto& ped : _nearbyPeds)
 					{
 						for (auto& a : AnimalRiding_catind::vAnimals)
 						{
@@ -136,12 +136,12 @@ namespace sub
 						DISABLE_CONTROL_ACTION(0, INPUT_COVER, true);
 
 						REMOVE_ALL_PED_WEAPONS(myHumanPed.Handle(), true);
-						myHumanPed.Health_set(myHumanPed.GetMaxHealth());
-						SetPedInvincibleOn(myHumanPed.Handle());
+						myHumanPed.Health_set(myHumanPed.MaxHealth_get());
+						set_ped_invincible_on(myHumanPed.Handle());
 
 						REMOVE_ALL_PED_WEAPONS(myAnimalPed.Handle(), true);
-						myAnimalPed.Health_set(myAnimalPed.GetMaxHealth());
-						SetPedInvincibleOn(myAnimalPed.Handle());
+						myAnimalPed.Health_set(myAnimalPed.MaxHealth_get());
+						set_ped_invincible_on(myAnimalPed.Handle());
 					}
 				}
 			}
@@ -154,7 +154,7 @@ namespace sub
 				myHumanPed = PLAYER_PED_ID();
 				myHumanPed.StoreWeaponsInArray(myHumanWeaponBackup);
 
-				myHumanPed.SetPosition(ped.GetPosition());
+				myHumanPed.Position_set(ped.Position_get());
 				ped.FreezePosition(true);
 				myHumanPed.FreezePosition(true);
 
@@ -180,7 +180,7 @@ namespace sub
 			{
 				if (myAnimalPed.Exists())
 				{
-					SetPedInvincibleOff(myAnimalPed.Handle());
+					set_ped_invincible_off(myAnimalPed.Handle());
 				}
 
 				if (myAnimalPed.Handle() != 0)
@@ -191,13 +191,13 @@ namespace sub
 						WAIT(50);
 						myHumanPed = PLAYER_PED_ID();
 						myHumanPed.Detach();
-						SetPedInvincibleOff(myHumanPed.Handle());
+						set_ped_invincible_off(myHumanPed.Handle());
 						myHumanPed.GiveWeaponsFromArray(myHumanWeaponBackup);
 					}
 					else
 					{
 						myHumanPed = PLAYER_PED_ID();
-						auto newPed = World::CreatePed(PedHash::Michael, myHumanPed.GetPosition(), myHumanPed.Heading_get(), false);
+						auto newPed = World::CreatePed(PedHash::Michael, myHumanPed.Position_get(), myHumanPed.Heading_get(), false);
 						WAIT(50);
 						CHANGE_PLAYER_PED(PLAYER_ID(), newPed.Handle(), true, true);
 						WAIT(50);
@@ -243,7 +243,7 @@ namespace sub
 		void SpawnAnimalRide(const Model& model)
 		{
 			GTAped myPed = PLAYER_PED_ID();
-			const auto& myPos = myPed.GetPosition();
+			const auto& myPos = myPed.Position_get();
 			auto myHeading = myPed.Heading_get();
 			const auto& myRot = myPed.Rotation_get();
 			const auto& myDir = Vector3::RotationToDirection(myRot);
@@ -285,6 +285,3 @@ namespace sub
 }
 
 
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(ANIMALRIDING,         sub::AnimalRiding_catind::Sub_AnimalRiding)

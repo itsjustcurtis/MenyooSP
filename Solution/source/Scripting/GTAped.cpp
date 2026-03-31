@@ -824,7 +824,7 @@ GTAvehicle GTAped::CurrentVehicle() const
 	return GET_VEHICLE_PED_IS_USING(this->mHandle);
 }
 
-VehicleSeat GTAped::GetCurrentVehicleSeat()
+VehicleSeat GTAped::CurrentVehicleSeat_get()
 {
 	if (this->IsInVehicle())
 	{

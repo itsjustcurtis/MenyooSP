@@ -22,7 +22,7 @@ typedef unsigned long Hash;
 class Vector3;
 class GTAprop;
 
-namespace RopeGun
+namespace _RopeGun_
 {
 	class EntitiesAndRope
 	{

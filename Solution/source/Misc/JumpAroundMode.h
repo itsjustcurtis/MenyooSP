@@ -9,7 +9,7 @@
 */
 #pragma once
 
-namespace JumpAroundMode
+namespace _JumpAroundMode_
 {
 	extern bool bEnabled;
 
