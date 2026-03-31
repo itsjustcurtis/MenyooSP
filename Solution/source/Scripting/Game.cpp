@@ -184,7 +184,7 @@ namespace Game
 			SET_TEXT_EDGE(0, 0, 0, 0, 0);
 			//SET_TEXT_OUTLINE();
 		}
-		void setupdraw(INT8 font, const Vector2& scale, bool centred, bool right_justified, bool outline, RGBA colour, Vector2 wrap)
+		void SetupDraw(INT8 font, const Vector2& scale, bool centred, bool right_justified, bool outline, RGBA colour, Vector2 wrap)
 		{
 			SET_TEXT_FONT(font);
 			SET_TEXT_SCALE(scale.x, scale.y);
@@ -210,7 +210,7 @@ namespace Game
 			}
 			END_TEXT_COMMAND_DISPLAY_TEXT(X, Y, 0);
 		}
-		void drawstring(std::ostream& os, float X, float Y)
+		void DrawString(std::ostream& os, float X, float Y)
 		{
 			const std::string& s = dynamic_cast<std::ostringstream&>(os).str();
 			if (s.length() < 100)
@@ -400,7 +400,7 @@ namespace Game
 		}
 
 		// Messages - Errors
-		void PrintError_InvalidInput(std::string inputStr)
+		void PrintErrorInvalidInput(std::string inputStr)
 		{
 			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Input: " + inputStr);
 			addlog(ige::LogType::LOG_ERROR, "Invalid Input: " + inputStr);

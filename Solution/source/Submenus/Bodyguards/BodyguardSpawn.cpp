@@ -126,9 +126,9 @@ namespace sub::BodyguardMenu::BodyguardManagement
 		ENTITY::SET_ENTITY_HEALTH(ped, sub::BodyguardMenu::health, 0);
 		PED::SET_PED_ARMOUR(ped, sub::BodyguardMenu::armor);
 		if (sub::BodyguardMenu::godmode)
-			set_ped_invincible_on(ped);
+			SetPedInvincibleOn(ped);
 		else
-			set_ped_invincible_off(ped);
+			SetPedInvincibleOff(ped);
 
 
 		PED::SET_PED_AS_GROUP_MEMBER(ped, PLAYER::GET_PLAYER_GROUP(PLAYER::PLAYER_ID()));

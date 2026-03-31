@@ -67,97 +67,25 @@ namespace sub
 		else
 			return (current > minVal) ? current - step : current;
 	}
-
-	// Activates the front-view camera or destroys it if already active
-	static void toggleFrontViewCamera(GTAped& thisPed)
-	{
-		if (g_cam_componentChanger.Exists())
-		{
-			g_cam_componentChanger.SetActive(false);
-			g_cam_componentChanger.Destroy();
-			World::RenderingCamera_set(0);
-		}
-		else
-		{
-			Camera gmCam = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
-			g_cam_componentChanger = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
-
-			g_cam_componentChanger.FieldOfView_set(40.0f);
-			g_cam_componentChanger.AttachTo(thisPed, Vector3(0.0f, 1.5f + thisPed.Dim1().y, 0.5f));
-			g_cam_componentChanger.PointAt(thisPed);
-
-			gmCam.Position_set(World::RenderingCamera_get().Handle() == 0 ? GameplayCamera::Position_get() : World::RenderingCamera_get().Position_get());
-			gmCam.Rotation_set(World::RenderingCamera_get().Handle() == 0 ? GameplayCamera::Rotation_get() : World::RenderingCamera_get().Rotation_get());
-
-			gmCam.InterpTo(g_cam_componentChanger, 1000, true, true);
-			while (gmCam.IsInterpolating())
-				WAIT(0);
-			gmCam.Destroy();
-			World::RenderingCamera_set(g_cam_componentChanger);
-		}
-	}
-
-	struct PropEntry { int propId, index, texture; };
-	struct CompEntry { int compId, drawable, texture, palette; };
-	struct PremadeOutfit
-	{
-		const char* name;
-		Hash pedHash;
-		std::vector<PropEntry> props;
-		std::vector<CompEntry> comps;
-	};
-
-	static const std::vector<PremadeOutfit> gPremadeOutfits = {
-		{ "Police (Freemode Male)", PedHash::FreemodeMale01,
-			{ {0, 47, 0}, {1, 10, 0}, {2, 3, 0} },
-			{ {0,0,0,0}, {1,0,0,0}, {3,0,0,0}, {4,35,0,0}, {5,0,0,0}, {6,25,0,0}, {7,0,0,0}, {8,58,0,0}, {9,0,0,0}, {10,0,0,0}, {11,55,0,0} }
-		},
-		{ "Police (Freemode Female)", PedHash::FreemodeFemale01,
-			{ {0, 45, 0} },
-			{ {3,100,0,0}, {4,34,0,0}, {11,48,0,0} }
-		},
-		{ "Robber (Freemode Male)", PedHash::FreemodeMale01,
-			{ {0, 48, 1} },
-			{ {3,29,1,0}, {4,34,0,0}, {5,45,0,0}, {6,24,0,0}, {7,40,0,0}, {8,25,1,0}, {11,0,16,0} }
-		},
-		{ "Garbage Man (Freemode Male)", PedHash::FreemodeMale01,
-			{ {1, 4, 0} },
-			{ {0,0,0,0}, {1,0,0,0}, {3,64,0,0}, {4,36,0,0}, {5,0,0,0}, {6,23,0,0}, {7,0,0,0}, {8,59,0,0}, {9,0,0,0}, {10,0,0,0}, {11,57,0,0} }
-		},
-		{ "Police (Michael)", PedHash::Michael,
-			{ {0, 10, 0} },
-			{ {3,6,0,0}, {4,6,0,0}, {6,6,0,0}, {8,8,0,0}, {11,0,0,0} }
-		},
-		{ "Firefighter (Michael)", PedHash::Michael,
-			{ {0, 0, 0} },
-			{ {3,1,0,0}, {4,1,0,0}, {5,1,0,0}, {6,1,0,0}, {8,1,0,0} }
-		},
-	};
-
-	static void applyPremadeOutfit(Ped ped, const PremadeOutfit& outfit)
-	{
-		BOOL bNetGame = NETWORK_IS_GAME_IN_PROGRESS();
-		for (auto& p : outfit.props)
-			SET_PED_PROP_INDEX(ped, p.propId, p.index, p.texture, bNetGame, 0);
-		for (auto& c : outfit.comps)
-			SET_PED_COMPONENT_VARIATION(ped, c.compId, c.drawable, c.texture, c.palette);
-	}
+	// Component changer
 
 	Camera g_cam_componentChanger;
 
 	void AddPedComponentOption(const std::string& text, int index)
 	{
 		bool pressed = false;
-		AddOption(text, pressed, nullFunc, SUB::COMPONENTS2, true, true);
-		if (pressed)
-			Static_12 = index;
+		AddOption(text, pressed, nullFunc, SUB::COMPONENTS2, true, true); if (pressed)
+		{
+			g_Ped4 = index;
+		}
 	}
 	void AddPedPropOption(const std::string& text, int index)
 	{
 		bool pressed = false;
-		AddOption(text, pressed, nullFunc, SUB::COMPONENTSPROPS2);
-		if (pressed)
-			Static_12 = index;
+		AddOption(text, pressed, nullFunc, SUB::COMPONENTSPROPS2); if (pressed)
+		{
+			g_Ped4 = index;
+		}
 	}
 
 	void ComponentChanger()
@@ -165,9 +93,12 @@ namespace sub
 		dict2.clear();
 		dict3.clear();
 
-		bool randomize = false, frontView = false, setDefault = false;
+		bool randomize = 0, frontView = 0, setDefault = 0,
+			ComponentChanger_online_police_m = 0, ComponentChanger_online_robber_m = 0,
+			ComponentChanger_online_garbage_m = 0, ComponentChanger_online_police_f = 0,
+			ComponentChanger_offline_police_michael = 0, ComponentChanger_offline_firefighter_michael = 0;
 
-		GTAped thisPed = Static_241;
+		GTAped thisPed = g_Ped1;
 		const Model& thisPedModel = thisPed.Model();
 
 		if (g_cam_componentChanger.Exists())
@@ -184,7 +115,7 @@ namespace sub
 		AddOption("Head Features", null, nullFunc, SUB::PED_HEADFEATURES_MAIN);
 		AddOption("Accessories", null, nullFunc, SUB::COMPONENTSPROPS);
 
-		const std::vector<std::string> componentNames
+		const std::vector<std::string> components
 		{
 			"Head",
 			"Beard/Mask",
@@ -202,67 +133,153 @@ namespace sub
 
 		AddBreak("---Components---");
 
-		for (int i = 0; i < PV_COMP_MAX; i++)
+		for ( int i = 0; i < PV_COMP_MAX; i++)
 		{
-			if (GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, i) > 0)
-			{
-				AddPedComponentOption(componentNames[i], i);
-			}
+			if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, i) > 0) AddPedComponentOption(components[i], i);
 		}
+
+		/*AddpedcomponentOption_("Head", PV_COMP_HEAD);
+		AddpedcomponentOption_("Beard/Mask", PV_COMP_BERD); // Beard // FACE_BRD
+		AddpedcomponentOption_("Hair", PV_COMP_HAIR); // Hair // FACE_HAIR
+		AddpedcomponentOption_("Torso", PV_COMP_UPPR);
+		AddpedcomponentOption_("Legs", PV_COMP_LOWR);
+		AddpedcomponentOption_("Hands/Back", PV_COMP_HAND);
+		AddpedcomponentOption_("Shoes", PV_COMP_FEET); // Shoes // CSHOP_ITEM39
+		AddpedcomponentOption_("Teeth/Scarf/Necklace/Bracelets", PV_COMP_TEEF);
+		AddpedcomponentOption_("Accessory/Tops", PV_COMP_ACCS); // Accessory // PIM_TACCE
+		AddpedcomponentOption_("Task/Armour", PV_COMP_TASK);
+		AddpedcomponentOption_("Emblem", PV_COMP_DECL);
+		AddpedcomponentOption_("Tops2 (Outer)", PV_COMP_JBIB);*/
 
 		AddOption("Random Components", randomize);
 		AddOption("Default Components", setDefault);
 
-		// Premade outfits, show break header if any outfits match this ped
-		bool hasPremadeOutfits = false;
-		for (auto& outfit : gPremadeOutfits)
+		switch (thisPedModel.hash)
 		{
-			if (outfit.pedHash == thisPedModel.hash)
-			{
-				hasPremadeOutfits = true;
-				break;
-			}
+		case PedHash::FreemodeMale01:
+		case PedHash::FreemodeFemale01:
+		case PedHash::Michael:
+			AddBreak("---Premade Outfits---"); break;
 		}
-		if (hasPremadeOutfits)
-		{
-			AddBreak("---Premade Outfits---");
-		}
+		if (thisPedModel.hash == PedHash::FreemodeMale01)
+			AddOption("Police (Freemode Male)", ComponentChanger_online_police_m);
+		if (thisPedModel.hash == PedHash::FreemodeFemale01)
+			AddOption("Police (Freemode Female)", ComponentChanger_online_police_f);
+		if (thisPedModel.hash == PedHash::FreemodeMale01)
+			AddOption("Robber (Freemode Male)", ComponentChanger_online_robber_m);
+		if (thisPedModel.hash == PedHash::FreemodeMale01)
+			AddOption("Garbage Man (Freemode Male)", ComponentChanger_online_garbage_m);
+		if (thisPedModel.hash == PedHash::Michael)
+			AddOption("Police (Michael)", ComponentChanger_offline_police_michael);
+		if (thisPedModel.hash == PedHash::Michael)
+			AddOption("Firefighter (Michael)", ComponentChanger_offline_firefighter_michael);
 
-		// Add menu options and apply if pressed
-		for (size_t i = 0; i < gPremadeOutfits.size(); i++)
-		{
-			auto& outfit = gPremadeOutfits[i];
-			if (outfit.pedHash != thisPedModel.hash)
-			{
-				continue;
-			}
 
-			bool pressed = false;
-			AddOption(outfit.name, pressed);
-			if (pressed)
-			{
-				applyPremadeOutfit(Static_241, outfit);
-				return;
-			}
-		}
-
-		if (randomize)
-		{
+		if (randomize) {
 			thisPed.RequestControlOnce();
 			SET_PED_RANDOM_COMPONENT_VARIATION(thisPed.GetHandle(), 0);
 			return;
 		}
 
-		if (setDefault)
-		{
-			thisPed.RequestControlOnce();
-			SET_PED_DEFAULT_COMPONENT_VARIATION(thisPed.GetHandle());
+		if (ComponentChanger_online_police_m) {
+			SET_PED_PROP_INDEX(g_Ped1, 0, 47, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+			SET_PED_PROP_INDEX(g_Ped1, 1, 10, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+			SET_PED_PROP_INDEX(g_Ped1, 2, 3, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 0, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 1, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 35, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 25, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 7, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 58, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 9, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 10, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 55, 0, 0);
 			return;
 		}
 
-		if (frontView)
-		{
-			toggleFrontViewCamera(thisPed);
+		if (ComponentChanger_online_police_f) {
+			SET_PED_PROP_INDEX(g_Ped1, 0, 45, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 100, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 34, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 48, 0, 0);
+			return;
+		}
+
+		if (ComponentChanger_offline_police_michael) {
+			SET_PED_PROP_INDEX(g_Ped1, 0, 10, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 6, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 6, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 6, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 8, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 0, 0, 0);
+			return;
+		}
+
+		if (ComponentChanger_offline_firefighter_michael) {
+			SET_PED_PROP_INDEX(g_Ped1, 0, 0, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 1, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 1, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 1, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 1, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 1, 0, 0);
+			return;
+		}
+
+		if (ComponentChanger_online_robber_m) {
+			SET_PED_PROP_INDEX(g_Ped1, 0, 48, 1, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 29, 1, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 34, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 45, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 24, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 7, 40, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 25, 1, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 0, 16, 0);
+			return;
+		}
+
+		if (ComponentChanger_online_garbage_m) {
+			SET_PED_PROP_INDEX(g_Ped1, 1, 4, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 0, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 1, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 64, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 36, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 23, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 7, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 59, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 9, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 10, 0, 0, 0);
+			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 57, 0, 0);
+			return;
+		}
+
+		if (frontView) {
+			if (g_cam_componentChanger.Exists())
+			{
+				g_cam_componentChanger.SetActive(false);
+				g_cam_componentChanger.Destroy();
+				World::RenderingCamera_set(0);
+			}
+			else
+			{
+				Camera gmCam = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
+				g_cam_componentChanger = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
+
+				g_cam_componentChanger.SetFieldOfView(40.0f);
+				g_cam_componentChanger.AttachTo(thisPed, Vector3(0.0f, 1.5f + thisPed.Dim1().y, 0.5f));
+				g_cam_componentChanger.PointAt(thisPed);
+
+				gmCam.SetPosition(World::RenderingCamera_get().Handle() == 0 ? GameplayCamera::GetPosition() : World::RenderingCamera_get().Position_get());
+				gmCam.SetRotation(World::RenderingCamera_get().Handle() == 0 ? GameplayCamera::GetRotation() : World::RenderingCamera_get().Rotation_get());
+
+				gmCam.InterpTo(g_cam_componentChanger, 1000, true, true);
+				while (gmCam.IsInterpolating())
+					WAIT(0);
+				gmCam.Destroy();
+				World::RenderingCamera_set(g_cam_componentChanger);
+			}
 			return;
 		}
 	}
@@ -270,27 +287,22 @@ namespace sub
 	{
 		bool increment = false, decrement = false, inputPressed = false;
 
-		int drawableCurrent = GET_PED_DRAWABLE_VARIATION(Static_241, Static_12);
-		int textureCurrent = GET_PED_TEXTURE_VARIATION(Static_241, Static_12);
-		int paletteCurrent = GET_PED_PALETTE_VARIATION(Static_241, Static_12);
+		int drawableCurrent = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4),
+			textureCurrent = GET_PED_TEXTURE_VARIATION(g_Ped1, g_Ped4),
+			paletteCurrent = GET_PED_PALETTE_VARIATION(g_Ped1, g_Ped4);
 
 		int drawableOld = drawableCurrent;
 		int textureOld = textureCurrent;
 		int paletteOld = paletteCurrent;
 
-		int maxDrawable = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, Static_12) - 1;
-		int maxTexture = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(Static_241, Static_12, drawableCurrent);
+		int maxDrawable = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+		int maxTexture = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent);
 
 		AddTitle("Set Variation");
 
-		if (maxDrawable >= 0)
-		{
-			AddNumber("Type", drawableCurrent, 0, inputPressed, increment, decrement);
-		}
-		if (maxTexture > 0)
-		{
-			AddNumber("Texture", textureCurrent, 0, null, increment, decrement);
-		}
+		if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", drawableCurrent, 0, inputPressed, increment, decrement);
+		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent)) AddNumber("Texture", textureCurrent, 0, null, increment, decrement);
+		//AddNumber("Palette", paletteCurrent, 0, null, increment, decrement);
 
 		switch (*Menu::currentopATM)
 		{
@@ -306,10 +318,10 @@ namespace sub
 						if (drawableCurrent > maxDrawable)
 						{
 							drawableCurrent = drawableOld;
-							Game::Print::PrintError_InvalidInput(inputStr);
+							Game::Print::PrintErrorInvalidInput(inputStr);
 						}
 					}
-					catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
+					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 				}
 			}
 			else if (increment || decrement)
@@ -332,33 +344,63 @@ namespace sub
 			break;
 		}
 
-		if (drawableOld != drawableCurrent || textureOld != textureCurrent || paletteOld != paletteCurrent)
-		{
-			if (Static_12 == PV_COMP_ACCS && !GET_PED_CONFIG_FLAG(Static_241, ePedConfigFlags::DisableTakeOffScubaGear, true))
+        if (drawableOld != drawableCurrent
+            || textureOld != textureCurrent
+            || paletteOld != paletteCurrent)
+        {
+			if (g_Ped4 == PV_COMP_ACCS && !GET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true)) //checks if accessory category & DisableTakeOffScubaGear is false
 			{
-				SET_PED_CONFIG_FLAG(Static_241, ePedConfigFlags::DisableTakeOffScubaGear, true);
+				SET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true);
 			}
+        	//if (IS_PED_COMPONENT_VARIATION_VALID(g_Ped1, g_Ped4, drawableCurrent, textureCurrent))
+        	SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, drawableCurrent, textureCurrent, paletteCurrent);
+            while (!HasPedSpecificDrawable(drawableCurrent))
+            {
+                if (increment)
+                {
+                    if (drawableCurrent < GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
+                    {
+                        drawableCurrent++;
+                        textureCurrent = 0;
+                    }
+                    else
+                    {
+                        drawableCurrent = 0;
+                        textureCurrent = 0;
+                    }
+                }
+                else if (decrement)
+                {
+                    if (drawableCurrent > -1)
+                    {
+                        drawableCurrent--;
+                        textureCurrent = 0;
+                        //Game::Print::PrintBottomLeft(oss_ << "drawableCurrent prev " << drawableCurrent << ".");
+                    }
+                    else
+                    {
+                        drawableCurrent = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+                        textureCurrent = 0;
+                    }
+                }
+                SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, drawableCurrent, textureCurrent, paletteCurrent);
+            }
+        }
+    }
 
-			SET_PED_COMPONENT_VARIATION(Static_241, Static_12, drawableCurrent, textureCurrent, paletteCurrent);
-
-			// Skip drawables that don't actually apply to this ped
-			while (!HasPedSpecificDrawable(drawableCurrent))
-			{
-				drawableCurrent = cycleInt(drawableCurrent, increment, 0, maxDrawable);
-				textureCurrent = 0;
-				SET_PED_COMPONENT_VARIATION(Static_241, Static_12, drawableCurrent, textureCurrent, paletteCurrent);
-			}
-		}
-	}
-
-	bool HasPedSpecificDrawable(int drawableNew)
+    bool HasPedSpecificDrawable(int compon_drawable_new)
+    {
+        bool compon_drawable_correct = false;
+        int drawableCurrent = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4);
+        if (compon_drawable_new == drawableCurrent)
+        {
+            compon_drawable_correct = true;
+        }
+        return compon_drawable_correct;
+    }
+    void ComponentChangerProps_()
 	{
-		return GET_PED_DRAWABLE_VARIATION(Static_241, Static_12) == drawableNew;
-	}
-
-	void ComponentChangerProps()
-	{
-		GTAped thisPed = Static_241;
+		GTAped thisPed = g_Ped1;
 
 		if (g_cam_componentChanger.Exists())
 		{
@@ -385,10 +427,8 @@ namespace sub
 
 		for (int i = 0; i < static_cast<int>(propNames.size()); ++i)
 		{
-			if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(Static_241, i) > 0)
-			{
+			if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, i) > 0)
 				AddPedPropOption(propNames[i], i);
-			}
 		}
 
 		AddBreak("---Utilities---");
@@ -412,43 +452,72 @@ namespace sub
 
 	void ComponentChangerProps2()
 	{
-		GTAentity ped = Static_241;
-		auto& propId = Static_12;
+		GTAentity ped = g_Ped1;
+		auto& propId = g_Ped4;
 
 		bool increment = false, decrement = false;
 
-		int typeCurrent = GET_PED_PROP_INDEX(Static_241, Static_12, 0);
-		int textureCurrent = GET_PED_PROP_TEXTURE_INDEX(Static_241, Static_12);
+		int typeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0);
+		int textureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
 		int typeOld = typeCurrent;
 		int textureOld = textureCurrent;
 
-		int maxPropType = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(Static_241, Static_12) - 1;
-		int maxPropTexture = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(Static_241, Static_12, typeCurrent) - 1;
+		int	propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0),
+			prop_texture_current = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
+		int prop_type_old = propTypeCurrent,
+			prop_texture_old = prop_texture_current;
 
 		AddTitle("Set Variation");
 
-		if (maxPropType >= 0)
-		{
-			AddNumber("Type", typeCurrent, 0, null, increment, decrement);
-		}
-		if (maxPropTexture >= 0)
-		{
-			AddNumber("Texture", textureCurrent, 0, null, increment, decrement);
-		}
+		if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", propTypeCurrent, 0, null, increment, decrement);
+		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) > 0) AddNumber("Texture", prop_texture_current, 0, null, increment, decrement);
 
 		switch (Menu::currentop)
 		{
 		case 1:
 			if (increment || decrement)
 			{
-				typeCurrent = cycleInt(typeCurrent, increment, -1, maxPropType);
-				textureCurrent = 0;
+				if (propTypeCurrent < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
+				{
+					propTypeCurrent++;
+					prop_texture_current = 0;
+				}
+				else
+				{
+					propTypeCurrent = -1;
+					prop_texture_current = 0;
+				}
+			}
+			else if (decrement)
+			{
+				if (propTypeCurrent > -1)
+				{
+					propTypeCurrent--;
+					prop_texture_current = 0;
+				}
+				else
+				{
+					propTypeCurrent = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+					prop_texture_current = 0;
+				}
 			}
 			break;
 		case 2:
 			if (increment || decrement)
 			{
-				textureCurrent = cycleInt(textureCurrent, increment, 0, maxPropTexture);
+				if (prop_texture_current < GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1)
+				{
+					prop_texture_current++;
+				}
+				else prop_texture_current = 0;
+			}
+			else if (decrement)
+			{
+				if (prop_texture_current > 0)
+				{
+					prop_texture_current--;
+				}
+				else prop_texture_current = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1;
 			}
 			break;
 		}
@@ -466,9 +535,33 @@ namespace sub
 				// Skip prop types that don't actually apply to this ped
 				while (!HasPedSpecificPropType(typeCurrent))
 				{
-					typeCurrent = cycleInt(typeCurrent, increment, -1, maxPropType);
-					textureCurrent = 0;
-					SET_PED_PROP_INDEX(ped.Handle(), propId, typeCurrent, textureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+					if (increment)
+					{
+						if (propTypeCurrent < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
+						{
+							propTypeCurrent++;
+							prop_texture_current = 0;
+						}
+						else
+						{
+							propTypeCurrent = -1;
+							prop_texture_current = 0;
+						}
+					}
+					else if (decrement)
+					{
+						if (propTypeCurrent > -1)
+						{
+							propTypeCurrent--;
+							prop_texture_current = 0;
+						}
+						else
+						{
+							propTypeCurrent = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+							prop_texture_current = 0;
+						}
+					}
+					SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, prop_texture_current, NETWORK_IS_GAME_IN_PROGRESS(), 0);					
 				}
 			}
 		}
@@ -476,7 +569,13 @@ namespace sub
 
 	bool HasPedSpecificPropType(int propTypeNew)
 	{
-		return GET_PED_PROP_INDEX(Static_241, Static_12, 0) == propTypeNew;
+		bool propTypeCorrect = false;
+		int propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0);
+		if (propTypeNew == propTypeCurrent)
+		{
+			propTypeCorrect = true;
+		}
+		return propTypeCorrect;
 	}
 
 	// Decals, tattoos & badges
@@ -583,7 +682,7 @@ namespace sub
 
 		void Sub_Decals_Types()
 		{
-			GTAped ped = Static_241;
+			GTAped ped = g_Ped1;
 			const auto& pedModel = ped.Model();
 
 			const auto& vPed = vAllDecals.find(pedModel.hash);
@@ -631,7 +730,7 @@ namespace sub
 		}
 		void Sub_Decals_InZone()
 		{
-			GTAentity ped = Static_241;
+			GTAentity ped = g_Ped1;
 
 			AddTitle(selectedZone->first);
 
@@ -652,7 +751,9 @@ namespace sub
 		}
 		void OpenSubDecals()
 		{
-			GTAentity ped = Static_241;
+			GTAentity ped = g_Ped1;
+			bool allowed = vAllDecals.find(ped.Model().hash) != vAllDecals.end();
+
 			if (vAllDecals.find(ped.Model().hash) != vAllDecals.end())
 			{
 				Menu::SetSub_delayed = SUB::PEDDECALS_TYPES;
@@ -668,7 +769,7 @@ namespace sub
 
 	namespace PedDamageTextures_catind
 	{
-		auto& selectedPedHandle = Static_241;
+		auto& selectedPedHandle = g_Ped1;
 		int boneToUse = 0;
 
 		std::map<Ped, std::vector<std::string>> vPedsAndDamagePacks;
@@ -887,7 +988,7 @@ namespace sub
 
 		void Sub_Main()
 		{
-			GTAped ped = Static_241;
+			GTAped ped = g_Ped1;
 			Model pedModel = ped.Model();
 
 			if (g_cam_componentChanger.Exists())
@@ -972,7 +1073,7 @@ namespace sub
 		}
 		void Sub_HeadOverlays()
 		{
-			auto& overlayIndex = Static_12;
+			auto& overlayIndex = g_Ped4;
 			AddTitle("Overlays");
 
 			for (UINT i = 0; i < vCaptions_headOverlays.size(); i++)
@@ -1001,8 +1102,8 @@ namespace sub
 
 		void Sub_HeadOverlays_InItem()
 		{
-			auto& overlayIndex = Static_12;
-			GTAped ped = Static_241;
+			auto& overlayIndex = g_Ped4;
+			GTAped ped = g_Ped1;
 
 			auto colourType = GetPedHeadOverlayColourType((PedHeadOverlay)overlayIndex);
 			bool bColoursAvailable = (colourType != 0);
@@ -1134,7 +1235,7 @@ namespace sub
 
 		void Sub_FaceFeatures()
 		{
-			GTAped ped = Static_241;
+			GTAped ped = g_Ped1;
 
 			AddTitle("Facial Features");
 
@@ -1166,7 +1267,7 @@ namespace sub
 
 		void Sub_SkinTone() // HEAD_BLEND
 		{
-			GTAped ped = Static_241;
+			GTAped ped = g_Ped1;
 			//auto& blendData = _pedHead->blendData;
 			PedHeadBlendData blendData;
 			GET_PED_HEAD_BLEND_DATA(ped.Handle(), (Any*)&blendData);
@@ -1297,10 +1398,10 @@ namespace sub
 			{
 				if (ep.Handle() == PLAYER_PED_ID())
 				{
-					bool bWas241 = (Static_241 == ep.Handle());
+					bool bWas241 = (g_Ped1 == ep.Handle());
 					ChangeModel_(eModel);
 					ep = PLAYER_PED_ID();
-					if (bWas241) Static_241 = ep.Handle();
+					if (bWas241) g_Ped1 = ep.Handle();
 				}
 
 				if (nodePedStuff.child("HasShortHeight").text().as_bool()) SET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, 1);
@@ -1361,7 +1462,7 @@ namespace sub
 				auto nodeFacialMood = nodePedStuff.child("FacialMood");
 				if (nodeFacialMood)
 				{
-					set_ped_facial_mood(ep, nodeFacialMood.text().as_string());
+					SetPedFacialMood(ep, nodeFacialMood.text().as_string());
 				}
 
 				int opacityLevel = nodeEntity.child("OpacityLevel").text().as_int(255);
@@ -1596,11 +1697,10 @@ namespace sub
 			std::string inputStr = Game::InputBox("", 28U, "FMMC_KEY_TIP9");
 			if (inputStr.length() > 0)
 			{
-				ComponentChanger_Outfit_catind::Create(Static_241, dir + "\\" + inputStr + ".xml");
+				ComponentChanger_Outfit_catind::Create(g_Ped1, dir + "\\" + inputStr + ".xml");
 				Game::Print::PrintBottomLeft("File ~b~created~s~.");
 			}
-
-			else Game::Print::PrintError_InvalidInput(inputStr);
+			else Game::Print::PrintErrorInvalidInput(inputStr);
 			return;
 		}
 
@@ -1621,7 +1721,7 @@ namespace sub
 					addlog(ige::LogType::LOG_ERROR, "Attempt to create folder " + inputStr + " failed");
 				}
 			}
-			else Game::Print::PrintError_InvalidInput(inputStr);
+			else Game::Print::PrintErrorInvalidInput(inputStr);
 			return;
 		}
 	}
@@ -1636,7 +1736,7 @@ namespace sub
 		AddTitle(name);
 		AddOption("Apply", outfits2_apply);
 		AddOption("Apply Clothing & Attachments", outfits2_applyAllFeatures);
-		AddOption((std::string)"Apply " + (Static_241 == PLAYER_PED_ID() ? "Ped Model" : "Head Features"), outfits2_applyModel);
+		AddOption((std::string)"Apply " + (g_Ped1 == PLAYER_PED_ID() ? "Ped Model" : "Head Features"), outfits2_applyModel);
 		AddOption("Apply and Set as Default", outfits2_applySetDefault);
 		AddOption("Rename File", outfits2_rename);
 		AddOption("Overwrite File", outfits2_overwrite);
@@ -1650,14 +1750,14 @@ namespace sub
 
 		if (outfits2_applyModel)
 		{
-			bool s1isme = Static_241 == PLAYER_PED_ID();
-			ComponentChanger_Outfit_catind::Apply(Static_241, filePath, true, false, false, false, false, false);
-			if (s1isme) Static_241 = PLAYER_PED_ID();
+			bool s1isme = g_Ped1 == PLAYER_PED_ID();
+			ComponentChanger_Outfit_catind::Apply(g_Ped1, filePath, true, false, false, false, false, false);
+			if (s1isme) g_Ped1 = PLAYER_PED_ID();
 		}
 
 		if (outfits2_applyAllFeatures)
 		{
-			ComponentChanger_Outfit_catind::Apply(Static_241, filePath, false, true, true, true, true, true);
+			ComponentChanger_Outfit_catind::Apply(g_Ped1, filePath, false, true, true, true, true, true);
 		}
 
 		if (outfits2_applySetDefault)
@@ -1677,10 +1777,8 @@ namespace sub
 
 		if (outfits2_overwrite)
 		{
-			if (ComponentChanger_Outfit_catind::Create(Static_241, filePath))
-			{
+			if (ComponentChanger_Outfit_catind::Create(g_Ped1, filePath))
 				Game::Print::PrintBottomLeft("File ~b~overwritten~s~.");
-			}
 			else
 			{
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to overwrite file.");
@@ -1701,7 +1799,10 @@ namespace sub
 				else Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to rename file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to rename file " + name + " to " + newName + "failed");
 			}
-			else Game::Print::PrintError_InvalidInput(newName);
+			else Game::Print::PrintErrorInvalidInput(newName);
+			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameOutfitFile, std::string(), 28U, "FMMC_KEY_TIP9", _name);
+			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_name);
+			//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&dir);
 		}
 
 		if (outfits2_delete)
@@ -1782,4 +1883,28 @@ namespace sub
 			}
 		}
 	}
+
 }
+
+
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(COMPONENTS, sub::ComponentChanger)
+REGISTER_SUBMENU(COMPONENTS2, sub::ComponentChanger2)
+REGISTER_SUBMENU(COMPONENTSPROPS, sub::ComponentChangerProps_)
+REGISTER_SUBMENU(COMPONENTSPROPS2, sub::ComponentChangerProps2)
+REGISTER_SUBMENU(COMPONENTS_OUTFITS, sub::ComponentChanger_Outfits)
+REGISTER_SUBMENU(COMPONENTS_OUTFITS2, sub::ComponentChanger_Outfits2)
+REGISTER_SUBMENU(PEDDECALS_TYPES, sub::PedDecals_catind::Sub_Decals_Types)
+REGISTER_SUBMENU(PEDDECALS_ZONES, sub::PedDecals_catind::Sub_Decals_Zones)
+REGISTER_SUBMENU(PEDDECALS_INZONE, sub::PedDecals_catind::Sub_Decals_InZone)
+REGISTER_SUBMENU(PEDDAMAGET_CATEGORYLIST, sub::PedDamageTextures_catind::Sub_CategoryList)
+REGISTER_SUBMENU(PEDDAMAGET_BONESELECTION, sub::PedDamageTextures_catind::Sub_BoneSelection)
+REGISTER_SUBMENU(PEDDAMAGET_BLOOD, sub::PedDamageTextures_catind::Sub_Blood)
+REGISTER_SUBMENU(PEDDAMAGET_DAMAGEDECALS, sub::PedDamageTextures_catind::Sub_DamageDecals)
+REGISTER_SUBMENU(PEDDAMAGET_DAMAGEPACKS, sub::PedDamageTextures_catind::Sub_DamagePacks)
+REGISTER_SUBMENU(PED_HEADFEATURES_MAIN, sub::PedHeadFeatures_catind::Sub_Main)
+REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS, sub::PedHeadFeatures_catind::Sub_HeadOverlays)
+REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS_INITEM, sub::PedHeadFeatures_catind::Sub_HeadOverlays_InItem)
+REGISTER_SUBMENU(PED_HEADFEATURES_FACEFEATURES, sub::PedHeadFeatures_catind::Sub_FaceFeatures)
+REGISTER_SUBMENU(PED_HEADFEATURES_SKINTONE, sub::PedHeadFeatures_catind::Sub_SkinTone)

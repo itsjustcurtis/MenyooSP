@@ -148,7 +148,7 @@ namespace sub
             if (!inputStr.empty())
             {
                 try { sub::BodyguardMenu::health = std::stoi(inputStr); }
-                catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
+                catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
             }
         }
 
@@ -162,7 +162,7 @@ namespace sub
             if (!inputStr.empty())
             {
                 try { sub::BodyguardMenu::armor = std::stoi(inputStr); }
-                catch (...) { Game::Print::PrintError_InvalidInput(inputStr); }
+                catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
             }
         }
 
@@ -177,8 +177,8 @@ namespace sub
                 if (!bg.Handle.Exists()) continue;
 
                 Ped ped = bg.Handle.GetHandle();
-                if (sub::BodyguardMenu::godmode) set_ped_invincible_on(ped);
-                else set_ped_invincible_off(ped);
+                if (sub::BodyguardMenu::godmode) SetPedInvincibleOn(ped);
+                else SetPedInvincibleOff(ped);
             }
         }
 
@@ -282,3 +282,9 @@ namespace sub
         }
     }
 }
+
+
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(BODYGUARDMAINMENU,         sub::BodyguardMainMenu)
+REGISTER_SUBMENU(BODYGUARD_SPAWN,           sub::BodyguardMenu::BodyguardSpawn)

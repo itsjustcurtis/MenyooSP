@@ -203,7 +203,7 @@ namespace sub::TeleportLocations_catind
 			}
 			else
 			{
-				Game::Print::setupdraw(0, Vector2(0, 0.185f), true, false, false);
+				Game::Print::SetupDraw(0, Vector2(0, 0.185f), true, false, false);
 				Game::Print::drawstring("No preview available", x_coord, y_coord - 0.0043f);
 			}
 		}
@@ -225,7 +225,7 @@ namespace sub::TeleportLocations_catind
 		}
 		void CreateYacht(YachtBuildInfoStructure& yachtInfo)
 		{
-			if (_worldObjects.size() > 2000)//GTA_MAX_ENTITIES - 48)
+			if (worldObjects.size() > 2000)//GTA_MAX_ENTITIES - 48)
 			{
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Too many entities in world.");
 				return;
@@ -273,7 +273,7 @@ namespace sub::TeleportLocations_catind
 					Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to build yacht. Try again.");
 					return;
 				}
-				const Vector3& propYachtPos = propYacht.Position_get();
+				const Vector3& propYachtPos = propYacht.GetPosition();
 
 				SET_OBJECT_TINT_INDEX(propYacht.Handle(), yachtInfo.yachtPropTextureVariation);
 
@@ -283,7 +283,7 @@ namespace sub::TeleportLocations_catind
 
 				sprintf_s(buffer, "apa_mp_apa_yacht_o%u_rail_%c", optionNumber, yachtInfo.railingColour);
 				GTAprop propRailings = World::CreateProp(std::string(buffer), Vector3(), false, false);
-				propRailings.IsCollisionEnabled_set(true);
+				propRailings.SetIsCollisionEnabled(true);
 				propRailings.AttachTo(propYachtWin, 0, false, Vector3(0.0032f, 0.0028f, 14.5700f), Vector3());
 				SET_ENTITY_LIGHTS(propRailings.Handle(), 0);
 				propRailings.MissionEntity_set(true);
@@ -306,7 +306,7 @@ namespace sub::TeleportLocations_catind
 				{
 					GTAprop p = World::CreateProp(ms, Vector3(), false, false);
 					p.AttachTo(propYachtWin, 0, false, Vector3(0.0032f, 0.0028f, 14.5700f), Vector3());
-					p.IsCollisionEnabled_set(true);
+					p.SetIsCollisionEnabled(true);
 					SET_OBJECT_TINT_INDEX(p.Handle(), yachtInfo.yachtPropTextureVariation);
 					SET_ENTITY_LIGHTS(p.Handle(), 0);
 					propRailings.MissionEntity_set(true);
@@ -316,7 +316,7 @@ namespace sub::TeleportLocations_catind
 				sprintf_s(buffer, "apa_mp_apa_y%u_l%u%c", optionNumber, yachtInfo.lightingType, yachtInfo.lightingColour);
 				GTAprop propLights = World::CreateProp(std::string(buffer), propYachtPos, false, false);
 				propLights.AttachTo(propYachtWin, 0, false, Vector3(0.0032f, 0.0028f, 14.5700f), Vector3());
-				propLights.IsCollisionEnabled_set(true);
+				propLights.SetIsCollisionEnabled(true);
 				SET_ENTITY_LIGHTS(propLights.Handle(), 0);
 				propLights.MissionEntity_set(true);
 				yachtInfo.vSpawnedEntities.push_back(propLights);
@@ -331,7 +331,7 @@ namespace sub::TeleportLocations_catind
 				{
 					GTAprop propDoor = World::CreateProp(std::string(buffer), Vector3(), true, false);
 					propDoor.AttachTo(propYachtWin, 0, false, doorOffset.first, doorOffset.second);
-					propDoor.IsCollisionEnabled_set(true);
+					propDoor.SetIsCollisionEnabled(true);
 					SET_OBJECT_TINT_INDEX(propDoor.Handle(), yachtInfo.yachtPropTextureVariation);
 					SET_ENTITY_LIGHTS(propDoor.Handle(), 0);
 					propDoor.MissionEntity_set(true);
@@ -341,7 +341,7 @@ namespace sub::TeleportLocations_catind
 				// Flag
 				GTAprop propFlag = World::CreateProp("apa_prop_flag_" + vFlagSuffixes[yachtInfo.flagIndex], Vector3(), true, false);
 				propFlag.AttachTo(propYachtWin, 0, false, Vector3(-56.6221f, -2.0013f, 1.5937f), Vector3(49.6800f, 0.0000f, -89.9500f));
-				propFlag.IsCollisionEnabled_set(true);
+				propFlag.SetIsCollisionEnabled(true);
 				SET_ENTITY_LIGHTS(propFlag.Handle(), 0);
 				propFlag.MissionEntity_set(true);
 				yachtInfo.vSpawnedEntities.push_back(propFlag);
@@ -349,7 +349,7 @@ namespace sub::TeleportLocations_catind
 				// Keypad
 				GTAprop propKeypad = World::CreateProp(0x25286EB9, Vector3(), true, false); // prop_ld_keypad_01b
 				propKeypad.AttachTo(propYachtWin, 0, false, Vector3(-36.8196f, -2.8881f, 0.8880f), Vector3(0.0000f, 0.0000f, -84.7550f));
-				propKeypad.IsCollisionEnabled_set(true);
+				propKeypad.SetIsCollisionEnabled(true);
 				SET_ENTITY_LIGHTS(propKeypad.Handle(), 0);
 				propKeypad.MissionEntity_set(true);
 				yachtInfo.vSpawnedEntities.push_back(propKeypad);
@@ -367,7 +367,7 @@ namespace sub::TeleportLocations_catind
 					propRadome.AttachTo(propYachtWin, 0, false, r.first, Vector3(0, 0, r.second));
 					propRadome.Detach();
 					propRadome.FreezePosition(true);
-					propRadome.IsCollisionEnabled_set(true);
+					propRadome.SetIsCollisionEnabled(true);
 					SET_OBJECT_TINT_INDEX(propRadome.Handle(), yachtInfo.yachtPropTextureVariation);
 					SET_ENTITY_LIGHTS(propRadome.Handle(), 0);
 					propRadome.MissionEntity_set(true);
@@ -388,7 +388,7 @@ namespace sub::TeleportLocations_catind
 					propBuoy.Detach();
 					propBuoy.FreezePosition(false);
 					propBuoy.Dynamic_set(true);
-					propBuoy.IsCollisionEnabled_set(true);
+					propBuoy.SetIsCollisionEnabled(true);
 					SET_ENTITY_LIGHTS(propBuoy.Handle(), 0);
 					propBuoy.MissionEntity_set(true);
 					yachtInfo.vSpawnedEntities.push_back(propBuoy);
@@ -399,7 +399,7 @@ namespace sub::TeleportLocations_catind
 				{
 					GTAprop propJacuzzi = World::CreateProp(0x98B5E3D4, Vector3(), true, false); // apa_mp_apa_yacht_jacuzzi_ripple1
 					propJacuzzi.AttachTo(propYachtWin, 0, false, Vector3(-50.8033f, -1.9774f, 0.1368f), Vector3());
-					propJacuzzi.IsCollisionEnabled_set(true);
+					propJacuzzi.SetIsCollisionEnabled(true);
 					SET_ENTITY_LIGHTS(propJacuzzi.Handle(), 0);
 					propJacuzzi.MissionEntity_set(true);
 					yachtInfo.vSpawnedEntities.push_back(propJacuzzi);
@@ -436,7 +436,7 @@ namespace sub::TeleportLocations_catind
 					veh.AttachTo(propYachtWin, 0, false, std::get<1>(v), std::get<2>(v));
 					veh.Detach();
 					veh.FreezePosition(false);
-					veh.IsCollisionEnabled_set(true);
+					veh.SetIsCollisionEnabled(true);
 					SET_ENTITY_LIGHTS(veh.Handle(), 0);
 					if (std::get<0>(v).IsBoat()) SET_BOAT_ANCHOR(veh.Handle(), true);
 					//veh.MissionEntity_set(true);
@@ -454,7 +454,7 @@ namespace sub::TeleportLocations_catind
 					ped.AttachTo(propYachtWin, 0, false, std::get<1>(p), std::get<2>(p));
 					ped.Detach();
 					ped.FreezePosition(false);
-					ped.IsCollisionEnabled_set(true);
+					ped.SetIsCollisionEnabled(true);
 					SET_ENTITY_LIGHTS(ped.Handle(), 0);
 					ped.RelationshipGroup_set("PLAYER");
 					ped.BlockPermanentEvents_set(true);
@@ -563,7 +563,7 @@ namespace sub::TeleportLocations_catind
 				Menu::SetSub_previous();
 				return;
 			}
-			GTAped ped = Static_241;
+			GTAped ped = g_Ped1;
 
 			AddTitle(currentYachtInfo.location->second.name);
 
@@ -644,7 +644,7 @@ namespace sub::TeleportLocations_catind
 			if (yachtInfo.location != nullptr && yachtInfo.option != nullptr)
 			{
 				GTAentity myPed = PLAYER_PED_ID();
-				const Vector3& myPos = myPed.Position_get();
+				const Vector3& myPos = myPed.GetPosition();
 				auto& posh = yachtInfo.location->second.poses[yachtInfo.internalLocationIndex - 1];
 
 				if (myPos.DistanceTo(posh.pos) < 100.0f)
@@ -684,7 +684,7 @@ namespace sub::TeleportLocations_catind
 									DO_SCREEN_FADE_OUT(5);
 									myPed.RequestControl();
 									WAIT(20);
-									myPed.Position_set(p.second);
+									myPed.SetPosition(p.second);
 									//myPed.Heading_set(same);
 									TaskSequence sq;
 									const Vector3& outsideMarkerPos = myPed.GetOffsetInWorldCoords(0, scale + 1.0f, 0);
@@ -724,3 +724,7 @@ namespace sub::TeleportLocations_catind
 
 
 
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TELEPORTOPS_YACHTS,                    sub::TeleportLocations_catind::Yachts::Sub_Yachts)
+REGISTER_SUBMENU(TELEPORTOPS_YACHTS_INGRP,              sub::TeleportLocations_catind::Yachts::Sub_Yachts_InGrp)

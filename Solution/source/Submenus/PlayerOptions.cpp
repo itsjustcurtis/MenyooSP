@@ -80,11 +80,11 @@ namespace sub
 
 		bool butAmIOnline = NETWORK_IS_IN_SESSION() != 0;
 
-		Static_241 = PLAYER_PED_ID();
-		Static_240 = PLAYER_ID();
+		g_Ped1 = PLAYER_PED_ID();
+		g_Ped2 = PLAYER_ID();
 
-		GTAped myPed = Static_241;
-		GTAplayer myPlayer = Static_240;
+		GTAped myPed = g_Ped1;
+		GTAplayer myPlayer = g_Ped2;
 
 		int PlayerOpsWantedLevel = myPlayer.WantedLevel_get();
 
@@ -113,51 +113,51 @@ namespace sub
 
 		AddOption("Opacity (Local)", bGoToAlphaLevelSub, nullFunc, SUB::ENTITYALPHALEVEL);
 		if (bGoToAlphaLevelSub)
-			Static_12 = myPed.Handle();
+			g_Ped4 = myPed.Handle();
 
 		AddOption("Cloning Options", null, nullFunc, SUB::CLONECOMPANIONSUB);
 
 		AddOption("Replenish Player", PlayerOpsReplenishPlayer_);
-		AddToggle("Refill Health When In Cover", loop_self_refillHealthInCover);
-		AddToggle("Invincibility", loop_player_invincibility, null, PlayerOpsInvincibilityOff_);
+		AddToggle("Refill Health When In Cover", selfRefillHealthInCover);
+		AddToggle("Invincibility", playerInvincibility, null, PlayerOpsInvincibilityOff_);
 		AddLocal("Invisibility", !myPed.IsVisible(), PlayerOpsInvisibilityOff_, PlayerOpsInvisibilityOff_);
-		AddToggle("No Ragdoll", loop_player_noRagdoll, null, PlayerOpsNoRagdollOff_);
-		AddToggle("Seatbelt", loop_player_seatbelt, null, PlayerOpsSeatbeltOff_);
-		AddToggle("Unlimited Special Ability (SP)", loop_player_unlimSpecialAbility);
-		AddToggle("Auto-Clean", loop_player_autoClean);
-		AddToggle("Super Run", loop_super_run);
-		AddToggle("Super Jump", loop_super_jump);
-		AddToggle("Walk underwater", loop_player_Walkunderwater);
-		AddTexter("Forcefield", loop_forcefield, forcefield_names, null, forcefield_plus, forcefield_minus);
-		AddLocal("Smash Ability", _SmashAbility_::g_smashAbility.Enabled(), _SmashAbility_::ToggleOnOff, _SmashAbility_::ToggleOnOff);
-		AddToggle("Fly Manual", loop_superman, PlayerOpsSupermanOn_);
-		AddToggle("Fly Auto", loop_superman_auto, PlayerOpsSupermanAUTOOn_);
-		AddToggle("Ignored By Everyone", loop_ignored_by_everyone, null, PlayerOps_ignoredByEveryone_off);
+		AddToggle("No Ragdoll", playerNoRagdoll, null, PlayerOpsNoRagdollOff_);
+		AddToggle("Seatbelt", playerSeatbelt, null, PlayerOpsSeatbeltOff_);
+		AddToggle("Unlimited Special Ability (SP)", playerUnlimitedAbility);
+		AddToggle("Auto-Clean", playerAutoClean);
+		AddToggle("Super Run", superRun);
+		AddToggle("Super Jump", superJump);
+		AddToggle("Walk underwater", playerWalkUnderwater);
+		AddTexter("Forcefield", forceField, forcefield_names, null, forcefield_plus, forcefield_minus);
+		AddLocal("Smash Ability", SmashAbility::g_smashAbility.Enabled(), SmashAbility::ToggleOnOff, SmashAbility::ToggleOnOff);
+		AddToggle("Fly Manual", superman, PlayerOpsSupermanOn_);
+		AddToggle("Fly Auto", supermanAuto, PlayerOpsSupermanAUTOOn_);
+		AddToggle("Ignored By Everyone", ignoredByEveryone, null, PlayerOps_ignoredByEveryone_off);
 		AddNumber("Wanted Level", PlayerOpsWantedLevel, 0, null, PlayerOpsWanted_plus, PlayerOpsWanted_minus);
 		if (PlayerOpsWantedLevel > 0)
-			AddLocal("Freeze Wanted Level", loop_self_freezeWantedLevel, PlayerOpsWanted_freezeOn, PlayerOpsWanted_freezeOff);
+			AddLocal("Freeze Wanted Level", selfFreezeWantedLevel, PlayerOpsWanted_freezeOn, PlayerOpsWanted_freezeOff);
 		else
-			AddToggle("Never Wanted", loop_never_wanted, PlayerOpsNeverWantedOn_, PlayerOpsNeverWantedOff_);
-		AddToggle("Burn Mode", loop_player_burn, PlayerOpsBurnModeOn_, PlayerOpsBurnModeOff_);
+			AddToggle("Never Wanted", neverWanted, PlayerOpsNeverWantedOn_, PlayerOpsNeverWantedOff_);
+		AddToggle("Burn Mode", playerBurn, PlayerOpsBurnModeOn_, PlayerOpsBurnModeOff_);
 		//AddToggle("No Gravity (ALPHA)", loop_player_noGravity, null, PlayerOpsNoGravityOff_);
 		AddNumber("Height (Elongation) - Experimental", fHeight, 2, null, bHeight_plus, bHeight_minus);
 		//AddNumber("Walk & Run Speed", fMovementSpeed, 2, null, bMovementSpeed_plus, bMovementSpeed_minus);
 		//AddNumber("Swim Speed", fSwimSpeed, 2, null, bSwimSpeed_plus, bSwimSpeed_minus);
-		AddNumber("Movement Speed (Alt)", mult69_0, 2, null, PlayerOps_i69_flt_MovementSpeed, PlayerOps_d69_flt_MovementSpeed);
-		AddNumber("Sweat Level", mult_self_sweat, 2, null, PlayerOps_sweat_plus, PlayerOps_sweat_minus);
-		AddNumber("Noise Level", mult_playerNoiseValue, 2, null, PlayerOps_noiseValue_plus, PlayerOps_noiseValue_minus);
-		AddLocal("Collision", myPed.IsCollisionEnabled_get(), vcollisionon, vcollisionoff);
+		AddNumber("Movement Speed (Alt)", swimSpeedMult, 2, null, PlayerOps_i69_flt_MovementSpeed, PlayerOps_d69_flt_MovementSpeed);
+		AddNumber("Sweat Level", selfSweatMult, 2, null, PlayerOps_sweat_plus, PlayerOps_sweat_minus);
+		AddNumber("Noise Level", playerNoiseMult, 2, null, PlayerOps_noiseValue_plus, PlayerOps_noiseValue_minus);
+		AddLocal("Collision", myPed.GetIsCollisionEnabled(), vcollisionon, vcollisionoff);
 		//AddOption("Collision ON", vcollisionon);
 		//AddOption("Collision OFF", vcollisionoff);
 
 
-		if (vcollisionon || vcollisionoff) myPed.IsCollisionEnabled_set(!myPed.IsCollisionEnabled_get());
+		if (vcollisionon || vcollisionoff) myPed.SetIsCollisionEnabled(!myPed.GetIsCollisionEnabled());
 		//if (vcollisionon) SET_ENTITY_COLLISION(PLAYER_PED_ID(), TRUE, 0);
 		//if (vcollisionoff) SET_ENTITY_COLLISION(PLAYER_PED_ID(), FALSE, 0);
 
 		if (PlayerOpsReplenishPlayer_) {
 			addlog(ige::LogType::LOG_TRACE, "Replenishing Player");
-			myPed.Health_set(myPed.MaxHealth_get());
+			myPed.Health_set(myPed.GetMaxHealth());
 			myPed.Armour_set(myPlayer.MaxArmour_get());
 			PedDamageTextures_catind::ClearAllBloodDamage(myPed);
 			PedDamageTextures_catind::ClearAllVisibleDamage(myPed);
@@ -167,38 +167,38 @@ namespace sub
 		if (PlayerOpsInvincibilityOff_) {
 			addlog(ige::LogType::LOG_TRACE, "Turning Off Invincibility");
 			SET_PLAYER_INVINCIBLE(PLAYER_ID(), 0);
-			set_ped_invincible_off(PLAYER_PED_ID());
+			SetPedInvincibleOff(PLAYER_PED_ID());
 			return;
 		}
 
 		if (PlayerOpsInvisibilityOff_)
 			myPed.SetVisible(!myPed.IsVisible());
 
-		if (PlayerOpsNoRagdollOff_) { set_ped_no_ragdoll_off(PLAYER_PED_ID()); return; }
-		if (PlayerOpsSeatbeltOff_) { set_ped_seatbelt_off(PLAYER_PED_ID()); return; }
+		if (PlayerOpsNoRagdollOff_) { SetPedNoRagdollOff(PLAYER_PED_ID()); return; }
+		if (PlayerOpsSeatbeltOff_) { SetPedSeatbeltOff(PLAYER_PED_ID()); return; }
 
-		if (forcefield_plus) { if (loop_forcefield < forcefield_names.size() - 1) loop_forcefield++; return; }
-		if (forcefield_minus) { if (loop_forcefield > 0) loop_forcefield--; return; }
+		if (forcefield_plus) { if (forceField < forcefield_names.size() - 1) forceField++; return; }
+		if (forcefield_minus) { if (forceField > 0) forceField--; return; }
 
 		if (PlayerOpsSupermanOn_) {
-			if (Menu::bit_controller) Game::Print::PrintBottomLeft("RT for Up. LT for Down. RB for Boost. A for Brake.");
+			if (Menu::bitController) Game::Print::PrintBottomLeft("RT for Up. LT for Down. RB for Boost. A for Brake.");
 			else Game::Print::PrintBottomLeft("Num7 for Up. Num1 for Down. NumPlus for Boost. NumMinus for Brake.");
 			return;
 		}
 
 		if (PlayerOpsSupermanAUTOOn_) {
-			Vector3 Pos = GET_ENTITY_COORDS(Static_241, 1);
+			Vector3 Pos = GET_ENTITY_COORDS(g_Ped1, 1);
 			CREATE_AMBIENT_PICKUP(PICKUP_PARACHUTE, Pos.x, Pos.y, Pos.z, 0, 300, 1, 0, 1);
-			TASK_PARACHUTE(Static_241, true, false);
+			TASK_PARACHUTE(g_Ped1, true, false);
 			APPLY_FORCE_TO_ENTITY(PLAYER_PED_ID(), 1, 0.0f, 0.0f, 10.0f, 0.0, 0.0, 0.0, 1, 1, 1, 1, 0, 1);
-			if (Menu::bit_controller) Game::Print::PrintBottomLeft("Press ~b~A~s~ for temporary brake.");
+			if (Menu::bitController) Game::Print::PrintBottomLeft("Press ~b~A~s~ for temporary brake.");
 			else Game::Print::PrintBottomLeft("Press ~b~NUMPLUS~s~ for temporary brake.");
 			return;
 		}
 
 		if (PlayerOps_ignoredByEveryone_off) {
 			Player temp = PLAYER_ID();
-			SET_POLICE_IGNORE_PLAYER(temp, loop_never_wanted);
+			SET_POLICE_IGNORE_PLAYER(temp, neverWanted);
 			SET_EVERYONE_IGNORE_PLAYER(temp, 0);
 			SET_PLAYER_CAN_BE_HASSLED_BY_GANGS(temp, 1);
 			SET_IGNORE_LOW_PRIORITY_SHOCKING_EVENTS(temp, 0);
@@ -223,9 +223,9 @@ namespace sub
 				SET_MAX_WANTED_LEVEL(6);
 				SET_PLAYER_WANTED_LEVEL/*_NO_DROP*/(PLAYER_ID(), PlayerOpsWantedLevel, 0);
 				SET_PLAYER_WANTED_LEVEL_NOW(PLAYER_ID(), 0);
-				loop_never_wanted = false;
+				neverWanted = false;
 			}
-			if (loop_self_freezeWantedLevel != 0) loop_self_freezeWantedLevel = PlayerOpsWantedLevel;
+			if (selfFreezeWantedLevel != 0) selfFreezeWantedLevel = PlayerOpsWantedLevel;
 			return;
 		}
 		if (PlayerOpsWanted_minus) {
@@ -242,32 +242,32 @@ namespace sub
 					SET_PLAYER_WANTED_LEVEL/*_NO_DROP*/(PLAYER_ID(), PlayerOpsWantedLevel, 0);
 				}
 				SET_PLAYER_WANTED_LEVEL_NOW(PLAYER_ID(), 0);
-				loop_never_wanted = false;
+				neverWanted = false;
 			}
-			if (loop_self_freezeWantedLevel != 0) loop_self_freezeWantedLevel = PlayerOpsWantedLevel;
+			if (selfFreezeWantedLevel != 0) selfFreezeWantedLevel = PlayerOpsWantedLevel;
 			return;
 		}
 
 		if (PlayerOpsWanted_freezeOn) {
-			loop_self_freezeWantedLevel = Game::Player().WantedLevel_get();
+			selfFreezeWantedLevel = Game::Player().WantedLevel_get();
 			return;
 		}
 		if (PlayerOpsWanted_freezeOff) {
-			loop_self_freezeWantedLevel = 0;
+			selfFreezeWantedLevel = 0;
 			return;
 		}
 
 		if (PlayerOpsBurnModeOn_) {
 			//set_explosion_at_coords(Static_241, Vector3::Zero(), EXPLOSION::DIR_FLAME, 4, 0, 0, 1);
-			if (GET_PLAYER_INVINCIBLE(Static_240)) SET_PLAYER_INVINCIBLE(Static_240, 0);
-			set_ped_invincible_off(Static_241);
+			if (GET_PLAYER_INVINCIBLE(g_Ped2)) SET_PLAYER_INVINCIBLE(g_Ped2, 0);
+			SetPedInvincibleOff(g_Ped1);
 			WAIT(130);
-			if (!IS_ENTITY_ON_FIRE(Static_241)) START_ENTITY_FIRE(Static_241);
+			if (!IS_ENTITY_ON_FIRE(g_Ped1)) START_ENTITY_FIRE(g_Ped1);
 			Game::Print::PrintBottomCentre("~b~Note:~s~ If you're not on fire yet, kill yourself.");
 			return;
 		}
 		if (PlayerOpsBurnModeOff_) {
-			if (IS_ENTITY_ON_FIRE(Static_241)) STOP_ENTITY_FIRE(Static_241);
+			if (IS_ENTITY_ON_FIRE(g_Ped1)) STOP_ENTITY_FIRE(g_Ped1);
 			return;
 		}
 
@@ -281,19 +281,19 @@ namespace sub
 		if (bSwimSpeed_minus) { if (fSwimSpeed > 0.0f) { fSwimSpeed -= 0.1f; GeneralGlobalHax::SetPlayerSwimSpeed(fSwimSpeed); } }
 
 		if (PlayerOps_i69_flt_MovementSpeed) {
-			if (mult69_0 < 1.40f) mult69_0 += 0.1f;
+			if (swimSpeedMult < 1.40f) swimSpeedMult += 0.1f;
 			return;
 		}
 		if (PlayerOps_d69_flt_MovementSpeed) {
-			if (mult69_0 > 0.0f) mult69_0 -= 0.1f;
+			if (swimSpeedMult > 0.0f) swimSpeedMult -= 0.1f;
 			return;
 		}
 
-		if (PlayerOps_sweat_plus) { if (mult_self_sweat < 5.5f) mult_self_sweat += 0.1f; return; }
-		if (PlayerOps_sweat_minus) { if (mult_self_sweat > 0.0f) mult_self_sweat -= 0.1f; if (mult_self_sweat == 0.0f) { SET_PED_SWEAT(Static_241, mult_self_sweat); CLEAR_PED_WETNESS(Static_241); } return; }
+		if (PlayerOps_sweat_plus) { if (selfSweatMult < 5.5f) selfSweatMult += 0.1f; return; }
+		if (PlayerOps_sweat_minus) { if (selfSweatMult > 0.0f) selfSweatMult -= 0.1f; if (selfSweatMult == 0.0f) { SET_PED_SWEAT(g_Ped1, selfSweatMult); CLEAR_PED_WETNESS(g_Ped1); } return; }
 
-		if (PlayerOps_noiseValue_plus) { if (mult_playerNoiseValue < 10.0f) mult_playerNoiseValue += 0.1f; return; }
-		if (PlayerOps_noiseValue_minus) { if (mult_playerNoiseValue > 0.0f) mult_playerNoiseValue -= 0.1f; return; }
+		if (PlayerOps_noiseValue_plus) { if (playerNoiseMult < 10.0f) playerNoiseMult += 0.1f; return; }
+		if (PlayerOps_noiseValue_minus) { if (playerNoiseMult > 0.0f) playerNoiseMult -= 0.1f; return; }
 
 
 	}
@@ -318,7 +318,7 @@ namespace sub
 
 		void Sub_FlagList()
 		{
-			GTAped ped = Static_241;
+			GTAped ped = g_Ped1;
 
 			AddTitle("Ped Flags");
 
@@ -338,7 +338,7 @@ namespace sub
 		int flagID = 0;
 		void Sub_CustomFlagSetter()
 		{
-			GTAped ped = Static_241;
+			GTAped ped = g_Ped1;
 			bool id_input = 0, id_plus = 0, id_minus = 0, id_toggle = 0;
 			BOOL flagStatus = GET_PED_CONFIG_FLAG(ped.Handle(), flagID, true);
 
@@ -356,7 +356,7 @@ namespace sub
 					try { flagID = stoi(inputStr); }
 					catch (...) 
 					{ 
-						Game::Print::PrintError_InvalidInput(inputStr);
+						Game::Print::PrintErrorInvalidInput(inputStr);
 						addlog(ige::LogType::LOG_ERROR, "Invalid flagID entered: " + inputStr);
 					}
 				}
@@ -371,8 +371,8 @@ namespace sub
 
 	void CloneCompanionSub()
 	{
-		GTAplayer player = Static_240;
-		GTAped playerPed = Static_241;
+		GTAplayer player = g_Ped2;
+		GTAped playerPed = g_Ped1;
 
 		if (!playerPed.Exists())
 		{
@@ -493,5 +493,9 @@ namespace sub
 }
 
 
-
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(CLONECOMPANIONSUB,   			sub::CloneCompanionSub)
+REGISTER_SUBMENU(PLAYEROPS,           			sub::PlayerOps_)
+REGISTER_SUBMENU(PEDFLAGMANAGER_NAMEDLIST, 		sub::PedConfigFlagManager_catind::Sub_FlagList)
+REGISTER_SUBMENU(PEDFLAGMANAGER_CUSTOM,    		sub::PedConfigFlagManager_catind::Sub_CustomFlagSetter)

@@ -11,7 +11,7 @@
 
 #include "GenericLoopedMode.h"
 
-namespace _ManualRespawn_
+namespace ManualRespawn
 {
 	class ManualRespawn final : public GenericLoopedMode
 	{
@@ -39,7 +39,7 @@ namespace _ManualRespawn_
 	void ToggleOnOff();
 
 
-	void Check_self_death_model();
+	void CheckSelfDealthModel();
 }
 
 

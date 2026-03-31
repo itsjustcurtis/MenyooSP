@@ -168,16 +168,16 @@ public:
 
 	void HasGravity_set(bool value) override;
 
-	bool EngineRunning_get() const;
-	void EngineRunning_set(bool value);
+	bool GetEngineRunning() const;
+	void SetEngineRunning(bool value);
 
 	void EnginePowerMultiplier_set(float value);
 	void EngineTorqueMultiplier_set(float value);
 
 	void EngineCanDegrade_set(bool value);
 
-	bool LightsOn_get() const;
-	void LightsOn_set(bool value);
+	bool GetLightsOn() const;
+	void SetLightsOn(bool value);
 
 	bool HighBeamsOn_get() const;
 
@@ -288,7 +288,7 @@ public:
 	std::vector<VehicleDoor> Doors_get() const;
 	bool HasBombBay_get() const;
 	bool HasForks_get() const;
-	bool HasSiren_get() const;
+	bool GetHasSiren() const;
 	bool HasTowArm_get() const;
 
 	void OpenDoor(VehicleDoor door, bool loose, bool instantly, bool playSound = true);

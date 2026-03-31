@@ -869,11 +869,11 @@ void GTAvehicle::HasGravity_set(bool value)
 	GTAentity::HasGravity_set(value);
 }
 
-bool GTAvehicle::EngineRunning_get() const
+bool GTAvehicle::GetEngineRunning() const
 {
 	return GET_IS_VEHICLE_ENGINE_RUNNING(this->mHandle) != 0;
 }
-void GTAvehicle::EngineRunning_set(bool value)
+void GTAvehicle::SetEngineRunning(bool value)
 {
 	SET_VEHICLE_ENGINE_ON(this->mHandle, value, true, true);
 }
@@ -892,13 +892,13 @@ void GTAvehicle::EngineCanDegrade_set(bool value)
 	SET_VEHICLE_ENGINE_CAN_DEGRADE(this->mHandle, value);
 }
 
-bool GTAvehicle::LightsOn_get() const
+bool GTAvehicle::GetLightsOn() const
 {
 	int lightState1, lightState2;
 	GET_VEHICLE_LIGHTS_STATE(this->mHandle, &lightState1, &lightState2);
 	return lightState1 == 1;
 }
-void GTAvehicle::LightsOn_set(bool value)
+void GTAvehicle::SetLightsOn(bool value)
 {
 	SET_VEHICLE_LIGHTS(this->mHandle, value ? 3 : 4);
 }
@@ -1487,7 +1487,7 @@ bool GTAvehicle::PlaceOnGroundProperly()
 }
 void GTAvehicle::PlaceOnNextStreet()
 {
-	const Vector3 pos = this->Position_get();
+	const Vector3 pos = this->GetPosition();
 	Vector3_t newPos;
 
 	float heading;
@@ -1499,7 +1499,7 @@ void GTAvehicle::PlaceOnNextStreet()
 
 		if (!IS_POINT_OBSCURED_BY_A_MISSION_ENTITY(newPos.x, newPos.y, newPos.z, 5.0f, 5.0f, 5.0f, 0))
 		{
-			this->Position_set(newPos);
+			this->SetPosition(newPos);
 			PlaceOnGround();
 			this->Heading_set(heading);
 			break;
@@ -1532,7 +1532,7 @@ bool GTAvehicle::HasForks_get() const
 {
 	return HasBone(VBone::forks);
 }
-bool GTAvehicle::HasSiren_get() const
+bool GTAvehicle::GetHasSiren() const
 {
 	return HasBone(VBone::siren1);
 }
@@ -3875,7 +3875,7 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 	if (!vehicle.Exists())
 		return GTAvehicle();
 
-	Vector3 Pos = vehicle.Position_get();
+	Vector3 Pos = vehicle.GetPosition();
 	Vector3 Rot = vehicle.Rotation_get();
 
 	Model vehicleModel = vehicle.Model();
@@ -3940,7 +3940,7 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 
 	newVeh.DirtLevel_set(vehicle.DirtLevel_get());
 
-	newVeh.EngineRunning_set(true);
+	newVeh.SetEngineRunning(true);
 
 	if (DOES_VEHICLE_HAVE_CREW_EMBLEM(vehicle.Handle(), 0) && pedForEmblem.Exists())
 	{
@@ -3959,36 +3959,36 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 	}
 
 	// Apply multipliers
-	auto rpmMultIt = g_multList_rpm.find(vehicle.Handle());
-	if (rpmMultIt != g_multList_rpm.end())
+	auto rpmMultIt = g_multListRPM.find(vehicle.Handle());
+	if (rpmMultIt != g_multListRPM.end())
 	{
-		g_multList_rpm[newVeh.Handle()] = rpmMultIt->second;
+		g_multListRPM[newVeh.Handle()] = rpmMultIt->second;
 		newVeh.EnginePowerMultiplier_set(rpmMultIt->second);
 	}
-	auto torqueMultIt = g_multList_torque.find(vehicle.Handle());
-	if (torqueMultIt != g_multList_torque.end())
+	auto torqueMultIt = g_multListTorque.find(vehicle.Handle());
+	if (torqueMultIt != g_multListTorque.end())
 	{
-		g_multList_torque[newVeh.Handle()] = torqueMultIt->second;
+		g_multListTorque[newVeh.Handle()] = torqueMultIt->second;
 		newVeh.EngineTorqueMultiplier_set(torqueMultIt->second);
 	}
-	auto maxSpeedMultIt = g_multList_maxSpeed.find(vehicle.Handle());
-	if (maxSpeedMultIt != g_multList_maxSpeed.end())
+	auto maxSpeedMultIt = g_multListMaxSpeed.find(vehicle.Handle());
+	if (maxSpeedMultIt != g_multListMaxSpeed.end())
 	{
-		g_multList_maxSpeed[newVeh.Handle()] = maxSpeedMultIt->second;
+		g_multListMaxSpeed[newVeh.Handle()] = maxSpeedMultIt->second;
 		newVeh.MaxSpeed_set(maxSpeedMultIt->second);
 	}
-	auto headlightsMultIt = g_multList_headlights.find(vehicle.Handle());
-	if (headlightsMultIt != g_multList_headlights.end())
+	auto headlightsMultIt = g_multListHeadLights.find(vehicle.Handle());
+	if (headlightsMultIt != g_multListHeadLights.end())
 	{
-		g_multList_headlights[newVeh.Handle()] = headlightsMultIt->second;
+		g_multListHeadLights[newVeh.Handle()] = headlightsMultIt->second;
 		newVeh.LightsMultiplier_set(headlightsMultIt->second);
 	}
 
 	// Engine sound
-	auto engineSoundIt = g_vehList_engSound.find(vehicle.Handle());
-	if (engineSoundIt != g_vehList_engSound.end())
+	auto engineSoundIt = g_vehListEngineSounds.find(vehicle.Handle());
+	if (engineSoundIt != g_vehListEngineSounds.end())
 	{
-		g_vehList_engSound[newVeh.Handle()] = engineSoundIt->second;
+		g_vehListEngineSounds[newVeh.Handle()] = engineSoundIt->second;
 		newVeh.EngineSound_set(engineSoundIt->second);
 	}
 
