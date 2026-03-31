@@ -134,7 +134,7 @@ namespace sub::TeleportLocations_catind
 				Menu::SetSub_previous();
 				return;
 			}
-			GTAped ped = Static_241;
+			GTAped ped = g_Ped1;
 			AddTitle(currentWarehouseInfo.location->name);
 
 			for (auto& o : vOptionArrays)
@@ -161,4 +161,7 @@ namespace sub::TeleportLocations_catind
 }
 
 
-
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TELEPORTOPS_IEVEHICLEWAREHOUSES,       	sub::TeleportLocations_catind::IeVehicleWarehouses::Sub_IeVehicleWarehouses)
+REGISTER_SUBMENU(TELEPORTOPS_IEVEHICLEWAREHOUSES_INLOC, 	sub::TeleportLocations_catind::IeVehicleWarehouses::Sub_IeVehicleWarehouses_InLoc)

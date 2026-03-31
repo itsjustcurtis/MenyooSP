@@ -29,7 +29,7 @@ namespace sub
 {
 	namespace FolderPreviewBmps_catind
 	{
-		bool& bFolderBmpsEnabled = _globalSpawnVehicle_drawBmps;
+		bool& bFolderBmpsEnabled = g_spawnVehicleDrawBMPs;
 		std::string previewPng = "preview.png";
 		std::vector<std::pair<std::string, DxHookIMG::DxTexture>> vFolderBmps;
 

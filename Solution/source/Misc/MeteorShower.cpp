@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace _MeteorShower_
+namespace MeteorShower
 {
 	const std::vector<std::string> MeteorShower::rockModelNames{ "prop_asteroid_01", "prop_test_boulder_01", "prop_test_boulder_02", "prop_test_boulder_03", "prop_test_boulder_04" };
 	Game::Sound::GameSound MeteorShower::crateLandSound = { "FBI_05_SOUNDS", "Crate_Land" };
@@ -93,7 +93,7 @@ namespace _MeteorShower_
 
 		if (GetTickCount() > timer1)
 		{
-			const Vector3& myPos = myPed.Position_get();
+			const Vector3& myPos = myPed.GetPosition();
 
 			float radius = GET_RANDOM_FLOAT_IN_RANGE(22.0f, 78.0f);
 			float angle = GET_RANDOM_INT_IN_RANGE(0, 360);
@@ -120,9 +120,9 @@ namespace _MeteorShower_
 		for (auto& r : rockArray)
 		{
 			//r.ApplyForce(Vector3::WorldDown() * 2);
-			if (r.Speed_get() > 0.55f)
+			if (r.GetSpeed() > 0.55f)
 			{
-				const Vector3& rPos = r.Position_get();
+				const Vector3& rPos = r.GetPosition();
 				const auto& rayToGround = RaycastResult::Raycast(rPos, Vector3::WorldDown(), 1.4f, IntersectOptions::Map, r);
 
 				if (r.IsInWater())
@@ -130,10 +130,10 @@ namespace _MeteorShower_
 					switch (r.Model().hash)
 					{
 					case 0xDF9841D7: // prop_asteroid_01
-						PTFX::trigger_ptfx_1("scr_oddjobtraffickingair", "scr_ojdg4_water_exp", r, Vector3(), Vector3(), 1.2f);
+						PTFX::TriggerPTFX("scr_oddjobtraffickingair", "scr_ojdg4_water_exp", r, Vector3(), Vector3(), 1.2f);
 						break;
 					default:
-						PTFX::trigger_ptfx_1("scr_oddjobtraffickingair", "scr_ojdg4_water_exp", r, Vector3(), Vector3(), 0.8f);
+						PTFX::TriggerPTFX("scr_oddjobtraffickingair", "scr_ojdg4_water_exp", r, Vector3(), Vector3(), 0.8f);
 						break;
 					}
 				}
@@ -143,10 +143,10 @@ namespace _MeteorShower_
 					switch (r.Model().hash)
 					{
 					case 0xDF9841D7: // prop_asteroid_01
-						PTFX::trigger_ptfx_1("scr_agencyheistb", "scr_agency3b_heli_expl", r, Vector3(), Vector3(), 1.2f);
+						PTFX::TriggerPTFX("scr_agencyheistb", "scr_agency3b_heli_expl", r, Vector3(), Vector3(), 1.2f);
 						break;
 					default:
-						PTFX::trigger_ptfx_1("scr_agencyheistb", "scr_agency3b_heli_expl", r, Vector3(), Vector3(), 0.8f);
+						PTFX::TriggerPTFX("scr_agencyheistb", "scr_agency3b_heli_expl", r, Vector3(), Vector3(), 0.8f);
 						break;
 					}
 				}

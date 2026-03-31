@@ -30,7 +30,7 @@
 //#include <string>
 //#include <sstream>
 
-namespace _RopeGun_
+namespace RopeGun
 {
 	EntitiesAndRope::EntitiesAndRope()
 		: rope(0), e1(0), e2(0), initialDistance(0.0f)
@@ -113,7 +113,7 @@ namespace _RopeGun_
 						bNoTarget = true;
 						float maxDistForRay = 1000.0f;
 						aimedCoords = GameplayCamera::RaycastForCoord(Vector2(0.0f, 0.0f), 0, maxDistForRay, maxDistForRay + 200.0f);
-						if (GameplayCamera::Position_get().DistanceTo(aimedCoords) > maxDistForRay + 100.0f)
+						if (GameplayCamera::GetPosition().DistanceTo(aimedCoords) > maxDistForRay + 100.0f)
 							return;
 					}
 				}
@@ -177,8 +177,8 @@ namespace _RopeGun_
 				continue;
 			}
 
-			const Vector3& pos1 = r.e1.Position_get();
-			const Vector3& pos2 = r.e2.Position_get();
+			const Vector3& pos1 = r.e1.GetPosition();
+			const Vector3& pos2 = r.e2.GetPosition();
 			float dist = pos1.DistanceTo(pos2);
 
 			if (dist > r.initialDistance - 0.2f)
@@ -241,8 +241,8 @@ namespace _RopeGun_
 
 		//GTAentity myPed = PLAYER_PED_ID();
 		//Vector3& myPos = myPed.Position_get();
-		const Vector3& pos1 = entity1.Position_get();
-		const Vector3& pos2 = entity2.Position_get();
+		const Vector3& pos1 = entity1.GetPosition();
+		const Vector3& pos2 = entity2.GetPosition();
 		float dist = pos1.DistanceTo(pos2);
 
 		Rope::LoadTextures();

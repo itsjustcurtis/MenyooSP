@@ -84,16 +84,16 @@ namespace sub
 		//AddweatherOption_("SnowLight");
 		//AddweatherOption_("Blizzard");
 		//AddweatherOption_("Xmas");
-		AddLocal("Snow On Terrain", _SpSnow.IsSnow(), spsnow_on, spsnow_off);
+		AddLocal("Snow On Terrain", g_spSnow.IsSnow(), spsnow_on, spsnow_off);
 		AddNumber("Wind Speed", windSpeed, 2, null, windSpeed_plus, windSpeed_minus);
 		AddNumber("Ocean Wave Strength", wavesHeight, 2, null, wavesHeight_plus, wavesHeight_minus);
-		AddNumber("Rain Puddles Multiplier", _globalRainFXIntensity, 2, null, rainfxi_plus, rainfxi_minus);
+		AddNumber("Rain Puddles Multiplier", g_rainFXIntensity, 2, null, rainfxi_plus, rainfxi_minus);
 		AddNumber("Gravity", mult_0_gravity, 2, null, gravityLevel_plus, gravityLevel_minus);
 		AddOption("Clouds", null, nullFunc, SUB::CLOUDOPS);
 		AddOption("Water Hack (For Waves At Beaches)", null, nullFunc, SUB::WATERHACK);
 
 
-		if (spsnow_on || spsnow_off) { _SpSnow.ToggleSnow(spsnow_on); }
+		if (spsnow_on || spsnow_off) { g_spSnow.ToggleSnow(spsnow_on); }
 
 		if (windSpeed_plus)
 		{
@@ -124,14 +124,14 @@ namespace sub
 		if (rainfxi_plus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "rainfxit_plus");
-			if (_globalRainFXIntensity < 45.0f) _globalRainFXIntensity += 0.1f;
-			SET_RAIN(_globalRainFXIntensity);
+			if (g_rainFXIntensity < 45.0f) g_rainFXIntensity += 0.1f;
+			SET_RAIN(g_rainFXIntensity);
 		}
 		if (rainfxi_minus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "rainfxit_minus");
-			if (_globalRainFXIntensity > 0.0f) _globalRainFXIntensity -= 0.1f;
-			SET_RAIN(_globalRainFXIntensity);
+			if (g_rainFXIntensity > 0.0f) g_rainFXIntensity -= 0.1f;
+			SET_RAIN(g_rainFXIntensity);
 		}
 
 		if (gravityLevel_plus)
@@ -203,4 +203,7 @@ namespace sub
 
 }
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(WEATHEROPS, 	sub::WeatherOps_)
+REGISTER_SUBMENU(CLOUDOPS,   	sub::WeatherClouds_catind::sub_CloudOps)

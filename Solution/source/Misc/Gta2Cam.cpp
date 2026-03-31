@@ -20,7 +20,7 @@
 #include "..\Scripting\World.h"
 #include "..\Scripting\GameplayCamera.h"
 
-namespace _Gta2Cam_
+namespace GTA2Cam
 {
 	// Not using these as class members because I feel like it
 	Camera gmCam2;
@@ -41,7 +41,7 @@ namespace _Gta2Cam_
 				mainCam.SetActive(false);
 				mainCam.Destroy();
 			}
-			Vector3 myPos = myPed.Position_get();
+			Vector3 myPos = myPed.GetPosition();
 			mainCamRelativePos = Vector3(0.0f, -0.5f, 19.0f);
 			Vector3 mainCamPos = myPos + mainCamRelativePos;
 			Vector3 mainCamRot = Vector3(-89.5, 0.0f, 0.0f);
@@ -61,8 +61,8 @@ namespace _Gta2Cam_
 
 		GTAentity myPed = PLAYER_PED_ID();
 
-		Vector3 gmCamPos = GameplayCamera::Position_get();
-		Vector3 gmCamRot = GameplayCamera::Rotation_get();
+		Vector3 gmCamPos = GameplayCamera::GetPosition();
+		Vector3 gmCamRot = GameplayCamera::GetRotation();
 		float gmCamFov = GameplayCamera::FieldOfView_get();
 		gmCam2 = World::CreateCamera(gmCamPos, gmCamRot, gmCamFov);
 
@@ -107,9 +107,9 @@ namespace _Gta2Cam_
 		{
 			if (mainCam.IsActive())
 			{
-				Vector3 myPos = myPed.Position_get();
+				Vector3 myPos = myPed.GetPosition();
 
-				mainCam.Position_set(myPos + mainCamRelativePos);
+				mainCam.SetPosition(myPos + mainCamRelativePos);
 				//mainCam.Rotation_set(-89.5f, 0.0f, 0.0f);
 
 				//SET_THIRD_PERSON_CAM_RELATIVE_PITCH_LIMITS_THIS_UPDATE(-90.0f, -90.0f);
@@ -140,7 +140,7 @@ namespace _Gta2Cam_
 				}
 				else if (myVeh.Exists())
 				{
-					float mySpeed = myVeh.Speed_get() * 3.6f;
+					float mySpeed = myVeh.GetSpeed() * 3.6f;
 					if (mySpeed > 30.0f)
 					{
 						if (mainCamRelativePos.z < 26.0f)

@@ -68,7 +68,7 @@ namespace sub
 				}
 				else
 					TASK_STAND_STILL(ped, -1);
-				set_ped_invincible_on(ped);
+				SetPedInvincibleOn(ped);
 				SET_PED_AS_NO_LONGER_NEEDED(&ped);
 			}
 		}
@@ -105,7 +105,7 @@ namespace sub
 			object.AttachTo(vehicle, boneIndex, false, Vector3(X, Y, Z), Vector3(Pitch, Roll, Yaw));
 			//ATTACH_ENTITY_TO_ENTITY(object, vehicle, -1, X, Y, Z, Pitch, Roll, Yaw, 0, 0, 0, 0, 2, 1);
 			SET_ENTITY_LIGHTS(object.Handle(), 0);
-			if (collisionEnabled) object.IsCollisionEnabled_set(collisionEnabled);
+			if (collisionEnabled) object.SetIsCollisionEnabled(collisionEnabled);
 			if (destroyVar) SET_OBJECT_AS_NO_LONGER_NEEDED(&object.Handle());
 		}
 
@@ -144,7 +144,7 @@ namespace sub
 			SET_ENTITY_LIGHTS(veh.Handle(), 0);
 			veh.PrimaryColour_set(primColour);
 			veh.SecondaryColour_set(secColour);
-			if (collisionEnabled) veh.IsCollisionEnabled_set(collisionEnabled);
+			if (collisionEnabled) veh.SetIsCollisionEnabled(collisionEnabled);
 			SET_VEHICLE_AS_NO_LONGER_NEEDED(&veh.Handle());
 		}
 
@@ -160,7 +160,7 @@ namespace sub
 		// Spawn funny veh function
 		int PlaceFunnyVeh_(Hash hash)
 		{
-			return FuncSpawnVehicle_(hash, Static_241);
+			return FuncSpawnVehicle_(hash, g_Ped1);
 		}
 
 		// Funny vehicles
@@ -1720,4 +1720,6 @@ namespace sub
 }
 
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(FUNNYVEHICLES,              sub::FunnyVehicles_catind::Sub_FunnyVehicles)

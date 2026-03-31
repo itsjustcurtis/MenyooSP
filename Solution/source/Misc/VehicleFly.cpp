@@ -24,7 +24,7 @@
 
 #include <math.h>
 
-namespace _VehicleFly_
+namespace VehicleFly
 {
 	// Not using these as class members because I feel like it
 	GTAvehicle vehicle;
@@ -55,10 +55,10 @@ namespace _VehicleFly_
 		std::string fxAsset = "scr_rcbarry1", fxName = "scr_alien_teleport";
 		float fxScale = 0.068f;
 
-		PTFX::trigger_ptfx_1(fxAsset, fxName, vehicle, Vector3(-vehicle_md.Dim2.x, vehicle_md.Dim1.y, -vehicle_md.Dim2.z), Vector3(90, 0, 0), fxScale);
-		PTFX::trigger_ptfx_1(fxAsset, fxName, vehicle, Vector3(vehicle_md.Dim1.x, vehicle_md.Dim1.y, -vehicle_md.Dim2.z), Vector3(90, 0, 0), fxScale);
-		PTFX::trigger_ptfx_1(fxAsset, fxName, vehicle, Vector3(-vehicle_md.Dim2.x, -vehicle_md.Dim2.y, -vehicle_md.Dim2.z), Vector3(90, 0, 0), fxScale);
-		PTFX::trigger_ptfx_1(fxAsset, fxName, vehicle, Vector3(vehicle_md.Dim1.x, -vehicle_md.Dim2.y, -vehicle_md.Dim2.z), Vector3(90, 0, 0), fxScale);
+		PTFX::TriggerPTFX(fxAsset, fxName, vehicle, Vector3(-vehicle_md.Dim2.x, vehicle_md.Dim1.y, -vehicle_md.Dim2.z), Vector3(90, 0, 0), fxScale);
+		PTFX::TriggerPTFX(fxAsset, fxName, vehicle, Vector3(vehicle_md.Dim1.x, vehicle_md.Dim1.y, -vehicle_md.Dim2.z), Vector3(90, 0, 0), fxScale);
+		PTFX::TriggerPTFX(fxAsset, fxName, vehicle, Vector3(-vehicle_md.Dim2.x, -vehicle_md.Dim2.y, -vehicle_md.Dim2.z), Vector3(90, 0, 0), fxScale);
+		PTFX::TriggerPTFX(fxAsset, fxName, vehicle, Vector3(vehicle_md.Dim1.x, -vehicle_md.Dim2.y, -vehicle_md.Dim2.z), Vector3(90, 0, 0), fxScale);
 
 		vehicle.ApplyForceRelative(Vector3(0, 0, 1.0f * control));
 
@@ -79,8 +79,8 @@ namespace _VehicleFly_
 			return;
 
 		//PTFX::trigger_ptfx_1("scr_trevor1", "scr_trev1_trailer_boosh", vehicle, Vector3(0, -vehicle_md.Dim2.y, -0.2f), vehicle.Rotation_get() * Vector3(1, 1, -1), 0.5f);
-		PTFX::trigger_ptfx_1("scr_carsteal4", "scr_carsteal4_wheel_burnout", vehicle, Vector3(-vehicle_md.Dim1.x, -vehicle_md.Dim1.y, -0.2f), vehicle.Rotation_get() * Vector3(1, 1, -1), 0.08f);
-		PTFX::trigger_ptfx_1("scr_carsteal4", "scr_carsteal4_wheel_burnout", vehicle, Vector3(vehicle_md.Dim2.x, -vehicle_md.Dim1.y, -0.2f), vehicle.Rotation_get() * Vector3(1, 1, -1), 0.08f);
+		PTFX::TriggerPTFX("scr_carsteal4", "scr_carsteal4_wheel_burnout", vehicle, Vector3(-vehicle_md.Dim1.x, -vehicle_md.Dim1.y, -0.2f), vehicle.Rotation_get() * Vector3(1, 1, -1), 0.08f);
+		PTFX::TriggerPTFX("scr_carsteal4", "scr_carsteal4_wheel_burnout", vehicle, Vector3(vehicle_md.Dim2.x, -vehicle_md.Dim1.y, -0.2f), vehicle.Rotation_get() * Vector3(1, 1, -1), 0.08f);
 
 		//vehicle.Position_set(vehicle.GetOffsetInWorldCoords(0, 1.0f * control, 0));
 		vehicle.ApplyForceRelative(Vector3(0, 1.0f * control, 0));
@@ -130,7 +130,7 @@ namespace _VehicleFly_
 
 	float VehicleFly::Pressed_GoUp()
 	{
-		if (Menu::bit_controller)
+		if (Menu::bitController)
 		{
 			return GET_DISABLED_CONTROL_NORMAL(2, INPUT_VEH_ACCELERATE);
 		}
@@ -141,7 +141,7 @@ namespace _VehicleFly_
 	}
 	float VehicleFly::Pressed_GoDown()
 	{
-		if (Menu::bit_controller)
+		if (Menu::bitController)
 		{
 			return GET_DISABLED_CONTROL_NORMAL(2, INPUT_VEH_BRAKE);
 		}
@@ -152,7 +152,7 @@ namespace _VehicleFly_
 	}
 	float VehicleFly::Pressed_GoForward()
 	{
-		if (Menu::bit_controller)
+		if (Menu::bitController)
 		{
 			float norm = -GET_DISABLED_CONTROL_NORMAL(2, INPUT_SCRIPT_LEFT_AXIS_Y);
 			return (norm > 0.0f) ? (norm) : 0.0f;
@@ -164,7 +164,7 @@ namespace _VehicleFly_
 	}
 	float VehicleFly::Pressed_GoBackward()
 	{
-		if (Menu::bit_controller)
+		if (Menu::bitController)
 		{
 			float norm = -GET_DISABLED_CONTROL_NORMAL(2, INPUT_SCRIPT_LEFT_AXIS_Y);
 			return (norm < 0.0f) ? abs(norm) : 0.0f;
@@ -176,7 +176,7 @@ namespace _VehicleFly_
 	}
 	float VehicleFly::Pressed_GoRight()
 	{
-		if (Menu::bit_controller)
+		if (Menu::bitController)
 		{
 			float norm = GET_DISABLED_CONTROL_NORMAL(2, INPUT_SCRIPT_LEFT_AXIS_X);
 			return (norm > 0.0f) ? norm : 0.0f;
@@ -188,7 +188,7 @@ namespace _VehicleFly_
 	}
 	float VehicleFly::Pressed_GoLeft()
 	{
-		if (Menu::bit_controller)
+		if (Menu::bitController)
 		{
 			float norm = GET_DISABLED_CONTROL_NORMAL(2, INPUT_SCRIPT_LEFT_AXIS_X);
 			return (norm < 0.0f) ? abs(norm) : 0.0f;
@@ -236,7 +236,7 @@ namespace _VehicleFly_
 
 		//HoverTick();
 
-		vehicle.Rotation_set(GameplayCamera::Rotation_get());
+		vehicle.SetRotation(GameplayCamera::GetRotation());
 
 		float bGoUp = Pressed_GoUp();
 		float bGoDown = Pressed_GoDown();
@@ -271,7 +271,7 @@ namespace _VehicleFly_
 
 	void VehicleFly::PrintFlyInstructions()
 	{
-		const bool& c = Menu::bit_controller;
+		const bool& c = Menu::bitController;
 		Game::Print::PrintBottomLeft(
 			oss_ << (c ? "~b~Accelerate" : "~b~Handbrake") << "~s~ for Up." << "\n"
 			<< (c ? "~b~Brake" : "~b~Sprint") << "~s~ for Down."

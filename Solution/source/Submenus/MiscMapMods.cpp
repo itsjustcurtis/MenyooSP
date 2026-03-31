@@ -254,3 +254,8 @@ namespace sub
 	}
 
 }
+
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(MAPMODS,            sub::MapMods_catind::MapMods_)
+REGISTER_SUBMENU(MAPMODS2,           sub::MapMods_catind::MapMods2_)

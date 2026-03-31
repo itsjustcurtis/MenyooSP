@@ -11,7 +11,7 @@
 
 #include "GenericLoopedMode.h"
 
-namespace _VehicleCruise_
+namespace VehicleCruise
 {
 	class VehicleCruise final : public GenericLoopedMode
 	{

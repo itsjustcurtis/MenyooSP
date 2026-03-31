@@ -20,7 +20,7 @@
 
 #include <vector>
 
-namespace _FlameThrower_ // Why have I made this for 'players' when this is sp and folks on mp/fivem probably can't even see these?
+namespace FlameThrower // Why have I made this for 'players' when this is sp and folks on mp/fivem probably can't even see these?
 {
 	Hash _whash = WEAPON_FIREEXTINGUISHER; // WEAPON_STUNGUN
 	struct FlameThrowerPlayerAndFx { GTAplayer player; int fxHandle1; }; // , fxHandle2; };
