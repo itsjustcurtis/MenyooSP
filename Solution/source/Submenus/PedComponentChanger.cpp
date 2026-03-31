@@ -315,58 +315,25 @@ namespace sub
 					try
 					{
 						drawableCurrent = stoi(inputStr);
-						if (drawableCurrent > GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
+						if (drawableCurrent > maxDrawable)
 						{
 							drawableCurrent = drawableOld;
 							Game::Print::PrintErrorInvalidInput(inputStr);
-						}							
+						}
 					}
 					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 				}
 			}
 			else if (increment || decrement)
 			{
-				if (drawableCurrent < GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
-				{
-					drawableCurrent++;
-					textureCurrent = 0;
-				}
-				else
-				{
-					drawableCurrent = 0;
-					textureCurrent = 0;
-				}
-			}
-			else if (decrement)
-			{
-				if (drawableCurrent > -1)
-				{
-					drawableCurrent--;
-					textureCurrent = 0;
-				}
-				else
-				{
-					drawableCurrent = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-					textureCurrent = 0;
-				}
+				drawableCurrent = cycleInt(drawableCurrent, increment, 0, maxDrawable);
+				textureCurrent = 0;
 			}
 			break;
 		case 2:
 			if (increment || decrement)
 			{
-				if (textureCurrent < GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent))
-				{
-					textureCurrent++;
-				}
-				else textureCurrent = 0;
-			}
-			else if (decrement)
-			{
-				if (textureCurrent > 0)
-				{
-					textureCurrent--;
-				}
-				else textureCurrent = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent) - 1;
+				textureCurrent = cycleInt(textureCurrent, increment, 0, maxTexture);
 			}
 			break;
 		case 3:
