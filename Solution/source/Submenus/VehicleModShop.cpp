@@ -1903,7 +1903,7 @@ namespace sub
 			AddOption("Plane Aileron Off", aileron_off);
 		}
 
-		if (vehicle.HasSiren_get())
+		if (vehicle.GetHasSiren())
 		{
 			bool bSirenOnTogglePressed = false;
 			AddTickol("Sirens", vehicle.SirenActive_get(), bSirenOnTogglePressed, bSirenOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bSirenOnTogglePressed)
@@ -2410,8 +2410,8 @@ namespace sub
 		if (veh_static12_stockParts)
 		{
 			vehicle.RequestControl(400);
-			set_vehicle_max_upgrades(Static_12, false, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(Static_12));
-			SET_VEHICLE_TYRES_CAN_BURST(Static_12, true);
+			set_vehicle_max_upgrades(g_Ped4, false, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(g_Ped4));
+			SET_VEHICLE_TYRES_CAN_BURST(g_Ped4, true);
 		}
 	}
 

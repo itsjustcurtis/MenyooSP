@@ -67,81 +67,7 @@ namespace sub
 		else
 			return (current > minVal) ? current - step : current;
 	}
-
-	// Activates the front-view camera or destroys it if already active
-	static void toggleFrontViewCamera(GTAped& thisPed)
-	{
-		if (g_cam_componentChanger.Exists())
-		{
-			g_cam_componentChanger.SetActive(false);
-			g_cam_componentChanger.Destroy();
-			World::RenderingCamera_set(0);
-		}
-		else
-		{
-			Camera gmCam = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
-			g_cam_componentChanger = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
-
-			g_cam_componentChanger.FieldOfView_set(40.0f);
-			g_cam_componentChanger.AttachTo(thisPed, Vector3(0.0f, 1.5f + thisPed.Dim1().y, 0.5f));
-			g_cam_componentChanger.PointAt(thisPed);
-
-			gmCam.Position_set(World::RenderingCamera_get().Handle() == 0 ? GameplayCamera::Position_get() : World::RenderingCamera_get().Position_get());
-			gmCam.Rotation_set(World::RenderingCamera_get().Handle() == 0 ? GameplayCamera::Rotation_get() : World::RenderingCamera_get().Rotation_get());
-
-			gmCam.InterpTo(g_cam_componentChanger, 1000, true, true);
-			while (gmCam.IsInterpolating())
-				WAIT(0);
-			gmCam.Destroy();
-			World::RenderingCamera_set(g_cam_componentChanger);
-		}
-	}
-
-	struct PropEntry { int propId, index, texture; };
-	struct CompEntry { int compId, drawable, texture, palette; };
-	struct PremadeOutfit
-	{
-		const char* name;
-		Hash pedHash;
-		std::vector<PropEntry> props;
-		std::vector<CompEntry> comps;
-	};
-
-	static const std::vector<PremadeOutfit> gPremadeOutfits = {
-		{ "Police (Freemode Male)", PedHash::FreemodeMale01,
-			{ {0, 47, 0}, {1, 10, 0}, {2, 3, 0} },
-			{ {0,0,0,0}, {1,0,0,0}, {3,0,0,0}, {4,35,0,0}, {5,0,0,0}, {6,25,0,0}, {7,0,0,0}, {8,58,0,0}, {9,0,0,0}, {10,0,0,0}, {11,55,0,0} }
-		},
-		{ "Police (Freemode Female)", PedHash::FreemodeFemale01,
-			{ {0, 45, 0} },
-			{ {3,100,0,0}, {4,34,0,0}, {11,48,0,0} }
-		},
-		{ "Robber (Freemode Male)", PedHash::FreemodeMale01,
-			{ {0, 48, 1} },
-			{ {3,29,1,0}, {4,34,0,0}, {5,45,0,0}, {6,24,0,0}, {7,40,0,0}, {8,25,1,0}, {11,0,16,0} }
-		},
-		{ "Garbage Man (Freemode Male)", PedHash::FreemodeMale01,
-			{ {1, 4, 0} },
-			{ {0,0,0,0}, {1,0,0,0}, {3,64,0,0}, {4,36,0,0}, {5,0,0,0}, {6,23,0,0}, {7,0,0,0}, {8,59,0,0}, {9,0,0,0}, {10,0,0,0}, {11,57,0,0} }
-		},
-		{ "Police (Michael)", PedHash::Michael,
-			{ {0, 10, 0} },
-			{ {3,6,0,0}, {4,6,0,0}, {6,6,0,0}, {8,8,0,0}, {11,0,0,0} }
-		},
-		{ "Firefighter (Michael)", PedHash::Michael,
-			{ {0, 0, 0} },
-			{ {3,1,0,0}, {4,1,0,0}, {5,1,0,0}, {6,1,0,0}, {8,1,0,0} }
-		},
-	};
-
-	static void applyPremadeOutfit(Ped ped, const PremadeOutfit& outfit)
-	{
-		BOOL bNetGame = NETWORK_IS_GAME_IN_PROGRESS();
-		for (auto& p : outfit.props)
-			SET_PED_PROP_INDEX(ped, p.propId, p.index, p.texture, bNetGame, 0);
-		for (auto& c : outfit.comps)
-			SET_PED_COMPONENT_VARIATION(ped, c.compId, c.drawable, c.texture, c.palette);
-	}
+	// Component changer
 
 	Camera g_cam_componentChanger;
 
@@ -167,7 +93,10 @@ namespace sub
 		dict2.clear();
 		dict3.clear();
 
-		bool randomize = false, frontView = false, setDefault = false;
+		bool randomize = 0, frontView = 0, setDefault = 0,
+			ComponentChanger_online_police_m = 0, ComponentChanger_online_robber_m = 0,
+			ComponentChanger_online_garbage_m = 0, ComponentChanger_online_police_f = 0,
+			ComponentChanger_offline_police_michael = 0, ComponentChanger_offline_firefighter_michael = 0;
 
 		GTAped thisPed = g_Ped1;
 		const Model& thisPedModel = thisPed.Model();
@@ -186,7 +115,7 @@ namespace sub
 		AddOption("Head Features", null, nullFunc, SUB::PED_HEADFEATURES_MAIN);
 		AddOption("Accessories", null, nullFunc, SUB::COMPONENTSPROPS);
 
-		const std::vector<std::string> componentNames
+		const std::vector<std::string> components
 		{
 			"Head",
 			"Beard/Mask",
@@ -206,7 +135,7 @@ namespace sub
 
 		for ( int i = 0; i < PV_COMP_MAX; i++)
 		{
-			if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, i) > 0) AddpedcomponentOption_(components[i], i);
+			if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, i) > 0) AddPedComponentOption(components[i], i);
 		}
 
 		/*AddpedcomponentOption_("Head", PV_COMP_HEAD);
@@ -222,8 +151,8 @@ namespace sub
 		AddpedcomponentOption_("Emblem", PV_COMP_DECL);
 		AddpedcomponentOption_("Tops2 (Outer)", PV_COMP_JBIB);*/
 
-		AddOption("Random Components", ComponentChanger_random);
-		AddOption("Default Components", ComponentChanger_default);
+		AddOption("Random Components", randomize);
+		AddOption("Default Components", setDefault);
 
 		switch (thisPedModel.hash)
 		{
@@ -246,14 +175,11 @@ namespace sub
 			AddOption("Firefighter (Michael)", ComponentChanger_offline_firefighter_michael);
 
 
-		if (ComponentChanger_random) {
+		if (randomize) {
 			thisPed.RequestControlOnce();
 			SET_PED_RANDOM_COMPONENT_VARIATION(thisPed.GetHandle(), 0);
 			return;
 		}
-
-		AddOption("Random Components", randomize);
-		AddOption("Default Components", setDefault);
 
 		if (ComponentChanger_online_police_m) {
 			SET_PED_PROP_INDEX(g_Ped1, 0, 47, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
@@ -329,7 +255,7 @@ namespace sub
 			return;
 		}
 
-		if (comp_front_view) {
+		if (frontView) {
 			if (g_cam_componentChanger.Exists())
 			{
 				g_cam_componentChanger.SetActive(false);
@@ -361,22 +287,22 @@ namespace sub
 	{
 		bool increment = false, decrement = false, inputPressed = false;
 
-		int compon_drawable_current = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4),
-			compon_texture_current = GET_PED_TEXTURE_VARIATION(g_Ped1, g_Ped4),
-			compon_palette_current = GET_PED_PALETTE_VARIATION(g_Ped1, g_Ped4);
+		int drawableCurrent = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4),
+			textureCurrent = GET_PED_TEXTURE_VARIATION(g_Ped1, g_Ped4),
+			paletteCurrent = GET_PED_PALETTE_VARIATION(g_Ped1, g_Ped4);
 
 		int drawableOld = drawableCurrent;
 		int textureOld = textureCurrent;
 		int paletteOld = paletteCurrent;
 
-		int maxDrawable = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(Static_241, Static_12) - 1;
-		int maxTexture = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(Static_241, Static_12, drawableCurrent);
+		int maxDrawable = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+		int maxTexture = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent);
 
 		AddTitle("Set Variation");
 
-		if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", compon_drawable_current, 0, compon_input, compon_plus, compon_minus);
-		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, compon_drawable_current)) AddNumber("Texture", compon_texture_current, 0, null, compon_plus, compon_minus);
-		//AddNumber("Palette", compon_palette_current, 0, null, compon_plus, compon_minus);
+		if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", drawableCurrent, 0, inputPressed, increment, decrement);
+		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent)) AddNumber("Texture", textureCurrent, 0, null, increment, decrement);
+		//AddNumber("Palette", paletteCurrent, 0, null, increment, decrement);
 
 		switch (*Menu::currentopATM)
 		{
@@ -388,10 +314,10 @@ namespace sub
 				{
 					try
 					{
-						compon_drawable_current = stoi(inputStr);
-						if (compon_drawable_current > GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
+						drawableCurrent = stoi(inputStr);
+						if (drawableCurrent > GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
 						{
-							compon_drawable_current = compon_drawable_old;
+							drawableCurrent = drawableOld;
 							Game::Print::PrintErrorInvalidInput(inputStr);
 						}							
 					}
@@ -400,47 +326,47 @@ namespace sub
 			}
 			else if (increment || decrement)
 			{
-				if (compon_drawable_current < GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
+				if (drawableCurrent < GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
 				{
-					compon_drawable_current++;
-					compon_texture_current = 0;
+					drawableCurrent++;
+					textureCurrent = 0;
 				}
 				else
 				{
-					compon_drawable_current = 0;
-					compon_texture_current = 0;
+					drawableCurrent = 0;
+					textureCurrent = 0;
 				}
 			}
-			else if (compon_minus)
+			else if (decrement)
 			{
-				if (compon_drawable_current > -1)
+				if (drawableCurrent > -1)
 				{
-					compon_drawable_current--;
-					compon_texture_current = 0;
+					drawableCurrent--;
+					textureCurrent = 0;
 				}
 				else
 				{
-					compon_drawable_current = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-					compon_texture_current = 0;
+					drawableCurrent = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+					textureCurrent = 0;
 				}
 			}
 			break;
 		case 2:
 			if (increment || decrement)
 			{
-				if (compon_texture_current < GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, compon_drawable_current))
+				if (textureCurrent < GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent))
 				{
-					compon_texture_current++;
+					textureCurrent++;
 				}
-				else compon_texture_current = 0;
+				else textureCurrent = 0;
 			}
-			else if (compon_minus)
+			else if (decrement)
 			{
-				if (compon_texture_current > 0)
+				if (textureCurrent > 0)
 				{
-					compon_texture_current--;
+					textureCurrent--;
 				}
-				else compon_texture_current = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, compon_drawable_current) - 1;
+				else textureCurrent = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent) - 1;
 			}
 			break;
 		case 3:
@@ -451,46 +377,46 @@ namespace sub
 			break;
 		}
 
-        if (compon_drawable_old != compon_drawable_current
-            || compon_texture_old != compon_texture_current
-            || compon_palette_old != compon_palette_current)
+        if (drawableOld != drawableCurrent
+            || textureOld != textureCurrent
+            || paletteOld != paletteCurrent)
         {
 			if (g_Ped4 == PV_COMP_ACCS && !GET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true)) //checks if accessory category & DisableTakeOffScubaGear is false
 			{
 				SET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true);
 			}
-        	//if (IS_PED_COMPONENT_VARIATION_VALID(Static_241, Static_12, compon_drawable_current, compon_texture_current))
-        	SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, compon_drawable_current, compon_texture_current, compon_palette_current);
-            while (!HasPedSpecificDrawable(compon_drawable_current))
+        	//if (IS_PED_COMPONENT_VARIATION_VALID(g_Ped1, g_Ped4, drawableCurrent, textureCurrent))
+        	SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, drawableCurrent, textureCurrent, paletteCurrent);
+            while (!HasPedSpecificDrawable(drawableCurrent))
             {
-                if (compon_plus)
+                if (increment)
                 {
-                    if (compon_drawable_current < GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
+                    if (drawableCurrent < GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
                     {
-                        compon_drawable_current++;
-                        compon_texture_current = 0;
+                        drawableCurrent++;
+                        textureCurrent = 0;
                     }
                     else
                     {
-                        compon_drawable_current = 0;
-                        compon_texture_current = 0;
+                        drawableCurrent = 0;
+                        textureCurrent = 0;
                     }
                 }
-                else if (compon_minus)
+                else if (decrement)
                 {
-                    if (compon_drawable_current > -1)
+                    if (drawableCurrent > -1)
                     {
-                        compon_drawable_current--;
-                        compon_texture_current = 0;
-                        //Game::Print::PrintBottomLeft(oss_ << "compon_drawable_current prev " << compon_drawable_current << ".");
+                        drawableCurrent--;
+                        textureCurrent = 0;
+                        //Game::Print::PrintBottomLeft(oss_ << "drawableCurrent prev " << drawableCurrent << ".");
                     }
                     else
                     {
-                        compon_drawable_current = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-                        compon_texture_current = 0;
+                        drawableCurrent = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+                        textureCurrent = 0;
                     }
                 }
-                SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, compon_drawable_current, compon_texture_current, compon_palette_current);
+                SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, drawableCurrent, textureCurrent, paletteCurrent);
             }
         }
     }
@@ -498,8 +424,8 @@ namespace sub
     bool HasPedSpecificDrawable(int compon_drawable_new)
     {
         bool compon_drawable_correct = false;
-        int compon_drawable_current = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4);
-        if (compon_drawable_new == compon_drawable_current)
+        int drawableCurrent = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4);
+        if (compon_drawable_new == drawableCurrent)
         {
             compon_drawable_correct = true;
         }
@@ -535,7 +461,7 @@ namespace sub
 		for (int i = 0; i < static_cast<int>(propNames.size()); ++i)
 		{
 			if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, i) > 0)
-				AddpedpropOption_(components[i], i);
+				AddPedPropOption(propNames[i], i);
 		}
 
 		AddBreak("---Utilities---");
@@ -564,47 +490,47 @@ namespace sub
 
 		bool increment = false, decrement = false;
 
-		int typeCurrent = GET_PED_PROP_INDEX(Static_241, Static_12, 0);
-		int textureCurrent = GET_PED_PROP_TEXTURE_INDEX(Static_241, Static_12);
+		int typeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0);
+		int textureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
 		int typeOld = typeCurrent;
 		int textureOld = textureCurrent;
 
-		int	prop_type_current = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0),
+		int	propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0),
 			prop_texture_current = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
-		int prop_type_old = prop_type_current,
+		int prop_type_old = propTypeCurrent,
 			prop_texture_old = prop_texture_current;
 
 		AddTitle("Set Variation");
 
-		if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", prop_type_current, 0, null, compon_plus, compon_minus);
-		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, prop_type_current) > 0) AddNumber("Texture", prop_texture_current, 0, null, compon_plus, compon_minus);
+		if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", propTypeCurrent, 0, null, increment, decrement);
+		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) > 0) AddNumber("Texture", prop_texture_current, 0, null, increment, decrement);
 
 		switch (Menu::currentop)
 		{
 		case 1:
 			if (increment || decrement)
 			{
-				if (prop_type_current < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
+				if (propTypeCurrent < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
 				{
-					prop_type_current++;
+					propTypeCurrent++;
 					prop_texture_current = 0;
 				}
 				else
 				{
-					prop_type_current = -1;
+					propTypeCurrent = -1;
 					prop_texture_current = 0;
 				}
 			}
-			else if (compon_minus)
+			else if (decrement)
 			{
-				if (prop_type_current > -1)
+				if (propTypeCurrent > -1)
 				{
-					prop_type_current--;
+					propTypeCurrent--;
 					prop_texture_current = 0;
 				}
 				else
 				{
-					prop_type_current = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+					propTypeCurrent = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
 					prop_texture_current = 0;
 				}
 			}
@@ -612,19 +538,19 @@ namespace sub
 		case 2:
 			if (increment || decrement)
 			{
-				if (prop_texture_current < GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, prop_type_current) - 1)
+				if (prop_texture_current < GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1)
 				{
 					prop_texture_current++;
 				}
 				else prop_texture_current = 0;
 			}
-			else if (compon_minus)
+			else if (decrement)
 			{
 				if (prop_texture_current > 0)
 				{
 					prop_texture_current--;
 				}
-				else prop_texture_current = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, prop_type_current) - 1;
+				else prop_texture_current = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1;
 			}
 			break;
 		}
@@ -642,33 +568,33 @@ namespace sub
 				// Skip prop types that don't actually apply to this ped
 				while (!HasPedSpecificPropType(typeCurrent))
 				{
-					if (compon_plus)
+					if (increment)
 					{
-						if (prop_type_current < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
+						if (propTypeCurrent < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
 						{
-							prop_type_current++;
+							propTypeCurrent++;
 							prop_texture_current = 0;
 						}
 						else
 						{
-							prop_type_current = -1;
+							propTypeCurrent = -1;
 							prop_texture_current = 0;
 						}
 					}
-					else if (compon_minus)
+					else if (decrement)
 					{
-						if (prop_type_current > -1)
+						if (propTypeCurrent > -1)
 						{
-							prop_type_current--;
+							propTypeCurrent--;
 							prop_texture_current = 0;
 						}
 						else
 						{
-							prop_type_current = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+							propTypeCurrent = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
 							prop_texture_current = 0;
 						}
 					}
-					SET_PED_PROP_INDEX(ped.Handle(), propId, prop_type_current, prop_texture_current, NETWORK_IS_GAME_IN_PROGRESS(), 0);					
+					SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, prop_texture_current, NETWORK_IS_GAME_IN_PROGRESS(), 0);					
 				}
 			}
 		}
@@ -676,13 +602,13 @@ namespace sub
 
 	bool HasPedSpecificPropType(int propTypeNew)
 	{
-		bool prop_type_correct = false;
-		int prop_type_current = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0);
-		if (prop_type_new == prop_type_current)
+		bool propTypeCorrect = false;
+		int propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0);
+		if (propTypeNew == propTypeCurrent)
 		{
-			prop_type_correct = true;
+			propTypeCorrect = true;
 		}
-		return prop_type_correct;
+		return propTypeCorrect;
 	}
 
 	// Decals, tattoos & badges
@@ -876,8 +802,8 @@ namespace sub
 
 	namespace PedDamageTextures_catind
 	{
-		auto& _selectedPedHandle = g_Ped1;
-		int _boneToUse = 0;
+		auto& selectedPedHandle = g_Ped1;
+		int boneToUse = 0;
 
 		std::map<Ped, std::vector<std::string>> vPedsAndDamagePacks;
 
@@ -1804,7 +1730,7 @@ namespace sub
 			std::string inputStr = Game::InputBox("", 28U, "FMMC_KEY_TIP9");
 			if (inputStr.length() > 0)
 			{
-				ComponentChanger_Outfit_catind::Create(g_Ped1, _dir + "\\" + inputStr + ".xml");
+				ComponentChanger_Outfit_catind::Create(g_Ped1, dir + "\\" + inputStr + ".xml");
 				Game::Print::PrintBottomLeft("File ~b~created~s~.");
 			}
 			else Game::Print::PrintErrorInvalidInput(inputStr);
@@ -1886,7 +1812,6 @@ namespace sub
 		{
 			if (ComponentChanger_Outfit_catind::Create(g_Ped1, filePath))
 				Game::Print::PrintBottomLeft("File ~b~overwritten~s~.");
-			}
 			else
 			{
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to overwrite file.");
@@ -1910,7 +1835,7 @@ namespace sub
 			else Game::Print::PrintErrorInvalidInput(newName);
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameOutfitFile, std::string(), 28U, "FMMC_KEY_TIP9", _name);
 			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_name);
-			//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&_dir);
+			//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&dir);
 		}
 
 		if (outfits2_delete)
@@ -1997,22 +1922,22 @@ namespace sub
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(COMPONENTS,           					sub::ComponentChanger_)
-REGISTER_SUBMENU(COMPONENTS2,          					sub::ComponentChanger2_)
-REGISTER_SUBMENU(COMPONENTSPROPS,      					sub::ComponentChangerProps_)
-REGISTER_SUBMENU(COMPONENTSPROPS2,     					sub::ComponentChangerProps2_)
-REGISTER_SUBMENU(COMPONENTS_OUTFITS,   					sub::ComponentChanger_Outfits)
-REGISTER_SUBMENU(COMPONENTS_OUTFITS2,  					sub::ComponentChanger_Outfits2)
-REGISTER_SUBMENU(PEDDECALS_TYPES,      					sub::PedDecals_catind::Sub_Decals_Types)
-REGISTER_SUBMENU(PEDDECALS_ZONES,      					sub::PedDecals_catind::Sub_Decals_Zones)
-REGISTER_SUBMENU(PEDDECALS_INZONE,     					sub::PedDecals_catind::Sub_Decals_InZone)
-REGISTER_SUBMENU(PEDDAMAGET_CATEGORYLIST,              	sub::PedDamageTextures_catind::Sub_CategoryList)
-REGISTER_SUBMENU(PEDDAMAGET_BONESELECTION,             	sub::PedDamageTextures_catind::Sub_BoneSelection)
-REGISTER_SUBMENU(PEDDAMAGET_BLOOD,                     	sub::PedDamageTextures_catind::Sub_Blood)
-REGISTER_SUBMENU(PEDDAMAGET_DAMAGEDECALS,              	sub::PedDamageTextures_catind::Sub_DamageDecals)
-REGISTER_SUBMENU(PEDDAMAGET_DAMAGEPACKS,               	sub::PedDamageTextures_catind::Sub_DamagePacks)
-REGISTER_SUBMENU(PED_HEADFEATURES_MAIN,                	sub::PedHeadFeatures_catind::Sub_Main)
-REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS,        	sub::PedHeadFeatures_catind::Sub_HeadOverlays)
-REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS_INITEM, 	sub::PedHeadFeatures_catind::Sub_HeadOverlays_InItem)
-REGISTER_SUBMENU(PED_HEADFEATURES_FACEFEATURES,        	sub::PedHeadFeatures_catind::Sub_FaceFeatures)
-REGISTER_SUBMENU(PED_HEADFEATURES_SKINTONE,            	sub::PedHeadFeatures_catind::Sub_SkinTone)
+REGISTER_SUBMENU(COMPONENTS, sub::ComponentChanger)
+REGISTER_SUBMENU(COMPONENTS2, sub::ComponentChanger2)
+REGISTER_SUBMENU(COMPONENTSPROPS, sub::ComponentChangerProps_)
+REGISTER_SUBMENU(COMPONENTSPROPS2, sub::ComponentChangerProps2)
+REGISTER_SUBMENU(COMPONENTS_OUTFITS, sub::ComponentChanger_Outfits)
+REGISTER_SUBMENU(COMPONENTS_OUTFITS2, sub::ComponentChanger_Outfits2)
+REGISTER_SUBMENU(PEDDECALS_TYPES, sub::PedDecals_catind::Sub_Decals_Types)
+REGISTER_SUBMENU(PEDDECALS_ZONES, sub::PedDecals_catind::Sub_Decals_Zones)
+REGISTER_SUBMENU(PEDDECALS_INZONE, sub::PedDecals_catind::Sub_Decals_InZone)
+REGISTER_SUBMENU(PEDDAMAGET_CATEGORYLIST, sub::PedDamageTextures_catind::Sub_CategoryList)
+REGISTER_SUBMENU(PEDDAMAGET_BONESELECTION, sub::PedDamageTextures_catind::Sub_BoneSelection)
+REGISTER_SUBMENU(PEDDAMAGET_BLOOD, sub::PedDamageTextures_catind::Sub_Blood)
+REGISTER_SUBMENU(PEDDAMAGET_DAMAGEDECALS, sub::PedDamageTextures_catind::Sub_DamageDecals)
+REGISTER_SUBMENU(PEDDAMAGET_DAMAGEPACKS, sub::PedDamageTextures_catind::Sub_DamagePacks)
+REGISTER_SUBMENU(PED_HEADFEATURES_MAIN, sub::PedHeadFeatures_catind::Sub_Main)
+REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS, sub::PedHeadFeatures_catind::Sub_HeadOverlays)
+REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS_INITEM, sub::PedHeadFeatures_catind::Sub_HeadOverlays_InItem)
+REGISTER_SUBMENU(PED_HEADFEATURES_FACEFEATURES, sub::PedHeadFeatures_catind::Sub_FaceFeatures)
+REGISTER_SUBMENU(PED_HEADFEATURES_SKINTONE, sub::PedHeadFeatures_catind::Sub_SkinTone)
