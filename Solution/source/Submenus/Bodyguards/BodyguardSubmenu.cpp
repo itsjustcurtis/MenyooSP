@@ -13,7 +13,7 @@
 
 namespace sub
 {
-    void ComponentChanger_();
+    void ComponentChanger();
 }
 
 namespace sub::BodyguardMenu
