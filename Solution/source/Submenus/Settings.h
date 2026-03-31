@@ -20,8 +20,12 @@ namespace sub
 {
 	void Settings();
 
-	void SettingsMenuPos();
-	extern UINT8 settingsHUDColor;
+	void SettingsMenuPos_();
+
+	//extern RGBA* _g_settings_rgba;
+	//extern int*_g_settings_rgba2;
+	//extern int* _g_settings_font;
+	extern UINT8 settings_hud_c;
 
 	void AddsettingscolOption(const std::string& text, RGBA& feature);
 	void SettingsColours();
@@ -32,7 +36,13 @@ namespace sub
 	void SettingsFonts2();
 
 	void SettingsLanguage();
-	void SettingsThemesMain();
+
+	namespace SettingsThemes_catind
+	{
+		void Sub_Main();
+
+	}
+
 }
 
 

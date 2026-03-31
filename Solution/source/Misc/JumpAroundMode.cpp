@@ -28,7 +28,7 @@
 #include <vector>
 #include <string>
 
-namespace JumpAroundMode
+namespace _JumpAroundMode_
 {
 	bool bEnabled = false;
 
@@ -41,7 +41,7 @@ namespace JumpAroundMode
 	inline void DrawDiscoLights()
 	{
 		GTAped myPed = PLAYER_PED_ID();
-		Vector3 myPos = myPed.GetPosition();
+		Vector3 myPos = myPed.Position_get();
 		int i;
 
 		DiscoLight* dlight;
@@ -69,7 +69,7 @@ namespace JumpAroundMode
 	void Tick()
 	{
 		float jumpForce = GET_RANDOM_FLOAT_IN_RANGE(0.6f, 1.14f);
-		for (auto& ped : nearbyPeds)
+		for (auto& ped : _nearbyPeds)
 		{
 			if (IS_ENTITY_ATTACHED(ped) || !IS_PED_ON_FOOT(ped) || IS_ENTITY_IN_AIR(ped))
 				continue;
@@ -90,7 +90,7 @@ namespace JumpAroundMode
 
 		auto& neonRGB = g_fadedRGB;
 		jumpForce = GET_RANDOM_FLOAT_IN_RANGE(40, 90);
-		for (auto& vehicle : nearbyVehicles)
+		for (auto& vehicle : _nearbyVehicles)
 		{
 			if (vehicle == g_myVeh || IS_ENTITY_ATTACHED(vehicle))
 				continue;

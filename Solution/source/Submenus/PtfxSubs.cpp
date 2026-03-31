@@ -3176,15 +3176,15 @@ namespace sub
         };
 #pragma endregion
 
-		std::vector<PtfxlopS> fxLops;
+		std::vector<PtfxlopS> _fxlops;
 
 		void AddEntityToPtfxLops(const PtfxS& effect, const GTAentity& entity)
 		{
-			for (auto it = fxLops.begin(); it != fxLops.end();)
+			for (auto it = _fxlops.begin(); it != _fxlops.end();)
 			{
 				if (it->entity.Equals(entity))
 				{
-					it = fxLops.erase(it);
+					it = _fxlops.erase(it);
 				}
 				else ++it;
 			}
@@ -3195,7 +3195,7 @@ namespace sub
 				fxlop.entity = entity;
 				fxlop.asset = effect.asset;
 				fxlop.fx = effect.fx;
-				fxLops.push_back(fxlop);
+				_fxlops.push_back(fxlop);
 			}
 		}
 
@@ -3227,7 +3227,7 @@ namespace sub
 		{
 			bool found = false;
 			bool tickolTrue = false;
-			for (auto& fxlop : fxLops)
+			for (auto& fxlop : _fxlops)
 			{
 				if (fxlop.entity == entity)
 				{
@@ -3352,10 +3352,10 @@ namespace sub
                 switch (g_lastSubmenuSource)
                 {
                 case SUB::PLAYEROPS: case SUB::SPOONER_SELECTEDENTITYOPS:
-                    __AddOption_entity(g_favorites[i], g_Ped1);
+                    __AddOption_entity(g_favorites[i], Static_241);
                     break;
                 case SUB::PTFXSUB:
-                    __AddOption_loopOnEntity(g_favorites[i], g_Ped1);
+                    __AddOption_loopOnEntity(g_favorites[i], Static_241);
                     break; // Subception
                 case SUB::TRIGGERFXGUN:
                     TriggerFxGun_catind::__AddOption_GunFx(g_favorites[i]);
@@ -3416,9 +3416,9 @@ namespace sub
             {
                 bool bPressedClear = false;
                 AddOption("Clear On All Entities", bPressedClear); if (bPressedClear)
-                    fxLops.clear();
+                    _fxlops.clear();
                 PtfxS nonefx = { "None", "", "" };
-                __AddOption_loopOnEntity(nonefx, g_Ped1);
+                __AddOption_loopOnEntity(nonefx, Static_241);
                 break; // subception
             }
             }
@@ -3431,10 +3431,10 @@ namespace sub
                 {
                 case SUB::PLAYEROPS:
                 case SUB::SPOONER_SELECTEDENTITYOPS:
-                    __AddOption_entity(current, g_Ped1);
+                    __AddOption_entity(current, Static_241);
                     break;
                 case SUB::PTFXSUB:
-                    __AddOption_loopOnEntity(current, g_Ped1);
+                    __AddOption_loopOnEntity(current, Static_241);
                     break;
                 case SUB::TRIGGERFXGUN:
                     TriggerFxGun_catind::__AddOption_GunFx(current);
@@ -3445,7 +3445,7 @@ namespace sub
                 if (*Menu::currentopATM == Menu::printingop)
                 {
                     if (g_favoritesLoaded) g_favoritesLoaded = false;
-                    if (Menu::bitController)
+                    if (Menu::bit_controller)
                     {
                         Menu::add_IB(INPUT_SCRIPT_RLEFT, IsAlreadyFavorite(current) ? "Remove From Favourites" : "Add To Favourites");
                         bShortcutToggleFavesPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -3489,8 +3489,3 @@ namespace sub
         }
     }
 }
-
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(PTFXSUB,        sub::Ptfx_catind::PTFXSub)
-REGISTER_SUBMENU(PTFX_FAVORITES, sub::Ptfx_catind::PTFXFavourites)

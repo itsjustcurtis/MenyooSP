@@ -19,7 +19,7 @@
 #include "..\Scripting\enums.h"
 #include "..\Scripting\Game.h"
 
-namespace VehicleCruise
+namespace _VehicleCruise_
 {
 	VehicleCruise::VehicleCruise()
 		: cruiseSpeed(0.0f)
@@ -124,9 +124,9 @@ namespace VehicleCruise
 
 	void VehicleCruise::PrintCruiseText(bool working)
 	{
-		Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.30f, 0.30f), false, true, true);
+		Game::Print::setupdraw(GTAfont::Impact, Vector2(0.30f, 0.30f), false, true, true);
 		if (working)
-			Game::Print::DrawString(oss_ << "Cruise Speed: ~b~" << int(cruiseSpeed * 3.6f) << " KM/H", 0.95f, 0.24f);
+			Game::Print::drawstring(oss_ << "Cruise Speed: ~b~" << int(cruiseSpeed * 3.6f) << " KM/H", 0.95f, 0.24f);
 		else
 			Game::Print::drawstring("Cruise Status: ~r~Inactive.", 0.95f, 0.24f);
 	}

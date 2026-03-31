@@ -22,7 +22,7 @@ namespace GTAmodel {
 }
 class GTAprop;
 
-namespace MeteorShower
+namespace _MeteorShower_
 {
 	class MeteorShower final : public GenericLoopedMode
 	{

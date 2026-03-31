@@ -1556,7 +1556,7 @@ void GTAmemory::Init()
 		GetModelInfo = (GetModelInfo_t)(address);
 	}
 
-	g_spSnow = SpSnow();
+	_SpSnow = SpSnow();
 	addlog(ige::LogType::LOG_INIT, "GTAMemory Init Done");
 }
 
@@ -1729,7 +1729,7 @@ void GTAmemory::InitEnhancedPools() {
 			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo pattern");
 		}
 
-		g_spSnow = SpSnow();
+		_SpSnow = SpSnow();
 	}
 }
 
@@ -2323,7 +2323,7 @@ uintptr_t GTAmemory::FindPattern(const char* pattern, const char* mask)
 
 //--------------------------------SpSnow---------------------------------------------------------
 
-SpSnow g_spSnow;
+SpSnow _SpSnow;
 
 void SpSnow::EnableSnow(bool bEnable)
 {

@@ -667,7 +667,7 @@ public:
 	void ToggleSnow(bool bEnable);
 	void Tick();
 };
-extern SpSnow g_spSnow;
+extern SpSnow _SpSnow;
 
 class GeneralGlobalHax final
 {

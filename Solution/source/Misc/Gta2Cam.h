@@ -17,7 +17,7 @@
 class GTAentity;
 class Camera;
 
-namespace GTA2Cam
+namespace _Gta2Cam_
 {
 	class Gta2Cam final : public GenericLoopedMode
 	{
