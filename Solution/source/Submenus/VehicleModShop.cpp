@@ -1289,7 +1289,7 @@ namespace sub
 		if (ms_paints_rgb_a != -1) AddNumber("Opacity", ms_paints_rgb_a, 0, ms_paints_rgb_a_custom, ms_paints_rgb_a_plus, ms_paints_rgb_a_minus);
 		AddTexter("HUD Colour", settingsHUDColor, HudColour::vHudColours, settings_hud_c_custom, settings_hud_c_plus, settings_hud_c_minus);
 		AddOption("~b~Input~s~ Hex Code", ms_paints_hexinput);
-		
+
 		AddBreak("---Presets---");
 		if (AddPresetColourOptions(ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b))
 			rgb_mode_set_carcol(g_Ped4, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
@@ -2508,7 +2508,6 @@ namespace sub
 					{
 						SET_VEHICLE_MOD(vehicle, modType, lastMod, GET_VEHICLE_MOD_VARIATION(vehicle, modType));
 					};
-					Game::Print::PrintBottomLeft("Back Pressed - Mod Option Restored");
 				}
 			}
 		}
@@ -3358,7 +3357,7 @@ namespace sub
 			})
 		{
 			bool bPressed_on = false, bPressed_off = false;
-			AddTickol(i.second.second, neonstate[static_cast<int>(i.first)], bPressed_on, bPressed_off, TICKOL::CARTHING);
+			AddTickol(i.second.second, vehicle.IsNeonLightOn(i.first), bPressed_on, bPressed_off, TICKOL::CARTHING);
 			if (bPressed_on || bPressed_off)
 			{
 				vehicle.RequestControl(300);

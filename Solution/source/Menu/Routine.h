@@ -48,34 +48,21 @@ void ThreadMenyooMain();
 void ThreadMenuLoops2();
 void TickMenyooConfig();
 void TickRainbowFader();
-
-extern INT16 BindNoClip;
-extern UINT8 pauseClockH;
-extern UINT8 pauseClockM;
 void TickNeonFlashAnim();
-
 void TickNeonFadeAnim();
-
 void TickNeonSlideAnim();
-
 void TickNeonShiftAnim();
-
 void TickNeonSpinAnim();
-
 void TickNeonFwkAnim();
-
 void TickNeonHeartbeatAnim();
 
-//--------------------------------On tick--------------------------------------------------------
-
-#pragma region variables used declare // p.s. this ain't it chief
-
-
-
+extern INT16 BindNoClip;
 extern RgbS g_fadedRGB, g_neonFade, g_neonSlide, g_neonHeart, g_neonShift;
 extern bool g_neonFlash;
-extern int g_neonSpin,g_neonSpinBack;
+extern int g_neonSpin, g_neonSpinBack;
 extern bool g_neonFwk[4];
+extern UINT8 pauseClockH;
+extern UINT8 pauseClockM;
 extern Vehicle g_myVeh;
 extern GTAmodel::Model g_myVehModel;
 extern Hash g_myWeap;

@@ -2692,7 +2692,7 @@ void SetVehicleHeavyMass(GTAvehicle vehicle)
 {
 	if (!vehicle.Exists())
 	{
-			return;
+		return;
 	}
 
 	float speed = vehicle.GetSpeed();
@@ -2723,7 +2723,7 @@ void SetVehicleHeavyMass(GTAvehicle vehicle)
 		}
 	}
 
-	}
+}
 
 Vector3 vehicleWeaponsOriginR;
 Vector3 vehicleWeaponsTargetR;
@@ -3166,10 +3166,10 @@ void SetWalkUnderwater(Entity PlayerPed)
 		DRAW_LIGHT_WITH_RANGEEX(PlayerPos.x, PlayerPos.y, (PlayerPos.z + 1.5f), 255, 255, 251, 100.0f, 1.5f, 0.0f);
 		DRAW_LIGHT_WITH_RANGEEX(PlayerPos.x, PlayerPos.y, (PlayerPos.z + 50.0f), 255, 255, 251, 200.0f, 1.0f, 0.0f);
 
-			if (IS_PED_JUMPING(PlayerPed)) // small pushup so jump feel more natural ( like when not underwater )
-			{
-				APPLY_FORCE_TO_ENTITY(PlayerPed, true, 0, 0, 0.7f, 0, 0, 0, true, true, true, true, false, true);
-			}
+		if (IS_PED_JUMPING(PlayerPed)) // small pushup so jump feel more natural ( like when not underwater )
+		{
+			APPLY_FORCE_TO_ENTITY(PlayerPed, true, 0, 0, 0.7f, 0, 0, 0, true, true, true, true, false, true);
+		}
 
 		if (GET_ENTITY_HEIGHT_ABOVE_GROUND(PlayerPed) > 1) //Do falling down
 		{
