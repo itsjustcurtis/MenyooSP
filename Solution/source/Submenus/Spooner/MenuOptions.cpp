@@ -22,6 +22,7 @@
 #include "EntityManagement.h"
 #include "RelationshipManagement.h"
 #include "SpoonerEntity.h"
+#include "../../Scripting/Game.h"
 
 namespace sub::Spooner
 {
@@ -124,6 +125,47 @@ namespace sub::Spooner
 				}
 			}
 		}
+
+		void AddOption_AddPedWithCallback(const std::string& text, const GTAmodel::Model& model, const std::function<void(Ped, const std::string&)>& callback)
+		{
+			bool pressed = false;
+			AddOption(text, pressed);
+
+			if (*Menu::currentopATM == Menu::printingop)
+			{
+				SpoonerMode::ModelPreviewInfo.entityType = EntityType::PED;
+				SpoonerMode::ModelPreviewInfo.model = model;
+			}
+
+			if (pressed)
+			{
+				Hash modelHash = *(Hash*)&model;
+				std::string modelName = text;
+
+				if (!STREAMING::HAS_MODEL_LOADED(modelHash))
+				{
+					STREAMING::REQUEST_MODEL(modelHash);
+					while (!STREAMING::HAS_MODEL_LOADED(modelHash))
+					{
+						WAIT(0);
+					}
+				}
+
+				Vector3 pos = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER_PED_ID(), 0.0f, 5.0f, 0.0f);
+				Ped pedHandle = PED::CREATE_PED(26, modelHash, pos.x, pos.y, pos.z, 0.0f, true, true);
+
+				if (pedHandle != 0)
+				{
+					callback(pedHandle, modelName);
+				}
+				else
+				{
+					Game::Print::PrintBottomLeft("Failed to spawn ped.");
+				}
+			}
+		}
+
+
 
 	}
 

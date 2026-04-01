@@ -353,7 +353,16 @@ std::string get_mod_slot_name(Vehicle vehicle, INT modType, bool gxt)
 		//case 48: Return = "Liveries 9"; break;
 		//}
 		Model vehModel = GET_ENTITY_MODEL(vehicle);
-		switch (modType)
+		REQUEST_ADDITIONAL_TEXT("mod_mnu", 19);
+		while (!HAS_ADDITIONAL_TEXT_LOADED(19)) {
+			WAIT(0);
+		}
+		if (GET_MOD_SLOT_NAME(vehicle, modType) == nullptr || std::strlen(GET_MOD_SLOT_NAME(vehicle, modType)) < 2)
+			name = vValues_ModSlotNames[modType];
+		else
+			name = GET_MOD_SLOT_NAME(vehicle, modType);
+
+		/*switch (modType)
 		{
 		default: name = vValues_ModSlotNames[modType]; break;
 		case VehicleMod::SideSkirt: name = (vehModel.hash == VEHICLE_FAGGIO3) ? "TOP_ARCHCOVER" : vehModel.IsBike() ? "CMM_MOD_S15" : vValues_ModSlotNames[modType]; break;// Air filter for bikes
@@ -366,7 +375,7 @@ std::string get_mod_slot_name(Vehicle vehicle, INT modType, bool gxt)
 		case VehicleMod::Tank: if (vehModel.hash == VEHICLE_SLAMVAN3) name = "CMM_MOD_S27"; else name = vValues_ModSlotNames[modType];
 		case VehicleMod::Windows: if (vehModel.hash == VEHICLE_BTYPE3) name = "CMM_MOD_S21b"; else name = vValues_ModSlotNames[modType];
 		case VehicleMod::Unknown47: if (vehModel.hash == VEHICLE_SLAMVAN3) name = "SLVAN3_RDOOR"; else name = vValues_ModSlotNames[modType];
-		}
+		}*/
 	}
 	else
 	{
@@ -860,13 +869,13 @@ void GTAvehicle::HasGravity_set(bool value)
 	GTAentity::HasGravity_set(value);
 }
 
-bool GTAvehicle::EngineRunning_get() const
+bool GTAvehicle::GetEngineRunning() const
 {
 	return GET_IS_VEHICLE_ENGINE_RUNNING(this->mHandle) != 0;
 }
-void GTAvehicle::EngineRunning_set(bool value)
+void GTAvehicle::SetEngineRunning(bool value)
 {
-	SET_VEHICLE_ENGINE_ON(this->mHandle, value, true, 0);
+	SET_VEHICLE_ENGINE_ON(this->mHandle, value, true, true);
 }
 
 void GTAvehicle::EnginePowerMultiplier_set(float value)
@@ -883,13 +892,13 @@ void GTAvehicle::EngineCanDegrade_set(bool value)
 	SET_VEHICLE_ENGINE_CAN_DEGRADE(this->mHandle, value);
 }
 
-bool GTAvehicle::LightsOn_get() const
+bool GTAvehicle::GetLightsOn() const
 {
 	int lightState1, lightState2;
 	GET_VEHICLE_LIGHTS_STATE(this->mHandle, &lightState1, &lightState2);
 	return lightState1 == 1;
 }
-void GTAvehicle::LightsOn_set(bool value)
+void GTAvehicle::SetLightsOn(bool value)
 {
 	SET_VEHICLE_LIGHTS(this->mHandle, value ? 3 : 4);
 }
@@ -1373,13 +1382,19 @@ void GTAvehicle::FixDoor(VehicleDoor door)
 		typedef void CVehicleDoor;
 		// EB 03 49 8B C0 0F BF 40 0C - 0x25
 		typedef CVehicleDoor*(__thiscall * tCVehicle__GetDoorByID)(CVehicle* This, uint32_t doorId);
-		static tCVehicle__GetDoorByID CVehicle__GetDoorByID = (tCVehicle__GetDoorByID)(MemryScan::PatternScanner::FindPattern("EB 03 49 8B C0 0F BF 40 0C") - 0x25);
+		static auto doorByIdPattern = MemryScan::PatternScanner::FindPattern("EB 03 49 8B C0 0F BF 40 0C");
+		static tCVehicle__GetDoorByID CVehicle__GetDoorByID = doorByIdPattern ? (tCVehicle__GetDoorByID)(doorByIdPattern - 0x25) : nullptr;
 		// C1 E8 14 A8 01 0F 85 ? ? ? ? 33 DB - 0x1A
 		typedef void(__thiscall * tCVehicleDoor__Fix)(CVehicleDoor* This, CVehicle* veh);
-		static tCVehicleDoor__Fix CVehicleDoor__Fix = (tCVehicleDoor__Fix)(MemryScan::PatternScanner::FindPattern("C1 E8 14 A8 01 0F 85 ? ? ? ? 33 DB") - 0x1A);
+		static auto doorFixPattern = MemryScan::PatternScanner::FindPattern("C1 E8 14 A8 01 0F 85 ? ? ? ? 33 DB");
+		static tCVehicleDoor__Fix CVehicleDoor__Fix = doorFixPattern ? (tCVehicleDoor__Fix)(doorFixPattern - 0x1A) : nullptr;
+
+		if (!CVehicle__GetDoorByID || !CVehicleDoor__Fix) return;
 
 		CVehicle* veh = (CVehicle*)this->MemoryAddress();
+		if (!veh) return;
 		CVehicleDoor* vehDoor = CVehicle__GetDoorByID(veh, doorId);
+		if (!vehDoor) return;
 		CVehicleDoor__Fix(vehDoor, veh);
 	}
 }
@@ -1473,7 +1488,7 @@ bool GTAvehicle::PlaceOnGroundProperly()
 }
 void GTAvehicle::PlaceOnNextStreet()
 {
-	const Vector3 pos = this->Position_get();
+	const Vector3 pos = this->GetPosition();
 	Vector3_t newPos;
 
 	float heading;
@@ -1485,7 +1500,7 @@ void GTAvehicle::PlaceOnNextStreet()
 
 		if (!IS_POINT_OBSCURED_BY_A_MISSION_ENTITY(newPos.x, newPos.y, newPos.z, 5.0f, 5.0f, 5.0f, 0))
 		{
-			this->Position_set(newPos);
+			this->SetPosition(newPos);
 			PlaceOnGround();
 			this->Heading_set(heading);
 			break;
@@ -1518,7 +1533,7 @@ bool GTAvehicle::HasForks_get() const
 {
 	return HasBone(VBone::forks);
 }
-bool GTAvehicle::HasSiren_get() const
+bool GTAvehicle::GetHasSiren() const
 {
 	return HasBone(VBone::siren1);
 }
@@ -1530,12 +1545,12 @@ bool GTAvehicle::HasTowArm_get() const
 void GTAvehicle::OpenDoor(VehicleDoor door, bool loose, bool instantly, bool playSound)
 {
 	SET_VEHICLE_DOOR_OPEN(this->mHandle, static_cast<int>(door), loose, instantly);
-	if (playSound) PLAY_VEHICLE_DOOR_OPEN_SOUND(this->mHandle, 1);
+	//if (playSound) PLAY_VEHICLE_DOOR_OPEN_SOUND(this->mHandle, 1);
 }
 void GTAvehicle::CloseDoor(VehicleDoor door, bool instantly, bool playSound)
 {
 	SET_VEHICLE_DOOR_SHUT(this->mHandle, static_cast<int>(door), instantly);
-	if (playSound) PLAY_VEHICLE_DOOR_CLOSE_SOUND(this->mHandle, 1);
+	//if (playSound) PLAY_VEHICLE_DOOR_CLOSE_SOUND(this->mHandle, 1);
 }
 void GTAvehicle::CloseAllDoors(bool instantly)
 {
@@ -1701,6 +1716,25 @@ void GTAvehicle::CargoBobMagnetReleaseVehicle()
 	if (this->IsCargobobHookActive(CargobobHook::Magnet))
 	{
 		SET_CARGOBOB_PICKUP_MAGNET_ACTIVE(this->mHandle, false);
+	}
+}
+
+bool GTAvehicle::IsBoatAnchored()
+{
+	return IS_BOAT_ANCHORED(this->mHandle);
+}
+
+bool GTAvehicle::CanBoatAnchorHere()
+{
+	return CAN_ANCHOR_BOAT_HERE(this->mHandle);
+}
+
+void GTAvehicle::AnchorBoat(bool anchored)
+{
+	if (this->CanBoatAnchorHere())
+	{
+		SET_BOAT_ANCHOR(this->mHandle, anchored);
+		SET_BOAT_REMAINS_ANCHORED_WHILE_PLAYER_IS_DRIVER(this->mHandle, anchored);
 	}
 }
 
@@ -3842,7 +3876,7 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 	if (!vehicle.Exists())
 		return GTAvehicle();
 
-	Vector3 Pos = vehicle.Position_get();
+	Vector3 Pos = vehicle.GetPosition();
 	Vector3 Rot = vehicle.Rotation_get();
 
 	Model vehicleModel = vehicle.Model();
@@ -3907,7 +3941,7 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 
 	newVeh.DirtLevel_set(vehicle.DirtLevel_get());
 
-	newVeh.EngineRunning_set(true);
+	newVeh.SetEngineRunning(true);
 
 	if (DOES_VEHICLE_HAVE_CREW_EMBLEM(vehicle.Handle(), 0) && pedForEmblem.Exists())
 	{
@@ -3926,36 +3960,36 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 	}
 
 	// Apply multipliers
-	auto rpmMultIt = g_multList_rpm.find(vehicle.Handle());
-	if (rpmMultIt != g_multList_rpm.end())
+	auto rpmMultIt = g_multListRPM.find(vehicle.Handle());
+	if (rpmMultIt != g_multListRPM.end())
 	{
-		g_multList_rpm[newVeh.Handle()] = rpmMultIt->second;
+		g_multListRPM[newVeh.Handle()] = rpmMultIt->second;
 		newVeh.EnginePowerMultiplier_set(rpmMultIt->second);
 	}
-	auto torqueMultIt = g_multList_torque.find(vehicle.Handle());
-	if (torqueMultIt != g_multList_torque.end())
+	auto torqueMultIt = g_multListTorque.find(vehicle.Handle());
+	if (torqueMultIt != g_multListTorque.end())
 	{
-		g_multList_torque[newVeh.Handle()] = torqueMultIt->second;
+		g_multListTorque[newVeh.Handle()] = torqueMultIt->second;
 		newVeh.EngineTorqueMultiplier_set(torqueMultIt->second);
 	}
-	auto maxSpeedMultIt = g_multList_maxSpeed.find(vehicle.Handle());
-	if (maxSpeedMultIt != g_multList_maxSpeed.end())
+	auto maxSpeedMultIt = g_multListMaxSpeed.find(vehicle.Handle());
+	if (maxSpeedMultIt != g_multListMaxSpeed.end())
 	{
-		g_multList_maxSpeed[newVeh.Handle()] = maxSpeedMultIt->second;
+		g_multListMaxSpeed[newVeh.Handle()] = maxSpeedMultIt->second;
 		newVeh.MaxSpeed_set(maxSpeedMultIt->second);
 	}
-	auto headlightsMultIt = g_multList_headlights.find(vehicle.Handle());
-	if (headlightsMultIt != g_multList_headlights.end())
+	auto headlightsMultIt = g_multListHeadLights.find(vehicle.Handle());
+	if (headlightsMultIt != g_multListHeadLights.end())
 	{
-		g_multList_headlights[newVeh.Handle()] = headlightsMultIt->second;
+		g_multListHeadLights[newVeh.Handle()] = headlightsMultIt->second;
 		newVeh.LightsMultiplier_set(headlightsMultIt->second);
 	}
 
 	// Engine sound
-	auto engineSoundIt = g_vehList_engSound.find(vehicle.Handle());
-	if (engineSoundIt != g_vehList_engSound.end())
+	auto engineSoundIt = g_vehListEngineSounds.find(vehicle.Handle());
+	if (engineSoundIt != g_vehListEngineSounds.end())
 	{
-		g_vehList_engSound[newVeh.Handle()] = engineSoundIt->second;
+		g_vehListEngineSounds[newVeh.Handle()] = engineSoundIt->second;
 		newVeh.EngineSound_set(engineSoundIt->second);
 	}
 

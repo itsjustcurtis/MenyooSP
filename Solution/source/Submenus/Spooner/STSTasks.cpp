@@ -105,6 +105,14 @@ namespace sub::Spooner
 			nodeTask.append_child("IsShortRange").text() = this->isShortRange;
 			nodeTask.append_child("ShowRoute").text() = this->showRoute;
 			nodeTask.append_child("ShowNumber").text() = this->showNumber;
+			// New Functions
+			nodeTask.append_child("ShowCone").text() = this->showCone;
+    	nodeTask.append_child("HudColorIndex").text() = this->hudColorIndex;
+			nodeTask.append_child("IsSelectableOnMap").text() = this->isSelectableOnMap;
+    	nodeTask.append_child("DisplayId").text() = this->displayId;
+    	nodeTask.append_child("Priority").text() = this->priority;
+    	nodeTask.append_child("SyncRotation").text() = this->syncRotation;
+
 		}
 		void AddBlip::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
 		{
@@ -118,6 +126,13 @@ namespace sub::Spooner
 			this->isShortRange = nodeTask.child("IsShortRange").text().as_bool();
 			this->showRoute = nodeTask.child("ShowRoute").text().as_bool();
 			this->showNumber = nodeTask.child("ShowNumber").text().as_int();
+			// New Functions
+			this->showCone = nodeTask.child("ShowCone").text().as_bool();
+    	this->hudColorIndex = nodeTask.child("HudColorIndex").text().as_int();
+			this->isSelectableOnMap = nodeTask.child("IsSelectableOnMap").text().as_bool();
+    	this->displayId = nodeTask.child("DisplayId").text().as_int();
+    	this->priority = nodeTask.child("Priority").text().as_int();
+    	this->syncRotation = nodeTask.child("SyncRotation").text().as_bool();
 		}
 		void AddBlip::ImportTaskDataSpecific(STSTask* otherTsk)
 		{
@@ -133,6 +148,9 @@ namespace sub::Spooner
 			this->isShortRange = otherTskT->isShortRange;
 			this->showRoute = otherTskT->showRoute;
 			this->showNumber = otherTskT->showNumber;
+			this->isSelectableOnMap = otherTskT->isSelectableOnMap;
+			// New functions
+
 		}
 		AddBlip::AddBlip()
 		{
@@ -152,6 +170,10 @@ namespace sub::Spooner
 			this->isShortRange = false;
 			this->showRoute = false;
 			this->showNumber = 0;
+			this->isSelectableOnMap = true;
+			// New functions
+			this->priority = 2;
+			this->displayMode = 2;
 		}
 		void AddBlip::Run(void* ve)
 		{
@@ -173,7 +195,19 @@ namespace sub::Spooner
 				this->blip.ShowRoute(this->showRoute);
 				if (this->showNumber != 0)
 					this->blip.ShowNumber(this->showNumber);
-			}
+				// New Functions
+				this->blip.ShowCone(this->showCone, this->hudColorIndex);
+				this->blip.SetSelectableOnMap(this->isSelectableOnMap ? 2 : 8);
+				//this->blip.SetPriority(this->priority);
+
+        			if (this->syncRotation)
+        			{
+            			this->blip.SyncRotationWithEntity(e.Handle.GetHandle());
+        			}
+    			}
+				// New Functions
+				//this->blip.SetDisplayMode(this->displayMode);
+
 		}
 
 		RemoveBlip::RemoveBlip()
@@ -288,7 +322,7 @@ namespace sub::Spooner
 		}
 		void FaceDirection::RunP(GTAped& ep)
 		{
-			ep.Task().TurnTo(ep.Position_get().PointOnCircle(2.0f, this->heading), this->durationAfterLife > 0 ? -1 : this->duration + 200);
+			ep.Task().TurnTo(ep.GetPosition().PointOnCircle(2.0f, this->heading), this->durationAfterLife > 0 ? -1 : this->duration + 200);
 		}
 
 		void FaceEntity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -453,12 +487,12 @@ namespace sub::Spooner
 			if (takeVehicleToo)
 			{
 				GTAvehicle veh = ep.CurrentVehicle();
-				(veh.Exists() ? (GTAentity)veh : (GTAentity)ep).Position_set(this->destination);
+				(veh.Exists() ? (GTAentity)veh : (GTAentity)ep).SetPosition(this->destination);
 				//SET_PED_COORDS_KEEP_VEHICLE(ep.Handle(), this->destination.x, this->destination.y, this->destination.z);
 			}
 			else
 			{
-				ep.Position_set(this->destination);
+				ep.SetPosition(this->destination);
 			}
 		}
 
@@ -583,7 +617,7 @@ namespace sub::Spooner
 		}
 		void GoToCoord::RunP(GTAped& ep)
 		{
-			TASK_GO_STRAIGHT_TO_COORD(ep.Handle(), this->destination.x, this->destination.y, this->destination.z, this->speed, this->durationAfterLife > 0 ? -1 : this->duration, Vector3::DirectionToRotation(Vector3::Normalize(this->destination - ep.Position_get())).z, 0.0f);
+			TASK_GO_STRAIGHT_TO_COORD(ep.Handle(), this->destination.x, this->destination.y, this->destination.z, this->speed, this->durationAfterLife > 0 ? -1 : this->duration, Vector3::DirectionToRotation(Vector3::Normalize(this->destination - ep.GetPosition())).z, 0.0f);
 		}
 
 		void FollowRoute::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -712,7 +746,7 @@ namespace sub::Spooner
 		}
 		void PatrolInRange::RunP(GTAped& ep)
 		{
-			ep.Task().WanderAround(this->coord.IsZero() ? ep.Position_get()/*Legacy/bugged PatrolInRange behaviour*/ : this->coord, this->radius);
+			ep.Task().WanderAround(this->coord.IsZero() ? ep.GetPosition()/*Legacy/bugged PatrolInRange behaviour*/ : this->coord, this->radius);
 		}
 
 		WanderFreely::	WanderFreely()
@@ -1102,7 +1136,7 @@ namespace sub::Spooner
 		{
 			std::vector<GTAped> pedHandles;
 			//GTAmemory::GetPedHandles(pedHandles, ep.Position_get(), this->radius);
-			World::GetNearbyPeds(pedHandles, ep.Position_get(), this->radius);
+			World::GetNearbyPeds(pedHandles, ep.GetPosition(), this->radius);
 
 			TaskSequence squ;
 
@@ -1882,7 +1916,7 @@ namespace sub::Spooner
 			if (e.AttachmentArgs.isAttached && sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.Handle, att))
 				EntityManagement::AttachEntity(e, att, e.AttachmentArgs.boneIndex, e.AttachmentArgs.offset, (this->isRelative ? e.AttachmentArgs.rotation : Vector3()) + rotationValue);
 			else
-				e.Handle.Rotation_set((this->isRelative ? e.Handle.Rotation_get() : Vector3()) + rotationValue);
+				e.Handle.SetRotation((this->isRelative ? e.Handle.Rotation_get() : Vector3()) + rotationValue);
 		}
 
 		void ChangeOpacity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const

@@ -27,11 +27,15 @@
 
 #include <string>
 #include <map>
+#include <algorithm>
 
 namespace BlipIcon {
 	const std::map<int, std::string> vNames
 	{
 		{ BlipIcon::Standard, "Standard" },
+		{ BlipIcon::Enemy, "Enemy" },
+		{ BlipIcon::Friend, "Friend" },
+		{ BlipIcon::VIP, "VIP" },
 		{ BlipIcon::BigBlip, "BigBlip" },
 		{ BlipIcon::PoliceOfficer, "PoliceOfficer" },
 		{ BlipIcon::PoliceArea, "PoliceArea" },
@@ -75,6 +79,7 @@ namespace BlipIcon {
 		{ BlipIcon::HeistStore, "HeistStore" },
 		{ BlipIcon::PoliceStation, "PoliceStation" },
 		{ BlipIcon::Hospital, "Hospital" },
+		{ BlipIcon::Elevator,"Elevator"},
 		{ BlipIcon::Helicopter, "Helicopter" },
 		{ BlipIcon::StrangersAndFreaks, "StrangersAndFreaks" },
 		{ BlipIcon::ArmoredTruck, "ArmoredTruck" },
@@ -133,6 +138,9 @@ namespace BlipIcon {
 		{ BlipIcon::Nigel, "Nigel" },
 		{ BlipIcon::AssaultRifle, "AssaultRifle" },
 		{ BlipIcon::Bat, "Bat" },
+		{ BlipIcon::Crowbar, "Crowbar" },
+		{ BlipIcon::StunGun, "StunGun" },
+		{ BlipIcon::AlienWeapon, "AlienWeapon" },
 		{ BlipIcon::Grenade, "Grenade" },
 		{ BlipIcon::Health, "Health" },
 		{ BlipIcon::Knife, "Knife" },
@@ -193,7 +201,6 @@ namespace BlipIcon {
 		{ BlipIcon::PropertyManagement, "PropertyManagement" },
 		{ BlipIcon::GangHighlight, "GangHighlight" },
 		{ BlipIcon::Altruist, "Altruist" },
-		{ BlipIcon::Enemy, "Enemy" },
 		{ BlipIcon::OnMission, "OnMission" },
 		{ BlipIcon::CashPickup, "CashPickup" },
 		{ BlipIcon::Chop, "Chop" },
@@ -202,7 +209,6 @@ namespace BlipIcon {
 		{ BlipIcon::CashPickupVagos, "CashPickupVagos" },
 		{ BlipIcon::CashPickupPolice, "CashPickupPolice" },
 		{ BlipIcon::Hooker, "Hooker" },
-		{ BlipIcon::Friend, "Friend" },
 		{ BlipIcon::CustodyDropoff, "CustodyDropoff" },
 		{ BlipIcon::OnMissionPolice, "OnMissionPolice" },
 		{ BlipIcon::OnMissionLost, "OnMissionLost" },
@@ -345,7 +351,6 @@ namespace BlipIcon {
 		{ BlipIcon::Truck, "Truck" },
 		{ BlipIcon::SpecialCargo, "SpecialCargo" },
 		{ BlipIcon::Trailer, "Trailer" },
-		{ BlipIcon::VIP, "VIP" },
 		{ BlipIcon::Cargobob, "Cargobob" },
 		{ BlipIcon::AreaCutline, "AreaCutline" },
 		{ BlipIcon::Jammed, "Jammed" },
@@ -534,7 +539,163 @@ namespace BlipIcon {
 		{ BlipIcon::Sasquatch, "Sasquatch" },
 		{ BlipIcon::Scarab, "Scarab" },
 		{ BlipIcon::Slamvam, "Slamvam" },
-		{ BlipIcon::ZR380, "ZR380" }
+		{ BlipIcon::ZR380, "ZR380" },
+		{ BlipIcon::ComicStore, "ComicStore" },
+		{ BlipIcon::CopCar, "CopCar" },
+		{ BlipIcon::KingofTheHill, "KingofTheHill" },
+		{ BlipIcon::Rucksack, "Rucksack" },
+		{ BlipIcon::ShippingContainer, "ShippingContainer" },
+		{ BlipIcon::Casino, "Casino" },
+		{ BlipIcon::CasinoTable, "CasinoTable" },
+		{ BlipIcon::CasinoWheel, "CasinoWheel" },
+		{ BlipIcon::CasinoChips, "CasinoChips" },
+		{ BlipIcon::CasinoHorse, "CasinoHorse" },
+		{ BlipIcon::Limo, "Limo" },
+		{ BlipIcon::OpenWheelCar, "OpenWheelCar" },
+		{ BlipIcon::Rappel, "Rappel" },
+		{ BlipIcon::ScubaGear, "ScubaGear" },
+		{ BlipIcon::SnowTruck, "Everon" },
+		{ BlipIcon::Buggy1, "Outlaw" },
+		{ BlipIcon::Buggy2, "Vagrant" },
+		{ BlipIcon::Zhaba, "Zhaba" },
+		{ BlipIcon::Arcade, "Arcade" },
+		{ BlipIcon::RCTank, "RCTank" },
+		{ BlipIcon::Stairs, "Stairs" },
+		{ BlipIcon::Camera2, "Camera2" },
+		{ BlipIcon::Winky, "Winky" },
+		{ BlipIcon::MiniSub, "Avisa" },
+		{ BlipIcon::KartRetro, "KartRetro" },
+		{ BlipIcon::KartModern, "KartModern" },
+		{ BlipIcon::MilitaryQuad, "MilitaryQuad" },
+		{ BlipIcon::MilitaryTruck, "MilitaryTruck" },
+		{ BlipIcon::ShipWheel, "ShipWheel" },
+		{ BlipIcon::UFO, "UFO" },
+		{ BlipIcon::SeaSparrow2, "Sparrow" },
+		{ BlipIcon::Dinghy2, "Weaponized Dinghy" },
+		{ BlipIcon::PatrolBoat, "Patrol Boat" },
+		{ BlipIcon::Toreador, "Toreador" },
+		{ BlipIcon::Squadee, "Squadee" },
+		{ BlipIcon::Alkonost, "Alkonost" },
+		{ BlipIcon::AnnihilatorStealth, "Annihilator Stealth" },
+		{ BlipIcon::Kostatka, "Kosatka" },
+		{ BlipIcon::BoltCutter, "Bolt Cutter" },
+		{ BlipIcon::RappelGear, "Rappel Gear" },
+		{ BlipIcon::KeyCard, "KeyCard" },
+		{ BlipIcon::Password, "Password" },
+		{ BlipIcon::IslandHeist, "Island Heist" },
+		{ BlipIcon::IslandParty, "Island Party" },
+		{ BlipIcon::RadarTower, "Radar Tower" },
+		{ BlipIcon::UnderwaterGrate, "Underwater Grate" },
+		{ BlipIcon::PowerSwitch, "Power Switch" },
+		{ BlipIcon::CompoundGate, "Compound Gate" },
+		{ BlipIcon::RappelPoint, "Rappel Point" },
+		{ BlipIcon::SubControls, "Sub Controls" },
+		{ BlipIcon::SubPeriscope, "Sub Periscope" },
+		{ BlipIcon::SubMissiles, "Sub Missiles" },
+		{ BlipIcon::Painting, "Painting" },
+		{ BlipIcon::LSCarMeet, "LS Car Meet"},
+		{ BlipIcon::CarTest, "Steering Wheel"},
+		{ BlipIcon::AutoShop, "Auto Shop" },
+		{ BlipIcon::Anchor, "Anchor" },
+		{ BlipIcon::PrizeBox, "Prize Box" },
+		{ BlipIcon::ChopShopHeist, "Chop Shop Heist" },
+		{ BlipIcon::Securoserv, "SecuroServ" },
+		{ BlipIcon::MovieCollection, "Movie Collection" },
+		{ BlipIcon::Chalkboard, "Chalkboard" },
+		{ BlipIcon::Train, "Train" },
+		{ BlipIcon::Slamvan2, "Lost MC Slamvan" },
+		{ BlipIcon::Crusader, "Crusader" },
+		{ BlipIcon::ConstructionOutfit, "Construction Outfit" },
+		{ BlipIcon::VanKeys, "VanKeys" },
+		{ BlipIcon::SUVService, "SUVService" },
+		{ BlipIcon::SecurityContract, "Security Contract" },
+		{ BlipIcon::SafeVault, "SafeVault" },
+		{ BlipIcon::Payphone, "Payphone" },
+		{ BlipIcon::Patriot3, "PatriotMilSpec" },
+		{ BlipIcon::RecordStudio, "RecordStudio" },
+		{ BlipIcon::Jubilee, "Jubilee" },
+		{ BlipIcon::Granger2, "Granger 3600XL" },
+		{ BlipIcon::Dynamite, "Dynamite" },
+		{ BlipIcon::Deity, "Deity" },
+		{ BlipIcon::Champion, "Champion" },
+		{ BlipIcon::Buffalo4, "BuffaloSTX" },
+		{ BlipIcon::Agency, "Agency" },
+		{ BlipIcon::BikerBar, "Biker Bar" },
+		{ BlipIcon::FlamingSkull, "Flaming Skull" },
+		{ BlipIcon::CayoPerico, "Cayo Perico" },
+		{ BlipIcon::ClubhouseContract, "Clubhouse Contract" },
+		{ BlipIcon::Acid, "Acid" },
+		{ BlipIcon::AcidLab, "Acid Lab" },
+		{ BlipIcon::MysteryPackage, "Mystery Package" },
+		{ BlipIcon::GunVan, "Gun Van" },
+		{ BlipIcon::WalkieTalkie, "Walkie Talkie" },
+		{ BlipIcon::Tractor, "Tractor" },
+		{ BlipIcon::JuggaloWarehouse, "Juggalo Warehouse" },
+		{ BlipIcon::Duffelbag, "Duffelbag" },
+		{ BlipIcon::OilTanker, "OilTanker" },
+		{ BlipIcon::Burrito, "Burrito" },
+		{ BlipIcon::Bicycle, "Bicycle" },
+		{ BlipIcon::Raiju, "Raiju" },
+		{ BlipIcon::WeaponizedConada, "Weaponized Conada" },
+		{ BlipIcon::Streamer216, "Streamer216" },
+		{ BlipIcon::SignalJammer, "Signal Jammer" },
+		{ BlipIcon::SalvageYard, "SalvageYard" },
+		{ BlipIcon::SalvageYardHeist, "SalvageYardHeist" },
+		{ BlipIcon::SalvageYardPlans, "SalvageYardPlans" },
+		{ BlipIcon::WeaponCrate, "Weapon Crate" },
+		{ BlipIcon::Snowball, "Snowball" },
+		{ BlipIcon::Tombstone, "Tombstone" },
+		{ BlipIcon::BottomDollarBounty, "Bottom Dollar Bounty" },
+		{ BlipIcon::BottomDollarBountyTarget, "Bottomy Dollar Bounty Target" },
+		{ BlipIcon::FilmingSchedule, "Filming Schedule" },
+		{ BlipIcon::Pizza, "Pizza" },
+		{ BlipIcon::AircraftCarrier, "Aircraft Carrier" },
+		{ BlipIcon::BottomDollarBailEnforcement, "Bottom Dollar Bail Enforcement" },
+		{ BlipIcon::ZombieDisease, "Zombie Disease" },
+		{ BlipIcon::ZombieProximity, "Zombie Proximity" },
+		{ BlipIcon::ZombieFire, "Zombie Fire" },
+		{ BlipIcon::PossessedAnimal, "Possessed Animal" },
+		{ BlipIcon::MobilePhone, "Mobile Phone" },
+		{ BlipIcon::DarnellBrosGarmentFactory, "Darnell Bros Garment Factory" },
+		{ BlipIcon::DarnellBrosGarmentFactoryForSale, "Darnell Bros Garment Factory For Sale" },
+		{ BlipIcon::FieldHanger, "Field Hanger" },
+		{ BlipIcon::FieldHangerForSale, "Field Hanger For Sale" },
+		{ BlipIcon::DH7IronMule, "DH-7 Iron Mule" },
+		{ BlipIcon::Cargoship, "Cargoship" },
+		{ BlipIcon::Torpedo, "Torpedo" },
+		{ BlipIcon::Propellor, "Propellor" },
+		{ BlipIcon::SharkTiger, "Shark" },
+		{ BlipIcon::FastTravel, "Fast Travel" },
+		{ BlipIcon::Duster300H, "Duster 300-H" },
+		{ BlipIcon::Titan250D, "Titan 250 D" },
+		{ BlipIcon::Collectible, "Collectible" },
+		{ BlipIcon::Dog, "Dog" },
+		{ BlipIcon::BobcatSecurity, "Bobcat Security" },
+		{ BlipIcon::Helitours, "Helitours" },
+		{ BlipIcon::HelitoursBuyable, "Helitours For Sale" },
+		{ BlipIcon::CarWashProperty, "Car Wash" },
+		{ BlipIcon::CarwashPropertyBuyable, "Car Wash For Sale" },
+		{ BlipIcon::AlarmBell, "Alarm Bell" },
+		{ BlipIcon::RealEstate, "Real Estate" },
+		{ BlipIcon::MedicalCourier, "Medical Courier" },
+		{ BlipIcon::GruppeSechs, "Gruppe Sechs" },
+		{ BlipIcon::FireHydrant, "Fire Hydrant" },
+		{ BlipIcon::FireTruck, "Fire Truck" },
+		{ BlipIcon::Forklift, "Forklift" },
+		{ BlipIcon::Newspaper, "News Paper" },
+		{ BlipIcon::NarcoSurvival, "420 Survival" }, //420 breaks the code. Needs an alternative name.
+		{ BlipIcon::CommunityMission, "Community Mission" },
+		{ BlipIcon::PropertyMansion, "Mansion Property" },
+		{ BlipIcon::Keypad2, "Keypad2" },
+		{ BlipIcon::TaxiSelfDestruct, "Taxi Self-Destruct" },
+		{ BlipIcon::SubwayTrain, "Subway Train" },
+		{ BlipIcon::TrashBin, "Trash Bin" },
+		{ BlipIcon::MissionCreator, "Mission Creator" },
+		{ BlipIcon::Cat, "Cat" },
+		{ BlipIcon::Mansion1, "Mansion1" },
+		{ BlipIcon::Mansion2, "Mansion2" },
+		{ BlipIcon::Mansion3, "Mansion3" }
+
 	};
 }
 
@@ -725,7 +886,44 @@ void GTAblip::ShowRoute(bool value)
 {
 	SET_BLIP_ROUTE(this->mHandle, value);
 }
+// New Blip functions
+void GTAblip::ShowCone(bool toggle, int hudColorIndex, float coneWidth, int coneColour)
+{
+    mConeColour = hudColorIndex;
+    SET_BLIP_SHOW_CONE(this->mHandle, toggle, mConeColour);
+}
 
+void GTAblip::SetSelectableOnMap(bool selectable)
+{
+	// Use ID 2 for selectable, 8 for non-selectable
+    SET_BLIP_DISPLAY(this->mHandle, selectable ? 2 : 8);
+}
+
+//void GTAblip::SetPriority(int priority)
+//{
+    //SET_BLIP_PRIORITY(this->mHandle, priority);
+//}
+// New Blip functions
+
+//int GTAblip::GetPriority() const
+//{
+	//return mPriority;
+//}
+//void GTAblip::SetDisplayMode(int value)
+//{
+	//SET_BLIP_DISPLAY(this->mHandle, value);
+//}
+// New Blip functions end here.
+void GTAblip::SetRotationWithFloat(float heading)
+{
+    SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, heading);
+}
+
+void GTAblip::AddBlipForArea(float x, float y, float z, float width, float height)
+{
+    this->mHandle = ADD_BLIP_FOR_AREA(x, y, z, width, height);
+}
+// New Blip functions end here.
 int GTAblip::Icon() const
 {
 	return GET_BLIP_SPRITE(this->mHandle);
@@ -776,6 +974,8 @@ bool GTAblip::Exists() const
 	return DOES_BLIP_EXIST(this->mHandle) != 0;
 }
 void GTAblip::Remove()
+
+
 {
 	if (DOES_BLIP_EXIST(this->mHandle))
 	{
@@ -783,4 +983,13 @@ void GTAblip::Remove()
 		REMOVE_BLIP(&id);
 		this->mHandle = id;
 	}
+}
+//New code to add rotational sync with attached entity.
+void GTAblip::SyncRotationWithEntity(int entityHandle)
+{
+    if (DOES_BLIP_EXIST(this->mHandle) && DOES_ENTITY_EXIST(entityHandle))
+    {
+        float entityHeading = GET_ENTITY_HEADING(entityHandle); // Get entity rotation
+        SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, entityHeading); // Set blip rotation
+    }
 }

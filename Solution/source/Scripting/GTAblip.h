@@ -45,6 +45,9 @@ namespace BlipIcon {
 		///<summary>The default English text for this value is "Destination".</summary>
 		BigBlip = 2,
 		///<summary>The default English text for this value is "Police".</summary>
+		Enemy = 270,
+		Friend = 280,
+		VIP = 480,
 		PoliceOfficer = 3,
 		///<summary>When this value is set, the blip will flash. The default English text for this value is "Objective".</summary>
 		PoliceArea = 4,
@@ -97,6 +100,7 @@ namespace BlipIcon {
 		HeistStore = 59,
 		PoliceStation = 60,
 		Hospital = 61,
+		Elevator = 63,
 		Helicopter = 64,
 		StrangersAndFreaks = 66,
 		ArmoredTruck = 67,
@@ -162,6 +166,9 @@ namespace BlipIcon {
 		Nigel = 149,
 		AssaultRifle = 150,
 		Bat = 151,
+		Crowbar = 849,
+		StunGun = 891,
+		AlienWeapon = 725,
 		Grenade = 152,
 		Health = 153,
 		Knife = 154,
@@ -227,7 +234,6 @@ namespace BlipIcon {
 		PropertyManagement = 267,
 		GangHighlight = 268,
 		Altruist = 269,
-		Enemy = 270,
 		OnMission = 271,
 		CashPickup = 272,
 		Chop = 273,
@@ -237,7 +243,6 @@ namespace BlipIcon {
 		CashPickupPolice = 278,
 		///<summary>The default English text for this value is "Drop Off Hooker".</summary>
 		Hooker = 279,
-		Friend = 280,
 		CustodyDropoff = 285,
 		OnMissionPolice = 286,
 		OnMissionLost = 287,
@@ -402,7 +407,6 @@ namespace BlipIcon {
 		Truck,
 		SpecialCargo,
 		Trailer,
-		VIP,
 		Cargobob,
 		AreaCutline,
 		Jammed,
@@ -605,7 +609,165 @@ namespace BlipIcon {
 		Sasquatch,
 		Scarab,
 		Slamvam,
-		ZR380
+		ZR380,
+		ComicStore = 671,
+		CopCar = 672,
+		KingofTheHill = 674,
+		Rucksack = 676,
+		ShippingContainer = 677,
+		Casino = 679,
+		CasinoTable = 680,
+		CasinoWheel = 681,
+		CasinoChips = 683,
+		CasinoHorse = 684,
+		Limo = 724,
+		OpenWheelCar = 726,
+		Rappel = 727,
+		ScubaGear = 729,
+		SnowTruck = 734,
+		Buggy1 = 735,
+		Buggy2 = 736,
+		Zhaba = 737,
+		Arcade = 740,
+		RCTank = 742,
+		Stairs = 743,
+		Camera2 = 744,
+		Winky = 745,
+		MiniSub = 746,
+		KartRetro = 747,
+		KartModern = 748,
+		MilitaryQuad = 749,
+		MilitaryTruck = 750,
+		ShipWheel = 751,
+		UFO = 752,
+		SeaSparrow2 = 753,
+		Dinghy2 = 754,
+		PatrolBoat = 755,
+		Toreador = 756,
+		Squadee = 757,
+		Alkonost = 758,
+		AnnihilatorStealth = 759,
+		Kostatka = 760,
+		BoltCutter = 761,
+		RappelGear = 762,
+		KeyCard = 763,
+		Password = 764,
+		IslandHeist = 765,
+		IslandParty = 766,
+		RadarTower = 767,
+		UnderwaterGrate = 768,
+		PowerSwitch = 769,
+		CompoundGate = 770,
+		RappelPoint = 771,
+		SubControls = 773,
+		SubPeriscope = 774,
+		SubMissiles = 775,
+		Painting = 776,
+		LSCarMeet = 777,
+		CarTest = 778,
+		AutoShop = 779,
+		Anchor = 780,
+		PrizeBox = 781,
+		ChopShopHeist = 784,
+		Securoserv = 788,
+		MovieCollection = 790,
+		Chalkboard = 793,
+		Train = 795,
+		Slamvan2 = 799,
+		Crusader = 800,
+		ConstructionOutfit = 801,
+		VanKeys = 811,
+		SUVService = 812,
+		SecurityContract = 813,
+		SafeVault = 814,
+		Payphone = 817,
+		Patriot3 = 818,
+		RecordStudio = 819,
+		Jubilee = 820,
+		Granger2 = 821,
+		Dynamite = 822,
+		Deity = 823,
+		Champion = 824,
+		Buffalo4 = 825,
+		Agency = 826,
+		BikerBar = 827,
+		FlamingSkull = 833,
+		CayoPerico = 836,
+		ClubhouseContract = 837,
+		Acid = 839,
+		AcidLab = 840,
+		MysteryPackage = 842,
+		GunVan = 844,
+		StashHouse = 845,
+		Tractor = 846,
+		JuggaloWarehouse = 847,
+		Duffelbag = 850,
+		OilTanker = 851,
+		Burrito = 853,
+		Bicycle = 859,
+		Raiju = 861,
+		WeaponizedConada = 862,
+		Streamer216 = 865,
+		SignalJammer = 866,
+		WalkieTalkie = 875,
+		SalvageYard = 867,
+		SalvageYardHeist = 868,
+		SalvageYardPlans = 879,
+		WeaponCrate = 880,
+		Snowball = 881,
+		Tombstone = 885,
+		BottomDollarBounty = 886,
+		BottomDollarBountyTarget = 887,
+		FilmingSchedule = 888,
+		Pizza = 889,
+		AircraftCarrier = 890,
+		//StunGun = 891,
+		BottomDollarBailEnforcement = 893,
+		ZombieDisease = 895,
+		ZombieProximity = 896,
+		ZombieFire = 897,
+		PossessedAnimal = 898,
+		MobilePhone = 899,
+		DarnellBrosGarmentFactory = 900,
+		DarnellBrosGarmentFactoryForSale = 901,
+		FieldHanger = 903,
+		FieldHangerForSale = 904,
+		DH7IronMule = 905,
+		Cargoship = 911,
+		Torpedo = 912,
+		Propellor = 913,
+		SharkTiger = 914,
+		FastTravel = 915,
+		Duster300H = 916,
+		Titan250D = 917,
+		Collectible = 918,
+		Dog = 923,
+		BobcatSecurity = 924,
+		Helitours = 928,
+		HelitoursBuyable = 929,
+		CarWashProperty = 931,
+		CarwashPropertyBuyable = 932,
+		AttentionAlert = 934,
+		AlarmBell = 935,
+		RealEstate = 939,
+		MedicalCourier = 940,
+		GruppeSechs = 941,
+		FireHydrant = 942,
+		FireTruck = 943,
+		Forklift = 944,
+		Newspaper = 945,
+		NarcoSurvival = 946, //420 breaks the code. Needs an alternative name.
+		CommunityMission = 947,
+		PropertyMansion = 948,
+		Keypad2 = 949,
+		TaxiSelfDestruct = 950,
+		SubwayTrain = 951,
+		TrashBin = 952,
+		MissionCreator = 953,
+		Cat = 954,
+		Mansion1 = 955,
+		Mansion2 = 956,
+		Mansion3 = 957,
 	};
 
 	extern const std::map<int, std::string> vNames;
@@ -620,7 +782,7 @@ namespace BlipColour {
 		White,
 		Red,
 		Green,
-		Blue,
+		Blue = 3,
 		Yellow = 66,
 		///<summary>The default RGB value of this color is the same as HUD_COLOUR_WHITE, whose default RGB value is #F0F0F0.</summary>
 		WhiteNotPure = 4,
@@ -763,7 +925,31 @@ public:
 
 	void SetScale(float value);
 
+//New functions
+
+	void ShowCone (bool toggle, int hudColorIndex, float coneWidth = 1.0f, int coneColour = BlipColour::Blue);
+
+	void SetSelectableOnMap(bool selectable);
+
+	//void SetPriority(int priority);
+
+	void SetRotationWithFloat(float heading);
+
+	void AddBlipForArea(float x, float y, float z, float width, float height);
+
+	void SyncRotationWithEntity(int entityHandle);
+
+//New functions end here
+
+//New functions
+
+	//int GetPriority() const;
+	//void SetDisplayMode(int value);
+
+//New functions end here
+
 	void ShowRoute(bool value);
+
 
 	int Icon() const;
 	void SetIcon(int value);
@@ -782,6 +968,8 @@ public:
 
 private:
 	int mHandle;
+	int mConeColour = 3;
+	//int mPriority = 2;
 };
 
 

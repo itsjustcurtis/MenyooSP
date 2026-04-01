@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -22,6 +22,9 @@
 #include "..\Scripting\ModelNames.h" // _vNeonColours
 #include "Routine.h" // (loop_no_clip_toggle, loop_hide_hud)
 #include "Language.h"
+#include "..\Util\FileLogger.h"
+#include "..\Menu\Menu.h"
+#include "..\Submenus\PedAnimation.h"
 
 #include <Windows.h>
 #include <utility>
@@ -160,6 +163,7 @@ RGBA _globalPedTrackers_Col(0, 255, 255, 205);
 std::pair<UINT16, UINT16> menubindsGamepad = { INPUT_FRONTEND_RB, INPUT_FRONTEND_LEFT };
 UINT16 menubinds = VirtualKey::F8;
 UINT16 respawnbinds = INPUT_LOOK_BEHIND;
+UINT16 stopanimbinds = VirtualKey::J;
 
 UINT16 Menu::currentsub = 0, Menu::LOOCsub = SUB::MAINMENU;
 INT Menu::currentop = 0, * Menu::currentopATM = &currentop;
@@ -174,22 +178,23 @@ INT Menu::currentsub_ar[100] = {};
 INT Menu::currentop_ar[100] = {};
 INT Menu::SetSub_delayed = 0;
 int Menu::delayedTimer = 0;
-bool Menu::bit_controller = 0, Menu::bit_mouse = 0;
+bool Menu::bitController = 0, Menu::bit_mouse = 0;
 bool Menu::bit_centre_title = 1, Menu::bit_centre_options = 0, Menu::bit_centre_breaks = 1,
-Menu::gradients = 1, Menu::thin_line_over_screct = 1, Menu::bit_glare_test = 1;
+Menu::gradients = 1, Menu::thinLineOverScrect = 1, Menu::bit_glare_test = 1;
 Scaleform Menu::scaleform_menuGlare;
 Scaleform Menu::instructional_buttons;
 std::vector<Scaleform_IbT> Menu::vIB;
 std::function<void()> Menu::OnSubBack = nullptr;
+INT8 g_loglevel = 2;
 
 void Menu::SetInputMethods()
 {
-	bit_controller = MenuInput::IsUsingController();
+	bitController = MenuInput::IsUsingController();
 }
 void Menu::DisableControls()
 {
 	// Keyboard
-	if (!bit_controller)
+	if (!bitController)
 	{
 		//DISPLAY_HUD(0);
 		HIDE_HELP_TEXT_THIS_FRAME();
@@ -297,38 +302,6 @@ void Menu::DisableControls()
 	DISABLE_CONTROL_ACTION(0, INPUT_VEH_HEADLIGHT, 1);
 	DISABLE_CONTROL_ACTION(0, INPUT_VEH_PUSHBIKE_SPRINT, 1);
 	DISABLE_CONTROL_ACTION(0, INPUT_VEH_PUSHBIKE_PEDAL, 1);
-
-	// pi_menu
-	/*	if (CONTROLS::_0xA571D46727E2B718(2)) {
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 237);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 238);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 241);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 242);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 239);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 240);
-	CONTROLS::ENABLE_CONTROL_ACTION(2, 176, 1);
-	}
-	else {
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 176);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 177);
-	}
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 172);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 173);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 174);
-	CONTROLS::SET_INPUT_EXCLUSIVE(2, 175);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_UNARMED, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_MELEE, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_HANDGUN, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_SHOTGUN, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_SMG, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_AUTO_RIFLE, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_SNIPER, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_HEAVY, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_SELECT_WEAPON_SPECIAL, 1);
-	CONTROLS::DISABLE_CONTROL_ACTION(0, INPUT_VEH_RADIO_WHEEL, 1);*/
-
-
 }
 void Menu::base()
 {
@@ -337,8 +310,6 @@ void Menu::base()
 	{
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("MenyooExtras")) REQUEST_STREAMED_TEXTURE_DICT("MenyooExtras", 0);
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu")) REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
-		//if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shared")) REQUEST_STREAMED_TEXTURE_DICT("shared", 0);
-		//if (!HAS_STREAMED_TEXTURE_DICT_LOADED("mpsafecracking")) REQUEST_STREAMED_TEXTURE_DICT("mpsafecracking", 0);
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendsalon")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendsalon", 0);
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendfashion", 0);
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_midfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_midfashion", 0);
@@ -429,7 +400,7 @@ void Menu::background()
 	float temp;
 	if (totalop > GTA_MAXOP) temp = GTA_MAXOP; else temp = (float)totalop; // Calculate last option number to draw rect
 
-																		   // Calculate Y Coord
+	// Calculate Y Coord
 	float bg_Y = ((temp * 0.035f) / 2.0f) + 0.159f;
 	float bg_length = temp * 0.035f;
 
@@ -445,7 +416,7 @@ void Menu::background()
 	else DRAW_RECT(0.16f + menuPos.x, scr_rect_Y + menuPos.y, 0.20f, 0.0345f, titlebox.R, titlebox.G, titlebox.B, titlebox.A, false);
 
 	// Draw thin line over scroller indicator rect
-	if (thin_line_over_screct)
+	if (thinLineOverScrect)
 	{
 		if (totalop < GTA_MAXOP) DRAW_RECT(0.16f + menuPos.x, (totalop * 0.035f + 0.1589f) + menuPos.y, 0.20f, 0.0011f, 255, 255, 255, 255, false);
 		else DRAW_RECT(0.16f + menuPos.x, (14.0f * 0.035f + 0.1589f) + menuPos.y, 0.20f, 0.0011f, 255, 255, 255, 255, false);
@@ -472,16 +443,10 @@ void Menu::background()
 
 	std::string toPrint = std::to_string(*currentopATM) + " / " + std::to_string(totalop);
 
-	Game::Print::setupdraw(GTAfont::Arial, Vector2(0.0f, 0.26f), false, false, false, optioncount);
+	Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.0f, 0.26f), false, false, false, optioncount);
 	float width = Game::Print::GetTextWidth(toPrint);
-	Game::Print::setupdraw(GTAfont::Arial, Vector2(0.0f, 0.26f), false, false, false, optioncount);
+	Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.0f, 0.26f), false, false, false, optioncount);
 	Game::Print::drawstring(toPrint, get_xcoord_at_menu_rightEdge(width, 0.0f, false), temp + menuPos.y);
-
-	//BEGIN_TEXT_COMMAND_DISPLAY_TEXT("CM_ITEM_COUNT");
-	//ADD_TEXT_COMPONENT_INTEGER(*currentopATM); // ! currentop_w_breaks
-	//ADD_TEXT_COMPONENT_INTEGER(totalop); // ! totalop - totalbreaks
-	//if (totalop < 1000) END_TEXT_COMMAND_DISPLAY_TEXT(0.219f + menuPos.x, temp + menuPos.y); // < 1000
-	//else END_TEXT_COMMAND_DISPLAY_TEXT(0.212f + menuPos.x, temp + menuPos.y); // >= 1000
 }
 void Menu::optionhi()
 {
@@ -516,34 +481,44 @@ bool Menu::isBinds()
 	// Open menu - RB + Left / F8
 	UINT8 index1 = menubindsGamepad.first < 50 ? 0 : 2;
 	UINT8 index2 = menubindsGamepad.second < 50 ? 0 : 2;
-	return bit_controller ? (IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, menubindsGamepad.second)) : IsKeyJustUp(menubinds); // F8
+	return bitController ? (IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, menubindsGamepad.second)) : IsKeyJustUp(menubinds); // F8
 }
 void Menu::while_closed()
 {
 	if (isBinds())
 	{
-		if (g_menuNotOpenedYet)
+
+		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, opening Menyoo");
+		if (g_menuNotOpenedYet) {
 			justopened();
+			GTAmemory::InitEnhancedPools();
+		}
+		else
+			addlog(ige::LogType::LOG_TRACE, "Menu has been opened before, skipping initialization");
+
 
 		Game::Sound::PlayFrontend("FocusIn", "HintCamSounds");
+
 		currentsub = LOOCsub;
+		addlog(ige::LogType::LOG_TRACE, "Setting current submenu to LOOCsub: " + std::to_string(LOOCsub));
 		if (currentsub == SUB::MAINMENU)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Current is MainMenu");
 			currentop = 1;
 			*currentopATM = 1;
 		}
-		//currentop = currentop;
-		/*currentsub = SUB::MAINMENU;
-		currentsub_ar_index = 0;
-		currentop = 1;*/
 	}
 }
+
 void Menu::while_opened()
 {
 	totalop = printingop; printingop = 0;
 	totalbreaks = breakcount; breakcount = 0; breakscroll = 0;
 
-	if (IS_PAUSE_MENU_ACTIVE()) SetSub_closed();
+	if (IS_PAUSE_MENU_ACTIVE()) {
+		addlog(ige::LogType::LOG_TRACE, "Game Paused, closing Menyoo");
+		SetSub_closed();
+	}
 
 	if (IS_GAMEPLAY_HINT_ACTIVE()) STOP_GAMEPLAY_HINT(false);
 	DISPLAY_AMMO_THIS_FRAME(0);
@@ -563,6 +538,7 @@ void Menu::while_opened()
 	// Scroll up
 	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Up))
 	{
+		addlog(ige::LogType::LOG_TRACE, "Up Pressed, moving selection up");
 		if (currentop <= 1)
 			Bottom();
 		else
@@ -572,6 +548,7 @@ void Menu::while_opened()
 	// Scroll down
 	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Down))
 	{
+		addlog(ige::LogType::LOG_TRACE, "Down Pressed, moving selection down");
 		if (currentop >= totalop)
 			Top();
 		else
@@ -581,6 +558,7 @@ void Menu::while_opened()
 	// B press
 	if (MenuPressTimer::IsButtonTapped(MenuPressTimer::Button::Back))
 	{
+		addlog(ige::LogType::LOG_TRACE, "Back Pressed, returning to previous menu");
 		if (currentsub == SUB::MAINMENU)
 			SetSub_closed();
 		else
@@ -590,13 +568,27 @@ void Menu::while_opened()
 	// Binds press
 	if (isBinds())//&& currentsub != SUB::MAINMENU)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, closing Menyoo");
 		SetSub_closed();
+	}
+
+}
+bool Menu::isStopAnimBinds()
+{
+	return IsKeyJustUp(stopanimbinds); // J
+}
+void Menu::while_stopanim()
+{
+	if (isStopAnimBinds())
+	{
+		sub::AnimationSub_StopAnimationCallback();
 	}
 }
 void Menu::Up(bool playSound)
 {
 	currentop--;
 	currentop_w_breaks--;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 1;
@@ -605,6 +597,7 @@ void Menu::Down(bool playSound)
 {
 	currentop++;
 	currentop_w_breaks++;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
@@ -613,6 +606,7 @@ void Menu::Bottom(bool playSound)
 {
 	currentop = totalop;
 	currentop_w_breaks = totalop;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 1;
@@ -621,6 +615,7 @@ void Menu::Top(bool playSound)
 {
 	currentop = 1;
 	currentop_w_breaks = 1;
+	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
@@ -635,7 +630,7 @@ void Menu::SetSub_previous()
 
 	currentsub = currentsub_ar[currentsub_ar_index]; // Get previous submenu from array and set as current submenu
 	currentop = currentop_ar[currentsub_ar_index]; // Get last selected option from array and set as current selected option
-	
+
 	currentsub_ar[currentsub_ar_index] = -2;
 	currentop_ar[currentsub_ar_index] = -2;
 
@@ -650,6 +645,8 @@ void Menu::SetSub_previous()
 
 void Menu::SetSub_new(INT sub_index)
 {
+	if (currentsub_ar_index >= 99)
+		return; // Array bounds safety - max depth reached
 	currentsub_ar_index++; //Increment array index
 	currentsub_ar[currentsub_ar_index] = currentsub; // Store current submenu index in array
 	currentsub = sub_index; // Set new submenu as current submenu
@@ -685,7 +682,7 @@ void Menu::SetSub_closed()
 
 void Menu::glare_test()
 {
-	if (loop_no_clip_toggle)
+	if (noClipToggle)
 	{
 		//Label_unloadglare:;
 		scaleform_menuGlare.Unload();
@@ -707,33 +704,6 @@ void Menu::glare_test()
 	//Vector2& size = _global_glare_size;
 
 	scaleform_menuGlare.Render2DScreenSpace(pos, size, { titletext.R, titletext.G, titletext.A, titlebox.A });
-
-
-	/*if (!HAS_SCALEFORM_MOVIE_LOADED(scaleform_menuGlare)){ scaleform_menuGlare = REQUEST_SCALEFORM_MOVIE("MP_MENU_GLARE"); return; }
-
-	Vector3 camstuff = _0x5B4E4C817FCC2DFB(2);
-	FLOAT tempFloat = sub_2cbfc(camstuff.z, 0.0, 360.0); // WHAT ARE Vector3 STRUCT ITEMS NAMED AS?? ._f2
-
-	BEGIN_SCALEFORM_MOVIE_METHOD(scaleform_menuGlare, "SET_DATA_SLOT");
-	SCALEFORM_MOVIE_METHOD_ADD_PARAM_FLOAT(0);
-	//SCALEFORM_MOVIE_METHOD_ADD_PARAM_FLOAT(tempFloat);
-	END_SCALEFORM_MOVIE_METHOD();
-
-	BEGIN_SCALEFORM_MOVIE_METHOD(scaleform_menuGlare, "SET_MAX_WIDTH");
-	SCALEFORM_MOVIE_METHOD_ADD_PARAM_FLOAT(0.2f);
-	END_SCALEFORM_MOVIE_METHOD();
-
-	//Int2 res;
-	//GET_ACTUAL_SCREEN_RESOLUTION(&res.x, &res.y);
-	//if (res == toInt2(1920, 1080)) END_SCALEFORM_MOVIE_METHOD();
-
-	SET_SCRIPT_GFX_ALIGN(76, 84);
-	SET_SCRIPT_GFX_ALIGN_PARAMS(0.008 + menuPos.x, 0.045f + menuPos.y, 0.0f, -0.5f);
-	RESET_SCRIPT_GFX_ALIGN();
-
-	_0x0DF606929C105BE1(scaleform_menuGlare, titletext.R, titletext.G, titletext.A, titlebox.A);
-	//DRAW_SCALEFORM_MOVIE(scaleform_menuGlare, 0.5f, 0.5f, 0.2f, 0.1f, 255, 255, 255, 255);*/
-
 }
 
 void Menu::set_opened_IB()
@@ -744,16 +714,6 @@ void Menu::set_opened_IB()
 		add_IB(INPUT_FRONTEND_RRIGHT, "ITEM_BACK");
 	else
 		add_IB(INPUT_FRONTEND_RRIGHT, "ITEM_EXIT");
-	/*if (bit_frontend_addnumber_selected)
-	{
-	Menu::add_IB(INPUT_FRONTEND_RIGHT, "Right");
-	Menu::add_IB(INPUT_FRONTEND_LEFT, "Left");
-	}
-	if (Menu::totalop > 1)
-	{
-	add_IB(INPUT_FRONTEND_DOWN, "Down");
-	add_IB(INPUT_FRONTEND_UP, "Up");
-	}*/
 
 	bit_frontend_addnumber_selected = false;
 }
@@ -783,7 +743,7 @@ std::string Menu::get_key_IB(const Scaleform_IbT& ib)
 }
 void Menu::draw_IB()
 {
-	if (vIB.empty() || UPDATE_ONSCREEN_KEYBOARD() == 0 || loop_hide_hud)//IS_HUD_HIDDEN())
+	if (vIB.empty() || UPDATE_ONSCREEN_KEYBOARD() == 0 || hideHUD)//IS_HUD_HIDDEN())
 	{
 		//instructional_buttons.Unload();
 		return;
@@ -842,13 +802,27 @@ void Menu::draw_IB()
 
 void Menu::sub_handler()
 {
+	static bool firstRun = true, isClosed = true;
+	if(firstRun) 
+	{
+		addlog(ige::LogType::LOG_TRACE, "First Run sub_handler");;
+	}
 	if (currentsub == SUB::CLOSED)
 	{
+		if (!isClosed)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Sub Closed");;
+			isClosed = true;
+		}
 		while_closed();
 	}
-
 	else
 	{
+		if (isClosed)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Sub Opened");;
+			isClosed = false;
+		}
 		submenu_switch();
 
 		if (Menu::currentop > Menu::printingop) { Menu::currentop = Menu::printingop + 1; Menu::Up(false); }
@@ -867,12 +841,14 @@ void Menu::sub_handler()
 		while_opened();
 	}
 
+	while_stopanim();
+
 	if (GET_GAME_TIMER() >= delayedTimer)
 	{
 		delayedTimer = GET_GAME_TIMER() + 810; // Delay for rainbow related loops
 		if (delayedTimer > INT_MAX - 1000) delayedTimer = 0;
 	}
-
+	firstRun = false;
 }
 
 //--------------------------------MouseSupport---------------------------------------------------
@@ -880,23 +856,6 @@ void Menu::sub_handler()
 bool MouseSupport::pressedSelectAfterSelect = 0;
 INT MouseSupport::currentopM = -1;
 std::vector<MouseSupport::ItemNumber> MouseSupport::vItems;
-
-//INT MouseSupport::ItemNumberToItemNumberOnScreen(INT itemNumber)
-//{
-//	if (itemNumber <= GTA_SCROLLOP)
-//	{
-//		return itemNumber;
-//	}
-//	else if (itemNumber >= (Menu::totalop - GTA_BETOP))
-//	{
-//		return GTA_SCROLLOP + (GTA_BETOP - (Menu::totalop - itemNumber));
-//	}
-//	else // itemNumber > GTA_SCROLLOP && itemNumber < (menu::totalop - GTA_BETOP)
-//	{
-//		INT result = GTA_SCROLLOP + (itemNumber % GTA_SCROLLOP); // wrong m9
-//	}
-//
-//}
 INT MouseSupport::ItemNumberToItemNumberOnScreen(INT itemNumber)
 {
 	/*if (itemNumber >= vItems.size() + Menu::breakcount)
@@ -1131,7 +1090,7 @@ void AddTitle(std::string text)
 
 	if (titletext_ALPHA_DIS_TEMP)
 	{
-		Game::Print::setupdraw(font_title, Vector2(0.26, 0.26), true, false, false, titletext);
+		Game::Print::SetupDraw(font_title, Vector2(0.26, 0.26), true, false, false, titletext);
 		Game::Print::drawstringGXT(text, 0.16f + menuPos.x, 0.1406f + menuPos.y);
 		return;
 	}
@@ -1269,30 +1228,6 @@ void OptionStatus(BOOL status)
 {
 	if (OptionY < 0.6325f && OptionY > 0.1425f)
 	{
-		//char* tempChar;
-		//SET_TEXT_FONT(4);
-		//SET_TEXT_SCALE(0.34f, 0.34f);
-		//SET_TEXT_CENTRE(1); SET_TEXT_OUTLINE();
-
-		//if (status == 0){
-		//	SET_TEXT_COLOUR(255, 102, 102, 250); //RED
-		//	tempChar = "OFF";
-		//}
-		//else if (status == 1){
-		//	SET_TEXT_COLOUR(102, 255, 102, 250); //GREEN
-		//	tempChar = "ON";
-		//}
-		//else{
-		//	SET_TEXT_COLOUR(255, 255, 102, 250); //YELLOW
-		//	tempChar = "??";
-		//}
-		//Game::Print::drawstring(tempChar, 0.233f + menuPos.x, OptionY + menuPos.y);
-
-		//char* tempChar = "000";
-		//SET_TEXT_FONT(0);
-		//SET_TEXT_SCALE(0.28f, 0.28f);
-		//SET_TEXT_CENTRE(1);
-
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("mprankbadge")) REQUEST_STREAMED_TEXTURE_DICT("mprankbadge", 0);
 
 		Vector2 res = { 0.022f, 0.03f };
@@ -1300,27 +1235,11 @@ void OptionStatus(BOOL status)
 		if (status == 0)
 		{
 			DRAW_SPRITE("mprankbadge", "rankglobe_21x21_colour", get_xcoord_at_menu_rightEdge(res.x, 0.0f, true), OptionY + 0.0166f + menuPos.y, res.x, res.y, 0.0f, 255, 102, 102, 250, false, 0);
-			// medaldot_32
-			//DRAW_SPRITE("mpsafecracking", "dial_bg", get_xcoord_at_menu_rightEdge(res.x, 0.0f, true), OptionY + 0.0166f, res.x, res.y, 0.0f, 255, 102, 102, 250);
-			//DRAW_RECT(0.233 + menuPos.x, OptionY + 0.0147f + menuPos.y, 0.05, 0.0315, 255, 102, 102, 250);
-			//DRAW_SPRITE("CommonMenu", "shop_box_blank", 0.233f + menuPos.x, OptionY + 0.0147f + menuPos.y, 0.06f, 0.037f, 0.0f, 255, 102, 102, 250);
-			//SET_TEXT_COLOUR(255, 102, 102, 250); //RED
-			//tempChar = "OFF";
 		}
 		else
 		{
 			DRAW_SPRITE("mprankbadge", "rankglobe_21x21_colour", get_xcoord_at_menu_rightEdge(res.x, 0.0f, true), OptionY + 0.0166f + menuPos.y, res.x, res.y, 0.0f, 102, 255, 102, 250, false, 0);
-			// medaldot_32 + emptydot_32
-			//DRAW_SPRITE("mpsafecracking", "dial_bg", get_xcoord_at_menu_rightEdge(res.x, 0.0f, true), OptionY + 0.0166f, res.x, res.y, 0.0f, 102, 255, 102, 250);
-			//DRAW_SPRITE("mpsafecracking", "dial_bg", 0.233f + menuPos.x, OptionY + 0.0146f + menuPos.y, 0.03f, 0.03f, 0.0f, 255, 102, 102, 250);
-			//DRAW_RECT(0.233 + menuPos.x, OptionY + 0.0147f + menuPos.y, 0.05, 0.0315, 102, 255, 102, 250);
-			//DRAW_SPRITE("CommonMenu", "shop_box_blank", 0.233f + menuPos.x, OptionY + 0.0147f + menuPos.y, 0.06f, 0.037f, 0.0f, 102, 255, 102, 250);
-			//SET_TEXT_COLOUR(102, 255, 102, 250); //GREEN
-			//tempChar = "ON";
 		}
-
-		//Game::Print::drawstring(tempChar, 0.233f + menuPos.x, OptionY + menuPos.y);
-
 	}
 }
 void AddToggle(const std::string& text, bool& loop_variable, bool& extra_option_code_ON, bool& extra_option_code_OFF, bool gxt)
@@ -1417,14 +1336,6 @@ void AddBreak(std::string text)
 			if (Menu::currentop >= Menu::totalop) Menu::Top();
 			else Menu::Down();
 			break;
-			//case 3: // Bottom
-			//	Menu::currentop_w_breaks = Menu::totalop - (Menu::totalbreaks - 1);
-			//	Menu::currentop--;
-			//	break;
-			//case 4: // Top
-			//	Menu::currentop_w_breaks = 1;
-			//	Menu::currentop++;
-			//	break;
 		}
 
 	}
@@ -1450,7 +1361,7 @@ void AddNumber(const std::string& text, float value, __int8 decimal_places, bool
 	if (OptionY < 0.6325f && OptionY > 0.1425f)
 	{
 		FLOAT newXpos;
-		Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
 		if (Menu::printingop == *Menu::currentopATM)
 		{
 			if (&RIGHT_PRESS != &null && &LEFT_PRESS != &null)
@@ -1463,20 +1374,20 @@ void AddNumber(const std::string& text, float value, __int8 decimal_places, bool
 				newXpos = get_xcoord_at_menu_rightEdge(textureRes.x - 0.005, textureRes.x - 0.005 + Game::Print::GetTextWidth(value, decimal_places), true);
 				DRAW_SPRITE("CommonMenu", "arrowleft", newXpos, OptionY + 0.016f + menuPos.y, textureRes.x, textureRes.y, 0.0f, selectedtext.R, selectedtext.G, selectedtext.B, selectedtext.A, false, 0); // Left
 
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), textureRes.x - 0.005, true);
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 			}
 			else
 			{
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), 0.0024f, true);
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 			}
 		}
 		else
 		{
 			newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), 0.0024f, true);
-			Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
 		}
 
 		Game::Print::drawfloat(value, decimal_places, newXpos, OptionY + 0.0056 + menuPos.y);
@@ -1646,7 +1557,7 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 
 		chartickStr = DOES_TEXT_LABEL_EXIST(chartickStr.c_str()) ? GET_FILENAME_FOR_AUDIO_CONVERSATION(chartickStr.c_str()) : Language::TranslateToSelected(chartickStr);
 		FLOAT newXpos;
-		Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
 
 		if (Menu::printingop == *Menu::currentopATM)
 		{
@@ -1660,20 +1571,20 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 				newXpos = get_xcoord_at_menu_rightEdge(textureRes.x - 0.005, textureRes.x - 0.005 + Game::Print::GetTextWidth(chartickStr), true);
 				DRAW_SPRITE("CommonMenu", "arrowleft", newXpos, OptionY + 0.016f + menuPos.y, textureRes.x, textureRes.y, 0.0f, selectedtext.R, selectedtext.G, selectedtext.B, selectedtext.A, false, 0); // Left
 
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), textureRes.x - 0.005, true);
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 			}
 			else
 			{
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), 0.0024f, true);
-				Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
 			}
 		}
 		else
 		{
 			newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), 0.0024f, true);
-			Game::Print::setupdraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
 		}
 
 		Game::Print::drawstring(chartickStr, newXpos, OptionY + 0.0056 + menuPos.y);
@@ -1698,13 +1609,9 @@ void AddTexter(const std::string& text, int selectedindex, const std::vector<std
 
 
 
-void Add_preset_colour_options_previews(UINT8 const r, UINT8 const g, UINT8 const b)
+void AddPresetColourOptionsPreviews(UINT8 const r, UINT8 const g, UINT8 const b)
 {
 	Vector2 res = { 0.1f, 0.0889f };
-
-	/*res = GET_TEXTURE_RESOLUTION("lgm_dlc_luxe", "t20");
-	res.x = res.x * 0.5f / Game::defaultScreenRes.first;
-	res.y = res.y * 0.5f / Game::defaultScreenRes.second;*/
 
 	FLOAT x_coord = 0.324f + menuPos.x;
 	if (menuPos.x > 0.45f) x_coord = menuPos.x - 0.003f;
@@ -1715,13 +1622,13 @@ void Add_preset_colour_options_previews(UINT8 const r, UINT8 const g, UINT8 cons
 }
 void Add_preset_colour_options_previews(const RgbS& rgb)
 {
-	Add_preset_colour_options_previews(rgb.R, rgb.G, rgb.B);
+	AddPresetColourOptionsPreviews(rgb.R, rgb.G, rgb.B);
 }
-void Add_preset_colour_options_previews(const RGBA& rgb)
+void AddPresetColourOptionsPreviews(const RGBA& rgb)
 {
-	Add_preset_colour_options_previews(rgb.R, rgb.G, rgb.B);
+	AddPresetColourOptionsPreviews(rgb.R, rgb.G, rgb.B);
 }
-bool Add_preset_colour_options(INT& r, INT& g, INT& b)
+bool AddPresetColourOptions(INT& r, INT& g, INT& b)
 {
 	bool bPressed = false;
 	for (auto& colol : _vNeonColours)
@@ -1737,7 +1644,7 @@ bool Add_preset_colour_options(INT& r, INT& g, INT& b)
 		}
 
 		if (Menu::printingop == *Menu::currentopATM)
-			Add_preset_colour_options_previews(colol.rgb.R, colol.rgb.G, colol.rgb.B);
+			AddPresetColourOptionsPreviews(colol.rgb.R, colol.rgb.G, colol.rgb.B);
 	}
 	return bPressed;
 }

@@ -36,9 +36,9 @@ namespace sub
 
 		enum Indices
 		{
-			SUPER, SPORT, SPORTSCLASSIC, COUPE, MUSCLE, OFFROAD, SUV, SEDAN, COMPACT,
-			PICKUP, VAN, TRUCK, SERVICE, TRAILER, TRAIN,
-			EMERGENCY, MOTORCYCLE, BICYCLE, PLANE, HELICOPTER, BOAT, OTHER
+			COMPACT, SEDAN, SUV, COUPE, MUSCLE, SPORTSCLASSIC, SPORT, SUPER,
+			MOTORCYCLE, OFFROAD, INDUSTRIAL, UTILITY, VAN, BICYCLE, BOAT, HELICOPTER,
+			PLANE, SERVICE, EMERGENCY, MILITARY, COMMERCIAL, TRAIN, OPENWHEEL, OTHER, DRIFT
 		};
 
 		void PopulateVehicleBmps();
@@ -56,6 +56,8 @@ namespace sub
 	bool SpawnVehicle_AddVehicleModelToFavourites(GTAmodel::Model vehModel, const std::string& customName);
 	bool SpawnVehicle_RemoveVehicleModelFromFavourites(GTAmodel::Model vehModel);
 
+	void SpawnVehicle_DLC();
+	void SpawnVehicle_DLC_Selection();
 	void SpawnVehicle_AllCatsSub();
 	void SpawnVehicle_Favourites();
 
@@ -72,10 +74,8 @@ namespace sub
 		void Sub_VehSaver();
 		void Sub_VehSaver_InItem();
 		int saveCarVars();
+		void saveColourVals();
 
 	}
 
 }
-
-
-

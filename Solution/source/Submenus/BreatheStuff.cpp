@@ -43,7 +43,7 @@ namespace sub
 		{
 			PTFX::LoopedPTFX& ptfx = _globalBreatheStuff_ptfx;
 
-			if (Menu::bit_controller ? !IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : !IsKeyDown(VirtualKey::J))
+			if (Menu::bitController ? !IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : !IsKeyDown(VirtualKey::J))
 			{
 				if (ptfx.Exists())
 					ptfx.Remove();
@@ -329,7 +329,7 @@ namespace sub
 			AddTickol(text, type == loop_player_breatheStuff, null, null); if (null)
 			{
 				if (loop_player_breatheStuff == BreathePtfxType::None && type != BreathePtfxType::None)
-					Game::Print::PrintBottomLeft(oss_ << "Hold " << "~b~" << (Menu::bit_controller ? "LS" : "J") << "~s~" << " to breathe out stuff!");
+					Game::Print::PrintBottomLeft(oss_ << "Hold " << "~b~" << (Menu::bitController ? "LS" : "J") << "~s~" << " to breathe out stuff!");
 
 				if (_globalBreatheStuff_ptfx.Exists())
 					_globalBreatheStuff_ptfx.Remove();
@@ -351,4 +351,6 @@ namespace sub
 
 }
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(BREATHESTUFF,            sub::BreatheStuff_catind::BreatheStuffSub_)

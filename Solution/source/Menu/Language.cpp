@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -11,11 +11,12 @@
 
 #include "..\Util\ExePath.h"
 #include "..\Util\FileLogger.h"
+#include "..\Menu\Menu.h"
 
 #include <fstream>
 #include <json\single_include\nlohmann\json.hpp>
+#include <set>
 using Json = nlohmann::json;
-
 
 namespace Language
 {
@@ -33,15 +34,19 @@ namespace Language
 
 	std::string Lang::Translate(std::string text)
 	{
-		try
-		{
-			auto& ret = this->pairs.at(text);
-			return ret;
+		static std::set<std::string> reported_missing;
+
+		auto it = this->pairs.find(text);
+		if (it != this->pairs.end()) {
+			return it->second;
 		}
-		catch (std::out_of_range)
+
+		if (reported_missing.insert(text).second)
 		{
-			return text;
+			addlog(ige::LogType::LOG_ERROR, "Missing translation for: " + text);
 		}
+		this->pairs[text] = text;
+		return text;
 	}
 
 	std::string TranslateToSelected(std::string text)
@@ -49,7 +54,9 @@ namespace Language
 		if (selectedLang != nullptr)
 			return selectedLang->Translate(text);
 		else
+		{
 			return text;
+		}
 	}
 
 	int Init()
@@ -101,11 +108,11 @@ namespace Language
 				{
 					Json doc = Json::parse(stream);
 					lang.Dictionary() = doc;
-					ige::myLog << ige::LogType::LOG_INFO << "Loaded language file " << lang.GetFilePath();
+					addlog(ige::LogType::LOG_INFO,  "Loaded language file " + lang.GetFilePath());
 				}
 				catch (...)
 				{
-					ige::myLog << ige::LogType::LOG_ERROR << "Unable to load language file " << lang.GetFilePath();
+					addlog(ige::LogType::LOG_ERROR,  "Unable to load language file " + lang.GetFilePath());
 					return -1;
 				}
 
@@ -113,7 +120,7 @@ namespace Language
 			}
 		}
 
-		ige::myLog << ige::LogType::LOG_ERROR << "Cannot find selected language in memory. Resetting to default";
+		addlog(ige::LogType::LOG_ERROR,  "Cannot find selected language in memory. Resetting to default");
 		ResetSelectedLang();
 		return -1;
 	}

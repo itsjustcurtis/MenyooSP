@@ -19,13 +19,9 @@ typedef unsigned short UINT16;
 namespace sub
 {
 	void MiscOps();
-
-	void Timecycles_();
-
+	void Timecycles();
 	void ClearAreaSub();
-
 	void DrawToolSub_();
-
 	void RadioSub_();
 
 	namespace WaterHack_catind

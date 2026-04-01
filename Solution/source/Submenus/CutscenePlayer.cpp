@@ -46,7 +46,7 @@ namespace sub
 						vCutsceneLabels.push_back(line);
 					}
 				}
-				ige::myLog << ige::LogType::LOG_INFO << "Loaded cutscene names from " << filePath;
+				addlog(ige::LogType::LOG_INFO,  "Loaded cutscene names from " + filePath);
 				fin.close();
 			}
 		}
@@ -121,4 +121,7 @@ namespace sub
 }
 
 
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(CUTSCENEPLAYER,       sub::CutscenePlayer_catind::Sub_CutsceneList)
 

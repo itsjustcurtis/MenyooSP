@@ -25,6 +25,7 @@
 #include "..\..\Scripting\World.h"
 #include "..\..\Util\StringManip.h"
 #include "..\..\Util\keyboard.h"
+#include "..\..\Util\FileLogger.h"
 #include "..\..\Scripting\GTAblip.h"
 #include "..\..\Scripting\Camera.h"
 #include "..\..\Scripting\WeaponIndivs.h"
@@ -49,7 +50,7 @@ namespace sub::Spooner
 		STSTask* _selectedSTST = nullptr;
 
 		namespace Sub_TaskSequence
-		{
+		{			
 			void Nothing()
 			{
 			}
@@ -85,7 +86,7 @@ namespace sub::Spooner
 					if (inputStr.length())
 					{
 						try { tskPtr->healthValue = stoi(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Int, std::string(), 5U, std::string(), std::to_string(tskPtr->healthValue));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->healthValue);
@@ -165,6 +166,24 @@ namespace sub::Spooner
 				AddTexter("Display Number", tskPtr->showNumber, std::vector<std::string>{""}, null, number_plus, number_minus);
 				if (number_plus) { if (tskPtr->showNumber < INT_MAX) tskPtr->showNumber++; }
 				if (number_minus) { if (tskPtr->showNumber > INT_MIN) tskPtr->showNumber--; }
+
+				AddToggle("Show Cone", tskPtr->showCone);
+				
+    				bool displayId_plus = false, displayId_minus = false;
+   				AddNumber("Display ID", tskPtr->displayId, 1, null, displayId_plus, displayId_minus);
+    				if (displayId_plus) { if (tskPtr->displayId < INT_MAX) tskPtr->displayId++; }
+    				if (displayId_minus) { if (tskPtr->displayId > 0) tskPtr->displayId--; }
+
+    				bool priority_plus = false, priority_minus = false;
+    				AddNumber("Priority", tskPtr->priority, 1, null, priority_plus, priority_minus);
+    				if (priority_plus) { if (tskPtr->priority < INT_MAX) tskPtr->priority++; }
+    				if (priority_minus) { if (tskPtr->priority > 0) tskPtr->priority--; }
+
+				AddToggle("Sync Rotation With Entity", tskPtr->syncRotation);
+
+				bool nonSelectable = (tskPtr->displayMode == 8);
+				AddToggle("Non-Selectable", nonSelectable);
+				tskPtr->displayMode = nonSelectable ? 8 : 2;
 			}
 			void RemoveBlip()
 			{
@@ -182,7 +201,7 @@ namespace sub::Spooner
 					bool bSetPosToMe = false;
 					AddOption("Set Target To Player Position", bSetPosToMe); if (bSetPosToMe)
 					{
-						Vector3 myPos = GTAentity(PLAYER_PED_ID()).Position_get();
+						Vector3 myPos = GTAentity(PLAYER_PED_ID()).GetPosition();
 						coord = myPos;
 					}
 				}
@@ -266,7 +285,7 @@ namespace sub::Spooner
 					bool bSetPosToMe = false;
 					AddOption("Set Target To Player Position", bSetPosToMe); if (bSetPosToMe)
 					{
-						Vector3 myPos = GTAentity(PLAYER_PED_ID()).Position_get();
+						Vector3 myPos = GTAentity(PLAYER_PED_ID()).GetPosition();
 						tskPtr->targetPos = myPos;
 					}
 				}
@@ -288,7 +307,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::FaceDirection>();
 
-				World::DrawMarker(MarkerType::DebugSphere, SelectedEntity.Handle.Position_get().PointOnCircle(1.0f, tskPtr->heading), Vector3(0, 0, tskPtr->heading), Vector3(), Vector3(0.3f, 0.3f, 0.3f), RGBA(177, 33, 193, 210));
+				World::DrawMarker(MarkerType::DebugSphere, SelectedEntity.Handle.GetPosition().PointOnCircle(1.0f, tskPtr->heading), Vector3(0, 0, tskPtr->heading), Vector3(), Vector3(0.3f, 0.3f, 0.3f), RGBA(177, 33, 193, 210));
 
 				bool bHeading_plus = false, bHeading_minus = false;
 				AddNumber("Direction To Face", tskPtr->heading, 0, null, bHeading_plus, bHeading_minus);
@@ -338,7 +357,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::SlideToCoord>();
 
-				World::DrawMarker(MarkerType::DebugSphere, SelectedEntity.Handle.Position_get().PointOnCircle(1.0f, tskPtr->heading), Vector3(), Vector3(0, 0, tskPtr->heading), Vector3(0.3f, 0.3f, 0.3f), RGBA(177, 33, 193, 210));
+				World::DrawMarker(MarkerType::DebugSphere, SelectedEntity.Handle.GetPosition().PointOnCircle(1.0f, tskPtr->heading), Vector3(), Vector3(0, 0, tskPtr->heading), Vector3(0.3f, 0.3f, 0.3f), RGBA(177, 33, 193, 210));
 
 				bool bSpeed_plus = false, bSpeed_minus = false;
 				AddNumber("Speed", tskPtr->speed, 1, null, bSpeed_plus, bSpeed_minus);
@@ -367,7 +386,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::FollowRoute>();
 
-				const Vector3& entityPos = SelectedEntity.Handle.Position_get();
+				const Vector3& entityPos = SelectedEntity.Handle.GetPosition();
 
 				for (auto porit = tskPtr->route.begin(); porit != tskPtr->route.end(); ++porit)
 				{
@@ -387,7 +406,7 @@ namespace sub::Spooner
 					if (Menu::printingop == *Menu::currentopATM)
 					{
 						bool bRemoveCoordPressed = false;
-						if (Menu::bit_controller)
+						if (Menu::bitController)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove coord");
 							bRemoveCoordPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -413,7 +432,7 @@ namespace sub::Spooner
 					bool bSetPosToMe = false;
 					AddTickol("Add Player Position", true, bSetPosToMe, bSetPosToMe, TICKOL::SMALLNEWSTAR); if (bSetPosToMe)
 					{
-						Vector3 myPos = GTAentity(PLAYER_PED_ID()).Position_get();
+						Vector3 myPos = GTAentity(PLAYER_PED_ID()).GetPosition();
 						tskPtr->route.push_back(myPos);
 						Menu::Down();
 					}
@@ -450,7 +469,7 @@ namespace sub::Spooner
 				bool bRadius_plus = false, bRadius_minus = false;
 				AddNumber("Radius", thisRadius, 0, null, bRadius_plus, bRadius_minus);
 				if (*Menu::currentopATM == Menu::printingop)
-					EntityManagement::DrawRadiusDisplayingMarker(SelectedEntity.Handle.Position_get(), thisRadius);
+					EntityManagement::DrawRadiusDisplayingMarker(SelectedEntity.Handle.GetPosition(), thisRadius);
 				if (bRadius_plus) { if (thisRadius < FLT_MAX) thisRadius += 1.0f; }
 				if (bRadius_minus) { if (thisRadius > 0.0f) thisRadius -= 1.0f; }
 
@@ -475,7 +494,7 @@ namespace sub::Spooner
 				bool bSearchRadius_plus = false, bSearchRadius_minus = false;
 				AddNumber("Search Radius", thisSearchRadius, 0, null, bSearchRadius_plus, bSearchRadius_minus);
 				if (*Menu::currentopATM == Menu::printingop)
-					EntityManagement::DrawRadiusDisplayingMarker(SelectedEntity.Handle.Position_get(), thisSearchRadius);
+					EntityManagement::DrawRadiusDisplayingMarker(SelectedEntity.Handle.GetPosition(), thisSearchRadius);
 				if (bSearchRadius_plus) { if (thisSearchRadius < FLT_MAX) thisSearchRadius += 1.0f; }
 				if (bSearchRadius_minus) { if (thisSearchRadius > 0.0f) thisSearchRadius -= 1.0f; }
 
@@ -520,8 +539,6 @@ namespace sub::Spooner
 				{
 					_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", _searchStr);
 					boost::to_lower(_searchStr);
-					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToLower, _searchStr, 126U, std::string(), _searchStr);
-					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
 				}
 
 				for (auto& sl : AnimationSub_TaskScenarios::vValues_TaskScenarios)
@@ -610,7 +627,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speed = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speed).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speed);
@@ -626,7 +643,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedMultiplier = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedMultiplier).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedMultiplier);
@@ -747,7 +764,7 @@ namespace sub::Spooner
 					if (Menu::printingop == *Menu::currentopATM)
 					{
 						bool bIsAFav = IsAnimationAFavourite(selectedDict.first, current);
-						if (Menu::bit_controller)
+						if (Menu::bitController)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -817,7 +834,7 @@ namespace sub::Spooner
 				bool bRadius_plus = false, bRadius_minus = false;
 				AddNumber("Radius", thisRadius, 0, null, bRadius_plus, bRadius_minus);
 				if (*Menu::currentopATM == Menu::printingop)
-					EntityManagement::DrawRadiusDisplayingMarker(SelectedEntity.Handle.Position_get(), thisRadius);
+					EntityManagement::DrawRadiusDisplayingMarker(SelectedEntity.Handle.GetPosition(), thisRadius);
 				if (bRadius_plus) { if (thisRadius < FLT_MAX) thisRadius += 1.0f; }
 				if (bRadius_minus) { if (thisRadius > 0.0f) thisRadius -= 1.0f; }
 			}
@@ -979,7 +996,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1015,7 +1032,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1053,7 +1070,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1105,7 +1122,7 @@ namespace sub::Spooner
 						bool bSetPosToMe = false;
 						AddOption("Set To Player Position", bSetPosToMe); if (bSetPosToMe)
 						{
-							Vector3 myPos = GTAentity(PLAYER_PED_ID()).Position_get();
+							Vector3 myPos = GTAentity(PLAYER_PED_ID()).GetPosition();
 							*nas.second = myPos;
 						}
 					}
@@ -1153,7 +1170,7 @@ namespace sub::Spooner
 					if (inputStr.length() > 0)
 					{
 						try { tskPtr->speedInKmph = stof(inputStr); }
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedInKmph).substr(0, 5));
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedInKmph);
@@ -1179,7 +1196,7 @@ namespace sub::Spooner
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::AchieveVelocity>();
 
 				const GTAentity& thisEntity = SelectedEntity.Handle;
-				const Vector3& entityPos = thisEntity.Position_get();
+				const Vector3& entityPos = thisEntity.GetPosition();
 				const Vector3& entityRot = thisEntity.Rotation_get();
 				const Vector3& rotForVel = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + Vector3(tskPtr->pitch, 0.0f, tskPtr->heading);
 				const Vector3& dirForVel = Vector3::RotationToDirection(rotForVel);
@@ -1215,7 +1232,7 @@ namespace sub::Spooner
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::AchievePushForce>();
 
 				const GTAentity& thisEntity = SelectedEntity.Handle;
-				const Vector3& entityPos = thisEntity.Position_get();
+				const Vector3& entityPos = thisEntity.GetPosition();
 				const Vector3& entityRot = thisEntity.Rotation_get();
 				const Vector3& rotForFrc = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + Vector3(tskPtr->pitch, 0.0f, tskPtr->heading);
 				const Vector3& dirForFrc = Vector3::RotationToDirection(rotForFrc);
@@ -1364,7 +1381,7 @@ namespace sub::Spooner
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::SetRotation>();
 
 				const GTAentity& thisEntity = SelectedEntity.Handle;
-				const Vector3& entityPos = thisEntity.Position_get();
+				const Vector3& entityPos = thisEntity.GetPosition();
 				const Vector3& entityRot = thisEntity.Rotation_get();
 				const Vector3& rotForRot = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + tskPtr->rotationValue;
 				const Vector3& dirForRot = Vector3::RotationToDirection(rotForRot);
@@ -1450,7 +1467,7 @@ namespace sub::Spooner
 									throw;
 								tskPtr->opacityValue = inputVal;
 							}
-							catch (...) { Game::Print::PrintError_InvalidInput(); }
+							catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 						}
 						//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Int, std::string(), 5U, std::string(), std::to_string(tskPtr->opacityValue));
 						//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->opacityValue);
@@ -1557,6 +1574,7 @@ namespace sub::Spooner
 			if (!isThisEntityInDb)
 			{
 				Game::Print::PrintBottomLeft("~r~Error:~s~ Entity is not in the Spooner Database");
+				addlog(ige::LogType::LOG_WARNING, "Cannot display task list, Entity not in Spooner Database");
 				Menu::SetSub_previous();
 				return;
 			}
@@ -1582,6 +1600,7 @@ namespace sub::Spooner
 				else
 				{
 					Game::Print::PrintBottomCentre("~r~Error:~s~ Task list is empty.");
+					addlog(ige::LogType::LOG_WARNING, "Cannot start tasks, Task list is empty");
 				}
 			}
 			else if (bStopPressed)
@@ -1609,7 +1628,7 @@ namespace sub::Spooner
 				{
 					bool bRemoveTaskPressed = false;
 					char bMoveTaskPressed = 0i8;
-					if (Menu::bit_controller)
+					if (Menu::bitController)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 						bRemoveTaskPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -1710,9 +1729,11 @@ namespace sub::Spooner
 				}
 			}
 		}
+
 		void Sub_TaskSequence_InTask()
 		{
-			auto tskPtr = _selectedSTST;
+			auto tskPtr = _selectedSTST;			
+
 			if (tskPtr == nullptr)
 			{
 				Menu::SetSub_previous();
@@ -1723,13 +1744,30 @@ namespace sub::Spooner
 			auto& thisDuration = tskPtr->duration;
 			if (thisDuration >= 0) // -1 for tasks with no settings. -2 for tasks with settings but no duration setting.
 			{
-				bool bDuration_plus = false, bDuration_minus = false, bDuration_input = false;
-				AddNumber("Duration (In Seconds)", (float(thisDuration) / 1000), 1, bDuration_input, bDuration_plus, bDuration_minus);
-				if (bDuration_plus) { if (thisDuration < INT_MAX) thisDuration += 500; }
-				if (bDuration_minus) { if (thisDuration > 0) thisDuration -= 500; }
+				bool bDuration_plus = false, bDuration_minus = false, bDuration_input = false, bDurationMult_plus = false, bDurationMult_minus = false, prec_plus = 0, prec_minus = 0;
+				AddNumber("Duration (In Seconds)", (float(thisDuration) / 1000), 3, bDuration_input, bDuration_plus, bDuration_minus);
+				AddNumber("Scroll Sensitivity", (float(_manualPlacementPrecision)), 3, null, prec_minus, prec_plus);
+				if (bDuration_plus) { 
+					addlog(ige::LogType::LOG_TRACE, "Increasing duration by " + std::to_string(_manualPlacementPrecision * 1000) + " milliseconds. Target " + std::to_string(thisDuration + _manualPlacementPrecision * 1000));
+					if (thisDuration <= INT_MAX-_manualPlacementPrecision*1000) thisDuration += static_cast<int>(_manualPlacementPrecision*1000);
+					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.");
+				}
+				if (bDuration_minus) {
+					addlog(ige::LogType::LOG_TRACE, "Decreasinc duration by " + std::to_string(_manualPlacementPrecision * 1000) + " milliseconds. Target " + std::to_string(thisDuration - _manualPlacementPrecision * 1000));
+					if (thisDuration > _manualPlacementPrecision*1000) thisDuration -= static_cast<int>(_manualPlacementPrecision*1000);
+					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.");
+				}						
+				if (prec_plus) {
+					addlog(ige::LogType::LOG_TRACE, "Increasing duration scroll sensitivity to " + std::to_string(_manualPlacementPrecision * 10) + " seconds.");
+					if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
+				}
+				if (prec_minus) {
+					addlog(ige::LogType::LOG_TRACE, "Decreasing duration scroll sensitivity to " + std::to_string(_manualPlacementPrecision / 10) + " seconds.");
+					if (_manualPlacementPrecision > 0.001f) _manualPlacementPrecision /= 10;
+				}
 				if (bDuration_input)
 				{
-					std::string oldDurationPreText = std::to_string(float(thisDuration - (thisDuration % 500)) / 1000);
+					std::string oldDurationPreText = std::to_string(float(thisDuration) / 1000);
 					oldDurationPreText = oldDurationPreText.substr(0, oldDurationPreText.find('.') + 2);
 					std::string inputStr = Game::InputBox("", 7 + 1, "Enter duration in seconds:", oldDurationPreText);
 					if (inputStr.length() > 0)
@@ -1747,7 +1785,6 @@ namespace sub::Spooner
 						{
 							inputVal = thisDuration;
 						}
-						inputVal -= (inputVal % 500);
 						thisDuration = inputVal;
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::ST_Duration, std::string(), 7U, "Enter duration in seconds:", oldDurationPreText);
@@ -1769,4 +1806,13 @@ namespace sub::Spooner
 }
 
 
-
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKLIST,                       			sub::Spooner::Submenus::Sub_TaskSequence_TaskList)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_ADDTASK,                        			sub::Spooner::Submenus::Sub_TaskSequence_AddTask)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_INTASK,                         			sub::Spooner::Submenus::Sub_TaskSequence_InTask)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKSUB_SCENARIOACTION_LIST,    			sub::Spooner::Submenus::Sub_TaskSequence::ScenarioAction_list)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_SETTINGS, 			sub::Spooner::Submenus::Sub_TaskSequence::PlayAnimation_settings)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS,        sub::Spooner::Submenus::Sub_TaskSequence::PlayAnimation_allPedAnims)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS_INDICT, sub::Spooner::Submenus::Sub_TaskSequence::PlayAnimation_allPedAnims_inDict)
+REGISTER_SUBMENU(SPOONER_TASKSEQUENCE_TASKSUB_PLAYSPEECHWITHVOICE_INVOICE,      sub::Spooner::Submenus::Sub_TaskSequence::PlaySpeechWithVoice_inVoice)

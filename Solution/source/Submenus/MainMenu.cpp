@@ -15,11 +15,17 @@
 #include "..\Menu\Routine.h"
 
 #include "..\Natives\natives2.h"
+#include "../Util/FileLogger.h"
 
 namespace sub
 {
 	void MainMenu()
 	{
+		static bool firstLoad = true;
+		if(firstLoad) {
+			firstLoad = false;
+			addlog(ige::LogType::LOG_TRACE, "First Load of MainMenu Submenu");
+		}
 		AddTitle("MENYOO");
 
 		AddOption("Players", null, nullFunc, SUB::PLAYERSSUB);
@@ -29,20 +35,22 @@ namespace sub
 		AddOption("Weapon Options", null, nullFunc, SUB::WEAPONOPS);
 		AddOption("Weather Options", null, nullFunc, SUB::WEATHEROPS);
 		AddOption("Time Options", null, nullFunc, SUB::TIMEOPS);
+		AddOption("Bodyguard Options", null, nullFunc, SUB::BODYGUARDMAINMENU);
 		AddOption("Object Spooner", null, nullFunc, SUB::SPOONER_MAIN);
 		//AddOption("Lighting Options", null, nullFunc, SUB::OBJECTSPAWNER_LIGHTINGOPS);
 		AddOption("Misc Options", null, nullFunc, SUB::MISCOPS);
 		AddOption("Settings", null, nullFunc, SUB::SETTINGS);
 
-		Static_240 = PLAYER_ID();
-		Static_241 = PLAYER_PED_ID();
-		Static_239 = GET_PLAYER_NAME(Static_240);
-		Static_242 = GET_PLAYER_GROUP(Static_240);
-
+		g_Ped2 = PLAYER_ID();
+		g_Ped1 = PLAYER_PED_ID();
+		g_PlayerName = GET_PLAYER_NAME(g_Ped2);
+		g_Ped3 = GET_PLAYER_GROUP(g_Ped2);
 	}
-
 }
 
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(MAINMENU, sub::MainMenu)
 
 
 

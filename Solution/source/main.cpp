@@ -16,36 +16,67 @@ http://dev-c.com
 #include "Memory\GTAmemory.h"
 #include "Util\FileLogger.h"
 #include "Menu\Routine.h"
+#include "Menu\Menu.h"
+#include "Menu\MenuConfig.h"
 
 #include <Windows.h>
 #include <Psapi.h>
+#include <sstream>
+
+#include <string>
 
 BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved)
 {
 	switch (reason)
 	{
 	case DLL_PROCESS_ATTACH:
+	{
 		//g_MainModule = hInstance;
 		g_MainModule = GetModuleHandle(NULL);
+		MenuConfig::ConfigInit();
+
+		g_isEnhanced = [] {
+			char path[MAX_PATH];
+			GetModuleFileNameA(GetModuleHandleA(nullptr), path, MAX_PATH);
+
+			const char* filename = strrchr(path, '\\');
+			filename = filename ? filename + 1 : path;
+			return (_stricmp(filename, "GTA5_Enhanced.exe") == 0);
+			}();
+
+		std::string gameName = g_isEnhanced ? "GTA5_Enhanced" : "GTA5";
 
 		if (!GetModuleInformation(GetCurrentProcess(), g_MainModule, &g_MainModuleInfo, sizeof(g_MainModuleInfo)))
-			ige::myLog << ige::LogType::LOG_ERROR << "Unable to get MODULEINFO from GTA5.exe";
+			addlog(ige::LogType::LOG_ERROR, "Unable to get MODULEINFO from " + gameName + ".exe");
 		else
-			ige::myLog << ige::LogType::LOG_INFO << "MODULEINFO: lpBaseofDll=" << g_MainModuleInfo.lpBaseOfDll << ", SizeOfImage=" << g_MainModuleInfo.SizeOfImage << ", EntryPoint=" << g_MainModuleInfo.EntryPoint;
+		{
+			std::ostringstream moduleinfostream;
+			moduleinfostream << "MODULEINFO: lpBaseofDll=" << g_MainModuleInfo.lpBaseOfDll
+				<< ", SizeOfImage=" << g_MainModuleInfo.SizeOfImage
+				<< ", EntryPoint=" << g_MainModuleInfo.EntryPoint;
 
+			addlog(ige::LogType::LOG_INFO, moduleinfostream.str());
+		}
+		addlog(ige::LogType::LOG_TRACE, "Attempting to Setup Hooks");
+		setupHooks();
+		addlog(ige::LogType::LOG_TRACE, "Initialising GTAmemory");
 		GTAmemory::Init();
 
+		addlog(ige::LogType::LOG_TRACE, "Registering Script ThreadMenyooMain");
 		scriptRegister(hInstance, ThreadMenyooMain);
-		scriptRegisterAdditionalThread(hInstance, Thread_menu_loops2);
+		addlog(ige::LogType::LOG_TRACE, "Registering Script Thread_menu_loops2");
+		scriptRegisterAdditionalThread(hInstance, ThreadMenuLoops2);
 
+		addlog(ige::LogType::LOG_TRACE, "Registering Keyboard Handler");
 		keyboardHandlerRegister(OnKeyboardMessage);
+		addlog(ige::LogType::LOG_TRACE, "Finished Registering scripts");
 
 		break;
-
+	}
 	case DLL_PROCESS_DETACH:
 		scriptUnregister(hInstance);
 		keyboardHandlerUnregister(OnKeyboardMessage);
-		
+		removeHooks();
 		break;
 	}
 	return TRUE;

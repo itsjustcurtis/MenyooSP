@@ -46,11 +46,30 @@
 #include <string>
 #include <vector>
 
-std::vector<Entity> _nearbyPeds, _nearbyVehicles, _worldPeds, _worldVehicles, _worldObjects, _worldEntities;
+std::vector<Entity> nearbyPeds, nearbyVehicles, worldPeds, worldVehicles, worldObjects, worldEntities;
 
 namespace World
 {
-	const std::vector<std::string> World::sWeatherNames{ "ExtraSunny", "Clear", "Clouds", "Smog", "Foggy", "Overcast", "Rain", "Thunder", "Clearing", "Neutral", "Snow", "Blizzard", "SnowLight", "Halloween" };
+	//const std::vector<std::string> World::sWeatherNames{ "ExtraSunny", "Clear", "Clouds", "Smog", "Foggy", "Overcast", "Rain", "Thunder", "Clearing", "Neutral", "Snow", "Blizzard", "SnowLight", "Christmas", "Halloween", "Halloween Snow", "Halloween Rain"};
+	const std::vector<std::pair<std::string, std::string>> World::sWeatherNames{
+	{"ExtraSunny", "ExtraSunny"},
+	{"Clear", "Clear"},
+	{"Clouds", "Clouds"},
+	{"Smog", "Smog"},
+	{"Foggy", "Foggy"},
+	{"Overcast", "Overcast"},
+	{"Rain", "Rain"},
+	{"Thunder", "Thunder"},
+	{"Clearing", "Clearing"},
+	{"Neutral", "Neutral"},
+	{"Snow", "Snow"},
+	{"Blizzard", "Blizzard"},
+	{"SnowLight", "SnowLight"},
+	//{"Christmas", "XMAS"},          // Still not working for some reason
+	{"Halloween", "Halloween"},
+	{"Halloween Snow", "SNOW_HALLOWEEN"},  // Different internal name
+	{"Halloween Rain", "RAIN_HALLOWEEN"}   // Different internal name
+	};
 
 	void GravityLevel_set(int value)
 	{
@@ -78,7 +97,7 @@ namespace World
 	void Weather_set(WeatherType weather)
 	{
 		CLEAR_OVERRIDE_WEATHER();
-		SET_WEATHER_TYPE_NOW((PCHAR)sWeatherNames[static_cast<int>(weather)].c_str());
+		SET_WEATHER_TYPE_NOW((PCHAR)sWeatherNames[static_cast<int>(weather)].second.c_str());
 	}
 	void Weather_set(const std::string& weatherName)
 	{
@@ -87,7 +106,7 @@ namespace World
 	}
 	void SetWeatherOverTime(WeatherType weather, DWORD ms)
 	{
-		SET_WEATHER_TYPE_OVERTIME_PERSIST((PCHAR)sWeatherNames[static_cast<int>(weather)].c_str(), float(ms) / 1000.0f);
+		SET_WEATHER_TYPE_OVERTIME_PERSIST((PCHAR)sWeatherNames[static_cast<int>(weather)].second.c_str(), float(ms) / 1000.0f);
 	}
 	void SetWeatherOverTime(const std::string& weatherName, DWORD ms)
 	{
@@ -95,7 +114,7 @@ namespace World
 	}
 	void SetWeatherOverride(WeatherType weather)
 	{
-		SET_OVERRIDE_WEATHER(sWeatherNames[static_cast<int>(weather)].c_str());
+		SET_OVERRIDE_WEATHER(sWeatherNames[static_cast<int>(weather)].second.c_str());
 		//SET_WEATHER_TYPE_NOW(sWeatherNames[static_cast<int>(weather)].c_str());
 	}
 	void SetWeatherOverride(const std::string& weatherName)
@@ -109,7 +128,7 @@ namespace World
 	}
 	void SetWeatherTransition(WeatherType from, WeatherType to, DWORD ms)
 	{
-		SET_CURR_WEATHER_STATE(GET_HASH_KEY(sWeatherNames[static_cast<int>(from)]), GET_HASH_KEY(sWeatherNames[static_cast<int>(to)]), float(ms) / 1000.0f);
+		SET_CURR_WEATHER_STATE(GET_HASH_KEY(sWeatherNames[static_cast<int>(from)].second), GET_HASH_KEY(sWeatherNames[static_cast<int>(to)].second), float(ms) / 1000.0f);
 	}
 	void GetWeatherTransition(WeatherType& from, WeatherType& to, DWORD& time)
 	{
@@ -121,11 +140,11 @@ namespace World
 
 		for (UINT8 i = 0; i < sWeatherNames.size(); i++)
 		{
-			if (fr == GET_HASH_KEY(sWeatherNames[i]))
+			if (fr == GET_HASH_KEY(sWeatherNames[i].second))
 			{
 				from = (WeatherType)i;
 			}
-			if (t == GET_HASH_KEY(sWeatherNames[i]))
+			if (t == GET_HASH_KEY(sWeatherNames[i].second))
 			{
 				to = (WeatherType)i;
 			}
@@ -136,7 +155,7 @@ namespace World
 		Hash currentWeatherHash = GET_PREV_WEATHER_TYPE_HASH_NAME();
 		for (int i = 0; i < sWeatherNames.size(); i++)
 		{
-			if (currentWeatherHash == GET_HASH_KEY(sWeatherNames[i]))
+			if (currentWeatherHash == GET_HASH_KEY(sWeatherNames[i].second))
 			{
 				return static_cast<WeatherType>(i);
 			}
@@ -147,7 +166,7 @@ namespace World
 	{
 		for (int i = 0; i < sWeatherNames.size(); i++)
 		{
-			if (weatherName.compare(sWeatherNames[i]) == 0)
+			if (weatherName.compare(sWeatherNames[i].second) == 0)
 			{
 				return static_cast<WeatherType>(i);
 			}
@@ -159,9 +178,9 @@ namespace World
 		Hash currentWeatherHash = GET_PREV_WEATHER_TYPE_HASH_NAME();
 		for (auto& weatherName : sWeatherNames)
 		{
-			if (currentWeatherHash == GET_HASH_KEY(weatherName))
+			if (currentWeatherHash == GET_HASH_KEY(weatherName.second))
 			{
-				return weatherName;
+				return weatherName.first;
 			}
 		}
 		return std::string();
@@ -170,7 +189,7 @@ namespace World
 	{
 		auto weatherTypeInt = static_cast<int>(weatherType);
 		if (weatherTypeInt >= 0 && weatherTypeInt < sWeatherNames.size())
-			return sWeatherNames[weatherTypeInt];
+			return sWeatherNames[weatherTypeInt].first;
 		else return std::string();
 	}
 
@@ -191,12 +210,12 @@ namespace World
 	}
 	void GetNearbyPeds(std::vector<GTAped>& result, GTAped ped, float radius, int maxAmount)
 	{
-		const Vector3 position = ped.Position_get();
-		int *handles = new int[maxAmount * 2 + 2];
+		const Vector3 position = ped.GetPosition();
+		std::vector<int> handles(maxAmount * 2 + 2);
 
 		handles[0] = maxAmount;
 
-		const int amount = GET_PED_NEARBY_PEDS(ped.Handle(), (Any*)handles, -1);
+		const int amount = GET_PED_NEARBY_PEDS(ped.Handle(), (Any*)handles.data(), -1);
 
 		int index;
 		int* currped;
@@ -215,14 +234,12 @@ namespace World
 				}
 			}
 		}
-
-		delete[] handles;
 	}
 	void GetNearbyPeds(std::vector<GTAped>& result, const Vector3& position, float radius)
 	{
 		//std::vector<Entity> handles;
 		//GTAmemory::GetPedHandles(handles);
-		auto& handles = _worldPeds;
+		auto& handles = worldPeds;
 
 		for (auto& currped : handles)
 		{
@@ -237,12 +254,12 @@ namespace World
 	}
 	void GetNearbyVehicles(std::vector<GTAvehicle>& result, GTAped ped, float radius, int maxAmount)
 	{
-		const Vector3 position = ped.Position_get();
-		int *handles = new int[maxAmount * 2 + 2];
+		const Vector3 position = ped.GetPosition();
+		std::vector<int> handles(maxAmount * 2 + 2);
 
 		handles[0] = maxAmount;
 
-		const int amount = GET_PED_NEARBY_VEHICLES(ped.Handle(), (Any*)handles);
+		const int amount = GET_PED_NEARBY_VEHICLES(ped.Handle(), (Any*)handles.data());
 
 		int index;
 		GTAvehicle currveh;
@@ -255,20 +272,18 @@ namespace World
 			{
 				currveh.Handle() = handles[index];
 
-				if (Vector3::Subtract(position, currveh.Position_get()).LengthSquared() < radius * radius)
+				if (Vector3::Subtract(position, currveh.GetPosition()).LengthSquared() < radius * radius)
 				{
 					result.push_back(currveh);
 				}
 			}
 		}
-
-		delete[] handles;
 	}
 	void GetNearbyVehicles(std::vector<GTAvehicle>& result, const Vector3& position, float radius)
 	{
 		//std::vector<Entity> handles;
 		//GTAmemory::GetVehicleHandles(handles);
-		auto& handles = _worldVehicles;
+		auto& handles = worldVehicles;
 
 		for (auto& currveh : handles)
 		{
@@ -279,13 +294,13 @@ namespace World
 
 	void GetNearbyProps(std::vector<GTAprop>& result, GTAped ped, float radius)
 	{
-		GetNearbyProps(result, ped.Position_get(), radius);
+		GetNearbyProps(result, ped.GetPosition(), radius);
 	}
 	void GetNearbyProps(std::vector<GTAprop>& result, const Vector3& position, float radius)
 	{
 		//std::vector<Entity> handles;
 		//GTAmemory::GetPropHandles(handles);
-		auto& handles = _worldObjects;
+		auto& handles = worldObjects;
 
 		for (auto& currprop : handles)
 		{
@@ -396,9 +411,9 @@ namespace World
 		//return cam;
 
 		Camera cam = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
-		cam.Position_set(position);
-		cam.Rotation_set(rotation);
-		cam.FieldOfView_set(fov);
+		cam.SetPosition(position);
+		cam.SetRotation(rotation);
+		cam.SetFieldOfView(fov);
 		return cam;
 	}
 	void DestroyAllCameras()
@@ -428,9 +443,9 @@ namespace World
 			position.z = World::GetGroundHeight(position) + model.Dim1().z;//model.Dim2().z;
 		}
 		auto ped = CreatePed(model, position, rotation.z, false);
-		ped.Position_set(position); // More accurate position
+		ped.SetPosition(position); // More accurate position
 		if (placeOnGround) ped.PlaceOnGround();
-		ped.Rotation_set((rotation)); // Rotation
+		ped.SetRotation((rotation)); // Rotation
 		return ped;
 	}
 	GTAped CreateRandomPed(const Vector3& position)
@@ -471,9 +486,9 @@ namespace World
 			position.z = World::GetGroundHeight(position) + model.Dim1().z;//model.Dim2().z;
 		}
 		auto vehicle = CreateVehicle(model, position, rotation.z, false);
-		vehicle.Position_set(position); // More accurate position
+		vehicle.SetPosition(position); // More accurate position
 		if (placeOnGround) vehicle.PlaceOnGround();
-		vehicle.Rotation_set(rotation); // Rotation
+		vehicle.SetRotation(rotation); // Rotation
 		return vehicle;
 	}
 
@@ -499,9 +514,9 @@ namespace World
 			position.z = World::GetGroundHeight(position) + model.Dim1().z;//model.Dim2().z;
 		}
 		GTAprop prop = CreateProp(model, position, dynamic, false);
-		prop.Position_set(position); // More accurate position
+		prop.SetPosition(position); // More accurate position
 		if (placeOnGround) prop.PlaceOnGround();
-		prop.Rotation_set(rotation); // Rotation
+		prop.SetRotation(rotation); // Rotation
 
 		return prop;
 	}
@@ -610,8 +625,8 @@ namespace World
 		if (aimedEntity.Handle())
 			return aimedEntity;
 
-		const Vector3& camCoord = GameplayCamera::Position_get();
-		const Vector3& hitCoord = (GameplayCamera::DirectionFromScreenCentre_get() * 1000.0f) + camCoord;
+		const Vector3& camCoord = GameplayCamera::GetPosition();
+		const Vector3& hitCoord = (GameplayCamera::GetDirectionFromScreenCentre() * 1000.0f) + camCoord;
 
 		const RaycastResult& ray = RaycastResult::Raycast(camCoord, hitCoord, IntersectOptions::Everything, myPed);
 
@@ -627,12 +642,14 @@ namespace World
 	{
 		PCHAR dict = 0;
 		PCHAR name = 0;
+		float zOffset = 0.0f;
+		if (type == 1 || type == 43) zOffset = -0.7f;
 		if (textureDict.length() > 0 && textureName.length() > 0)
 		{
 			dict = (PCHAR)textureDict.c_str();
 			name = (PCHAR)textureName.c_str();
 		}
-		DRAW_MARKER(type, pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, rot.x, rot.y, rot.z, scale.x, scale.y, scale.z, colour.R, colour.G, colour.B, colour.A, bobUpAndDown, faceCamY, unk2, rotateY, dict, name, drawOnEnt);
+		DRAW_MARKER(type, pos.x, pos.y, pos.z + zOffset, dir.x, dir.y, dir.z, rot.x, rot.y, rot.z, scale.x, scale.y, scale.z, colour.R, colour.G, colour.B, colour.A, bobUpAndDown, faceCamY, unk2, rotateY, dict, name, drawOnEnt);
 	}
 
 	void DrawLine(const Vector3& startPos, const Vector3& endPos, const RGBA& colour)
@@ -666,11 +683,11 @@ namespace World
 		INT i, j;
 		GTAped ped;
 
-		const Vector3& originCoord = originPed.Position_get();
+		const Vector3& originCoord = originPed.GetPosition();
 
-		Ped *peds = new Ped[140 * 2 + 2]; // Five minutes into doubled stack size and chill and it gives you that ped handle
+		std::vector<Ped> peds(140 * 2 + 2); // Five minutes into doubled stack size and chill and it gives you that ped handle
 		peds[0] = 140;
-		INT found = GET_PED_NEARBY_PEDS(originPed.Handle(), (Any*)peds, -1);
+		INT found = GET_PED_NEARBY_PEDS(originPed.Handle(), (Any*)peds.data(), -1);
 		for (i = 0; i < found; i++)
 		{
 			j = i * 2 + 2;
@@ -699,7 +716,6 @@ namespace World
 			EXPLODE_PED_HEAD(ped.Handle(), WEAPON_HEAVYSNIPER);
 
 		}
-		delete[] peds;
 
 		/*bool originPedExists = originPed.Exists();
 
@@ -742,7 +758,7 @@ namespace World
 // World - clear area
 void clear_area_of_entities(const EntityType& type, const Vector3& coords, float radius, const std::vector<GTAentity>& excludes)
 {
-
+	if (GTAmemory::GetIsEnhanced()) return; // It actually works for enhanced now, but after some time of clearing entities, the game crashes? TODO: investigate why that is.
 	//LOAD_ALL_OBJECTS_NOW();
 	//LOAD_SCENE(coords.x, coords.y, coords.z);
 	//SET_STREAMING(TRUE);
@@ -769,7 +785,7 @@ void clear_area_of_entities(const EntityType& type, const Vector3& coords, float
 	WAIT(0);
 	sub::Spooner::EntityManagement::DeleteInvalidEntitiesInDb();
 
-	update_nearby_stuff_arrays_tick();
+	UpdateNearbyStuffArraysTick();
 
 	/*switch (type)
 	{
@@ -800,9 +816,9 @@ void clear_area_of_vehicles_around_entity(Entity entity, float radius, bool memr
 			if (IS_PED_SITTING_IN_ANY_VEHICLE(entity))
 				oldcar = GET_VEHICLE_PED_IS_IN(entity, 0);
 
-			Vehicle *vehicles = new Vehicle[160 * 2 + 2];
+			std::vector<Vehicle> vehicles(160 * 2 + 2);
 			vehicles[0] = 160;
-			found = GET_PED_NEARBY_VEHICLES(entity, (Any*)vehicles);
+			found = GET_PED_NEARBY_VEHICLES(entity, (Any*)vehicles.data());
 			for (i = 0; i < found; i++)
 			{
 				offsettedID = i * 2 + 2;
@@ -821,7 +837,6 @@ void clear_area_of_vehicles_around_entity(Entity entity, float radius, bool memr
 
 				CLEAR_AREA_OF_VEHICLES(Pos.x, Pos.y, Pos.z, radius, 0, 0, 1, 1, 0, 0, 0);
 			}
-			delete[] vehicles;
 		}
 	}
 
@@ -846,9 +861,9 @@ void clear_area_of_peds_around_entity(Entity entity, float radius, bool memry)
 		{
 			INT i, offsettedID, found;
 
-			Ped *peds = new Ped[160 * 2 + 2];
+			std::vector<Ped> peds(160 * 2 + 2);
 			peds[0] = 160;
-			found = GET_PED_NEARBY_PEDS(entity, (Any*)peds, -1);
+			found = GET_PED_NEARBY_PEDS(entity, (Any*)peds.data(), -1);
 			for (i = 0; i < found; i++)
 			{
 				offsettedID = i * 2 + 2;
@@ -865,7 +880,6 @@ void clear_area_of_peds_around_entity(Entity entity, float radius, bool memry)
 
 				CLEAR_AREA_OF_PEDS(Pos.x, Pos.y, Pos.z, radius, 0);
 			}
-			delete[] peds;
 		}
 	}
 
@@ -879,12 +893,12 @@ void clear_area_of_peds_around_entity(Entity entity, float radius, bool memry)
 }
 void clear_attachments_off_entity(const GTAentity& entity, const EntityType& entType)
 {
-	auto* handles = &_worldEntities;
+	auto* handles = &worldEntities;
 	switch (entType)
 	{
-	case EntityType::PED: handles = &_worldPeds; break;
-	case EntityType::VEHICLE: handles = &_worldVehicles; break;
-	case EntityType::PROP: handles = &_worldObjects; break;
+	case EntityType::PED: handles = &worldPeds; break;
+	case EntityType::VEHICLE: handles = &worldVehicles; break;
+	case EntityType::PROP: handles = &worldObjects; break;
 	}
 	for (GTAentity e : *handles)
 	{

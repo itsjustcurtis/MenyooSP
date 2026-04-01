@@ -64,7 +64,7 @@ float Camera::FieldOfView_get() const
 {
 	return GET_CAM_FOV(this->mHandle);
 }
-void Camera::FieldOfView_set(float value)
+void Camera::SetFieldOfView(float value)
 {
 	SET_CAM_FOV(this->mHandle, value);
 }
@@ -139,7 +139,7 @@ Vector3 Camera::Position_get() const
 {
 	return GET_CAM_COORD(this->mHandle);
 }
-void Camera::Position_set(Vector3 coord)
+void Camera::SetPosition(Vector3 coord)
 {
 	SET_CAM_COORD(this->mHandle, coord.x, coord.y, coord.z);
 }
@@ -152,7 +152,7 @@ Vector3 Camera::Rotation_get(__int8 unk) const
 {
 	return GET_CAM_ROT(this->mHandle, unk);
 }
-void Camera::Rotation_set(const Vector3& rot, __int8 unk)
+void Camera::SetRotation(const Vector3& rot, __int8 unk)
 {
 	SET_CAM_ROT(this->mHandle, rot.x, rot.y, rot.z, unk);
 }

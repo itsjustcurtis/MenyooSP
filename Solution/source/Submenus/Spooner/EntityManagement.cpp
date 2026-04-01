@@ -21,6 +21,7 @@
 #include "..\..\Scripting\GTAvehicle.h"
 #include "..\..\Scripting\GTAped.h"
 #include "..\..\Util\StringManip.h"
+#include "..\..\Util\FileLogger.h"
 #include "..\..\Scripting\World.h"
 #include "..\..\Scripting\Model.h"
 #include "..\..\Scripting\Game.h"
@@ -204,7 +205,7 @@ namespace sub::Spooner
 		void DeleteAllEntitiesInWorld()
 		{
 			GTAentity myPed = PLAYER_PED_ID();
-			for (GTAentity e : _worldEntities)
+			for (GTAentity e : worldEntities)
 			{
 				if (e != myPed && e != g_myVeh)
 					e.Delete();
@@ -212,11 +213,11 @@ namespace sub::Spooner
 			ClearDb();
 
 			WAIT(0);
-			update_nearby_stuff_arrays_tick();
+			UpdateNearbyStuffArraysTick();
 		}
 		void DeleteAllPropsInWorld()
 		{
-			for (GTAentity e : _worldObjects)
+			for (GTAentity e : worldObjects)
 			{
 				e.Delete();
 			}
@@ -234,12 +235,12 @@ namespace sub::Spooner
 			DeleteAllPropsInDb();
 
 			WAIT(0);
-			update_nearby_stuff_arrays_tick();
+			UpdateNearbyStuffArraysTick();
 		}
 		void DeleteAllPedsInWorld()
 		{
 			GTAentity myPed = PLAYER_PED_ID();
-			for (GTAentity e : _worldPeds)
+			for (GTAentity e : worldPeds)
 			{
 				if (e != myPed)
 					e.Delete();
@@ -259,11 +260,11 @@ namespace sub::Spooner
 			DeleteAllPedsInDb();
 
 			WAIT(0);
-			update_nearby_stuff_arrays_tick();
+			UpdateNearbyStuffArraysTick();
 		}
 		void DeleteAllVehiclesInWorld()
 		{
-			for (GTAprop e : _worldVehicles)
+			for (GTAprop e : worldVehicles)
 			{
 				e.Delete(e != g_myVeh);
 			}
@@ -281,7 +282,7 @@ namespace sub::Spooner
 			DeleteAllVehiclesInDb();
 
 			WAIT(0);
-			update_nearby_stuff_arrays_tick();
+			UpdateNearbyStuffArraysTick();
 		}
 
 		SpoonerEntity AddProp(const GTAmodel::Model& model, const std::string& name, bool unloadModel)
@@ -289,6 +290,7 @@ namespace sub::Spooner
 			if (Databases::EntityDb.size() >= GTA_MAX_ENTITIES)
 			{
 				Game::Print::PrintBottomLeft("~r~Error:~s~ Max spawn count reached.");
+				addlog(ige::LogType::LOG_WARNING, "Failed to add prop, max spawn count " + std::to_string(GTA_MAX_ENTITIES) + " Reached");
 				return SpoonerEntity();
 			}
 			if (!model.IsInCdImage())
@@ -389,7 +391,7 @@ namespace sub::Spooner
 			newEntity.Handle.SetExplosionProof(Settings::bSpawnInvincibleEntities);
 			newEntity.Handle.SetMeleeProof(Settings::bSpawnInvincibleEntities);
 			model.LoadCollision(100);
-			newEntity.Handle.IsCollisionEnabled_set(bCollision);
+			newEntity.Handle.SetIsCollisionEnabled(bCollision);
 			model.Unload();
 
 			newEntity.Type = (EntityType)newEntity.Handle.Type();
@@ -413,11 +415,13 @@ namespace sub::Spooner
 			if (Databases::EntityDb.size() >= GTA_MAX_ENTITIES)
 			{
 				Game::Print::PrintBottomLeft("~r~Error:~s~ Max spawn count reached.");
+				addlog(ige::LogType::LOG_WARNING, "Failed to spawn ped, max spawn count " + std::to_string(GTA_MAX_ENTITIES) + " Reached");
 				return SpoonerEntity();
 			}
 			if (!model.IsInCdImage())
 			{
-				Game::Print::PrintError_InvalidModel();
+				Game::Print::PrintError_InvalidModel(name);
+				addlog(ige::LogType::LOG_ERROR, "Failed to spawn ped, invalid model: " + name);
 				return SpoonerEntity();
 			}
 
@@ -475,7 +479,7 @@ namespace sub::Spooner
 			SET_PED_COMBAT_MOVEMENT(ep.Handle(), 2);
 			ep.CanSwitchWeapons_set(false);
 			model.LoadCollision(100);
-			newEntity.Handle.IsCollisionEnabled_set(bCollision);
+			newEntity.Handle.SetIsCollisionEnabled(bCollision);
 			model.Unload();
 
 			newEntity.Type = (EntityType)newEntity.Handle.Type();
@@ -500,11 +504,13 @@ namespace sub::Spooner
 			if (Databases::EntityDb.size() >= GTA_MAX_ENTITIES)
 			{
 				Game::Print::PrintBottomLeft("~r~Error:~s~ Max spawn count reached.");
+				addlog(ige::LogType::LOG_WARNING, "Failed to add vehicle, max spawn count " + std::to_string(GTA_MAX_ENTITIES) + " Reached");
 				return SpoonerEntity();
 			}
 			if (!model.IsInCdImage())
 			{
-				Game::Print::PrintError_InvalidModel();
+				Game::Print::PrintError_InvalidModel(name);
+				addlog(ige::LogType::LOG_ERROR, "Failed to spawn vehicle, invalid model: " + name);
 				return SpoonerEntity();
 			}
 
@@ -549,7 +555,7 @@ namespace sub::Spooner
 			newEntity.Handle.SetExplosionProof(Settings::bSpawnInvincibleEntities);
 			newEntity.Handle.SetMeleeProof(Settings::bSpawnInvincibleEntities);
 			model.LoadCollision(100);
-			newEntity.Handle.IsCollisionEnabled_set(bCollision);
+			newEntity.Handle.SetIsCollisionEnabled(bCollision);
 			model.Unload();
 
 			newEntity.Type = (EntityType)newEntity.Handle.Type();
@@ -629,7 +635,7 @@ namespace sub::Spooner
 			EntityType entType = (EntityType)orig.Handle.Type();
 			if (entType == EntityType::PROP)
 			{
-				newEntity.Handle = World::CreateProp(orig.Handle.Model(), orig.Handle.Position_get(), orig.Handle.Rotation_get(), bDynamic, false);
+				newEntity.Handle = World::CreateProp(orig.Handle.Model(), orig.Handle.GetPosition(), orig.Handle.Rotation_get(), bDynamic, false);
 				SET_NETWORK_ID_CAN_MIGRATE(OBJ_TO_NET(newEntity.Handle.Handle()), true);
 				GTAprop eo = newEntity.Handle;
 
@@ -653,8 +659,8 @@ namespace sub::Spooner
 				if (!wMovGrpStr.empty())
 					set_ped_weapon_movement_clipset(ep, wMovGrpStr);
 
-				ep.Position_set(origPed.Position_get());
-				ep.Rotation_set(origPed.Rotation_get());
+				ep.SetPosition(origPed.GetPosition());
+				ep.SetRotation(origPed.Rotation_get());
 				sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = sub::PedHeadFeatures_catind::vPedHeads[origPed.Handle()];
 				sub::PedDamageTextures_catind::vPedsAndDamagePacks[ep.Handle()] = sub::PedDamageTextures_catind::vPedsAndDamagePacks[origPed.Handle()];
 				sub::PedDecals_catind::vPedsAndDecals[ep.Handle()] = sub::PedDecals_catind::vPedsAndDecals[origPed.Handle()];
@@ -662,7 +668,7 @@ namespace sub::Spooner
 				//GTAped(newEntity.Handle).GiveWeaponsFromArray(weaponsBackup);
 				SET_NETWORK_ID_CAN_MIGRATE(ep.NetID(), true);
 				ep.BlockPermanentEvents_set(orig.IsStill);
-				SET_PED_CONFIG_FLAG(ep.Handle(), 223, GET_PED_CONFIG_FLAG(origPed.Handle(), 223, false));
+				SET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, GET_PED_CONFIG_FLAG(origPed.Handle(), ePedConfigFlags::_Shrink, false));
 
 				SET_PED_CAN_PLAY_AMBIENT_ANIMS(ep.Handle(), true);
 				SET_PED_CAN_PLAY_AMBIENT_BASE_ANIMS(ep.Handle(), true);
@@ -680,9 +686,9 @@ namespace sub::Spooner
 					ep.Task().PlayAnimation(orig.LastAnimation.dict, orig.LastAnimation.name);
 				}
 
-				const auto& facialMoodStr = get_ped_facial_mood(orig.Handle);
+				const auto& facialMoodStr = GetPedFacialMood(orig.Handle);
 				if (!facialMoodStr.empty())
-					set_ped_facial_mood(ep, facialMoodStr);
+					SetPedFacialMood(ep, facialMoodStr);
 
 				ep.Armour_set(origPed.Armour_get());
 				ep.Weapon_set(origPed.Weapon_get());
@@ -702,8 +708,8 @@ namespace sub::Spooner
 			{
 				//newEntity.Handle = World::CreateVehicle(orig.Handle.Model(), orig.Handle.Position_get(), orig.Handle.Rotation_get(), false);
 				newEntity.Handle = clone_vehicle(orig.Handle);
-				newEntity.Handle.Position_set(orig.Handle.Position_get());
-				newEntity.Handle.Rotation_set(orig.Handle.Rotation_get());
+				newEntity.Handle.SetPosition(orig.Handle.GetPosition());
+				newEntity.Handle.SetRotation(orig.Handle.Rotation_get());
 				SET_NETWORK_ID_CAN_MIGRATE(VEH_TO_NET(newEntity.Handle.Handle()), true);
 			}
 
@@ -714,14 +720,14 @@ namespace sub::Spooner
 			newEntity.Handle.SetVisible(orig.Handle.IsVisible());
 			newEntity.Handle.SetInvincible(orig.Handle.IsInvincible());
 			newEntity.Handle.SetBulletProof(orig.Handle.IsBulletProof());
-			newEntity.Handle.IsCollisionEnabled_set(orig.Handle.IsCollisionEnabled_get());
+			newEntity.Handle.SetIsCollisionEnabled(orig.Handle.GetIsCollisionEnabled());
 			newEntity.Handle.SetExplosionProof(orig.Handle.IsExplosionProof());
 			newEntity.Handle.SetFireProof(orig.Handle.IsFireProof());
 			newEntity.Handle.SetMeleeProof(orig.Handle.IsMeleeProof());
 			newEntity.Handle.SetOnlyDamagedByPlayer(orig.Handle.IsOnlyDamagedByPlayer());
 			newEntity.Handle.SetOnFire(orig.Handle.IsOnFire());
 			newEntity.Handle.Alpha_set(orig.Handle.Alpha_get());
-			newEntity.Handle.Health_set(orig.Handle.Health_get());
+			newEntity.Handle.Health_set(orig.Handle.GetHealth());
 
 			orig.Handle.MissionEntity_set(bOrigWasMissionEntity);
 
@@ -736,7 +742,7 @@ namespace sub::Spooner
 			}
 
 			// fx lops
-			for (auto& ptfxlop : sub::Ptfx_catind::_fxlops)
+			for (auto& ptfxlop : sub::Ptfx_catind::fxLops)
 			{
 				if (ptfxlop.entity == orig.Handle)
 				{
@@ -744,7 +750,7 @@ namespace sub::Spooner
 					newPtfxLop.entity = newEntity.Handle;
 					newPtfxLop.asset = ptfxlop.asset.c_str();
 					newPtfxLop.fx = ptfxlop.fx.c_str();
-					sub::Ptfx_catind::_fxlops.push_back(newPtfxLop);
+					sub::Ptfx_catind::fxLops.push_back(newPtfxLop);
 					break;
 				}
 			}
@@ -784,7 +790,7 @@ namespace sub::Spooner
 		void DetachEntity(SpoonerEntity& ent)
 		{
 			bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
-			bool bHasCollision = ent.Handle.IsCollisionEnabled_get();
+			bool bHasCollision = ent.Handle.GetIsCollisionEnabled();
 			if (isOnTheLine)
 				ent.Handle.RequestControl();
 			ent.Handle.Detach();
@@ -792,7 +798,7 @@ namespace sub::Spooner
 			ent.AttachmentArgs.boneIndex = 0;
 			ent.AttachmentArgs.offset.clear();
 			ent.AttachmentArgs.rotation.clear();
-			ent.Handle.IsCollisionEnabled_set(bHasCollision);
+			ent.Handle.SetIsCollisionEnabled(bHasCollision);
 
 			GTAentity attTo;
 			for (auto& e : Databases::EntityDb)
@@ -827,7 +833,7 @@ namespace sub::Spooner
 			if (ent.Handle.Handle() != to.Handle())
 			{
 				bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
-				bool bHasCollision = ent.Handle.IsCollisionEnabled_get();
+				bool bHasCollision = ent.Handle.GetIsCollisionEnabled();
 				bool wheelsAreInvis = are_vehicle_wheels_invisible(ent.Handle);
 				if (isOnTheLine)
 				{
@@ -843,7 +849,7 @@ namespace sub::Spooner
 				//ent.Handle.IsCollisionEnabled_set(bHasCollision);
 				SET_ENTITY_LIGHTS(ent.Handle.Handle(), 0);
 				if (wheelsAreInvis)
-					set_vehicle_wheels_invisible(ent.Handle, true);
+					SetVehicleWheelsInvisible(ent.Handle, true);
 			}
 		}
 		void AttachEntityInit(SpoonerEntity& ent, GTAentity to, bool bAttachWithRelativePosRot)
@@ -865,7 +871,7 @@ namespace sub::Spooner
 			DetachEntity(ent);
 			if (bAttachWithRelativePosRot)
 			{
-				AttachEntity(ent, to, 0, to.GetOffsetGivenWorldCoords(ent.Handle.Position_get()), ent.Handle.Rotation_get() - to.Rotation_get());
+				AttachEntity(ent, to, 0, to.GetOffsetGivenWorldCoords(ent.Handle.GetPosition()), ent.Handle.Rotation_get() - to.Rotation_get());
 			}
 			else
 			{
@@ -947,7 +953,7 @@ namespace sub::Spooner
 		{
 			if (ent.Exists())
 			{
-				const auto& soe_pos = ent.Position_get();
+				const auto& soe_pos = ent.GetPosition();
 				const auto& soe_md = ent.ModelDimensions();
 				const auto& markerPos = soe_pos + Vector3(0, 0, (std::max)(soe_md.Dim1.z, soe_md.Dim2.z) + 1.4f); // May not be at the right position if the entity is tilted
 				World::DrawMarker(MarkerType::UpsideDownCone, markerPos, Vector3(), Vector3(), Vector3(1, 1, 2), colour);

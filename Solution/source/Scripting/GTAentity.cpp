@@ -94,17 +94,23 @@ GTAblip GTAentity::CurrentBlip() const
 Vector3 GTAentity::ForwardVector() const
 {
 	//return GET_ENTITY_FORWARD_VECTOR(this->mHandle);
-	return GTAmemory::ReadVector3(this->MemoryAddress() + 0x70);
+	auto addr = this->MemoryAddress();
+	if (!addr) return Vector3();
+	return GTAmemory::ReadVector3(addr + 0x70);
 }
 Vector3 GTAentity::RightVector() const
 {
 	//return Vector3::Cross(ForwardVector(), Vector3::WorldUp());
-	return GTAmemory::ReadVector3(this->MemoryAddress() + 0x60);
+	auto addr = this->MemoryAddress();
+	if (!addr) return Vector3();
+	return GTAmemory::ReadVector3(addr + 0x60);
 }
 Vector3 GTAentity::UpVector() const
 {
 	//return Vector3::Cross(RightVector(), ForwardVector());
-	return GTAmemory::ReadVector3(this->MemoryAddress() + 0x80);
+	auto addr = this->MemoryAddress();
+	if (!addr) return Vector3();
+	return GTAmemory::ReadVector3(addr + 0x80);
 }
 
 bool GTAentity::IsPositionFrozen() const
@@ -144,7 +150,7 @@ void GTAentity::Heading_set(float value)
 	SET_ENTITY_HEADING(this->mHandle, value);
 }
 
-int GTAentity::Health_get() const
+int GTAentity::GetHealth() const
 {
 	return GET_ENTITY_HEALTH(this->mHandle);
 }
@@ -153,30 +159,46 @@ void GTAentity::Health_set(int value)
 	SET_ENTITY_HEALTH(this->mHandle, value, 0);
 }
 
+float GTAentity::Vehicle_engine_get() const
+{
+	if (!IsVehicle())
+		return -1.0f;
+
+	return GET_VEHICLE_ENGINE_HEALTH(this->mHandle);
+}
+
+void GTAentity::Vehicle_engine_set(float value)
+{
+	if (!IsVehicle())
+		return;
+
+	SET_VEHICLE_ENGINE_HEALTH(this->mHandle, value);
+}
+
 float GTAentity::HeightAboveGround() const
 {
 	return GET_ENTITY_HEIGHT_ABOVE_GROUND(this->mHandle);
 }
 float GTAentity::GetGroundZ() const
 {
-	Vector3 pos = this->Position_get();
+	Vector3 pos = this->GetPosition();
 	GET_GROUND_Z_FOR_3D_COORD(pos.x, pos.y, 1100.0f, &pos.z, 0, 0);
 	return pos.z;
 }
 void GTAentity::PlaceOnGround()
 {
-	Vector3 pos = this->Position_get();
+	Vector3 pos = this->GetPosition();
 
 	RaycastResult ray1 = RaycastResult::Raycast(pos, Vector3(0, 0, -1.0f), 10000.0f, IntersectOptions::Map);
 	if (ray1.DidHitAnything())
 	{
-		this->Position_set(ray1.HitCoords() + Vector3(0, 0, this->Dim1().z));
+		this->SetPosition(ray1.HitCoords() + Vector3(0, 0, this->Dim1().z));
 		return;
 	}
 	RaycastResult ray2 = RaycastResult::Raycast(pos, Vector3(0, 0, 1.0f), 10000.0f, IntersectOptions::Map);
 	if (ray2.DidHitAnything())
 	{
-		this->Position_set(ray2.HitCoords() + Vector3(0, 0, this->Dim1().z));
+		this->SetPosition(ray2.HitCoords() + Vector3(0, 0, this->Dim1().z));
 		return;
 	}
 
@@ -279,13 +301,39 @@ void GTAentity::SetVisible(bool value)
 	SET_ENTITY_VISIBLE(this->mHandle, value, false);
 }
 
-int GTAentity::MaxHealth_get() const
+int GTAentity::GetMaxHealth() const
 {
 	return GET_ENTITY_MAX_HEALTH(this->mHandle);
 }
 void GTAentity::MaxHealth_set(int value)
 {
 	SET_ENTITY_MAX_HEALTH(this->mHandle, value);
+}
+
+void GTAentity::SetLandingGear(bool deployed)
+{
+	if (!IsVehicle())
+		return;
+
+	int state = deployed ? 0 : 3;  // 0 = deployed, 3 = retracted
+	VEHICLE::CONTROL_LANDING_GEAR(this->GetHandle(), state);
+}
+
+int GTAentity::GetLandingGearState() const
+{
+	if (!IsVehicle())
+		return -1;
+
+	return VEHICLE::GET_LANDING_GEAR_STATE(this->GetHandle());
+}
+
+bool GTAentity::HasLandingGear() const
+{
+	if (!IsVehicle())
+		return false;
+
+	int state = VEHICLE::GET_LANDING_GEAR_STATE(this->mHandle);
+	return state >= 0 && state <= 3;
 }
 
 GTAmodel::Model GTAentity::Model() const
@@ -296,7 +344,7 @@ GTAmodel::ModelDimensions GTAentity::ModelDimensions() const
 {
 	return this->Model().Dimensions();
 }
-void GTAentity::ModelDimensions(Vector3 &dim1, Vector3 &dim2) const
+void GTAentity::ModelDimensions(Vector3& dim1, Vector3& dim2) const
 {
 	this->Model().Dimensions(dim1, dim2);
 }
@@ -310,11 +358,11 @@ Vector3 GTAentity::Dim2() const
 }
 
 
-Vector3 GTAentity::Position_get() const
+Vector3 GTAentity::GetPosition() const
 {
 	return GET_ENTITY_COORDS(this->mHandle, 1);
 }
-void GTAentity::Position_set(Vector3 value)
+void GTAentity::SetPosition(Vector3 value)
 {
 	SET_ENTITY_COORDS_NO_OFFSET(this->mHandle, value.x, value.y, value.z, 1, 1, 1);
 }
@@ -323,7 +371,7 @@ Vector3 GTAentity::Rotation_get() const
 {
 	return GET_ENTITY_ROTATION(this->mHandle, 2);
 }
-void GTAentity::Rotation_set(Vector3 value)
+void GTAentity::SetRotation(Vector3 value)
 {
 	SET_ENTITY_ROTATION(this->mHandle, value.x, value.y, value.z, 2, 1);
 }
@@ -351,7 +399,7 @@ Vector3 GTAentity::RotationVelocity_get() const
 {
 	return GET_ENTITY_ROTATION_VELOCITY(this->mHandle);
 }
-float GTAentity::Speed_get() const
+float GTAentity::GetSpeed() const
 {
 	return GET_ENTITY_SPEED(this->mHandle);
 }
@@ -370,7 +418,7 @@ int GTAentity::Alpha_get() const
 }
 void GTAentity::Alpha_set(int value)
 {
-	if(value == 255)
+	if (value == 255)
 		RESET_ENTITY_ALPHA(this->mHandle);
 	else
 		SET_ENTITY_ALPHA(this->mHandle, value, 0);
@@ -424,15 +472,39 @@ void GTAentity::HasCollisionWithEntity_set(const GTAentity& ent, bool value)
 {
 	SET_ENTITY_NO_COLLISION_ENTITY(this->mHandle, ent.mHandle, value);
 }
-bool GTAentity::IsCollisionEnabled_get() const
+bool GTAentity::GetIsCollisionEnabled() const
 {
 	return !GET_ENTITY_COLLISION_DISABLED(this->mHandle);
 }
-void GTAentity::IsCollisionEnabled_set(bool value)
+void GTAentity::SetIsCollisionEnabled(bool value)
 {
 	SET_ENTITY_COLLISION(this->mHandle, value, false);
 }
+void GTAentity::ToggleLandingGear()
+{
+	if (!IS_ENTITY_A_VEHICLE(this->mHandle))
+		return;
 
+	int currentState = GET_LANDING_GEAR_STATE(this->mHandle);
+
+	if (currentState == 0) // Deployed
+	{
+		// If in air, animate the retraction
+		if (IS_ENTITY_IN_AIR(this->mHandle))
+			CONTROL_LANDING_GEAR(this->mHandle, 1); // Retracting
+		else
+			CONTROL_LANDING_GEAR(this->mHandle, 3); // Snap to Retracted
+	}
+	else if (currentState == 3) // Retracted
+	{
+		// If in air, animate the deployment
+		if (IS_ENTITY_IN_AIR(this->mHandle))
+			CONTROL_LANDING_GEAR(this->mHandle, 2); // Deploying
+		else
+			CONTROL_LANDING_GEAR(this->mHandle, 0); // Snap to Deployed
+	}
+}
+// Very real chance this won't work, but this is the ability to toggle landing gear which I've been begging for, for a while.
 
 int GTAentity::NetID() const
 {
@@ -441,7 +513,7 @@ int GTAentity::NetID() const
 
 bool GTAentity::IsInRangeOf(Vector3 position, float range) const
 {
-	return ((Vector3::Subtract(this->Position_get(), position).Length()) < range);
+	return ((Vector3::Subtract(this->GetPosition(), position).Length()) < range);
 }
 bool GTAentity::IsInArea(Vector3 pos1, Vector3 pos2) const
 {
@@ -513,7 +585,7 @@ Vector3 GTAentity::GetOffsetFromBoneInWorldCoords(int boneIndex, const Vector3& 
 			const Vector3& front = Vector3(Addr[4], Addr[5], Addr[6]);
 			const Vector3& up = Vector3(Addr[8], Addr[9], Addr[10]);
 			const Vector3& boneOff = Vector3(Addr[12], Addr[13], Addr[14]);
-			const Vector3& vehOffset = boneOff + right*offset.x + front*offset.y + up*offset.z;
+			const Vector3& vehOffset = boneOff + right * offset.x + front * offset.y + up * offset.z;
 			return this->GetOffsetInWorldCoords(vehOffset);
 		}
 	}
@@ -577,7 +649,7 @@ void GTAentity::SetMass(float mass)
 void GTAentity::Oscillate(const Vector3& position, float angleFreq, float dampRatio)
 {
 	//Zorg93 - bring entity to position without lerp function using applyforce
-	this->ApplyForce(((position - this->Position_get()) * (angleFreq * angleFreq)) -
+	this->ApplyForce(((position - this->GetPosition()) * (angleFreq * angleFreq)) -
 		(2.0f * angleFreq * dampRatio * this->Velocity_get()) + Vector3(0.0f, 0.0f, 0.1f), ForceType::MaxForceRot2);
 }
 void OscillateEntity(GTAentity entity, const Vector3& position, float angleFreq, float dampRatio)
@@ -652,10 +724,11 @@ void GTAentity::Delete(bool tele)
 
 	if (tele) SET_ENTITY_COORDS_NO_OFFSET(this->mHandle, 32.2653f, 7683.5249f, 0.5696f, 0, 0, 0);
 
+	auto type = (EntityType)this->Type();
 	auto handle = this->mHandle;
 	this->mHandle = 0;
 
-	switch ((EntityType)this->Type())
+	switch (type)
 	{
 	case EntityType::PROP: DELETE_OBJECT(&handle); break;
 	case EntityType::VEHICLE: DELETE_VEHICLE(&handle); break;
@@ -813,5 +886,3 @@ void GTAentity::SetOnlyDamagedByPlayer(bool value)
 
 	SET_ENTITY_ONLY_DAMAGED_BY_PLAYER(this->mHandle, value);
 }
-
-

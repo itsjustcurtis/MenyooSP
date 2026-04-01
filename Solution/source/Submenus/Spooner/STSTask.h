@@ -130,7 +130,7 @@ namespace sub::Spooner
 
 		virtual void LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle);
 
-		// virual ctor and dtor k
+		virtual ~STSTask() = default;
 	};
 
 }

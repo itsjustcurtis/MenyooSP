@@ -13,20 +13,26 @@
 *.userosscache
 *.sln.docstates
 
+Solution/Menyoo.sln
+Solution/Menyoo.vcxproj.filters
+Solution/Menyoo.vcxproj
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
-[Rr]elease/
+/[Rr]elease/ 
+[Tt]mp/
 [Rr]eleases/
 x64/
 x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]in/
+Menyoo.asi
+Menyoo.map
 [Oo]bj/
 [Ll]og/
 

@@ -112,7 +112,8 @@ namespace sub::Spooner
 				this->duration = right->duration;
 				this->durationAfterLife = right->durationAfterLife;
 				this->isLoopedTask = right->isLoopedTask;
-			}	this->ImportTaskDataSpecific(right);
+				this->ImportTaskDataSpecific(right);
+			}
 		}
 	}
 

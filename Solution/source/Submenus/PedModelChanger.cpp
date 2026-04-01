@@ -17,6 +17,7 @@
 #include "..\Natives\natives2.h"
 #include "..\Scripting\Model.h"
 #include "..\Util\ExePath.h"
+#include "..\Util\FileLogger.h"
 #include "..\Util\StringManip.h"
 #include "..\Util\keyboard.h"
 #include "..\Scripting\Game.h"
@@ -33,6 +34,7 @@
 #include "..\Submenus\Spooner\Databases.h"
 #include "..\Submenus\Spooner\EntityManagement.h"
 #include "..\Submenus\Spooner\MenuOptions.h"
+#include "..\Submenus\Bodyguards\BodyguardSpawn.h"
 
 #include <string>
 #include <vector>
@@ -100,7 +102,7 @@ namespace sub
 		void ShowInstructionalButton(GTAmodel::Model model)
 		{
 			bool bIsAFav = IsPedAFavourite(model);
-			if (Menu::bit_controller)
+			if (Menu::bitController)
 			{
 				Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -170,11 +172,11 @@ namespace sub
 							}
 							else Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add ped model.");
 						}
-						else Game::Print::PrintError_InvalidInput();
+						else Game::Print::PrintErrorInvalidInput(customNameStr);
 					}
-					else Game::Print::PrintError_InvalidModel();
+					else Game::Print::PrintError_InvalidModel(hashNameStr);
 				}
-				else Game::Print::PrintError_InvalidInput();
+				else Game::Print::PrintErrorInvalidInput(hashNameStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouritePedModelEntryName, std::string(), 40U, "Enter model name (e.g. IG_BENNY):");
 			}
 
@@ -240,19 +242,19 @@ namespace sub
 				if (wasInVehicle)
 				{
 					vehicle = playerPed.CurrentVehicle();
-					currentVehSeat = playerPed.CurrentVehicleSeat_get();
+					currentVehSeat = playerPed.GetCurrentVehicleSeat();
 				}
 
-				bool bHasCollision = playerPed.IsCollisionEnabled_get();
+				bool bHasCollision = playerPed.GetIsCollisionEnabled();
 
 				SET_PLAYER_MODEL(PLAYER_ID(), model.hash);
 
 				playerPed = PLAYER_PED_ID();
 
-				playerPed.IsCollisionEnabled_set(bHasCollision);
+				playerPed.SetIsCollisionEnabled(bHasCollision);
 
-				//SET_PED_DEFAULT_COMPONENT_VARIATION(playerPed.Handle());
-				SET_PED_RANDOM_COMPONENT_VARIATION(playerPed.Handle(), 0);
+				SET_PED_DEFAULT_COMPONENT_VARIATION(playerPed.Handle());
+				//SET_PED_RANDOM_COMPONENT_VARIATION(playerPed.Handle(), 0);
 
 				model.Unload();
 
@@ -272,7 +274,7 @@ namespace sub
 				if (IS_WEAPON_VALID(currWeaponHash))
 					playerPed.Weapon_set(currWeaponHash);
 
-				SET_PED_INFINITE_AMMO_CLIP(playerPed.Handle(), bit_infinite_ammo);
+				SET_PED_INFINITE_AMMO_CLIP(playerPed.Handle(), bitInfiniteAmmo);
 
 				if (spi >= 0)
 				{
@@ -285,7 +287,7 @@ namespace sub
 					spe.LastAnimation.dict.clear();
 					spe.LastAnimation.name.clear();
 					if (att.Exists() && spe.AttachmentArgs.isAttached)
-						spe.Handle.AttachTo(att, spe.AttachmentArgs.boneIndex, spe.Handle.IsCollisionEnabled_get(), spe.AttachmentArgs.offset, spe.AttachmentArgs.rotation);
+						spe.Handle.AttachTo(att, spe.AttachmentArgs.boneIndex, spe.Handle.GetIsCollisionEnabled(), spe.AttachmentArgs.offset, spe.AttachmentArgs.rotation);
 					spe.TaskSequence.Reset();
 					if (sub::Spooner::SelectedEntity.Handle.Equals(oldPlayerPed))
 					{
@@ -304,26 +306,27 @@ namespace sub
 			}
 		}
 	}
-	void AddmodelchangerOption_(const std::string& text, const GTAmodel::Model& model)
+	void AddmodelchangerOption_(const std::string& text, const GTAmodel::Model& model, int tickTrue)
 	{
 		const GTAped& ped = Game::PlayerPed();
 		const Model& pedModel = ped.Model();
 
 		bool pressed = false;
-		AddTickol(text, model.Equals(pedModel), pressed, pressed); if (pressed)
+		AddTickol(text, model.Equals(pedModel), pressed, pressed, static_cast<TICKOL>(tickTrue)); if (pressed)
 		{
-			PTFX::trigger_ptfx_1("scr_solomon3", "scr_trev4_747_blood_impact", 0, ped.GetOffsetInWorldCoords(0.37, -0.32f, -1.32f), Vector3(90.0f, 0, 0), 0.7f);
+			PTFX::TriggerPTFX("scr_solomon3", "scr_trev4_747_blood_impact", 0, ped.GetOffsetInWorldCoords(0.37, -0.32f, -1.32f), Vector3(90.0f, 0, 0), 0.7f);
 			ChangeModel_(model);
+			addlog(ige::LogType::LOG_TRACE, "Changed model to: " + text);
 		}
 	}
-	void AddmodelOption_(const std::string& text, const GTAmodel::Model& model, bool *extra_option_code)
+	void AddmodelOption_(const std::string& text, const GTAmodel::Model& model, bool* extra_option_code, int tickTrue)
 	{
 		if (model.IsInCdImage())
 		{
 			switch (Menu::currentsub_ar[Menu::currentsub_ar_index])
 			{
 			case SUB::MODELCHANGER:
-				AddmodelchangerOption_(text, model.hash);
+				AddmodelchangerOption_(text, model.hash, tickTrue);
 				break;
 			case SUB::PEDGUN_ALLPEDS:
 				AddpgunOption_(text, model.hash, extra_option_code);
@@ -331,25 +334,30 @@ namespace sub
 			case SUB::SPOONER_SPAWN_PED:
 				sub::Spooner::MenuOptions::AddOption_AddPed(text, model);
 				break;
+			case SUB::BODYGUARD_SPAWN:
+				sub::BodyguardMenu::BodyguardManagement::AddOption_BodyguardPed(text, model);
+
+				break;
 			}
 
 			if (*Menu::currentopATM == Menu::printingop)
 				PedFavourites_catind::ShowInstructionalButton(model);
 		}
 	}
-	
+
+	std::pair<std::string, std::string> rngped;
+
 	void ModelChanger_()
 	{
-		bool ModelChangerRandomPedVariation_ = 0,
-			ModelChangerInput_ = 0;
-		//	 ModelChangerVariationWarning_ = 0,
-		//	 ModelChangerSlendy_ = 0,
-		//	 ModelChanger_Animal = 0;
+		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger");
+		bool ModelChangerRandomPedVariation_ = 0, ModelChangerInput_ = 0;
+		rngped = { "", "" };
 
-		Static_241 = PLAYER_PED_ID();
+		g_Ped1 = PLAYER_PED_ID();
 		AddTitle("Model Changer");
 		AddOption("Randomize Ped Variation", ModelChangerRandomPedVariation_);
 		AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
+		AddOption("Player", null, nullFunc, SUB::MODELCHANGER_PLAYER);
 		AddOption("Animals", null, nullFunc, SUB::MODELCHANGER_ANIMAL);
 		AddOption("Ambient Females", null, nullFunc, SUB::MODELCHANGER_AMBFEMALES);
 		AddOption("Ambient Males", null, nullFunc, SUB::MODELCHANGER_AMBMALES);
@@ -365,10 +373,11 @@ namespace sub
 		AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
 		AddOption("~b~Input~s~ Model", ModelChangerInput_);
 
-
+		addlog(ige::LogType::LOG_TRACE, "Created ModelChanger Options");
 		if (ModelChangerRandomPedVariation_) {
-			SET_PED_RANDOM_COMPONENT_VARIATION(Static_241, 0);
-			SET_PED_RANDOM_PROPS(Static_241);
+			addlog(ige::LogType::LOG_TRACE, "Random Ped Selected");
+			SET_PED_RANDOM_COMPONENT_VARIATION(g_Ped1, 0);
+			SET_PED_RANDOM_PROPS(g_Ped1);
 			return;
 		}
 
@@ -380,29 +389,37 @@ namespace sub
 				if (model.IsInCdImage())
 					ChangeModel_(model);
 				else
-					Game::Print::PrintError_InvalidModel();
+					Game::Print::PrintError_InvalidModel(inputStr);
 				return;
 			}
-			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::ModelChangerInput, std::string(), 64U, "Enter ped model name (e.g. IG_BENNY):");
 		}
-
-		//if (ModelChangerVariationWarning_){
-		//	Game::Print::PrintBottomCentre("~r~Warning:~s~ Do not change ped variation.");
-		//	ModelChangerVariationWarning_ = false;
-		//}
-
-		//if (ModelChangerSlendy_){
-		//	SET_PED_COMPONENT_VARIATION(Static_241, 0, 0, 3, 0);
-		//	SET_PED_COMPONENT_VARIATION(Static_241, 0, 3, 3, 0);
-		//	ModelChangerSlendy_ = false;
-		//}
+	}
 
 
+	GTAmodel::Model ModelChanger_Random(std::vector<std::pair<std::string, std::string>> pedModels)
+	{
+		addlog(ige::LogType::LOG_TRACE, "Getting Random Ped Model");		
+		rngped = pedModels[std::rand() % pedModels.size()];
+		addlog(ige::LogType::LOG_TRACE, "Got Random Ped Model: " + rngped.first + ", " + rngped.second);
+		return rngped.first;
+	}
 
+	// I would really like this whole section to be refactored into one function - IJC
+	void ModelChanger_Player()
+	{
+		AddTitle("Player");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Player);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
+		for (auto& pmn : g_pedModels_Player)
+		{
+			AddmodelOption_(pmn.second, (pmn.first));
+		}
 	}
 	void ModelChanger_Animal()
 	{
 		AddTitle("Animals");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Animal);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Animal)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -411,6 +428,8 @@ namespace sub
 	void ModelChanger_AmbientFemale()
 	{
 		AddTitle("Ambient Females");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_AmbientFemale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_AmbientFemale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -419,6 +438,8 @@ namespace sub
 	void ModelChanger_AmbientMale()
 	{
 		AddTitle("Ambient Males");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_AmbientMale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_AmbientMale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -427,6 +448,8 @@ namespace sub
 	void ModelChanger_Cutscene()
 	{
 		AddTitle("Cutscene Models");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Cutscene);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Cutscene)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -435,6 +458,8 @@ namespace sub
 	void ModelChanger_GangFemale()
 	{
 		AddTitle("Gang Females");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_GangFemale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_GangFemale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -443,6 +468,8 @@ namespace sub
 	void ModelChanger_GangMale()
 	{
 		AddTitle("Gang Males");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_GangMale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_GangMale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -451,6 +478,8 @@ namespace sub
 	void ModelChanger_Story()
 	{
 		AddTitle("Story Models");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Story);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Story)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -459,6 +488,8 @@ namespace sub
 	void ModelChanger_Multiplayer()
 	{
 		AddTitle("Multiplayer Models");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Multiplayer);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Multiplayer)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -467,6 +498,8 @@ namespace sub
 	void ModelChanger_ScenarioFemale()
 	{
 		AddTitle("Scenario Females");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_ScenarioFemale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_ScenarioFemale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -475,6 +508,8 @@ namespace sub
 	void ModelChanger_ScenarioMale()
 	{
 		AddTitle("Scenario Males");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_ScenarioMale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_ScenarioMale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -483,6 +518,8 @@ namespace sub
 	void ModelChanger_Story_ScenarioFemale()
 	{
 		AddTitle("Story Scenario Females");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_StoryScenarioFemale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_StoryScenarioFemale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -491,6 +528,8 @@ namespace sub
 	void ModelChanger_Story_ScenarioMale()
 	{
 		AddTitle("Story Scenario Males");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_StoryScenarioMale);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_StoryScenarioMale)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -499,6 +538,8 @@ namespace sub
 	void ModelChanger_Others()
 	{
 		AddTitle("Others");
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") ModelChanger_Random(g_pedModels_Others);
+		AddmodelOption_("Random", rngped.first, nullptr, 0);
 		for (auto& pmn : g_pedModels_Others)
 		{
 			AddmodelOption_(pmn.second, (pmn.first));
@@ -507,4 +548,21 @@ namespace sub
 
 }
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(MODELCHANGER,                     sub::ModelChanger_)
+REGISTER_SUBMENU(MODELCHANGER_FAVOURITES,          sub::PedFavourites_catind::Sub_PedFavourites)
+REGISTER_SUBMENU(MODELCHANGER_PLAYER,              sub::ModelChanger_Player)
+REGISTER_SUBMENU(MODELCHANGER_ANIMAL,              sub::ModelChanger_Animal)
+REGISTER_SUBMENU(MODELCHANGER_AMBFEMALES,          sub::ModelChanger_AmbientFemale)
+REGISTER_SUBMENU(MODELCHANGER_AMBMALES,            sub::ModelChanger_AmbientMale)
+REGISTER_SUBMENU(MODELCHANGER_CS,                  sub::ModelChanger_Cutscene)
+REGISTER_SUBMENU(MODELCHANGER_GANGFEMALES,         sub::ModelChanger_GangFemale)
+REGISTER_SUBMENU(MODELCHANGER_GANGMALES,           sub::ModelChanger_GangMale)
+REGISTER_SUBMENU(MODELCHANGER_STORY,               sub::ModelChanger_Story)
+REGISTER_SUBMENU(MODELCHANGER_MP,                  sub::ModelChanger_Multiplayer)
+REGISTER_SUBMENU(MODELCHANGER_SCENARIOFEMALES,     sub::ModelChanger_ScenarioFemale)
+REGISTER_SUBMENU(MODELCHANGER_SCENARIOMALES,       sub::ModelChanger_ScenarioMale)
+REGISTER_SUBMENU(MODELCHANGER_ST_SCENARIOFEMALES,  sub::ModelChanger_Story_ScenarioFemale)
+REGISTER_SUBMENU(MODELCHANGER_ST_SCENARIOMALES,    sub::ModelChanger_Story_ScenarioMale)
+REGISTER_SUBMENU(MODELCHANGER_OTHERS,              sub::ModelChanger_Others)

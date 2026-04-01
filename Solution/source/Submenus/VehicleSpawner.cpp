@@ -47,11 +47,13 @@
 
 namespace sub
 {
+	Blip blip_g;
 	// Vehicle - spawn function
 	int FuncSpawnVehicle_(GTAmodel::Model model, GTAped ped, bool deleteOld, bool warpIntoVehicle)
 	{
 		Vehicle newcar = 0;
-
+		GTAentity selfPed = PLAYER_PED_ID();
+		Vector3 pedsCoords = selfPed.GetPosition();
 		Vector3 oldVelocity;
 		Vector3 Pos1, Pos2;
 		Vehicle oldcar = 0;
@@ -80,14 +82,14 @@ namespace sub
 			{
 				float spacing1 = Model(GET_ENTITY_MODEL(oldcar)).Dim1().y + model.Dim2().y + 1.0f;
 				if(deleteOld)
-					Pos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(oldcar, 0, 0, 0);
+					Pos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(oldcar, 0, 0, 0.5f);
 				else
-					Pos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(oldcar, 0, spacing1, 0);
+					Pos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(oldcar, 0, spacing1, 0.5f);
 			}
 			else
 				Pos1 = ped.GetOffsetInWorldCoords(Vector3());
 
-			PTFX::trigger_ptfx_1("proj_xmas_firework", "scr_firework_xmas_burst_rgw", 0, Pos1, Vector3(), 1.0f);
+			PTFX::TriggerPTFX("proj_xmas_firework", "scr_firework_xmas_burst_rgw", 0, Pos1, Vector3(), 1.0f);
 			//PTFX::trigger_ptfx_1("scr_fbi5a", "scr_fbi5_ped_water_splash", 0, Pos1, Vector3(), 1.5f);
 
 			newcar = CREATE_VEHICLE(model.hash, Pos1.x, Pos1.y, Pos1.z, ped.Heading_get(), 1, 1, 0);
@@ -95,32 +97,33 @@ namespace sub
 				
 			//if (!IS_ENTITY_IN_AIR(ped) && !IS_ENTITY_IN_WATER(ped)) SET_VEHICLE_ON_GROUND_PROPERLY(newcar, 0.0f);
 			
-			
-			SET_ENTITY_COLLISION(newcar, false, true);
+
 			SET_ENTITY_ALPHA(newcar, 0, false);
-			SET_VEHICLE_HAS_STRONG_AXLES(newcar, 1);
+			SET_ENTITY_COLLISION(newcar, false, true);
+			//SET_VEHICLE_HAS_STRONG_AXLES(newcar, 1);
 			SET_VEHICLE_DIRT_LEVEL(newcar, 0.0f);
-			SET_VEHICLE_ENVEFF_SCALE(newcar, 0.0f);
-			SET_ENTITY_AS_MISSION_ENTITY(newcar, 0, 1); //Fixes the despawning of MP onl;y cars after a couple of secs
+			//SET_VEHICLE_ENVEFF_SCALE(newcar, 0.0f);
+			//SET_ENTITY_AS_MISSION_ENTITY(newcar, 0, 1); //Fixes the despawning of MP onl;y cars after a couple of secs
 			//	SET_ENTITY_PROOFS(newcar, 1, 1, 1, 1, 1, 1, 1, 1);
 
-			int newnetid = VEH_TO_NET(newcar);
-			Game::RequestControlOfId(newnetid);
+			///int newnetid = VEH_TO_NET(newcar);
+			//Game::RequestControlOfId(newnetid);
 			//SET_NETWORK_ID_CAN_MIGRATE(newnetid, 1);
 			//SET_NETWORK_ID_EXISTS_ON_ALL_MACHINES(newnetid, 1);
 
 			if (oldcarBool && DOES_ENTITY_EXIST(oldcar))
 			{
 				GTAvehicle(newcar).RequestControl();
+				SET_VEHICLE_ENGINE_ON(newcar, oldCarOn, true, 0);
+				SET_ENTITY_COLLISION(newcar, true, true);
+				SET_VEHICLE_FORWARD_SPEED(newcar, abs(oldVelocity.y));
 				SET_ENTITY_VELOCITY(newcar, oldVelocity.x, oldVelocity.y, oldVelocity.z);
 				if (deleteOld)
 				{ 
-					FREEZE_ENTITY_POSITION(oldcar, true);
+					//FREEZE_ENTITY_POSITION(oldcar, true);
 					SET_ENTITY_COLLISION(oldcar, false, true);
 					SET_ENTITY_ALPHA(oldcar, 0, false);
 				}
-				SET_VEHICLE_ENGINE_ON(newcar, true, true, 0);
-				SET_ENTITY_COLLISION(newcar, true, true);
 				RESET_ENTITY_ALPHA(newcar);
 				if (warpIntoVehicle)
 				{
@@ -158,7 +161,7 @@ namespace sub
 					}
 					WAIT(0);
 					GTAvehicle(oldcar).RequestControl();
-					SET_ENTITY_AS_MISSION_ENTITY(oldcar, 0, 1);
+					//SET_ENTITY_AS_MISSION_ENTITY(oldcar, 0, 1);
 					SET_ENTITY_COORDS(oldcar, 32.2653f, 7683.5249f, 0.5696f, 0, 0, 0, 1);
 					DELETE_VEHICLE(&oldcar);
 				}
@@ -167,8 +170,8 @@ namespace sub
 			{
 				if (warpIntoVehicle)
 					SET_PED_INTO_VEHICLE(ped.Handle(), newcar, (int)GTAvehicle(newcar).FirstFreeSeat(SEAT_DRIVER));
-					SET_ENTITY_COLLISION(newcar, true, true);
-					RESET_ENTITY_ALPHA(newcar);
+				SET_ENTITY_COLLISION(newcar, true, true);
+				RESET_ENTITY_ALPHA(newcar);
 			}
 			//SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(newcar, 5);
 			//SET_VEHICLE_NUMBER_PLATE_TEXT(newcar, "MENYOO");
@@ -350,7 +353,6 @@ namespace sub
 			{ VEHICLE_WINDSOR, "lgm_dlc_luxe", "windsor" },
 			{ VEHICLE_BRAWLER, "lgm_dlc_luxe", "brawler" },
 			{ VEHICLE_VINDICATOR, "lgm_dlc_luxe", "vindicator" },
-			{ VEHICLE_CHINO, "lgm_dlc_luxe", "chino" },
 			{ VEHICLE_COQUETTE3, "lgm_dlc_luxe", "coquette3" },
 			{ VEHICLE_T20, "lgm_dlc_luxe", "t20" },
 
@@ -365,12 +367,14 @@ namespace sub
 
 			{ VEHICLE_AKUMA, "sssa_default", "akuma" },
 			{ VEHICLE_BALLER, "sssa_default", "baller2" },
+			{ VEHICLE_BALLER2, "sssa_default", "baller2" },
 			{ VEHICLE_BATI, "sssa_default", "bati" },
 			{ VEHICLE_BATI2, "sssa_default", "bati2" },
 			{ VEHICLE_BFINJECTION, "sssa_default", "bfinject" },
 			{ VEHICLE_BIFTA, "sssa_default", "bifta" },
 			{ VEHICLE_BISON, "sssa_default", "bison" },
 			{ VEHICLE_BLAZER, "sssa_default", "blazer" },
+			{ VEHICLE_BLAZER2, "candc_casinoheist", "blazer2" },
 			{ VEHICLE_BODHI2, "sssa_default", "bodhi2" },
 			{ VEHICLE_CAVALCADE, "sssa_default", "cavcade" },
 			{ VEHICLE_DILETTANTE, "sssa_default", "dilettan" },
@@ -439,6 +443,7 @@ namespace sub
 			{ VEHICLE_LANDSTALKER, "sssa_dlc_heist", "landstalker" },
 			{ VEHICLE_RUMPO, "sssa_dlc_heist", "rumpo" },
 			{ VEHICLE_SCHAFTER2, "sssa_dlc_heist", "schafter2" },
+			{ VEHICLE_SCHAFTER5, "sssa_dlc_heist", "schafter2" },
 			{ VEHICLE_SEMINOLE, "sssa_dlc_heist", "seminole" },
 			{ VEHICLE_SURGE, "sssa_dlc_heist", "surge" },
 
@@ -450,7 +455,6 @@ namespace sub
 			{ VEHICLE_PANTO, "sssa_dlc_hipster", "panto" },
 			{ VEHICLE_PICADOR, "sssa_dlc_hipster", "picador" },
 			{ VEHICLE_PIGALLE, "sssa_dlc_hipster", "pigalle" },
-			{ VEHICLE_PRIMO, "sssa_dlc_hipster", "primo" },
 			{ VEHICLE_REBEL2, "sssa_dlc_hipster", "rebel2" },
 			{ VEHICLE_REGINA, "sssa_dlc_hipster", "regina" },
 			{ VEHICLE_RHAPSODY, "sssa_dlc_hipster", "rhapsody" },
@@ -480,12 +484,12 @@ namespace sub
 			{ VEHICLE_BUCCANEER2, "lsc_default", "buccaneer2_b" },
 			{ VEHICLE_BUCCANEER, "lsc_default", "buccaneer2" },
 			{ VEHICLE_CHINO2, "lsc_default", "chino2_b" },
-			{ VEHICLE_CHINO, "lsc_default", "chino2" },
+			{ VEHICLE_CHINO, "lgm_dlc_luxe", "chino" },
 			{ VEHICLE_FACTION, "lsc_default", "faction2_a" },
 			{ VEHICLE_FACTION2, "lsc_default", "faction2_b" },
 			{ VEHICLE_MOONBEAM, "lsc_default", "moonbeam2_a" },
 			{ VEHICLE_MOONBEAM2, "lsc_default", "moonbeam2_b" },
-			{ VEHICLE_PRIMO, "lsc_default", "primo2_a" },
+			{ VEHICLE_PRIMO, "sssa_dlc_hipster", "primo" },
 			{ VEHICLE_PRIMO2, "lsc_default", "primo2_b" },
 			{ VEHICLE_VOODOO2, "lsc_default", "voodoo_a" },
 			{ VEHICLE_VOODOO, "lsc_default", "voodoo_b" },
@@ -498,7 +502,10 @@ namespace sub
 			{ VEHICLE_LIMO2, "candc_apartments", "limo2" },
 			{ VEHICLE_BALLER3, "lgm_dlc_apartments", "baller3" },
 			{ VEHICLE_BALLER4, "lgm_dlc_apartments", "baller4" },
+			{ VEHICLE_BALLER5, "lgm_dlc_apartments", "baller3" },
+			{ VEHICLE_BALLER6, "lgm_dlc_apartments", "baller4" },
 			{ VEHICLE_COG55, "lgm_dlc_apartments", "cog55" },
+			{ VEHICLE_COG552, "lgm_dlc_apartments", "cog55" },
 			{ VEHICLE_COGNOSCENTI, "lgm_dlc_apartments", "cognosc" },
 			{ VEHICLE_COGNOSCENTI2, "lgm_dlc_apartments", "cognosc" },
 			{ VEHICLE_MAMBA, "lgm_dlc_apartments", "mamba" },
@@ -512,18 +519,15 @@ namespace sub
 			{ VEHICLE_SULTANRS, "lsc_jan2016", "sultan2" },
 			{ VEHICLE_BTYPE3, "lgm_dlc_valentines2", "roosevelt2" },
 
-			//{ VEHICLE_FACTION, "lsc_lowrider2", "faction3_a" },
 			{ VEHICLE_FACTION3, "lsc_lowrider2", "faction3_b" },
-			//{ VEHICLE_MINIVAN, "lsc_lowrider2", "minivan2_a" },
 			{ VEHICLE_MINIVAN2, "lsc_lowrider2", "minivan2_b" },
 			{ VEHICLE_SABREGT, "lsc_lowrider2", "sabregt2_a" },
 			{ VEHICLE_SABREGT2, "lsc_lowrider2", "sabregt2_b" },
-			//{ VEHICLE_SLAMVAN, "lsc_lowrider2", "slamvan3_a" },
 			{ VEHICLE_SLAMVAN3, "lsc_lowrider2", "slamvan3_b" },
 			{ VEHICLE_TORNADO, "lsc_lowrider2", "tornado5_a" },
 			{ VEHICLE_TORNADO5, "lsc_lowrider2", "tornado5_b" },
-			//{ VEHICLE_VIRGO, "lsc_lowrider2", "virgo2_a" },
 			{ VEHICLE_VIRGO2, "lsc_lowrider2", "virgo2_b" },
+			{ VEHICLE_VIRGO3, "lsc_lowrider2", "virgo2_a" },
 
 			{ VEHICLE_BESTIAGTS, "lgm_dlc_executive1", "bestiagts" },
 			{ VEHICLE_FMJ, "lgm_dlc_executive1", "fmj" },
@@ -553,8 +557,8 @@ namespace sub
 			{ VEHICLE_OMNIS, "sssa_dlc_stunt", "omnis" },
 			{ VEHICLE_RALLYTRUCK, "sssa_dlc_stunt", "rallytruck" },
 			{ VEHICLE_TAMPA2, "sssa_dlc_stunt", "tampa2" },
-			{ VEHICLE_TROHPYTRUCK, "sssa_dlc_stunt", "trophy" },
-			{ VEHICLE_TROHPYTRUCK2, "sssa_dlc_stunt", "trophy2" },
+			{ VEHICLE_TROPHYTRUCK, "sssa_dlc_stunt", "trophy" },
+			{ VEHICLE_TROPHYTRUCK2, "sssa_dlc_stunt", "trophy2" },
 			{ VEHICLE_TROPOS, "sssa_dlc_stunt", "tropos" },
 
 			{ VEHICLE_HAKUCHOU2, "lgm_dlc_biker", "hakuchou2" },
@@ -568,7 +572,7 @@ namespace sub
 			{ VEHICLE_DEFILER, "sssa_dlc_biker", "defiler" },
 			{ VEHICLE_ESSKEY, "sssa_dlc_biker", "esskey" },
 			{ VEHICLE_FAGGIO3, "sssa_dlc_biker", "faggio3" },
-			{ VEHICLE_FAGGION, "sssa_dlc_biker", "faggion" },
+			{ VEHICLE_FAGGIO, "sssa_dlc_biker", "faggion" },
 			{ VEHICLE_MANCHEZ, "sssa_dlc_biker", "manchez" },
 			{ VEHICLE_NIGHTBLADE, "sssa_dlc_biker", "nightblade" },
 			{ VEHICLE_RATBIKE, "sssa_dlc_biker", "ratbike" },
@@ -587,7 +591,7 @@ namespace sub
 			{ VEHICLE_RUINER2, "candc_importexport", "ruiner2" },
 			{ VEHICLE_TECHNICAL2, "candc_importexport", "technical2" },
 			{ VEHICLE_VOLTIC2, "candc_importexport", "voltic2" },
-			{ VEHICLE_WASTLNDR, "candc_importexport", "wastlndr" },
+			{ VEHICLE_WASTELANDER, "candc_importexport", "wastlndr" },
 			{ VEHICLE_PENETRATOR, "lgm_dlc_importexport", "penetrator" },
 			{ VEHICLE_TEMPESTA, "lgm_dlc_importexport", "tempesta" },
 			//{ VEHICLE_COMET2, "lsc_dlc_import_export", "comet3_a" },
@@ -631,7 +635,6 @@ namespace sub
 			{ VEHICLE_XA21, "lgm_dlc_gunrunning", "xa21" },
 
 			{ VEHICLE_HAULER2, "candc_truck", "cab_0" },
-			{ VEHICLE_LAZER, "candc_smuggler", "lazer" },
 			{ VEHICLE_BOMBUSHKA, "candc_smuggler","bombushka" },
 			{ VEHICLE_HUNTER, "candc_smuggler","hunter" },
 			{ VEHICLE_LAZER , "candc_smuggler","lazer" },
@@ -669,7 +672,7 @@ namespace sub
 			{ VEHICLE_SENTINEL3, "sssa_dlc_xmas2017", "sentinel3" },
 			{ VEHICLE_STREITER, "sssa_dlc_xmas2017", "streiter" },
 			{ VEHICLE_YOSEMITE, "sssa_dlc_xmas2017", "yosemite" },
-			{ VEHICLE_AUTARCH, "sssa_dlc_xmas2017", "autarch" },
+			{ VEHICLE_AUTARCH, "lgm_dlc_xmas2017", "autarch" },
 			{ VEHICLE_COMET4, "lgm_dlc_xmas2017", "comet4" },
 			{ VEHICLE_COMET5, "lgm_dlc_xmas2017", "comet5" },
 			{ VEHICLE_GT500, "lgm_dlc_xmas2017", "gt500" },
@@ -706,6 +709,7 @@ namespace sub
 			{ VEHICLE_PBUS2, "sssa_dlc_battle", "pbus2" },
 			{ VEHICLE_PATRIOT, "sssa_dlc_battle", "patriot" },
 			{ VEHICLE_PATRIOT2, "sssa_dlc_battle", "patriot2" },
+			{ VEHICLE_FUTO, "sssa_dlc_battle", "futo" },
 			{ VEHICLE_TERBYTE, "candc_hacker", "banner0" },
 			{ VEHICLE_POUNDER2, "candc_battle", "pounder2" },
 			{ VEHICLE_MULE4, "candc_battle", "mule4" },
@@ -768,7 +772,272 @@ namespace sub
 			{ VEHICLE_ZR380, "mba_vehicles", "zr3801" },
 			{ VEHICLE_ZR3802, "mba_vehicles", "zr3802" },
 			{ VEHICLE_ZR3803, "mba_vehicles", "zr3803" },
+			
+			//The Diamond Casino and Resort
+			{ VEHICLE_DRAFTER, "lgm_dlc_vinewood", "drafter" },
+			{ VEHICLE_EMERUS, "lgm_dlc_vinewood", "emerus" },
+			{ VEHICLE_JUGULAR, "lgm_dlc_vinewood", "jugular" },
+			{ VEHICLE_KRIEGER, "lgm_dlc_vinewood", "krieger" },
+			{ VEHICLE_LOCUST, "lgm_dlc_vinewood", "locust" },
+			{ VEHICLE_NEO, "lgm_dlc_vinewood", "neo" },
+			{ VEHICLE_NOVAK, "lgm_dlc_vinewood", "novak" },
+			{ VEHICLE_PARAGON, "lgm_dlc_vinewood", "paragon" },
+			{ VEHICLE_PARAGON2, "lgm_dlc_vinewood", "paragon" },
+			{ VEHICLE_RROCKET, "lgm_dlc_vinewood", "rrocket" },
+			{ VEHICLE_S80, "lgm_dlc_vinewood", "s80" },
+			{ VEHICLE_THRAX, "lgm_dlc_vinewood", "thrax" },
+			{ VEHICLE_ZORRUSSO, "lgm_dlc_vinewood", "zorrusso" },
+			{ VEHICLE_CARACARA2, "sssa_dlc_vinewood", "caracara2" },
+			{ VEHICLE_DYNASTY, "sssa_dlc_vinewood", "dynasty" },
+			{ VEHICLE_GAUNTLET3, "sssa_dlc_vinewood", "gauntlet3" },
+			{ VEHICLE_GAUNTLET4, "sssa_dlc_vinewood", "gauntlet4" },
+			{ VEHICLE_HELLION, "sssa_dlc_vinewood", "hellion" },
+			{ VEHICLE_ISSI7, "sssa_dlc_vinewood", "issi7" },
+			{ VEHICLE_NEBULA, "sssa_dlc_vinewood", "nebula" },
+			{ VEHICLE_PEYOTE2, "sssa_dlc_vinewood", "peyote2" },
+			{ VEHICLE_ZION3, "sssa_dlc_vinewood", "zion3" },
 
+			//The Diamond Casino Heist
+			{ VEHICLE_JB7002, "candc_casinoheist", "jb7002" },
+			{ VEHICLE_MINITANK, "candc_casinoheist", "minitank" },
+			{ VEHICLE_ZHABA, "candc_casinoheist", "zhaba" },
+			{ VEHICLE_FORMULA, "lgm_dlc_casinoheist", "formula" },
+			{ VEHICLE_FORMULA2, "lgm_dlc_casinoheist", "formula2" },
+			{ VEHICLE_FURIA, "lgm_dlc_casinoheist", "furia" },
+			{ VEHICLE_IMORGON, "lgm_dlc_casinoheist", "imorgon" },
+			{ VEHICLE_KOMODA, "lgm_dlc_casinoheist", "komoda" },
+			{ VEHICLE_REBLA, "lgm_dlc_casinoheist", "rebla" },
+			{ VEHICLE_STRYDER, "lgm_dlc_casinoheist", "stryder" },
+			{ VEHICLE_VSTR, "lgm_dlc_casinoheist", "vstr" },
+			{ VEHICLE_ASBO, "sssa_dlc_casinoheist", "asbo" },
+			{ VEHICLE_EVERON, "sssa_dlc_casinoheist", "everon" },
+			{ VEHICLE_KANJO, "sssa_dlc_casinoheist", "kanjo" },
+			{ VEHICLE_OUTLAW, "sssa_dlc_casinoheist", "outlaw" },
+			{ VEHICLE_RETINUE2, "sssa_dlc_casinoheist", "retinue2" },
+			{ VEHICLE_SUGOI, "sssa_dlc_casinoheist", "sugoi" },
+			{ VEHICLE_SULTAN2, "sssa_dlc_casinoheist", "sultan2" },
+			{ VEHICLE_VAGRANT, "sssa_dlc_casinoheist", "vagrant" },
+			{ VEHICLE_YOSEMITE2, "sssa_dlc_casinoheist", "yosemite2" },
+
+			//Los Santos Summer Special DLC
+			{ VEHICLE_COQUETTE4, "lgm_dlc_summer2020", "coquette4" },
+			{ VEHICLE_OPENWHEEL1, "lgm_dlc_summer2020", "openwheel1" },
+			{ VEHICLE_OPENWHEEL2, "lgm_dlc_summer2020", "openwheel2" },
+			{ VEHICLE_TIGON, "lgm_dlc_summer2020", "tigon" },
+			{ VEHICLE_GAUNTLET5, "lsc_dlc_summer2020", "gauntlet3_b" },
+			{ VEHICLE_GLENDALE2, "lsc_dlc_summer2020", "glendale_b" },
+			{ VEHICLE_MANANA2, "lsc_dlc_summer2020", "manana_b" },
+			{ VEHICLE_PEYOTE3, "lsc_dlc_summer2020", "peyote_b" },
+			{ VEHICLE_YOSEMITE3, "lsc_dlc_summer2020", "yosemite_b" },
+			{ VEHICLE_YOUGA3, "lsc_dlc_summer2020", "youga2_b" },
+			{ VEHICLE_CLUB, "sssa_dlc_summer2020", "club" },
+			{ VEHICLE_DUKES3, "sssa_dlc_summer2020", "dukes3" },
+			{ VEHICLE_LANDSTALKER2, "sssa_dlc_summer2020", "landstlkr2" },
+			{ VEHICLE_PENUMBRA2, "sssa_dlc_summer2020", "penumbra2" },
+			{ VEHICLE_SEMINOLE2, "sssa_dlc_summer2020", "seminole2" },
+
+			//The Cayo Perico Heist
+			{ VEHICLE_KOSATKA, "candc_sub", "banner1" },
+			{ VEHICLE_ALKONOST, "candc_heist4", "alkonost" },
+			{ VEHICLE_ANNIHILATOR2, "candc_heist4", "annihlator2" },
+			{ VEHICLE_AVISA, "candc_heist4", "avisa" },
+			{ VEHICLE_DINGHY5, "candc_heist4", "dinghy5" },
+			{ VEHICLE_MANCHEZ2, "candc_heist4", "manchez2" },
+			{ VEHICLE_PATROLBOAT, "candc_heist4", "patrolboat" },
+			{ VEHICLE_SEASPARROW2, "candc_heist4", "sparrow3" },
+			{ VEHICLE_SEASPARROW3, "candc_heist4", "sparrow3" },
+			{ VEHICLE_SQUADDIE, "candc_heist4", "squaddie" },
+			{ VEHICLE_TOREADOR, "candc_heist4", "toreador" },
+			{ VEHICLE_VERUS, "candc_heist4", "verus" },
+			{ VEHICLE_VETIR, "candc_heist4", "vetir" },
+			{ VEHICLE_WINKY, "candc_heist4", "winky" },
+			{ VEHICLE_LONGFIN, "dock_dlc_heist4", "longfin" },
+			{ VEHICLE_ITALIRSX, "lgm_dlc_heist4", "italirsx" },
+			{ VEHICLE_BRIOSO2, "sssa_dlc_heist4", "brioso2" },
+			{ VEHICLE_SLAMTRUCK, "sssa_dlc_heist4", "slamtruck" },
+			{ VEHICLE_VETO, "sssa_dlc_heist4", "veto" },
+			{ VEHICLE_VETO2, "sssa_dlc_heist4", "veto2" },
+			{ VEHICLE_WEEVIL, "sssa_dlc_heist4", "weevil" },
+
+			//Los Santos Tuner
+			{ VEHICLE_COMET6, "lgm_dlc_tuner", "comet6" },
+			{ VEHICLE_CYPHER, "lgm_dlc_tuner", "cypher" },
+			{ VEHICLE_EUROS, "lgm_dlc_tuner", "euros" },
+			{ VEHICLE_GROWLER, "lgm_dlc_tuner", "growler" },
+			{ VEHICLE_JESTER4, "lgm_dlc_tuner", "jester4" },
+			{ VEHICLE_TAILGATER2, "lgm_dlc_tuner", "tailgater2" },
+			{ VEHICLE_VECTRE, "lgm_dlc_tuner", "vectre" },
+			{ VEHICLE_ZR350, "lgm_dlc_tuner", "zr350" },
+			{ VEHICLE_CALICO, "sssa_dlc_tuner", "calico" },
+			{ VEHICLE_DOMINATOR7, "sssa_dlc_tuner", "dominator7" },
+			{ VEHICLE_DOMINATOR8, "sssa_dlc_tuner", "dominator8" },
+			{ VEHICLE_FUTO2, "sssa_dlc_tuner", "futo2" },
+			{ VEHICLE_PREVION, "sssa_dlc_tuner", "previon" },
+			{ VEHICLE_REMUS, "sssa_dlc_tuner", "remus" },
+			{ VEHICLE_RT3000, "sssa_dlc_tuner", "rt3000" },
+			{ VEHICLE_SULTAN3, "sssa_dlc_tuner", "sultan3" },
+			{ VEHICLE_WARRENER2, "sssa_dlc_tuner", "warrener2" },
+			// { VEHICLE_FREIGHTCAR2, "ytd", "vehModel" },
+
+			//The Contract
+			{ VEHICLE_ASTRON, "lgm_dlc_security", "astron" },
+			{ VEHICLE_BALLER7, "lgm_dlc_security", "baller7" },
+			{ VEHICLE_CHAMPION, "lgm_dlc_security", "champion" },
+			{ VEHICLE_CINQUEMILA, "lgm_dlc_security", "cinquemila" },
+			{ VEHICLE_COMET7, "lgm_dlc_security", "comet7" },
+			{ VEHICLE_DEITY, "lgm_dlc_security", "deity" },
+			{ VEHICLE_IGNUS, "lgm_dlc_security", "ignus" },
+			{ VEHICLE_JUBILEE, "lgm_dlc_security", "jubilee" },
+			{ VEHICLE_REEVER, "lgm_dlc_security", "reever" },
+			{ VEHICLE_SHINOBI, "lgm_dlc_security", "shinobi" },
+			{ VEHICLE_ZENO, "lgm_dlc_security", "zeno" },
+			{ VEHICLE_BUFFALO4, "sssa_dlc_security", "buffalo4" },
+			{ VEHICLE_GRANGER2, "sssa_dlc_security", "granger2" },
+			{ VEHICLE_IWAGEN, "sssa_dlc_security", "iwagen" },
+			{ VEHICLE_PATRIOT3, "sssa_dlc_security", "patriot3" },
+			{ VEHICLE_MULE5, "candc_default", "mule3" },
+			// { VEHICLE_YOUGA4, "ytd", "vehModel" },
+
+			//The Criminal Enterprises
+			{ VEHICLE_CONADA, "elt_dlc_sum2", "conada" },
+			{ VEHICLE_BRIOSO3, "lsc_dlc_sum2", "brioso2_b" },
+			{ VEHICLE_SENTINEL4, "lsc_dlc_sum2", "sentinel3_b" },
+			{ VEHICLE_TENF, "lsc_dlc_sum2", "tenf" },
+			{ VEHICLE_TENF2, "lsc_dlc_sum2", "tenf_b" },
+			{ VEHICLE_WEEVIL2, "lsc_dlc_sum2", "weevil_b" },
+			{ VEHICLE_CORSITA, "lgm_dlc_sum2", "corsita" },
+			{ VEHICLE_LM87, "lgm_dlc_sum2", "lm87" },
+			{ VEHICLE_OMNISEGT, "lgm_dlc_sum2", "omnisegt" },
+			{ VEHICLE_SM722, "lgm_dlc_sum2", "sm722" },
+			{ VEHICLE_TORERO2, "lgm_dlc_sum2", "torero2" },
+			{ VEHICLE_DRAUGUR, "sssa_dlc_sum2", "draugur" },
+			{ VEHICLE_GREENWOOD, "sssa_dlc_sum2", "greenwood" },
+			{ VEHICLE_KANJOSJ, "sssa_dlc_sum2", "kanjosj" },
+			{ VEHICLE_POSTLUDE, "sssa_dlc_sum2", "postlude" },
+			{ VEHICLE_RHINEHART, "sssa_dlc_sum2", "rhinehart" },
+			{ VEHICLE_RUINER4, "sssa_dlc_sum2", "ruiner4" },
+			{ VEHICLE_VIGERO2, "sssa_dlc_sum2", "vigero2" },
+
+			//Los Santos Drug Wars
+			{ VEHICLE_BRICKADE2, "candc_xmas2022", "brickade2" },
+			{ VEHICLE_TAXI, "candc_xmas2022", "taxi" },
+			{ VEHICLE_BROADWAY, "lgm_dlc_xmas2022", "broadway" },
+			{ VEHICLE_ENTITY3, "lgm_dlc_xmas2022", "entity3" },
+			{ VEHICLE_PANTHERE, "lgm_dlc_xmas2022", "panthere" },
+			{ VEHICLE_POWERSURGE, "lgm_dlc_xmas2022", "powersurge" },
+			{ VEHICLE_R300, "lgm_dlc_xmas2022", "r300" },
+			{ VEHICLE_VIRTUE, "lgm_dlc_xmas2022", "virtue" },
+			{ VEHICLE_BOOR, "sssa_dlc_xmas2022", "boor" },
+			{ VEHICLE_EUDORA, "sssa_dlc_xmas2022", "eudora" },
+			{ VEHICLE_EVERON2, "sssa_dlc_xmas2022", "everon2" },
+			{ VEHICLE_ISSI8, "sssa_dlc_xmas2022", "issi8" },
+			{ VEHICLE_JOURNEY2, "sssa_dlc_xmas2022", "journey2" },
+			{ VEHICLE_SURFER3, "sssa_dlc_xmas2022", "surfer3" },
+			{ VEHICLE_TAHOMA, "sssa_dlc_xmas2022", "tahoma" },
+			{ VEHICLE_TULIP2, "sssa_dlc_xmas2022", "tulip2" },
+			{ VEHICLE_MANCHEZ3, "candc_heist4", "manchez2" },
+			// { VEHICLE_CARGOPLANE2, "ytd", "vehModel" },
+
+			//San Andreas Mercenaries
+			{ VEHICLE_CONADA2, "candc_2023_01", "conada2" },
+			{ VEHICLE_RAIJU, "candc_2023_01", "raiju" },
+			{ VEHICLE_STREAMER216, "candc_2023_01", "streamer216" },
+			{ VEHICLE_BUFFALO5, "lgm_dlc_2023_01", "buffalo5" },
+			{ VEHICLE_COUREUR, "lgm_dlc_2023_01", "coureur" },
+			{ VEHICLE_STINGERTT, "lgm_dlc_2023_01", "stingertt" },
+			{ VEHICLE_INDUCTOR, "pandm_dlc_2023_01", "inductor" },
+			{ VEHICLE_INDUCTOR2, "pandm_dlc_2023_01", "inductor2" },
+			{ VEHICLE_BRIGHAM, "sssa_dlc_2023_01", "brigham" },
+			{ VEHICLE_CLIQUE2, "sssa_dlc_2023_01", "clique2" },
+			{ VEHICLE_GAUNTLET6, "sssa_dlc_2023_01", "gauntlet6" },
+			{ VEHICLE_L35, "sssa_dlc_2023_01", "l35" },
+			{ VEHICLE_MONSTROCITI, "sssa_dlc_2023_01", "monstrociti" },
+			{ VEHICLE_RATEL, "sssa_dlc_2023_01", "ratel" },
+			// { VEHICLE_AVENGER3, "ytd", "vehModel" },
+			// { VEHICLE_AVENGER4, "ytd", "vehModel" },
+			// { VEHICLE_SPEEDO5, "ytd", "vehModel" },
+
+			//Chop Shop DLC
+			{ VEHICLE_BENSON2, "candc_2023_2", "benson2" },
+			{ VEHICLE_BOXVILLE6, "candc_2023_2", "boxville6" },
+			{ VEHICLE_POLGAUNTLET, "candc_2023_2", "polgauntlet" },
+			{ VEHICLE_POLICE4, "candc_2023_2", "police4" },
+			{ VEHICLE_POLICE5, "candc_2023_2", "police5" },
+			{ VEHICLE_PRANGER, "candc_2023_2", "pranger" },
+			{ VEHICLE_RIOT, "candc_2023_2", "riot" },
+			{ VEHICLE_ALEUTIAN, "lgm_dlc_2023_2", "aleutian" },
+			{ VEHICLE_BALLER8, "lgm_dlc_2023_2", "baller8" },
+			{ VEHICLE_TURISMO3, "lgm_dlc_2023_2", "turismo3" },
+			{ VEHICLE_ASTEROPE2, "sssa_dlc_2023_2", "asterope2" },
+			{ VEHICLE_CAVALCADE3, "sssa_dlc_2023_2", "cavalcade3" },
+			{ VEHICLE_DOMINATOR9, "sssa_dlc_2023_2", "dominator9" },
+			{ VEHICLE_DORADO, "sssa_dlc_2023_2", "dorado" },
+			{ VEHICLE_FR36, "sssa_dlc_2023_2", "fr36" },
+			{ VEHICLE_IMPALER5, "sssa_dlc_2023_2", "impaler5" },
+			{ VEHICLE_IMPALER6, "sssa_dlc_2023_2", "impaler6" },
+			{ VEHICLE_TERMINUS, "sssa_dlc_2023_2", "terminus" },
+			{ VEHICLE_VIGERO3, "sssa_dlc_2023_2", "vigero3" },
+			{ VEHICLE_VIVANITE, "sssa_dlc_2023_2", "vivanite" },
+			{ VEHICLE_DRIFTFR36, "sssa_dlc_2023_2", "fr36" },
+			{ VEHICLE_DRIFTEUROS, "lgm_dlc_tuner", "euros" },
+			{ VEHICLE_DRIFTJESTER, "lgm_dlc_tuner", "jester4" },
+			{ VEHICLE_DRIFTZR350, "lgm_dlc_tuner", "zr350" },
+			{ VEHICLE_DRIFTFUTO, "sssa_dlc_tuner", "futo2" },
+			{ VEHICLE_DRIFTREMUS, "sssa_dlc_tuner", "remus" },
+			{ VEHICLE_DRIFTTAMPA, "sssa_dlc_stunt", "tampa2" },
+			{ VEHICLE_PHANTOM4, "candc_importexport", "phantom2" },
+			{ VEHICLE_DRIFTYOSEMITE, "sssa_dlc_casinoheist", "yosemite2" },
+			// { VEHICLE_BOATTRAILER2, "ytd", "vehModel" },
+			// { VEHICLE_BOATTRAILER3, "ytd", "vehModel" },
+			// { VEHICLE_FREIGHT2, "ytd", "vehModel" },
+			// { VEHICLE_TOWTRUCK3, "ytd", "vehModel" },
+			// { VEHICLE_TOWTRUCK4, "ytd", "vehModel" },
+			// { VEHICLE_TRAILERS5, "ytd", "vehModel" },
+			// { VEHICLE_TVTRAILER2, "ytd", "vehModel" },
+
+			//Bottom Dollar Bounties DLC
+			{ VEHICLE_POLDOMINATOR10, "candc_dlc_2024_1", "poldom10" },
+			{ VEHICLE_POLDORADO, "candc_dlc_2024_1", "poldorado" },
+			{ VEHICLE_POLGREENWOOD, "candc_dlc_2024_1", "polgreenw" },
+			{ VEHICLE_POLIMPALER5, "candc_dlc_2024_1", "polimpaler5" },
+			{ VEHICLE_POLIMPALER6, "candc_dlc_2024_1", "polimpaler6" },
+			{ VEHICLE_COQUETTE5, "lgm_dlc_2024_1", "coquette5" },
+			{ VEHICLE_ENVISAGE, "lgm_dlc_2024_1", "envisage" },
+			{ VEHICLE_EUROSX32, "lgm_dlc_2024_1", "eurosx32" },
+			{ VEHICLE_NIOBE, "lgm_dlc_2024_1", "niobe" },
+			{ VEHICLE_PARAGON3, "lgm_dlc_2024_1", "paragon3" },
+			{ VEHICLE_PIPISTRELLO, "lgm_dlc_2024_1", "pipistrello" },
+			{ VEHICLE_CASTIGATOR, "sssa_dlc_2024_1", "castigator" },
+			{ VEHICLE_DOMINATOR10, "sssa_dlc_2024_1", "dominator10" },
+			{ VEHICLE_PIZZABOY, "sssa_dlc_2024_1", "pizzaboy" },
+			{ VEHICLE_VORSCHLAGHAMMER, "sssa_dlc_2024_1", "vorschlag" },
+			{ VEHICLE_YOSEMITE1500, "sssa_dlc_2024_1", "yosemite4" },
+			{ VEHICLE_DRIFTVORSCHLAG, "sssa_dlc_2024_1", "vorschlag" },
+			{ VEHICLE_DRIFTCYPHER, "lgm_dlc_tuner", "cypher" },
+			{ VEHICLE_DRIFTNEBULA, "sssa_dlc_vinewood", "nebula" },
+			{ VEHICLE_DRIFTSENTINEL, "lsc_dlc_sum2", "sentinel3_b" },
+			//{ VEHICLE_POLICET3, "ytd", "vehModel" },
+
+			//Agents of Sabotage
+			{ VEHICLE_BANSHEE3, "lgm_dlc_2024_2", "banshee3" },
+			{ VEHICLE_CARGOBOB5, "candc_dlc_2024_2", "cargobob5" },
+			{ VEHICLE_CHAVOSV6, "sssa_dlc_2024_2", "chavosv6" },
+			{ VEHICLE_COQUETTE6, "lgm_dlc_2024_2", "coquette6" },
+			{ VEHICLE_DRIFTCHEBUREK, "sssa_dlc_assault", "cheburek" },
+			{ VEHICLE_DRIFTFUTO2, "sssa_dlc_battle", "futo" },
+			{ VEHICLE_DRIFTJESTER3, "lgm_dlc_assault", "jester3" },
+			{ VEHICLE_DUSTER2, "elt_dlc_2024_2", "duster2" },
+			{ VEHICLE_FIREBOLT, "sssa_dlc_2024_2", "firebolt" },
+			// { VEHICLE_FREIGHTCAR3, "ytd", "vehModel" },
+			{ VEHICLE_JESTER5, "lgm_dlc_2024_2", "jester5" },
+			{ VEHICLE_POLCARACARA, "candc_dlc_2024_2", "polcaracar" },
+			{ VEHICLE_POLCOQUETTE4, "candc_dlc_2024_2", "polcoqutt4" },
+			{ VEHICLE_POLFACTION2, "candc_dlc_2024_2", "polfation2" },
+			{ VEHICLE_POLTERMINUS, "candc_dlc_2024_2", "polterminu" },
+			{ VEHICLE_URANUS, "sssa_dlc_2024_2", "uranus" },
+			// { VEHICLE_YOUGA5, "ytd", "vehModel" },
+			{ VEHICLE_TITAN2, "candc_dlc_2024_2", "titan2" },
+			{ VEHICLE_TACO, "candc_dlc_2024_2", "taco" },
 		};
 #pragma endregion
 		void PopulateVehicleBmps()
@@ -825,9 +1094,17 @@ namespace sub
 			}
 			else
 			{
-				Game::Print::setupdraw(0, Vector2(0, 0.185f), true, false, false);
+				Game::Print::SetupDraw(0, Vector2(0, 0.185f), true, false, false);
 				Game::Print::drawstring("No preview available", x_coord, y_coord - 0.0043f);
 			}
+		}
+		void DrawVehicleModelName(const GTAmodel::Model& vehModel)
+		{
+			FLOAT x_coord = menuPos.x + 0.25f;
+			FLOAT y_coord = OptionY + menuPos.y;
+
+			Game::Print::SetupDraw(font_selection, Vector2(0.0f, (font_options == 0? 0.33f:0.4f)), false, true, false, selectedtext,{0, x_coord});
+			Game::Print::drawstring("ModelName: " + vehModel.VehicleModelName(), 0, y_coord);
 		}
 
 		void AddvcatOption_(const std::string& text, UINT8 index, bool *extra_option_code)
@@ -835,6 +1112,7 @@ namespace sub
 			std::vector<Model>* tempvecp;
 			switch (index)
 			{
+			case OPENWHEEL:		tempvecp = &g_vehHashes_OPENWHEEL; break;
 			case SUPER:			tempvecp = &g_vehHashes_SUPER; break;
 			case SPORT:			tempvecp = &g_vehHashes_SPORT; break;
 			case SPORTSCLASSIC: tempvecp = &g_vehHashes_SPORTSCLASSIC; break;
@@ -844,11 +1122,8 @@ namespace sub
 			case SUV:			tempvecp = &g_vehHashes_SUV; break;
 			case SEDAN:			tempvecp = &g_vehHashes_SEDAN; break;
 			case COMPACT:		tempvecp = &g_vehHashes_COMPACT; break;
-			case PICKUP:		tempvecp = &g_vehHashes_PICKUP; break;
 			case VAN:			tempvecp = &g_vehHashes_VAN; break;
-			case TRUCK:			tempvecp = &g_vehHashes_TRUCK; break;
 			case SERVICE:		tempvecp = &g_vehHashes_SERVICE; break;
-			case TRAILER:		tempvecp = &g_vehHashes_TRAILER; break;
 			case TRAIN:			tempvecp = &g_vehHashes_TRAIN; break;
 			case EMERGENCY:		tempvecp = &g_vehHashes_EMERGENCY; break;
 			case MOTORCYCLE:	tempvecp = &g_vehHashes_MOTORCYCLE; break;
@@ -856,7 +1131,12 @@ namespace sub
 			case PLANE:			tempvecp = &g_vehHashes_PLANE; break;
 			case HELICOPTER:	tempvecp = &g_vehHashes_HELICOPTER; break;
 			case BOAT:			tempvecp = &g_vehHashes_BOAT; break;
+			case INDUSTRIAL:	tempvecp = &g_vehHashes_INDUSTRIAL; break;
+			case COMMERCIAL:	tempvecp = &g_vehHashes_COMMERCIAL; break;
+			case UTILITY:		tempvecp = &g_vehHashes_UTILITY; break;
+			case MILITARY:		tempvecp = &g_vehHashes_MILITARY; break;
 			case OTHER:			tempvecp = &g_vehHashes_OTHER; break;
+			case DRIFT:			tempvecp = &g_vehHashes_DRIFT; break;
 			}
 			if (tempvecp->empty())
 				return;
@@ -876,17 +1156,36 @@ namespace sub
 
 		void AddVSpawnOption_(const std::string& text, const GTAmodel::Model& vehModel, Ped ped)
 		{
+			Vector3 toBeNodeCoordinates = GTAped(ped).GetPosition();
 			bool pressed = false;
 			AddOption(text, pressed, nullFunc, -1, false, false); if (pressed)
 			{
-				Vehicle vehicle = FuncSpawnVehicle_(vehModel, ped, _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_autoSit);
+				Vehicle vehicle = FuncSpawnVehicle_(vehModel, ped, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
+				set_vehicle_max_upgrades(vehicle, g_spawnVehicleAutoUpgrade, g_spawnVehicleInvincible,
+					g_spawnVehiclePlateType, g_spawnVehiclePlateTexterValue == 0 ? g_spawnVehiclePlateText : "", g_spawnVehicleNeonToggle,
+					g_spawnVehicleNeonColor.R, g_spawnVehicleNeonColor.G, g_spawnVehicleNeonColor.B,
+					g_spawnVehiclePrimaryColor, g_spawnVehicleSecondaryColor);
+				if (g_addBlip)
+				{
+					blip_g = ADD_BLIP_FOR_ENTITY(vehicle);
+					HUD::SET_BLIP_SPRITE(blip_g, GetRandomSpriteId());
+					Game::Print::PrintBottomLeft("Added a blip.");
+				}
+				if (g_warpNear)
+				{
+					Vector3_t outPos;
 
-				set_vehicle_max_upgrades(vehicle, _globalSpawnVehicle_autoUpgrade, _globalSpawnVehicle_invincible,
-					_globalSpawnVehicle_plateType, _globalSpawnVehicle_plateTexter_value == 0 ? _globalSpawnVehicle_plateText : "", _globalSpawnVehicle_neonToggle,
-					_globalSpawnVehicle_neonCol.R, _globalSpawnVehicle_neonCol.G, _globalSpawnVehicle_neonCol.B,
-					_globalSpawnVehicle_PrimCol, _globalSpawnVehicle_SecCol);
+					for (int i = 1; i < 40; i++)
+					{
+						GET_NTH_CLOSEST_VEHICLE_NODE(toBeNodeCoordinates.x, toBeNodeCoordinates.y, toBeNodeCoordinates.z, i, &outPos, 1, 0x40400000, 0);
 
-				if (!NETWORK_IS_IN_SESSION() && !_globalSpawnVehicle_persistent)
+						if (!IS_POINT_OBSCURED_BY_A_MISSION_ENTITY(outPos.x, outPos.y, outPos.z, 5.0f, 5.0f, 5.0f, 0))
+						{
+							SET_ENTITY_COORDS(vehicle, outPos.x, outPos.y, outPos.z, 0, 0, 0, 0);
+						}
+					}
+				}
+				if (!NETWORK_IS_IN_SESSION() && !g_spawnVehiclePersistent)
 					SET_VEHICLE_AS_NO_LONGER_NEEDED(&vehicle);
 			}
 		}
@@ -907,9 +1206,11 @@ namespace sub
 		AddOption("Spawn Settings", null, nullFunc, SUB::SPAWNVEHICLE_OPTIONS);
 		AddOption("Saved Vehicles", null, nullFunc, SUB::VEHICLE_SAVER);
 		AddOption("Favourites", null, nullFunc, SUB::SPAWNVEHICLE_FAVOURITES);
+		//AddOption("DLC Vehicles", null, nullFunc, SUB::SPAWNVEHICLE_DLC_SELECTION);
 		AddOption("Funny Vehicles (Old)", null, nullFunc, SUB::FUNNYVEHICLES);
 
 		AddBreak("---Cars---");
+		AddvcatOption_("Open Wheel", OPENWHEEL);
 		AddvcatOption_("Super", SUPER);
 		AddvcatOption_("Sports", SPORT);
 		AddvcatOption_("Sports Classics", SPORTSCLASSIC);
@@ -919,17 +1220,19 @@ namespace sub
 		AddvcatOption_("SUVs", SUV);
 		AddvcatOption_("Sedans", SEDAN);
 		AddvcatOption_("Compacts", COMPACT);
+		AddvcatOption_("Drift", DRIFT);
 
 		AddBreak("---Industrial---");
-		AddvcatOption_("Pickups", PICKUP);
 		AddvcatOption_("Vans", VAN);
-		AddvcatOption_("Trucks", TRUCK);
 		AddvcatOption_("Services", SERVICE);
-		AddvcatOption_("Trailers", TRAILER);
+		AddvcatOption_("Industrial", INDUSTRIAL);
+		AddvcatOption_("Commercial", COMMERCIAL);
+		AddvcatOption_("Utility", UTILITY);
 		AddvcatOption_("Trains", TRAIN);
 
 		AddBreak("---Others---");
 		AddvcatOption_("Emergency", EMERGENCY);
+		AddvcatOption_("Military", MILITARY);
 		AddvcatOption_("Motorcycles", MOTORCYCLE);
 		AddvcatOption_("Bicycles", BICYCLE);
 		AddvcatOption_("Planes", PLANE);
@@ -943,7 +1246,7 @@ namespace sub
 		if (spnrandom || spawnvehicle_input)
 		{
 			Model model;
-			Ped ped = Static_241;
+			Ped ped = g_Ped1;
 
 			if (spnrandom)
 			{
@@ -962,17 +1265,17 @@ namespace sub
 
 			if (model.IsInCdImage() && model.IsVehicle())
 			{
-				Vehicle spawnedVehicle = FuncSpawnVehicle_(model, ped, _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_autoSit);
+				Vehicle spawnedVehicle = FuncSpawnVehicle_(model, ped, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
 
-				set_vehicle_max_upgrades(spawnedVehicle, _globalSpawnVehicle_autoUpgrade, _globalSpawnVehicle_invincible,
-					_globalSpawnVehicle_plateType, _globalSpawnVehicle_plateTexter_value == 0 ? _globalSpawnVehicle_plateText : "", _globalSpawnVehicle_neonToggle,
-					_globalSpawnVehicle_neonCol.R, _globalSpawnVehicle_neonCol.G, _globalSpawnVehicle_neonCol.B,
-					_globalSpawnVehicle_PrimCol, _globalSpawnVehicle_SecCol);
+				set_vehicle_max_upgrades(spawnedVehicle, g_spawnVehicleAutoUpgrade, g_spawnVehicleInvincible,
+					g_spawnVehiclePlateType, g_spawnVehiclePlateTexterValue == 0 ? g_spawnVehiclePlateText : "", g_spawnVehicleNeonToggle,
+					g_spawnVehicleNeonColor.R, g_spawnVehicleNeonColor.G, g_spawnVehicleNeonColor.B,
+					g_spawnVehiclePrimaryColor, g_spawnVehicleSecondaryColor);
 
-				if (!NETWORK_IS_IN_SESSION() && !_globalSpawnVehicle_persistent)
+				if (!NETWORK_IS_IN_SESSION() && !g_spawnVehiclePersistent)
 					SET_VEHICLE_AS_NO_LONGER_NEEDED(&spawnedVehicle);
 			}
-			else Game::Print::PrintError_InvalidModel();
+			else Game::Print::PrintError_InvalidModel(model.VehicleModelName());
 		}
 		/*if (spawnvehicle_input)
 		{
@@ -995,28 +1298,30 @@ namespace sub
 		bool veh_plate_plus = 0, veh_plate_minus = 0, veh_plate_text_set = 0, veh_plate_text_plus = 0, veh_plate_text_minus = 0,
 			set_mspaint_index_10 = 0, set_mspaint_index_11 = 0, set_rgbcarcol_index_9 = 0;
 
-		auto& plateTexter_value = _globalSpawnVehicle_plateTexter_value;
-		std::vector<std::string> plateTexter{ _globalSpawnVehicle_plateText, "Random" };
-		std::vector<std::string> ms_vPlateTypeNames{ "CMOD_PLA_0", "CMOD_PLA_4", "CMOD_PLA_3", "CMOD_PLA_1", "CMOD_PLA_2", "Yankton" }; // BOW1, YOBLA, YOBLU, BOW2, BOW3, YANKTON 
+		auto& plateTexter_value = g_spawnVehiclePlateTexterValue;
+		std::vector<std::string> plateTexter{ g_spawnVehiclePlateText, "Random" };
+		std::vector<std::string> ms_vPlateTypeNames{ "CMOD_PLA_0", "CMOD_PLA_4", "CMOD_PLA_3", "CMOD_PLA_1", "CMOD_PLA_2", "Yankton", "CMOD_PLA_6", "CMOD_PLA_7", "CMOD_PLA_8", "CMOD_PLA_9", "CMOD_PLA_10", "CMOD_PLA_11", "CMOD_PLA_12" }; // BOW1, YOBLA, YOBLU, BOW2, BOW3, YANKTON, ECOLA, LASVENTURAS, LIBERTYCITY, LSCARMEET, LSPOUNDERS, SPRUNK 
 
 		AddTitle("Spawn Settings");
-		AddToggle("Delete Old Vehicle", _globalSpawnVehicle_deleteOld);
-		AddToggle("Auto-Sit In Vehicle", _globalSpawnVehicle_autoSit);
-		AddToggle("Spawn Pre-Upgraded", _globalSpawnVehicle_autoUpgrade);
-		AddToggle("Spawn Invincible", _globalSpawnVehicle_invincible);
-		AddToggle("Spawn Persistent", _globalSpawnVehicle_persistent);
+		AddToggle("Delete Old Vehicle", g_spawnVehicleDeleteOld);
+		AddToggle("Auto-Sit In Vehicle", g_spawnVehicleAutoSit);
+		AddToggle("Add Blip For Spawned Vehicles", g_addBlip);
+		AddToggle("Spawn At Nearest Node", g_warpNear);
+		AddToggle("Spawn Pre-Upgraded", g_spawnVehicleAutoUpgrade);
+		AddToggle("Spawn Invincible", g_spawnVehicleInvincible);
+		AddToggle("Spawn Persistent", g_spawnVehiclePersistent);
 		AddOption("Primary Paint", set_mspaint_index_10, nullFunc, SUB::MSPAINTS2); // Primary Paint
 		AddOption("Secondary Paint", set_mspaint_index_11, nullFunc, SUB::MSPAINTS2); // Secondary Paint
 		AddBreak("---Neons---");
-		AddToggle("Toggle", _globalSpawnVehicle_neonToggle);
-		AddOption("RGB Colour", set_rgbcarcol_index_9, nullFunc, SUB::MSPAINTS_RGB); if (*Menu::currentopATM == Menu::printingop) Add_preset_colour_options_previews(_globalSpawnVehicle_neonCol);
+		AddToggle("Toggle", g_spawnVehicleNeonToggle);
+		AddOption("RGB Colour", set_rgbcarcol_index_9, nullFunc, SUB::MSPAINTS_RGB); if (*Menu::currentopATM == Menu::printingop) Add_preset_colour_options_previews(g_spawnVehicleNeonColor);
 
 		AddBreak("---Plate---");
-		AddTexter("Type", _globalSpawnVehicle_plateType, ms_vPlateTypeNames, null, veh_plate_plus, veh_plate_minus);
+		AddTexter("Type", g_spawnVehiclePlateType, ms_vPlateTypeNames, null, veh_plate_plus, veh_plate_minus);
 		AddTexter("Text", plateTexter_value, plateTexter, veh_plate_text_set, veh_plate_text_plus, veh_plate_text_minus);
 
 		AddBreak("---Previews---");
-		AddToggle("Enable Previews", _globalSpawnVehicle_drawBmps);
+		AddToggle("Enable Previews", g_spawnVehicleDrawBMPs);
 		bool bReloadPreviewsPressed = false;
 		AddOption("Reload Previews", bReloadPreviewsPressed); if (bReloadPreviewsPressed)
 		{
@@ -1024,12 +1329,12 @@ namespace sub
 			FolderPreviewBmps_catind::PopulateFolderBmps();
 		}
 
-		if (set_mspaint_index_10) ms_curr_paint_index = 10;
-		if (set_mspaint_index_11) ms_curr_paint_index = 11;
-		if (set_rgbcarcol_index_9) bit_MSPaints_RGB_mode = 9;
+		if (set_mspaint_index_10) msCurrentPaintIndex = 10;
+		if (set_mspaint_index_11) msCurrentPaintIndex = 11;
+		if (set_rgbcarcol_index_9) bitMSPaintsRGBMode = 9;
 
-		if (veh_plate_plus) { if (_globalSpawnVehicle_plateType < 5) _globalSpawnVehicle_plateType++; return; }
-		if (veh_plate_minus) { if (_globalSpawnVehicle_plateType > 0) _globalSpawnVehicle_plateType--; return; }
+		if (veh_plate_plus) { if (g_spawnVehiclePlateType < (INT)(ms_vPlateTypeNames.size() - 1)) g_spawnVehiclePlateType++; return; }
+		if (veh_plate_minus) { if (g_spawnVehiclePlateType > 0) g_spawnVehiclePlateType--; return; }
 
 		if (veh_plate_text_plus) { if (plateTexter_value < 1) plateTexter_value++; return; }
 		if (veh_plate_text_minus) { if (plateTexter_value > 0) plateTexter_value--; return; }
@@ -1039,11 +1344,11 @@ namespace sub
 			switch (plateTexter_value)
 			{
 			case 0:
-				std::string inputStr = Game::InputBox("", 9U, "CMOD_MOD_18_D", _globalSpawnVehicle_plateText);
+				std::string inputStr = Game::InputBox("", 9U, "CMOD_MOD_18_D", g_spawnVehiclePlateText);
 				if (inputStr.length() > 0 && inputStr.length() <= 8)
-					_globalSpawnVehicle_plateText = inputStr;
+					g_spawnVehiclePlateText = inputStr;
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::GSpawnVehiclePlateText, std::string(), 8U, "CMOD_MOD_18_D", _globalSpawnVehicle_plateText);
 				break;
 			}
@@ -1137,6 +1442,7 @@ namespace sub
 
 		switch (SpawnVehicle_index)
 		{
+		case OPENWHEEL:		tempvecp = &g_vehHashes_OPENWHEEL; break;
 		case SUPER:			tempvecp = &g_vehHashes_SUPER; break;
 		case SPORT:			tempvecp = &g_vehHashes_SPORT; break;
 		case SPORTSCLASSIC: tempvecp = &g_vehHashes_SPORTSCLASSIC; break;
@@ -1146,11 +1452,8 @@ namespace sub
 		case SUV:			tempvecp = &g_vehHashes_SUV; break;
 		case SEDAN:			tempvecp = &g_vehHashes_SEDAN; break;
 		case COMPACT:		tempvecp = &g_vehHashes_COMPACT; break;
-		case PICKUP:		tempvecp = &g_vehHashes_PICKUP; break;
 		case VAN:			tempvecp = &g_vehHashes_VAN; break;
-		case TRUCK:			tempvecp = &g_vehHashes_TRUCK; break;
 		case SERVICE:		tempvecp = &g_vehHashes_SERVICE; break;
-		case TRAILER:		tempvecp = &g_vehHashes_TRAILER; break;
 		case TRAIN:			tempvecp = &g_vehHashes_TRAIN; break;
 		case EMERGENCY:		tempvecp = &g_vehHashes_EMERGENCY; break;
 		case MOTORCYCLE:	tempvecp = &g_vehHashes_MOTORCYCLE; break;
@@ -1158,7 +1461,12 @@ namespace sub
 		case PLANE:			tempvecp = &g_vehHashes_PLANE; break;
 		case HELICOPTER:	tempvecp = &g_vehHashes_HELICOPTER; break;
 		case BOAT:			tempvecp = &g_vehHashes_BOAT; break;
+		case INDUSTRIAL:	tempvecp = &g_vehHashes_INDUSTRIAL; break;
+		case COMMERCIAL:	tempvecp = &g_vehHashes_COMMERCIAL; break;
+		case UTILITY:		tempvecp = &g_vehHashes_UTILITY; break;
+		case MILITARY:		tempvecp = &g_vehHashes_MILITARY; break;
 		case OTHER:			tempvecp = &g_vehHashes_OTHER; break;
+		case DRIFT:			tempvecp = &g_vehHashes_DRIFT; break;
 		}
 
 		//std::vector<std::string>&tempvecp2 = *tempvecp;
@@ -1182,7 +1490,7 @@ namespace sub
 				sub::Spooner::MenuOptions::AddOption_AddVehicle(vehModel.VehicleDisplayName(true), vehModel);
 				break;
 			case SUB::SPAWNVEHICLE:
-				AddVSpawnOption_(vehModel.VehicleDisplayName(true), vehModel, Static_241);
+				AddVSpawnOption_(vehModel.VehicleDisplayName(true), vehModel, g_Ped1);
 				break;
 
 			}
@@ -1196,11 +1504,11 @@ namespace sub
 				AddkgunOption_(vehModel.VehicleDisplayName(true), vehModel.hash, nullptr, false);
 				break;
 			case SUB::MSENGINESOUND:
-				AddTickol(vehModel.VehicleDisplayName(true), get_vehicle_engine_sound_name(Static_12) == vehModel.VehicleDisplayName(false), bSetEngSoundPressed, bSetEngSoundPressed); if (bSetEngSoundPressed)
+				AddTickol(vehModel.VehicleDisplayName(true), GetVehicleEngineSoundName(g_Ped4) == vehModel.VehicleDisplayName(false), bSetEngSoundPressed, bSetEngSoundPressed); if (bSetEngSoundPressed)
 				{
-					GTAvehicle veh12 = Static_12;
+					GTAvehicle veh12 = g_Ped4;
 					veh12.RequestControl(200);
-					set_vehicle_engine_sound_name(veh12, vehModel.VehicleDisplayName(false));
+					SetVehicleEngineSoundName(veh12, vehModel.VehicleDisplayName(false));
 				}
 				break;
 			}
@@ -1208,11 +1516,13 @@ namespace sub
 
 			if (Menu::printingop == *Menu::currentopATM)
 			{
-				if (_globalSpawnVehicle_drawBmps)
+				if (g_spawnVehicleDrawBMPs)
 					DrawVehicleBmp(vehModel);
+				
+				DrawVehicleModelName(vehModel);
 
 				bool bIsAFav = SpawnVehicle_IsVehicleModelAFavourite(vehModel);
-				if (Menu::bit_controller)
+				if (Menu::bitController)
 				{
 					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -1251,7 +1561,7 @@ namespace sub
 		auto& _searchStr = dict2;
 		using namespace SpawnVehicle_catind;
 
-		GTAped myPed = Static_241;
+		GTAped myPed = g_Ped1;
 		GTAvehicle myVehicle = myPed.CurrentVehicle();
 		bool bIsInVehicle = myVehicle.Exists();
 
@@ -1291,7 +1601,7 @@ namespace sub
 				}
 			}
 			else
-				Game::Print::PrintError_InvalidModel();
+				Game::Print::PrintError_InvalidModel(inputStrModel);
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteVehicleModelEntryName, std::string(), 28U, "Enter model name (e.g. adder):");
 		}
 
@@ -1312,7 +1622,7 @@ namespace sub
 					}
 					else Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add model.");
 				}
-				else Game::Print::PrintError_InvalidInput();
+				else Game::Print::PrintErrorInvalidInput(inputStrName);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteVehicleModelCurrent, std::string(), 28U, "Enter custom name:", myVehicleModel.VehicleDisplayName(true));
 				//OnscreenKeyboard::State::arg1._uint = myVehicleModel.hash;
 			}
@@ -1378,7 +1688,7 @@ namespace sub
 						sub::Spooner::MenuOptions::AddOption_AddVehicle(vehDisplayName, vehModel);
 						break;
 					case SUB::SPAWNVEHICLE:
-						AddVSpawnOption_(vehDisplayName, vehModel, Static_241);
+						AddVSpawnOption_(vehDisplayName, vehModel, g_Ped1);
 						break;
 					}
 					/// one submenu back >>>
@@ -1391,11 +1701,11 @@ namespace sub
 						AddkgunOption_(vehDisplayName, vehModel.hash, &null, false);
 						break;
 					case SUB::MSENGINESOUND:
-						AddTickol(vehDisplayName, get_vehicle_engine_sound_name(Static_12) == vehModel.VehicleDisplayName(false), bSetEngSoundPressed, bSetEngSoundPressed); if (bSetEngSoundPressed)
+						AddTickol(vehDisplayName, GetVehicleEngineSoundName(g_Ped4) == vehModel.VehicleDisplayName(false), bSetEngSoundPressed, bSetEngSoundPressed); if (bSetEngSoundPressed)
 						{
-							GTAvehicle veh12 = Static_12;
+							GTAvehicle veh12 = g_Ped4;
 							veh12.RequestControl(200);
-							set_vehicle_engine_sound_name(veh12, vehModel.VehicleDisplayName(false));
+							SetVehicleEngineSoundName(veh12, vehModel.VehicleDisplayName(false));
 						}
 						break;
 					}
@@ -1403,10 +1713,12 @@ namespace sub
 
 				if (Menu::printingop == *Menu::currentopATM)
 				{
-					if (_globalSpawnVehicle_drawBmps)
+					if (g_spawnVehicleDrawBMPs)
 						DrawVehicleBmp(vehModel);
 
-					if (Menu::bit_controller)
+					DrawVehicleModelName(vehModel);
+
+					if (Menu::bitController)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 
@@ -1439,7 +1751,508 @@ namespace sub
 		//if (Menu::currentop > Menu::printingop) Menu::Up();
 
 	}
+	//keeping this code, but purely for future reference, access in the menu has been blocked
+	const std::vector<std::string> CAPTIONS_CUNNINGSTUNTS{ "Nagasaki BF400", "Grotti Brioso R/A", "Vapid Desert Raid", "Emperor ETR1", "Western Gargoyle", "Obey Omnis", "Annis RE-7B", "Vapid Trophy Truck", "Lampadati Tropos Rallye", "Progen Tyrus", "Western Cliffhanger", "Ocelot Lynx", "Declasse Drift Tampa", "MTL Dune", "Vapid Contender" };
 
+	const std::vector<std::string> CAPTIONS_BIKERSUPDATE{ "LCC Avarus", "Nagasaki Chimera", "Shitzu Defiler", "Pegassi Faggio Mod", "Pegassi Faggio Sport", "Shitzu Hakuchou Drag Bike", "Maibatsu Manchez", "Western Nightblade", "Western Rat Bike", "Nagasaki Street Blazer", "Western Wolfsbane", "Western Zombie Bobber", "Western Zombie Chopper", "Western Daemon (Custom)", "BF Raptor", "Pegassi Vortex", "LCC Sanctus", "Declasse Tornado Rat Rod", "Nagasaki Shotaro", "Pegassi Esskey", "Bravado Youga Classic" };
+
+	const std::vector<std::string> CAPTIONS_IMPORTEXPORT{ "Brute Armored Boxville", "Nagasaki Blazer Aqua", "Principe Diabolus", "Principe Diabolus (Custom)", "Annis Elegy Retro (Custom)", "Ocelot Penetrator", "JoBuilt Phantom Wedge", "BF Ramp Buggy", "Coil Rocket Voltic", "Imponte Ruiner 2000", "Karin Technical Aqua", "Pegassi Tempesta", "MTL Wastelander", "Truffade Nero", "Truffade Nero Custom", "Pfister Comet Retro Custom", "Pegassi FCR 1000", "Pegassi FCR 1000 Custom", "Progen Itali GTB", "Progen Itali GTB Custom", "Dewbauchee Specter", "Dewbauchee Specter Custom" };
+
+	const std::vector<std::string> CAPTIONS_CUNNINGSTUNTS2{ "Progen GP1", "Hijak Ruston", "Pegassi Infernus Classic", "Grotti Turismo Classic", "Imponte Duke O'Death" };
+
+	const std::vector<std::string> CAPTIONS_GUNRUNNING{ "Vom Feuer Anti-Aircraft Trailer", "HVY APC Tank", "Nagasaki Caddy (Bunker)", "BF Dune FAV", "Bravado Half-track", "JoBuilt Hauler Custom", "Mobile Operations Center (Trailer)", "Pegassi Oppressor", "JoBuilt Phantom Custom", "Declasse Weaponized Tampa", "Dewbauchee Vagner", "Grotti Cheetah Classic", "Karin Technical Custom", "Pegassi Torero", "HVY Insurgent Pick-up Custom", "HVY Nightshark", "Ocelot XA-21", "Ocelot Ardent" };
+
+	const std::vector<std::string> CAPTIONS_SMUGGLERSRUN{ "Buckingham Alpha-Z1", "Nagasaki Havok", "LF-22 Starling", "Vapid Retinue", "Western Company Rogue", "Mammoth Tula", "Nagasaki Ultralight", "V-65 Molotok", "Grotti Visione", "Dewbauchee Rapid GT Classic", "RM-10 Bombushka", "Buckingham Howard NX-25", "Mammoth Mogul", "Buckingham Pyro", "Grotti Vigilante", "Western Company Seabreeze", "P-45 Nokota", "Coil Cyclone", "FH-1 Hunter", "JoBuilt P-996 LAZER" };
+
+	const std::vector<std::string> CAPTIONS_DOOMSDAYHEIST{ "Akula", "Mammoth Avenger", "HVY Barrage", "HVY Chernobog", "Pfister Comet Safari", "Imponte Deluxo", "Ocelot Pariah", "Coil Raiden", "RCV", "Vapid Riata", "Übermacht SC1", "Ocelot Stromberg", "Mammoth Thruster (Jetpack)", "TM-02 Khanjali Tank", "Volatol", "Declasse Yosemite", "Übermacht Sentinel Classic", "Benefactor Streiter", "Albany Hermes", "Overflod Autarch", "Annis Savestra", "ampadati Viseris", "Grotti GT500", "Übermacht Revolter", "Pfister Neon", "Canis Kamacho", "Vapid Hustler", "Karin 190z", "Pfister Comet SR" };
+
+	const std::vector<std::string> CAPTIONS_SOUTHERNSASPORTSERIES{ "Overflod Entity XXR", "Vulcar Fagaloa", "Vapid GB200", "Declasse Hotring Sabre", "Cheval Taipan", "Vapid Ellie", "Pegassi Tezeract", "Vapid Caracara", "Vapid Flash GT", "Weeny Issi Classic", "Sea Sparrow", "Vapid Dominator GTX", "Overflod Tyrant", "RUNE Cheburek", "Lampadati Michelli GT" };
+
+	const std::vector<std::string> CAPTIONS_AFTERHOURS{ "Festival Bus", "Dinka Jester Classic", "Maibatsu Mule Custom", "Mammoth Patriot Stretch", "MTL Pounder Custom", "Vapid Speedo Custom", "Ocelot Swinger", "Blimp", "Enus Stafford", "B-11 Strikeforce", "Benefactor Terrorbyte", "Pegassi Oppressor Mk II", "Declasse Scramjet", "HVY Menacer", "Canis Freecrawler" };
+
+	const std::vector<std::string> CAPTIONS_ARENAWAR{ "Benefactor Bruiser (Arena)", "Declasse Brutus (Arena)", "MTL Cerberus (Arena)", "Western Deathbike (Arena)", "Vapid Dominator (Arena)", "Declasse Impaler", "Declasse Impaler (Arena)", "Vapid Imperator (Arena)", "Weeny Issi (Arena)", "Bravado Sasquatch (Arena)", "HVY Scarab (Arena)", "Vapid Slamvan (Arena)", "Annis ZR380 (Arena)", "Pegassi Toros", "Vapid Clique", "Grotti Itali GTO", "Declasse Tulip", "Benefactor Schlagen GT", "RC Bandito", "Schyster Deviant", "Declasse Vamos", "Principe Deveste Eight" };
+
+	const std::vector<std::string> CAPTIONS_DIAMONDCASINO{ "Obey 8F Drafter", "Vapid Caracara 4x4", "Weeny Issi Sport", "Enus Paragon R", "Enus Paragon R (Armored)", "Annis S80RR", "Truffade Thrax", "Vysser Neo", "Bravado Gauntlet Classic", "Progen Emerus", "Vulcar Nebula Turbo", "Ocelot Locust", "Bravado Gauntlet Hellfire", "Benefactor Krieger", "Übermacht Zion Classic", "Annis Hellion", "Ocelot Jugular", "Weeny Dynasty", "Pegassi Zorrusso", "Western Rampant Rocket Tricycle", "Lampadati Novak", "Vapid Peyote Gasser" };
+
+	const std::vector<std::string> CAPTIONS_LSSUMMERSPECIAL{ "Imponte Beater Dukes", "Benefactor BR8 (Formula 1 Car)", "BF Club", "Invetero Coquette D10", "Declasse DR1 (IndyCar)", "Bravado Gauntlet Classic Custom", "Benefactor Glendale Custom", "Dundreary Landstalker XL", "Albany Manana Custom", "Maibatsu Penumbra FF", "Vapid Peyote Custom", "Canis Seminole Frontier", "Lampadati Tigon", "Declasse Yosemite Rancher", "Bravado Youga Classic 4x4" };
+
+	const std::vector<std::string> CAPTIONS_CAYOHEIST{ "Western Company Annihilator Stealth", "Kraken Submersibles Avisa", "RUNE Kosatka (Submarine HQ)", "Kurtz 31 Patrol Boat", "Shitzu Longfin", "RO-86 Alkonost", "Sparrow", "Pegassi Toreador", "Vapid Winky", "Dinka Veto Classic (Go-Kart)", "Dinka Veto Modern (Go-Kart)", "Grotti Itali RSX", "BF Weevil", "Grotti Brioso 300", "Maibatsu Manchez Scout", "Vapid Slamtruck", "Vetir", "Mammoth Squaddie", "Dinka Verus", "Nagasaki Weaponized Dinghy" };
+
+	const std::vector<std::string> CAPTIONS_LSTUNERS{ "Karin Calico GTF", "Vapid Dominator GTT", "Annis Euros", "Karin Futo GTX", "Dinka Jester RR", "Annis Remus", "Dinka RT3000", "Obey Tailgater S", "Vulcar Warrener HKR", "Annis ZR350", "Pfister Comet S2", "Vapid Dominator ASP", "Emperor Vectre", "Pfister Growler", "Karin Sultan RS Classic", "Übermacht Cypher", "Karin Previon" };
+
+	const std::vector<std::string> CAPTIONS_THECONTRACT{ "Pfister Astron", "Bravado Buffalo STX", "Dewbauchee Champion", "Lampadati Cinquemila", "Enus Deity", "Pegassi Ignus", "Enus Jubilee", "Vapid Youga Custom", "Overflod Zeno", "Gallivanter Baller ST", "Mammoth Patriot Mil-Spec", "Pfister Comet S2 Cabrio", "Nagasaki Shinobi", "Obey I-Wagen", "Declasse Granger 3600LX", "Western Reever" };
+
+	const std::vector<std::string> CAPTIONS_CRIMINALENTERPRISES{ "Obey 10F", "Obey 10F Widebody", "Grotti Brioso 300 Widebody", "Buckingham Conada", "Lampadati Corsita", "Declasse Draugur", "Bravado Greenwood", "Dinka Kanjo SJ", "Benefactor LM87", "Obey Omnis e-GT (Imani Tech)", "Dinka Postlude", "Übermacht Rhinehart", "Imponte Ruiner ZZ-8", "Übermacht Sentinel Classic Widebody", "Benefactor SM722", "Pegassi Torero XO", "Declasse Vigero ZX", "BF Weevil Custom", "Benefactor SM722", "Declasse Draugur", "Imponte Ruiner ZZ-8", "Grotti Brioso 300 Widebody", "Declasse Vigero ZX", "Dinka Postlude", "Dinka Kanjo SJ", "Obey 10F", "Übermacht Rhinehart", "BF Weevil Custom", "Obey 10F Widebody", "Übermacht Sentinel Classic Widebody" };
+
+	const std::vector<std::string> CAPTIONS_THECHOPSHOP{ "Vapid Aleutian", "Karin Asterope GZ", "Vapid Dominator GT", "Fathom FR36 (Drift Car)", "Declasse Impaler LX", "Brute Police Riot", "Vapid Police Stanier LE Cruiser", "Grotti Turismo Omaggio", "Vapid Unmarked Cruiser", "Declasse Vigero ZX Convertible (HSW Upgrade)", "Karin Vivanite", "Declasse Park Ranger", "Brute Boxville (LSDS)", "Bravado Dorado", "Albany Cavalcade XL", "Bravado Police Gauntlet Interceptor", "Declasse Impaler SZ", "Canis Terminus", "Gallivanter Baller ST-D", "Vapid Benson (Cluckin' Bell)" };
+
+	const std::vector<std::string> CAPTIONS_BOTTOMDOLLAR{ "Impaler LX Cruiser", "Dominator FX Cruiser", "Castigator", "Pipistrello", "Übermacht Niobe", "Paragon S", "Envisage", "Euros X32", "Coquette D1", "Dorado Cruiser", "Burrito (Bail Enforcement)", "Impaler SZ Cruiser", "Greenwood Cruiser", "Yosemite 1500", "Dominator FX", "Vorschlaghammer", "Pizza Boy" };
+
+
+	const std::vector<std::string> Captions_financeFelony = {
+	"Benefactor XLS",              // XLS
+	"Benefactor XLS (Armored)",    // XLS2
+	"Dewbauchee Seven-70",         // Seven-70
+	"Vapid FMJ",                   // FMJ
+	"Pegassi Reaper",              // Reaper
+	"Grotti Bestia GTS",           // Bestia GTS
+	"Enus Windsor Drop",           // Windsor2
+	"Buckingham Volatus",          // Volatus
+	"Buckingham Nimbus",           // Nimbus
+	"Nagasaki Tug",                // Tug
+	"MTL Brickade",                // Brickade
+	"Bravado Rumpo Custom",        // Rumpo3
+	"Ocelot Lynx",                 // Lynx
+	"Progen T20",                  // T20
+	"Western Company Cargobob",    // Cargobob2
+	"Western Company Cargobob3",   // Cargobob3
+	"Pegassi Zentorno",            // Zentorno
+	"Benefactor Schafter V12",     // Schafter3
+	"Benefactor Schafter V12 (Armored)", // Schafter4
+	};
+	const std::vector<std::string> VALUES_CUNNINGSTUNTS{ "bf400", "brioso", "trophytruck2", "sheava", "gargoyle", "omnis", "le7b", "trophytruck", "tropos", "tyrus", "cliffhanger", "lynx", "tampa2", "rallytruck", "contender" };
+
+	const std::vector<std::string> VALUES_BIKERSUPDATE{ "avarus", "chimera", "defiler", "faggio3", "faggio", "hakuchou2", "manchez", "nightblade", "ratbike", "blazer4", "wolfsbane", "zombiea", "zombieb", "daemon2", "raptor", "vortex", "sanctus", "tornado6", "shotaro", "esskey", "youga2" };
+
+	const std::vector<std::string> VALUES_IMPORTEXPORT{ "boxville5", "blazer5", "diablous", "diablous2", "elegy", "penetrator", "phantom2", "dune5", "voltic2", "ruiner2", "technical2", "tempesta", "wastelander", "nero", "nero2", "comet3", "fcr", "fcr2", "italigtb", "italigtb2", "specter", "specter2" };
+
+	const std::vector<std::string> VALUES_CUNNINGSTUNTS2{ "gp1", "ruston", "infernus2", "turismo2", "dukes2" };
+
+	const std::vector<std::string> VALUES_GUNRUNNING{ "trailersmall2", "apc", "caddy3", "dune3", "halftrack", "hauler2", "trailerlarge", "oppressor", "phantom3", "tampa3", "vagner", "cheetah2", "technical3", "torero", "insurgent3", "nightshark", "xa21", "ardent" };
+
+	const std::vector<std::string> VALUES_SMUGGLERSRUN{ "alphaz1", "havok", "starling", "retinue", "rogue", "tula", "microlight", "molotok", "visione", "rapidgt3", "bombushka", "howard", "mogul", "pyro", "vigilante", "seabreeze", "nokota", "cyclone", "hunter", "lazer" };
+
+	const std::vector<std::string> VALUES_DOOMSDAYHEIST{ "akula", "avenger", "barrage", "chernobog", "comet4", "deluxo", "pariah", "raiden", "riot2", "riata", "sc1", "stromberg", "thruster", "khanjali", "volatol", "yosemite", "sentinel3", "streiter", "hermes", "autarch", "savestra", "viseris", "gt500", "revolter", "neon", "kamacho", "hustler", "z190", "comet5" };
+
+	const std::vector<std::string> VALUES_SOUTHERNSASPORTSERIES{ "entity2", "fagaloa", "GB200", "hotring", "taipan", "ellie", "Tezeract", "caracara", "flashgt", "issi3", "seasparrow", "dominator3", "tyrant", "cheburek", "michelli" };
+
+	const std::vector<std::string> VALUES_AFTERHOURS{ "pbus2", "jester3", "mule4", "mule4", "pounder2", "speedo4", "swinger", "blimp3", "stafford", "strikeforce", "terbyte", "oppressor2", "scramjet", "menacer", "freecrawler" };
+
+	const std::vector<std::string> VALUES_ARENAWAR{ "bruiser", "brutus", "cerberus", "deathbike", "dominator4", "impaler", "impaler2", "imperator", "issi4", "monster3", "scarab", "slamvan4", "zr380", "toros", "clique", "italigto", "tulip", "schlagen", "rcbandito", "deviant", "vamos", "deveste" };
+
+	const std::vector<std::string> VALUES_DIAMONDCASINO{ "drafter", "caracara2", "issi7", "paragon", "paragon2", "s80", "thrax", "neo", "gauntlet3", "emerus", "nebula", "locust", "gauntlet4", "krieger", "zion3", "hellion", "jugular", "dynasty", "zorrusso", "rrocket", "novak", "peyote2" };
+
+	const std::vector<std::string> VALUES_LSSUMMERSPECIAL{ "dukes3", "openwheel1", "club", "coquette4", "openwheel2", "gauntlet5", "glendale2", "landstalker2", "manana2", "penumbra2", "peyote3", "seminole2", "tigon", "yosemite3", "youga3" };
+
+	const std::vector<std::string> VALUES_CAYOHEIST{ "annihilator2", "avisa", "kosatka", "patrolboat", "longfin", "alkonost", "seasparrow3", "toreador", "winky", "veto", "veto2", "italirsx", "weevil", "brioso2", "manchez2", "slamtruck", "vetir", "squaddie", "verus", "dinghy5" };
+
+	const std::vector<std::string> VALUES_LSTUNERS{ "calico", "dominator8", "drifteuros", "futo2", "driftjester", "driftremus", "rt3000", "tailgater2", "warrener2", "zr350", "comet6", "dominator7", "vectre", "growler", "sultan3", "cypher", "previon" };
+
+	const std::vector<std::string> VALUES_THECONTRACT{ "astron", "buffalo4", "champion", "cinquemila", "Deity", "Ignus", "jubilee", "youga4", "zeno", "baller7", "patriot3", "comet7", "shinobi", "iwagen", "granger2", "reever" };
+
+	const std::vector<std::string> VALUES_CRIMINALENTERPRISES{ "tenf", "tenf2", "brioso3", "conada", "corsita", "draugur", "greenwood", "kanjosj", "lm87", "omnisegt", "postlude", "rhinehart", "ruiner4", "sentinel4", "sm722", "torero2", "vigero2", "weevil2", "sm722", "draugur", "ruiner4", "brioso3", "vigero2", "postlude", "kanjosj", "tenf", "rhinehart", "weevil2", "tenf2", "sentinel4" };
+
+	const std::vector<std::string> VALUES_THECHOPSHOP{ "aleutian", "asterope2", "dominator9", "fr36", "impaler6", "riot", "police", "turismo3", "police4", "vigero3", "vivanite", "pranger", "boxville6", "dorado", "cavalcade3", "polgauntlet", "impaler5", "terminus", "baller8", "benson2" };
+
+	const std::vector<std::string> VALUES_BOTTOMDOLLAR{ "polimpaler6", "poldominator10", "castigator", "pipistrello", "niobe", "paragon3", "envisage", "eurosx32", "coquette5", "poldorado", "policet3", "polimpaler5", "polgreenwood", "yosemite1500", "dominator10", "vorschlaghammer", "pizzaboy" };
+	const std::vector<std::string> Values_financeFelony = {
+	"xls",          // XLS
+	"xls2",         // XLS2 (Armored)
+	"seven70",      // Seven-70
+	"fmj",          // FMJ
+	"reaper",       // Reaper
+	"bestiaGTS",    // Bestia GTS
+	"windsor2",     // Windsor Drop
+	"volatus",      // Volatus
+	"nimbus",       // Nimbus
+	"tug",          // Tug
+	"brickade",     // Brickade
+	"rumpo3",       // Rumpo Custom
+	"lynx",         // Lynx
+	"t20",          // T20
+	"cargobob2",    // Cargobob2
+	"cargobob3",    // Cargobob3
+	"zentorno",     // Zentorno
+	"schafter3",    // Schafter V12
+	"schafter4",    // Schafter V12 (Armored)
+	};
+	const std::vector<std::string> Captions_heistsDLC = {
+	"Karin Kuruma",
+	"Karin Kuruma (Armored)",
+	"Armored Boxville",
+	"Insurgent",
+	"Insurgent Pickup",
+	"Technical",
+	"Casco",
+	"Velum 5-Seater",
+	"Hydra",
+	"Savage",
+	"Valkyrie",
+	"Lectro",
+	"Dinghy 4-Seater"
+	};
+	const std::vector<std::string> Values_heistsDLC = {
+		"kuruma",
+		"kuruma2",
+		"boxville4",
+		"insurgent",
+		"insurgent2",
+		"technical",
+		"casco",
+		"velum2",
+		"hydra",
+		"savage",
+		"valkyrie",
+		"lectro",
+		"dinghy3"
+	};
+
+	const std::vector<std::string> CAPTIONS_AGENTS_OF_SABOTAGE = {
+		"Bravado Banshee GTS",
+		"Dinka Jester RR Widebody",
+		"Invetero Coquette D5",
+		"Futo",
+		"Vapid Firebolt ASP",
+		"Dinka Chavos V6",
+		"Vapid Uranus",
+		"Brute Taco Van",
+		"Buckingham DH7 Iron Mule",
+		"Canis Terminus Patrol",
+		"Invetero Coquette D10 Pursuit",
+		"Cheburek",
+		"Vapid Caracara Pursuit",
+		"Eberhard Titan 250D",
+		"Jester Classic"
+	};
+
+	const std::vector<std::string> VALUES_AGENTS_OF_SABOTAGE = {
+	"banshee3",
+	"jester4",
+	"coquette5",
+	"driftfuto2",
+	"firebolt",
+	"chavosv6",
+	"uranus",
+	"taco",
+	"cargobob5",
+	"polterminus",//ok
+	"polcoquette4",
+	"driftcheburek",
+	"polcaracara",
+	"titan2",
+	"driftjester3"
+	};
+
+	const std::vector<std::string> CAPTIONS_BEACH_BUM = {//done
+	"BF Bifta",
+	"Canis Kalahari",
+	"Bravado Paradise",
+	"Dinka Speeder"
+	};
+	const std::vector<std::string> VALUES_BEACH_BUM = {//done
+		"bifta",
+		"kalahari",
+		"paradise",
+		"speeder"
+	};
+
+	const std::vector<std::string> CAPTIONS_LOW_RIDERS = {//done
+	"Declasse Buccaneer",
+	"Declasse Primo",
+	"Imponte Chino",
+	"Willard Voodoo",
+	"Declasse Moonbeam",
+	"Declasse Faction"
+	};
+	const std::vector<std::string> VALUES_LOW_RIDERS = {//done
+		"buccaneer",
+		"primo",
+		"chino",
+		"voodoo",
+		"moonbeam",
+		"faction"
+	};
+	const std::vector<std::string> CAPTIONS_HIGH_LIFE_ILL_GOT_ONE = {//dome
+	"Enus Huntley S",
+	"Dewbauchee Massacro",
+	"Pegassi Zentorno",
+	"Pegassi Osiris",
+	"Benefactor Stirling GT",
+	"Progen T20"
+	};
+	const std::vector<std::string> VALUES_HIGH_LIFE_ILL_GOT_ONE = {//done
+		"huntley",
+		"massacro",
+		"zentorno",
+		"osiris",
+		"stirling",
+		"t20"
+	};
+
+	const std::vector<std::string> CAPTIONS_ILL_GOT_TWO = {//done
+	"Pegassi Osiris",
+	"Enus Windsor Drop",
+	"Benefactor Schafter LWB",
+	"Grotti Turismo R",
+	"Pegassi ZType",
+	"Coil Brawler",
+	"Progen T20",
+	"Invetero Coquette BlackFin",
+	"Vapid Chino",
+	"Dinka Vindicator",
+	"Lampadati Toro"
+	};
+	const std::vector<std::string> VALUES_ILL_GOT_TWO = {//done
+		"osiris",
+		"windsor2",
+		"schafter3",
+		"turismor",
+		"ztype",
+		"brawler",
+		"t20",
+		"coquette3",
+		"chino",
+		"vindicator",
+		"toro"
+	};
+
+	const std::vector<std::string> CAPTIONS_VALENTINES = {//done
+	"Albany Roosevelt"
+	};
+	const std::vector<std::string> VALUES_VALENTINES = {//done
+		"btype"
+	};
+
+	const std::vector<std::string> CAPTIONS_HIGH_LIFE = {//done
+	"Pegassi Zentorno",
+	"Dewbauchee Massacro",
+	"Enus Huntley S",
+	"Dinka Thrust"
+	};
+	const std::vector<std::string> VALUES_HIGH_LIFE = {//done
+		"zentorno",
+		"massacro",
+		"huntley",
+		"thrust"
+	};
+
+	const std::vector<std::string> CAPTIONS_NOT_HIPSTER = {//done
+	"Benefactor Glendale",
+	"Benefactor Panto",
+	"Bravado Rhapsody",
+	"Vapid Blade",
+	"Vapid Slamvan",
+	"Vulcar Warrener",
+	"Lampadati Pigalle"
+	};
+	const std::vector<std::string> VALUES_NOT_HIPSTER = {//done
+		"glendale",
+		"panto",
+		"rhapsody",
+		"blade",
+		"slamvan",
+		"warrener",
+		"pigalle"
+	};
+
+	const std::vector<std::string> CAPTIONS_INDEPENDENCE_DAY = {//dine
+	"Western Sovereign",
+	"Vapid Liberator"
+	};
+	const std::vector<std::string> VALUES_INDEPENDENCE_DAY = {//done
+		"sovereign",
+		"monster"
+	};
+
+	const std::vector<std::string> CAPTIONS_FLIGHT_SCHOOL = {//done
+	"Western Besra",
+	"Buckingham Miljet",
+	"Invetero Coquette Classic",
+	"Swift"
+	};
+	const std::vector<std::string> VALUES_FLIGHT_SCHOOL = {//done
+		"besra",
+		"miljet",
+		"coquette2",
+		"swift"
+	};
+
+	const std::vector<std::string> CAPTIONS_LAST_TEAM_STANDING = {//done
+	"Lampadati Furore GT",
+	"Shitzu Hakuchou",
+	"LCC Innovation"
+	};
+	const std::vector<std::string> VALUES_LAST_TEAM_STANDING = {//done
+		"furoregt",
+		"hakuchou",
+		"innovation"
+	};
+
+	const std::vector<std::string> CAPTIONS_FESTIVE_2014 = {//done
+	"Bravado Rat-Truck",
+	"Vapid Slamvan Custom",
+	"Dinka Jester Racecar",
+	"Dewbauchee Massacro Racecar"
+	};
+	const std::vector<std::string> VALUES_FESTIVE_2014 = {//done
+		"ratloader2",
+		"slamvan2",
+		"jester2",
+		"massacro2"
+	};
+
+	const std::vector<std::string> CAPTIONS_EXECUTIVES_CRIMINALS = {//done
+	"Bravado Banshee 900R",
+	"Albany Roosevelt Valor",
+	"Benefactor Schafter LWB",
+	"Benefactor Schafter V12",
+	"Benefactor Schafter V12 (Armored)",
+	"Enus Cognoscenti",
+	"Enus Cognoscenti (Armored)",
+	"Enus Cognoscenti 55",
+	"Enus Cognoscenti 55 (Armored)",
+	"Declasse Mamba",
+	"Imponte Nightshade",
+	"Bravado Verlierer"
+	};
+	const std::vector<std::string> VALUES_EXECUTIVES_CRIMINALS = {//done
+		"banshee2",
+		"btype3",
+		"schafter5",
+		"schafter3",
+		"schafter4",
+		"cognoscenti",
+		"cog552",
+		"cog55",
+		"cog552",
+		"mamba",
+		"nightshade",
+		"verlierer2"
+	};
+
+	struct VehicleDlcCategory {
+		std::string name;
+		std::vector<std::string> captions;
+		std::vector<std::string> values;
+	};
+
+	const std::vector<VehicleDlcCategory> VehicleDlcCategories = {
+		{ "Beach Bum", CAPTIONS_BEACH_BUM, VALUES_BEACH_BUM },
+		{ "Executives and Other Criminals", CAPTIONS_EXECUTIVES_CRIMINALS, VALUES_EXECUTIVES_CRIMINALS},
+		{ "Festive Surprise 2014", CAPTIONS_FESTIVE_2014, VALUES_FESTIVE_2014},
+		{ "Last Team Standing", CAPTIONS_LAST_TEAM_STANDING, VALUES_LAST_TEAM_STANDING},
+		{ "SA Flight School", CAPTIONS_FLIGHT_SCHOOL, VALUES_FLIGHT_SCHOOL},
+		{ "Independence Day", CAPTIONS_INDEPENDENCE_DAY, VALUES_INDEPENDENCE_DAY},
+		{ "I'm Not a Hipster", CAPTIONS_NOT_HIPSTER, VALUES_NOT_HIPSTER},
+		{ "High Life", CAPTIONS_HIGH_LIFE, VALUES_HIGH_LIFE},
+		{ "Valentine's Day Massacre", CAPTIONS_VALENTINES, VALUES_VALENTINES},
+		{ "Ill-Gotten Gains Part II", CAPTIONS_ILL_GOT_TWO, VALUES_ILL_GOT_TWO},
+		{ "Ill-Gotten Gains Part I", CAPTIONS_HIGH_LIFE_ILL_GOT_ONE, VALUES_HIGH_LIFE_ILL_GOT_ONE},
+		{ "Lowriders", CAPTIONS_LOW_RIDERS, VALUES_LOW_RIDERS},
+		{ "Finance & Felony", Captions_financeFelony, Values_financeFelony },
+		{ "Heists", Captions_heistsDLC, Values_heistsDLC },
+		{ "Cunning Stunts", CAPTIONS_CUNNINGSTUNTS, VALUES_CUNNINGSTUNTS },
+		{ "Bikers", CAPTIONS_BIKERSUPDATE, VALUES_BIKERSUPDATE },
+		{ "Import/Export", CAPTIONS_IMPORTEXPORT, VALUES_IMPORTEXPORT },
+		{ "Cunning Stunts 2", CAPTIONS_CUNNINGSTUNTS2, VALUES_CUNNINGSTUNTS2 },
+		{ "Smugglers Run", CAPTIONS_SMUGGLERSRUN, VALUES_SMUGGLERSRUN },
+		{ "Doomsday Heist", CAPTIONS_DOOMSDAYHEIST, VALUES_DOOMSDAYHEIST },
+		{ "Southern SA Series", CAPTIONS_SOUTHERNSASPORTSERIES, VALUES_SOUTHERNSASPORTSERIES },
+		{ "After Hours", CAPTIONS_AFTERHOURS, VALUES_AFTERHOURS },
+		{ "Arena War", CAPTIONS_ARENAWAR, VALUES_ARENAWAR },
+		{ "Diamond Casino", CAPTIONS_DIAMONDCASINO, VALUES_DIAMONDCASINO },
+		{ "LS Summer Special", CAPTIONS_LSSUMMERSPECIAL, VALUES_LSSUMMERSPECIAL },
+		{ "Cayo Heist", CAPTIONS_CAYOHEIST, VALUES_CAYOHEIST },
+		{ "LS Tuners", CAPTIONS_LSTUNERS, VALUES_LSTUNERS },
+		{ "The Contract", CAPTIONS_THECONTRACT, VALUES_THECONTRACT },
+		{ "Criminal Enterprises", CAPTIONS_CRIMINALENTERPRISES, VALUES_CRIMINALENTERPRISES },
+		{ "The Chop Shop", CAPTIONS_THECHOPSHOP, VALUES_THECHOPSHOP },
+		{ "Bottom Dollar", CAPTIONS_BOTTOMDOLLAR, VALUES_BOTTOMDOLLAR },
+		{ "Agents Of Sabotage", CAPTIONS_AGENTS_OF_SABOTAGE, VALUES_AGENTS_OF_SABOTAGE },
+	};
+
+	int vehDlcCatagoryId = 0;
+	int vehDlcIdToSpawn = 0;
+	void SpawnVehicle_DLC()
+	{
+		bool spawnVehicle = false;
+
+		if (vehDlcCatagoryId < 0 || vehDlcCatagoryId >= VehicleDlcCategories.size())
+		{
+			Game::Print::PrintBottomLeft("Invalid Category");
+			return;
+		}
+
+		const auto& selectedCategory = VehicleDlcCategories[vehDlcCatagoryId];
+
+		AddTitle(selectedCategory.name);
+
+		for (size_t i = 0; i < selectedCategory.captions.size(); ++i)
+		{
+			AddOption(selectedCategory.captions[i], spawnVehicle);
+
+			if (Menu::printingop == *Menu::currentopATM)
+				vehDlcIdToSpawn = static_cast<int>(i);
+
+			if (Menu::printingop == *Menu::currentopATM)
+			{
+
+				if (g_spawnVehicleDrawBMPs)
+					SpawnVehicle_catind::DrawVehicleBmp(selectedCategory.values[vehDlcIdToSpawn]);
+
+				const bool bIsAFav = SpawnVehicle_IsVehicleModelAFavourite(selectedCategory.values[vehDlcIdToSpawn]);
+
+				if (Menu::bitController)
+				{
+					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + std::string(" favourites"));
+
+					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
+					{
+						if (!bIsAFav)
+						{
+							SpawnVehicle_AddVehicleModelToFavourites(
+								selectedCategory.values[vehDlcIdToSpawn],
+								Game::InputBox("", 28U, "Enter custom name:",
+									GTAmodel::Model(selectedCategory.values[vehDlcIdToSpawn]).VehicleDisplayName(true)));
+						}
+						else
+						{
+							SpawnVehicle_RemoveVehicleModelFromFavourites(selectedCategory.values[vehDlcIdToSpawn]);
+						}
+					}
+				}
+				else
+				{
+					Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + std::string(" favourites"));
+
+					if (IsKeyJustUp(VirtualKey::B))
+					{
+						if (!bIsAFav)
+						{
+							SpawnVehicle_AddVehicleModelToFavourites(
+								selectedCategory.values[vehDlcIdToSpawn],
+								Game::InputBox("", 28U, "Enter custom name:",
+									GTAmodel::Model(selectedCategory.values[vehDlcIdToSpawn]).VehicleDisplayName(true)));
+						}
+						else
+						{
+							SpawnVehicle_RemoveVehicleModelFromFavourites(selectedCategory.values[vehDlcIdToSpawn]);
+						}
+					}
+				}
+			}
+		}
+
+		if (spawnVehicle)
+		{
+			FuncSpawnVehicle_(
+				selectedCategory.values[vehDlcIdToSpawn], g_Ped1, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
+		}
+	}
+
+	void SpawnVehicle_DLC_Selection()
+	{
+		AddTitle("DLC Vehicles");
+		for (size_t i = 0; i < VehicleDlcCategories.size(); ++i)
+		{
+			AddOption(VehicleDlcCategories[i].name, null, nullFunc, SUB::SPAWNVEHICLEDLC);
+
+			if (Menu::printingop == *Menu::currentopATM)
+			{
+				vehDlcCatagoryId = static_cast<int>(i);
+			}
+		}
+	}
 	// Vehicle saver
 
 	namespace VehicleSaver_catind
@@ -1533,16 +2346,16 @@ namespace sub
 			nodeVehicleStuff.append_child("NumberPlateIndex").text() = ev.NumberPlateTextIndex_get();
 			nodeVehicleStuff.append_child("WheelType").text() = ev.WheelType_get();
 			nodeVehicleStuff.append_child("WheelsInvisible").text() = are_vehicle_wheels_invisible(ev);
-			nodeVehicleStuff.append_child("EngineSoundName").text() = get_vehicle_engine_sound_name(ev).c_str();
+			nodeVehicleStuff.append_child("EngineSoundName").text() = GetVehicleEngineSoundName(ev).c_str();
 			nodeVehicleStuff.append_child("WindowTint").text() = ev.WindowTint_get();
 			nodeVehicleStuff.append_child("BulletProofTyres").text() = !ev.CanTyresBurst_get();
 			nodeVehicleStuff.append_child("DirtLevel").text() = ev.DirtLevel_get();
 			nodeVehicleStuff.append_child("PaintFade").text() = ev.PaintFade_get();
 			nodeVehicleStuff.append_child("RoofState").text() = (int)ev.RoofState_get();
 			nodeVehicleStuff.append_child("SirenActive").text() = ev.SirenActive_get();
-			nodeVehicleStuff.append_child("EngineOn").text() = ev.EngineRunning_get();
+			nodeVehicleStuff.append_child("EngineOn").text() = ev.GetEngineRunning();
 			nodeVehicleStuff.append_child("EngineHealth").text() = ev.EngineHealth_get();
-			nodeVehicleStuff.append_child("LightsOn").text() = ev.LightsOn_get();
+			nodeVehicleStuff.append_child("LightsOn").text() = ev.GetLightsOn();
 			nodeVehicleStuff.append_child("IsRadioLoud").text() = CAN_VEHICLE_RECEIVE_CB_RADIO(ev.Handle());// != 0;
 			nodeVehicleStuff.append_child("LockStatus").text() = (int)ev.LockStatus_get();
 
@@ -1604,10 +2417,10 @@ namespace sub
 			nodeVehicleTyresBursted.append_child("_8").text() = ev.IsTyreBursted(8);
 
 			// Multipliers
-			if (g_multList_rpm.count(ev.Handle())) nodeVehicleStuff.append_child("RpmMultiplier").text() = g_multList_rpm[ev.Handle()];
-			if (g_multList_torque.count(ev.Handle())) nodeVehicleStuff.append_child("TorqueMultiplier").text() = g_multList_torque[ev.Handle()];
-			if (g_multList_maxSpeed.count(ev.Handle())) nodeVehicleStuff.append_child("MaxSpeed").text() = g_multList_maxSpeed[ev.Handle()];
-			if (g_multList_headlights.count(ev.Handle())) nodeVehicleStuff.append_child("HeadlightIntensity").text() = g_multList_headlights[ev.Handle()];
+			if (g_multListRPM.count(ev.Handle())) nodeVehicleStuff.append_child("RpmMultiplier").text() = g_multListRPM[ev.Handle()];
+			if (g_multListTorque.count(ev.Handle())) nodeVehicleStuff.append_child("TorqueMultiplier").text() = g_multListTorque[ev.Handle()];
+			if (g_multListMaxSpeed.count(ev.Handle())) nodeVehicleStuff.append_child("MaxSpeed").text() = g_multListMaxSpeed[ev.Handle()];
+			if (g_multListHeadLights.count(ev.Handle())) nodeVehicleStuff.append_child("HeadlightIntensity").text() = g_multListHeadLights[ev.Handle()];
 
 			nodeVehicle.append_child("OpacityLevel").text() = ev.Alpha_get();
 			nodeVehicle.append_child("LodDistance").text() = ev.LodDistance_get();
@@ -1616,8 +2429,8 @@ namespace sub
 			{
 				nodeVehicle.append_child("IsDriverVisible").text() = driverPed.IsVisible();
 			}
-			nodeVehicle.append_child("MaxHealth").text() = ev.MaxHealth_get();
-			nodeVehicle.append_child("Health").text() = ev.Health_get();
+			nodeVehicle.append_child("MaxHealth").text() = ev.GetMaxHealth();
+			nodeVehicle.append_child("Health").text() = ev.GetHealth();
 
 			nodeVehicle.append_child("HasGravity").text() = ev.HasGravity_get();
 			nodeVehicle.append_child("IsOnFire").text() = ev.IsOnFire();
@@ -1661,12 +2474,12 @@ namespace sub
 			if (doc.save_file((const char*)filePath.c_str()))
 			{
 				Game::Print::PrintBottomLeft("File ~b~saved~s~.");
-				ige::myLog << ige::LogType::LOG_INFO << "Vehicle saved - " << eModel.VehicleDisplayName(false) << " in " << filePath;
+				addlog(ige::LogType::LOG_INFO,  "Vehicle saved - " + eModel.VehicleDisplayName(false) + " in " + filePath);
 			}
 			else
 			{
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
-				ige::myLog << ige::LogType::LOG_ERROR << "Unable to save vehicle.";
+				addlog(ige::LogType::LOG_ERROR,  "Unable to save vehicle.");
 			}
 		}
 		void VehSaver_ReadFromFile(std::string filePath, GTAentity ped)
@@ -1674,7 +2487,7 @@ namespace sub
 			pugi::xml_document doc;
 			if (doc.load_file((const char*)filePath.c_str()).status != pugi::status_ok)
 			{
-				ige::myLog << ige::LogType::LOG_ERROR << "Unable to load vehicle file " << filePath;
+				addlog(ige::LogType::LOG_ERROR,  "Unable to load vehicle file " + filePath);
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load file.");
 			}
 
@@ -1686,20 +2499,20 @@ namespace sub
 			Model eModel = nodeVehicle.child("ModelHash").text().as_uint();
 			if (!eModel.IsInCdImage())
 			{
-				Game::Print::PrintError_InvalidModel();
+				Game::Print::PrintError_InvalidModel(std::to_string(eModel.hash));
 				return;
 			}
 			eModel.Load();
 
-			GTAvehicle ev = FuncSpawnVehicle_(eModel, ped.Handle(), _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_autoSit); // spawn vehicle to commence customisation
+			GTAvehicle ev = FuncSpawnVehicle_(eModel, ped.Handle(), g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit); // spawn vehicle to commence customisation
 			if (ped.Handle() == myPed.Handle())
 			{
 				g_myVeh = ev.Handle();
-				g_myVeh_model = eModel;
+				g_myVehModel = eModel;
 				myVehicle = g_myVeh;
 			}
 			SET_VEHICLE_MOD_KIT(ev.Handle(), 0);
-			set_vehicle_max_upgrades(ev.Handle(), false, _globalSpawnVehicle_invincible, _globalSpawnVehicle_plateType);
+			set_vehicle_max_upgrades(ev.Handle(), false, g_spawnVehicleInvincible, g_spawnVehiclePlateType);
 
 			WAIT(100);
 
@@ -1762,9 +2575,9 @@ namespace sub
 			ev.PaintFade_set(nodeVehicleStuff.child("PaintFade").text().as_float());
 			ev.RoofState_set((VehicleRoofState)nodeVehicleStuff.child("RoofState").text().as_int());
 			ev.SirenActive_set(nodeVehicleStuff.child("SirenActive").text().as_bool());
-			if (nodeVehicleStuff.child("EngineOn")) ev.EngineRunning_set(nodeVehicleStuff.child("EngineOn").text().as_bool());
+			if (nodeVehicleStuff.child("EngineOn")) ev.SetEngineRunning(nodeVehicleStuff.child("EngineOn").text().as_bool());
 			if (nodeVehicleStuff.child("EngineHealth")) ev.EngineHealth_set(nodeVehicleStuff.child("EngineHealth").text().as_int());
-			if (nodeVehicleStuff.child("LightsOn")) ev.LightsOn_set(nodeVehicleStuff.child("LightsOn").text().as_bool());
+			if (nodeVehicleStuff.child("LightsOn")) ev.SetLightsOn(nodeVehicleStuff.child("LightsOn").text().as_bool());
 			if (nodeVehicleStuff.child("IsRadioLoud").text().as_int(0))
 			{
 				SET_VEHICLE_RADIO_LOUD(ev.Handle(), nodeVehicleStuff.child("IsRadioLoud").text().as_int());
@@ -1846,9 +2659,9 @@ namespace sub
 				if (nodeVehicleTyresBursted.child("_8").text().as_bool()) ev.BurstTyre(8);
 			}
 
-			if (nodeVehicleStuff.child("WheelsInvisible").text().as_bool()) set_vehicle_wheels_invisible(ev, true);
+			if (nodeVehicleStuff.child("WheelsInvisible").text().as_bool()) SetVehicleWheelsInvisible(ev, true);
 			std::string engSoundName = nodeVehicleStuff.child("EngineSoundName").text().as_string();
-			if (engSoundName.length()) set_vehicle_engine_sound_name(ev, engSoundName);
+			if (engSoundName.length()) SetVehicleEngineSoundName(ev, engSoundName);
 
 			// Multipliers
 			auto nodeVehicleRpmMultiplier = nodeVehicleStuff.child("RpmMultiplier");
@@ -1858,22 +2671,22 @@ namespace sub
 			if (nodeVehicleRpmMultiplier)
 			{
 				MODIFY_VEHICLE_TOP_SPEED(ev.Handle(), nodeVehicleRpmMultiplier.text().as_float());
-				g_multList_rpm[ev.Handle()] = nodeVehicleRpmMultiplier.text().as_float();
+				g_multListRPM[ev.Handle()] = nodeVehicleRpmMultiplier.text().as_float();
 			}
 			if (nodeVehicleTorqueMultiplier)
 			{
 				SET_VEHICLE_CHEAT_POWER_INCREASE(ev.Handle(), nodeVehicleTorqueMultiplier.text().as_float());
-				g_multList_torque[ev.Handle()] = nodeVehicleTorqueMultiplier.text().as_float();
+				g_multListTorque[ev.Handle()] = nodeVehicleTorqueMultiplier.text().as_float();
 			}
 			if (nodeVehicleMaxSpeed)
 			{
 				SET_ENTITY_MAX_SPEED(ev.Handle(), nodeVehicleMaxSpeed.text().as_float());
-				g_multList_maxSpeed[ev.Handle()] = nodeVehicleMaxSpeed.text().as_float();
+				g_multListMaxSpeed[ev.Handle()] = nodeVehicleMaxSpeed.text().as_float();
 			}
 			if (nodeVehicleHeadlightIntensity)
 			{
 				SET_VEHICLE_LIGHT_MULTIPLIER(ev.Handle(), nodeVehicleHeadlightIntensity.text().as_float());
-				g_multList_headlights[ev.Handle()] = nodeVehicleHeadlightIntensity.text().as_float();
+				g_multListHeadLights[ev.Handle()] = nodeVehicleHeadlightIntensity.text().as_float();
 			}
 
 			int opacityLevel = nodeVehicle.child("OpacityLevel").text().as_int();
@@ -1911,7 +2724,7 @@ namespace sub
 			ev.SetOnFire(nodeVehicle.child("IsOnFire").text().as_bool());
 			ev.SetInvincible(nodeVehicle.child("IsInvincible").text().as_bool());
 			ev.SetBulletProof(nodeVehicle.child("IsBulletProof").text().as_bool());
-			ev.IsCollisionEnabled_set(true);
+			ev.SetIsCollisionEnabled(true);
 			//ev.SetCollisionProof(nodeVehicle.child("IsCollisionProof").text().as_bool());
 			ev.SetExplosionProof(nodeVehicle.child("IsExplosionProof").text().as_bool());
 			ev.SetFireProof(nodeVehicle.child("IsFireProof").text().as_bool());
@@ -2001,19 +2814,113 @@ namespace sub
 				}
 				for (auto& e : vSpawnedAttachments)
 				{
-					if (!_globalSpawnVehicle_persistent) e.e.Handle.NoLongerNeeded();
+					if (!g_spawnVehiclePersistent) e.e.Handle.NoLongerNeeded();
 				}
 			}
 
 			for (auto& amh : vModelHashes) Model(amh).Unload();
 			eModel.Unload();
 
-			ige::myLog << ige::LogType::LOG_INFO << "Loaded vehicle file " << filePath;
+			addlog(ige::LogType::LOG_INFO,  "Loaded vehicle file " + filePath);
 			std::ostringstream ss;
 			ss << "Spawned vehicle from file with " << (vSpawnedAttachments.size() - 1) << " attachments. ";
 			if (bAddAttachmentsToSpoonerDb)
 				ss << "The attachments have been added to the Spooner Database.";
 			Game::Print::PrintBottomLeft(ss);
+		}
+
+		void saveColourVals()
+		{
+			std::ofstream outfile;
+			auto& _dir = dict3;
+			int r, g, b;
+			VEHICLE::GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(g_Ped4, &r, &g, &b);
+			std::array<int, 3> hsv = GetHSVFromRGB(r, g, b);
+			float normalisedcolour = NormalizeHSV(hsv[0], hsv[1], hsv[2]);
+
+			std::vector<std::pair<std::string, std::pair<std::string, float>>> ColourNames
+			{
+				{"3850041493", {"black", 0}},
+				{"807368168", {"grey", 35}},
+				{"607306136", {"silver", 53}},
+				{"4066575219", {"white", 71}},
+				{"1325014621", {"beige", 72}},
+				{"2201497177", {"brown", 110}},
+				{"1585269136", {"red", 122}},
+				{"2639756769", {"orange", 129}},
+				{"3440150791", {"yellow", 136}},
+				{"306110198", {"green", 171}},
+				{"1345033317", {"graphite", 214}},
+				{"3826758445", {"blue", 240}},
+				{"2019367074", {"pink", 352}},
+			};
+
+			float minDiff = static_cast<float>(INT_MAX);
+			std::string nearestColour;
+			std::string nearestAudio;
+			for (const auto& colour : ColourNames)
+			{
+				float diff = std::abs(colour.second.second - normalisedcolour);
+				if (diff < minDiff)
+				{
+					minDiff = diff;
+					nearestColour = colour.second.first;
+					nearestAudio = colour.first;
+				}
+			}
+			int prim, sec;
+			std::string finish;
+			GET_VEHICLE_COLOURS(g_Ped4, &prim, &sec);
+			switch (prim)
+			{
+			case 0:
+				finish = "1";
+				break;
+			case 111:
+				finish = "2";
+				break;
+			case 12:
+				finish = "3";
+				break;
+			case 15:
+				finish = "4";
+				break;
+			case 21:
+				finish = "5";
+				break;
+			case 117:
+				finish = "6";
+				break;
+			case 120:
+				finish = "7";
+				break;
+			case 158:
+				finish = "8";
+				break;
+			case 159:
+				finish = "9";
+				break;
+			case 2: default:
+				finish = "normal";
+				break;
+			}
+
+			std::string customname = Game::InputBox("noname", 64, "Enter Colour Name");
+
+			outfile.open(dict3 + "\\Custom colours.txt", std::ios_base::app); // append instead of overwrite
+			outfile << "Check https://gtamods.com/wiki/Carcols.ymt for all colour names, audio hashes and IDs.\n";
+			outfile << "<Item>\n";
+			outfile << "      <color value = \"0xFF" + ((int_to_hexstring(r, false)) + int_to_hexstring(g, false) + int_to_hexstring(b, false) + "\"/>\n");
+			outfile << "      <metallicID>EVehicleModelColorMetallic_" + finish + "</metallicID>\n";
+			outfile << "      <audioColor>POLICE_SCANNER_COLOUR_" + nearestColour + "</audioColor>\n";
+			outfile << "      <audioPrefix>none</audioPrefix>\n";
+			outfile << "      <audioColorHash value=\"" + nearestAudio + "\"/>\n";
+			outfile << "      <audioPrefixHash value=\"0\"/>\n";
+			outfile << "      <colorName> " + std::to_string(static_cast<int>(normalisedcolour)) + " " + customname + " </colorName>\n";
+			outfile << "</Item>\n";
+			outfile << "\n";
+			outfile.close();
+			Game::Print::PrintBottomLeft("Saved Current Colour: " + customname + "\n" + "HSV: " + std::to_string(hsv[0]) + ", " + std::to_string(hsv[1]) + ", " + std::to_string(hsv[2]));
 		}
 
 		int saveCarVars(GTAvehicle vehicle)
@@ -2038,6 +2945,7 @@ namespace sub
 			outfile << std::to_string(color5) << "\n";
 			outfile << std::to_string(color6) << "\n";
 			outfile << "\n";
+			outfile.close();
 			Game::Print::PrintBottomLeft("Saved Vehicle Carvariations");
 			return 0;
 		}
@@ -2048,11 +2956,11 @@ namespace sub
 			auto& _name = dict;
 			auto& _dir = dict3;
 
-			auto ped = Static_241;
+			auto ped = g_Ped1;
 			auto vehicle = GET_VEHICLE_PED_IS_USING(ped);
 			bool isPedInVeh = IS_PED_IN_ANY_VEHICLE(ped, 0) || IS_PED_SITTING_IN_ANY_VEHICLE(ped);
 
-			bool save2 = false, bCreateFolderPressed = false, savecarvar = false;
+			bool save2 = false, bCreateFolderPressed = false, savecarvar = false, ms_paints_savergb = false;
 			std::vector<std::string> vfilnames;
 
 			AddTitle("Saved Vehicles");
@@ -2070,7 +2978,8 @@ namespace sub
 
 			AddOption("Save Current Vehicle", save2);
 
-			//AddOption("Store CarVariations", savecarvar);
+			AddOption("Store CarVariations", savecarvar);
+			AddOption("Save Colour Profile", ms_paints_savergb);
 
 			AddOption("Create New Folder", bCreateFolderPressed);
 
@@ -2155,12 +3064,15 @@ namespace sub
 						VehSaver_SaveToFile(_dir + "\\" + inputStr + ".xml", vehicle);
 					}
 					else
-						Game::Print::PrintError_InvalidInput();
+						Game::Print::PrintErrorInvalidInput(inputStr);
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SaveVehicleToFile, std::string(), 28U, "Enter file name:");
 					//OnscreenKeyboard::State::arg1._int = vehicle;
 					//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&_dir);
 				}
 			}
+
+			if (ms_paints_savergb)
+				saveColourVals();
 
 			if (savecarvar)
 			{
@@ -2186,7 +3098,7 @@ namespace sub
 					}
 				}
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				return;
 				// No OnscreenKeyboard!
 			}
@@ -2200,7 +3112,7 @@ namespace sub
 			auto& _dir = dict3;
 			std::string filePath = _dir + "\\" + _name + ".xml";
 
-			auto& ped = Static_241;
+			auto& ped = g_Ped1;
 			auto vehicle = GET_VEHICLE_PED_IS_USING(ped);
 			bool isPedInVeh = IS_PED_IN_ANY_VEHICLE(ped, 0) || IS_PED_SITTING_IN_ANY_VEHICLE(ped);
 
@@ -2233,7 +3145,7 @@ namespace sub
 						Game::Print::PrintBottomCentre("~r~Error~s~ renaming file.");
 				}
 				else
-					Game::Print::PrintError_InvalidInput();
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameVehicleFile, std::string(), 28U, "Enter new name:", _name);
 				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_name);
 				//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&_dir);
@@ -2299,14 +3211,19 @@ namespace sub
 						}
 					}
 				}
-
 			}
-
 		}
-
 	}
-
 }
 
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(SPAWNVEHICLE,               	sub::SpawnVehicle_)
+REGISTER_SUBMENU(SPAWNVEHICLE_OPTIONS,       	sub::SpawnVehicle_Options)
+REGISTER_SUBMENU(SPAWNVEHICLE_ALLCATS,       	sub::SpawnVehicle_AllCatsSub)
+REGISTER_SUBMENU(SPAWNVEHICLEDLC,            	sub::SpawnVehicle_DLC)
+REGISTER_SUBMENU(SPAWNVEHICLE_DLC_SELECTION, 	sub::SpawnVehicle_DLC_Selection)
+REGISTER_SUBMENU(SPAWNVEHICLE_FAVOURITES,    	sub::SpawnVehicle_Favourites)
+REGISTER_SUBMENU(VEHICLE_SAVER,       			sub::VehicleSaver_catind::Sub_VehSaver)
+REGISTER_SUBMENU(VEHICLE_SAVER_INITEM, 			sub::VehicleSaver_catind::Sub_VehSaver_InItem)

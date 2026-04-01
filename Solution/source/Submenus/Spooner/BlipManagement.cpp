@@ -58,7 +58,7 @@ namespace sub::Spooner
 		{
 			auto blip = World::CreateBlip(position);
 			blip.SetFlashing(false);
-			blip.SetScale(0.8f);
+			blip.SetScale(-1.0f);
 			blip.SetFriendly(true);
 			blip.SetIcon(BlipIcon::Castle);
 			blip.SetColour(BlipColour::Green);

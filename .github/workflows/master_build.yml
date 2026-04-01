@@ -2,7 +2,7 @@ name: Master_Build
 
 on:
   push:
-    branches: [ "master", "pre_release" ]
+    branches: [ "main", "Development" ]
   #workflow_run:
   #  workflows: ["MSBuild"]
   #  types:
@@ -11,39 +11,120 @@ on:
 
 
 env:
-  # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: ./Solution/Menyoo.sln
-
-  # Configuration type to build.
-  # You can convert this to a build matrix if you need coverage of multiple configuration types.
-  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
   BUILD_CONFIGURATION: Release
+  CANCELJOB: false
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
+  check-version-and-merge:
+    runs-on: ubuntu-latest
+    outputs:
+      CANCELJOB: ${{ steps.set_output.outputs.CANCELJOB }}
+
+    steps:
+      - name: Checkout repository
+        if: env.CANCELJOB != 'true'  
+        uses: actions/checkout@v3
+
+      - name: Extract version from macros.h
+        id: extract_version
+        if: env.CANCELJOB != 'true' 
+        run: |
+          VERSION=$(grep '#define MENYOO_CURRENT_VER_' Solution/source/macros.h | awk '{print $3}' | tr -d '"')
+          echo "VERSION=v$VERSION" >> $GITHUB_ENV
+          echo "Extracted version: $VERSION"
+          
+      - name: Check if tag already exists
+        if: env.CANCELJOB != 'true' 
+        run: |
+          VERSION=${{ env.VERSION }}
+          echo "Checking for tag: $VERSION"  
+          RELEASE_LIST=$(gh release list)
+          TAGS=$(echo "$RELEASE_LIST" | awk '{print $1}')
+          echo "$TAGS"
+          
+           echo "Checking if tag exists:"
+          for tag in $TAGS; do
+            if [ "$tag" = "$VERSION" ]; then
+              echo "Tag $VERSION already exists. Cancelling workflow."
+              echo "CANCELJOB=true" >> $GITHUB_ENV
+              exit 0
+            fi
+          done
+          
+          echo "Tag $VERSION does not exist. Proceeding."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Check version pattern and merge
+        id: check_version
+        if: env.CANCELJOB != 'true' 
+        run: |
+          VERSION=${{ env.VERSION }}
+          echo "Checking version pattern: $VERSION"
+          if [[ $GITHUB_REF == "refs/heads/main" ]]; then
+            echo "Already on main branch. Skipping merge check."
+            exit 0
+          fi
+
+          # Function to check for existing PR with the same version
+          check_pr_exists() {
+            PR_LIST=$(gh pr list --head Development --base main --state open --json title,body)
+            PR_EXIST=$(echo "$PR_LIST" | jq -r --arg VERSION "$VERSION" '.[] | select((.title | contains($VERSION)) or (.body | contains($VERSION)))')
+            [ -n "$PR_EXIST" ]
+          }
+
+          if [[ $VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version is a full release. Creating pull request to merge into main."
+            echo "## Check for existing PR"
+            if check_pr_exists; then
+              echo "PR already exists with version $VERSION."
+              echo "CANCELJOB=true" >> $GITHUB_ENV
+              exit 0
+            fi
+            echo "Creating new PR."
+            gh pr create --title "Release $VERSION" --body "Merging development into main for release $VERSION" --base main --head Development
+            echo "CANCELJOB=true" >> $GITHUB_ENV
+            exit 0
+          elif [[ $VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(a|b|rc)[0-9]+$ ]]; then
+            echo "Version is a pre-release. Proceeding with pre-release build."
+          else
+            echo "Version is invalid or a development version. Cancelling workflow."
+            echo "CANCELJOB=true" >> $GITHUB_ENV
+            exit 0
+          fi
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set output
+        id: set_output
+        run: echo "CANCELJOB=${{ env.CANCELJOB }}" >> $GITHUB_OUTPUT
+
   build:
     runs-on: windows-latest
+    needs: check-version-and-merge
 
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
 
+    - name: Generate solution with Premake
+      run: Solution/external/premake/premake5.exe vs2022
+
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.1
-      #with: vs-version: '[16.4, 16.5)'
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
-      # Add additional options to the MSBuild command line here (like platform or verbosity level).
-      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}} -verbosity:minimal
-      # BaseOutputPath should be /Solution/source/_Build/bin/Release/
+      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=x64 Solution/Menyoo.sln -verbosity:minimal
       
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v4
       with:
         # Artifact name
         name: MenyooSP
@@ -62,6 +143,7 @@ jobs:
 
 
   pre-release:
+    if: github.ref == 'refs/heads/main' || (github.ref == 'refs/heads/Development' && needs.check-version-and-merge.outputs.CANCELJOB != 'true')
     needs: build
     permissions: write-all
     name: "Pre Release"
@@ -85,15 +167,24 @@ jobs:
          #workflow_conclusion: ""
          #name: MenyooSP
          #skip_unpack: true
-      - uses: actions/download-artifact@v3
-      
+      - uses: actions/download-artifact@v4
+     
+      - name: Extract version from macros.h
+        id: extract_version
+        run: |
+          Select-String -Path "Solution\source\macros.h" -Pattern '#define MENYOO_CURRENT_VER_' | ForEach-Object {
+            $_.Line -match '#define MENYOO_CURRENT_VER_\s+"(.*?)"' | Out-Null
+            $matches[1]
+          } | Out-File -FilePath version.txt
+          $VERSION = Get-Content version.txt
+          echo "VERSION=v$VERSION" >> $env:GITHUB_ENV
+          echo "Extracted version: $VERSION"
       - name: Zip artifact for deployment
         run: Compress-Archive -Path "MenyooSP/*" -DestinationPath "MenyooSP.zip"
-      
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
+          automatic_release_tag: ${{ env.VERSION }}
+          prerelease: ${{ github.ref_name != 'main' }}
           title: ${{ steps.version.outputs.version}}
           files: MenyooSP.zip

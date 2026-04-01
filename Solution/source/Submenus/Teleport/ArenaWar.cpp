@@ -456,5 +456,6 @@ namespace sub::TeleportLocations_catind
 
 }
 
-
-
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TELEPORTOPS_ARENAWAR,     sub::TeleportLocations_catind::ArenaWar::Sub_ArenaWar)

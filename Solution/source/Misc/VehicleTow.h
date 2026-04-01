@@ -13,7 +13,7 @@
 
 class GTAvehicle;
 
-namespace _VehicleTow_
+namespace VehicleTow
 {
 	class VehicleTow final : public GenericLoopedMode
 	{

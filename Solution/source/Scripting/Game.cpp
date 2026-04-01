@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -23,6 +23,8 @@
 #include <string>
 #include <sstream>
 #include <Windows.h>
+#include "../Util/FileLogger.h"
+#include "../Util/ExePath.h"
 
 std::ostream& operator<<(std::ostream& stream, std::wstring& text)
 {
@@ -182,7 +184,7 @@ namespace Game
 			SET_TEXT_EDGE(0, 0, 0, 0, 0);
 			//SET_TEXT_OUTLINE();
 		}
-		void setupdraw(INT8 font, const Vector2& scale, bool centred, bool right_justified, bool outline, RGBA colour, Vector2 wrap)
+		void SetupDraw(INT8 font, const Vector2& scale, bool centred, bool right_justified, bool outline, RGBA colour, Vector2 wrap)
 		{
 			SET_TEXT_FONT(font);
 			SET_TEXT_SCALE(scale.x, scale.y);
@@ -208,7 +210,7 @@ namespace Game
 			}
 			END_TEXT_COMMAND_DISPLAY_TEXT(X, Y, 0);
 		}
-		void drawstring(std::ostream& os, float X, float Y)
+		void DrawString(std::ostream& os, float X, float Y)
 		{
 			const std::string& s = dynamic_cast<std::ostringstream&>(os).str();
 			if (s.length() < 100)
@@ -398,13 +400,15 @@ namespace Game
 		}
 
 		// Messages - Errors
-		void PrintError_InvalidInput()
+		void PrintErrorInvalidInput(std::string inputStr)
 		{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Input.");
+			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Input: " + inputStr);
+			addlog(ige::LogType::LOG_ERROR, "Invalid Input: " + inputStr);
 		}
-		void PrintError_InvalidModel()
+		void PrintError_InvalidModel(std::string inputStr)
 		{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Model.");
+			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Model: " + inputStr);
+			addlog(ige::LogType::LOG_ERROR, "Invalid Model: " + inputStr);
 		}
 
 		// Text width
@@ -449,8 +453,38 @@ namespace Game
 		//CustomKeyboardText ckt;
 		DISPLAY_ONSCREEN_KEYBOARD(true, "", "", preText.c_str(), "", "", "", maxChars);
 
+		bool pasteWasPressed = false;
+
 		while (UPDATE_ONSCREEN_KEYBOARD() == 0)
 		{
+			bool ctrlDown = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+			bool vDown = (GetAsyncKeyState('V') & 0x8000) != 0;
+
+			bool shiftDown = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+			bool insertDown = (GetAsyncKeyState(VK_INSERT) & 0x8000) != 0;
+
+			bool ctrlV = ctrlDown && vDown;
+			bool shiftInsert = shiftDown && insertDown;
+
+			if ((ctrlV || shiftInsert) && !pasteWasPressed)
+			{
+				pasteWasPressed = true;
+
+				std::string clip = GetClipboardText();
+				if (!clip.empty())
+				{
+					clip = clip.substr(0, maxChars);
+
+					CANCEL_ONSCREEN_KEYBOARD();
+
+					WAIT(0);
+
+					DISPLAY_ONSCREEN_KEYBOARD(true, "", "", clip.c_str(), "", "", "", maxChars);
+				}
+			}
+
+			if (!ctrlV && !shiftInsert) pasteWasPressed = false;
+
 			SET_TEXT_FONT(/*GTAfont::Arial*/0);
 			SET_TEXT_SCALE(0.34f, 0.34f);
 			SET_TEXT_COLOUR(255, 255, 255, 255);

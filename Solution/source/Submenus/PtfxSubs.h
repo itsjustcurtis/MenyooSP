@@ -18,18 +18,23 @@ namespace sub
 {
 	namespace Ptfx_catind
 	{
+		extern int ITEMS_PER_PAGE;
 		typedef struct { std::string name, asset, fx; } PtfxS;
+		// Define comparison operator for PtfxS
+		inline bool operator==(const PtfxS& a, const PtfxS& b) {
+			return a.name == b.name && a.asset == b.asset && a.fx == b.fx;
+		}
 
 		extern const std::vector<PtfxS> vPTFX;
 
 		typedef struct { GTAentity entity; std::string asset, fx; } PtfxlopS;
-		extern std::vector<PtfxlopS> _fxlops;
+		extern std::vector<PtfxlopS> fxLops;
 
 		void AddEntityToPtfxLops(const PtfxS& effect, const GTAentity& entity);
 
 		void __AddOption_entity(const PtfxS& effect, GTAentity entity);
 		void __AddOption_loopOnEntity(const PtfxS& effect, GTAentity entity);
-
+		void PTFXFavourites();
 		void PTFXSub();
 
 	}

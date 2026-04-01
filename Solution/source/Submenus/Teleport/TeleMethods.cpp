@@ -23,6 +23,7 @@
 #include "..\..\Scripting\Camera.h"
 #include "..\..\Memory\GTAmemory.h"
 #include "..\..\Scripting\GTAblip.h"
+#include <Util/FileLogger.h>
 
 #include "..\Spooner\SpoonerMode.h"
 #include "TeleLocation.h"
@@ -49,7 +50,7 @@ void teleport_net_ped(GTAentity ped, float X, float Y, float Z, bool bWait, bool
 			ped.RequestControlOnce();
 		//if (NETWORK_HAS_CONTROL_OF_ENTITY(ped))
 		{
-			ped.Position_set(Vector3(X, Y, Z));
+			ped.SetPosition(Vector3(X, Y, Z));
 			if (bPtfx && ped.IsVisible())
 			{
 				const PTFX::sFxData ptfx = { "scr_rcbarry2", "scr_clown_death" };
@@ -71,7 +72,7 @@ void teleport_net_ped(GTAentity ped, float X, float Y, float Z, bool bWait, bool
 			vehicle.RequestControl(1000);
 		else
 			vehicle.RequestControlOnce();
-		vehicle.Position_set(Vector3(X, Y, Z));
+		vehicle.SetPosition(Vector3(X, Y, Z));
 	}
 
 	if (ped.Equals(myPed) || ped.Equals(myVeh))
@@ -92,12 +93,14 @@ void teleport_net_ped(GTAentity ped, const Vector3& pos, bool bWait, bool bPtfx)
 void teleport_to_missionBlip(GTAped ped)
 {
 	//GTAblip blip;
-
+	addlog(ige::LogType::LOG_DEBUG, "Teleporting to Mission Objective");
 	//for (int i = 0; i <= 521; i++)
 	BlipList* blipList = GTAmemory::GetBlipList();
 	for (UINT16 i = 0; i <= 1000; i++)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Iterating Blip ID: " + std::to_string(i));
 		Blipx* blip = blipList->m_Blips[i];
+
 		if (blip)
 		{
 			/*blip.Handle() = GET_FIRST_BLIP_INFO_ID(i);
@@ -110,7 +113,7 @@ void teleport_to_missionBlip(GTAped ped)
 			auto icon = blip.Icon();*/
 			auto colour = blip->dwColor;
 			auto icon = blip->iIcon;
-
+			addlog(ige::LogType::LOG_TRACE, "Blip Found - Colour: " + std::to_string(colour) + ", Icon: " + std::to_string(icon));
 			if ((icon == BlipIcon::CrateDrop) ||
 				(colour == BlipColour::Yellow && icon == BlipIcon::Standard) ||
 				(colour == BlipColour::Yellow3 && icon == BlipIcon::Standard) ||
@@ -122,22 +125,25 @@ void teleport_to_missionBlip(GTAped ped)
 			{
 				//Vector3 coord = blip.Position_get();
 				Vector3 coord = Vector3(blip->x, blip->y, blip->z);
-
+				addlog(ige::LogType::LOG_DEBUG, "Mission Blip Found - Co-ord: " + std::to_string(coord.x)+"," + std::to_string(coord.y) + "," + std::to_string(coord.z));
 				if (ped.IsInVehicle())
 				{
+					addlog(ige::LogType::LOG_TRACE, "Teleporting Vehicle");
 					auto vehicle = ped.CurrentVehicle();
 					if (vehicle.RequestControl(1000))
-						vehicle.Position_set(coord);
+						vehicle.SetPosition(coord);
 				}
 				else
 				{
+					addlog(ige::LogType::LOG_TRACE, "Teleporting Ped");
 					if (ped.RequestControl(1000))
-						ped.Position_set(coord);
+						ped.SetPosition(coord);
 				}
 				break;
 			}
 		}
 	}
+	addlog(ige::LogType::LOG_DEBUG, "Teleported to Mission Objective");
 }
 
 namespace sub::TeleportLocations_catind
@@ -155,60 +161,49 @@ namespace sub::TeleportLocations_catind
 			{
 				Vector3 blipCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).Position_get();
 
-				GET_GROUND_Z_FOR_3D_COORD(blipCoords.x, blipCoords.y, 800.0f, &blipCoords.z, 0, 0);
-				blipCoords.z += 20.0f;
-				if (!ped.IsInVehicle())
-				{
-					Game::RequestControlOfId(ped.NetID());
-					ped.RequestControl(1000);
+				GTAentity e = ped;
+				if (ped.IsInVehicle())
+					e = ped.CurrentVehicle();
 
-					for (int i = 0; i < sizeof(____gtaGroundCheckHeight) / sizeof(float); i++)
-					{
-						SET_ENTITY_COORDS(ped.Handle(), blipCoords.x, blipCoords.y, blipCoords.z, 0, 0, 0, 1);
-						WAIT(100);
-						if (GET_GROUND_Z_FOR_3D_COORD(blipCoords.x, blipCoords.y, ____gtaGroundCheckHeight[i], &blipCoords.z, 0, 0))
-							break;
-					}
-					SET_ENTITY_COORDS(ped.Handle(), blipCoords.x, blipCoords.y, blipCoords.z, 0, 0, 0, 1);
-				}
-				else
-				{
-					GTAvehicle vehicle = ped.CurrentVehicle();
-					Game::RequestControlOfId(vehicle.NetID());
-					vehicle.RequestControl(1000);
+				GET_GROUND_Z_FOR_3D_COORD(blipCoords.x, blipCoords.y, 810.0, &blipCoords.z, 0, 0);
 
-					for (int i = 0; i < sizeof(____gtaGroundCheckHeight) / sizeof(float); i++)
-					{
-						SET_ENTITY_COORDS(vehicle.Handle(), blipCoords.x, blipCoords.y, blipCoords.z, 0, 0, 0, 1);
-						WAIT(100);
-						if (GET_GROUND_Z_FOR_3D_COORD(blipCoords.x, blipCoords.y, ____gtaGroundCheckHeight[i], &blipCoords.z, 0, 0))
-							break;
-					}
-					SET_ENTITY_COORDS(vehicle.Handle(), blipCoords.x, blipCoords.y, blipCoords.z, 0, 0, 0, 1);
+				Game::RequestControlOfId(e.NetID());
+				e.RequestControl(1000);
+
+				for (int height : ____gtaGroundCheckHeight)
+				{
+					SET_ENTITY_COORDS(e.Handle(), blipCoords.x, blipCoords.y, height, 0, 0, 0, 1);
+					WAIT(100);
+					if (GET_GROUND_Z_FOR_3D_COORD(blipCoords.x, blipCoords.y, height, &blipCoords.z, 0, 0))
+						break;
 				}
+				SET_ENTITY_COORDS(e.Handle(), blipCoords.x, blipCoords.y, blipCoords.z, 0, 0, 0, 1);
+			}
+			else {
+				Game::Print::PrintBottomCentre("~r~Error:~s~ No Waypoint set.");
 			}
 		}
 		void ToWaypoint241()
 		{
-			TeleMethods::ToWaypoint(Static_241);
+			TeleMethods::ToWaypoint(g_Ped1);
 		}
 		void ToMissionBlip241()
 		{
-			teleport_to_missionBlip(Static_241);
+			teleport_to_missionBlip(g_Ped1);
 		}
 		void ToForward241()
 		{
-			auto& entityToTeleport = Static_241;
+			auto& entityToTeleport = g_Ped1;
 			Vector3 yoffsetforward = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(entityToTeleport, 0.0f, 3.5f, 0.0f);
 			teleport_net_ped(entityToTeleport, yoffsetforward.x, yoffsetforward.y, yoffsetforward.z, true, false);
 		}
 		void ToCoordinates241(const Vector3& coord)
 		{
-			teleport_net_ped(Static_241, coord.x, coord.y, coord.z);
+			teleport_net_ped(g_Ped1, coord.x, coord.y, coord.z);
 		}
 		void ToTeleLocation241(const TeleLocation& loc)
 		{
-			auto& entityToTeleport = Static_241;
+			auto& entityToTeleport = g_Ped1;
 
 			bool isOnline = NETWORK_IS_IN_SESSION() != 0;
 			if (loc.bOnTheLine && loc.bOffTheLine)

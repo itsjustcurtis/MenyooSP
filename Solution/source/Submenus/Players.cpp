@@ -39,9 +39,9 @@ namespace sub
 
 				if (bPlayerPressed)
 				{
-					Static_240 = i;
-					Static_241 = GET_PLAYER_PED(Static_240); // Store ped
-					Static_239 = GET_PLAYER_NAME(Static_240); // Store name
+					g_Ped2 = i;
+					g_Ped1 = GET_PLAYER_PED(g_Ped2); // Store ped
+					g_PlayerName = GET_PLAYER_NAME(g_Ped2); // Store name
 					Menu::SetSub_new(SUB::PLAYERSSUBAMENU); // Change submenu to 'PlayersSubAMenu_'
 				}
 			}
@@ -61,14 +61,14 @@ namespace sub
 		}
 		else spectatePlayerStr = "Spectate Player";
 
-		AddTitle(Static_239); // Title = player name
+		AddTitle(g_PlayerName); // Title = player name
 		AddOption("Set Waypoint To Player", bSetWp);
-		AddLocal(spectatePlayerStr, loop_spectate_player == Static_240, bSpectateOn, bSpectateOff); // Spectate Player
+		AddLocal(spectatePlayerStr, spectatePlayer == g_Ped2, bSpectateOn, bSpectateOff); // Spectate Player
 
 		if (bSpectateOn)
 		{
 			Ped ped;
-			loop_spectate_player = Static_240;
+			spectatePlayer = g_Ped2;
 			for (int i = 0; i < GAME_PLAYERCOUNT; i++)
 			{
 				if (!NETWORK_IS_PLAYER_ACTIVE(i)) continue;
@@ -77,7 +77,7 @@ namespace sub
 				NETWORK_SET_IN_SPECTATOR_MODE_EXTENDED(0, ped, 1);
 				NETWORK_SET_IN_SPECTATOR_MODE(false, ped);
 			}
-			ped = GET_PLAYER_PED(loop_spectate_player);
+			ped = GET_PLAYER_PED(spectatePlayer);
 			if (DOES_ENTITY_EXIST(ped))
 			{
 				STAT_SET_BOOL(GET_HASH_KEY("MPPLY_CAN_SPECTATE"), true, true);
@@ -96,18 +96,18 @@ namespace sub
 				NETWORK_SET_IN_SPECTATOR_MODE(false, ped);
 			}
 			NETWORK_SET_ACTIVITY_SPECTATOR(false);
-			loop_spectate_player = -1;
+			spectatePlayer = -1;
 		}
 
 		if (bSetWp)
 		{
-			GTAplayer player = Static_240;
+			GTAplayer player = g_Ped2;
 			if (player.IsActive())
 			{
 				const GTAped& playerPed = player.GetPed();
 				if (playerPed.IsAlive())
 				{
-					const Vector3& pos = playerPed.Position_get();
+					const Vector3& pos = playerPed.GetPosition();
 					SET_NEW_WAYPOINT(pos.x, pos.y);
 				}
 				else
@@ -124,6 +124,11 @@ namespace sub
 	}
 
 }
+
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(PLAYERSSUB,  		sub::PlayersSub_)
+REGISTER_SUBMENU(PLAYERSSUBAMENU, 	sub::PlayersSubAMenu_)
 
 
 

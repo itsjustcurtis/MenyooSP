@@ -16,6 +16,7 @@
 
 #include "..\Natives\natives2.h"
 #include "..\Scripting\Game.h"
+#include "..\Util\FileLogger.h"
 
 #include <string>
 #include <vector>
@@ -33,7 +34,7 @@ namespace sub
 		const std::array<NamedCharStatList_t, 5> vCharStatLists
 		{ {
 			{ "Cash",{
-				{ "TOTAL_CASH", "Total Cash", StatDataType_t::INT, 0, INT_MAX }
+				{ "TOTAL_CASH", "Total Cash", StatDataType_t::INT, 0, static_cast<float>(INT_MAX) }
 				//{ "TOTAL_CASH_EARNED", "Earned Cash", StatDataType_t::INT, 0, INT_MAX }
 			} },
 			{ "Abilities (ALPHA)",{
@@ -50,8 +51,8 @@ namespace sub
 				{ "SPECIAL_ABILITY_UNLOCKED", "Special Capacity", StatDataType_t::INT, 0, 100 }
 			} },
 			{ "K/D Ratio",{
-				{ "KILLS", "Kill Count", StatDataType_t::INT, 0, INT_MAX },
-				{ "DEATHS", "Death Count", StatDataType_t::INT, 0, INT_MAX }
+				{ "KILLS", "Kill Count", StatDataType_t::INT, 0, static_cast<float>(INT_MAX) },
+				{ "DEATHS", "Death Count", StatDataType_t::INT, 0, static_cast<float>(INT_MAX) }
 			} },
 			{ "Properties",{
 				{ "PROP_BOUGHT_TRAF", "Arms Trafficking", StatDataType_t::BOOL, 0, 0 },
@@ -149,7 +150,10 @@ namespace sub
 							statValue = stoi(inputStr);
 							StatSetInt(statName, statValue);
 						}
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { 
+							Game::Print::PrintErrorInvalidInput(inputStr); 
+							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Integer for " + stat.caption + " Entered");
+						}
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpStatManagerInputInt, std::string(), (int)std::to_string((int)stat.max).length(), "Enter integer value:", std::to_string(statValue));
 					//OnscreenKeyboard::State::arg1._uint = GET_HASH_KEY(statName);
@@ -172,7 +176,10 @@ namespace sub
 							statValue = stof(inputStr);
 							StatSetFloat(statName, statValue);
 						}
-						catch (...) { Game::Print::PrintError_InvalidInput(); }
+						catch (...) { 
+							Game::Print::PrintErrorInvalidInput(inputStr);
+							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Float for " + stat.caption + " Entered");
+						}
 					}
 					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpStatManagerInputFloat, std::string(), 13U, "Enter floating point value:", std::to_string(statValue));
 					//OnscreenKeyboard::State::arg1._uint = GET_HASH_KEY(statName);
@@ -198,24 +205,105 @@ namespace sub
 				}
 			}
 
-			/*AddBreak("---Others---");
-			int statExclus = StatGetInt("SP_UNLOCK_EXCLUS_CONTENT");
-			bool bExclus_plus = false, bExclus_minus = false;
-			AddNumber("Exclusive Content", statExclus, 0, null, bExclus_plus, bExclus_minus);
-			if (bExclus_plus) { if (statExclus < 100) { statExclus++; StatSetInt("SP_UNLOCK_EXCLUS_CONTENT", statExclus); } }
-			if (bExclus_minus) { if (statExclus > 0) { statExclus--; StatSetInt("SP_UNLOCK_EXCLUS_CONTENT", statExclus); } }*/
-
 			// Is this legal?
 			AddBreak("---Achievements---");
 			bool bUnlockAllAch = false;
 			AddOption("Unlock All Achievements", bUnlockAllAch); if (bUnlockAllAch)
 			{
-				int numAchievements = 59;
+				int numAchievements = 78;
 				//gamever
 				for (int i = 0; i < numAchievements; i++)
 					if (!HAS_ACHIEVEMENT_BEEN_PASSED(i))
 						GIVE_ACHIEVEMENT_TO_PLAYER(i);
 			}
+
+			auto unlockAchievement = [](int id, const char* description) {
+				bool unlockFlag = false;
+				AddOption(std::to_string(id) + ". " + description, unlockFlag);
+				if (unlockFlag && !HAS_ACHIEVEMENT_BEEN_PASSED(id))
+				{
+					GIVE_ACHIEVEMENT_TO_PLAYER(id);
+				}
+			};
+			
+			unlockAchievement(1, "Unlock 'Welcome to Los Santos'");
+			unlockAchievement(2, "Unlock 'A Friendship Resurrected'");
+			unlockAchievement(3, "Unlock 'A Fair Day's Pay'");
+			unlockAchievement(4, "Unlock 'The Moment of Truth'");
+			unlockAchievement(5, "Unlock 'To Live or Die in Los Santos'");
+			unlockAchievement(6, "Unlock 'Diamond Hard'");
+			unlockAchievement(7, "Unlock 'Subversive'");
+			unlockAchievement(8, "Unlock 'Blitzed'");
+			unlockAchievement(9, "Unlock 'Small Town, Big Job'");
+			unlockAchievement(10, "Unlock 'The Government Gimps'");
+			unlockAchievement(11, "Unlock 'The Big One!'");
+			unlockAchievement(12, "Unlock 'Solid Gold, Baby!'");
+			unlockAchievement(13, "Unlock 'Career Criminal'");
+			unlockAchievement(14, "Unlock 'San Andreas Sightseer'");
+			unlockAchievement(15, "Unlock 'All's Fare in Love and War'");
+			unlockAchievement(16, "Unlock 'TP Industries Arms Race'");
+			unlockAchievement(17, "Unlock 'Multi-Disciplined'");
+			unlockAchievement(18, "Unlock 'From Beyond the Stars'");
+			unlockAchievement(19, "Unlock 'A Mystery, Solved'");
+			unlockAchievement(20, "Unlock 'Waste Management'");
+			unlockAchievement(21, "Unlock 'Red Mist'");
+			unlockAchievement(22, "Unlock 'Show Off'");
+			unlockAchievement(23, "Unlock 'Kifflom!'");
+			unlockAchievement(24, "Unlock 'Three Man Army'");
+			unlockAchievement(25, "Unlock 'Out of Your Depth'");
+			unlockAchievement(26, "Unlock 'Altruist Acolyte'");
+			unlockAchievement(27, "Unlock 'A Lot of Cheddar'");
+			unlockAchievement(28, "Unlock 'Trading Pure Alpha'");
+			unlockAchievement(29, "Unlock 'Pimp My Sidearm'");
+			unlockAchievement(30, "Unlock 'Wanted: Alive Or Alive'");
+			unlockAchievement(31, "Unlock 'Los Santos Customs'");
+			unlockAchievement(32, "Unlock 'Close Shave'");
+			unlockAchievement(33, "Unlock 'Off the Plane'");
+			unlockAchievement(34, "Unlock 'Three-Bit Gangster'");
+			unlockAchievement(35, "Unlock 'Making Moves'");
+			unlockAchievement(36, "Unlock 'Above the Law'");
+			unlockAchievement(37, "Unlock 'Numero Uno'");
+			unlockAchievement(38, "Unlock 'The Midnight Club'");
+			unlockAchievement(39, "Unlock 'Unnatural Selection'");
+			unlockAchievement(40, "Unlock 'Backseat Driver'");
+			unlockAchievement(41, "Unlock 'Run Like The Wind'");
+			unlockAchievement(42, "Unlock 'Clean Sweep'");
+			unlockAchievement(43, "Unlock 'Decorated'");
+			unlockAchievement(44, "Unlock 'Stick Up Kid'");
+			unlockAchievement(45, "Unlock 'Enjoy Your Stay'");
+			unlockAchievement(46, "Unlock 'Crew Cut'");
+			unlockAchievement(47, "Unlock 'Full Refund'");
+			unlockAchievement(48, "Unlock 'Dialling Digits'");
+			unlockAchievement(49, "Unlock 'American Dream'");
+			unlockAchievement(50, "Unlock 'A New Perspective'");
+			unlockAchievement(51, "Unlock 'Be Prepared'");
+			unlockAchievement(52, "Unlock 'In the Name of Science'");
+			unlockAchievement(53, "Unlock 'Dead Presidents'");
+			unlockAchievement(54, "Unlock 'Parole Day'");
+			unlockAchievement(55, "Unlock 'Shot Caller'");
+			unlockAchievement(56, "Unlock 'Four Way'");
+			unlockAchievement(57, "Unlock 'Live a Little'");
+			unlockAchievement(58, "Unlock 'Can't Touch This'");
+			unlockAchievement(59, "Unlock 'Mastermind'");
+			unlockAchievement(60, "Unlock 'Vinewood Visionary'");
+			unlockAchievement(61, "Unlock 'Majestic'");
+			unlockAchievement(62, "Unlock 'Humans of Los Santos'");
+			unlockAchievement(63, "Unlock 'First Time Director'");
+			unlockAchievement(64, "Unlock 'Animal Lover'");
+			unlockAchievement(65, "Unlock 'Ensemble Piece'");
+			unlockAchievement(66, "Unlock 'Cult Movie'");
+			unlockAchievement(67, "Unlock 'Location Scout'");
+			unlockAchievement(68, "Unlock 'Method Actor'");
+			unlockAchievement(69, "Unlock 'Cryptozoologist'");
+			unlockAchievement(70, "Unlock 'Getting Started'");
+			unlockAchievement(71, "Unlock 'The Data Breaches'");
+			unlockAchievement(72, "Unlock 'The Bogdan Problem'");
+			unlockAchievement(73, "Unlock 'The Doomsday Scenario'");
+			unlockAchievement(74, "Unlock 'A World Worth Saving'");
+			unlockAchievement(75, "Unlock 'Orbital Obliteration'");
+			unlockAchievement(76, "Unlock 'Elitist'");
+			unlockAchievement(77, "Unlock 'Masterminds'");
+
 		}
 		void Sub_InChar()
 		{
@@ -250,4 +338,8 @@ namespace sub
 }
 
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(SPSTATMANAGER,               	sub::SpStatManager_catind::Sub_SpStatManager)
+REGISTER_SUBMENU(SPSTATMANAGER_INCHAR,        	sub::SpStatManager_catind::Sub_InChar)
+REGISTER_SUBMENU(SPSTATMANAGER_INCHAR_INLIST, 	sub::SpStatManager_catind::Sub_InChar_InList)

@@ -86,8 +86,11 @@ public:
 	float Heading_get() const;
 	void Heading_set(float value);
 
-	int Health_get() const;
+	int GetHealth() const;
 	void Health_set(int value);
+
+	float Vehicle_engine_get() const;
+	void Vehicle_engine_set(float value);
 
 	float HeightAboveGround() const;
 	float GetGroundZ() const;
@@ -122,8 +125,16 @@ public:
 	bool IsVisible() const;
 	void SetVisible(bool value);
 
-	int MaxHealth_get() const;
+	int LandingGearState_get() const;
+	void SetLandingGearState(int state);
+
+	int GetMaxHealth() const;
 	void MaxHealth_set(int value);
+
+	bool ToggleLandingGear() const;
+	void SetLandingGear(bool value);
+	int GetLandingGearState() const;
+	bool HasLandingGear() const;
 
 	GTAmodel::Model Model() const;
 	GTAmodel::ModelDimensions ModelDimensions() const;
@@ -131,18 +142,18 @@ public:
 	Vector3 Dim1() const;
 	Vector3 Dim2() const;
 
-	Vector3 Position_get() const;
-	void Position_set(Vector3 value);
+	Vector3 GetPosition() const;
+	void SetPosition(Vector3 value);
 
 	Vector3 Rotation_get() const;
-	void Rotation_set(Vector3 value);
+	void SetRotation(Vector3 value);
 	Vector3 Direction_get() const;
 	void Direction_set(Vector3 value);
 
 	Vector3 Velocity_get() const;
 	void Velocity_set(Vector3 value);
 	Vector3 RotationVelocity_get() const;
-	float Speed_get() const;
+	float GetSpeed() const;
 	void MaxSpeed_set(float value);
 	Vector3 SpeedVector_get(bool relative);
 
@@ -161,8 +172,9 @@ public:
 	bool HasCollided() const;
 	void IsRecordingCollisions_set(bool value);
 	void HasCollisionWithEntity_set(const GTAentity& ent, bool value);
-	bool IsCollisionEnabled_get() const;
-	void IsCollisionEnabled_set(bool value);
+	bool GetIsCollisionEnabled() const;
+	void SetIsCollisionEnabled(bool value);
+	void ToggleLandingGear();
 
 	virtual int NetID() const;
 
@@ -238,12 +250,9 @@ public:
 
 	bool IsOnlyDamagedByPlayer() const;
 	void SetOnlyDamagedByPlayer(bool value);
-	
+
 
 protected:
 	int mHandle;
-	
+
 };
-
-
-
