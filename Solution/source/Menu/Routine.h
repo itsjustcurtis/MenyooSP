@@ -48,9 +48,19 @@ void ThreadMenyooMain();
 void ThreadMenuLoops2();
 void TickMenyooConfig();
 void TickRainbowFader();
+void TickNeonFlashAnim();
+void TickNeonFadeAnim();
+void TickNeonSlideAnim();
+void TickNeonShiftAnim();
+void TickNeonSpinAnim();
+void TickNeonFwkAnim();
+void TickNeonHeartbeatAnim();
 
 extern INT16 BindNoClip;
-extern RgbS g_fadedRGB;
+extern RgbS g_fadedRGB, g_neonFade, g_neonSlide, g_neonHeart, g_neonShift;
+extern bool g_neonFlash;
+extern int g_neonSpin, g_neonSpinBack;
+extern bool g_neonFwk[4];
 extern UINT8 pauseClockH;
 extern UINT8 pauseClockM;
 extern Vehicle g_myVeh;
@@ -229,7 +239,11 @@ extern bool vehicleDisableSiren;
 extern bool fireworksDisplay;
 extern bool bitInfiniteAmmo;
 extern bool selfInfiniteParachutes;
+extern int loop_neon_fade, loop_neon_flash, loop_neon_delay;
 
+extern bool loop_neon_rgb, neonstate[4];
+
+extern RgbS g_setNeonColour;
 extern Entity targetSlotEntity;
 extern bool targetEntityLocked;
 
@@ -308,6 +322,7 @@ void SetVehicleInvincibleOn(Vehicle vehicle);
 void SetVehicleInvincibleOff(Vehicle vehicle);
 void SetVehicleFlip(GTAvehicle vehicle);
 void SetVehicleRainbowMode(GTAvehicle vehicle, bool useFader);
+void set_vehicle_neon_anim(GTAvehicle vehicle);
 void SetVehicleHeavyMass(GTAvehicle vehicle);
 void SetSelfVehicleBoost();
 

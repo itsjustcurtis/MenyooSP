@@ -522,7 +522,7 @@ enum class PauseMenuState : int
 	ViewingMap = 15
 };
 
-namespace GTAfont { 
+namespace GTAfont {
 	enum GTAfont : INT8
 	{
 		Arial = 0,
@@ -676,10 +676,10 @@ enum WeaponHash : DWORD
 	WEAPON_CERAMICPISTOL = 0x2B5EF5EC,
 	WEAPON_HAZARDCAN = 0xBA536372,
 
-    // 1.0.2189.0
+	// 1.0.2189.0
 	WEAPON_COMBATSHOTGUN = 0x5A96BA4,
 	WEAPON_GADGETPISTOL = 0x57A4368C,
-	WEAPON_MILITARYRIFLE = 0x9D1F17E6,     
+	WEAPON_MILITARYRIFLE = 0x9D1F17E6,
 
 	//The Contract(mpsecurity) - 2545
 	WEAPON_HEAVYRIFLE = 0xc78d71b4,
@@ -728,7 +728,7 @@ enum WeaponComponentHash : DWORD
 	COMPONENT_CARBINERIFLE_VARMOD_LUXE = 0xD89B9658,
 	COMPONENT_ADVANCEDRIFLE_CLIP_01 = 0xFA8FA10F,
 	COMPONENT_ADVANCEDRIFLE_VARMOD_LUXE = 0x377CD377,
-    COMPONENT_MILITARYRIFLE_CLIP_01 = 0x2D46D83B,                                          
+	COMPONENT_MILITARYRIFLE_CLIP_01 = 0x2D46D83B,
 	COMPONENT_MG_CLIP_01 = 0xF434EF84,
 	COMPONENT_MG_VARMOD_LOWRIDER = 0xD6DABABE,
 	COMPONENT_COMBATMG_CLIP_01 = 0xE1FFB34A,
@@ -786,7 +786,7 @@ enum WeaponComponentHash : DWORD
 	COMPONENT_AT_SCOPE_MEDIUM = 0xA0D89C42,
 	COMPONENT_AT_SCOPE_LARGE = 0xD2443DDC,
 	COMPONENT_AT_SCOPE_MAX = 0xBC54DA77,
-    COMPONENT_MILITARYRIFLE_SIGHT_01 = 0x6B82F395,                                           
+	COMPONENT_MILITARYRIFLE_SIGHT_01 = 0x6B82F395,
 	COMPONENT_AT_PI_SUPP = 0xC304849A,
 	COMPONENT_AT_PI_SUPP_02 = 0x65EA7EBB,
 	COMPONENT_AT_AR_SUPP = 0x837445AA,
@@ -804,7 +804,7 @@ enum WeaponComponentHash : DWORD
 	COMPONENT_ASSAULTRIFLE_CLIP_02 = 0xB1214F9B,
 	COMPONENT_CARBINERIFLE_CLIP_02 = 0x91109691,
 	COMPONENT_ADVANCEDRIFLE_CLIP_02 = 0x8EC1C979,
-    COMPONENT_MILITARYRIFLE_CLIP_02 = 0x684ACE42,                                          
+	COMPONENT_MILITARYRIFLE_CLIP_02 = 0x684ACE42,
 	COMPONENT_MG_CLIP_02 = 0x82158B47,
 	COMPONENT_COMBATPDW_CLIP_02 = 0x334A5203,
 	COMPONENT_COMBATMG_CLIP_02 = 0xD6C59CD6,
@@ -2544,7 +2544,7 @@ namespace HudColour{
 		STUNT_1,
 		STUNT_2
 	};
-	
+
 	extern const std::vector<std::string> vHudColours;
 }
 
@@ -4181,7 +4181,7 @@ namespace Bone {
 
 	};
 
-	struct NamedPedBone{ std::string name; int boneid; };
+	struct NamedPedBone { std::string name; int boneid; };
 	extern const std::vector <NamedPedBone> vBoneNames;
 }
 
@@ -4493,7 +4493,7 @@ namespace VBone {
 		wing_rf,
 		wing_rr,
 		wingtip_1,
-		wingtip_2,
+		wingtip_2
 	};
 
 	extern const std::vector<std::string> vNames;
@@ -4888,6 +4888,18 @@ enum class VehicleNeonLight : int
 	Front = 2,
 	Back = 3,
 };
+/*enum VehicleNeonFlash : int
+{
+	None,
+	Simple,
+	Spin,
+	SpinBack,
+};
+enum VehicleNeonFade : int
+{
+	None,
+	Simple,
+};*/
 enum class VehicleRoofState : int
 {
 	Closed,

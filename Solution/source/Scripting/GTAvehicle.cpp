@@ -1118,6 +1118,7 @@ void GTAvehicle::NeonLightsColour_set(RgbS value)
 void GTAvehicle::NeonLightsColour_set(BYTE r, BYTE g, BYTE b)
 {
 	SET_VEHICLE_NEON_COLOUR(this->mHandle, r, g, b);
+	g_setNeonColour = { r, g, b };
 }
 
 RgbS GTAvehicle::TyreSmokeColour_get() const

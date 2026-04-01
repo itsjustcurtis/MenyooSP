@@ -65,7 +65,7 @@ namespace sub
 
 	std::vector<NamedVehiclePaint> PAINTS_PEARL{
 
-	}; 
+	};
 
 	const std::vector<NamedVehiclePaint> PAINTS_WHEELS
 	{
@@ -321,7 +321,7 @@ namespace sub
 		//spawn dummy vehicle
 		Vector3 coords = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER::PLAYER_PED_ID(), 0.0, 0.0, -100.0);
 		float heading = ENTITY::GET_ENTITY_HEADING(PLAYER::PLAYER_PED_ID());
-		Vehicle veh =  CREATE_VEHICLE(model.hash, coords.x, coords.y, coords.z, heading, 1, 0, 0);
+		Vehicle veh = CREATE_VEHICLE(model.hash, coords.x, coords.y, coords.z, heading, 1, 0, 0);
 		VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(veh, 5.0f);
 		int painttype, colour, pearl, second;
 
@@ -744,7 +744,7 @@ namespace sub
 		}
 
 	}
-	
+
 	void MSPaints2_()
 	{
 		bool paintIndex_plus = 0, paintIndex_minus = 0, paintIndex_input = 0,
@@ -1020,7 +1020,7 @@ namespace sub
 			_AddPaintIndexSlider();
 
 		}
-		
+
 		void Sub_Chrome()
 		{
 			AddTitle("Chrome");
@@ -1031,7 +1031,7 @@ namespace sub
 				AddcarcolOption_(p.name, g_Ped4, p.paint, p.pearl);
 
 		}
-		
+
 		void Sub_Normal()
 		{
 			AddTitle("Classic");
@@ -1042,7 +1042,7 @@ namespace sub
 				AddcarcolOption_(p.name, g_Ped4, p.paint, p.pearl);
 
 		}
-		
+
 		void Sub_Matte()
 		{
 			AddTitle("Matte");
@@ -1053,7 +1053,7 @@ namespace sub
 				AddcarcolOption_(p.name, g_Ped4, p.paint, p.pearl);
 
 		}
-		
+
 		void Sub_Metallic()
 		{
 			AddTitle("Metallic");
@@ -1063,7 +1063,7 @@ namespace sub
 			for (auto& p : vPaints)
 				AddcarcolOption_(p.name, g_Ped4, p.paint, p.pearl);
 		}
-		
+
 		void Sub_Metal()
 		{
 			AddTitle("Metal");
@@ -1073,7 +1073,7 @@ namespace sub
 			for (auto& p : vPaints)
 				AddcarcolOption_(p.name, g_Ped4, p.paint, p.pearl);
 		}
-		
+
 		void Sub_Chameleon()
 		{
 			AddTitle("Chameleon");
@@ -1084,7 +1084,7 @@ namespace sub
 				AddcarcolOption_(p.name, g_Ped4, p.paint, p.pearl);
 
 		}
-		
+
 		void Sub_Pearl()
 		{
 			AddTitle("Pearlescent");
@@ -1097,7 +1097,7 @@ namespace sub
 			_AddPaintIndexSlider();
 
 		}
-		
+
 		void Sub_Util()
 		{
 			AddTitle("Utility");
@@ -1107,7 +1107,7 @@ namespace sub
 			for (auto& p : vPaints)
 				AddcarcolOption_(p.name, g_Ped4, p.paint, p.pearl);
 		}
-		
+
 		void Sub_Worn()
 		{
 			AddTitle("Worn");
@@ -1164,7 +1164,7 @@ namespace sub
 		}
 
 	}
-	
+
 	void MSPaints_RGB()
 	{
 		int ms_paints_rgb_r = 0,
@@ -3342,8 +3342,12 @@ namespace sub
 		}
 
 		GTAvehicle vehicle = g_Ped4;
+		std::vector<std::string> NEON_FLASH{ "None","Simple","Spin","SpinBack", "Firework"};
+		std::vector<std::string> NEON_FADE{ "None","Simple","Heartbeat","Shift","Slide"};
 
 		AddTitle(Game::GetGXTEntry("PIM_PVEO_004", "Neons Lights"));
+
+		bool neon_delay_plus = 0, neon_delay_minus = 0, neon_delay_input = 0, neon_flash_plus = 0, neon_flash_minus = 0, neon_fade_plus = 0, neon_fade_minus = 0, neon_rgb_toggle = 0;
 
 		for (auto& i : std::map<VehicleNeonLight, std::pair<Hash, std::string>>{
 			{ VehicleNeonLight::Left,{ 0xCE8DADF3, "Left" } },
@@ -3358,6 +3362,7 @@ namespace sub
 			{
 				vehicle.RequestControl(300);
 				vehicle.SetNeonLightOn(i.first, bPressed_on);
+				neonstate[static_cast<int>(i.first)] = bPressed_on;
 			}
 		}
 
@@ -3367,8 +3372,59 @@ namespace sub
 			bitMSPaintsRGBMode = 2;
 		}
 		if (*Menu::currentopATM == Menu::printingop)
-			Add_preset_colour_options_previews(vehicle.NeonLightsColour_get());
+			Add_preset_colour_options_previews(g_setNeonColour);
 
+
+		AddToggle("Neon RGB", loop_neon_rgb);
+
+		AddTexter("Neon Fade", loop_neon_fade, NEON_FADE, null, neon_fade_plus, neon_fade_minus);
+		AddTexter("Neon Flash", loop_neon_flash, NEON_FLASH, null, neon_flash_plus, neon_flash_minus);
+
+
+		if (neon_fade_plus)
+		{
+			if (loop_neon_fade == NEON_FADE.size()-1)
+				loop_neon_fade = 0;
+			else
+				loop_neon_fade++;
+		}
+		if (neon_fade_minus)
+		{
+			if (loop_neon_fade == 0)
+				loop_neon_fade = NEON_FADE.size()-1;
+			else
+				loop_neon_fade--;
+		}
+		if (neon_flash_plus)
+		{
+			if (loop_neon_flash == NEON_FLASH.size()-1)
+				loop_neon_flash = 0;
+			else
+				loop_neon_flash++;
+		}
+		if (neon_flash_minus)
+		{
+			if (loop_neon_flash == 0)
+				loop_neon_flash = NEON_FLASH.size()-1;
+			else
+				loop_neon_flash--;
+		}
+
+
+		if (loop_neon_flash > 0 || loop_neon_fade > 0)
+			AddNumber("Animation Speed (ms)", loop_neon_delay, 0, neon_delay_input, neon_delay_plus, neon_delay_minus);
+
+		if (neon_delay_plus) loop_neon_delay += 50;
+		if (neon_delay_minus) loop_neon_delay -= 50;
+		if (neon_delay_input)
+		{
+			std::string inputStr = Game::InputBox("", 4U, "", std::to_string(loop_neon_delay));
+			if (inputStr.length() > 0)
+			{
+				try { loop_neon_delay = std::stoi(inputStr); }
+				catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
+			}
+		}	
 	}
 
 	// Engine sound
