@@ -252,7 +252,11 @@ extern bool vehicleDisableSiren;
 extern bool fireworksDisplay;
 extern bool bitInfiniteAmmo;
 extern bool selfInfiniteParachutes;
+extern int loop_neon_fade, loop_neon_flash, loop_neon_delay;
 
+extern bool loop_neon_rgb, neonstate[4];
+
+extern RgbS g_setNeonColour;
 extern Entity targetSlotEntity;
 extern bool targetEntityLocked;
 
@@ -331,6 +335,7 @@ void SetVehicleInvincibleOn(Vehicle vehicle);
 void SetVehicleInvincibleOff(Vehicle vehicle);
 void SetVehicleFlip(GTAvehicle vehicle);
 void SetVehicleRainbowMode(GTAvehicle vehicle, bool useFader);
+void set_vehicle_neon_anim(GTAvehicle vehicle);
 void SetVehicleHeavyMass(GTAvehicle vehicle);
 void SetSelfVehicleBoost();
 

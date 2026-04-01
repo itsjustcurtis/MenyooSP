@@ -182,7 +182,7 @@ inline void MenyooMain()
 	srand(GetTickCount());
 	SET_RANDOM_SEED(GetTickCount());
 	g_MenyooConfigTick = GetTickCount();
-	g_RGBFaderTick = GetTickCount();
+	g_FaderTick = GetTickCount();
 	g_NeonFaderTick = GetTickCount();
 	g_NeonSliderTick = GetTickCount();
 	g_NeonShifterTick = GetTickCount();
@@ -280,7 +280,7 @@ void TickRainbowFader()
 		}
 		firstTick = false;
 
-		g_RGBFaderTick = GetTickCount();
+		g_FaderTick = GetTickCount();
 	}
 }
 
@@ -305,9 +305,9 @@ void TickNeonFadeAnim()
 			loop_fade_multiplier = 0.5 * (cos((3.142 * time) / loop_neon_delay) + 1);
 		else
 			loop_fade_multiplier = 1;
-		fade.R = g_neon_colour_set.R * loop_fade_multiplier;
-		fade.G = g_neon_colour_set.G * loop_fade_multiplier;
-		fade.B = g_neon_colour_set.B * loop_fade_multiplier;
+		fade.R = g_setNeonColour.R * loop_fade_multiplier;
+		fade.G = g_setNeonColour.G * loop_fade_multiplier;
+		fade.B = g_setNeonColour.B * loop_fade_multiplier;
 		g_NeonFaderTick = GetTickCount();
 	}
 
@@ -320,9 +320,9 @@ void TickNeonSlideAnim()
 		float loop_slide_multiplier = 1.0f;
 		int time = GetTickCount() % (2 * loop_neon_delay);
 		loop_slide_multiplier = ((abs(1.2*tanh(1.2 * sin(((0.5 * 3.142 * time / loop_neon_delay))))) - 1) * floor(cos(3.142 * ((time / loop_neon_delay) + 0.5)))) + (1.2*(-(abs(tanh(1.2 * cos(((0.5 * 3.142 * time) / loop_neon_delay)))))*floor(sin(((3.142 * time) / loop_neon_delay)))));
-		slide.R = g_neon_colour_set.R * loop_slide_multiplier;
-		slide.G = g_neon_colour_set.G * loop_slide_multiplier;
-		slide.B = g_neon_colour_set.B * loop_slide_multiplier;
+		slide.R = g_setNeonColour.R * loop_slide_multiplier;
+		slide.G = g_setNeonColour.G * loop_slide_multiplier;
+		slide.B = g_setNeonColour.B * loop_slide_multiplier;
 		g_NeonSliderTick = GetTickCount();
 	}
 
@@ -333,9 +333,9 @@ void TickNeonShiftAnim()
 	{
 		auto& shift = g_neonShift;
 		int time = GetTickCount() % (2*loop_neon_delay);
-		shift.R = (96 - (0.75 * g_neon_colour_set.R)) * (sin((3.142 * time) / loop_neon_delay)) + 96 + (0.25 * g_neon_colour_set.R);
-		shift.G = (96 - (0.75 * g_neon_colour_set.G)) * (sin((3.142 * time) / loop_neon_delay)) + 96 + (0.25 * g_neon_colour_set.G);
-		shift.B = (96 - 0.75 * (g_neon_colour_set.B)) * (sin((3.142 * time) / loop_neon_delay)) + 96 + (0.25 * g_neon_colour_set.B);
+		shift.R = (96 - (0.75 * g_setNeonColour.R)) * (sin((3.142 * time) / loop_neon_delay)) + 96 + (0.25 * g_setNeonColour.R);
+		shift.G = (96 - (0.75 * g_setNeonColour.G)) * (sin((3.142 * time) / loop_neon_delay)) + 96 + (0.25 * g_setNeonColour.G);
+		shift.B = (96 - 0.75 * (g_setNeonColour.B)) * (sin((3.142 * time) / loop_neon_delay)) + 96 + (0.25 * g_setNeonColour.B);
 		g_NeonShifterTick = GetTickCount();
 	}
 
@@ -350,9 +350,9 @@ void TickNeonHeartbeatAnim() {
 			loop_heart_multiplier = 1 - abs(((cos((3.142 * (time)) / loop_neon_delay * 4))));
 		else
 			loop_heart_multiplier = 0;
-		fade.R = g_neon_colour_set.R * loop_heart_multiplier;
-		fade.G = g_neon_colour_set.G * loop_heart_multiplier;
-		fade.B = g_neon_colour_set.B * loop_heart_multiplier;
+		fade.R = g_setNeonColour.R * loop_heart_multiplier;
+		fade.G = g_setNeonColour.G * loop_heart_multiplier;
+		fade.B = g_setNeonColour.B * loop_heart_multiplier;
 		g_NeonHeartBeatTick = GetTickCount();
 	}
 }
@@ -653,16 +653,12 @@ bool fireworksDisplay = false;
 bool bitInfiniteAmmo = false; 
 bool selfInfiniteParachutes = false;
 
-loop_car_colour_change = 0, loop_vehicle_invisibility = 0, loop_self_engineOn = 0, loop_hide_hud = 0, loop_showFullHud = 0,
-loop_pause_clock = 0, loop_sync_clock = 0, loop_triple_bullets = 0, loop_rapid_fire = 0, loop_self_resurrectionGun = 0, loop_soulswitch_gun = 0, loop_self_deleteGun = 0, loop_vehicle_fixloop = 0, loop_vehicle_fliploop = 0,
-loop_blackout_mode = 0, loop_simple_blackout_mode = 0, loop_restricted_areas_access = 0, loop_HVSnipers = 0, loop_vehicle_disableSiren = 0, loop_fireworksDisplay = 0,
-bit_infinite_ammo = 0, loop_self_inf_parachutes = 0, lowersuspension = 0, loop_neon_rgb = 0;
+extern int loop_neon_fade = 0, loop_neon_flash = 0, loop_neon_delay = 1000;
 
-int loop_neon_fade = 0, loop_neon_flash = 0, loop_neon_delay = 1000;
+extern bool loop_neon_rgb = false, neonstate[4] = { false };
 
-bool neonstate[4] = {0};
+extern RgbS g_setNeonColour = g_spawnVehicleNeonColor;
 
-RgbS g_neon_colour_set = _globalSpawnVehicle_neonCol;
 Entity targetSlotEntity = 0;
 
 bool targetEntityLocked = false;
@@ -2572,7 +2568,7 @@ void SetVehicleRainbowMode(GTAvehicle vehicle, bool useFader)
 }
 void set_vehicle_neon_anim(GTAvehicle vehicle)
 {
-	if (Static_12 != g_myVeh)
+	if (g_Ped4 != g_myVeh)
 	{
 		loop_neon_fade = 0;
 		loop_neon_flash = 0;
@@ -2580,13 +2576,12 @@ void set_vehicle_neon_anim(GTAvehicle vehicle)
 		for (int i = 0; i < 4; i++) {
 			neonstate[i] = 0;
 		}
-		lowersuspension = 0;
 	}
 	if (loop_neon_rgb)
 	{
-		g_neon_colour_set = g_fadedRGB; 
+		g_setNeonColour = g_fadedRGB; 
 		vehicle.RequestControlOnce();
-		vehicle.NeonLightsColour_set(g_neon_colour_set);
+		vehicle.NeonLightsColour_set(g_setNeonColour);
 	}
 	switch (loop_neon_flash)
 	{
@@ -2663,7 +2658,7 @@ void set_vehicle_neon_anim(GTAvehicle vehicle)
 	case 0:
 	{
 		vehicle.RequestControlOnce();
-		vehicle.NeonLightsColour_set(g_neon_colour_set);
+		vehicle.NeonLightsColour_set(g_setNeonColour);
 		break;
 	}
 	case 1:
@@ -2696,8 +2691,9 @@ void set_vehicle_neon_anim(GTAvehicle vehicle)
 void SetVehicleHeavyMass(GTAvehicle vehicle)
 {
 	if (!vehicle.Exists())
+	{
 			return;
-}
+	}
 
 	float speed = vehicle.GetSpeed();
 	if (speed < 0.5f)
@@ -2705,7 +2701,7 @@ void SetVehicleHeavyMass(GTAvehicle vehicle)
 		return;
 	}
 
-		vehicle.RequestControlOnce();
+	vehicle.RequestControlOnce();
 
 	SetVehicleInvincibleOn(vehicle.Handle());
 	vehicle.Repair(true); // Only if it needs a repair obv
@@ -3750,6 +3746,8 @@ static void TickVehicleEffects(bool gameIsPaused)
 	{
 		SetVehicleRainbowMode(g_myVeh, true);
 	}
+
+	set_vehicle_neon_anim(g_myVeh);
 
 	if (vehicleDisableSiren)
 	{

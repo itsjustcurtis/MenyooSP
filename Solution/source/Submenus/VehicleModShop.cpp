@@ -36,6 +36,7 @@
 
 namespace sub
 {
+	bool lowersuspension = 0;
 	int lastMod = -2;
 	bool selectmod = false;
 	int lastpaint, lastpearl, lastr, lastg, lastb;
@@ -1288,26 +1289,6 @@ namespace sub
 		if (ms_paints_rgb_a != -1) AddNumber("Opacity", ms_paints_rgb_a, 0, ms_paints_rgb_a_custom, ms_paints_rgb_a_plus, ms_paints_rgb_a_minus);
 		AddTexter("HUD Colour", settingsHUDColor, HudColour::vHudColours, settings_hud_c_custom, settings_hud_c_plus, settings_hud_c_minus);
 		AddOption("~b~Input~s~ Hex Code", ms_paints_hexinput);
-		switch (bit_MSPaints_RGB_mode)
-		{
-		case 0: case 1: case 7: default: break;
-		case 2: case 3: case 4: case 9: case 10: 
-		{
-			AddOption("Match Primary", matchprim);
-			AddOption("Match Secondary", matchsec);
-			break;
-		}
-		}
-
-		if(matchprim)
-		{ 
-			GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(Static_12, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b);
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, 255);
-		}
-		if (matchsec) {		
-			GET_VEHICLE_CUSTOM_SECONDARY_COLOUR(Static_12, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b);
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, 255);
-		}
 		
 		AddBreak("---Presets---");
 		if (AddPresetColourOptions(ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b))
@@ -3392,10 +3373,10 @@ namespace sub
 			bitMSPaintsRGBMode = 2;
 		}
 		if (*Menu::currentopATM == Menu::printingop)
-			Add_preset_colour_options_previews(g_neon_colour_set);
+			Add_preset_colour_options_previews(g_setNeonColour);
 
 
-		AddToggle("Neon RGB", loop_neon_rgb, neon_rgb_toggle, neon_rgb_toggle);
+		AddToggle("Neon RGB", loop_neon_rgb);
 
 		AddTexter("Neon Fade", loop_neon_fade, NEON_FADE, null, neon_fade_plus, neon_fade_minus);
 		AddTexter("Neon Flash", loop_neon_flash, NEON_FLASH, null, neon_flash_plus, neon_flash_minus);
@@ -3442,7 +3423,7 @@ namespace sub
 			if (inputStr.length() > 0)
 			{
 				try { loop_neon_delay = std::stoi(inputStr); }
-				catch (...) { Game::Print::PrintError_InvalidInput(); }
+				catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 			}
 		}	
 	}
