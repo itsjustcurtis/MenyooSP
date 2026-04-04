@@ -326,7 +326,7 @@ std::string GetVehicleEngineSoundName(const GTAvehicle& vehicle);
 void SetVehicleEngineSoundName(GTAvehicle vehicle, const std::string& name);
 
 extern std::unordered_set<Vehicle> g_vehWheelsInvisForRussian;
-bool are_vehicle_wheels_invisible(const GTAvehicle& vehicle);
+bool AreVehicleWheelsInvisible(const GTAvehicle& vehicle);
 void SetVehicleWheelsInvisible(GTAvehicle vehicle, bool enable);
 
 extern std::map<Ped, std::string> g_pedListMovGroup;

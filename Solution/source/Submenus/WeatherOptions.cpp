@@ -9,152 +9,122 @@
 */
 #include "WeatherOptions.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Memory\GTAmemory.h"
-#include "..\Scripting\World.h"
-#include "..\Util\FileLogger.h"
-
-#include <string>
-#include <map>
-#include <array>
-
 namespace sub
 {
-	void WeatherOps_()
+	void WeatherMenu()
 	{
-		bool spsnow_on = 0,
-			spsnow_off = 0,
-			windSpeed_plus = 0, windSpeed_minus = 0,
-			rainfxi_plus = 0, rainfxi_minus = 0,
-			wavesHeight_plus = 0, wavesHeight_minus = 0,
-			gravityLevel_plus = 0, gravityLevel_minus = 0,
-			bClearWeatherOverride = 0;
+		bool spSnowOn = false;
+		bool spSnowOff = false;
+		bool windSpeedPlus = false;
+		bool windSpeedMinus = false;
+		bool rainFXPlus = false;
+		bool rainFXMinus = false;
+		bool wavesHeightPlus = false;
+		bool wavesHeightMinus = false;
+		bool gravityLevelPlus = false;
+		bool gravityLevelMinus = false;
+		bool clearWeatherOverride = false;
 
-		//std::vector<std::string>{"Earth", "Mercury", "Earth's Moon", "Pluto"};
-		// unused
-		std::map<float, std::string> v0gravities
-		{
-			{ 0.0f, "Zero 0.0" },
-			{ 0.6f, "Pluto 0.6" },
-			{ 1.6f, "Earth's Moon 1.6" },
-			{ 3.7f, "Mercury/Mars 3.7" },
-			{ 8.9f, "Venus/Uranus 8.9" },
-			{ 9.8f, "Earth 9.8" },
-			{ 10.4f, "Saturn 10.4" },
-			{ 11.2f, "Neptune 11.2" },
-			{ 24.9f, "Jupiter 24.9" },
-			{ 274.0f, "Sun 274.0" }
-		};
-
-		float mult_0_gravity = GTAmemory::WorldGravity_get();
+		float gravityMultiplier = GTAmemory::GetWorldGravity();
 		float windSpeed = GET_WIND_SPEED();
 		float wavesHeight = GET_DEEP_OCEAN_SCALER();
 
 		AddTitle("Weather");
-		AddTickol("Reset Weather", true, bClearWeatherOverride, bClearWeatherOverride, TICKOL::CROSS); if (bClearWeatherOverride)
+		AddTickol("Reset Weather", true, clearWeatherOverride, clearWeatherOverride, TICKOL::CROSS); 
+		if (clearWeatherOverride)
 		{
 			World::ClearWeatherOverride();
 		}
 		for (auto& weatherName : World::sWeatherNames)
 		{
 			bool bWeatherPressed = false;
-			AddTickol(weatherName.first, GET_PREV_WEATHER_TYPE_HASH_NAME() == GET_HASH_KEY(weatherName.second), bWeatherPressed, bWeatherPressed); if (bWeatherPressed)
+			AddTickol(weatherName.first, GET_PREV_WEATHER_TYPE_HASH_NAME() == GET_HASH_KEY(weatherName.second), bWeatherPressed, bWeatherPressed); 
+			if (bWeatherPressed)
 			{
 				addlog(ige::LogType::LOG_DEBUG, "Setting weather to " + weatherName.first);
 				World::SetWeatherOverride(weatherName.second);
 			}
 		}
 		
-		//AddweatherOption_("Clear");
-		//AddweatherOption_("ExtraSunny");
-		//AddweatherOption_("Clouds");
-		//AddweatherOption_("Smog");
-		//AddweatherOption_("Foggy");
-		//AddweatherOption_("Overcast");
-		//AddweatherOption_("Clearing");
-		//AddweatherOption_("Rain");
-		//AddweatherOption_("Thunder");
-		//AddweatherOption_("Neutral");
-		//AddweatherOption_("Snow");
-		//AddweatherOption_("SnowLight");
-		//AddweatherOption_("Blizzard");
-		//AddweatherOption_("Xmas");
-		AddLocal("Snow On Terrain", g_spSnow.IsSnow(), spsnow_on, spsnow_off);
-		AddNumber("Wind Speed", windSpeed, 2, null, windSpeed_plus, windSpeed_minus);
-		AddNumber("Ocean Wave Strength", wavesHeight, 2, null, wavesHeight_plus, wavesHeight_minus);
-		AddNumber("Rain Puddles Multiplier", g_rainFXIntensity, 2, null, rainfxi_plus, rainfxi_minus);
-		AddNumber("Gravity", mult_0_gravity, 2, null, gravityLevel_plus, gravityLevel_minus);
+		AddLocal("Snow On Terrain", g_spSnow.IsSnow(), spSnowOn, spSnowOff);
+		AddNumber("Wind Speed", windSpeed, 2, null, windSpeedPlus, windSpeedMinus);
+		AddNumber("Ocean Wave Strength", wavesHeight, 2, null, wavesHeightPlus, wavesHeightMinus);
+		AddNumber("Rain Puddles Multiplier", g_rainFXIntensity, 2, null, rainFXPlus, rainFXMinus);
+		AddNumber("Gravity", gravityMultiplier, 2, null, gravityLevelPlus, gravityLevelMinus);
 		AddOption("Clouds", null, nullFunc, SUB::CLOUDOPS);
 		AddOption("Water Hack (For Waves At Beaches)", null, nullFunc, SUB::WATERHACK);
 
 
-		if (spsnow_on || spsnow_off) { g_spSnow.ToggleSnow(spsnow_on); }
+		if (spSnowOn || spSnowOff) 
+		{ 
+			g_spSnow.ToggleSnow(spSnowOn); 
+		}
 
-		if (windSpeed_plus)
+		if (windSpeedPlus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "windSpeed_plus");
 			windSpeed += 0.1f;
 			SET_WIND_SPEED(windSpeed);
 		}
-		if (windSpeed_minus)
+		if (windSpeedMinus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "windSpeed_minus");
 			windSpeed -= 0.1f;
 			SET_WIND_SPEED(windSpeed);
 		}
 
-		if (wavesHeight_plus)
+		if (wavesHeightPlus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "wavesHeight_plus");
 			wavesHeight += 0.1f;
 			WATER::SET_DEEP_OCEAN_SCALER(wavesHeight);
 		}
-		if (wavesHeight_minus)
+
+		if (wavesHeightMinus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "wavesHeight_minus");
 			wavesHeight -= 0.1f;
 			WATER::SET_DEEP_OCEAN_SCALER(wavesHeight);
 		}
 
-		if (rainfxi_plus)
+		if (rainFXPlus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "rainfxit_plus");
-			if (g_rainFXIntensity < 45.0f) g_rainFXIntensity += 0.1f;
+			if (g_rainFXIntensity < 45.0f) 
+			{
+				g_rainFXIntensity += 0.1f;
+			}
 			SET_RAIN(g_rainFXIntensity);
 		}
-		if (rainfxi_minus)
+
+		if (rainFXMinus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "rainfxit_minus");
-			if (g_rainFXIntensity > 0.0f) g_rainFXIntensity -= 0.1f;
+			if (g_rainFXIntensity > 0.0f) 
+			{
+				g_rainFXIntensity -= 0.1f;
+			}
 			SET_RAIN(g_rainFXIntensity);
 		}
 
-		if (gravityLevel_plus)
+		if (gravityLevelPlus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "gravityLevel_plus");
-			mult_0_gravity += 0.1;
-			GTAmemory::WorldGravity_set(mult_0_gravity);
+			gravityMultiplier += 0.1;
+			GTAmemory::SetWorldGravity(gravityMultiplier);
 		}
-		if (gravityLevel_minus)
+
+		if (gravityLevelMinus)
 		{
 			addlog(ige::LogType::LOG_TRACE, "gravityLevel_minus");
-			mult_0_gravity -= 0.1;
-			GTAmemory::WorldGravity_set(mult_0_gravity);
+			gravityMultiplier -= 0.1;
+			GTAmemory::SetWorldGravity(gravityMultiplier);
 		}
-		
-		//if (gravityLevel_plus && mult_0_gravity < 3){ mult_0_gravity++; SET_GRAVITY_LEVEL(mult_0_gravity); return; }
-		//if (gravityLevel_minus && mult_0_gravity > 0){ mult_0_gravity--; SET_GRAVITY_LEVEL(mult_0_gravity); return; }
-
 	}
 
-	namespace WeatherClouds_catind
+	namespace WeatherClouds
 	{
-		const std::array<std::string, 20> vCloudNames
+		const std::array<std::string, 20> cloudNames
 		{ {
 			{ "Altostratus" },
 			{ "Cirrocumulus" },
@@ -178,7 +148,7 @@ namespace sub
 			{ "Wispy" }
 			} };
 
-		void sub_CloudOps()
+		void CloudMenu()
 		{
 			AddTitle("Clouds");
 
@@ -188,22 +158,22 @@ namespace sub
 				UNLOAD_ALL_CLOUD_HATS();
 			}
 
-			for (auto& name : vCloudNames)
+			for (auto& name : cloudNames)
 			{
 				bool bPressed = false;
-				AddOption(name, bPressed); if (bPressed)
+				AddOption(name, bPressed);
+				if (bPressed)
 				{
 					addlog(ige::LogType::LOG_DEBUG, "Set Clouds: " + name);
 					LOAD_CLOUD_HAT(name.c_str(), 0.5f);
 				}
 			}
 		}
-
 	}
-
 }
+
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(WEATHEROPS, 	sub::WeatherOps_)
-REGISTER_SUBMENU(CLOUDOPS,   	sub::WeatherClouds_catind::sub_CloudOps)
+REGISTER_SUBMENU(WEATHEROPS, 	sub::WeatherMenu)
+REGISTER_SUBMENU(CLOUDOPS,   	sub::WeatherClouds::CloudMenu)

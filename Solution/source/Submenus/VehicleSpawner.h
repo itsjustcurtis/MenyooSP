@@ -9,7 +9,41 @@
 */
 #pragma once
 
+#include "..\macros.h"
+
+#include "..\Menu\Menu.h"
+#include "..\Menu\Routine.h"
+
+#include "..\Natives\natives2.h"
+#include "..\Util\GTAmath.h"
+#include "..\Scripting\Model.h"
+#include "..\Scripting\PTFX.h"
+#include "..\Scripting\GTAentity.h"
+#include "..\Scripting\GTAvehicle.h"
+#include "..\Scripting\GTAped.h"
+#include "..\Scripting\Game.h"
+#include "..\Scripting\DxHookIMG.h"
+#include "..\Util\ExePath.h"
+#include "..\Scripting\ModelNames.h"
+#include "..\Menu\FolderPreviewBmps.h"
+#include "..\Util\StringManip.h"
+#include "..\Util\keyboard.h"
+#include "..\Util\FileLogger.h"
+
+#include "VehicleModShop.h"
+#include "WeaponOptions.h"
+#include "Spooner\MenuOptions.h"
+#include "Spooner\Databases.h"
+#include "Spooner\EntityManagement.h"
+#include "Spooner\FileManagement.h"
+#include "Spooner\SpoonerEntity.h"
+
+#include <Shlwapi.h> //PathIsDirectory
+#pragma comment(lib, "Shlwapi.lib")
 #include <string>
+#include <vector>
+#include <pugixml\src\pugixml.hpp>
+#include <dirent\include\dirent.h>
 
 typedef unsigned __int8 UINT8;
 typedef int INT, Vehicle, Entity, Ped;
@@ -19,20 +53,18 @@ typedef char *PCHAR;
 class GTAentity;
 class GTAvehicle;
 class GTAped;
-namespace GTAmodel {
+namespace GTAmodel
+{
 	class Model;
 }
 
 namespace sub
 {
-	// Vehicle - spawn function
-	int FuncSpawnVehicle_(GTAmodel::Model model, GTAped ped, bool deleteOld = false, bool warpIntoVehicle = true);
+	int SpawnVehicle(GTAmodel::Model model, GTAped ped, bool deleteOld = false, bool warpIntoVehicle = true);
 
-	// Vehicle spawner
-
-	namespace SpawnVehicle_catind
+	namespace VehicleSpawner
 	{
-		extern UINT8 SpawnVehicle_index;
+		extern UINT8 spawnVehicleIndex;
 
 		enum Indices
 		{
@@ -42,37 +74,32 @@ namespace sub
 		};
 
 		void PopulateVehicleBmps();
-		//void DrawVehicleBmp(const Model& vehModel);
-
-		void AddvcatOption_(const std::string& text, UINT8 index, bool *extra_option_code = nullptr);
+		void AddVehicleCategoryOption(const std::string& text, UINT8 index, bool *extra_option_code = nullptr);
 
 	}
 
-	void SpawnVehicle_();
+	void SpawnVehicleMenu();
+	void SpawnVehicleOptions();
 
-	void SpawnVehicle_Options();
+	bool SpawnVehicleIsVehicleModelAFavourite(GTAmodel::Model vehModel);
+	bool SpawnVehicleAddVehicleModelToFavourites(GTAmodel::Model vehModel, const std::string& customName);
+	bool SpawnVehicleRemoveVehicleModelFromFavourites(GTAmodel::Model vehModel);
 
-	bool SpawnVehicle_IsVehicleModelAFavourite(GTAmodel::Model vehModel);
-	bool SpawnVehicle_AddVehicleModelToFavourites(GTAmodel::Model vehModel, const std::string& customName);
-	bool SpawnVehicle_RemoveVehicleModelFromFavourites(GTAmodel::Model vehModel);
+	void SpawnVehicleDLC();
+	void SpawnVehicleDLCSelection();
+	void SpawnVehicleAllCategoriesMenu();
+	void SpawnVehicleFavouritesMenu();
 
-	void SpawnVehicle_DLC();
-	void SpawnVehicle_DLC_Selection();
-	void SpawnVehicle_AllCatsSub();
-	void SpawnVehicle_Favourites();
-
-	// Vehicle saver
-
-	namespace VehicleSaver_catind
+	namespace VehicleSaver
 	{
 		extern UINT8 _persistentAttachmentsTexterIndex;
 		extern UINT8 _driverVisibilityTexterIndex;
 
-		void VehSaver_SaveToFile(std::string filePath, GTAvehicle ev);
-		void VehSaver_ReadFromFile(std::string filePath, GTAentity ped);
+		void VehicleSaveToFile(std::string filePath, GTAvehicle ev);
+		void VehicleReadFromFile(std::string filePath, GTAentity ped);
 
-		void Sub_VehSaver();
-		void Sub_VehSaver_InItem();
+		void VehicleSaverMenu();
+		void VehSaverInItemMenu();
 		int saveCarVars();
 		void saveColourVals();
 

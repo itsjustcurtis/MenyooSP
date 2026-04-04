@@ -15,7 +15,7 @@
 #include <algorithm>
 
 // Integer/String manipulation
-std::string int_to_hexstring(unsigned long i, bool zerox)
+std::string IntToHexString(unsigned long i, bool zerox)
 {
 	std::stringstream stream;
 	if (zerox)

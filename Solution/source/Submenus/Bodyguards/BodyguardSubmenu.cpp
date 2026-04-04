@@ -42,7 +42,7 @@ namespace sub::BodyguardMenu
                 else
                 {
                     auto model = SelectedBodyguard->Handle.Model();
-                    title = int_to_hexstring(model.hash, true);
+                    title = IntToHexString(model.hash, true);
                 }
             }
             else

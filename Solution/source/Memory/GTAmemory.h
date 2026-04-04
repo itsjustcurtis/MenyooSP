@@ -612,8 +612,8 @@ public:
 
 	static int GetNumberOfVehicles();
 
-	static float WorldGravity_get();
-	static void WorldGravity_set(float value);
+	static float GetWorldGravity();
+	static void SetWorldGravity(float value);
 
 	static inline bool bittest(int data, unsigned char index)
 	{

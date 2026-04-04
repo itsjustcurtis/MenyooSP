@@ -19,15 +19,10 @@ namespace ManualRespawn
 		bool inRespawn;
 	public:
 		ManualRespawn();
-
 		bool InRespawn();
-
 		void TurnOff() override;
-
 		bool IsSkipPressed();
-
 		inline void ShowRespawnHelpText();
-
 		void Tick() override;
 		inline void DoManualRespawnTick();
 
@@ -37,14 +32,5 @@ namespace ManualRespawn
 	extern ManualRespawn g_manualRespawn;
 
 	void ToggleOnOff();
-
-
 	void CheckSelfDealthModel();
 }
-
-
-
-
-
-
-

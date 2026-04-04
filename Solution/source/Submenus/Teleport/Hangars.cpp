@@ -298,7 +298,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (currentHangarInfo.location == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 			GTAped ped = g_Ped1;
@@ -335,7 +335,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (currentHangarInfo.location == nullptr || selectedOptionArray == nullptr || selectedOptionArray->ptr == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 			AddTitle(selectedOptionArray->name.empty() ? "Option" : selectedOptionArray->name);

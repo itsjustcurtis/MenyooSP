@@ -756,7 +756,7 @@ namespace World
 
 
 // World - clear area
-void clear_area_of_entities(const EntityType& type, const Vector3& coords, float radius, const std::vector<GTAentity>& excludes)
+void ClearAreaOfEntities(const EntityType& type, const Vector3& coords, float radius, const std::vector<GTAentity>& excludes)
 {
 	if (GTAmemory::GetIsEnhanced()) return; // It actually works for enhanced now, but after some time of clearing entities, the game crashes? TODO: investigate why that is.
 	//LOAD_ALL_OBJECTS_NOW();
@@ -843,8 +843,8 @@ void clear_area_of_vehicles_around_entity(Entity entity, float radius, bool memr
 	else
 	{
 		if (IS_ENTITY_A_PED(entity))
-			clear_area_of_entities(EntityType::VEHICLE, Pos, radius, { GET_VEHICLE_PED_IS_USING(entity) });
-		else clear_area_of_entities(EntityType::VEHICLE, Pos, radius, {});
+			ClearAreaOfEntities(EntityType::VEHICLE, Pos, radius, { GET_VEHICLE_PED_IS_USING(entity) });
+		else ClearAreaOfEntities(EntityType::VEHICLE, Pos, radius, {});
 	}
 
 
@@ -886,8 +886,8 @@ void clear_area_of_peds_around_entity(Entity entity, float radius, bool memry)
 	else
 	{
 		if (IS_ENTITY_A_PED(entity))
-			clear_area_of_entities(EntityType::PED, Pos, radius, { entity });
-		else clear_area_of_entities(EntityType::PED, Pos, radius, {});
+			ClearAreaOfEntities(EntityType::PED, Pos, radius, { entity });
+		else ClearAreaOfEntities(EntityType::PED, Pos, radius, {});
 	}
 
 }
@@ -907,11 +907,11 @@ void clear_attachments_off_entity(const GTAentity& entity, const EntityType& ent
 			/*if (entity.Handle() == PLAYER_PED_ID() && IS_PED_A_PLAYER(e.Handle()))
 			{
 			std::string ofn("_reserved");
-			sub::ComponentChanger_Outfit_catind::Create(entity.Handle(), ofn);
-			if (sub::ComponentChanger_Outfit_catind::Exists(ofn))
+			sub::ComponentChangerOutfit::Create(entity.Handle(), ofn);
+			if (sub::ComponentChangerOutfit::Exists(ofn))
 			{
 			WAIT(40);
-			sub::ComponentChanger_Outfit_catind::Apply(entity, ofn, true, true, true, true);
+			sub::ComponentChangerOutfit::Apply(entity, ofn, true, true, true, true);
 			}
 			}
 			else*/

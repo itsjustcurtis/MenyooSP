@@ -100,8 +100,8 @@ namespace DxHookIMG
 	DxTexture teleToWpBoxIconGamepad;
 	void LoadAllMenyooTexturesInit()
 	{
-		sub::Speedo_catind::LoadSpeedoImages();
-		sub::Clock_catind::LoadClockImages();
+		sub::Speedo::LoadSpeedoImages();
+		sub::Clock::LoadClockImages();
 		//DxHookIMG::titleui_spooner.Load(GetPathffA(Pathff::Graphics, true) + "titleui_spooner.png");
 		DxHookIMG::teleToWpBoxIconKeyboard.Load(GetPathffA(Pathff::Graphics, true) + "teleportToWaypointBoxKeyboard.png");
 		DxHookIMG::teleToWpBoxIconGamepad.Load(GetPathffA(Pathff::Graphics, true) + "teleportToWaypointBoxGamepad.png");

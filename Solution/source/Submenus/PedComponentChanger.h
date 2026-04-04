@@ -47,7 +47,7 @@ namespace sub
 
 	// Decals - tattoos & badges
 
-	namespace PedDecals_catind
+	namespace PedDecals
 	{
 		struct PedDecalValue
 		{
@@ -84,7 +84,7 @@ namespace sub
 
 	// Damage/blood textures
 
-	namespace PedDamageTextures_catind
+	namespace PedDamageTextures
 	{
 		extern std::map<Ped, std::vector<std::string>> vPedsAndDamagePacks;
 
@@ -156,7 +156,7 @@ namespace sub
 
 	// Outfits (saver)
 
-	namespace ComponentChanger_Outfit_catind
+	namespace ComponentChangerOutfit
 	{
 		extern UINT8 persistentAttachmentsTexterIndex;
 		bool Create(GTAentity ped, std::string filePath);

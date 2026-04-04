@@ -11,11 +11,23 @@
 
 #include <string>
 
+#include "..\macros.h"
+
+#include "..\Menu\Menu.h"
+
+#include "..\Natives\natives2.h"
+#include "..\Scripting\Game.h"
+#include "..\Util\FileLogger.h"
+
+#include <string>
+#include <vector>
+#include <utility>
+
 typedef unsigned __int8 UINT8;
 
 namespace sub
 {
-	namespace SpStatManager_catind
+	namespace SpStatManager
 	{
 		enum class StatDataType_t : UINT8
 		{
@@ -24,10 +36,16 @@ namespace sub
 			INT,
 			FLOAT
 		};
-		struct CharStat_t { std::string name, caption; StatDataType_t type; float min, max; };
-		//struct NamedCharStatList_t { std::string title; std::vector<CharStat_t> list; };
 
-		// Setters/Getters
+		struct CharStat_t 
+		{ 
+			std::string name;
+			std::string caption; 
+			StatDataType_t type; 
+			float min;
+			float max; 
+		};
+
 		int StatGetInt(const std::string& name);
 		bool StatGetBool(const std::string& name);
 		float StatGetFloat(const std::string& name);
@@ -37,11 +55,10 @@ namespace sub
 		void StatSetFloat(const std::string& name, float value);
 		void StatSetString(const std::string& name, const std::string& value);
 
-		void __AddOption(const CharStat_t& stat);
-
-		void Sub_SpStatManager();
-		void Sub_InChar();
-		void Sub_InChar_InList();
+		void AddOptionStats(const CharStat_t& stat);
+		void SPStatsManagerMenu();
+		void SPStatsInCharMenu();
+		void InCharInListMenu();
 
 	}
 

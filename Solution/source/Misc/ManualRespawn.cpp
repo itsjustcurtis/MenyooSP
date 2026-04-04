@@ -31,8 +31,7 @@
 
 namespace ManualRespawn
 {
-	ManualRespawn::ManualRespawn()
-		: inRespawn(false)
+	ManualRespawn::ManualRespawn() : inRespawn(false)
 	{
 	}
 
@@ -60,13 +59,13 @@ namespace ManualRespawn
 	{
 		std::string bindsname = "button";
 		try { bindsname = ControllerInputs::vNames.at(respawnbinds); }
-		catch (...) {
+		catch (...) 
+		{
 			addlog(ige::LogType::LOG_ERROR, "Unable to set new bindsname, respawnbinds = " + std::to_string(respawnbinds));
 		}
 
 		Game::Print::SetupDraw(GTAfont::Arial, Vector2(0, 0.4f), false, true, false, RGBA(255, 255, 255, 190));
 		Game::Print::drawstring("Press ~b~[" + bindsname + "]~s~ to respawn.", NULL, 0.1f);
-		//Game::CustomHelpText::ShowTimedText(oss_ << "Press " << "~INPUT_LOOK_BEHIND~" << " to respawn.", 100);
 	}
 
 	void ManualRespawn::Tick()
@@ -80,7 +79,7 @@ namespace ManualRespawn
 	{
 		auto player = PLAYER_ID();
 
-		if (IS_PLAYER_DEAD(player))// || IS_PLAYER_BEING_ARRESTED(player, true))
+		if (IS_PLAYER_DEAD(player))
 		{
 			if (IsSkipPressed())
 			{
@@ -143,20 +142,8 @@ namespace ManualRespawn
 			std::vector<s_Weapon_Components_Tint> weaponsBackup;
 			playerPed.StoreWeaponsInArray(weaponsBackup);
 
-			/*int did[12], tid[12], did2[10], tid2[10];
-			for (i = 0; i<12; i++)
-			{
-			did[i] = GET_PED_DRAWABLE_VARIATION(playerPed, i);
-			tid[i] = GET_PED_TEXTURE_VARIATION(playerPed, i);
-			}
-			for (i = 0; i<10; i++)
-			{
-			did2[i] = GET_PED_PROP_INDEX(playerPed, i);
-			tid2[i] = GET_PED_PROP_TEXTURE_INDEX(playerPed, i);
-			}*/
-
 			const std::string& ofn = GetPathffA(Pathff::Outfit, true) + "_reserved.xml";
-			sub::ComponentChanger_Outfit_catind::Create(PLAYER_PED_ID(), ofn);
+			sub::ComponentChangerOutfit::Create(PLAYER_PED_ID(), ofn);
 
 
 			if (is_death)
@@ -183,7 +170,7 @@ namespace ManualRespawn
 				WAIT(0);
 
 			// change back the model
-			sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), ofn, true, true, true, true, true, false);
+			sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), ofn, true, true, true, true, true, false);
 
 			WAIT(0);
 

@@ -88,10 +88,6 @@ namespace VehicleCruise
 			return;
 		}
 
-		//auto cartime = GET_TIME_SINCE_PLAYER_HIT_VEHICLE(player.Handle());
-		//auto pedtime = GET_TIME_SINCE_PLAYER_HIT_PED(player.Handle());
-		//auto rpm = vehicle.CurrentRPM_get();
-
 		bool inSeat = isPlane ? true : vehicle.GetPedOnSeat(VehicleSeat::SEAT_DRIVER) == ped.Handle();
 		bool isInAirOrUpsideDownIfCar = isPlane ? false : (!vehicle.IsOnAllWheels() || vehicle.IsInWater());
 
@@ -107,13 +103,11 @@ namespace VehicleCruise
 
 			if (IS_CONTROL_JUST_PRESSED(2, INPUT_VEH_BRAKE))
 			{
-				//cruiseSpeed = speed;
 				cruiseSpeed -= 2.0f / 3.6f;
 			}
 
 			if (IS_CONTROL_JUST_PRESSED(2, INPUT_VEH_ACCELERATE))
 			{
-				//cruiseSpeed = speed;
 				cruiseSpeed += 2.0f / 3.6f;
 			}
 		}

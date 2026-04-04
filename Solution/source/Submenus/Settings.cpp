@@ -8,22 +8,7 @@
 * (at your option) any later version.
 */
 #include "MainMenu.h"
-
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-#include "..\Menu\MenuConfig.h"
-#include "..\Menu\Language.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Util\GTAmath.h"
-#include "..\Natives\types.h" // RGBA
-#include "..\Scripting\enums.h"
-#include "..\Scripting\Game.h"
-
-#include <string>
-#include <math.h>
+#include "Settings.h"
 
 namespace sub
 {
@@ -151,12 +136,12 @@ namespace sub
 	}
 	void SettingsColours2()
 	{
-		bool settingsRInput = 0;
-		bool settingsRPlus = 0;
-		bool settingsRMinus = 0; 
-		bool settingsHUDColourApply = 0; 
-		bool settingsHUDColourPlus = 0;
-		bool settingsHUDColourMinus = 0;
+		bool settingsRInput = false;
+		bool settingsRPlus = false;
+		bool settingsRMinus = false; 
+		bool settingsHUDColourApply = false; 
+		bool settingsHUDColourPlus = false;
+		bool settingsHUDColourMinus = false;
 
 		auto& settingsRGBA = g_settingsRGBA;
 		auto& settingsRGBA2 = g_settingsRGBA2;
@@ -196,7 +181,8 @@ namespace sub
 				break;
 		}
 
-		if (settingsRInput) {
+		if (settingsRInput) 
+		{
 			int tempHash = *settingsRGBA2;
 			try 
 			{
@@ -565,6 +551,7 @@ namespace sub
 		}
 	}
 }
+
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"

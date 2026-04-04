@@ -9,8 +9,37 @@
 */
 #pragma once
 
+#include "..\macros.h"
+
+#include "..\Menu\Menu.h"
+#include "..\Menu\Routine.h"
+
+#include "..\Natives\natives2.h"
+#include "..\Util\StringManip.h"
+#include "..\Util\keyboard.h"
+#include "..\Util\GTAmath.h"
+#include "..\Util\FileLogger.h"
+#include "..\Scripting\Game.h"
+#include "..\Scripting\World.h"
+#include "..\Scripting\Camera.h"
+#include "..\Scripting\TimecycleModification.h"
+#include "..\Scripting\GTAentity.h"
+#include "..\Scripting\GTAped.h"
+#include "..\Scripting\GTAvehicle.h"
+#include "..\Scripting\GameplayCamera.h"
+
+#include "..\Misc\Gta2Cam.h"
+#include "..\Misc\ManualRespawn.h"
+#include "..\Misc\MeteorShower.h"
+#include "..\Misc\JumpAroundMode.h"
+#include "..\Misc\FpsCounter.h"
+
+#include "..\Submenus\Spooner\EntityManagement.h"
+
 #include <string>
 #include <map>
+#include <vector>
+#include <algorithm>
 
 typedef signed char INT8;
 typedef unsigned char UINT8;
@@ -21,45 +50,36 @@ namespace sub
 	void MiscOps();
 	void Timecycles();
 	void ClearAreaSub();
-	void DrawToolSub_();
-	void RadioSub_();
+	void DrawToolsMenu();
+	void RadioMenu();
 
-	namespace WaterHack_catind
+	namespace WaterHack
 	{
 		void Tick();
-
 		void Sub_WaterHack();
 	}
 
-	namespace TVChannelStuff_catind
+	namespace TVChannelStuff
 	{
-		extern bool loop_basictv;
-
+		extern bool loopBasicTV;
 		extern std::string currentTvChannelLabel;
-		extern std::map<std::string, std::string> vTvPlaylists;
+		extern std::map<std::string, std::string> tvPlaylists;
 
 		void DrawTvWhereItsSupposedToBe();
-
-		void Sub_TV();
+		void TVMenu();
 	}
 
-	namespace HudOptions_catind
+	namespace HudOptions
 	{
-		extern bool loop_revealMinimap;
-
-		void Sub_HudOptions();
+		extern bool revealMinimap;
+		void HudOptionsMenu();
 	}
 
-	namespace GameCamOptions_catind
+	namespace GameCamOptions
 	{
-		extern float _shakeAmplitude;
-		extern INT8 _shakeId;
+		extern float shakeAmplitude;
+		extern INT8 shakeID;
 
-		void Sub_GameCamOptions();
+		void GameCamOptionsMenu();
 	}
-
 }
-
-
-
-

@@ -58,7 +58,7 @@ namespace sub::Spooner
 			default:
 				return (UINT)std::count_if(Databases::EntityDb.begin(), Databases::EntityDb.end(),
 					[type](const SpoonerEntity& item) {
-					return item.Type == type;
+					return item.type == type;
 				});
 				break;
 			}
@@ -68,34 +68,34 @@ namespace sub::Spooner
 		{
 			for (int i = 0; i < Databases::EntityDb.size(); i++)
 			{
-				if (Databases::EntityDb[i].Handle == entity)
+				if (Databases::EntityDb[i].handle == entity)
 					return i;
 			}
 			return -1;
 		}
 		int GetEntityIndexInDb(const SpoonerEntity& ent)
 		{
-			return GetEntityIndexInDb(ent.Handle);
+			return GetEntityIndexInDb(ent.handle);
 		}
 		void AddEntityToDb(SpoonerEntity ent, bool missionEnt)
 		{
-			if (ent.Handle.Exists())
+			if (ent.handle.Exists())
 			{
-				if (ent.HashName.length() == 0)
-					ent.HashName = int_to_hexstring(ent.Handle.Model().hash, true);
+				if (ent.hashName.length() == 0)
+					ent.hashName = IntToHexString(ent.handle.Model().hash, true);
 				if (missionEnt)
-					ent.Handle.MissionEntity_set(true);
+					ent.handle.SetMissionEntity(true);
 				Databases::EntityDb.push_back(ent);
 			}
 		}
 		void RemoveEntityFromDb(const SpoonerEntity& ent)
 		{
-			GTAentity handle = ent.Handle;
+			GTAentity handle = ent.handle;
 
 			const auto& eit = std::find(Databases::EntityDb.begin(), Databases::EntityDb.end(), ent);
 			if (eit != Databases::EntityDb.end())
 			{
-				eit->TaskSequence.Reset(true);
+				eit->taskSequence.Reset(true);
 				Databases::EntityDb.erase(eit);
 			}
 
@@ -118,11 +118,11 @@ namespace sub::Spooner
 		}
 		void DeleteEntity(SpoonerEntity& ent)
 		{
-			GTAentity handle = ent.Handle;
+			GTAentity handle = ent.handle;
 			for (auto& e : Databases::EntityDb)
 			{
 				GTAentity attTo;
-				if (e.AttachmentArgs.isAttached && GetEntityThisEntityIsAttachedTo(e.Handle, attTo) && attTo.Equals(handle))
+				if (e.attachmentArgs.isAttached && GetEntityThisEntityIsAttachedTo(e.handle, attTo) && attTo.Equals(handle))
 				{
 					DetachEntity(e); // Detach other attachments (to clear variables)
 				}
@@ -137,10 +137,10 @@ namespace sub::Spooner
 			GTAentity myPed = PLAYER_PED_ID();
 			for (auto& e : Databases::EntityDb)
 			{
-				if (e.Handle != myPed &&  e.Handle != g_myVeh)
+				if (e.handle != myPed &&  e.handle != g_myVeh)
 				{
-					//GTAblip(e.Handle.CurrentBlip()).Remove();
-					e.Handle.Delete(true);
+					//GTAblip(e.handle.CurrentBlip()).Remove();
+					e.handle.Delete(true);
 				}
 			}
 			ClearDb();
@@ -150,19 +150,19 @@ namespace sub::Spooner
 			GTAentity myPed = PLAYER_PED_ID();
 			for (auto it = Databases::EntityDb.begin(); it != Databases::EntityDb.end();)
 			{
-				if (it->Type == targetType)
+				if (it->type == targetType)
 				{
 					for (auto& e : Databases::EntityDb)
 					{
 						GTAentity attTo;
-						if (e.AttachmentArgs.isAttached && GetEntityThisEntityIsAttachedTo(e.Handle, attTo) && attTo.Equals(it->Handle))
+						if (e.attachmentArgs.isAttached && GetEntityThisEntityIsAttachedTo(e.handle, attTo) && attTo.Equals(it->handle))
 						{
 							DetachEntity(e); // Detach other attachments (to clear variables)
 						}
 					}
-					it->Handle.Detach(); // Detach this
-					//GTAblip(it->Handle.CurrentBlip()).Remove();
-					it->Handle.Delete(it->Handle != myPed && it->Handle != g_myVeh);
+					it->handle.Detach(); // Detach this
+					//GTAblip(it->handle.CurrentBlip()).Remove();
+					it->handle.Delete(it->handle != myPed && it->handle != g_myVeh);
 					it = Databases::EntityDb.erase(it);
 				}
 				else ++it;
@@ -185,9 +185,9 @@ namespace sub::Spooner
 		{
 			for (auto it = Databases::EntityDb.begin(); it != Databases::EntityDb.end();)
 			{
-				if (!it->Handle.Exists())
+				if (!it->handle.Exists())
 				{
-					//it->Handle.Delete(false);
+					//it->handle.Delete(false);
 					it = Databases::EntityDb.erase(it);
 				}
 				else ++it;
@@ -225,7 +225,7 @@ namespace sub::Spooner
 			/*std::vector<SpoonerEntity> newdb;
 			for (auto& dbe : Databases::EntityDb)
 			{
-			switch (dbe.Type)
+			switch (dbe.type)
 			{
 			case EntityType::PROP: break;
 			default: newdb.push_back(dbe); break;
@@ -249,7 +249,7 @@ namespace sub::Spooner
 			/*std::vector<SpoonerEntity> newdb;
 			for (auto& dbe : Databases::EntityDb)
 			{
-			switch (dbe.Type)
+			switch (dbe.type)
 			{
 			case EntityType::PED: break;
 			default: newdb.push_back(dbe); break;
@@ -272,7 +272,7 @@ namespace sub::Spooner
 			/*std::vector<SpoonerEntity> newdb;
 			for (auto& dbe : Databases::EntityDb)
 			{
-			switch (dbe.Type)
+			switch (dbe.type)
 			{
 			case EntityType::VEHICLE: break;
 			default: newdb.push_back(dbe); break;
@@ -296,7 +296,7 @@ namespace sub::Spooner
 			if (!model.IsInCdImage())
 			{
 				const std::string& mdlnme = get_prop_model_label(model);
-				std::string nameOfPlaceWhereYouMayFindThisModelToBeValid = "NO SUGGESTED LOCATIONS";
+				std::string suggestedLocation = "NO SUGGESTED LOCATIONS";
 				if (!mdlnme.empty())
 				{
 					for (auto& prfx : std::vector<std::pair<std::string, std::string>>
@@ -343,11 +343,11 @@ namespace sub::Spooner
 						if (mdlnme.size() > prfx.first.size())
 						{
 							if (mdlnme.compare(0, prfx.first.size(), prfx.first) == 0)
-								nameOfPlaceWhereYouMayFindThisModelToBeValid = prfx.second;
+								suggestedLocation = prfx.second;
 						}
 					}
 				}
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid model.\n Check suggested locations: [" + nameOfPlaceWhereYouMayFindThisModelToBeValid + "]");
+				Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid model.\n Check suggested locations: [" + suggestedLocation + "]");
 				return SpoonerEntity();
 			}
 
@@ -364,47 +364,47 @@ namespace sub::Spooner
 			{
 				GTAentity myPedOrVehicle = myPed.IsInVehicle() ? (GTAentity)myPed.CurrentVehicle() : (GTAentity)myPed;
 
-				newEntity.Handle = World::CreateProp(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 2.6f + dimensions.Dim2.y, 0), myPedOrVehicle.Rotation_get(), bDynamic, false);
+				newEntity.handle = World::CreateProp(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 2.6f + dimensions.Dim2.y, 0), myPedOrVehicle.Rotation_get(), bDynamic, false);
 				if (unloadModel)
 					model.Unload();
 				if (!myPedOrVehicle.IsInAir())
-					PLACE_OBJECT_ON_GROUND_PROPERLY(newEntity.Handle.Handle());
+					PLACE_OBJECT_ON_GROUND_PROPERLY(newEntity.handle.Handle());
 			}
 			else
 			{
 				Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + dimensions.Dim2.y);
 				spawnPos.z += dimensions.Dim1.z;
 
-				newEntity.Handle = World::CreateProp(model, spawnPos, Vector3(0, 0, spoocam.Rotation_get().z), bDynamic, false);
+				newEntity.handle = World::CreateProp(model, spawnPos, Vector3(0, 0, spoocam.Rotation_get().z), bDynamic, false);
 				if (unloadModel)
 					model.Unload();
 			}
 
-			SET_NETWORK_ID_CAN_MIGRATE(OBJ_TO_NET(newEntity.Handle.Handle()), true);
-			newEntity.Handle.Dynamic_set(false);
-			newEntity.Handle.FreezePosition(true);
-			newEntity.Handle.FreezePosition(bFreezePos);
-			newEntity.Handle.Dynamic_set(bDynamic);
-			newEntity.Handle.LodDistance_set(1000000);
-			newEntity.Handle.MissionEntity_set(true);
-			newEntity.Handle.SetInvincible(Settings::bSpawnInvincibleEntities);
-			newEntity.Handle.SetExplosionProof(Settings::bSpawnInvincibleEntities);
-			newEntity.Handle.SetMeleeProof(Settings::bSpawnInvincibleEntities);
+			SET_NETWORK_ID_CAN_MIGRATE(OBJ_TO_NET(newEntity.handle.Handle()), true);
+			newEntity.handle.Dynamic_set(false);
+			newEntity.handle.FreezePosition(true);
+			newEntity.handle.FreezePosition(bFreezePos);
+			newEntity.handle.Dynamic_set(bDynamic);
+			newEntity.handle.SetLODDistance(1000000);
+			newEntity.handle.SetMissionEntity(true);
+			newEntity.handle.SetInvincible(Settings::bSpawnInvincibleEntities);
+			newEntity.handle.SetExplosionProof(Settings::bSpawnInvincibleEntities);
+			newEntity.handle.SetMeleeProof(Settings::bSpawnInvincibleEntities);
 			model.LoadCollision(100);
-			newEntity.Handle.SetIsCollisionEnabled(bCollision);
+			newEntity.handle.SetIsCollisionEnabled(bCollision);
 			model.Unload();
 
-			newEntity.Type = (EntityType)newEntity.Handle.Type();
+			newEntity.type = (EntityType)newEntity.handle.Type();
 
 			if (name.length() > 0)
-				newEntity.HashName = name;
+				newEntity.hashName = name;
 			else
 			{
-				newEntity.HashName = get_prop_model_label(model);
-				if (newEntity.HashName.length() == 0) newEntity.HashName = int_to_hexstring(model.hash, true);
+				newEntity.hashName = get_prop_model_label(model);
+				if (newEntity.hashName.length() == 0) newEntity.hashName = IntToHexString(model.hash, true);
 			}
 
-			newEntity.Dynamic = bDynamic;
+			newEntity.dynamic = bDynamic;
 
 			AddEntityToDb(newEntity);
 
@@ -420,7 +420,7 @@ namespace sub::Spooner
 			}
 			if (!model.IsInCdImage())
 			{
-				Game::Print::PrintError_InvalidModel(name);
+				Game::Print::PrintErrorInvalidModel(name);
 				addlog(ige::LogType::LOG_ERROR, "Failed to spawn ped, invalid model: " + name);
 				return SpoonerEntity();
 			}
@@ -438,7 +438,7 @@ namespace sub::Spooner
 			{
 				GTAentity myPedOrVehicle = myPed.IsInVehicle() ? (GTAentity)myPed.CurrentVehicle() : (GTAentity)myPed;
 
-				newEntity.Handle = World::CreatePed(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 2.6f + dimensions.Dim2.y, 0), myPedOrVehicle.Rotation_get(), myPedOrVehicle.HeightAboveGround() < 3.0f);
+				newEntity.handle = World::CreatePed(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 2.6f + dimensions.Dim2.y, 0), myPedOrVehicle.Rotation_get(), myPedOrVehicle.HeightAboveGround() < 3.0f);
 				if (unloadModel)
 					model.Unload();
 			}
@@ -447,21 +447,21 @@ namespace sub::Spooner
 				Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + dimensions.Dim2.y);
 				spawnPos.z += dimensions.Dim1.z;
 
-				newEntity.Handle = World::CreatePed(model, spawnPos, Vector3(0, 0, spoocam.Rotation_get().z), false);
+				newEntity.handle = World::CreatePed(model, spawnPos, Vector3(0, 0, spoocam.Rotation_get().z), false);
 				if (unloadModel)
 					model.Unload();
 			}
 
-			GTAped ep = newEntity.Handle;
-			SET_NETWORK_ID_CAN_MIGRATE(PED_TO_NET(newEntity.Handle.Handle()), true);
-			newEntity.Handle.FreezePosition(bFreezePos);
-			newEntity.Handle.Dynamic_set(bDynamic);
-			newEntity.Handle.LodDistance_set(1000000);
-			newEntity.Handle.MissionEntity_set(true);
-			newEntity.Handle.SetInvincible(Settings::bSpawnInvincibleEntities);
-			newEntity.Handle.SetExplosionProof(Settings::bSpawnInvincibleEntities);
-			newEntity.Handle.SetMeleeProof(Settings::bSpawnInvincibleEntities);
-			newEntity.IsStill = Settings::bSpawnStillPeds;
+			GTAped ep = newEntity.handle;
+			SET_NETWORK_ID_CAN_MIGRATE(PED_TO_NET(newEntity.handle.Handle()), true);
+			newEntity.handle.FreezePosition(bFreezePos);
+			newEntity.handle.Dynamic_set(bDynamic);
+			newEntity.handle.SetLODDistance(1000000);
+			newEntity.handle.SetMissionEntity(true);
+			newEntity.handle.SetInvincible(Settings::bSpawnInvincibleEntities);
+			newEntity.handle.SetExplosionProof(Settings::bSpawnInvincibleEntities);
+			newEntity.handle.SetMeleeProof(Settings::bSpawnInvincibleEntities);
+			newEntity.isStill = Settings::bSpawnStillPeds;
 			ep.BlockPermanentEvents_set(Settings::bSpawnStillPeds);
 
 			SET_PED_CAN_PLAY_AMBIENT_ANIMS(ep.Handle(), true);
@@ -479,21 +479,21 @@ namespace sub::Spooner
 			SET_PED_COMBAT_MOVEMENT(ep.Handle(), 2);
 			ep.CanSwitchWeapons_set(false);
 			model.LoadCollision(100);
-			newEntity.Handle.SetIsCollisionEnabled(bCollision);
+			newEntity.handle.SetIsCollisionEnabled(bCollision);
 			model.Unload();
 
-			newEntity.Type = (EntityType)newEntity.Handle.Type();
+			newEntity.type = (EntityType)newEntity.handle.Type();
 
 			if (name.length() > 0)
-				newEntity.HashName = name;
+				newEntity.hashName = name;
 			else
 			{
-				newEntity.HashName = get_ped_model_label(model, false);
-				if (newEntity.HashName.length() == 0)
-					newEntity.HashName = int_to_hexstring(model.hash, true);
+				newEntity.hashName = GetPedModelLabel(model, false);
+				if (newEntity.hashName.length() == 0)
+					newEntity.hashName = IntToHexString(model.hash, true);
 			}
 
-			newEntity.Dynamic = bDynamic;
+			newEntity.dynamic = bDynamic;
 
 			AddEntityToDb(newEntity);
 
@@ -509,7 +509,7 @@ namespace sub::Spooner
 			}
 			if (!model.IsInCdImage())
 			{
-				Game::Print::PrintError_InvalidModel(name);
+				Game::Print::PrintErrorInvalidModel(name);
 				addlog(ige::LogType::LOG_ERROR, "Failed to spawn vehicle, invalid model: " + name);
 				return SpoonerEntity();
 			}
@@ -527,49 +527,49 @@ namespace sub::Spooner
 			{
 				GTAentity myPedOrVehicle = myPed.IsInVehicle() ? (GTAentity)myPed.CurrentVehicle() : (GTAentity)myPed;
 
-				newEntity.Handle = World::CreateVehicle(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 3.6f + dimensions.Dim2.y, 0), myPedOrVehicle.Rotation_get(), false);
+				newEntity.handle = World::CreateVehicle(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 3.6f + dimensions.Dim2.y, 0), myPedOrVehicle.Rotation_get(), false);
 				if (unloadModel)
 					model.Unload();
 				if (!myPedOrVehicle.IsInAir())
-					SET_VEHICLE_ON_GROUND_PROPERLY(newEntity.Handle.Handle(), 0.0f);
+					SET_VEHICLE_ON_GROUND_PROPERLY(newEntity.handle.Handle(), 0.0f);
 			}
 			else
 			{
 				Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + dimensions.Dim2.y);
 				spawnPos.z += dimensions.Dim1.z;
 
-				newEntity.Handle = World::CreateVehicle(model, spawnPos, Vector3(0, 0, spoocam.Rotation_get().z), false);
+				newEntity.handle = World::CreateVehicle(model, spawnPos, Vector3(0, 0, spoocam.Rotation_get().z), false);
 				if (unloadModel) model.Unload();
 			}
 
-			SET_NETWORK_ID_CAN_MIGRATE(VEH_TO_NET(newEntity.Handle.Handle()), true);
-			SET_VEHICLE_MOD_KIT(newEntity.Handle.Handle(), 0);
-			SET_VEHICLE_DIRT_LEVEL(newEntity.Handle.Handle(), 0.0f);
-			SET_VEHICLE_ENVEFF_SCALE(newEntity.Handle.Handle(), 0.3f);
-			GTAvehicle(newEntity.Handle).CloseAllDoors(true);
-			newEntity.Handle.FreezePosition(bFreezePos);
-			newEntity.Handle.Dynamic_set(bDynamic);
-			newEntity.Handle.LodDistance_set(1000000);
-			newEntity.Handle.MissionEntity_set(true);
-			newEntity.Handle.SetInvincible(Settings::bSpawnInvincibleEntities);
-			newEntity.Handle.SetExplosionProof(Settings::bSpawnInvincibleEntities);
-			newEntity.Handle.SetMeleeProof(Settings::bSpawnInvincibleEntities);
+			SET_NETWORK_ID_CAN_MIGRATE(VEH_TO_NET(newEntity.handle.Handle()), true);
+			SET_VEHICLE_MOD_KIT(newEntity.handle.Handle(), 0);
+			SET_VEHICLE_DIRT_LEVEL(newEntity.handle.Handle(), 0.0f);
+			SET_VEHICLE_ENVEFF_SCALE(newEntity.handle.Handle(), 0.3f);
+			GTAvehicle(newEntity.handle).CloseAllDoors(true);
+			newEntity.handle.FreezePosition(bFreezePos);
+			newEntity.handle.Dynamic_set(bDynamic);
+			newEntity.handle.SetLODDistance(1000000);
+			newEntity.handle.SetMissionEntity(true);
+			newEntity.handle.SetInvincible(Settings::bSpawnInvincibleEntities);
+			newEntity.handle.SetExplosionProof(Settings::bSpawnInvincibleEntities);
+			newEntity.handle.SetMeleeProof(Settings::bSpawnInvincibleEntities);
 			model.LoadCollision(100);
-			newEntity.Handle.SetIsCollisionEnabled(bCollision);
+			newEntity.handle.SetIsCollisionEnabled(bCollision);
 			model.Unload();
 
-			newEntity.Type = (EntityType)newEntity.Handle.Type();
+			newEntity.type = (EntityType)newEntity.handle.Type();
 
 			if (name.length() > 0)
-				newEntity.HashName = name;
+				newEntity.hashName = name;
 			else
 			{
-				newEntity.HashName = get_vehicle_model_label(model, false);
-				if (newEntity.HashName.length() == 0)
-					newEntity.HashName = int_to_hexstring(model.hash, true);
+				newEntity.hashName = get_vehicle_model_label(model, false);
+				if (newEntity.hashName.length() == 0)
+					newEntity.hashName = IntToHexString(model.hash, true);
 			}
 
-			newEntity.Dynamic = bDynamic;
+			newEntity.dynamic = bDynamic;
 
 			AddEntityToDb(newEntity);
 
@@ -588,32 +588,32 @@ namespace sub::Spooner
 
 		SpoonerEntity CopyEntity(SpoonerEntity orig, bool isInDb, bool addToDb, UINT8 copyAttachments, bool unloadModel, UINT8 currAtir)
 		{
-			if (!orig.Handle.Exists())
+			if (!orig.handle.Exists())
 				return SpoonerEntity();
 
-			bool bOrigWasMissionEntity = orig.Handle.MissionEntity_get();
+			bool bOrigWasMissionEntity = orig.handle.MissionEntity_get();
 			if (!bOrigWasMissionEntity)
 			{
-				orig.Handle.MissionEntity_set(true);
+				orig.handle.SetMissionEntity(true);
 				WAIT(20);
 			}
 			SpoonerEntity newEntity(orig);
-			bool bDynamic = orig.Dynamic;
-			bool bFreezePos = orig.Handle.IsPositionFrozen();
-			newEntity.Handle.Dynamic_set(false);
-			newEntity.Handle.FreezePosition(true);
+			bool bDynamic = orig.dynamic;
+			bool bFreezePos = orig.handle.IsPositionFrozen();
+			newEntity.handle.Dynamic_set(false);
+			newEntity.handle.FreezePosition(true);
 
 			GTAped myPed = PLAYER_PED_ID();
-			bool isThisMyPed = orig.Handle.Handle() == myPed.Handle();
+			bool isThisMyPed = orig.handle.Handle() == myPed.Handle();
 
 			bool bTaskSeqIsActive = false;
 			if (isInDb)
 			{
-				bool bTaskSeqIsEmpty = orig.TaskSequence.empty();
-				bTaskSeqIsActive = orig.TaskSequence.IsActive();
-				newEntity.TaskSequence.AllTasks().clear();
-				newEntity.TaskSequence.Reset();
-				auto& oldTaskSeqTasks = orig.TaskSequence.AllTasks();
+				bool bTaskSeqIsEmpty = orig.taskSequence.empty();
+				bTaskSeqIsActive = orig.taskSequence.IsActive();
+				newEntity.taskSequence.AllTasks().clear();
+				newEntity.taskSequence.Reset();
+				auto& oldTaskSeqTasks = orig.taskSequence.AllTasks();
 
 				if (!bTaskSeqIsEmpty)
 				{
@@ -621,53 +621,53 @@ namespace sub::Spooner
 					{
 						if (tskPtr != nullptr)
 						{
-							STSTask* newtskPtr = newEntity.TaskSequence.AddTask(tskPtr->type);
+							STSTask* newtskPtr = newEntity.taskSequence.AddTask(tskPtr->type);
 							if (newtskPtr != nullptr)
 							{
 								newtskPtr->Assign(tskPtr);
 							}
 						}
 					}
-					if (bTaskSeqIsActive) newEntity.TaskSequence.Start();
+					if (bTaskSeqIsActive) newEntity.taskSequence.Start();
 				}
 			}
 
-			EntityType entType = (EntityType)orig.Handle.Type();
+			EntityType entType = (EntityType)orig.handle.Type();
 			if (entType == EntityType::PROP)
 			{
-				newEntity.Handle = World::CreateProp(orig.Handle.Model(), orig.Handle.GetPosition(), orig.Handle.Rotation_get(), bDynamic, false);
-				SET_NETWORK_ID_CAN_MIGRATE(OBJ_TO_NET(newEntity.Handle.Handle()), true);
-				GTAprop eo = newEntity.Handle;
+				newEntity.handle = World::CreateProp(orig.handle.Model(), orig.handle.GetPosition(), orig.handle.Rotation_get(), bDynamic, false);
+				SET_NETWORK_ID_CAN_MIGRATE(OBJ_TO_NET(newEntity.handle.Handle()), true);
+				GTAprop eo = newEntity.handle;
 
-				if (orig.TextureVariation != -1)
-					SET_OBJECT_TINT_INDEX(eo.Handle(), orig.TextureVariation);
+				if (orig.textureVariation != -1)
+					SET_OBJECT_TINT_INDEX(eo.Handle(), orig.textureVariation);
 			}
 			else if (entType == EntityType::PED)
 			{
 				//std::vector<s_Weapon_Components_Tint> weaponsBackup;
 				GTAped ep;
-				GTAped origPed = orig.Handle;
+				GTAped origPed = orig.handle;
 
-				//newEntity.Handle = World::CreatePed(orig.Handle.Model(), orig.Handle.Position_get(), orig.Handle.Rotation_get(), false);
-				newEntity.Handle = origPed.Clone(origPed.Heading_get(), true, true);
-				ep = newEntity.Handle;
+				//newEntity.handle = World::CreatePed(orig.handle.Model(), orig.handle.Position_get(), orig.handle.Rotation_get(), false);
+				newEntity.handle = origPed.Clone(origPed.GetHeading(), true, true);
+				ep = newEntity.handle;
 
-				const auto& movGrpStr = get_ped_movement_clipset(orig.Handle);
+				const auto& movGrpStr = GetPedMovementClipSet(orig.handle);
 				if (!movGrpStr.empty())
-					set_ped_movement_clipset(ep, movGrpStr);
-				const auto& wMovGrpStr = get_ped_weapon_movement_clipset(orig.Handle);
+					SetPedMovementClipSet(ep, movGrpStr);
+				const auto& wMovGrpStr = GetPedWeaponMovementClipSet(orig.handle);
 				if (!wMovGrpStr.empty())
-					set_ped_weapon_movement_clipset(ep, wMovGrpStr);
+					SetPedWeaponMovementClipSet(ep, wMovGrpStr);
 
 				ep.SetPosition(origPed.GetPosition());
 				ep.SetRotation(origPed.Rotation_get());
 				sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = sub::PedHeadFeatures_catind::vPedHeads[origPed.Handle()];
-				sub::PedDamageTextures_catind::vPedsAndDamagePacks[ep.Handle()] = sub::PedDamageTextures_catind::vPedsAndDamagePacks[origPed.Handle()];
-				sub::PedDecals_catind::vPedsAndDecals[ep.Handle()] = sub::PedDecals_catind::vPedsAndDecals[origPed.Handle()];
-				//GTAped(orig.Handle).StoreWeaponsInArray(weaponsBackup);
-				//GTAped(newEntity.Handle).GiveWeaponsFromArray(weaponsBackup);
+				sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()] = sub::PedDamageTextures::vPedsAndDamagePacks[origPed.Handle()];
+				sub::PedDecals::vPedsAndDecals[ep.Handle()] = sub::PedDecals::vPedsAndDecals[origPed.Handle()];
+				//GTAped(orig.handle).StoreWeaponsInArray(weaponsBackup);
+				//GTAped(newEntity.handle).GiveWeaponsFromArray(weaponsBackup);
 				SET_NETWORK_ID_CAN_MIGRATE(ep.NetID(), true);
-				ep.BlockPermanentEvents_set(orig.IsStill);
+				ep.BlockPermanentEvents_set(orig.isStill);
 				SET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, GET_PED_CONFIG_FLAG(origPed.Handle(), ePedConfigFlags::_Shrink, false));
 
 				SET_PED_CAN_PLAY_AMBIENT_ANIMS(ep.Handle(), true);
@@ -676,22 +676,22 @@ namespace sub::Spooner
 				SET_PED_CAN_PLAY_VISEME_ANIMS(ep.Handle(), true, TRUE);
 				SET_PED_IS_IGNORED_BY_AUTO_OPEN_DOORS(ep.Handle(), true);
 
-				if (!bTaskSeqIsActive && IS_PED_USING_SCENARIO(orig.Handle.Handle(), orig.LastAnimation.name.c_str()))
+				if (!bTaskSeqIsActive && IS_PED_USING_SCENARIO(orig.handle.Handle(), orig.lastAnimation.name.c_str()))
 				{
 					WAIT(40);
-					ep.Task().StartScenario(orig.LastAnimation.name, -1, false);
+					ep.Task().StartScenario(orig.lastAnimation.name, -1, false);
 				}
-				if (!bTaskSeqIsActive && IS_ENTITY_PLAYING_ANIM(orig.Handle.Handle(), orig.LastAnimation.dict.c_str(), orig.LastAnimation.name.c_str(), 3))
+				if (!bTaskSeqIsActive && IS_ENTITY_PLAYING_ANIM(orig.handle.Handle(), orig.lastAnimation.dict.c_str(), orig.lastAnimation.name.c_str(), 3))
 				{
-					ep.Task().PlayAnimation(orig.LastAnimation.dict, orig.LastAnimation.name);
+					ep.Task().PlayAnimation(orig.lastAnimation.dict, orig.lastAnimation.name);
 				}
 
-				const auto& facialMoodStr = GetPedFacialMood(orig.Handle);
+				const auto& facialMoodStr = GetPedFacialMood(orig.handle);
 				if (!facialMoodStr.empty())
 					SetPedFacialMood(ep, facialMoodStr);
 
 				ep.Armour_set(origPed.Armour_get());
-				ep.Weapon_set(origPed.Weapon_get());
+				ep.SetWeapon(origPed.Weapon_get());
 				ep.CanSwitchWeapons_set(false);
 				SET_PED_PATH_CAN_USE_CLIMBOVERS(ep.Handle(), true);
 				SET_PED_PATH_CAN_USE_LADDERS(ep.Handle(), true);
@@ -701,56 +701,56 @@ namespace sub::Spooner
 				SET_PED_COMBAT_ABILITY(ep.Handle(), 2);
 				SET_PED_COMBAT_MOVEMENT(ep.Handle(), 2);
 				Hash oldRelationshipGrp;
-				RelationshipManagement::GetPedRelationshipGroup(orig.Handle, oldRelationshipGrp);
+				RelationshipManagement::GetPedRelationshipGroup(orig.handle, oldRelationshipGrp);
 				RelationshipManagement::SetPedRelationshipGroup(ep, oldRelationshipGrp);
 			}
 			else if (entType == EntityType::VEHICLE)
 			{
-				//newEntity.Handle = World::CreateVehicle(orig.Handle.Model(), orig.Handle.Position_get(), orig.Handle.Rotation_get(), false);
-				newEntity.Handle = clone_vehicle(orig.Handle);
-				newEntity.Handle.SetPosition(orig.Handle.GetPosition());
-				newEntity.Handle.SetRotation(orig.Handle.Rotation_get());
-				SET_NETWORK_ID_CAN_MIGRATE(VEH_TO_NET(newEntity.Handle.Handle()), true);
+				//newEntity.handle = World::CreateVehicle(orig.handle.Model(), orig.handle.Position_get(), orig.handle.Rotation_get(), false);
+				newEntity.handle = clone_vehicle(orig.handle);
+				newEntity.handle.SetPosition(orig.handle.GetPosition());
+				newEntity.handle.SetRotation(orig.handle.Rotation_get());
+				SET_NETWORK_ID_CAN_MIGRATE(VEH_TO_NET(newEntity.handle.Handle()), true);
 			}
 
-			newEntity.Handle.FreezePosition(bFreezePos);
-			newEntity.Handle.Dynamic_set(bDynamic);
-			newEntity.Handle.LodDistance_set(1000000);
-			newEntity.Handle.MissionEntity_set(true);
-			newEntity.Handle.SetVisible(orig.Handle.IsVisible());
-			newEntity.Handle.SetInvincible(orig.Handle.IsInvincible());
-			newEntity.Handle.SetBulletProof(orig.Handle.IsBulletProof());
-			newEntity.Handle.SetIsCollisionEnabled(orig.Handle.GetIsCollisionEnabled());
-			newEntity.Handle.SetExplosionProof(orig.Handle.IsExplosionProof());
-			newEntity.Handle.SetFireProof(orig.Handle.IsFireProof());
-			newEntity.Handle.SetMeleeProof(orig.Handle.IsMeleeProof());
-			newEntity.Handle.SetOnlyDamagedByPlayer(orig.Handle.IsOnlyDamagedByPlayer());
-			newEntity.Handle.SetOnFire(orig.Handle.IsOnFire());
-			newEntity.Handle.Alpha_set(orig.Handle.Alpha_get());
-			newEntity.Handle.Health_set(orig.Handle.GetHealth());
+			newEntity.handle.FreezePosition(bFreezePos);
+			newEntity.handle.Dynamic_set(bDynamic);
+			newEntity.handle.SetLODDistance(1000000);
+			newEntity.handle.SetMissionEntity(true);
+			newEntity.handle.SetVisible(orig.handle.IsVisible());
+			newEntity.handle.SetInvincible(orig.handle.IsInvincible());
+			newEntity.handle.SetBulletProof(orig.handle.IsBulletProof());
+			newEntity.handle.SetIsCollisionEnabled(orig.handle.GetIsCollisionEnabled());
+			newEntity.handle.SetExplosionProof(orig.handle.IsExplosionProof());
+			newEntity.handle.SetFireProof(orig.handle.IsFireProof());
+			newEntity.handle.SetMeleeProof(orig.handle.IsMeleeProof());
+			newEntity.handle.SetOnlyDamagedByPlayer(orig.handle.IsOnlyDamagedByPlayer());
+			newEntity.handle.SetOnFire(orig.handle.IsOnFire());
+			newEntity.handle.SetAlpha(orig.handle.GetAlpha());
+			newEntity.handle.SetHealth(orig.handle.GetHealth());
 
-			orig.Handle.MissionEntity_set(bOrigWasMissionEntity);
+			orig.handle.SetMissionEntity(bOrigWasMissionEntity);
 
-			if (orig.AttachmentArgs.isAttached && !currAtir)
+			if (orig.attachmentArgs.isAttached && !currAtir)
 			{
 				GTAentity attTo;
-				if (GetEntityThisEntityIsAttachedTo(orig.Handle, attTo))
+				if (GetEntityThisEntityIsAttachedTo(orig.handle, attTo))
 				{
-					EntityManagement::AttachEntity(newEntity, attTo, orig.AttachmentArgs.boneIndex, orig.AttachmentArgs.offset, orig.AttachmentArgs.rotation);
+					EntityManagement::AttachEntity(newEntity, attTo, orig.attachmentArgs.boneIndex, orig.attachmentArgs.offset, orig.attachmentArgs.rotation);
 				}
 				// else set both isAttached to false??
 			}
 
 			// fx lops
-			for (auto& ptfxlop : sub::Ptfx_catind::fxLops)
+			for (auto& ptfxlop : sub::PtfxSubs::fxLoops)
 			{
-				if (ptfxlop.entity == orig.Handle)
+				if (ptfxlop.entity == orig.handle)
 				{
-					sub::Ptfx_catind::PtfxlopS newPtfxLop;
-					newPtfxLop.entity = newEntity.Handle;
+					sub::PtfxSubs::PtfxlopS newPtfxLop;
+					newPtfxLop.entity = newEntity.handle;
 					newPtfxLop.asset = ptfxlop.asset.c_str();
 					newPtfxLop.fx = ptfxlop.fx.c_str();
-					sub::Ptfx_catind::fxLops.push_back(newPtfxLop);
+					sub::PtfxSubs::fxLoops.push_back(newPtfxLop);
 					break;
 				}
 			}
@@ -761,11 +761,11 @@ namespace sub::Spooner
 				GTAentity attTo;
 				for (auto& e : Databases::EntityDb)
 				{
-					if (GetEntityThisEntityIsAttachedTo(e.Handle, attTo) && attTo == orig.Handle)
+					if (GetEntityThisEntityIsAttachedTo(e.handle, attTo) && attTo == orig.handle)
 					{
-						atirModelHashes.insert(e.Handle.Model().hash);
+						atirModelHashes.insert(e.handle.Model().hash);
 						auto newAtt = CopyEntity(e, true, false, copyAttachments, false, currAtir + 1);
-						EntityManagement::AttachEntity(newAtt, newEntity.Handle, e.AttachmentArgs.boneIndex, e.AttachmentArgs.offset, e.AttachmentArgs.rotation);
+						EntityManagement::AttachEntity(newAtt, newEntity.handle, e.attachmentArgs.boneIndex, e.attachmentArgs.offset, e.attachmentArgs.rotation);
 						if (addToDb) Databases::EntityDb.push_back(newAtt);
 					}
 				}
@@ -777,11 +777,11 @@ namespace sub::Spooner
 			}
 
 			//bug?
-			orig.Handle.FreezePosition(bFreezePos);
-			orig.Handle.Dynamic_set(bDynamic);
+			orig.handle.FreezePosition(bFreezePos);
+			orig.handle.Dynamic_set(bDynamic);
 
 			if (unloadModel)
-				newEntity.Handle.Model().Unload();
+				newEntity.handle.Model().Unload();
 			if (addToDb)
 				Databases::EntityDb.push_back(newEntity);
 			return newEntity;
@@ -790,22 +790,22 @@ namespace sub::Spooner
 		void DetachEntity(SpoonerEntity& ent)
 		{
 			bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
-			bool bHasCollision = ent.Handle.GetIsCollisionEnabled();
+			bool bHasCollision = ent.handle.GetIsCollisionEnabled();
 			if (isOnTheLine)
-				ent.Handle.RequestControl();
-			ent.Handle.Detach();
-			ent.AttachmentArgs.isAttached = false;
-			ent.AttachmentArgs.boneIndex = 0;
-			ent.AttachmentArgs.offset.clear();
-			ent.AttachmentArgs.rotation.clear();
-			ent.Handle.SetIsCollisionEnabled(bHasCollision);
+				ent.handle.RequestControl();
+			ent.handle.Detach();
+			ent.attachmentArgs.isAttached = false;
+			ent.attachmentArgs.boneIndex = 0;
+			ent.attachmentArgs.offset.clear();
+			ent.attachmentArgs.rotation.clear();
+			ent.handle.SetIsCollisionEnabled(bHasCollision);
 
 			GTAentity attTo;
 			for (auto& e : Databases::EntityDb)
 			{
-				if (GetEntityThisEntityIsAttachedTo(e.Handle, attTo) && attTo == ent.Handle)
+				if (GetEntityThisEntityIsAttachedTo(e.handle, attTo) && attTo == ent.handle)
 				{
-					AttachEntity(e, attTo, e.AttachmentArgs.boneIndex, e.AttachmentArgs.offset, e.AttachmentArgs.rotation);
+					AttachEntity(e, attTo, e.attachmentArgs.boneIndex, e.attachmentArgs.offset, e.attachmentArgs.rotation);
 				}
 			}
 		}
@@ -813,7 +813,7 @@ namespace sub::Spooner
 		{
 			/*for (auto& e : _worldEntities)
 			{
-			if (IS_ENTITY_ATTACHED_TO_ENTITY(from.Handle.Handle(), to.Handle()))
+			if (IS_ENTITY_ATTACHED_TO_ENTITY(from.handle.Handle(), to.Handle()))
 			{
 			to = e;
 			return true;
@@ -830,40 +830,40 @@ namespace sub::Spooner
 		}
 		void AttachEntity(SpoonerEntity& ent, GTAentity to, int boneIndex, const Vector3& offset, const Vector3& rotation)
 		{
-			if (ent.Handle.Handle() != to.Handle())
+			if (ent.handle.Handle() != to.Handle())
 			{
 				bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
-				bool bHasCollision = ent.Handle.GetIsCollisionEnabled();
-				bool wheelsAreInvis = are_vehicle_wheels_invisible(ent.Handle);
+				bool bHasCollision = ent.handle.GetIsCollisionEnabled();
+				bool wheelsAreInvis = AreVehicleWheelsInvisible(ent.handle);
 				if (isOnTheLine)
 				{
-					ent.Handle.RequestControl();
+					ent.handle.RequestControl();
 					//to.RequestControl();
 				}
-				ent.Handle.AttachTo(to, boneIndex, bHasCollision, offset, rotation);
-				ent.AttachmentArgs.isAttached = true;
-				ent.AttachmentArgs.boneIndex = boneIndex;
-				ent.AttachmentArgs.offset = offset;
-				ent.AttachmentArgs.rotation = rotation;
-				ent.Handle.Dynamic_set(ent.Dynamic);
-				//ent.Handle.IsCollisionEnabled_set(bHasCollision);
-				SET_ENTITY_LIGHTS(ent.Handle.Handle(), 0);
+				ent.handle.AttachTo(to, boneIndex, bHasCollision, offset, rotation);
+				ent.attachmentArgs.isAttached = true;
+				ent.attachmentArgs.boneIndex = boneIndex;
+				ent.attachmentArgs.offset = offset;
+				ent.attachmentArgs.rotation = rotation;
+				ent.handle.Dynamic_set(ent.dynamic);
+				//ent.handle.IsCollisionEnabled_set(bHasCollision);
+				SET_ENTITY_LIGHTS(ent.handle.Handle(), 0);
 				if (wheelsAreInvis)
-					SetVehicleWheelsInvisible(ent.Handle, true);
+					SetVehicleWheelsInvisible(ent.handle, true);
 			}
 		}
 		void AttachEntityInit(SpoonerEntity& ent, GTAentity to, bool bAttachWithRelativePosRot)
 		{
-			if (to.IsAttachedTo(ent.Handle))
+			if (to.IsAttachedTo(ent.handle))
 			{
 				SpoonerEntity to1;
-				to1.Handle = to;
+				to1.handle = to;
 				auto to1ind = EntityManagement::GetEntityIndexInDb(to1);
 				if (to1ind >= 0)
 				{
 					bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
 					if (isOnTheLine)
-						to1.Handle.RequestControl();
+						to1.handle.RequestControl();
 					auto& to1r = Databases::EntityDb[to1ind];
 					DetachEntity(to1r);
 				}
@@ -871,7 +871,7 @@ namespace sub::Spooner
 			DetachEntity(ent);
 			if (bAttachWithRelativePosRot)
 			{
-				AttachEntity(ent, to, 0, to.GetOffsetGivenWorldCoords(ent.Handle.GetPosition()), ent.Handle.Rotation_get() - to.Rotation_get());
+				AttachEntity(ent, to, 0, to.GetOffsetGivenWorldCoords(ent.handle.GetPosition()), ent.handle.Rotation_get() - to.Rotation_get());
 			}
 			else
 			{
@@ -896,18 +896,18 @@ namespace sub::Spooner
 		{
 			if (ent.Exists())
 			{
-				const auto& ent_md = ent.ModelDimensions();
+				const auto& entMd = ent.ModelDimensions();
 
 				// I've used the opposite Z dimensions for reasons
-				const auto& boxUpperLeftRear = ent.GetOffsetInWorldCoords(-ent_md.Dim2.x, -ent_md.Dim2.y, ent_md.Dim2.z);
-				const auto& boxUpperRightRear = ent.GetOffsetInWorldCoords(ent_md.Dim1.x, -ent_md.Dim2.y, ent_md.Dim2.z);
-				const auto& boxLowerLeftRear = ent.GetOffsetInWorldCoords(-ent_md.Dim2.x, -ent_md.Dim2.y, -ent_md.Dim1.z);
-				const auto& boxLowerRightRear = ent.GetOffsetInWorldCoords(ent_md.Dim1.x, -ent_md.Dim2.y, -ent_md.Dim1.z);
+				const auto& boxUpperLeftRear = ent.GetOffsetInWorldCoords(-entMd.Dim2.x, -entMd.Dim2.y, entMd.Dim2.z);
+				const auto& boxUpperRightRear = ent.GetOffsetInWorldCoords(entMd.Dim1.x, -entMd.Dim2.y, entMd.Dim2.z);
+				const auto& boxLowerLeftRear = ent.GetOffsetInWorldCoords(-entMd.Dim2.x, -entMd.Dim2.y, -entMd.Dim1.z);
+				const auto& boxLowerRightRear = ent.GetOffsetInWorldCoords(entMd.Dim1.x, -entMd.Dim2.y, -entMd.Dim1.z);
 
-				const auto& boxUpperLeftFront = ent.GetOffsetInWorldCoords(-ent_md.Dim2.x, ent_md.Dim1.y, ent_md.Dim2.z);
-				const auto& boxUpperRightFront = ent.GetOffsetInWorldCoords(ent_md.Dim1.x, ent_md.Dim1.y, ent_md.Dim2.z);
-				const auto& boxLowerLeftFront = ent.GetOffsetInWorldCoords(-ent_md.Dim2.x, ent_md.Dim1.y, -ent_md.Dim1.z);
-				const auto& boxLowerRightFront = ent.GetOffsetInWorldCoords(ent_md.Dim1.x, ent_md.Dim1.y, -ent_md.Dim1.z);
+				const auto& boxUpperLeftFront = ent.GetOffsetInWorldCoords(-entMd.Dim2.x, entMd.Dim1.y, entMd.Dim2.z);
+				const auto& boxUpperRightFront = ent.GetOffsetInWorldCoords(entMd.Dim1.x, entMd.Dim1.y, entMd.Dim2.z);
+				const auto& boxLowerLeftFront = ent.GetOffsetInWorldCoords(-entMd.Dim2.x, entMd.Dim1.y, -entMd.Dim1.z);
+				const auto& boxLowerRightFront = ent.GetOffsetInWorldCoords(entMd.Dim1.x, entMd.Dim1.y, -entMd.Dim1.z);
 
 				const RGBA& lineColour = colour.ToRGBA(250);
 				const RGBA& polyColour = colour.ToRGBA(100);
@@ -953,9 +953,9 @@ namespace sub::Spooner
 		{
 			if (ent.Exists())
 			{
-				const auto& soe_pos = ent.GetPosition();
-				const auto& soe_md = ent.ModelDimensions();
-				const auto& markerPos = soe_pos + Vector3(0, 0, (std::max)(soe_md.Dim1.z, soe_md.Dim2.z) + 1.4f); // May not be at the right position if the entity is tilted
+				const auto& soePos = ent.GetPosition();
+				const auto& soeMd = ent.ModelDimensions();
+				const auto& markerPos = soePos + Vector3(0, 0, (std::max)(soeMd.Dim1.z, soeMd.Dim2.z) + 1.4f); // May not be at the right position if the entity is tilted
 				World::DrawMarker(MarkerType::UpsideDownCone, markerPos, Vector3(), Vector3(), Vector3(1, 1, 2), colour);
 			}
 		}

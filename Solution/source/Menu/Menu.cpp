@@ -173,8 +173,8 @@ INT Menu::printingop = 0;
 UINT16 Menu::breakcount = 0;
 UINT16 Menu::totalbreaks = 0;
 UINT8 Menu::breakscroll = 0;
-INT16 Menu::currentsub_ar_index = 0;
-INT Menu::currentsub_ar[100] = {};
+INT16 Menu::currentArrayIndex = 0;
+INT Menu::currentArray[100] = {};
 INT Menu::currentop_ar[100] = {};
 INT Menu::SetSub_delayed = 0;
 int Menu::delayedTimer = 0;
@@ -358,7 +358,7 @@ void Menu::titlebox_draw()
 	case SUB::PED_HEADFEATURES_MAIN: case SUB::PED_HEADFEATURES_HEADOVERLAYS: case SUB::PED_HEADFEATURES_HEADOVERLAYS_INITEM: case SUB::PED_HEADFEATURES_FACEFEATURES: case SUB::PED_HEADFEATURES_SKINTONE:
 		DRAW_SPRITE("shopui_title_highendsalon", "shopui_title_highendsalon", 0.16f + menuPos.x, 0.0989f + menuPos.y, 0.20f, 0.083f, 0.0f, 255, 255, 255, titlebox.A, false, 0); break;
 	case SUB::MODSHOP: case SUB::MSDOORS: case SUB::MSCATALL: case SUB::MSEXTRA: case SUB::MSLIGHTS: case SUB::MSNEONS: case SUB::MSWHEELS: case SUB::MSWHEELS2: case SUB::MSWHEELS3: case SUB::MS_TYRESBURST: case SUB::GETALLPAINTIDS: case SUB::MSPAINTS: case SUB::MSPAINTS2: case SUB::MSPAINTS2_CHROME: case SUB::MSPAINTS2_MATTE: case SUB::MSPAINTS2_METAL: case SUB::MSPAINTS2_CHAMELEON: case SUB::MSPAINTS2_METALLIC: case SUB::MSPAINTS2_NORMAL: case SUB::MSPAINTS2_SHARED: case SUB::MSENGINESOUND: //case SUB::MSPAINTS_RGB:
-		if (Menu::currentsub_ar[currentsub_ar_index] != SUB::MS_BENNYS)
+		if (Menu::currentArray[currentArrayIndex] != SUB::MS_BENNYS)
 		{
 			DRAW_SPRITE("shopui_title_carmod", "shopui_title_carmod", 0.16f + menuPos.x, 0.0989f + menuPos.y, 0.20f, 0.083f, 0.0f, 255, 255, 255, titlebox.A, false, 0); break;
 		}
@@ -370,7 +370,7 @@ void Menu::titlebox_draw()
 			//DRAW_SPRITE("shopui_title_movie_masks", "shopui_title_movie_masks", 0.16f + menuPos.x, 0.0989f + menuPos.y, 0.20f, 0.083f, 0.0f, 255, 255, 255, titlebox.A); break;
 	case SUB::SPAWNVEHICLE: case SUB::SPAWNVEHICLE_OPTIONS: case SUB::SPAWNVEHICLE_ALLCATS: case SUB::SPAWNVEHICLE_FAVOURITES: case SUB::FUNNYVEHICLES: case SUB::VEHICLE_SAVER: case SUB::VEHICLE_SAVER_INITEM:
 		DRAW_SPRITE("shopui_title_carmod2", "shopui_title_carmod2", 0.16f + menuPos.x, 0.0989f + menuPos.y, 0.20f, 0.083f, 0.0f, 255, 255, 255, titlebox.A, false, 0); break;
-	case SUB::ANIMATIONSUB: case SUB::ANIMATIONSUB_DEER: case SUB::ANIMATIONSUB_GESTSIT: case SUB::ANIMATIONSUB_GUARDREAC: case SUB::ANIMATIONSUB_MISSRAPPEL: case SUB::ANIMATIONSUB_RANDARREST: case SUB::ANIMATIONSUB_SHARK: case SUB::ANIMATIONSUB_SWAT: case SUB::ANIMATIONSUB_CUSTOM: case SUB::ANIMATIONSUB_SETTINGS: case SUB::ANIMATIONSUB_TASKSCENARIOS: case SUB::ANIMATIONSUB_TASKSCENARIOS2: case SUB::MOVEMENTGROUP:
+	case SUB::ANIMATIONSUB: case SUB::ANIMATIONSUB_DEER: case SUB::ANIMATIONSUB_GESTSIT: case SUB::ANIMATIONSUB_GUARDREAC: case SUB::ANIMATIONSUB_MISSRAPPEL: case SUB::ANIMATIONSUB_RANDARREST: case SUB::ANIMATIONSUB_SHARK: case SUB::ANIMATIONSUB_SWAT: case SUB::ANIMATIONSUB_CUSTOM: case SUB::ANIMATIONSUB_SETTINGS: case SUB::AnimationTaskScenarios: case SUB::AnimationTaskScenarios2: case SUB::MOVEMENTGROUP:
 		DRAW_SPRITE("shopui_title_tennis", "shopui_title_tennis", 0.16f + menuPos.x, 0.0989f + menuPos.y, 0.20f, 0.083f, 0.0f, 255, 255, 255, titlebox.A, false, 0); break;
 	case SUB::TELEPORTOPS_YACHTS: case SUB::TELEPORTOPS_YACHTS_INGRP:
 		DRAW_SPRITE("dock_dlc_banner", "yacht_banner_0", 0.16f + menuPos.x, 0.0989f + menuPos.y, 0.20f, 0.083f, 0.0f, 255, 255, 255, titlebox.A, false, 0); break;
@@ -563,7 +563,7 @@ void Menu::while_opened()
 		if (currentsub == SUB::MAINMENU)
 			SetSub_closed();
 		else
-			SetSub_previous();
+			SetPreviousMenu();
 	}
 
 	// Binds press
@@ -582,7 +582,7 @@ void Menu::while_stopanim()
 {
 	if (isStopAnimBinds())
 	{
-		sub::AnimationSub_StopAnimationCallback();
+		sub::AnimationStopAnimationCallback();
 	}
 }
 void Menu::Up(bool playSound)
@@ -621,7 +621,7 @@ void Menu::Top(bool playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
 }
-void Menu::SetSub_previous()
+void Menu::SetPreviousMenu()
 {
 	if (OnSubBack != nullptr)
 	{
@@ -629,13 +629,13 @@ void Menu::SetSub_previous()
 		OnSubBack = nullptr;
 	}
 
-	currentsub = currentsub_ar[currentsub_ar_index]; // Get previous submenu from array and set as current submenu
-	currentop = currentop_ar[currentsub_ar_index]; // Get last selected option from array and set as current selected option
+	currentsub = currentArray[currentArrayIndex]; // Get previous submenu from array and set as current submenu
+	currentop = currentop_ar[currentArrayIndex]; // Get last selected option from array and set as current selected option
 
-	currentsub_ar[currentsub_ar_index] = -2;
-	currentop_ar[currentsub_ar_index] = -2;
+	currentArray[currentArrayIndex] = -2;
+	currentop_ar[currentArrayIndex] = -2;
 
-	currentsub_ar_index--; // Decrement array index by 1
+	currentArrayIndex--; // Decrement array index by 1
 	printingop = 0; // Reset option print variable
 	totalop = 0; // Reset total option count variable
 	Game::Sound::PlayFrontend_default("BACK"); // Play sound
@@ -644,15 +644,15 @@ void Menu::SetSub_previous()
 
 }
 
-void Menu::SetSub_new(INT sub_index)
+void Menu::NewSetMenu(INT sub_index)
 {
-	if (currentsub_ar_index >= 99)
+	if (currentArrayIndex >= 99)
 		return; // Array bounds safety - max depth reached
-	currentsub_ar_index++; //Increment array index
-	currentsub_ar[currentsub_ar_index] = currentsub; // Store current submenu index in array
+	currentArrayIndex++; //Increment array index
+	currentArray[currentArrayIndex] = currentsub; // Store current submenu index in array
 	currentsub = sub_index; // Set new submenu as current submenu
 
-	currentop_ar[currentsub_ar_index] = currentop; // Store currently selected option in array
+	currentop_ar[currentArrayIndex] = currentop; // Store currently selected option in array
 	currentop = 1; currentop_w_breaks = 1; // Set new selected option as first option in submenu
 
 	printingop = 0; // Reset currently printing option var
@@ -835,7 +835,7 @@ void Menu::sub_handler()
 
 		if (SetSub_delayed != -1)
 		{
-			SetSub_new(SetSub_delayed);
+			NewSetMenu(SetSub_delayed);
 			SetSub_delayed = -1;
 		}
 
@@ -1621,7 +1621,7 @@ void AddPresetColourOptionsPreviews(UINT8 const r, UINT8 const g, UINT8 const b)
 
 	DRAW_RECT(x_coord, OptionY + 0.044f + menuPos.y, res.x, res.y, r, g, b, 255, false);
 }
-void Add_preset_colour_options_previews(const RgbS& rgb)
+void AddPresetColourOptionsPreview(const RgbS& rgb)
 {
 	AddPresetColourOptionsPreviews(rgb.R, rgb.G, rgb.B);
 }

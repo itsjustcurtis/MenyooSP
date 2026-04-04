@@ -2223,11 +2223,11 @@ int GTAmemory::GetNumberOfVehicles()
 	return 0;
 }
 
-float GTAmemory::WorldGravity_get()
+float GTAmemory::GetWorldGravity()
 {
 	return *_readWorldGravityAddress;
 }
-void GTAmemory::WorldGravity_set(float value)
+void GTAmemory::SetWorldGravity(float value)
 {
 	*_writeWorldGravityAddress = value;
 	SET_GRAVITY_LEVEL(0);

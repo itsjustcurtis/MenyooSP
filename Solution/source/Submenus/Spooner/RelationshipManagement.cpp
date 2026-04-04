@@ -30,13 +30,13 @@ namespace sub::Spooner
 	namespace RelationshipManagement
 	{
 		//struct RelationshipGroup_t{ std::string name; Hash handle; };
-		bool RG_Created = false;
-		std::string RG_SpoonerFriends = { "SPOONER_FRIENDS" };
-		std::string RG_SpoonerEnemies = { "SPOONER_ENEMIES" };
-		std::string RG_SpoonerNeutral = { "SPOONER_NEUTRAL" };
-		std::string RG_Me = { "PLAYER", };
+		bool rgCreated = false;
+		std::string rgSpoonerFriends = { "SPOONER_FRIENDS" };
+		std::string rgSpoonerEnemies = { "SPOONER_ENEMIES" };
+		std::string rgSpoonerNeutral = { "SPOONER_NEUTRAL" };
+		std::string rgMe = { "PLAYER", };
 
-		std::vector<std::string> vRGs{ RG_SpoonerFriends, RG_SpoonerEnemies, RG_SpoonerNeutral };
+		std::vector<std::string> relationshipGroups{ rgSpoonerFriends, rgSpoonerEnemies, rgSpoonerNeutral };
 
 		/*bool GetPedRelationshipGroup(const GTAped& ped, std::string& outGrp)
 		{
@@ -53,27 +53,27 @@ namespace sub::Spooner
 		bool GetPedRelationshipGroup(const GTAped& ped, Hash& outHash)
 		{
 			outHash = ped.RelationshipGroup_get();
-			return (outHash == GET_HASH_KEY(RG_SpoonerFriends) || outHash == GET_HASH_KEY(RG_SpoonerEnemies) || outHash == GET_HASH_KEY(RG_SpoonerNeutral));
+			return (outHash == GET_HASH_KEY(rgSpoonerFriends) || outHash == GET_HASH_KEY(rgSpoonerEnemies) || outHash == GET_HASH_KEY(rgSpoonerNeutral));
 		}
 		void SetPedRelationshipGroup(GTAped ped, Hash group)
 		{
 			//using namespace sub::Spooner::RelationshipManagement;
 
 			if (NETWORK_HAS_PLAYER_STARTED_TRANSITION(PLAYER_ID()))
-				RG_Created = false;
+				rgCreated = false;
 
-			if (!RG_Created)
+			if (!rgCreated)
 			{
-				World::AddRelationshipGroup(RG_SpoonerFriends);
-				World::AddRelationshipGroup(RG_SpoonerEnemies);
-				World::AddRelationshipGroup(RG_SpoonerNeutral);
-				//World::AddRelationshipGroup(RG_Me);
+				World::AddRelationshipGroup(rgSpoonerFriends);
+				World::AddRelationshipGroup(rgSpoonerEnemies);
+				World::AddRelationshipGroup(rgSpoonerNeutral);
+				//World::AddRelationshipGroup(rgMe);
 
-				World::SetRelationshipBetweenGroups(PedRelationship::Neutral, RG_SpoonerFriends, RG_SpoonerNeutral);
-				World::SetRelationshipBetweenGroups(PedRelationship::Neutral, RG_SpoonerEnemies, RG_SpoonerNeutral);
-				World::SetRelationshipBetweenGroups(PedRelationship::Hate, RG_SpoonerFriends, RG_SpoonerEnemies);
-				World::SetRelationshipBetweenGroups(PedRelationship::Companion, RG_SpoonerFriends, RG_Me);
-				RG_Created = true;
+				World::SetRelationshipBetweenGroups(PedRelationship::Neutral, rgSpoonerFriends, rgSpoonerNeutral);
+				World::SetRelationshipBetweenGroups(PedRelationship::Neutral, rgSpoonerEnemies, rgSpoonerNeutral);
+				World::SetRelationshipBetweenGroups(PedRelationship::Hate, rgSpoonerFriends, rgSpoonerEnemies);
+				World::SetRelationshipBetweenGroups(PedRelationship::Companion, rgSpoonerFriends, rgMe);
+				rgCreated = true;
 			}
 
 			ped.RelationshipGroup_set(group);

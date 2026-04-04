@@ -140,7 +140,7 @@ namespace sub::TeleportLocations_catind
 			if (apply)
 			{
 				GrabbedCoords = false;
-				teleport_net_ped(thisEntity, _customTeleLoc.x, _customTeleLoc.y, _customTeleLoc.z);
+				TeleportNetPed(thisEntity, _customTeleLoc.x, _customTeleLoc.y, _customTeleLoc.z);
 			}
 
 			if (update)

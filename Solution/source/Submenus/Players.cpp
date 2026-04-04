@@ -8,23 +8,11 @@
 * (at your option) any later version.
 */
 #include "MainMenu.h"
-
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Scripting\Game.h"
-#include "..\Scripting\GTAplayer.h"
-//#include "..\Scripting\GTAentity.h"
-#include "..\Scripting\GTAped.h"
+#include "Players.h"
 
 namespace sub
 {
-	// Are these basic (FiveM) player options allowed on 5mods?
-
-	void PlayersSub_()
+	void PlayersMenu()
 	{
 		AddTitle("Players");
 
@@ -34,24 +22,22 @@ namespace sub
 			{
 				bool bPlayerPressed = false;
 				AddOption(GET_PLAYER_NAME(i), bPlayerPressed);
-
-				//if (Menu::printingop == *Menu::currentopATM) Static_240 = i;
-
 				if (bPlayerPressed)
 				{
 					g_Ped2 = i;
 					g_Ped1 = GET_PLAYER_PED(g_Ped2); // Store ped
 					g_PlayerName = GET_PLAYER_NAME(g_Ped2); // Store name
-					Menu::SetSub_new(SUB::PLAYERSSUBAMENU); // Change submenu to 'PlayersSubAMenu_'
+					Menu::NewSetMenu(SUB::PLAYERSSUBAMENU);
 				}
 			}
 		}
 	}
 
-	void PlayersSubAMenu_()
+	void PlayersAMenu()
 	{
-		bool bSpectateOn = false, bSpectateOff = false;
-		bool bSetWp = false;
+		bool spectateOn = false;
+		bool spectateOff = false;
+		bool setWaypoint = false;
 
 		std::string spectatePlayerStr = "CM_SPECTATE";
 		if (Game::DoesGXTEntryExist(spectatePlayerStr))
@@ -59,21 +45,30 @@ namespace sub
 			spectatePlayerStr = Game::GetGXTEntry(spectatePlayerStr);
 			spectatePlayerStr = spectatePlayerStr.substr(0, spectatePlayerStr.find('('));
 		}
-		else spectatePlayerStr = "Spectate Player";
+		else 
+		{
+			spectatePlayerStr = "Spectate Player";
+		}
 
 		AddTitle(g_PlayerName); // Title = player name
-		AddOption("Set Waypoint To Player", bSetWp);
-		AddLocal(spectatePlayerStr, spectatePlayer == g_Ped2, bSpectateOn, bSpectateOff); // Spectate Player
+		AddOption("Set Waypoint To Player", setWaypoint);
+		AddLocal(spectatePlayerStr, spectatePlayer == g_Ped2, spectateOn, spectateOff); // Spectate Player
 
-		if (bSpectateOn)
+		if (spectateOn)
 		{
 			Ped ped;
 			spectatePlayer = g_Ped2;
 			for (int i = 0; i < GAME_PLAYERCOUNT; i++)
 			{
-				if (!NETWORK_IS_PLAYER_ACTIVE(i)) continue;
+				if (!NETWORK_IS_PLAYER_ACTIVE(i)) 
+				{
+					continue;
+				}
 				ped = GET_PLAYER_PED(i);
-				if (!DOES_ENTITY_EXIST(ped)) continue;
+				if (!DOES_ENTITY_EXIST(ped)) 
+				{
+					continue;
+				}
 				NETWORK_SET_IN_SPECTATOR_MODE_EXTENDED(0, ped, 1);
 				NETWORK_SET_IN_SPECTATOR_MODE(false, ped);
 			}
@@ -84,14 +79,20 @@ namespace sub
 				NETWORK_SET_IN_SPECTATOR_MODE(true, ped);
 			}
 		}
-		if (bSpectateOff)
+		if (spectateOff)
 		{
 			Ped ped;
 			for (int i = 0; i < GAME_PLAYERCOUNT; i++)
 			{
-				if (!NETWORK_IS_PLAYER_ACTIVE(i)) continue;
+				if (!NETWORK_IS_PLAYER_ACTIVE(i)) 
+				{
+					continue;
+				}
 				ped = GET_PLAYER_PED(i);
-				if (!DOES_ENTITY_EXIST(ped)) continue;
+				if (!DOES_ENTITY_EXIST(ped)) 
+				{
+					continue;
+				}
 				NETWORK_SET_IN_SPECTATOR_MODE_EXTENDED(0, ped, 1);
 				NETWORK_SET_IN_SPECTATOR_MODE(false, ped);
 			}
@@ -99,7 +100,7 @@ namespace sub
 			spectatePlayer = -1;
 		}
 
-		if (bSetWp)
+		if (setWaypoint)
 		{
 			GTAplayer player = g_Ped2;
 			if (player.IsActive())
@@ -120,15 +121,14 @@ namespace sub
 				SET_WAYPOINT_OFF();
 			}
 		}
-
 	}
-
 }
+
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(PLAYERSSUB,  		sub::PlayersSub_)
-REGISTER_SUBMENU(PLAYERSSUBAMENU, 	sub::PlayersSubAMenu_)
+REGISTER_SUBMENU(PLAYERSSUB,  		sub::PlayersMenu)
+REGISTER_SUBMENU(PLAYERSSUBAMENU, 	sub::PlayersAMenu)
 
 
 
