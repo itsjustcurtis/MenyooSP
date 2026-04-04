@@ -241,7 +241,7 @@ namespace sub::Spooner
 				GTAentity& thisTargetEnt = targetEntity;
 
 				GTAentity myPed = PLAYER_PED_ID();
-				if (myPed.Handle() != SelectedEntity.Handle.Handle() && myPed.Exists())
+				if (myPed.Handle() != selectedEntity.handle.Handle() && myPed.Exists())
 				{
 					bool bMyPedPressed = false;
 					AddTickol("Self", thisTargetEnt == myPed, bMyPedPressed, bMyPedPressed); if (bMyPedPressed)
@@ -252,15 +252,15 @@ namespace sub::Spooner
 
 				for (auto& e : Databases::EntityDb)
 				{
-					if (e.Handle.Handle() != SelectedEntity.Handle.Handle() && e.Handle.Exists() && (eType == EntityType::ALL || e.Type == eType))
+					if (e.handle.Handle() != selectedEntity.handle.Handle() && e.handle.Exists() && (eType == EntityType::ALL || e.type == eType))
 					{
 						bool bEntPressed = false;
-						AddTickol(e.HashName, thisTargetEnt == e.Handle, bEntPressed, bEntPressed); if (bEntPressed)
+						AddTickol(e.hashName, thisTargetEnt == e.handle, bEntPressed, bEntPressed); if (bEntPressed)
 						{
-							thisTargetEnt = e.Handle;
+							thisTargetEnt = e.handle;
 						}
 						if (*Menu::currentopATM == Menu::printingop)
-							EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(0, 255, 0, 200));
+							EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 				}
 			}
@@ -307,7 +307,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::FaceDirection>();
 
-				World::DrawMarker(MarkerType::DebugSphere, SelectedEntity.Handle.GetPosition().PointOnCircle(1.0f, tskPtr->heading), Vector3(0, 0, tskPtr->heading), Vector3(), Vector3(0.3f, 0.3f, 0.3f), RGBA(177, 33, 193, 210));
+				World::DrawMarker(MarkerType::DebugSphere, selectedEntity.handle.GetPosition().PointOnCircle(1.0f, tskPtr->heading), Vector3(0, 0, tskPtr->heading), Vector3(), Vector3(0.3f, 0.3f, 0.3f), RGBA(177, 33, 193, 210));
 
 				bool bHeading_plus = false, bHeading_minus = false;
 				AddNumber("Direction To Face", tskPtr->heading, 0, null, bHeading_plus, bHeading_minus);
@@ -336,7 +336,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::TeleportToCoord>();
 
-				if (SelectedEntity.Type == EntityType::PED)
+				if (selectedEntity.type == EntityType::PED)
 				{
 					bool bTeleVehicleToggle = false;
 					AddTickol("Take Vehicle Too (If In One)", tskPtr->takeVehicleToo, bTeleVehicleToggle, bTeleVehicleToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bTeleVehicleToggle) tskPtr->takeVehicleToo = !tskPtr->takeVehicleToo;
@@ -357,7 +357,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::SlideToCoord>();
 
-				World::DrawMarker(MarkerType::DebugSphere, SelectedEntity.Handle.GetPosition().PointOnCircle(1.0f, tskPtr->heading), Vector3(), Vector3(0, 0, tskPtr->heading), Vector3(0.3f, 0.3f, 0.3f), RGBA(177, 33, 193, 210));
+				World::DrawMarker(MarkerType::DebugSphere, selectedEntity.handle.GetPosition().PointOnCircle(1.0f, tskPtr->heading), Vector3(), Vector3(0, 0, tskPtr->heading), Vector3(0.3f, 0.3f, 0.3f), RGBA(177, 33, 193, 210));
 
 				bool bSpeed_plus = false, bSpeed_minus = false;
 				AddNumber("Speed", tskPtr->speed, 1, null, bSpeed_plus, bSpeed_minus);
@@ -386,7 +386,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::FollowRoute>();
 
-				const Vector3& entityPos = SelectedEntity.Handle.GetPosition();
+				const Vector3& entityPos = selectedEntity.handle.GetPosition();
 
 				for (auto porit = tskPtr->route.begin(); porit != tskPtr->route.end(); ++porit)
 				{
@@ -469,7 +469,7 @@ namespace sub::Spooner
 				bool bRadius_plus = false, bRadius_minus = false;
 				AddNumber("Radius", thisRadius, 0, null, bRadius_plus, bRadius_minus);
 				if (*Menu::currentopATM == Menu::printingop)
-					EntityManagement::DrawRadiusDisplayingMarker(SelectedEntity.Handle.GetPosition(), thisRadius);
+					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisRadius);
 				if (bRadius_plus) { if (thisRadius < FLT_MAX) thisRadius += 1.0f; }
 				if (bRadius_minus) { if (thisRadius > 0.0f) thisRadius -= 1.0f; }
 
@@ -494,7 +494,7 @@ namespace sub::Spooner
 				bool bSearchRadius_plus = false, bSearchRadius_minus = false;
 				AddNumber("Search Radius", thisSearchRadius, 0, null, bSearchRadius_plus, bSearchRadius_minus);
 				if (*Menu::currentopATM == Menu::printingop)
-					EntityManagement::DrawRadiusDisplayingMarker(SelectedEntity.Handle.GetPosition(), thisSearchRadius);
+					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisSearchRadius);
 				if (bSearchRadius_plus) { if (thisSearchRadius < FLT_MAX) thisSearchRadius += 1.0f; }
 				if (bSearchRadius_minus) { if (thisSearchRadius > 0.0f) thisSearchRadius -= 1.0f; }
 
@@ -512,7 +512,7 @@ namespace sub::Spooner
 
 				AddOption("All Actions", null, nullFunc, SUB::SPOONER_TASKSEQUENCE_TASKSUB_SCENARIOACTION_LIST);
 
-				for (auto& sn : AnimationSub_TaskScenarios::vNamedScenarios)
+				for (auto& sn : AnimationTaskScenarios::vNamedScenarios)
 				{
 					bool bScenarioNamePressed = false;
 					AddTickol(sn.name, thisScenarioName == sn.label, bScenarioNamePressed, bScenarioNamePressed); if (bScenarioNamePressed)
@@ -525,7 +525,7 @@ namespace sub::Spooner
 			{
 				if (_selectedSTST == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::ScenarioAction>();
@@ -541,7 +541,7 @@ namespace sub::Spooner
 					boost::to_lower(_searchStr);
 				}
 
-				for (auto& sl : AnimationSub_TaskScenarios::vValues_TaskScenarios)
+				for (auto& sl : AnimationTaskScenarios::vValues_TaskScenarios)
 				{
 					if (!_searchStr.empty()) { if (sl.find(_searchStr) == std::string::npos) continue; }
 
@@ -562,10 +562,10 @@ namespace sub::Spooner
 				AddOption("Settings", null, nullFunc, SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_SETTINGS);
 				AddOption("All Animations", null, nullFunc, SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS);
 
-				if (!sub::AnimationSub_catind::vPresetPedAnims.empty())
+				if (!sub::AnimationMenu::presetPedAnims.empty())
 				{
 					AddBreak("---Basic---");
-					for (auto& npa : sub::AnimationSub_catind::vPresetPedAnims)
+					for (auto& npa : sub::AnimationMenu::presetPedAnims)
 					{
 						bool bPresetAnimPressed = false;
 						AddTickol(npa.caption, (npa.animDict == tskPtr->animDict && npa.animName == tskPtr->animName), bPresetAnimPressed, bPresetAnimPressed); if (bPresetAnimPressed)
@@ -610,7 +610,7 @@ namespace sub::Spooner
 			{
 				if (_selectedSTST == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::PlayAnimation>();
@@ -690,13 +690,13 @@ namespace sub::Spooner
 			{
 				if (_selectedSTST == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::PlayAnimation>();
 
 				auto& _searchStr = dict;
-				sub::AnimationSub_catind::selectedAnimDictPtr = nullptr;
+				sub::AnimationMenu::selectedAnimDictPtr = nullptr;
 				bool searchobj = false;
 				bool bCurrentPressed;
 				bool notFoundInDict;
@@ -711,7 +711,7 @@ namespace sub::Spooner
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
 				}
 
-				for (auto& current : sub::AnimationSub_catind::vAllPedAnims)
+				for (auto& current : sub::AnimationMenu::allPedAnims)
 				{
 					if (!current.second.empty())
 					{
@@ -732,7 +732,7 @@ namespace sub::Spooner
 						bCurrentPressed = false;
 						AddOption(current.first, bCurrentPressed); if (bCurrentPressed)
 						{
-							sub::AnimationSub_catind::selectedAnimDictPtr = &current;
+							sub::AnimationMenu::selectedAnimDictPtr = &current;
 							Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS_INDICT;
 						}
 					}
@@ -740,13 +740,13 @@ namespace sub::Spooner
 			}
 			void PlayAnimation_allPedAnims_inDict()
 			{
-				if (_selectedSTST == nullptr || sub::AnimationSub_catind::selectedAnimDictPtr == nullptr)
+				if (_selectedSTST == nullptr || sub::AnimationMenu::selectedAnimDictPtr == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::PlayAnimation>();
-				auto& selectedDict = *sub::AnimationSub_catind::selectedAnimDictPtr;
+				auto& selectedDict = *sub::AnimationMenu::selectedAnimDictPtr;
 				//auto& _searchStr = dict;
 				bool bCurrentPressed;
 
@@ -834,7 +834,7 @@ namespace sub::Spooner
 				bool bRadius_plus = false, bRadius_minus = false;
 				AddNumber("Radius", thisRadius, 0, null, bRadius_plus, bRadius_minus);
 				if (*Menu::currentopATM == Menu::printingop)
-					EntityManagement::DrawRadiusDisplayingMarker(SelectedEntity.Handle.GetPosition(), thisRadius);
+					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisRadius);
 				if (bRadius_plus) { if (thisRadius < FLT_MAX) thisRadius += 1.0f; }
 				if (bRadius_minus) { if (thisRadius > 0.0f) thisRadius -= 1.0f; }
 			}
@@ -856,20 +856,20 @@ namespace sub::Spooner
 
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::PlaySpeechWithVoice>();
 
-				/*for (auto& oasd : sub::Speech_catind::vSpeechData)
+				/*for (auto& oasd : sub::Speech::vSpeechData)
 				{
 				bool bSpeechDatumPressed = false;
 				bool bSpeechIsActive = tskPtr->speechName == oasd.speechName && tskPtr->voiceName == oasd.voiceName;
 				AddTickol(oasd.title, bSpeechIsActive, bSpeechDatumPressed, bSpeechDatumPressed); if (bSpeechDatumPressed)
 				{
-				GTAped(SelectedEntity.Handle).PlaySpeechWithVoice(oasd.speechName, oasd.voiceName, oasd.paramName);
+				GTAped(selectedEntity.handle).PlaySpeechWithVoice(oasd.speechName, oasd.voiceName, oasd.paramName);
 				tskPtr->speechName = oasd.speechName;
 				tskPtr->voiceName = oasd.voiceName;
 				tskPtr->paramName = oasd.paramName;
 				}
 				}*/
 
-				sub::Speech_catind::_currVoiceInfo = nullptr;
+				sub::Speech::_currVoiceInfo = nullptr;
 
 				bool bSearchPressed = false;
 				AddOption(_searchStr.empty() ? "SEARCH" : _searchStr, bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
@@ -880,41 +880,41 @@ namespace sub::Spooner
 					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
 				}
 
-				for (auto& v : sub::Speech_catind::vVoiceData)
+				for (auto& v : sub::Speech::vVoiceData)
 				{
 					if (!_searchStr.empty()) { if (boost::to_upper_copy(v.voiceName).find(_searchStr) == std::string::npos) continue; }
 
 					bool bVoicePressed = false;
 					AddOption(v.voiceName, bVoicePressed); if (bVoicePressed)
 					{
-						sub::Speech_catind::_currVoiceInfo = &v;
+						sub::Speech::_currVoiceInfo = &v;
 						Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYSPEECHWITHVOICE_INVOICE;
 					}
 				}
 			}
 			void PlaySpeechWithVoice_inVoice()
 			{
-				if (_selectedSTST == nullptr || sub::Speech_catind::_currVoiceInfo == nullptr)
+				if (_selectedSTST == nullptr || sub::Speech::_currVoiceInfo == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::PlaySpeechWithVoice>();
 
-				auto& v = *sub::Speech_catind::_currVoiceInfo;
+				auto& v = *sub::Speech::_currVoiceInfo;
 
 				AddTitle(v.voiceName);
 
-				auto paramIter = std::find_if(sub::Speech_catind::vSpeechParams.begin(), sub::Speech_catind::vSpeechParams.end(),
-					[tskPtr](const sub::Speech_catind::SpeechParamS& item) {
+				auto paramIter = std::find_if(sub::Speech::vSpeechParams.begin(), sub::Speech::vSpeechParams.end(),
+					[tskPtr](const sub::Speech::SpeechParamS& item) {
 					return item.label.compare(tskPtr->paramName) == 0;
 				});
-				if (paramIter == sub::Speech_catind::vSpeechParams.end())
-					paramIter = sub::Speech_catind::vSpeechParams.begin();
+				if (paramIter == sub::Speech::vSpeechParams.end())
+					paramIter = sub::Speech::vSpeechParams.begin();
 				bool bSpeechParam_plus = false, bSpeechParam_minus = false;
 				AddTexter("Modifier", 0, std::vector<std::string>{ paramIter->title }, null, bSpeechParam_plus, bSpeechParam_minus);
-				if (bSpeechParam_plus) { if (std::next(paramIter) != sub::Speech_catind::vSpeechParams.end()) tskPtr->paramName = (++paramIter)->label; }
-				if (bSpeechParam_minus) { if (paramIter != sub::Speech_catind::vSpeechParams.begin()) tskPtr->paramName = (--paramIter)->label; }
+				if (bSpeechParam_plus) { if (std::next(paramIter) != sub::Speech::vSpeechParams.end()) tskPtr->paramName = (++paramIter)->label; }
+				if (bSpeechParam_minus) { if (paramIter != sub::Speech::vSpeechParams.begin()) tskPtr->paramName = (--paramIter)->label; }
 
 				for (auto& s : v.speechNames)
 				{
@@ -923,7 +923,7 @@ namespace sub::Spooner
 					{
 						tskPtr->voiceName = v.voiceName;
 						tskPtr->speechName = s;
-						GTAped(SelectedEntity.Handle).PlaySpeechWithVoice(tskPtr->speechName, tskPtr->voiceName, tskPtr->paramName);
+						GTAped(selectedEntity.handle).PlaySpeechWithVoice(tskPtr->speechName, tskPtr->voiceName, tskPtr->paramName);
 					}
 				}
 			}
@@ -943,15 +943,15 @@ namespace sub::Spooner
 
 				for (auto& e : Databases::EntityDb)
 				{
-					if (e.Handle.Handle() != SelectedEntity.Handle.Handle() && e.Handle.IsVehicle())
+					if (e.handle.Handle() != selectedEntity.handle.Handle() && e.handle.IsVehicle())
 					{
 						bool bPedPressed = false;
-						AddTickol(e.HashName, thisTargetVehicle == e.Handle, bPedPressed, bPedPressed); if (bPedPressed)
+						AddTickol(e.hashName, thisTargetVehicle == e.handle, bPedPressed, bPedPressed); if (bPedPressed)
 						{
-							thisTargetVehicle = e.Handle;
+							thisTargetVehicle = e.handle;
 						}
 						if (*Menu::currentopATM == Menu::printingop)
-							EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(0, 255, 0, 200));
+							EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 				}
 			}
@@ -970,15 +970,15 @@ namespace sub::Spooner
 
 				for (auto& e : Databases::EntityDb)
 				{
-					if (e.Handle.Handle() != SelectedEntity.Handle.Handle() && e.Handle.IsVehicle())
+					if (e.handle.Handle() != selectedEntity.handle.Handle() && e.handle.IsVehicle())
 					{
 						bool bPedPressed = false;
-						AddTickol(e.HashName, thisTargetVehicle == e.Handle, bPedPressed, bPedPressed); if (bPedPressed)
+						AddTickol(e.hashName, thisTargetVehicle == e.handle, bPedPressed, bPedPressed); if (bPedPressed)
 						{
-							thisTargetVehicle = e.Handle;
+							thisTargetVehicle = e.handle;
 						}
 						if (*Menu::currentopATM == Menu::printingop)
-							EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(0, 255, 0, 200));
+							EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 				}
 			}
@@ -1195,7 +1195,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::AchieveVelocity>();
 
-				const GTAentity& thisEntity = SelectedEntity.Handle;
+				const GTAentity& thisEntity = selectedEntity.handle;
 				const Vector3& entityPos = thisEntity.GetPosition();
 				const Vector3& entityRot = thisEntity.Rotation_get();
 				const Vector3& rotForVel = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + Vector3(tskPtr->pitch, 0.0f, tskPtr->heading);
@@ -1231,7 +1231,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::AchievePushForce>();
 
-				const GTAentity& thisEntity = SelectedEntity.Handle;
+				const GTAentity& thisEntity = selectedEntity.handle;
 				const Vector3& entityPos = thisEntity.GetPosition();
 				const Vector3& entityRot = thisEntity.Rotation_get();
 				const Vector3& rotForFrc = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + Vector3(tskPtr->pitch, 0.0f, tskPtr->heading);
@@ -1380,7 +1380,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::SetRotation>();
 
-				const GTAentity& thisEntity = SelectedEntity.Handle;
+				const GTAentity& thisEntity = selectedEntity.handle;
 				const Vector3& entityPos = thisEntity.GetPosition();
 				const Vector3& entityRot = thisEntity.Rotation_get();
 				const Vector3& rotForRot = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + tskPtr->rotationValue;
@@ -1480,7 +1480,7 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::TriggerFx>();
 
-				const GTAentity& thisEntity = SelectedEntity.Handle;
+				const GTAentity& thisEntity = selectedEntity.handle;
 				World::DrawMarker(MarkerType::DebugSphere, thisEntity.GetOffsetInWorldCoords(tskPtr->posOffset), Vector3(), Vector3(), Vector3(0.1f, 0.1f, 0.1f), RGBA(tskPtr->colour, 190));
 
 				bool bTogglePlayOncePressed = false;
@@ -1547,7 +1547,7 @@ namespace sub::Spooner
 
 				AddBreak("---FX---");
 				const auto& fxData = tskPtr->fx.GetFxData();
-				for (auto& ef : sub::Ptfx_catind::vPTFX)
+				for (auto& ef : sub::PtfxSubs::PTFX)
 				{
 					bool bFxNamePressed = false;
 					AddTickol(ef.name, fxData.asset == ef.asset && fxData.effect == ef.fx, bFxNamePressed, null); if (bFxNamePressed)
@@ -1563,30 +1563,30 @@ namespace sub::Spooner
 		{
 			dict.clear();
 
-			if (!SelectedEntity.Handle.Exists())
+			if (!selectedEntity.handle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
-			SelectedEntity.Handle.RequestControlOnce();
-			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(SelectedEntity);
+			selectedEntity.handle.RequestControlOnce();
+			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(selectedEntity);
 			bool isThisEntityInDb = thisEntityIndexInDb >= 0;
 			if (!isThisEntityInDb)
 			{
 				Game::Print::PrintBottomLeft("~r~Error:~s~ Entity is not in the Spooner Database");
 				addlog(ige::LogType::LOG_WARNING, "Cannot display task list, Entity not in Spooner Database");
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
 			AddTitle("Tasks");
 
-			auto& taskSequence = Databases::EntityDb[thisEntityIndexInDb].TaskSequence;
+			auto& taskSequence = Databases::EntityDb[thisEntityIndexInDb].taskSequence;
 			auto& taskList = taskSequence.AllTasks();
-			GTAentity thisEntity = SelectedEntity.Handle;
+			GTAentity thisEntity = selectedEntity.handle;
 			EntityType thisEntityType = (EntityType)thisEntity.Type();
 
-			SelectedEntity.TaskSequence = taskSequence;
+			selectedEntity.taskSequence = taskSequence;
 
 			bool bStartPressed = false, bStopPressed = false;
 			AddLocal("Status", taskSequence.IsActive(), bStartPressed, bStopPressed);
@@ -1606,7 +1606,7 @@ namespace sub::Spooner
 			else if (bStopPressed)
 			{
 				taskSequence.Reset(false);
-				CLEAR_PED_TASKS_IMMEDIATELY(SelectedEntity.Handle.Handle());
+				CLEAR_PED_TASKS_IMMEDIATELY(selectedEntity.handle.Handle());
 				Game::Print::PrintBottomLeft("Ended a Spooner task sequence.");
 			}
 
@@ -1696,34 +1696,34 @@ namespace sub::Spooner
 		}
 		void Sub_TaskSequence_AddTask()
 		{
-			if (!SelectedEntity.Handle.Exists())
+			if (!selectedEntity.handle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
-			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(SelectedEntity);
+			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(selectedEntity);
 			bool isThisEntityInDb = thisEntityIndexInDb >= 0;
 			if (!isThisEntityInDb)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
 			AddTitle("Add Task");
 
 			auto& thisEntity = Databases::EntityDb[thisEntityIndexInDb];
-			auto& taskSequence = thisEntity.TaskSequence;
+			auto& taskSequence = thisEntity.taskSequence;
 
 			for (auto& tn : vSTSTaskTypeNames)
 			{
-				if (tn.second.second == EntityType::ALL || tn.second.second == thisEntity.Type)
+				if (tn.second.second == EntityType::ALL || tn.second.second == thisEntity.type)
 				{
 					bool bTaskTypePressed = false;
 					AddOption(tn.second.first, bTaskTypePressed); if (bTaskTypePressed)
 					{
 						taskSequence.AddTask(tn.first);
-						SelectedEntity.TaskSequence = taskSequence;
-						Menu::SetSub_previous();
+						selectedEntity.taskSequence = taskSequence;
+						Menu::SetPreviousMenu();
 						return;
 					}
 				}
@@ -1736,7 +1736,7 @@ namespace sub::Spooner
 
 			if (tskPtr == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 			AddTitle(STSTaskGetName(tskPtr->type)->second.first);

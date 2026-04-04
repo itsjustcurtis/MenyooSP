@@ -65,8 +65,4 @@ namespace FPSCounter
 	}
 
 	bool bDisplayFps = false;
-
 }
-
-
-

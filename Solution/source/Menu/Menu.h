@@ -148,8 +148,8 @@ public:
 	static UINT16 breakcount;
 	static UINT16 totalbreaks;
 	static UINT8 breakscroll;
-	static INT16 currentsub_ar_index;
-	static INT currentsub_ar[100];
+	static INT16 currentArrayIndex;
+	static INT currentArray[100];
 	static INT currentop_ar[100];
 	static INT SetSub_delayed;
 	static int delayedTimer;
@@ -187,8 +187,8 @@ public:
 	static void Down(bool playSound = true);
 	static void Bottom(bool playSound = true);
 	static void Top(bool playSound = true);
-	static void SetSub_previous();
-	static void SetSub_new(INT sub_index);
+	static void SetPreviousMenu();
+	static void NewSetMenu(INT sub_index);
 	static void SetSub_closed();
 
 	static void glare_test();
@@ -254,7 +254,7 @@ void AddTexter(const std::string& text, int selectedindex, const std::vector<std
 
 
 void AddPresetColourOptionsPreviews(UINT8 const r, UINT8 const g, UINT8 const b);
-void Add_preset_colour_options_previews(const RgbS& rgb);
+void AddPresetColourOptionsPreview(const RgbS& rgb);
 void AddPresetColourOptionsPreviews(const RGBA& rgb);
 bool AddPresetColourOptions(INT& r, INT& g, INT& b);
 

@@ -9,8 +9,6 @@
 */
 #pragma once
 
-//#include "GenericLoopedMode.h"
-
 #include <string>
 
 typedef unsigned long DWORD;

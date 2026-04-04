@@ -9,32 +9,9 @@
 */
 #include "AnimalRiding.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Scripting\enums.h"
-#include "..\Util\ExePath.h"
-#include "..\Util\GTAmath.h"
-#include "..\Scripting\Model.h"
-#include "..\Misc\GenericLoopedMode.h"
-#include "..\Scripting\GTAentity.h"
-#include "..\Scripting\GTAped.h"
-#include "..\Scripting\WeaponIndivs.h"
-#include "..\Scripting\World.h"
-#include "..\Scripting\Game.h"
-#include "..\Scripting\CustomHelpText.h"
-#include "..\Scripting\ModelNames.h"
-
-#include <string>
-#include <vector>
-#include <pugixml\src\pugixml.hpp>
-
 namespace sub
 {
-	namespace AnimalRiding_catind
+	namespace AnimalRiding
 	{
 		struct AnimalAndSeat { Model model; int attachBone; Vector3 position; Vector3 rotation; };
 		std::vector<AnimalAndSeat> vAnimals
@@ -51,7 +28,7 @@ namespace sub
 			if (doc.load_file((const wchar_t*)(GetPathffW(Pathff::Main, true) + (L"AnimalRidingData.xml")).c_str()).status == pugi::status_ok)
 			{
 				vAnimals.clear();
-				auto nodeRoot = doc.document_element();//doc.child("AnimalRidingData");
+				auto nodeRoot = doc.document_element();
 				auto nodePeds = nodeRoot.child("Peds");
 				for (auto nodePed = nodePeds.first_child(); nodePed; nodePed = nodePed.next_sibling())
 				{
@@ -103,12 +80,9 @@ namespace sub
 
 				if ((myPed.Handle() != myAnimalPed.Handle()))
 				{
-					//std::vector<Entity> closestPeds;
-					//GTAmemory::GetPedHandles(closestPeds, myPos, 1.0f);
-
 					for (auto& ped : nearbyPeds)
 					{
-						for (auto& a : AnimalRiding_catind::vAnimals)
+						for (auto& a : AnimalRiding::vAnimals)
 						{
 							if (a.model.hash == GET_ENTITY_MODEL(ped) && !IS_ENTITY_DEAD(ped, false))
 							{
@@ -136,20 +110,19 @@ namespace sub
 						DISABLE_CONTROL_ACTION(0, INPUT_COVER, true);
 
 						REMOVE_ALL_PED_WEAPONS(myHumanPed.Handle(), true);
-						myHumanPed.Health_set(myHumanPed.GetMaxHealth());
+						myHumanPed.SetHealth(myHumanPed.GetMaxHealth());
 						SetPedInvincibleOn(myHumanPed.Handle());
 
 						REMOVE_ALL_PED_WEAPONS(myAnimalPed.Handle(), true);
-						myAnimalPed.Health_set(myAnimalPed.GetMaxHealth());
+						myAnimalPed.SetHealth(myAnimalPed.GetMaxHealth());
 						SetPedInvincibleOn(myAnimalPed.Handle());
 					}
 				}
 			}
 
-			void Mount(GTAped ped, const AnimalRiding_catind::AnimalAndSeat& a)
+			void Mount(GTAped ped, const AnimalRiding::AnimalAndSeat& a)
 			{
-				//ped.MissionEntity_set(true);
-				ped.RelationshipGroup_set("PLAYER");
+				ped.SetRelationshipGroup("PLAYER");
 
 				myHumanPed = PLAYER_PED_ID();
 				myHumanPed.StoreWeaponsInArray(myHumanWeaponBackup);
@@ -162,15 +135,16 @@ namespace sub
 
 				switch (a.model.hash)
 				{
-				default: //myHumanPed.Task().PlayAnimation("amb@code_human_in_car_idles@generic@ds@idle_a", "idle_a", 2.0, -2.0, -1, 33, 0, false); break;
-				case PedHash::MountainLion: myHumanPed.Task().PlayAnimation("rcmjosh2", "josh_sitting_loop", 4.0f, -4.0f, -1, 1, 0, false); break;
+					default:
+					case PedHash::MountainLion: 
+						myHumanPed.Task().PlayAnimation("rcmjosh2", "josh_sitting_loop", 4.0f, -4.0f, -1, 1, 0, false); break;
 				}
 
 				ped.FreezePosition(false);
 				myHumanPed.FreezePosition(false);
 
 				WAIT(50);
-				CHANGE_PLAYER_PED(PLAYER_ID(), ped.Handle(), true, true); // true,false?
+				CHANGE_PLAYER_PED(PLAYER_ID(), ped.Handle(), true, true);
 				WAIT(50);
 				myAnimalPed = PLAYER_PED_ID();
 
@@ -197,7 +171,7 @@ namespace sub
 					else
 					{
 						myHumanPed = PLAYER_PED_ID();
-						auto newPed = World::CreatePed(PedHash::Michael, myHumanPed.GetPosition(), myHumanPed.Heading_get(), false);
+						auto newPed = World::CreatePed(PedHash::Michael, myHumanPed.GetPosition(), myHumanPed.GetHeading(), false);
 						WAIT(50);
 						CHANGE_PLAYER_PED(PLAYER_ID(), newPed.Handle(), true, true);
 						WAIT(50);
@@ -218,6 +192,7 @@ namespace sub
 			{
 				Game::CustomHelpText::ShowTimedText("Press ~INPUT_VEH_EXIT~ to mount onto this animal.", 100);
 			}
+
 			void PrintInstructions()
 			{
 				Game::Print::PrintBottomLeft("Approach a supported animal and hop on it like it's a car!");
@@ -244,13 +219,13 @@ namespace sub
 		{
 			GTAped myPed = PLAYER_PED_ID();
 			const auto& myPos = myPed.GetPosition();
-			auto myHeading = myPed.Heading_get();
+			auto myHeading = myPed.GetHeading();
 			const auto& myRot = myPed.Rotation_get();
 			const auto& myDir = Vector3::RotationToDirection(myRot);
 
-			auto animalRide = World::CreatePed(model, myPos + myDir * 3.0f, myHeading, false); // An animal created with ped type 26 (human) gg
+			auto animalRide = World::CreatePed(model, myPos + myDir * 3.0f, myHeading, false);
 
-			animalRide.RelationshipGroup_set("PLAYER");
+			animalRide.SetRelationshipGroup("PLAYER");
 
 			TaskSequence seq;
 			seq.AddTask().GuardCurrentPosition();
@@ -260,31 +235,28 @@ namespace sub
 			model.Unload();
 		}
 
-		void Sub_AnimalRiding()
+		void AnimalRidingMenu()
 		{
 			AddTitle("Animal Riding");
-
-			AddLocal("Toggle", AnimalRiding_catind::g_animalRidingMode.Enabled(), AnimalRiding_catind::ToggleOnOff, AnimalRiding_catind::ToggleOnOff);
+			AddLocal("Toggle", AnimalRiding::g_animalRidingMode.Enabled(), AnimalRiding::ToggleOnOff, AnimalRiding::ToggleOnOff);
 
 			AddBreak("---Spawn A Ride---");
 			for (auto& a : vAnimals)
 			{
 				bool bSpawnRidePressed = false;
-				AddOption(get_ped_model_label(a.model, true), bSpawnRidePressed); if (bSpawnRidePressed)
+				AddOption(GetPedModelLabel(a.model, true), bSpawnRidePressed); if (bSpawnRidePressed)
 				{
-					AnimalRiding_catind::SpawnAnimalRide(a.model);
+					AnimalRiding::SpawnAnimalRide(a.model);
 				}
 			}
 
 			AddBreak("---Animal Data---");
 			AddOption("Reload Data From File", null, PopulateAnimals);
 		}
-
 	}
-
 }
 
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(ANIMALRIDING,         sub::AnimalRiding_catind::Sub_AnimalRiding)
+REGISTER_SUBMENU(ANIMALRIDING,         sub::AnimalRiding::AnimalRidingMenu)

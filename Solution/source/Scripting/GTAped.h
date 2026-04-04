@@ -149,9 +149,9 @@ public:
 
 	int MemberCount() const;
 
-	void SeparationRange_set(float range);
+	void SetSeparationRange(float range);
 
-	void FormationSpacing_set(float spacing);
+	void SetFormationSpacing(float spacing);
 	void ResetFormationSpacing();
 
 	void FormationType_set(FormationType value);
@@ -212,7 +212,7 @@ public:
 	void PlaySpeechWithVoice(const std::string& speechName, const std::string& voiceName, const std::string& speechParam, bool unk = 0);
 
 	Hash Weapon_get() const;
-	void Weapon_set(Hash weaponHash);
+	void SetWeapon(Hash weaponHash);
 	void RemoveAllWeapons();
 
 	Vector3 LastWeaponImpactCoord() const;
@@ -224,7 +224,7 @@ public:
 
 	void AlwaysDiesWhenInjured_set(bool value);
 
-	void AlwaysKeepTask_set(bool value);
+	void SetAlwaysKeepTask(bool value);
 
 	int Armour_get() const;
 	void Armour_set(int value);
@@ -258,10 +258,10 @@ public:
 	void DrownsInWater_set(bool value);
 	void DrownsInSinkingVehicle_set(bool value);
 
-	void DrivingSpeed_set(float value);
+	void SetDrivingSpeed(float value);
 	void MaxDrivingSpeed_set(float value);
 
-	void DrivingStyle_set(int value);
+	void SetDrivingStyle(int value);
 
 	//NaturalMotion::Euphoria Euphoria_get() const;
 
@@ -346,11 +346,11 @@ public:
 
 	Hash RelationshipGroup_get() const;
 	void RelationshipGroup_set(Hash grpHash);
-	void RelationshipGroup_set(const std::string& grpName);
+	void SetRelationshipGroup(const std::string& grpName);
 
-	void ShootRate_set(int value);
+	void SetShootRate(int value);
 
-	void HasGravity_set(bool value) override;
+	void SetHasGravity(bool value) override;
 
 	Tasks Task();
 	int TaskSequenceProgress_get() const;

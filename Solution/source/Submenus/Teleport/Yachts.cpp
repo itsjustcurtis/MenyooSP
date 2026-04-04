@@ -286,7 +286,7 @@ namespace sub::TeleportLocations_catind
 				propRailings.SetIsCollisionEnabled(true);
 				propRailings.AttachTo(propYachtWin, 0, false, Vector3(0.0032f, 0.0028f, 14.5700f), Vector3());
 				SET_ENTITY_LIGHTS(propRailings.Handle(), 0);
-				propRailings.MissionEntity_set(true);
+				propRailings.SetMissionEntity(true);
 				yachtInfo.vSpawnedEntities.push_back(propRailings);
 
 				std::vector<std::string> optionColModels;
@@ -309,7 +309,7 @@ namespace sub::TeleportLocations_catind
 					p.SetIsCollisionEnabled(true);
 					SET_OBJECT_TINT_INDEX(p.Handle(), yachtInfo.yachtPropTextureVariation);
 					SET_ENTITY_LIGHTS(p.Handle(), 0);
-					propRailings.MissionEntity_set(true);
+					propRailings.SetMissionEntity(true);
 					yachtInfo.vSpawnedEntities.push_back(p);
 				}
 
@@ -318,7 +318,7 @@ namespace sub::TeleportLocations_catind
 				propLights.AttachTo(propYachtWin, 0, false, Vector3(0.0032f, 0.0028f, 14.5700f), Vector3());
 				propLights.SetIsCollisionEnabled(true);
 				SET_ENTITY_LIGHTS(propLights.Handle(), 0);
-				propLights.MissionEntity_set(true);
+				propLights.SetMissionEntity(true);
 				yachtInfo.vSpawnedEntities.push_back(propLights);
 
 				sprintf_s(buffer, "apa_mp_apa_yacht_door%c", yachtInfo.doorColour);
@@ -334,7 +334,7 @@ namespace sub::TeleportLocations_catind
 					propDoor.SetIsCollisionEnabled(true);
 					SET_OBJECT_TINT_INDEX(propDoor.Handle(), yachtInfo.yachtPropTextureVariation);
 					SET_ENTITY_LIGHTS(propDoor.Handle(), 0);
-					propDoor.MissionEntity_set(true);
+					propDoor.SetMissionEntity(true);
 					yachtInfo.vSpawnedEntities.push_back(propDoor);
 				}
 
@@ -343,7 +343,7 @@ namespace sub::TeleportLocations_catind
 				propFlag.AttachTo(propYachtWin, 0, false, Vector3(-56.6221f, -2.0013f, 1.5937f), Vector3(49.6800f, 0.0000f, -89.9500f));
 				propFlag.SetIsCollisionEnabled(true);
 				SET_ENTITY_LIGHTS(propFlag.Handle(), 0);
-				propFlag.MissionEntity_set(true);
+				propFlag.SetMissionEntity(true);
 				yachtInfo.vSpawnedEntities.push_back(propFlag);
 
 				// Keypad
@@ -351,7 +351,7 @@ namespace sub::TeleportLocations_catind
 				propKeypad.AttachTo(propYachtWin, 0, false, Vector3(-36.8196f, -2.8881f, 0.8880f), Vector3(0.0000f, 0.0000f, -84.7550f));
 				propKeypad.SetIsCollisionEnabled(true);
 				SET_ENTITY_LIGHTS(propKeypad.Handle(), 0);
-				propKeypad.MissionEntity_set(true);
+				propKeypad.SetMissionEntity(true);
 				yachtInfo.vSpawnedEntities.push_back(propKeypad);
 
 				std::map<UINT8, std::vector<std::pair<Vector3, float>>> radomeOffsets
@@ -370,7 +370,7 @@ namespace sub::TeleportLocations_catind
 					propRadome.SetIsCollisionEnabled(true);
 					SET_OBJECT_TINT_INDEX(propRadome.Handle(), yachtInfo.yachtPropTextureVariation);
 					SET_ENTITY_LIGHTS(propRadome.Handle(), 0);
-					propRadome.MissionEntity_set(true);
+					propRadome.SetMissionEntity(true);
 					yachtInfo.vSpawnedEntities.push_back(propRadome);
 				}
 
@@ -390,7 +390,7 @@ namespace sub::TeleportLocations_catind
 					propBuoy.Dynamic_set(true);
 					propBuoy.SetIsCollisionEnabled(true);
 					SET_ENTITY_LIGHTS(propBuoy.Handle(), 0);
-					propBuoy.MissionEntity_set(true);
+					propBuoy.SetMissionEntity(true);
 					yachtInfo.vSpawnedEntities.push_back(propBuoy);
 				}
 
@@ -401,7 +401,7 @@ namespace sub::TeleportLocations_catind
 					propJacuzzi.AttachTo(propYachtWin, 0, false, Vector3(-50.8033f, -1.9774f, 0.1368f), Vector3());
 					propJacuzzi.SetIsCollisionEnabled(true);
 					SET_ENTITY_LIGHTS(propJacuzzi.Handle(), 0);
-					propJacuzzi.MissionEntity_set(true);
+					propJacuzzi.SetMissionEntity(true);
 					yachtInfo.vSpawnedEntities.push_back(propJacuzzi);
 				}
 
@@ -456,7 +456,7 @@ namespace sub::TeleportLocations_catind
 					ped.FreezePosition(false);
 					ped.SetIsCollisionEnabled(true);
 					SET_ENTITY_LIGHTS(ped.Handle(), 0);
-					ped.RelationshipGroup_set("PLAYER");
+					ped.SetRelationshipGroup("PLAYER");
 					ped.BlockPermanentEvents_set(true);
 					auto& animArgs = std::get<3>(p);
 					if (animArgs.asset.empty()) { if (!animArgs.effect.empty()) { ped.Task().StartScenario(animArgs.effect); } }
@@ -560,7 +560,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (currentYachtInfo.location == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 			GTAped ped = g_Ped1;
@@ -631,7 +631,7 @@ namespace sub::TeleportLocations_catind
 				(ped.IsInVehicle() ? ped.CurrentVehicle() : GTAentity(ped)).FreezePosition(false);
 				WATER::SET_DEEP_OCEAN_SCALER(0.0f);
 				WATER::REMOVE_EXTRA_CALMING_QUAD(-4);
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				DO_SCREEN_FADE_IN(200);
 				return;
 			}

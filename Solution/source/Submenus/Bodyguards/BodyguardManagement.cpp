@@ -69,7 +69,7 @@ namespace sub::BodyguardMenu
 				return;
 
 			if (ent.HashName.empty())
-				ent.HashName = int_to_hexstring(ent.Handle.Model().hash, true);
+				ent.HashName = IntToHexString(ent.Handle.Model().hash, true);
 
 			BodyguardDb.push_back(std::move(ent));
 		}
@@ -104,7 +104,7 @@ namespace sub::BodyguardMenu
 
 			ent.Handle.Detach();
 
-			ent.Handle.MissionEntity_set(false);
+			ent.Handle.SetMissionEntity(false);
 
 			if (ped && ENTITY::DOES_ENTITY_EXIST(ped))
 			{

@@ -260,7 +260,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (currentGarageInfo.location == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 			GTAped ped = g_Ped1;

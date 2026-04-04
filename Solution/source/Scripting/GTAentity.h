@@ -83,11 +83,11 @@ public:
 
 	void Dynamic_set(bool value);
 
-	float Heading_get() const;
+	float GetHeading() const;
 	void Heading_set(float value);
 
 	int GetHealth() const;
-	void Health_set(int value);
+	void SetHealth(int value);
 
 	float Vehicle_engine_get() const;
 	void Vehicle_engine_set(float value);
@@ -115,7 +115,7 @@ public:
 	void SetOnFire(bool value);
 
 	bool MissionEntity_get() const;
-	void MissionEntity_set(bool value);
+	void SetMissionEntity(bool value);
 
 	bool IsUpright() const;
 	void SetUpright();
@@ -129,7 +129,7 @@ public:
 	void SetLandingGearState(int state);
 
 	int GetMaxHealth() const;
-	void MaxHealth_set(int value);
+	void SetMaxHealth(int value);
 
 	bool ToggleLandingGear() const;
 	void SetLandingGear(bool value);
@@ -158,15 +158,15 @@ public:
 	Vector3 SpeedVector_get(bool relative);
 
 
-	int Alpha_get() const;
-	void Alpha_set(int value);
+	int GetAlpha() const;
+	void SetAlpha(int value);
 	void ResetAlpha();
 
-	int LodDistance_get() const;
-	void LodDistance_set(int value);
+	int GetLODDistance() const;
+	void SetLODDistance(int value);
 
-	bool HasGravity_get() const;
-	virtual void HasGravity_set(bool value);
+	bool GetHasGravity() const;
+	virtual void SetHasGravity(bool value);
 
 	Vector3 CollisionNormal() const;
 	bool HasCollided() const;

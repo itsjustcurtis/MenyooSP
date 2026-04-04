@@ -9,31 +9,6 @@
 */
 #include "VehicleModShop.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Util\GTAmath.h"
-#include "..\Util\StringManip.h"
-#include "..\Util\FileLogger.h"
-#include "..\Scripting\enums.h"
-#include "..\main.h"
-#include "..\Scripting\GTAvehicle.h"
-#include "..\Scripting\Model.h"
-#include "..\Scripting\Game.h"
-#include "..\Memory\GTAmemory.h"
-#include "..\Scripting\World.h"
-
-#include "Settings.h"
-
-#include <string>
-#include <sstream>
-#include <iomanip>
-#include <vector>
-#include <array>
-
 namespace sub
 {
 	bool lowersuspension = 0;
@@ -44,26 +19,36 @@ namespace sub
 
 	// Paints
 
-	struct NamedVehiclePaint { std::string name; INT16 paint, pearl; };
+	struct NamedVehiclePaint 
+	{ 
+		std::string name; 
+		INT16 paint;
+		INT16 pearl; 
+	};
 
 #pragma region paintvectors
-	std::vector<NamedVehiclePaint> PAINTS_NORMAL{
+	std::vector<NamedVehiclePaint> PAINTS_NORMAL
+	{
 
 	};
 
-	std::vector<NamedVehiclePaint> PAINTS_METALLIC{
+	std::vector<NamedVehiclePaint> PAINTS_METALLIC
+	{
 
 	};
 
-	std::vector<NamedVehiclePaint> PAINTS_MATTE{
+	std::vector<NamedVehiclePaint> PAINTS_MATTE
+	{
 
 	};
 
-	std::vector<NamedVehiclePaint> PAINTS_METAL{
+	std::vector<NamedVehiclePaint> PAINTS_METAL
+	{
 
 	};
 
-	std::vector<NamedVehiclePaint> PAINTS_PEARL{
+	std::vector<NamedVehiclePaint> PAINTS_PEARL
+	{
 
 	}; 
 
@@ -302,9 +287,12 @@ namespace sub
 	{
 
 	};
+
 	std::vector<NamedVehiclePaint> PAINTS_CHAMELEON
 	{
+
 	};
+
 #pragma endregion
 
 	INT paintIndex_maxValue = 0;
@@ -456,22 +444,22 @@ namespace sub
 		switch (partIndex_CustomK)
 		{
 		case 1:
-			return vehicle.PrimaryColour_get();
+			return vehicle.GetPrimaryColour();
 			break;
 		case 2:
-			return vehicle.SecondaryColour_get();
+			return vehicle.GetSecondaryColour();
 			break;
 		case 3:
-			return vehicle.PearlescentColour_get();
+			return vehicle.GetPearlescentColour();
 			break;
 		case 4:
-			return vehicle.RimColour_get();
+			return vehicle.GetRimColour();
 			break;
 		case 5:
-			return vehicle.InteriorColour_get();
+			return vehicle.GetInteriorColour();
 			break;
 		case 6:
-			return vehicle.DashboardColour_get();
+			return vehicle.GetDashboardColour();
 			break;
 		case 10:
 			return g_spawnVehiclePrimaryColor;
@@ -504,25 +492,25 @@ namespace sub
 		{
 		case 1:
 			vehicle.ClearCustomPrimaryColour();
-			vehicle.PrimaryColour_set(colour_index);
+			vehicle.SetPrimaryColour(colour_index);
 			if (pearl_index != -1)
-				vehicle.PearlescentColour_set(pearl_index);
+				vehicle.SetPearlescentColour(pearl_index);
 			break;
 		case 2:
 			vehicle.ClearCustomSecondaryColour();
-			vehicle.SecondaryColour_set(colour_index);
+			vehicle.SetSecondaryColour(colour_index);
 			break;
 		case 3:
-			vehicle.PearlescentColour_set(colour_index);
+			vehicle.SetPearlescentColour(colour_index);
 			break;
 		case 4:
-			vehicle.RimColour_set(colour_index);
+			vehicle.SetRimColour(colour_index);
 			break;
 		case 5:
-			vehicle.InteriorColour_set(colour_index);
+			vehicle.SetInteriorColour(colour_index);
 			break;
 		case 6:
-			vehicle.DashboardColour_set(colour_index);
+			vehicle.SetDashboardColour(colour_index);
 			break;
 		}
 
@@ -592,7 +580,7 @@ namespace sub
 	{
 		if (!DOES_ENTITY_EXIST(g_Ped4))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -631,7 +619,7 @@ namespace sub
 			msCurrentPaintIndex = 4;
 			if (GET_VEHICLE_MOD(g_Ped4, VehicleMod::FrontWheels) < 0)
 				Game::Print::PrintBottomCentre("~b~Note:~s~ Colours cannot always be applied to stock wheels.");
-			Menu::SetSub_new(SUB::MSPAINTS2_SHARED);
+			Menu::NewSetMenu(SUB::MSPAINTS2_SHARED);
 			return;
 		}
 
@@ -779,7 +767,7 @@ namespace sub
 		case 4: default: AddTitle(Game::GetGXTEntry("CMOD_MOD_WHEM", "Wheels")); break;
 		}
 
-		switch (Menu::currentsub_ar[Menu::currentsub_ar_index])
+		switch (Menu::currentArray[Menu::currentArrayIndex])
 		{
 		case SUB::SPAWNVEHICLE_OPTIONS:
 			INT16* carColSettingPtr = (msCurrentPaintIndex == 10 ? &g_spawnVehiclePrimaryColor : &g_spawnVehicleSecondaryColor);
@@ -811,7 +799,7 @@ namespace sub
 			AddOption("Random RGB", MSPaints_RColour);
 			AddOption("Set RGB", MSPaints_primRGB, nullFunc, SUB::MSPAINTS_RGB);
 			if (*Menu::currentopATM == Menu::printingop)
-				Add_preset_colour_options_previews(msCurrentPaintIndex == 1 ? vehicle.CustomPrimaryColour_get() : msCurrentPaintIndex == 2 ? vehicle.CustomSecondaryColour_get() : RgbS(0, 0, 0));
+				AddPresetColourOptionsPreview(msCurrentPaintIndex == 1 ? vehicle.GetCustomPrimaryColour() : msCurrentPaintIndex == 2 ? vehicle.GetCustomSecondaryColour() : RgbS(0, 0, 0));
 			msCurrentPaintIndex == 1 ? painttypeswitch = "Secondary" : painttypeswitch = "Primary";
 			AddOption("Copy to " + painttypeswitch, copypaint);
 		}
@@ -904,14 +892,14 @@ namespace sub
 			case 1:
 				if (GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(g_Ped4))
 				{
-					RgbS copy = vehicle.CustomPrimaryColour_get();
+					RgbS copy = vehicle.GetCustomPrimaryColour();
 					vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
 				}
 				break;
 			case 2:
 				if (GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(g_Ped4))
 				{
-					RgbS copy = vehicle.CustomSecondaryColour_get();
+					RgbS copy = vehicle.GetCustomSecondaryColour();
 					vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
 				}
 				break;
@@ -1450,9 +1438,9 @@ namespace sub
 		{
 			std::size_t hexcheck;
 			std::string titlestring;
-			std::string hexr = int_to_hexstring(ms_paints_rgb_r, false);
-			std::string hexg = int_to_hexstring(ms_paints_rgb_g, false);
-			std::string hexb = int_to_hexstring(ms_paints_rgb_b, false);
+			std::string hexr = IntToHexString(ms_paints_rgb_r, false);
+			std::string hexg = IntToHexString(ms_paints_rgb_g, false);
+			std::string hexb = IntToHexString(ms_paints_rgb_b, false);
 			if (hexr.length() == 1)
 				hexr = "0" + hexr;
 			if (hexg.length() == 1)
@@ -1520,14 +1508,14 @@ namespace sub
 			{
 			case 1:
 			{
-				RgbS copy = vehicle.CustomPrimaryColour_get();
+				RgbS copy = vehicle.GetCustomPrimaryColour();
 				paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
 				vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
 				break;
 			}
 			case 2:
 			{
-				RgbS copy = vehicle.CustomSecondaryColour_get();
+				RgbS copy = vehicle.GetCustomSecondaryColour();
 				paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
 				vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
 				break;
@@ -1545,7 +1533,7 @@ namespace sub
 			case 1:
 				if (GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(g_Ped4))
 				{
-					RgbS copy = vehicle.CustomPrimaryColour_get();
+					RgbS copy = vehicle.GetCustomPrimaryColour();
 					paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
 					vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
 				}
@@ -1553,7 +1541,7 @@ namespace sub
 			case 2:
 				if (GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(g_Ped4))
 				{
-					RgbS copy = vehicle.CustomSecondaryColour_get();
+					RgbS copy = vehicle.GetCustomSecondaryColour();
 					paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
 					vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
 				}
@@ -1563,7 +1551,7 @@ namespace sub
 	}
 
 	// vehicle - upgrades
-	void set_vehicle_max_upgrades(Vehicle vehicle, bool upgradeIt, bool invincible, INT8 plateType, std::string plateText,
+	void SetVehicleMaxUpgrades(Vehicle vehicle, bool upgradeIt, bool invincible, INT8 plateType, std::string plateText,
 		bool neonIt, UINT8 NeonR, UINT8 NeonG, UINT8 NeonB, INT16 prim_col_index, INT16 sec_col_index)
 	{
 		if (!DOES_ENTITY_EXIST(vehicle) || !IS_ENTITY_A_VEHICLE(vehicle))
@@ -1663,7 +1651,7 @@ namespace sub
 	{
 		if (!(DOES_ENTITY_EXIST(g_Ped4) && IS_ENTITY_A_VEHICLE(g_Ped4)))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -1862,7 +1850,7 @@ namespace sub
 				{ "Light Purple" }
 			};
 
-			int hlColour = vehicle.HeadlightColour_get();
+			int hlColour = vehicle.GetHeadlightColour();
 
 			bool bHlColourPlus = false, bHlColourMinus = false;
 			AddTexter(Game::GetGXTEntry("CMOD_LGT_1", "Xenon Lights") + " Colour", hlColour == 255 ? 0 : hlColour,
@@ -1874,7 +1862,7 @@ namespace sub
 					hlColour = 0;
 				else if (hlColour < vHlColours.size() - 1)
 					hlColour++;
-				vehicle.HeadlightColour_set(hlColour);
+				vehicle.SetHeadlightColour(hlColour);
 			}
 			else if (bHlColourMinus)
 			{
@@ -1882,7 +1870,7 @@ namespace sub
 					hlColour = 255;
 				else if (hlColour != 255 && hlColour > 0)
 					hlColour--;
-				vehicle.HeadlightColour_set(hlColour);
+				vehicle.SetHeadlightColour(hlColour);
 			}
 		}
 
@@ -1906,8 +1894,8 @@ namespace sub
 		if (vehicle.GetHasSiren())
 		{
 			bool bSirenOnTogglePressed = false;
-			AddTickol("Sirens", vehicle.SirenActive_get(), bSirenOnTogglePressed, bSirenOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bSirenOnTogglePressed)
-				vehicle.SirenActive_set(!vehicle.SirenActive_get());
+			AddTickol("Sirens", vehicle.GetSirenActive(), bSirenOnTogglePressed, bSirenOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bSirenOnTogglePressed)
+				vehicle.SetSirenActive(!vehicle.GetSirenActive());
 		}
 
 		AddOption("AUTO UPGRADE", veh_static12_autoUpgrade);
@@ -2132,7 +2120,7 @@ namespace sub
 
 		if (SubMS_Extra) {
 			for (i = 0; i <= 12; i++)
-				if (DOES_EXTRA_EXIST(g_Ped4, i)) { Menu::SetSub_new(SUB::MSEXTRA); break; }
+				if (DOES_EXTRA_EXIST(g_Ped4, i)) { Menu::NewSetMenu(SUB::MSEXTRA); break; }
 			if (Menu::currentsub != SUB::MSEXTRA)
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Vehicle has no extras.");
 			return;
@@ -2164,7 +2152,7 @@ namespace sub
 			if (inputStr.length() > 0 && inputStr.length() <= 8)
 			{
 				vehicle.RequestControl(400);
-				vehicle.NumberPlateText_set(inputStr);
+				vehicle.SetNumberPlateText(inputStr);
 				Game::Print::PrintBottomLeft("CMOD_PLATEFIT", true);
 			}
 			else Game::Print::PrintErrorInvalidInput(inputStr);
@@ -2403,14 +2391,14 @@ namespace sub
 		if (veh_static12_autoUpgrade)
 		{
 			vehicle.RequestControl(400);
-			set_vehicle_max_upgrades(g_Ped4, true, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(g_Ped4));
+			SetVehicleMaxUpgrades(g_Ped4, true, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(g_Ped4));
 			SET_VEHICLE_TYRES_CAN_BURST(g_Ped4, false);
 		}
 
 		if (veh_static12_stockParts)
 		{
 			vehicle.RequestControl(400);
-			set_vehicle_max_upgrades(g_Ped4, false, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(g_Ped4));
+			SetVehicleMaxUpgrades(g_Ped4, false, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(g_Ped4));
 			SET_VEHICLE_TYRES_CAN_BURST(g_Ped4, true);
 		}
 	}
@@ -2426,7 +2414,7 @@ namespace sub
 
 			if (!vehicle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -2471,7 +2459,7 @@ namespace sub
 
 		if (!DOES_ENTITY_EXIST(vehicle))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -2533,7 +2521,7 @@ namespace sub
 
 		if (!vehicle.Exists())
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -2691,7 +2679,7 @@ namespace sub
 	{
 		if (!DOES_ENTITY_EXIST(g_Ped4))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -2738,7 +2726,7 @@ namespace sub
 
 		AddOption(Game::GetGXTEntry("CMOD_MOD_TYR3", "Tire Smoke Colour"), set_msrgb_index_4, nullFunc, SUB::MSPAINTS_RGB);
 		if (*Menu::currentopATM == Menu::printingop)
-			Add_preset_colour_options_previews(vehicle.TyreSmokeColour_get());
+			AddPresetColourOptionsPreview(vehicle.GetTyreSmokeColour());
 
 
 
@@ -2748,7 +2736,7 @@ namespace sub
 			//else Game::Print::PrintBottomCentre("~r~Error:~s~ Colours cannot be applied to stock wheels.");
 			if (GET_VEHICLE_MOD(g_Ped4, VehicleMod::FrontWheels) < 0)
 				Game::Print::PrintBottomCentre("~b~Note:~s~ Colours cannot always be applied to stock wheels.");
-			Menu::SetSub_new(SUB::MSPAINTS2_SHARED);
+			Menu::NewSetMenu(SUB::MSPAINTS2_SHARED);
 			return;
 		}
 
@@ -2772,7 +2760,7 @@ namespace sub
 
 		if (MSWheelsBPTyresOn_) {
 			vehicle.RequestControlOnce();
-			vehicle.CanTyresBurst_set(!vehicle.CanTyresBurst_get());
+			vehicle.SetCanTyresBurst(!vehicle.GetCanTyresBurst());
 			return;
 		}
 
@@ -2786,7 +2774,7 @@ namespace sub
 	{
 		if (!DOES_ENTITY_EXIST(g_Ped4))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -2897,7 +2885,7 @@ namespace sub
 	{
 		if (!DOES_ENTITY_EXIST(g_Ped4))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -2999,7 +2987,7 @@ namespace sub
 			if (bBurstPressed)
 			{
 				vehicle.RequestControl(800);
-				vehicle.CanTyresBurst_set(true);
+				vehicle.SetCanTyresBurst(true);
 				vehicle.BurstTyre(i);
 			}
 			else if (bUnburstPressed)
@@ -3023,10 +3011,10 @@ namespace sub
 		}
 
 		bool bMakeAllWheelsInvis = false;
-		AddLocal("Make All Wheels Invisible", are_vehicle_wheels_invisible(vehicle), bMakeAllWheelsInvis, bMakeAllWheelsInvis); if (bMakeAllWheelsInvis)
+		AddLocal("Make All Wheels Invisible", AreVehicleWheelsInvisible(vehicle), bMakeAllWheelsInvis, bMakeAllWheelsInvis); if (bMakeAllWheelsInvis)
 		{
 			vehicle.RequestControl(600);
-			if (!are_vehicle_wheels_invisible(vehicle))
+			if (!AreVehicleWheelsInvisible(vehicle))
 			{
 				SetVehicleWheelsInvisible(vehicle, true);
 			}
@@ -3080,11 +3068,11 @@ namespace sub
 			GTAvehicle vehicle = g_Ped4;
 			if (!vehicle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
-			int ms_wintint = vehicle.WindowTint_get();
+			int ms_wintint = vehicle.GetWindowTint();
 			if (ms_wintint < 0 || ms_wintint >= msWindows_wintint_names.size()) ms_wintint = 0;
 			//vehicle.RequestControlOnce();
 
@@ -3092,8 +3080,8 @@ namespace sub
 
 			bool ms_wintint_plus = false, ms_wintint_minus = false;
 			AddTexter("CMOD_GLD2_2", ms_wintint, msWindows_wintint_names, null, ms_wintint_plus, ms_wintint_minus, true); // Window Tint
-			if (ms_wintint_plus) { if (ms_wintint < msWindows_wintint_names.size() - 1) ms_wintint++; vehicle.WindowTint_set(ms_wintint); }
-			if (ms_wintint_minus) { if (ms_wintint > 0) ms_wintint--; vehicle.WindowTint_set(ms_wintint); }
+			if (ms_wintint_plus) { if (ms_wintint < msWindows_wintint_names.size() - 1) ms_wintint++; vehicle.SetWindowTint(ms_wintint); }
+			if (ms_wintint_minus) { if (ms_wintint > 0) ms_wintint--; vehicle.SetWindowTint(ms_wintint); }
 
 			AddBreak("---Status---");
 
@@ -3194,7 +3182,7 @@ namespace sub
 	{
 		if (!DOES_ENTITY_EXIST(g_Ped4))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -3216,11 +3204,11 @@ namespace sub
 			"Unknown 9",
 			"CannotBeTriedToBeEntered"
 		};
-		int lockStatus = static_cast<int>(vehicle.LockStatus_get());
+		int lockStatus = static_cast<int>(vehicle.GetLockStatus());
 		bool bLockStatus_plus = false, bLockStatus_minus = false;
 		AddTexter("Lock Status", lockStatus, vDoorLockNames, null, bLockStatus_plus, bLockStatus_minus);
-		if (bLockStatus_plus) { if (lockStatus < vDoorLockNames.size() - 1) { lockStatus++; vehicle.LockStatus_set(static_cast<VehicleLockStatus>(lockStatus)); } }
-		if (bLockStatus_minus) { if (lockStatus > 0) { lockStatus--; vehicle.LockStatus_set(static_cast<VehicleLockStatus>(lockStatus)); } }
+		if (bLockStatus_plus) { if (lockStatus < vDoorLockNames.size() - 1) { lockStatus++; vehicle.SetLockStatus(static_cast<VehicleLockStatus>(lockStatus)); } }
+		if (bLockStatus_minus) { if (lockStatus > 0) { lockStatus--; vehicle.SetLockStatus(static_cast<VehicleLockStatus>(lockStatus)); } }
 
 		static UINT8 ____ms_doors_action_index = 0;
 		auto& action = ____ms_doors_action_index;
@@ -3311,7 +3299,7 @@ namespace sub
 	{
 		if (!DOES_ENTITY_EXIST(g_Ped4))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -3323,9 +3311,9 @@ namespace sub
 			if (!thisVehicle.DoesExtraExist(i))
 				continue;
 			bool bExtraPressed = false;
-			AddTickol("Extra " + std::to_string(i), thisVehicle.ExtraOn_get(i), bExtraPressed, bExtraPressed, TICKOL::CARTHING); if (bExtraPressed)
+			AddTickol("Extra " + std::to_string(i), thisVehicle.GetExtraOn(i), bExtraPressed, bExtraPressed, TICKOL::CARTHING); if (bExtraPressed)
 			{
-				thisVehicle.ExtraOn_set(i, !thisVehicle.ExtraOn_get(i));
+				thisVehicle.SetExtraOn(i, !thisVehicle.GetExtraOn(i));
 			}
 		}
 
@@ -3337,7 +3325,7 @@ namespace sub
 	{
 		if (!DOES_ENTITY_EXIST(g_Ped4))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -3367,7 +3355,7 @@ namespace sub
 			bitMSPaintsRGBMode = 2;
 		}
 		if (*Menu::currentopATM == Menu::printingop)
-			Add_preset_colour_options_previews(vehicle.NeonLightsColour_get());
+			AddPresetColourOptionsPreview(vehicle.GetNeonLightsColour());
 
 	}
 
@@ -3377,7 +3365,7 @@ namespace sub
 	{
 		if (!DOES_ENTITY_EXIST(g_Ped4))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 

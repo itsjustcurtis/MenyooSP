@@ -75,7 +75,7 @@ void PopulateObjectModelsArray();
 void PopulateGlobalEntityModelsArrays();
 
 // Model - labels
-std::string get_ped_model_label(const GTAmodel::Model& model, bool properName);
+std::string GetPedModelLabel(const GTAmodel::Model& model, bool properName);
 std::string get_vehicle_model_label(const GTAmodel::Model& model, bool properName);
 std::string get_prop_model_label(const GTAmodel::Model& model);
 

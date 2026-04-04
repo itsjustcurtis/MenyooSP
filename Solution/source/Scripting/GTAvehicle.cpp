@@ -462,7 +462,7 @@ void GTAvehicle::Delete(bool tele)
 	if (blip.Exists())
 		blip.Remove();
 
-	this->MissionEntity_set(false);
+	this->SetMissionEntity(false);
 
 	if (tele)
 		SET_ENTITY_COORDS_NO_OFFSET(this->mHandle, 32.2653f, 7683.5249f, 0.5696f, 0, 0, 0);
@@ -562,19 +562,19 @@ VehicleSeat GTAvehicle::FirstFreeSeat(VehicleSeat defaultReturn) const
 	return defaultReturn;
 }
 
-std::string GTAvehicle::NumberPlateText_get() const
+std::string GTAvehicle::GetNumberPlateText() const
 {
 	return GET_VEHICLE_NUMBER_PLATE_TEXT(this->mHandle);
 }
-void GTAvehicle::NumberPlateText_set(const std::string& value)
+void GTAvehicle::SetNumberPlateText(const std::string& value)
 {
 	SET_VEHICLE_NUMBER_PLATE_TEXT(this->mHandle, value.c_str());
 }
-int GTAvehicle::NumberPlateTextIndex_get() const
+int GTAvehicle::GetNumberPlateTextIndex() const
 {
 	return GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(this->mHandle);
 }
-void GTAvehicle::NumberPlateTextIndex_set(int value)
+void GTAvehicle::SetNumberPlateTextIndex(int value)
 {
 	SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(this->mHandle, value);
 }
@@ -651,31 +651,31 @@ void GTAvehicle::MaxSpeed_set(float value)
 	SET_VEHICLE_MAX_SPEED(this->mHandle, value);
 }
 
-float GTAvehicle::DirtLevel_get() const
+float GTAvehicle::GetDirtLevel() const
 {
 	return GET_VEHICLE_DIRT_LEVEL(this->mHandle);
 }
-void GTAvehicle::DirtLevel_set(float value)
+void GTAvehicle::SetDirtLevel(float value)
 {
 	SET_VEHICLE_DIRT_LEVEL(this->mHandle, value);
 }
-float GTAvehicle::PaintFade_get() const
+float GTAvehicle::GetPaintFade() const
 {
 	return GET_VEHICLE_ENVEFF_SCALE(this->mHandle);
 }
-void GTAvehicle::PaintFade_set(float value)
+void GTAvehicle::SetPaintFade(float value)
 {
 	SET_VEHICLE_ENVEFF_SCALE(this->mHandle, value);
 }
 
-VehicleRoofState GTAvehicle::RoofState_get() const
+VehicleRoofState GTAvehicle::GetRoofState() const
 {
 	if (IS_THIS_MODEL_AN_AMPHIBIOUS_CAR(this->mHandle))
 		return static_cast<VehicleRoofState>(1);
 	else
 		return static_cast<VehicleRoofState>(GET_CONVERTIBLE_ROOF_STATE(this->mHandle));
 }
-void GTAvehicle::RoofState_set(VehicleRoofState value)
+void GTAvehicle::SetRoofState(VehicleRoofState value)
 {
 	switch (value)
 	{
@@ -699,11 +699,11 @@ void GTAvehicle::BodyHealth_set(float value)
 	SET_VEHICLE_BODY_HEALTH(this->mHandle, value);
 }
 
-float GTAvehicle::EngineHealth_get() const
+float GTAvehicle::GetEngineHealth() const
 {
 	return GET_VEHICLE_ENGINE_HEALTH(this->mHandle);
 }
-void GTAvehicle::EngineHealth_set(float value)
+void GTAvehicle::SetEngineHealth(float value)
 {
 	SET_VEHICLE_ENGINE_HEALTH(this->mHandle, value);
 }
@@ -717,11 +717,11 @@ void GTAvehicle::PetrolTankHealth_set(float value)
 	SET_VEHICLE_PETROL_TANK_HEALTH(this->mHandle, value);
 }
 
-bool GTAvehicle::SirenActive_get() const
+bool GTAvehicle::GetSirenActive() const
 {
 	return IS_VEHICLE_SIREN_ON(this->mHandle) != 0;
 }
-void GTAvehicle::SirenActive_set(bool value)
+void GTAvehicle::SetSirenActive(bool value)
 {
 	SET_VEHICLE_SIREN(this->mHandle, value);
 }
@@ -735,52 +735,52 @@ void GTAvehicle::LoudRadioActive_set(bool value)
 	SET_VEHICLE_RADIO_LOUD(this->mHandle, value);
 }
 
-int GTAvehicle::PrimaryColour_get() const
+int GTAvehicle::GetPrimaryColour() const
 {
 	int colour1, colour2;
 	GET_VEHICLE_COLOURS(this->mHandle, &colour1, &colour2);
 	return colour1;
 }
-void GTAvehicle::PrimaryColour_set(int value)
+void GTAvehicle::SetPrimaryColour(int value)
 {
 	int colour1, colour2;
 	GET_VEHICLE_COLOURS(this->mHandle, &colour1, &colour2);
 	SET_VEHICLE_COLOURS(this->mHandle, value, colour2);
 }
 
-int GTAvehicle::SecondaryColour_get() const
+int GTAvehicle::GetSecondaryColour() const
 {
 	int colour1, colour2;
 	GET_VEHICLE_COLOURS(this->mHandle, &colour1, &colour2);
 	return colour2;
 }
-void GTAvehicle::SecondaryColour_set(int value)
+void GTAvehicle::SetSecondaryColour(int value)
 {
 	int colour1, colour2;
 	GET_VEHICLE_COLOURS(this->mHandle, &colour1, &colour2);
 	SET_VEHICLE_COLOURS(this->mHandle, colour1, value);
 }
 
-int GTAvehicle::RimColour_get() const
+int GTAvehicle::GetRimColour() const
 {
 	int colour1, colour2;
 	GET_VEHICLE_EXTRA_COLOURS(this->mHandle, &colour1, &colour2);
 	return colour2;
 }
-void GTAvehicle::RimColour_set(int value)
+void GTAvehicle::SetRimColour(int value)
 {
 	int colour1, colour2;
 	GET_VEHICLE_EXTRA_COLOURS(this->mHandle, &colour1, &colour2);
 	SET_VEHICLE_EXTRA_COLOURS(this->mHandle, colour1, value);
 }
 
-int GTAvehicle::PearlescentColour_get() const
+int GTAvehicle::GetPearlescentColour() const
 {
 	int colour1, colour2;
 	GET_VEHICLE_EXTRA_COLOURS(this->mHandle, &colour1, &colour2);
 	return colour1;
 }
-void GTAvehicle::PearlescentColour_set(int value)
+void GTAvehicle::SetPearlescentColour(int value)
 {
 	int colour1, colour2;
 	GET_VEHICLE_EXTRA_COLOURS(this->mHandle, &colour1, &colour2);
@@ -788,7 +788,7 @@ void GTAvehicle::PearlescentColour_set(int value)
 }
 
 // For Benny's supported vehicles
-int GTAvehicle::InteriorColour_get() const
+int GTAvehicle::GetInteriorColour() const
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_877_1_STEAM)
 		return 0;
@@ -796,13 +796,13 @@ int GTAvehicle::InteriorColour_get() const
 	GET_VEHICLE_EXTRA_COLOUR_5(this->mHandle, &col);
 	return col;
 }
-void GTAvehicle::InteriorColour_set(int value)
+void GTAvehicle::SetInteriorColour(int value)
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_877_1_STEAM)
 		return;
 	SET_VEHICLE_EXTRA_COLOUR_5(this->mHandle, value);
 }
-int GTAvehicle::DashboardColour_get() const
+int GTAvehicle::GetDashboardColour() const
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_877_1_STEAM)
 		return 0;
@@ -810,7 +810,7 @@ int GTAvehicle::DashboardColour_get() const
 	GET_VEHICLE_EXTRA_COLOUR_6(this->mHandle, &col);
 	return col;
 }
-void GTAvehicle::DashboardColour_set(int value)
+void GTAvehicle::SetDashboardColour(int value)
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_877_1_STEAM)
 		return;
@@ -818,33 +818,33 @@ void GTAvehicle::DashboardColour_set(int value)
 }
 
 // b1604
-int GTAvehicle::HeadlightColour_get() const
+int GTAvehicle::GetHeadlightColour() const
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_1604_0_STEAM)
 		return 0;
 	return GET_VEHICLE_XENON_LIGHT_COLOR_INDEX(this->mHandle);
 }
-void GTAvehicle::HeadlightColour_set(int value)
+void GTAvehicle::SetHeadlightColour(int value)
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_1604_0_STEAM)
 		return;
 	SET_VEHICLE_XENON_LIGHT_COLOR_INDEX(this->mHandle, value);
 }
 
-int GTAvehicle::WheelType_get() const
+int GTAvehicle::GetWheelType() const
 {
 	return GET_VEHICLE_WHEEL_TYPE(this->mHandle);
 }
-void GTAvehicle::WheelType_set(int value)
+void GTAvehicle::SetWheelType(int value)
 {
 	SET_VEHICLE_WHEEL_TYPE(this->mHandle, value);
 }
 
-int GTAvehicle::WindowTint_get() const
+int GTAvehicle::GetWindowTint() const
 {
 	return GET_VEHICLE_WINDOW_TINT(this->mHandle);
 }
-void GTAvehicle::WindowTint_set(int value)
+void GTAvehicle::SetWindowTint(int value)
 {
 	SET_VEHICLE_WINDOW_TINT(this->mHandle, value);
 }
@@ -863,10 +863,10 @@ void GTAvehicle::Wanted_set(bool value)
 	SET_VEHICLE_IS_WANTED(this->mHandle, value);
 }
 
-void GTAvehicle::HasGravity_set(bool value)
+void GTAvehicle::SetHasGravity(bool value)
 {
 	SET_VEHICLE_GRAVITY(this->mHandle, value);
-	GTAentity::HasGravity_set(value);
+	GTAentity::SetHasGravity(value);
 }
 
 bool GTAvehicle::GetEngineRunning() const
@@ -1030,11 +1030,11 @@ void GTAvehicle::NeedsToBeHotwired_set(bool value)
 	SET_VEHICLE_NEEDS_TO_BE_HOTWIRED(this->mHandle, value);
 }
 
-bool GTAvehicle::CanTyresBurst_get() const
+bool GTAvehicle::GetCanTyresBurst() const
 {
 	return GET_VEHICLE_TYRES_CAN_BURST(this->mHandle) != 0;
 }
-void GTAvehicle::CanTyresBurst_set(bool value)
+void GTAvehicle::SetCanTyresBurst(bool value)
 {
 	SET_VEHICLE_TYRES_CAN_BURST(this->mHandle, value);
 }
@@ -1075,13 +1075,13 @@ void GTAvehicle::PreviouslyOwnedByPlayer_set(bool value)
 	SET_VEHICLE_HAS_BEEN_OWNED_BY_PLAYER(this->mHandle, value);
 }
 
-RgbS GTAvehicle::CustomPrimaryColour_get() const
+RgbS GTAvehicle::GetCustomPrimaryColour() const
 {
 	int r, g, b;
 	GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(this->mHandle, &r, &g, &b);
 	return RgbS(r, g, b);
 }
-void GTAvehicle::CustomPrimaryColour_set(RgbS value)
+void GTAvehicle::SetCustomPrimaryColour(RgbS value)
 {
 	SET_VEHICLE_CUSTOM_PRIMARY_COLOUR(this->mHandle, value.R, value.G, value.B);
 }
@@ -1090,13 +1090,13 @@ void GTAvehicle::CustomPrimaryColour_set(BYTE r, BYTE g, BYTE b)
 	SET_VEHICLE_CUSTOM_PRIMARY_COLOUR(this->mHandle, r, g, b);
 }
 
-RgbS GTAvehicle::CustomSecondaryColour_get() const
+RgbS GTAvehicle::GetCustomSecondaryColour() const
 {
 	int r, g, b;
 	GET_VEHICLE_CUSTOM_SECONDARY_COLOUR(this->mHandle, &r, &g, &b);
 	return RgbS(r, g, b);
 }
-void GTAvehicle::CustomSecondaryColour_set(RgbS value)
+void GTAvehicle::SetCustomSecondaryColour(RgbS value)
 {
 	SET_VEHICLE_CUSTOM_SECONDARY_COLOUR(this->mHandle, value.R, value.G, value.B);
 }
@@ -1105,13 +1105,13 @@ void GTAvehicle::CustomSecondaryColour_set(BYTE r, BYTE g, BYTE b)
 	SET_VEHICLE_CUSTOM_SECONDARY_COLOUR(this->mHandle, r, g, b);
 }
 
-RgbS GTAvehicle::NeonLightsColour_get() const
+RgbS GTAvehicle::GetNeonLightsColour() const
 {
 	int r, g, b;
 	GET_VEHICLE_NEON_COLOUR(this->mHandle, &r, &g, &b);
 	return RgbS(r, g, b);
 }
-void GTAvehicle::NeonLightsColour_set(RgbS value)
+void GTAvehicle::SetNeonLightsColour(RgbS value)
 {
 	SET_VEHICLE_NEON_COLOUR(this->mHandle, value.R, value.G, value.B);
 }
@@ -1120,13 +1120,13 @@ void GTAvehicle::NeonLightsColour_set(BYTE r, BYTE g, BYTE b)
 	SET_VEHICLE_NEON_COLOUR(this->mHandle, r, g, b);
 }
 
-RgbS GTAvehicle::TyreSmokeColour_get() const
+RgbS GTAvehicle::GetTyreSmokeColour() const
 {
 	int r, g, b;
 	GET_VEHICLE_TYRE_SMOKE_COLOR(this->mHandle, &r, &g, &b);
 	return RgbS(r, g, b);
 }
-void GTAvehicle::TyreSmokeColour_set(RgbS value)
+void GTAvehicle::SetTyreSmokeColour(RgbS value)
 {
 	SET_VEHICLE_TYRE_SMOKE_COLOR(this->mHandle, value.R, value.G, value.B);
 }
@@ -1135,11 +1135,11 @@ void GTAvehicle::TyreSmokeColour_set(BYTE r, BYTE g, BYTE b)
 	SET_VEHICLE_TYRE_SMOKE_COLOR(this->mHandle, r, g, b);
 }
 
-int GTAvehicle::Livery_get() const
+int GTAvehicle::GetLivery() const
 {
 	return GET_VEHICLE_LIVERY(this->mHandle);
 }
-void GTAvehicle::Livery_set(int liveryIndex)
+void GTAvehicle::SetLivery(int liveryIndex)
 {
 	SET_VEHICLE_LIVERY(this->mHandle, liveryIndex);
 }
@@ -1403,7 +1403,7 @@ void GTAvehicle::FixAllDoors()
 		this->FixDoor(index);
 }
 
-void GTAvehicle::RadioStation_set(int value)
+void GTAvehicle::SetRadioStation(int value)
 {
 	if (value == RadioStation::Off)
 	{
@@ -1420,11 +1420,11 @@ VehicleClass GTAvehicle::ClassType_get()
 	return static_cast<VehicleClass>(GET_VEHICLE_CLASS(this->mHandle));
 }
 
-VehicleLockStatus GTAvehicle::LockStatus_get() const
+VehicleLockStatus GTAvehicle::GetLockStatus() const
 {
 	return static_cast<VehicleLockStatus>(GET_VEHICLE_DOOR_LOCK_STATUS(this->mHandle));
 }
-void GTAvehicle::LockStatus_set(const VehicleLockStatus& value)
+void GTAvehicle::SetLockStatus(const VehicleLockStatus& value)
 {
 	SET_VEHICLE_DOORS_LOCKED(this->mHandle, static_cast<int>(value));
 }
@@ -1642,11 +1642,11 @@ bool GTAvehicle::DoesExtraExist(int extraId) const
 {
 	return DOES_EXTRA_EXIST(this->mHandle, extraId) != 0;
 }
-bool GTAvehicle::ExtraOn_get(int extraId) const
+bool GTAvehicle::GetExtraOn(int extraId) const
 {
 	return IS_VEHICLE_EXTRA_TURNED_ON(this->mHandle, extraId) != 0;
 }
-void GTAvehicle::ExtraOn_set(int extraId, bool value)
+void GTAvehicle::SetExtraOn(int extraId, bool value)
 {
 	SET_VEHICLE_EXTRA(this->mHandle, extraId, !value); // Opposite for some reason
 }
@@ -3883,20 +3883,20 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 	GTAvehicle newVeh = World::CreateVehicle(vehicleModel, Pos, Rot, false);
 	WAIT(40);
 
-	newVeh.PrimaryColour_set(vehicle.PrimaryColour_get());
-	newVeh.SecondaryColour_set(vehicle.SecondaryColour_get());
+	newVeh.SetPrimaryColour(vehicle.GetPrimaryColour());
+	newVeh.SetSecondaryColour(vehicle.GetSecondaryColour());
 	if (vehicle.IsPrimaryColorCustom())
 	{
-		newVeh.CustomPrimaryColour_set(vehicle.CustomPrimaryColour_get());
+		newVeh.SetCustomPrimaryColour(vehicle.GetCustomPrimaryColour());
 	}
 	if (vehicle.IsSecondaryColorCustom())
 	{
-		newVeh.CustomSecondaryColour_set(vehicle.CustomSecondaryColour_get());
+		newVeh.SetCustomSecondaryColour(vehicle.GetCustomSecondaryColour());
 	}
 
 	SET_VEHICLE_MOD_KIT(newVeh.Handle(), 0);
 
-	newVeh.WheelType_set(vehicle.WheelType_get());
+	newVeh.SetWheelType(vehicle.GetWheelType());
 
 	for (int i = 0; i < vValues_ModSlotNames.size(); i++)
 	{
@@ -3906,16 +3906,16 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 			newVeh.SetMod(i, vehicle.GetMod(i), vehicle.GetModVariation(i));
 	}
 
-	newVeh.CanTyresBurst_set(vehicle.CanTyresBurst_get());
-	newVeh.TyreSmokeColour_set(vehicle.TyreSmokeColour_get());
-	newVeh.NumberPlateTextIndex_set(vehicle.NumberPlateTextIndex_get());
-	newVeh.NumberPlateText_set(vehicle.NumberPlateText_get());
-	newVeh.PearlescentColour_set(vehicle.PearlescentColour_get());
-	newVeh.RimColour_set(vehicle.RimColour_get());
+	newVeh.SetCanTyresBurst(vehicle.GetCanTyresBurst());
+	newVeh.SetTyreSmokeColour(vehicle.GetTyreSmokeColour());
+	newVeh.SetNumberPlateTextIndex(vehicle.GetNumberPlateTextIndex());
+	newVeh.SetNumberPlateText(vehicle.GetNumberPlateText());
+	newVeh.SetPearlescentColour(vehicle.GetPearlescentColour());
+	newVeh.SetRimColour(vehicle.GetRimColour());
 
 	if (newVeh.IsConvertible())
 	{
-		newVeh.RoofState_set(vehicle.RoofState_get());
+		newVeh.SetRoofState(vehicle.GetRoofState());
 	}
 
 	for (VehicleNeonLight i : { VehicleNeonLight::Left, VehicleNeonLight::Right, VehicleNeonLight::Front, VehicleNeonLight::Back})
@@ -3926,19 +3926,19 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 	for (int i = 0; i <= 60; i++)
 	{
 		if (newVeh.DoesExtraExist(i))
-			newVeh.ExtraOn_set(i, vehicle.ExtraOn_get(i));
+			newVeh.SetExtraOn(i, vehicle.GetExtraOn(i));
 	}
 
-	if (newVeh.LiveryCount() > 1 && newVeh.Livery_get() >= 0)
+	if (newVeh.LiveryCount() > 1 && newVeh.GetLivery() >= 0)
 	{
-		newVeh.Livery_set(vehicle.Livery_get());
+		newVeh.SetLivery(vehicle.GetLivery());
 	}
 
-	newVeh.NeonLightsColour_set(vehicle.NeonLightsColour_get());
+	newVeh.SetNeonLightsColour(vehicle.GetNeonLightsColour());
 
-	newVeh.WindowTint_set(vehicle.WindowTint_get());
+	newVeh.SetWindowTint(vehicle.GetWindowTint());
 
-	newVeh.DirtLevel_set(vehicle.DirtLevel_get());
+	newVeh.SetDirtLevel(vehicle.GetDirtLevel());
 
 	newVeh.SetEngineRunning(true);
 
@@ -3947,9 +3947,9 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 		add_emblem_to_vehicle(newVeh, pedForEmblem);
 	}
 
-	newVeh.InteriorColour_set(vehicle.InteriorColour_get());
-	newVeh.DashboardColour_set(vehicle.DashboardColour_get());
-	newVeh.HeadlightColour_set(vehicle.HeadlightColour_get());
+	newVeh.SetInteriorColour(vehicle.GetInteriorColour());
+	newVeh.SetDashboardColour(vehicle.GetDashboardColour());
+	newVeh.SetHeadlightColour(vehicle.GetHeadlightColour());
 
 	// Burst tyres
 	for (int i = 0; i <= 8; i++)

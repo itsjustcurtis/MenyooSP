@@ -58,20 +58,6 @@ namespace SmashAbility
 			const Vector3& entityPos = entity.GetPosition();
 			OscillateEntity(entity, entityPos + Vector3(0, 0, 0.10f), 1.9f, 0.3f);
 		}
-		/*for (GTAvehicle veh : _nearbyVehicles)
-		{
-		if (veh.Handle() == g_myVeh) continue;
-
-		veh.Oscillate(veh.Position_get() + Vector3(0, 0, 0.0003f), 1.75f, 0.3f);
-		//veh.ApplyForceCustom(Vector3(0, 0, 0.2f), Vector3(), 1, true, false, true, true, true, true);
-		}
-
-		for (GTAped ped : _nearbyPeds)
-		{
-		ped.Oscillate(ped.Position_get() + Vector3(0, 0, 0.0003f), 1.75f, 0.3f);
-		//ped.ApplyForceCustom(Vector3(0, 0, 0.1f), Vector3(), 1, true, false, true, true, true, true);
-		}*/
-
 	}
 	void SmashAbility::DoSmash()
 	{
@@ -90,17 +76,6 @@ namespace SmashAbility
 			const Vector3& entityPos = entity.GetPosition();
 			entity.ApplyForce(Vector3(0, 0, -31.0f * entity.HeightAboveGround()), ForceType::MaxForceRot2);
 		}
-		/*for (GTAvehicle veh : _nearbyVehicles)
-		{
-		veh.ApplyForce(Vector3(0, 0, -70), 3);
-		//veh.ApplyForceCustom(Vector3(0, 0, -70.0f), Vector3(), 1, true, false, true, true, true, true);
-		}
-
-		for (GTAped ped : _nearbyPeds)
-		{
-		ped.ApplyForce(Vector3(0, 0, -50), 3);
-		//ped.ApplyForceCustom(Vector3(0, 0, -50.0f), Vector3(), 1, true, false, true, true, true, true);
-		}*/
 	}
 
 	bool SmashAbility::IsLevitatePressed()

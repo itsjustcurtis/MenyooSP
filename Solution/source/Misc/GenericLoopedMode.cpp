@@ -9,29 +9,10 @@
 */
 #include "GenericLoopedMode.h"
 
-// Not used - put .Tick() calls directly where needed (in Menu\Routine.cpp)
+// Not used
 void GenericLoopedMode::TickAll()
 {
-	/*static std::vector<GenericLoopedMode*> vGLMs
-	{
-		//_FlameThrower_:://not GenericLoopedMode
-		//_JumpAroundMode_:://not GenericLoopedMode
-		&_MagnetGun_::g_magnetGun,
-		&_RopeGun_::g_ropeGun,
-		&_VehicleTow_::g_vehicleTow,
-		&_VehicleCruise_::g_vehicleCruise,
-		&_VehicleFly_::g_vehicleFly,
-		&_ManualRespawn_::g_manualRespawn,
-		&_MeteorShower_::g_meteorShower,
-		&_SmashAbility_::g_smashAbility,
-		&_Gta2Cam_::g_gta2Cam,
-		//_FpsCounter_:://not GenericLoopedMode
-	};
-	
-	for (auto& g : vGLMs)
-	{
-		g->Tick();
-	}*/
+
 }
 
 

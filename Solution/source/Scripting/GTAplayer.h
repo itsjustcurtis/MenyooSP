@@ -57,7 +57,7 @@ public:
 	bool IsTargetingAt(Entity) const; /// return whether targetting entity
 	GTAentity AimedEntity() const; /// returns entity handle for the entity the player is aiming at
 	INT MaxArmour_get() const; /// return player max armour
-	INT WantedLevel_get() const; /// return player wanted level
+	INT GetWantedLevel() const; /// return player wanted level
 
 	void GiveRagdollControl(bool value);
 

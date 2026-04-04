@@ -178,8 +178,6 @@ namespace VehicleTow
 		Rope newRope = Rope::AddRope(RopeType::Normal, pos1, Vector3(0, 0, 5.0f), dist, 0.0f, true);
 		newRope.ActivatePhysics();
 		currentPair.rope = newRope;
-		//newRope.PinVertex(0, pos1);
-		//newRope.PinVertex(newRope.VertexCount() - 1, pos2);
 
 		newRope.AttachEntities(last, offset1, newVeh, offset2, dist + 0.2f);
 

@@ -9,127 +9,162 @@
 */
 #include "TimeOptions.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Util\GTAmath.h"
-#include "..\Scripting\DxHookIMG.h"
-#include "..\Scripting\Game.h"
-#include "..\Util\ExePath.h"
-
-#include <string>
-#include <time.h>
-#include <stdio.h>
-
 namespace sub
 {
-	void TimeOps_()
+	void TimeMenu()
 	{
-		bool WeatherOps_pause_clock_toggle = 0,
-			WeatherOps_hour_plus = 0,
-			WeatherOps_hour_minus = 0,
-			WeatherOps_minute_plus = 0,
-			WeatherOps_minute_minus = 0,
-			timescale_plus = 0,
-			timescale_minus = 0;
+		bool pauseClockToggle = false;
+		bool hourPlus = false;
+		bool hourMinus = false;
+		bool minutePlus = false;
+		bool minuteMinus = false;
+		bool timeScalePlus = false;
+		bool timeScaleMinus = false;
 
-		int WeatherOps_hour = GET_CLOCK_HOURS();
-		int WeatherOps_minute = GET_CLOCK_MINUTES();
+		int hour = GET_CLOCK_HOURS();
+		int minute = GET_CLOCK_MINUTES();
 
 		AddTitle("Time");
 		AddOption("Clock (System Time)", null, nullFunc, SUB::CLOCK);
-		AddToggle("Pause Clock Time", pauseClock, WeatherOps_pause_clock_toggle);
+		AddToggle("Pause Clock Time", pauseClock, pauseClockToggle);
 		AddToggle("Sync With System Time", syncClock);
-		AddNumber("Hour", WeatherOps_hour, 0, null, WeatherOps_hour_plus, WeatherOps_hour_minus);
-		AddNumber("Minute", WeatherOps_minute, 0, null, WeatherOps_minute_plus, WeatherOps_minute_minus);
-		AddNumber("World Speed", currentTimescale, 1, null, timescale_plus, timescale_minus);
+		AddNumber("Hour", hour, 0, null, hourPlus, hourMinus);
+		AddNumber("Minute", minute, 0, null, minutePlus, minuteMinus);
+		AddNumber("World Speed", currentTimescale, 1, null, timeScalePlus, timeScaleMinus);
 
-		if (WeatherOps_hour_plus) {
-			if ((WeatherOps_hour + 1) == 24)
+		if (hourPlus) 
+		{
+			if ((hour + 1) == 24)
 			{
 				if (GET_CLOCK_MONTH() + 1 == 12 && GET_CLOCK_DAY_OF_MONTH() + 1 == 30)
+				{
 					SET_CLOCK_DATE(1, 0, GET_CLOCK_YEAR() + 1);
+				}
 				else if (GET_CLOCK_DAY_OF_MONTH() + 1 == 30)
+				{
 					SET_CLOCK_DATE(1, GET_CLOCK_MONTH() + 1, GET_CLOCK_YEAR());
+				}
 				else
+				{
 					SET_CLOCK_DATE(GET_CLOCK_DAY_OF_MONTH() + 1, GET_CLOCK_MONTH(), GET_CLOCK_YEAR());
-				NETWORK_OVERRIDE_CLOCK_TIME(0, WeatherOps_minute, GET_CLOCK_SECONDS());
+				}
+				NETWORK_OVERRIDE_CLOCK_TIME(0, minute, GET_CLOCK_SECONDS());
 			}
 			else
-				NETWORK_OVERRIDE_CLOCK_TIME((WeatherOps_hour + 1), WeatherOps_minute, GET_CLOCK_SECONDS());
+			{
+				NETWORK_OVERRIDE_CLOCK_TIME((hour + 1), minute, GET_CLOCK_SECONDS());
+			}
 			return;
 		}
-		if (WeatherOps_hour_minus) {
-			if ((WeatherOps_hour - 1) == -1)
+		if (hourMinus) 
+		{
+			if ((hour - 1) == -1)
 			{
 				if (GET_CLOCK_MONTH() - 1 == -1 && GET_CLOCK_DAY_OF_MONTH() - 1 == 0)
+				{
 					SET_CLOCK_DATE(28, 11, GET_CLOCK_YEAR() - 1);
+				}
 				else if (GET_CLOCK_DAY_OF_MONTH() - 1 == 0)
+				{
 					SET_CLOCK_DATE(28, GET_CLOCK_MONTH() - 1, GET_CLOCK_YEAR());
+				}
 				else
+				{
 					SET_CLOCK_DATE(GET_CLOCK_DAY_OF_MONTH() - 1, GET_CLOCK_MONTH(), GET_CLOCK_YEAR());
-				NETWORK_OVERRIDE_CLOCK_TIME(23, WeatherOps_minute, GET_CLOCK_SECONDS());
+				}
+				NETWORK_OVERRIDE_CLOCK_TIME(23, minute, GET_CLOCK_SECONDS());
 			}
 			else
-				NETWORK_OVERRIDE_CLOCK_TIME((WeatherOps_hour - 1), WeatherOps_minute, GET_CLOCK_SECONDS());
+			{
+				NETWORK_OVERRIDE_CLOCK_TIME((hour - 1), minute, GET_CLOCK_SECONDS());
+			}
 			return;
 		}
 
-		if (WeatherOps_minute_plus) {
-			if ((WeatherOps_minute + 1) == 61)
+		if (minutePlus) 
+		{
+			if ((minute + 1) == 61)
 			{
-				if (WeatherOps_hour + 1 == 24)
+				if (hour + 1 == 24)
 				{
 					if (GET_CLOCK_DAY_OF_MONTH() + 1 == 30)
+					{
 						SET_CLOCK_DATE(1, GET_CLOCK_MONTH() + 1, GET_CLOCK_YEAR());
+					}
 					else
+					{
 						SET_CLOCK_DATE(GET_CLOCK_DAY_OF_MONTH() + 1, GET_CLOCK_MONTH(), GET_CLOCK_YEAR());
+					}
 					NETWORK_OVERRIDE_CLOCK_TIME(0, 0, GET_CLOCK_SECONDS());
 				}
 				else
-					NETWORK_OVERRIDE_CLOCK_TIME(WeatherOps_hour + 1, 0, GET_CLOCK_SECONDS());
+				{
+					NETWORK_OVERRIDE_CLOCK_TIME(hour + 1, 0, GET_CLOCK_SECONDS());
+				}
 			}
 			else
-				NETWORK_OVERRIDE_CLOCK_TIME(WeatherOps_hour, WeatherOps_minute + 1, GET_CLOCK_SECONDS());
+			{
+				NETWORK_OVERRIDE_CLOCK_TIME(hour, minute + 1, GET_CLOCK_SECONDS());
+			}
 			return;
 		}
-		if (WeatherOps_minute_minus) {
-			if ((WeatherOps_minute - 1) == -1)
+		if (minuteMinus) 
+		{
+			if ((minute - 1) == -1)
 			{
-				if (WeatherOps_hour - 1 == -1)
+				if (hour - 1 == -1)
 				{
 					if (GET_CLOCK_DAY_OF_MONTH() - 1 == 0)
+					{
 						SET_CLOCK_DATE(29, GET_CLOCK_MONTH() - 1, GET_CLOCK_YEAR());
+					}
 					else
+					{
 						SET_CLOCK_DATE(GET_CLOCK_DAY_OF_MONTH() - 1, GET_CLOCK_MONTH(), GET_CLOCK_YEAR());
+					}
 					NETWORK_OVERRIDE_CLOCK_TIME(23, 60, GET_CLOCK_SECONDS());
 				}
 				else
-					NETWORK_OVERRIDE_CLOCK_TIME(WeatherOps_hour - 1, 60, GET_CLOCK_SECONDS());
+				{
+					NETWORK_OVERRIDE_CLOCK_TIME(hour - 1, 60, GET_CLOCK_SECONDS());
+				}
 			}
 			else
-				NETWORK_OVERRIDE_CLOCK_TIME(WeatherOps_hour, WeatherOps_minute - 1, GET_CLOCK_SECONDS());
+			{
+				NETWORK_OVERRIDE_CLOCK_TIME(hour, minute - 1, GET_CLOCK_SECONDS());
+			}
 			return;
 		}
 
-		if (timescale_plus && currentTimescale < 1.1f) { currentTimescale += 0.1f; SET_TIME_SCALE(currentTimescale); return; }
-		if (timescale_minus && currentTimescale > 0.0f) { currentTimescale -= 0.1f; SET_TIME_SCALE(currentTimescale); return; }
+		if (timeScalePlus && currentTimescale < 1.1f) 
+		{ 
+			currentTimescale += 0.1f; 
+			SET_TIME_SCALE(currentTimescale); 
+			return; 
+		}
 
-		if (WeatherOps_pause_clock_toggle) { pauseClockH = GET_CLOCK_HOURS(); pauseClockM = GET_CLOCK_MINUTES(); return; }
+		if (timeScaleMinus && currentTimescale > 0.0f) 
+		{ 
+			currentTimescale -= 0.1f; 
+			SET_TIME_SCALE(currentTimescale); 
+			return; 
+		}
 
-
+		if (pauseClockToggle) 
+		{ 
+			pauseClockH = GET_CLOCK_HOURS();
+			pauseClockM = GET_CLOCK_MINUTES(); 
+			return; 
+		}
 	}
 
-	namespace Clock_catind
+	namespace Clock
 	{
-		UINT8 loop_clock = 0;
-		UINT8 _analogueClockIndex = 0;
-		Vector2 _analogueClockPos = { 0.931f, 0.126f };//{ 0.5f, 0.1168f };
+		UINT8 loopClock = 0;
+		UINT8 analogueClockIndex = 0;
+		Vector2 analogueClockPosition = { 0.931f, 0.126f };
 
-		const std::string vWeekDayNames[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+		const std::string weekDayNames[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 		inline void DisplayClockDigital()
 		{
 			time_t now = time(0);
@@ -140,11 +175,10 @@ namespace sub
 			sprintf_s(mintBuff, "%02d", t.tm_min);
 
 			Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.3f, 0.3f), true, false, true, RGBA(255, 255, 255, 210));
-			Game::Print::DrawString(oss_ << vWeekDayNames[t.tm_wday] << " - " << (t.tm_hour < 13 ? t.tm_hour : t.tm_hour - 12) << ':' << mintBuff << (t.tm_hour < 12 ? " am" : " pm"), 0.5f, 0.007f);//0.01f, 0.8f);
+			Game::Print::DrawString(oss_ << weekDayNames[t.tm_wday] << " - " << (t.tm_hour < 13 ? t.tm_hour : t.tm_hour - 12) << ':' << mintBuff << (t.tm_hour < 12 ? " am" : " pm"), 0.5f, 0.007f);//0.01f, 0.8f);
 		}
 
-		//struct sClockImage { std::string name; DxHookIMG::DxTexture faceId, hourId, minuteId; };
-		std::vector<sClockImage> vClockImages;
+		std::vector<ClockImage> clockImages;
 
 		void LoadClockImages()
 		{
@@ -163,22 +197,23 @@ namespace sub
 					DxHookIMG::DxTexture hourId = GetPathffA(Pathff::Graphics, true) + "Clock\\" + handhName;
 					DxHookIMG::DxTexture minuteId = GetPathffA(Pathff::Graphics, true) + "Clock\\" + handmName;
 
-					sClockImage cmg = { fullNameWithoutExtension, faceId, hourId, minuteId };
-					vClockImages.push_back(cmg);
+					ClockImage cmg = { fullNameWithoutExtension, faceId, hourId, minuteId };
+					clockImages.push_back(cmg);
 				}
 				++sit;
 			}
 		}
+
 		inline void DisplayClockAnalogue()
 		{
 			time_t now = time(0);
 			tm t;
 			localtime_s(&t, &now);
 
-			auto& cmg = vClockImages[_analogueClockIndex];
+			auto& cmg = clockImages[analogueClockIndex];
 
 			const Vector2& size = Vector2(0.1540f, 0.164f) * 0.7f;
-			const Vector2& pos = _analogueClockPos;
+			const Vector2& pos = analogueClockPosition;
 
 			cmg.faceId.Draw(0, pos, size, 0.0f, RGBA::AllWhite());
 			cmg.hourId.Draw(0, pos, size, (30.0f * t.tm_hour) + (0.5f * t.tm_min), RGBA::AllWhite());
@@ -187,58 +222,81 @@ namespace sub
 
 		void DisplayClock()
 		{
-			//auto& mode = loop_clock;
-
-			switch (loop_clock)
+			switch (loopClock)
 			{
-			case 1: DisplayClockDigital(); break; // Digital
-			case 2: DisplayClockAnalogue(); break; // Analogue
+				case 1: DisplayClockDigital(); 
+					break; // Digital
+				case 2: DisplayClockAnalogue(); 
+					break; // Analogue
 			}
 		}
 
-		void Sub_Clock()
+		void ClockMenu()
 		{
 			AddTitle("Clock");
 
-			auto& mode = loop_clock;
+			auto& mode = loopClock;
 
-			UINT min_clockt = 0;
-			UINT8 max_clockt = 2;
-			bool bClockt_plus = false, bClockt_minus = false;
-			AddTexter("Clock", mode, std::vector<std::string>{"Off", "Digital", "Analogue"}, null, bClockt_plus, bClockt_minus);
-			if (bClockt_plus) { if (mode < max_clockt) mode++; }
-			if (bClockt_minus) { if (mode > min_clockt) mode--; }
+			UINT minClockTime = 0;
+			UINT8 maxClockTime = 2;
+			bool clockTimePlus = false;
+			bool clockTimeMinus = false;
+			AddTexter("Clock", mode, std::vector<std::string>{"Off", "Digital", "Analogue"}, null, clockTimePlus, clockTimeMinus);
+			if (clockTimePlus) 
+			{ 
+				if (mode < maxClockTime) 
+				mode++; 
+			}
+			if (clockTimeMinus) 
+			{ 
+				if (mode > minClockTime) 
+				mode--; 
+			}
 
 			if (mode == 2) // If analogue
 			{
 				AddBreak("---Themes---");
-				for (UINT i = 0; i < vClockImages.size(); i++)
+				for (UINT i = 0; i < clockImages.size(); i++)
 				{
 					bool bAcmgPressed = false;
-					AddTickol(vClockImages[i].name, vClockImages[_analogueClockIndex].faceId == vClockImages[i].faceId, bAcmgPressed, bAcmgPressed); if (bAcmgPressed)
+					AddTickol(clockImages[i].name, clockImages[analogueClockIndex].faceId == clockImages[i].faceId, bAcmgPressed, bAcmgPressed); if (bAcmgPressed)
 					{
-						_analogueClockIndex = i;
+						analogueClockIndex = i;
 					}
 				}
 
 				AddBreak("---Position---");
 
-				bool acposX_plus = false, acposX_minus = false;
-				bool acposY_plus = false, acposY_minus = false;
-				AddNumber("X", _analogueClockPos.x, 3, null, acposX_plus, acposX_minus);
-				AddNumber("Y", _analogueClockPos.y, 3, null, acposY_plus, acposY_minus);
+				bool analogueClockPosXPlus = false;
+				bool analogueClockXMinus = false;
+				bool analogueClockPosYPlus = false;
+				bool analogueClockPosYMinus = false;
+				AddNumber("X", analogueClockPosition.x, 3, null, analogueClockPosXPlus, analogueClockXMinus);
+				AddNumber("Y", analogueClockPosition.y, 3, null, analogueClockPosYPlus, analogueClockPosYMinus);
 
-				if (acposX_plus) _analogueClockPos.x += 0.005f;
-				else if (acposX_minus) _analogueClockPos.x -= 0.005f;
-				if (acposY_plus) _analogueClockPos.y += 0.005f;
-				else if (acposY_minus) _analogueClockPos.y -= 0.005f;
+				if (analogueClockPosXPlus) 
+				{
+					analogueClockPosition.x += 0.005f;
+				}
+				else if (analogueClockXMinus) 
+				{
+					analogueClockPosition.x -= 0.005f;
+				}
+				if (analogueClockPosYPlus) 
+				{
+					analogueClockPosition.y += 0.005f;
+				}
+				else if (analogueClockPosYMinus) 
+				{
+					analogueClockPosition.y -= 0.005f;
+				}
 			}
 		}
 	}
-
 }
+
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(TIMEOPS,   	sub::TimeOps_)
-REGISTER_SUBMENU(CLOCK,         sub::Clock_catind::Sub_Clock)
+REGISTER_SUBMENU(TIMEOPS,   	sub::TimeMenu)
+REGISTER_SUBMENU(CLOCK,         sub::Clock::ClockMenu)

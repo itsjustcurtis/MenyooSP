@@ -9,49 +9,30 @@
 */
 #include "MiscMapMods.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Util\GTAmath.h"
-#include "..\Util\ExePath.h"
-#include "..\Scripting\GTAentity.h"
-#include "..\Scripting\GTAprop.h"
-#include "..\Scripting\GTAped.h"
-#include "..\Scripting\Game.h"
-#include "..\Scripting\Model.h"
-#include "..\Scripting\World.h"
-
-#include "..\Submenus\Teleport\TeleMethods.h"
-
-#include <pugixml\src\pugixml.hpp>
-#include <string>
-#include <vector>
-
 namespace sub
 {
-	namespace MapMods_catind
+	namespace MapMods
 	{
-		void mm_unloadAll();
+		void UnloadAllMapMods();
 
-		void mm_PlaceObject(std::vector<GTAentity>& handles, Hash hash, float X, float Y, float Z, float pitch, float roll, float yaw, bool noLongerNeeded = false)
+		void MapModsPlaceObject(std::vector<GTAentity>& handles, Hash hash, float X, float Y, float Z, float pitch, float roll, float yaw, bool noLongerNeeded = false)
 		{
 			Model model(hash);
 			GTAprop e = World::CreateProp(hash, Vector3(X, Y, Z), Vector3(pitch, roll, yaw), false, false);
 			e.FreezePosition(true);
 			SET_NETWORK_ID_CAN_MIGRATE(OBJ_TO_NET(e.Handle()), TRUE);
-			e.LodDistance_set(1000000);
-			e.MissionEntity_set(true);
+			e.SetLODDistance(1000000);
+			e.SetMissionEntity(true);
 			model.Unload();
 			if (noLongerNeeded)
+			{
 				SET_OBJECT_AS_NO_LONGER_NEEDED(&e.Handle());
+			}
 
 			handles.push_back(e.GetHandle());
 		}
 
-		void mm_PlaceRawObject(std::vector<GTAentity>& handles, Hash hash, float X, float Y, float Z, float pitch, float roll, float yaw,
-			bool hasQuaternion, float qx, float qy, float qz, float qw)
+		void MapModsPlaceRawObject(std::vector<GTAentity>& handles, Hash hash, float X, float Y, float Z, float pitch, float roll, float yaw, bool hasQuaternion, float qx, float qy, float qz, float qw)
 		{
 			Object tempEntity = CREATE_OBJECT(hash, X, Y, Z, 1, 1, 0);
 			SET_ENTITY_COORDS(tempEntity, X, Y, Z, 1, 0, 0, 1);
@@ -67,7 +48,7 @@ namespace sub
 			handles.push_back(tempEntity);
 		}
 
-		class GTAmapmod
+		class GTAMapMod
 		{
 		private:
 			std::string name;
@@ -76,13 +57,13 @@ namespace sub
 			pugi::xml_node xmlNode;
 			std::vector<GTAentity> ohandles;
 		public:
-			GTAmapmod(const std::string& newName, const std::string& newAuthor, Vector3 newLocation, pugi::xml_node node)
+			GTAMapMod(const std::string& newName, const std::string& newAuthor, Vector3 newLocation, pugi::xml_node node)
 				: name(newName), author(newAuthor), location(newLocation), xmlNode(node)
 			{
 			}
-			void Tele()
+			void Teleport()
 			{
-				teleport_net_ped(Game::PlayerPed(), location.x, location.y, location.z);
+				TeleportNetPed(Game::PlayerPed(), location.x, location.y, location.z);
 			}
 			bool IsLoaded()
 			{
@@ -90,10 +71,12 @@ namespace sub
 			}
 			void Load(bool showMsg = true)
 			{
-				mm_unloadAll();
+				UnloadAllMapMods();
 				LoadFromXml();
 				if (showMsg)
+				{
 					Game::Print::PrintBottomCentre(name + " ~b~loaded~s~.");
+				}
 			}
 			void Unload(bool showMsg = true)
 			{
@@ -114,7 +97,6 @@ namespace sub
 		private:
 			void LoadFromXml()
 			{
-				// Handle loop-based mods
 				pugi::xml_node loopNode = xmlNode.child("Loop");
 				if (loopNode)
 				{
@@ -137,7 +119,7 @@ namespace sub
 						for (int i = 0; i < count; i++)
 						{
 							tempZ += zIncrement;
-							mm_PlaceObject(ohandles, hash, x, y, tempZ, pitch, roll, yaw, noLongerNeeded);
+							MapModsPlaceObject(ohandles, hash, x, y, tempZ, pitch, roll, yaw, noLongerNeeded);
 						}
 					}
 				}
@@ -165,37 +147,43 @@ namespace sub
 							float qy = objNode.attribute("qy").as_float();
 							float qz = objNode.attribute("qz").as_float();
 							float qw = objNode.attribute("qw").as_float();
-							mm_PlaceRawObject(ohandles, hash, x, y, z, pitch, roll, yaw, hasQuat, qx, qy, qz, qw);
+							MapModsPlaceRawObject(ohandles, hash, x, y, z, pitch, roll, yaw, hasQuat, qx, qy, qz, qw);
 						}
 						else
 						{
-							mm_PlaceObject(ohandles, hash, x, y, z, pitch, roll, yaw, noLongerNeeded);
+							MapModsPlaceObject(ohandles, hash, x, y, z, pitch, roll, yaw, noLongerNeeded);
 						}
 					}
 				}
 
 				if (!author.empty())
+				{
 					Game::Print::PrintBottomLeft("Hax by ~b~" + author);
+				}
 			}
 		};
 
 		pugi::xml_document mapModsDoc;
-		std::vector<GTAmapmod> vAllMapMods;
-		GTAmapmod *currentMAPMODC;
+		std::vector<GTAMapMod> allMapMods;
+		GTAMapMod *currentMAPMODC;
 
-		void mm_unloadAll()
+		void UnloadAllMapMods()
 		{
-			for (GTAmapmod& mm : vAllMapMods)
-				mm.Unload(false);
+			for (GTAMapMod& mapMod : allMapMods)
+			{
+				mapMod.Unload(false);
+			}
 		}
 
 		void LoadMapModsFromXml()
 		{
-			vAllMapMods.clear();
+			allMapMods.clear();
 
 			std::string xmlPath = GetPathffA(Pathff::Main, true) + "MapMods.xml";
 			if (mapModsDoc.load_file(xmlPath.c_str()).status != pugi::status_ok)
+			{
 				return;
+			}
 
 			pugi::xml_node root = mapModsDoc.document_element();
 			for (pugi::xml_node modNode = root.child("MapMod"); modNode; modNode = modNode.next_sibling("MapMod"))
@@ -209,53 +197,66 @@ namespace sub
 				location.y = locNode.attribute("y").as_float();
 				location.z = locNode.attribute("z").as_float();
 
-				vAllMapMods.emplace_back(name, author, location, modNode);
+				allMapMods.emplace_back(name, author, location, modNode);
 			}
 		}
 
-		void __AddpointOption(GTAmapmod &mm)
+		void AppPointOption(GTAMapMod &mapMod)
 		{
 			bool pressed = false;
-			AddOption(mm.Name(), pressed, nullFunc, SUB::MAPMODS2, false); if (pressed)
+			AddOption(mapMod.Name(), pressed, nullFunc, SUB::MAPMODS2, false); if (pressed)
 			{
-				currentMAPMODC = &mm;
+				currentMAPMODC = &mapMod;
 			}
 		}
 
-		void MapMods_()
+		void MapMods()
 		{
-			if (vAllMapMods.empty())
+			if (allMapMods.empty())
+			{
 				LoadMapModsFromXml();
+			}
 
 			AddTitle("Map Mods");
 
-			for (auto& mm : vAllMapMods)
-				__AddpointOption(mm);
+			for (auto& mm : allMapMods)
+			{
+				AppPointOption(mm);
+			}
 
 		}
-		void MapMods2_()
+
+		void MapMods2()
 		{
 
-			bool cmmtele = 0, cmmload = 0, cmmunload = 0;
+			bool currentMapModTeleport = false;
+			bool currentMapModLoad = false;
+			bool currentMapModUnload = false;
 
 			AddTitle(currentMAPMODC->Name());
+			AddOption("Teleport", currentMapModTeleport);
+			AddLocal("Load", currentMAPMODC->IsLoaded(), currentMapModLoad, currentMapModUnload);
 
-			AddOption("Teleport", cmmtele);
-			AddLocal("Load", currentMAPMODC->IsLoaded(), cmmload, cmmunload);
+			if (currentMapModTeleport) 
+			{
+				currentMAPMODC->Teleport();
+			}
 
-			if (cmmtele) currentMAPMODC->Tele();
+			if (currentMapModLoad)
+			{
+				currentMAPMODC->Load();
+			}
 
-			if (cmmload) currentMAPMODC->Load();
-
-			if (cmmunload) currentMAPMODC->Unload();
-
+			if (currentMapModUnload) 
+			{
+				currentMAPMODC->Unload();
+			}
 		}
-
 	}
-
 }
+
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(MAPMODS,            sub::MapMods_catind::MapMods_)
-REGISTER_SUBMENU(MAPMODS2,           sub::MapMods_catind::MapMods2_)
+REGISTER_SUBMENU(MAPMODS,            sub::MapMods::MapMods)
+REGISTER_SUBMENU(MAPMODS2,           sub::MapMods::MapMods2)

@@ -340,7 +340,7 @@ void PopulateGlobalEntityModelsArrays()
 }
 
 // Model - labels
-std::string get_ped_model_label(const GTAmodel::Model& model, bool properName)
+std::string GetPedModelLabel(const GTAmodel::Model& model, bool properName)
 {
 	for (UINT i = 0; i < g_pedModels.size(); i++)
 	{

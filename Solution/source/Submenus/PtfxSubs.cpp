@@ -9,33 +9,12 @@
 */
 #include "PtfxSubs.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-
-#include "..\Submenus\WeaponOptions.h"
-#include "..\Util\keyboard.h"
-
-#include "..\Scripting\Game.h"
-
-#include "..\Util\ExePath.h"
-
-#include <windows.h>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <ctime>
-#include <json\single_include\nlohmann\json.hpp>
-
 namespace sub
 {
-	namespace Ptfx_catind
+	namespace PtfxSubs
 	{
 #pragma region ptfxvector
-		const std::vector<PtfxS> vPTFX
+		const std::vector<PtfxS> PTFX
 		{
 			{ "Starburst FW", "scr_indep_fireworks", "scr_indep_firework_starburst" },
 			{ "Fountain FW", "scr_indep_fireworks", "scr_indep_firework_fountain" },
@@ -44,58 +23,32 @@ namespace sub
 			{ "NYE FW", "proj_xmas_firework", "scr_firework_xmas_burst_rgw" },
 			{ "Spiral FW", "proj_xmas_firework", "scr_firework_xmas_spiral_burst_rgw" },
 			{ "Ring FW", "proj_xmas_firework", "scr_firework_xmas_ring_burst_rgw" },
-			//{ "Flare Fuse", "core", "proj_flare_fuse" }, // Requires LOOPED_PTFX
-			//{ "Flare", "scr_fbi5a", "scr_fbi5a_flare" },
 			{ "Magical Flowers", "scr_rcbarry2", "scr_exp_clown" },
-			//{ "Magical Stars", "scr_rcbarry2", "scr_clown_bull" },
 			{ "Magical Smoke", "scr_rcbarry2", "scr_clown_appears" },
 			{ "Magical Smoke 2", "scr_rcbarry2", "scr_clown_death" },
 			{ "MoneySwap Smoke", "scr_tplaces", "scr_tplaces_team_swap" },
 			{ "Firey Particles", "scr_rcbarry1", "scr_alien_teleport" },
 			{ "Disintegration", "scr_rcbarry1", "scr_alien_disintegrate" },
-			//{ "Charges", "scr_rcbarry1", "scr_alien_charging" },
-			//{ "Beam", "scr_rcbarry1", "scr_alien_beam" },
-			//{ "Impact", "scr_rcbarry1", "scr_alien_impact" },
-			//{ "Door Heavy Stat", "scr_agencyheista", "scr_agency3a_door_hvy_stat" },
-			//{ "Door Heavy Trigger", "scr_agencyheista", "scr_agency3a_door_hvy_trig" },
-			//{ "Dry Ice", "scr_fbi5a", "scr_fbi5_dry_ice" },
-			//{ "Blaze", "scr_agencyheist", "scr_fbi_ext_blaze" },
 			{ "Mop Drips", "scr_agencyheist", "scr_fbi_mop_drips" },
 			{ "Mop Squeeze", "scr_agencyheist", "scr_fbi_mop_squeeze" },
-			//{ "Large Water Splash", "scr_exile3", "scr_ex3_water_dinghy_wash" },
 			{ "Water Splash", "scr_fbi5a", "scr_fbi5_ped_water_splash" },
-			//{ "Water Bubbles", "scr_fbi5a", "water_splash_ped_bubbles" },
-			//{ "Puke", "scr_family5", "scr_trev_puke" },
 			{ "Puke", "scr_familyscenem", "scr_trev_puke" },
 			{ "Puke Ambient", "scr_familyscenem", "scr_trev_amb_puke" },
-			//{ "Blood", "scr_finalec2", "scr_finale2_blood_entry" },
-			//{ "Autopsy Blood", "scr_agencyheist", "scr_fbi_autopsy_blood" },
 			{ "Blood Stab", "scr_michael2", "scr_mich2_blood_stab" },
 			{ "Blood Impact", "scr_solomon3", "scr_trev4_747_blood_impact" },
 			{ "Blood Spasm", "scr_michael2", "scr_abattoir_ped_sliced" },
 			{ "Tyre Spiked", "scr_bigscore", "scr_bigscore_tyre_spiked" },
 			{ "Tyre Smoke", "scr_mp_creator", "scr_mp_plane_landing_tyre_smoke" },
-			//{ "Landing Tyre Smoke", "scr_fm_intro_cut_dev", "scr_mp_plane_landing_tyre_smoke" },
 			{ "Gold Ball Trail", "scr_minigamegolf", "scr_golf_ball_trail" },
 			{ "Sniper Impact", "scr_martin1", "scr_sol1_sniper_impact" },
 			{ "Dirt Throw", "core_snow", "cs_mich1_spade_dirt_throw" },
 			{ "Camera", "scr_rcpaparazzo1", "scr_rcpap1_camera" },
-			//{ "Fire Ring", "scr_ie_export", "scr_ie_export_fire_ring" },
 			{ "Meth Pipe Smoke", "scr_familyscenem", "scr_meth_pipe_smoke" },
 			{ "Pipefall Debris", "scr_reconstructionaccident", "scr_reconstruct_pipefall_debris" },
 			{ "Pipe Impact", "scr_reconstructionaccident", "scr_reconstruct_pipe_impact" },
-			//{ "Sparking Generator", "scr_reconstructionaccident", "scr_sparking_generator" },
 			{ "Burial Dirt", "scr_reburials", "scr_burial_dirt" },
 			{ "Wheel Burnout", "scr_recartheft", "scr_wheel_burnout" },
-			//{ "Rescue Fire", "scr_recrash_rescue", "scr_recrash_rescue_fire" },
 			{ "Bank Notes", "scr_paletoscore", "scr_paleto_banknotes" },
-			//{ "Blow Torch", "scr_paletoscore", "cs_paleto_blowtorch" },
-			//{ "Trailer Splash", "scr_tevor1", "scr_trev1_trailer_splash" },
-			//{ "Trailer Wires", "scr_tevor1", "scr_trev1_trailer_wires" },
-			//{ "Crash Dust", "scr_tevor1", "scr_trev1_crash_dust" },
-			//{ "Wheelspin Dirt", "scr_tevor1", "scr_trev1_wheelspin_dirt" },
-			//{ "Train Sparks", "scr_oddjobtowtruck", "scr_ojtt_train_sparks" },
-			//{ "Hotbox Trail", "scr_oddjobtaxi", "scr_ojtaxi_hotbox_trail" },
 			{ "Engine Debris", "scr_solomon3", "scr_trev4_747_engine_debris" },
 			{ "Car Impact", "scr_exile2", "scr_ex2_car_impact" },
 			{ "Helicopter Explosion", "scr_agencyheistb", "scr_agency3b_heli_expl" },
@@ -105,36 +58,19 @@ namespace sub
 			{ "Drug Train Explosion", "scr_oddjobtraffickingair", "scr_drug_grd_train_exp" },
 			{ "Water Explosion", "scr_oddjobtraffickingair", "scr_ojdg4_water_exp" },
 			{ "Boat Explosion", "scr_oddjobtraffickingair", "scr_ojdg4_boat_exp" },
-			//{ "Moving Cloud", "scr_exile1", "scr_ex1_moving_cloud" },
-			//{ "Jeep Engine Fire", "scr_exile2", "scr_ex2_jeep_engine_fire" },
-			//{ "Cargo Engine Trail", "scr_exile1", "scr_ex1_cargo_engine_trail" },
 			{ "Cargo Engine Burst", "scr_exile1", "scr_ex1_cargo_engine_burst" },
-			//{ "Cargo Smoke", "scr_exile1", "scr_ex1_cargo_smoke" },
-			//{ "Cargo Fire", "scr_exile1", "cs_ex1_cargo_fire" },
-			//{ "Cargo Debris", "scr_exile1", "scr_ex1_cargo_debris" },
 			{ "Plane Explosion", "scr_exile1", "scr_ex1_plane_exp" },
 			{ "Dust Impact", "scr_exile1", "scr_ex1_dust_impact" },
 			{ "Car Impact Dust", "scr_finale1", "scr_fin_trev_car_impact" },
-			//{ "Dust Settle", "scr_exile1", "scr_ex1_dust_settle" },
-			//{ "Sparking Wires", "scr_exile1", "cs_ex1_sparking_wires_sm" },
 			{ "Bike Burnout", "scr_jewelheist", "scr_jew_bike_burnout" },
 			{ "Cab Smash", "scr_jewelheist", "scr_jewel_cab_smash" },
 			{ "Wheel Burnout", "scr_carsteal4", "scr_carsteal4_wheel_burnout" },
 			{ "Muzzle Flash", "scr_carsteal4", "scr_carsteal5_car_muzzle_flash" },
 			{ "Flame", "core", "ent_sht_flame" },
-			//{ "Fire Trail", "scr_martin1", "scr_sol1_fire_trail" },
-			//{ "Falling Debris", "scr_agencyheist", "scr_fbi_falling_debris" },
-			//{ "Building Smoke", "scr_agencyheistb", "scr_agency3b_blding_smoke" },
 			{ "Breach Smoke", "scr_agencyheist", "scr_fbi_dd_breach_smoke" },
 			{ "Electric Box Smoke", "scr_agencyheistb", "scr_agency3b_elec_box" },
-			//{ "Shot Chopper", "scr_agencyheistb", "scr_agency3b_shot_chopper" },
-			//{ "Wood Splinter", "scr_agencyheistb", "scr_agency3b_wood_splinter" },
-			//{ "Rooftop Explosion", "scr_agencyheist", "scr_fbi_ext_rooftop" },
 			{ "Explosion Fire Trail", "scr_agencyheistb", "scr_agency3b_heli_exp_trail" },
-			//{ "RPG Trail", "scr_agencyheistb", "scr_agency3b_proj_rpg_trail" },
-			//{ "Lighter Flame", "scr_mp_house", "scr_sh_lighter_flame" },
 			{ "Petrol Fire", "scr_finale1", "scr_fin_fire_petrol_trev" },
-			//{ "Petrol Fire 2", "ent_damage", "ent_sht_petrol_fire" },
 			{ "Sparks", "scr_fbi4", "scr_fbi4_trucks_crash" },
 			{ "Lighter Sparks", "scr_mp_house", "scr_sh_lighter_sparks" },
 			{ "Blue Sparks", "scr_trevor1", "scr_trev1_trailer_boosh" },
@@ -3176,15 +3112,15 @@ namespace sub
         };
 #pragma endregion
 
-		std::vector<PtfxlopS> fxLops;
+		std::vector<PtfxlopS> fxLoops;
 
 		void AddEntityToPtfxLops(const PtfxS& effect, const GTAentity& entity)
 		{
-			for (auto it = fxLops.begin(); it != fxLops.end();)
+			for (auto it = fxLoops.begin(); it != fxLoops.end();)
 			{
 				if (it->entity.Equals(entity))
 				{
-					it = fxLops.erase(it);
+					it = fxLoops.erase(it);
 				}
 				else ++it;
 			}
@@ -3195,14 +3131,15 @@ namespace sub
 				fxlop.entity = entity;
 				fxlop.asset = effect.asset;
 				fxlop.fx = effect.fx;
-				fxLops.push_back(fxlop);
+				fxLoops.push_back(fxlop);
 			}
 		}
 
-		void __AddOption_entity(const PtfxS& effect, GTAentity entity)
+		void AddOptionEntity(const PtfxS& effect, GTAentity entity)
 		{
 			bool pressed = false;
-			AddOption(effect.name, pressed); if (pressed)
+			AddOption(effect.name, pressed); 
+            if (pressed)
 			{
 				PCHAR asset = (PCHAR)effect.asset.c_str();
 
@@ -3223,18 +3160,18 @@ namespace sub
 				}
 			}
 		}
-		void __AddOption_loopOnEntity(const PtfxS& effect, GTAentity entity)
+		void AddOptionLoopOnEntity(const PtfxS& effect, GTAentity entity)
 		{
 			bool found = false;
-			bool tickolTrue = false;
-			for (auto& fxlop : fxLops)
+			bool tickOnLoopTrue = false;
+			for (auto& fxlop : fxLoops)
 			{
 				if (fxlop.entity == entity)
 				{
 					found = true;
 					if (fxlop.asset == effect.asset && fxlop.fx == effect.fx)
 					{
-						tickolTrue = true;
+						tickOnLoopTrue = true;
 						break;
 					}
 				}
@@ -3242,35 +3179,45 @@ namespace sub
 
 			if (!found)
 			{
-				tickolTrue = !effect.asset.length() && !effect.fx.length();
+				tickOnLoopTrue = !effect.asset.length() && !effect.fx.length();
 			}
 
 			bool pressed = false;
-			AddTickol(effect.name, tickolTrue, pressed, pressed); if (pressed)
+			AddTickol(effect.name, tickOnLoopTrue, pressed, pressed); if (pressed)
 			{
 				AddEntityToPtfxLops(effect, entity);
 			}
 		}
-		std::string wstringToString(const std::wstring& wstr) {
+		std::string wstringToString(const std::wstring& wstr) 
+        {
             // Convert the wide string to a narrow string
             return std::string(wstr.begin(), wstr.end());
         }
 
-        void to_json(nlohmann::json& j, const PtfxS& ptfx) {
-            j = nlohmann::json{ {"name", ptfx.name}, {"dict", ptfx.asset}, {"fxName", ptfx.fx} };
+        void to_json(nlohmann::json& j, const PtfxS& ptfx) 
+        {
+            j = nlohmann::json
+            { 
+                {"name", ptfx.name}, 
+                {"dict", ptfx.asset}, 
+                {"fxName", ptfx.fx} 
+            };
         }
 
-        void from_json(const nlohmann::json& j, PtfxS& ptfx) {
+        void from_json(const nlohmann::json& j, PtfxS& ptfx)
+        {
             j.at("name").get_to(ptfx.name);
             j.at("dict").get_to(ptfx.asset);
             j.at("fxName").get_to(ptfx.fx);
         }
-        std::vector<PtfxS> g_favorites;
+        std::vector<PtfxS> favourites;
 
-        void SaveFavoritesToFile(const std::string& filepath) {
-            nlohmann::json j = g_favorites;
+        void SaveFavoritesToFile(const std::string& filepath) 
+        {
+            nlohmann::json j = favourites;
             std::ofstream file(filepath);
-            if (file.is_open()) {
+            if (file.is_open()) 
+            {
                 file << j.dump(4); // Pretty print with indentation
                 file.close();
             }
@@ -3278,91 +3225,102 @@ namespace sub
 
         static FILETIME g_lastWriteTime = { 0 };
 
-        void LoadFavoritesFromFile(const std::string& filepath) {
+        void LoadFavoritesFromFile(const std::string& filepath) 
+        {
             WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-            if (!GetFileAttributesExA(filepath.c_str(), GetFileExInfoStandard, &fileInfo)) {
-                //Game::Print::PrintBottomLeft("Favorites file not found.");
+            if (!GetFileAttributesExA(filepath.c_str(), GetFileExInfoStandard, &fileInfo)) 
+            {
                 return;
             }
 
             // If file hasn't changed, skip reload
-            if (CompareFileTime(&fileInfo.ftLastWriteTime, &g_lastWriteTime) == 0) {
+            if (CompareFileTime(&fileInfo.ftLastWriteTime, &g_lastWriteTime) == 0) 
+            {
                 return;
             }
 
             std::ifstream file(filepath);
-            if (!file.good()) {
+            if (!file.good())
+            {
                 Game::Print::PrintBottomLeft("Error opening favorites file.");
                 return;
             }
 
             nlohmann::json j;
             file >> j;
-            g_favorites = j.get<std::vector<PtfxS>>();
+            favourites = j.get<std::vector<PtfxS>>();
             file.close();
 
             // Save the last write time
             g_lastWriteTime = fileInfo.ftLastWriteTime;
         }
 
-        bool IsAlreadyFavorite(const PtfxS& fx) {
-            return std::find(g_favorites.begin(), g_favorites.end(), fx) != g_favorites.end();
+        bool IsAlreadyFavorite(const PtfxS& fx) 
+        {
+            return std::find(favourites.begin(), favourites.end(), fx) != favourites.end();
         }
-        void AddHoveredToFavorites(const PtfxS& hoveredFx) {
-            if (!IsAlreadyFavorite(hoveredFx)) {
-                g_favorites.push_back(hoveredFx);
+        void AddHoveredToFavorites(const PtfxS& hoveredFx) 
+        {
+            if (!IsAlreadyFavorite(hoveredFx))
+            {
+                favourites.push_back(hoveredFx);
                 std::wstring wpath = GetPathffW(Pathff::Main, true) + L"fx_favorites.json";
                 std::string spath = wstringToString(wpath);  // convert to std::string
                 SaveFavoritesToFile(spath);
             }
         }
 
-        void RemoveFavoriteAtIndex(size_t idx) {
-            if (idx < g_favorites.size()) {
-                g_favorites.erase(g_favorites.begin() + idx);
+        void RemoveFavoriteAtIndex(size_t idx) 
+        {
+            if (idx < favourites.size()) 
+            {
+                favourites.erase(favourites.begin() + idx);
                 std::wstring wpath = GetPathffW(Pathff::Main, true) + L"fx_favorites.json";
                 std::string spath = wstringToString(wpath);  // convert to std::string
                 SaveFavoritesToFile(spath); //Update list
             }
         }
 
-        void ToggleFavorite(const PtfxS& current) {
+        void ToggleFavorite(const PtfxS& current) 
+        {
             // Find current in favorites vector
-            auto it = std::find(g_favorites.begin(), g_favorites.end(), current);
+            auto it = std::find(favourites.begin(), favourites.end(), current);
 
-            if (it != g_favorites.end()) {
+            if (it != favourites.end()) 
+            {
                 // Item is already a favorite, remove it
-                size_t index = std::distance(g_favorites.begin(), it);
+                size_t index = std::distance(favourites.begin(), it);
                 RemoveFavoriteAtIndex(index);
                 Game::Print::PrintBottomLeft("Removed Favourite From Index " + std::to_string(index));
             }
-            else {
+            else 
+            {
                 // Not a favorite, add it
                 AddHoveredToFavorites(current);
                 Game::Print::PrintBottomLeft("Added Favourite To File");
             }
         }
-        int g_lastSubmenuSource = -1;  // -1 = invalid or unset
-        bool g_favoritesLoaded = false;
+        int lastSubmenuSource = -1;  // -1 = invalid or unset
+        bool favouritesLoaded = false;
         void PTFXFavourites()
         {
             AddTitle("Favorite FX's");
-            for (size_t i = 0; i < g_favorites.size(); ++i)
+            for (size_t i = 0; i < favourites.size(); ++i)
             {
-                switch (g_lastSubmenuSource)
+                switch (lastSubmenuSource)
                 {
                 case SUB::PLAYEROPS: case SUB::SPOONER_SELECTEDENTITYOPS:
-                    __AddOption_entity(g_favorites[i], g_Ped1);
+                    AddOptionEntity(favourites[i], g_Ped1);
                     break;
                 case SUB::PTFXSUB:
-                    __AddOption_loopOnEntity(g_favorites[i], g_Ped1);
+                    AddOptionLoopOnEntity(favourites[i], g_Ped1);
                     break; // Subception
                 case SUB::TRIGGERFXGUN:
-                    TriggerFxGun_catind::__AddOption_GunFx(g_favorites[i]);
+                    TriggerFxGun::AddOptionGunFX(favourites[i]);
                     break;
                 }
             }
-            if (g_favorites.empty())
+            if (favourites.empty())
             {
                 AddOption("Nothing yet has been saved here..");
             }
@@ -3372,24 +3330,30 @@ namespace sub
         const int ITEMS_PER_PAGE_MIN = 10;
         const int ITEMS_PER_PAGE_MAX = 100;
         static int ptfxPage = 0;
+
         void PTFXSub()
         {
-            if (!g_favoritesLoaded) {
+            if (!favouritesLoaded) 
+            {
                 std::wstring wpath = GetPathffW(Pathff::Main, true) + L"fx_favorites.json";
                 std::string spath = wstringToString(wpath);
                 LoadFavoritesFromFile(spath);
-                g_favoritesLoaded = true;
+                favouritesLoaded = true;
             }
             std::vector<PtfxS> displayedFx;
-            if (showOnlyFaves) {
-                for (const auto& fx : vPTFX) {
-                    if (IsAlreadyFavorite(fx)) {
+            if (showOnlyFaves) 
+            {
+                for (const auto& fx : PTFX) 
+                {
+                    if (IsAlreadyFavorite(fx)) 
+                    {
                         displayedFx.push_back(fx);
                     }
                 }
             }
-            else {
-                displayedFx = vPTFX;
+            else 
+            {
+                displayedFx = PTFX;
             }
             // Pagination logic
             int totalItems = static_cast<int>(displayedFx.size());
@@ -3397,17 +3361,20 @@ namespace sub
             int startIndex = ptfxPage * ITEMS_PER_PAGE;
             int endIndex = min(startIndex + ITEMS_PER_PAGE, totalItems);
 
-            bool itemCountMinus = 0;
-            bool itemCountPlus = 0;
-            bool detectKeypress = 0;
-            bool bShortcutToggleFavesPressed = 0;
+            bool itemCountMinus = false;
+            bool itemCountPlus = false;
+            bool detectKeypress = false;
+            bool bShortcutToggleFavesPressed = false;
             std::string pageLabel = "Page " + std::to_string(ptfxPage + 1) + " / " + std::to_string(totalPages);
             AddTitle("FX - " + pageLabel);
             AddNumber("Items Per Page", ITEMS_PER_PAGE, 0, null, itemCountPlus, itemCountMinus);
-            AddOption("Favourites", detectKeypress, nullFunc, SUB::PTFX_FAVORITES); if (detectKeypress) 
-                g_lastSubmenuSource = Menu::currentsub_ar[Menu::currentsub_ar_index];
+            AddOption("Favourites", detectKeypress, nullFunc, SUB::PTFX_FAVORITES);
+            if (detectKeypress)
+            {
+                lastSubmenuSource = Menu::currentArray[Menu::currentArrayIndex];
+            }
             AddToggle("Only Show Favorites", showOnlyFaves);
-            switch (Menu::currentsub_ar[Menu::currentsub_ar_index])
+            switch (Menu::currentArray[Menu::currentArrayIndex])
             {
             case SUB::PLAYEROPS: case SUB::SPOONER_SELECTEDENTITYOPS:
                 AddOption("Loop On Entity", null, nullFunc, SUB::PTFXSUB);
@@ -3415,11 +3382,14 @@ namespace sub
             case SUB::PTFXSUB:
             {
                 bool bPressedClear = false;
-                AddOption("Clear On All Entities", bPressedClear); if (bPressedClear)
-                    fxLops.clear();
+                AddOption("Clear On All Entities", bPressedClear); 
+                if (bPressedClear)
+                {
+                    fxLoops.clear();
+                }
                 PtfxS nonefx = { "None", "", "" };
-                __AddOption_loopOnEntity(nonefx, g_Ped1);
-                break; // subception
+                AddOptionLoopOnEntity(nonefx, g_Ped1);
+                break;
             }
             }
          
@@ -3427,24 +3397,27 @@ namespace sub
             {
                 const auto& current = displayedFx[i];
 
-                switch (Menu::currentsub_ar[Menu::currentsub_ar_index])
+                switch (Menu::currentArray[Menu::currentArrayIndex])
                 {
                 case SUB::PLAYEROPS:
                 case SUB::SPOONER_SELECTEDENTITYOPS:
-                    __AddOption_entity(current, g_Ped1);
+                    AddOptionEntity(current, g_Ped1);
                     break;
                 case SUB::PTFXSUB:
-                    __AddOption_loopOnEntity(current, g_Ped1);
+                    AddOptionLoopOnEntity(current, g_Ped1);
                     break;
                 case SUB::TRIGGERFXGUN:
-                    TriggerFxGun_catind::__AddOption_GunFx(current);
+                    TriggerFxGun::AddOptionGunFX(current);
                     break;
                 }
 
                 // Handle favorite toggling
                 if (*Menu::currentopATM == Menu::printingop)
                 {
-                    if (g_favoritesLoaded) g_favoritesLoaded = false;
+                    if (favouritesLoaded) 
+                    {
+                        favouritesLoaded = false;
+                    }
                     if (Menu::bitController)
                     {
                         Menu::add_IB(INPUT_SCRIPT_RLEFT, IsAlreadyFavorite(current) ? "Remove From Favourites" : "Add To Favourites");
@@ -3466,13 +3439,17 @@ namespace sub
             if (itemCountPlus)
             {
                 if (ITEMS_PER_PAGE < ITEMS_PER_PAGE_MAX)
+                {
                     ITEMS_PER_PAGE += 1;
+                }
             }
 
             if (itemCountMinus)
             {
                 if (ITEMS_PER_PAGE > ITEMS_PER_PAGE_MIN)
+                {
                     ITEMS_PER_PAGE -= 1;
+                }
             }
             // Block navigation input if on first page
             if (ptfxPage + 1 != 0 && totalPages != 0 && *Menu::currentopATM != 1)
@@ -3490,7 +3467,8 @@ namespace sub
     }
 }
 
+
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(PTFXSUB,        sub::Ptfx_catind::PTFXSub)
-REGISTER_SUBMENU(PTFX_FAVORITES, sub::Ptfx_catind::PTFXFavourites)
+REGISTER_SUBMENU(PTFXSUB,        sub::PtfxSubs::PTFXSub)
+REGISTER_SUBMENU(PTFX_FAVORITES, sub::PtfxSubs::PTFXFavourites)

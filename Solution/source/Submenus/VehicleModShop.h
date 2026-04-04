@@ -9,7 +9,30 @@
 */
 #pragma once
 
+#include "..\macros.h"
+
+#include "..\Menu\Menu.h"
+#include "..\Menu\Routine.h"
+
+#include "..\Natives\natives2.h"
+#include "..\Util\GTAmath.h"
+#include "..\Util\StringManip.h"
+#include "..\Util\FileLogger.h"
+#include "..\Scripting\enums.h"
+#include "..\main.h"
+#include "..\Scripting\GTAvehicle.h"
+#include "..\Scripting\Model.h"
+#include "..\Scripting\Game.h"
+#include "..\Memory\GTAmemory.h"
+#include "..\Scripting\World.h"
+
+#include "Settings.h"
+
 #include <string>
+#include <sstream>
+#include <iomanip>
+#include <vector>
+#include <array>
 
 typedef unsigned char UINT8;
 typedef signed char INT8;
@@ -22,7 +45,7 @@ namespace sub
 	void PopulateAllPaintIDs();
 
 	// vehicle - upgrades
-	void set_vehicle_max_upgrades(Vehicle vehicle, bool upgradeIt = true, bool invincible = false, INT8 plateType = 5, std::string plateText = std::string(),
+	void SetVehicleMaxUpgrades(Vehicle vehicle, bool upgradeIt = true, bool invincible = false, INT8 plateType = 5, std::string plateText = std::string(),
 		bool neonIt = false, UINT8 NeonR = 0, UINT8 NeonG = 0, UINT8 NeonB = 0, INT16 prim_col_index = -3, INT16 sec_col_index = -3);
 
 

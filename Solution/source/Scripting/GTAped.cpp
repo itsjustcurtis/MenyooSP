@@ -81,12 +81,12 @@ int PedGroup::MemberCount() const
 	return count;
 }
 
-void PedGroup::SeparationRange_set(float range)
+void PedGroup::SetSeparationRange(float range)
 {
 	SET_GROUP_SEPARATION_RANGE(this->_handle, range);
 }
 
-void PedGroup::FormationSpacing_set(float spacing)
+void PedGroup::SetFormationSpacing(float spacing)
 {
 	SET_GROUP_FORMATION_SPACING(this->_handle, spacing, 0xbf800000, 0xbf800000);
 }
@@ -308,7 +308,7 @@ void GTAped::Delete(bool tele)
 	GTAblip blip = this->CurrentBlip();
 	if (blip.Exists()) blip.Remove();
 
-	this->MissionEntity_set(false);
+	this->SetMissionEntity(false);
 
 	if (tele) SET_ENTITY_COORDS_NO_OFFSET(this->mHandle, 32.2653f, 7683.5249f, 0.5696f, 0, 0, 0);
 
@@ -375,7 +375,7 @@ Hash GTAped::Weapon_get() const
 	GET_CURRENT_PED_WEAPON(this->mHandle, &weap, true);
 	return weap;
 }
-void GTAped::Weapon_set(Hash weaponHash)
+void GTAped::SetWeapon(Hash weaponHash)
 {
 	if (!HAS_PED_GOT_WEAPON(this->mHandle, weaponHash, false))
 		GIVE_WEAPON_TO_PED(this->mHandle, weaponHash, 9999, true, false);
@@ -413,7 +413,7 @@ void GTAped::AlwaysDiesWhenInjured_set(bool value)
 	SET_PED_DIES_WHEN_INJURED(this->mHandle, value);
 }
 
-void GTAped::AlwaysKeepTask_set(bool value)
+void GTAped::SetAlwaysKeepTask(bool value)
 {
 	SET_PED_KEEP_TASK(this->mHandle, value);
 }
@@ -510,7 +510,7 @@ void GTAped::DrownsInSinkingVehicle_set(bool value)
 	SET_PED_DIES_IN_SINKING_VEHICLE(this->mHandle, value);
 }
 
-void GTAped::DrivingSpeed_set(float value)
+void GTAped::SetDrivingSpeed(float value)
 {
 	SET_DRIVE_TASK_CRUISE_SPEED(this->mHandle, value);
 }
@@ -519,7 +519,7 @@ void GTAped::MaxDrivingSpeed_set(float value)
 	SET_DRIVE_TASK_MAX_CRUISE_SPEED(this->mHandle, value);
 }
 
-void GTAped::DrivingStyle_set(int value)
+void GTAped::SetDrivingStyle(int value)
 {
 	SET_DRIVE_TASK_DRIVING_STYLE(this->mHandle, value);
 }
@@ -766,20 +766,20 @@ void GTAped::RelationshipGroup_set(Hash grpHash)
 {
 	SET_PED_RELATIONSHIP_GROUP_HASH(this->mHandle, grpHash);
 }
-void GTAped::RelationshipGroup_set(const std::string& grpName)
+void GTAped::SetRelationshipGroup(const std::string& grpName)
 {
 	SET_PED_RELATIONSHIP_GROUP_HASH(this->mHandle, GET_HASH_KEY(grpName));
 }
 
-void GTAped::ShootRate_set(int value)
+void GTAped::SetShootRate(int value)
 {
 	SET_PED_SHOOT_RATE(this->mHandle, value);
 }
 
-void GTAped::HasGravity_set(bool value)
+void GTAped::SetHasGravity(bool value)
 {
 	SET_PED_GRAVITY(this->mHandle, value);
-	GTAentity::HasGravity_set(value);
+	GTAentity::SetHasGravity(value);
 }
 
 Tasks GTAped::Task()
@@ -871,7 +871,7 @@ GTAentity GTAped::GetSourceOfDeath() const
 }
 void GTAped::Kill()
 {
-	this->Health_set(0);
+	this->SetHealth(0);
 }
 void GTAped::ExplodeHead(Hash weaponHash)
 {

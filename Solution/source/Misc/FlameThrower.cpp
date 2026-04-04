@@ -25,18 +25,6 @@ namespace FlameThrower // Why have I made this for 'players' when this is sp and
 	Hash _whash = WEAPON_FIREEXTINGUISHER; // WEAPON_STUNGUN
 	struct FlameThrowerPlayerAndFx { GTAplayer player; int fxHandle1; }; // , fxHandle2; };
 	std::vector<FlameThrowerPlayerAndFx> _flameThrowerPlayerandFxArray;
-	/*Game::Sound::GameSound fireSound;
-
-	void TurnOn()
-	{
-		Game::Sound::GameSound::Load("FARMHOUSE_FIRE");
-		Game::Sound::GameSound::Load("FARMHOUSE_FIRE_BG");
-		Game::Sound::GameSound::Load("SCRIPT\\FBI_05_Chemical_Factory_01");
-		Game::Sound::GameSound::Load("SCRIPT\\Underwater");
-
-		fireSound = Game::Sound::GameSound("CHINESE2_SOUNDS", "FarmhouseFire_Ignite");
-
-	}*/
 
 	bool IsPlayerAdded(GTAplayer player)
 	{
@@ -68,12 +56,8 @@ namespace FlameThrower // Why have I made this for 'players' when this is sp and
 		FlameThrowerPlayerAndFx ft;
 		ft.player = player;
 		ft.fxHandle1 = 0;
-		//ft.fxHandle2 = 0;
 		RemovePlayer(player);
 		fts.push_back(ft);
-
-		//fireSound.Destroy();
-		//TurnOn();
 	}
 
 	void RemoveSelf()
@@ -100,22 +84,12 @@ namespace FlameThrower // Why have I made this for 'players' when this is sp and
 		std::string fxAsset1 = "core";
 		std::string fxName1 = "ent_sht_flame";
 
-		//PCHAR fxAsset2 = "core";
-		//PCHAR fxName2 = "ent_sht_flame";
-
-		//PCHAR fxAsset2 = "scr_martin1";
-		//PCHAR fxName2 = "scr_sol1_fire_trail";
-
 		scale = 2.0f;
 
 		if (!HAS_NAMED_PTFX_ASSET_LOADED(fxAsset1.c_str()))
 		{
 			REQUEST_NAMED_PTFX_ASSET(fxAsset1.c_str());
 		}
-		/*if (!HAS_NAMED_PTFX_ASSET_LOADED(fxAsset2.c_str()))
-		{
-		REQUEST_NAMED_PTFX_ASSET(fxAsset2.c_str());
-		}*/
 
 		auto& fts = _flameThrowerPlayerandFxArray;
 		for (auto it = fts.begin(); it != fts.end();)
@@ -125,26 +99,21 @@ namespace FlameThrower // Why have I made this for 'players' when this is sp and
 
 			if (!player.IsActive())
 			{
-				it = fts.erase(it);//RemovePlayer(player);
+				it = fts.erase(it);
 				continue;
 			}
 
 			playerPed = player.GetPed();
 			auto& fxHandle1 = ft.fxHandle1;
-			//auto& fxHandle2 = ft.fxHandle2;
 
 			whash = playerPed.Weapon_get();
 
-			//if (!IS_PED_SHOOTING(ped.Handle()) || whash != _whash
 			if ((!player.IsFreeAiming() && !player.IsTargetingAnything()) || whash != _whash)
 			{
 				if (DOES_PARTICLE_FX_LOOPED_EXIST(fxHandle1))
 					REMOVE_PARTICLE_FX(fxHandle1, false);
-				//if (DOES_PARTICLE_FX_LOOPED_EXIST(fxHandle2))
-				//REMOVE_PARTICLE_FX(fxHandle2, false);
 				++it;
 				continue;
-				//fireSound.Stop();
 			}
 
 			if (player == myPlayer)
@@ -159,7 +128,6 @@ namespace FlameThrower // Why have I made this for 'players' when this is sp and
 			wobject = GET_CURRENT_PED_WEAPON_ENTITY_INDEX(playerPed.Handle(), 0);
 			Model wmodel = wobject.Model();
 			gunBone = GET_ENTITY_BONE_INDEX_BY_NAME(wobject.Handle(), "Gun_Nuzzle");
-			//ModelDimensions& wdim = wmodel.Dimensions();
 
 			wobject.RequestControlOnce();
 
@@ -168,17 +136,9 @@ namespace FlameThrower // Why have I made this for 'players' when this is sp and
 				USE_PARTICLE_FX_ASSET(fxAsset1.c_str());
 				fxHandle1 = START_PARTICLE_FX_LOOPED_ON_ENTITY_BONE(fxName1.c_str(), wobject.Handle(), 0.0f, 0.0f, 0.04f, 89.5f, 0.0f, 90.0f, gunBone, scale, 0, 0, 0);
 			}
-			/*if (!DOES_PARTICLE_FX_LOOPED_EXIST(fxHandle2.c_str()))
-			{
-			USE_PARTICLE_FX_ASSET(fxAsset2.c_str());
-			fxHandle2 = START_PARTICLE_FX_LOOPED_ON_ENTITY_BONE(fxName2.c_str(), wobject.Handle(), 0.0f, 2.33f, 0.04f, 89.5f, 0.0f, 90.0f, gunBone, scale, 0, 0, 0);
-			}*/
 
 			SET_PARTICLE_FX_LOOPED_EVOLUTION(fxHandle1, "flow", 1.0f, 0);
 			SET_PARTICLE_FX_LOOPED_EVOLUTION(fxHandle1, "damage", 1.0f, 0);
-
-			//fireSound.Play(wobject);
-
 			++it;
 		}
 

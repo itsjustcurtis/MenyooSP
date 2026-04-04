@@ -55,11 +55,11 @@ namespace sub::Spooner
 		bool bHeldEntityHasCollision = true;
 		Camera spoonerModeCamera;
 		float spoonerModeCameraCamDistance = 5.0f;
-		eSpoonerModeMode& spoonerModeMode = Settings::SpoonerModeMode;
+		eSpoonerModeMode& spoonerModeMode = Settings::spoonerModeMode;
 
 		bool IsHotkeyPressed()
 		{
-			if (std::find(std::begin(Menu::currentsub_ar), std::end(Menu::currentsub_ar), SUB::SPOONER_MAIN) == std::end(Menu::currentsub_ar))
+			if (std::find(std::begin(Menu::currentArray), std::end(Menu::currentArray), SUB::SPOONER_MAIN) == std::end(Menu::currentArray))
 			{
 				UINT8 index1 = bindsGamepad.first < 50 ? 0 : 2;
 				UINT8 index2 = bindsGamepad.second < 50 ? 0 : 2;
@@ -68,11 +68,11 @@ namespace sub::Spooner
 			return false;
 		}
 
-		ModelPreviewInfoStructure ModelPreviewInfo = { EntityType::ALL, 0, 0, 0,{} };
+		ModelPreviewInfoStructure modelPreviewInfo = { EntityType::ALL, 0, 0, 0,{} };
 		void SpawnModelPreview()
 		{
 			bool bOnTheLine = NETWORK_IS_IN_SESSION() != 0;
-			auto& info = ModelPreviewInfo;
+			auto& info = modelPreviewInfo;
 			if (info.entityType == EntityType::ALL)
 			{
 				if (info.entity != 0)
@@ -166,7 +166,7 @@ namespace sub::Spooner
 						}
 						info.entity.FreezePosition(true);
 						info.entity.SetIsCollisionEnabled(false);
-						info.entity.Alpha_set(120);
+						info.entity.SetAlpha(120);
 						//info.entity.Rotation_set()
 						//info.entity.Position_set(spawnPos);
 					}
@@ -191,29 +191,29 @@ namespace sub::Spooner
 
 		void ResetSelectedEntity()
 		{
-			SelectedEntity.Handle = 0;
+			selectedEntity.handle = 0;
 		}
 		bool GetEntityPtr(GTAentity& inEntity, SpoonerEntity*& outEntity)
 		{
 			outEntity = new SpoonerEntity;
 
-			outEntity->Handle = inEntity;
-			outEntity->Type = (EntityType)inEntity.Type();
-			const Model& outEntity_model = inEntity.Model();
-			outEntity->HashName = outEntity->Type == EntityType::PROP ? get_prop_model_label(outEntity_model)
-				: (outEntity->Type == EntityType::PED ? get_ped_model_label(outEntity_model, true)
-					: get_vehicle_model_label(outEntity_model, true));
-			if (outEntity->HashName.length() == 0) outEntity->HashName = int_to_hexstring(outEntity_model.hash, true);
-			outEntity->Dynamic = !outEntity->Handle.IsPositionFrozen();//outEntity->Type == EntityType::PED || outEntity->Type == EntityType::VEHICLE;
-			//outEntity->LastAnimation.dict.clear();
-			//outEntity->LastAnimation.name.clear();
-			outEntity->IsStill = false;
+			outEntity->handle = inEntity;
+			outEntity->type = (EntityType)inEntity.Type();
+			const Model& outEntityModel = inEntity.Model();
+			outEntity->hashName = outEntity->type == EntityType::PROP ? get_prop_model_label(outEntityModel)
+				: (outEntity->type == EntityType::PED ? GetPedModelLabel(outEntityModel, true)
+					: get_vehicle_model_label(outEntityModel, true));
+			if (outEntity->hashName.length() == 0) outEntity->hashName = IntToHexString(outEntityModel.hash, true);
+			outEntity->dynamic = !outEntity->handle.IsPositionFrozen();//outEntity->type == EntityType::PED || outEntity->type == EntityType::VEHICLE;
+			//outEntity->lastAnimation.dict.clear();
+			//outEntity->lastAnimation.name.clear();
+			outEntity->isStill = false;
 
-			auto idindb = EntityManagement::GetEntityIndexInDb(*outEntity);
-			if (idindb >= 0)
+			auto idInDb = EntityManagement::GetEntityIndexInDb(*outEntity);
+			if (idInDb >= 0)
 			{
 				delete outEntity;
-				outEntity = &Databases::EntityDb[idindb];
+				outEntity = &Databases::EntityDb[idInDb];
 				return true; // Is in db
 			}
 			else
@@ -234,8 +234,8 @@ namespace sub::Spooner
 		{
 			SpoonerEntity* eifoc = nullptr;
 			bool isAlreadyInDb = SpoonerMode::GetEntityPtr(entity, eifoc);
-			SelectedEntity = *eifoc;
-			SelectedEntity.Handle.RequestControl();
+			selectedEntity = *eifoc;
+			selectedEntity.handle.RequestControl();
 			if (!isAlreadyInDb)
 				delete eifoc;
 		}
@@ -261,7 +261,7 @@ namespace sub::Spooner
 					UINT totalNumEntities = (UINT)Databases::EntityDb.size();
 					for (auto& eee : Databases::EntityDb)
 					{
-						switch (eee.Type)
+						switch (eee.type)
 						{
 						case EntityType::PROP: totalNumProps++; break;
 						case EntityType::PED: totalNumPeds++; break;
@@ -305,13 +305,13 @@ namespace sub::Spooner
 
 				if (Menu::bitController) // If controller
 				{
-					float movementSensitivity = Settings::CameraMovementSensitivityGamepad;
+					float movementSensitivity = Settings::cameraMovementSensitivityGamepad;
 					//if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS)) movementSensitivity += 1.36f * movementSensitivity;
 
 					nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
 					nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
 
-					float rotationSensitivity = Settings::CameraRotationSensitivityGamepad;
+					float rotationSensitivity = Settings::cameraRotationSensitivityGamepad;
 					nextRot.z = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR) * rotationSensitivity;
 					nextRot.x = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD) * rotationSensitivity;
 					nextRot.y = !IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_RB) ? (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LB) ? -2.0f : 0.0f) : 2.0f;
@@ -350,12 +350,12 @@ namespace sub::Spooner
 						Menu::add_IB(INPUT_VEH_EXIT, "Open main menu");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_VEH_EXIT))
 						{
-							memset(Menu::currentsub_ar, 0, sizeof(Menu::currentsub_ar));
+							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
 							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentsub_ar[0] = SUB::MAINMENU;
+							Menu::currentArray[0] = SUB::MAINMENU;
 							Menu::currentop_ar[0] = 1;
-							Menu::currentsub_ar_index = 0;
-							Menu::SetSub_new(SUB::SPOONER_MAIN);
+							Menu::currentArrayIndex = 0;
+							Menu::NewSetMenu(SUB::SPOONER_MAIN);
 							Menu::currentop = 2;
 						}
 
@@ -369,12 +369,12 @@ namespace sub::Spooner
 								{
 									newMarkerPtr->m_position.z += (newMarkerPtr->m_scale / 2);
 									SelectedMarker = newMarkerPtr;
-									memset(Menu::currentsub_ar, 0, sizeof(Menu::currentsub_ar));
+									memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
 									memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-									Menu::currentsub_ar[0] = SUB::MAINMENU;
+									Menu::currentArray[0] = SUB::MAINMENU;
 									Menu::currentop_ar[0] = 1;
-									Menu::currentsub_ar_index = 0;
-									Menu::SetSub_new(SUB::SPOONER_MANAGEMARKERS_INMARKER);
+									Menu::currentArrayIndex = 0;
+									Menu::NewSetMenu(SUB::SPOONER_MANAGEMARKERS_INMARKER);
 								}
 							}
 						}
@@ -385,7 +385,7 @@ namespace sub::Spooner
 						DRAW_RECT(0.5f, 0.5f, 0.02f, 0.002f, 0, 255, 0, 255, false);
 						DRAW_RECT(0.5f, 0.5f, 0.001f, 0.03f, 0, 255, 0, 255, false);
 
-						GTAentity* currentEntPtr = bIsSomethingHeld ? &SelectedEntity.Handle : &entityInFrontOfCam;
+						GTAentity* currentEntPtr = bIsSomethingHeld ? &selectedEntity.handle : &entityInFrontOfCam;
 						GTAentity& currentEnt = *currentEntPtr;
 
 						auto indexInDb = EntityManagement::GetEntityIndexInDb(currentEnt);
@@ -401,61 +401,61 @@ namespace sub::Spooner
 								switch (spoonerModeMode)
 								{
 								case eSpoonerModeMode::GroundEase:
-									freeCam.PointAt(SelectedEntity.Handle);
+									freeCam.PointAt(selectedEntity.handle);
 									freeCam.StopPointing();
-									bHeldEntityHasCollision = SelectedEntity.Handle.GetIsCollisionEnabled();
-									SET_ENTITY_COLLISION(SelectedEntity.Handle.Handle(), false, false);
+									bHeldEntityHasCollision = selectedEntity.handle.GetIsCollisionEnabled();
+									SET_ENTITY_COLLISION(selectedEntity.handle.Handle(), false, false);
 									break;
 								case eSpoonerModeMode::Precision:
-									bHeldEntityHasCollision = SelectedEntity.Handle.GetIsCollisionEnabled();
-									freeCam.SetRotation(SelectedEntity.Handle.Rotation_get());
+									bHeldEntityHasCollision = selectedEntity.handle.GetIsCollisionEnabled();
+									freeCam.SetRotation(selectedEntity.handle.Rotation_get());
 									break;
 								}
 							}
 
 							DRAW_RECT(0.5f, 0.5f, 0.004f, 0.008f, 255, 128, 0, 255, false);
 
-							SelectedEntity.Handle.RequestControl();
-							Vector3 r_sl = SelectedEntity.Handle.Rotation_get();
-							Vector3 r_fc = freeCam.Rotation_get();
+							selectedEntity.handle.RequestControl();
+							Vector3 rotSelected = selectedEntity.handle.Rotation_get();
+							Vector3 rotFreeCam = freeCam.Rotation_get();
 							switch (spoonerModeMode)
 							{
 							case eSpoonerModeMode::GroundEase:
 								if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_RS))
-									r_sl.x -= 2.0f; // Decrease pitch RS
+									rotSelected.x -= 2.0f; // Decrease pitch RS
 								if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS))
-									r_sl.x += 2.0f; // Increase pitch LS
-								r_sl.y += nextRot.y; // Increase/Decrease pitch using RB/LB
-								r_sl.z += nextRot.z; // Relative yaw kept constant
-								SelectedEntity.Handle.SetRotation(r_sl);
+									rotSelected.x += 2.0f; // Increase pitch LS
+								rotSelected.y += nextRot.y; // Increase/Decrease pitch using RB/LB
+								rotSelected.z += nextRot.z; // Relative yaw kept constant
+								selectedEntity.handle.SetRotation(rotSelected);
 								break;
 							case eSpoonerModeMode::Precision:
-								SelectedEntity.Handle.SetRotation(r_fc);
+								selectedEntity.handle.SetRotation(rotFreeCam);
 								break;
 							}
-							r_sl = SelectedEntity.Handle.Rotation_get(); // To get -180 to 180 values
+							rotSelected = selectedEntity.handle.Rotation_get(); // To get -180 to 180 values
 
-							const ModelDimensions& md_SelectedEntity = SelectedEntity.Handle.ModelDimensions();
+							const ModelDimensions& mdSelectedEntity = selectedEntity.handle.ModelDimensions();
 							switch (spoonerModeMode)
 							{
 							case eSpoonerModeMode::GroundEase:
 							{
-								//Vector3& geSep = SelectedEntity.Handle.Position_get();
-								//auto& geGroundRay = RaycastResult::Raycast(geSep, Vector3::WorldDown(), max(max(md_SelectedEntity.Dim1.x, md_SelectedEntity.Dim2.x), max(max(md_SelectedEntity.Dim1.y, md_SelectedEntity.Dim2.y), max(md_SelectedEntity.Dim1.z, md_SelectedEntity.Dim2.z))) + 2.0f, IntersectOptions::Everything, SelectedEntity.Handle);
-								float geGroundZ = md_SelectedEntity.Dim1.z;
+								//Vector3& geSep = selectedEntity.handle.Position_get();
+								//auto& geGroundRay = RaycastResult::Raycast(geSep, Vector3::WorldDown(), max(max(mdSelectedEntity.Dim1.x, mdSelectedEntity.Dim2.x), max(max(mdSelectedEntity.Dim1.y, mdSelectedEntity.Dim2.y), max(mdSelectedEntity.Dim1.z, mdSelectedEntity.Dim2.z))) + 2.0f, IntersectOptions::Everything, selectedEntity.handle);
+								float geGroundZ = mdSelectedEntity.Dim1.z;
 								//if (geGroundRay.DidHitAnything())
 								//{
 								//geGroundZ = geGroundRay.HitCoords().DistanceTo(geSep);
 								//}
-								if (abs(r_sl.x) > 150.0f || abs(r_sl.y) > 150.0f)
-									geGroundZ = md_SelectedEntity.Dim2.z;
-								else if (abs(r_sl.x) > 70.0f && abs(r_sl.y) > 70.0f)
-									geGroundZ = (md_SelectedEntity.Dim1.y + md_SelectedEntity.Dim1.x) / 2;
-								else if (abs(r_sl.x) > 70.0f)
-									geGroundZ = md_SelectedEntity.Dim1.y;
-								else if (abs(r_sl.y) > 70.0f)
-									geGroundZ = md_SelectedEntity.Dim1.x;
-								SelectedEntity.Handle.SetPosition(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), SelectedEntity.Handle, 90.0f, 15.0f + md_SelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ));
+								if (abs(rotSelected.x) > 150.0f || abs(rotSelected.y) > 150.0f)
+									geGroundZ = mdSelectedEntity.Dim2.z;
+								else if (abs(rotSelected.x) > 70.0f && abs(rotSelected.y) > 70.0f)
+									geGroundZ = (mdSelectedEntity.Dim1.y + mdSelectedEntity.Dim1.x) / 2;
+								else if (abs(rotSelected.x) > 70.0f)
+									geGroundZ = mdSelectedEntity.Dim1.y;
+								else if (abs(rotSelected.y) > 70.0f)
+									geGroundZ = mdSelectedEntity.Dim1.x;
+								selectedEntity.handle.SetPosition(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), selectedEntity.handle, 90.0f, 15.0f + mdSelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ));
 								break;
 							}
 							case eSpoonerModeMode::Precision:
@@ -463,11 +463,11 @@ namespace sub::Spooner
 									freeCamCamDistance -= 0.1f; // Zoom in RS
 								if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS))
 									freeCamCamDistance += 0.1f; // Zoom out LS
-								Vector3 attachmentOffset = { 0.0f, -md_SelectedEntity.Dim2.y - freeCamCamDistance, 0.0f };
-								freeCam.AttachTo(SelectedEntity.Handle, attachmentOffset);
-								SelectedEntity.Handle.SetPosition(SelectedEntity.Handle.GetOffsetInWorldCoords(nextOffset));
+								Vector3 attachmentOffset = { 0.0f, -mdSelectedEntity.Dim2.y - freeCamCamDistance, 0.0f };
+								freeCam.AttachTo(selectedEntity.handle, attachmentOffset);
+								selectedEntity.handle.SetPosition(selectedEntity.handle.GetOffsetInWorldCoords(nextOffset));
 								if (Settings::bFreezeEntityWhenMovingIt)
-									SelectedEntity.Handle.FreezePosition(Settings::bFreezeEntityWhenMovingIt);
+									selectedEntity.handle.FreezePosition(Settings::bFreezeEntityWhenMovingIt);
 								break;
 							}
 
@@ -494,20 +494,20 @@ namespace sub::Spooner
 									Menu::add_IB(INPUT_FRONTEND_UP, "Add to Database");
 									if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_UP))
 									{
-										EntityManagement::AddEntityToDb(SelectedEntity);
+										EntityManagement::AddEntityToDb(selectedEntity);
 									}
 								}
 
 								if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_RIGHT))
 								{
-									const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(SelectedEntity, isInDb, true, Submenus::_copyEntTexterValue);
+									const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, isInDb, true, Submenus::_copyEntTexterValue);
 									//EntityManagement::AddEntityToDb(copiedEntity);
-									SelectedEntity = copiedEntity;
+									selectedEntity = copiedEntity;
 								}
 								if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LEFT))
 								{
-									SelectedEntity.Handle.RequestControl(600);
-									EntityManagement::DeleteEntity(SelectedEntity);
+									selectedEntity.handle.RequestControl(600);
+									EntityManagement::DeleteEntity(selectedEntity);
 									bIsSomethingHeld = false;
 								}
 							}
@@ -519,11 +519,11 @@ namespace sub::Spooner
 								switch (spoonerModeMode)
 								{
 								case eSpoonerModeMode::GroundEase:
-									SET_ENTITY_COLLISION(SelectedEntity.Handle.Handle(), bHeldEntityHasCollision, true);
+									SET_ENTITY_COLLISION(selectedEntity.handle.Handle(), bHeldEntityHasCollision, true);
 									freeCam.Detach(); // Just in case
 									break;
 								case eSpoonerModeMode::Precision:
-									SET_ENTITY_COLLISION(SelectedEntity.Handle.Handle(), bHeldEntityHasCollision, true);
+									SET_ENTITY_COLLISION(selectedEntity.handle.Handle(), bHeldEntityHasCollision, true);
 									freeCam.Detach();
 									break;
 								}
@@ -549,12 +549,12 @@ namespace sub::Spooner
 								{
 									const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(GetEntityPtrValue(currentEnt), isInDb, true, Submenus::_copyEntTexterValue);
 									//EntityManagement::AddEntityToDb(copiedEntity);
-									SelectedEntity = copiedEntity;
+									selectedEntity = copiedEntity;
 								}
 								else if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LEFT))
 								{
 									auto entPtrVal = GetEntityPtrValue(currentEnt);
-									entPtrVal.Handle.RequestControl(600);
+									entPtrVal.handle.RequestControl(600);
 									EntityManagement::DeleteEntity(entPtrVal);
 									bIsSomethingHeld = false;
 								}
@@ -566,12 +566,12 @@ namespace sub::Spooner
 							{
 								SpoonerMode::SetAsSelectedEntity(currentEnt);
 							}
-							memset(Menu::currentsub_ar, 0, sizeof(Menu::currentsub_ar));
+							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
 							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentsub_ar[0] = SUB::MAINMENU;
+							Menu::currentArray[0] = SUB::MAINMENU;
 							Menu::currentop_ar[0] = 1;
-							Menu::currentsub_ar_index = 0;
-							Menu::SetSub_new(SUB::SPOONER_SELECTEDENTITYOPS);
+							Menu::currentArrayIndex = 0;
+							Menu::NewSetMenu(SUB::SPOONER_SELECTEDENTITYOPS);
 						}
 					}
 					else
@@ -582,7 +582,7 @@ namespace sub::Spooner
 				}
 				else // If keyboard + mouse
 				{
-					float movementSensitivity = Settings::CameraMovementSensitivityKeyboard;
+					float movementSensitivity = Settings::cameraMovementSensitivityKeyboard;
 					if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
 						movementSensitivity = 4.0f * movementSensitivity;
 
@@ -590,7 +590,7 @@ namespace sub::Spooner
 					nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
 					nextOffset.z = IsKeyDown(VirtualKey::X) ? movementSensitivity / 2 : IsKeyDown(VirtualKey::Z) ? -movementSensitivity / 2 : 0.0f;
 
-					float rotationSensitivity = Settings::CameraRotationSensitivityMouse;
+					float rotationSensitivity = Settings::cameraRotationSensitivityMouse;
 					nextRot.z = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR) * rotationSensitivity;
 					nextRot.x = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD) * rotationSensitivity;
 					nextRot.y = !IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? (IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -2.0f : 0.0f) : 2.0f;
@@ -629,12 +629,12 @@ namespace sub::Spooner
 						Menu::add_IB(INPUT_VEH_EXIT, "Open main menu");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_VEH_EXIT))
 						{
-							memset(Menu::currentsub_ar, 0, sizeof(Menu::currentsub_ar));
+							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
 							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentsub_ar[0] = SUB::MAINMENU;
+							Menu::currentArray[0] = SUB::MAINMENU;
 							Menu::currentop_ar[0] = 1;
-							Menu::currentsub_ar_index = 0;
-							Menu::SetSub_new(SUB::SPOONER_MAIN);
+							Menu::currentArrayIndex = 0;
+							Menu::NewSetMenu(SUB::SPOONER_MAIN);
 							Menu::currentop = 2;
 						}
 
@@ -648,12 +648,12 @@ namespace sub::Spooner
 								{
 									newMarkerPtr->m_position.z += (newMarkerPtr->m_scale / 2);
 									SelectedMarker = newMarkerPtr;
-									memset(Menu::currentsub_ar, 0, sizeof(Menu::currentsub_ar));
+									memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
 									memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-									Menu::currentsub_ar[0] = SUB::MAINMENU;
+									Menu::currentArray[0] = SUB::MAINMENU;
 									Menu::currentop_ar[0] = 1;
-									Menu::currentsub_ar_index = 0;
-									Menu::SetSub_new(SUB::SPOONER_MANAGEMARKERS_INMARKER);
+									Menu::currentArrayIndex = 0;
+									Menu::NewSetMenu(SUB::SPOONER_MANAGEMARKERS_INMARKER);
 								}
 							}
 						}
@@ -664,7 +664,7 @@ namespace sub::Spooner
 						DRAW_RECT(0.5f, 0.5f, 0.02f, 0.002f, 0, 255, 0, 255, false);
 						DRAW_RECT(0.5f, 0.5f, 0.001f, 0.03f, 0, 255, 0, 255, false);
 
-						GTAentity* currentEntPtr = bIsSomethingHeld ? &SelectedEntity.Handle : &entityInFrontOfCam;
+						GTAentity* currentEntPtr = bIsSomethingHeld ? &selectedEntity.handle : &entityInFrontOfCam;
 						GTAentity& currentEnt = *currentEntPtr;
 
 						auto indexInDb = EntityManagement::GetEntityIndexInDb(currentEnt);
@@ -680,61 +680,61 @@ namespace sub::Spooner
 								switch (spoonerModeMode)
 								{
 								case eSpoonerModeMode::GroundEase:
-									freeCam.PointAt(SelectedEntity.Handle);
+									freeCam.PointAt(selectedEntity.handle);
 									freeCam.StopPointing();
-									bHeldEntityHasCollision = SelectedEntity.Handle.GetIsCollisionEnabled();
-									SET_ENTITY_COLLISION(SelectedEntity.Handle.Handle(), false, false);
+									bHeldEntityHasCollision = selectedEntity.handle.GetIsCollisionEnabled();
+									SET_ENTITY_COLLISION(selectedEntity.handle.Handle(), false, false);
 									break;
 								case eSpoonerModeMode::Precision:
-									bHeldEntityHasCollision = SelectedEntity.Handle.GetIsCollisionEnabled();
-									freeCam.SetRotation(SelectedEntity.Handle.Rotation_get());
+									bHeldEntityHasCollision = selectedEntity.handle.GetIsCollisionEnabled();
+									freeCam.SetRotation(selectedEntity.handle.Rotation_get());
 									break;
 								}
 							}
 
 							DRAW_RECT(0.5f, 0.5f, 0.004f, 0.008f, 255, 128, 0, 255, false);
 
-							SelectedEntity.Handle.RequestControl();
-							Vector3 r_sl = SelectedEntity.Handle.Rotation_get();
-							Vector3 r_fc = freeCam.Rotation_get();
+							selectedEntity.handle.RequestControl();
+							Vector3 rotSelected = selectedEntity.handle.Rotation_get();
+							Vector3 rotFreeCam = freeCam.Rotation_get();
 							switch (spoonerModeMode)
 							{
 							case eSpoonerModeMode::GroundEase:
 								if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))
-									r_sl.x -= 2.0f; // Decrease pitch ScrollDown
+									rotSelected.x -= 2.0f; // Decrease pitch ScrollDown
 								if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
-									r_sl.x += 2.0f; // Increase pitch ScrollUp
-								r_sl.y += nextRot.y; // Increase/Decrease pitch using RB/LB
-								r_sl.z += nextRot.z; // Relative yaw kept constant
-								SelectedEntity.Handle.SetRotation(r_sl);
+									rotSelected.x += 2.0f; // Increase pitch ScrollUp
+								rotSelected.y += nextRot.y; // Increase/Decrease pitch using RB/LB
+								rotSelected.z += nextRot.z; // Relative yaw kept constant
+								selectedEntity.handle.SetRotation(rotSelected);
 								break;
 							case eSpoonerModeMode::Precision:
-								SelectedEntity.Handle.SetRotation(r_fc);
+								selectedEntity.handle.SetRotation(rotFreeCam);
 								break;
 							}
-							r_sl = SelectedEntity.Handle.Rotation_get(); // To get -180 to 180 values
+							rotSelected = selectedEntity.handle.Rotation_get(); // To get -180 to 180 values
 
-							const ModelDimensions& md_SelectedEntity = SelectedEntity.Handle.ModelDimensions();
+							const ModelDimensions& mdSelectedEntity = selectedEntity.handle.ModelDimensions();
 							switch (spoonerModeMode)
 							{
 							case eSpoonerModeMode::GroundEase:
 							{
-								//Vector3& geSep = SelectedEntity.Handle.Position_get();
-								//auto& geGroundRay = RaycastResult::Raycast(geSep, Vector3::WorldDown(), max(max(md_SelectedEntity.Dim1.x, md_SelectedEntity.Dim2.x), max(max(md_SelectedEntity.Dim1.y, md_SelectedEntity.Dim2.y), max(md_SelectedEntity.Dim1.z, md_SelectedEntity.Dim2.z))) + 2.0f, IntersectOptions::Everything, SelectedEntity.Handle);
-								float geGroundZ = md_SelectedEntity.Dim1.z;
+								//Vector3& geSep = selectedEntity.handle.Position_get();
+								//auto& geGroundRay = RaycastResult::Raycast(geSep, Vector3::WorldDown(), max(max(mdSelectedEntity.Dim1.x, mdSelectedEntity.Dim2.x), max(max(mdSelectedEntity.Dim1.y, mdSelectedEntity.Dim2.y), max(mdSelectedEntity.Dim1.z, mdSelectedEntity.Dim2.z))) + 2.0f, IntersectOptions::Everything, selectedEntity.handle);
+								float geGroundZ = mdSelectedEntity.Dim1.z;
 								//if (geGroundRay.DidHitAnything())
 								//{
 								//geGroundZ = geGroundRay.HitCoords().DistanceTo(geSep);
 								//}
-								if (abs(r_sl.x) > 150.0f || abs(r_sl.y) > 150.0f)
-									geGroundZ = md_SelectedEntity.Dim2.z;
-								else if (abs(r_sl.x) > 70.0f && abs(r_sl.y) > 70.0f)
-									geGroundZ = (md_SelectedEntity.Dim1.y + md_SelectedEntity.Dim1.x) / 2;
-								else if (abs(r_sl.x) > 70.0f)
-									geGroundZ = md_SelectedEntity.Dim1.y;
-								else if (abs(r_sl.y) > 70.0f)
-									geGroundZ = md_SelectedEntity.Dim1.x;
-								SelectedEntity.Handle.SetPosition(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), SelectedEntity.Handle, 90.0f, 15.0f + md_SelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ));
+								if (abs(rotSelected.x) > 150.0f || abs(rotSelected.y) > 150.0f)
+									geGroundZ = mdSelectedEntity.Dim2.z;
+								else if (abs(rotSelected.x) > 70.0f && abs(rotSelected.y) > 70.0f)
+									geGroundZ = (mdSelectedEntity.Dim1.y + mdSelectedEntity.Dim1.x) / 2;
+								else if (abs(rotSelected.x) > 70.0f)
+									geGroundZ = mdSelectedEntity.Dim1.y;
+								else if (abs(rotSelected.y) > 70.0f)
+									geGroundZ = mdSelectedEntity.Dim1.x;
+								selectedEntity.handle.SetPosition(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), selectedEntity.handle, 90.0f, 15.0f + mdSelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ));
 								break;
 							}
 							case eSpoonerModeMode::Precision:
@@ -742,11 +742,11 @@ namespace sub::Spooner
 									freeCamCamDistance -= 0.23f; // Zoom in RS
 								if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))
 									freeCamCamDistance += 0.23f; // Zoom out LS
-								Vector3 attachmentOffset = { 0.0f, -md_SelectedEntity.Dim2.y - freeCamCamDistance, 0.0f };
-								freeCam.AttachTo(SelectedEntity.Handle, attachmentOffset);
-								SelectedEntity.Handle.SetPosition(SelectedEntity.Handle.GetOffsetInWorldCoords(nextOffset));
+								Vector3 attachmentOffset = { 0.0f, -mdSelectedEntity.Dim2.y - freeCamCamDistance, 0.0f };
+								freeCam.AttachTo(selectedEntity.handle, attachmentOffset);
+								selectedEntity.handle.SetPosition(selectedEntity.handle.GetOffsetInWorldCoords(nextOffset));
 								if (Settings::bFreezeEntityWhenMovingIt)
-									SelectedEntity.Handle.FreezePosition(Settings::bFreezeEntityWhenMovingIt);
+									selectedEntity.handle.FreezePosition(Settings::bFreezeEntityWhenMovingIt);
 								break;
 							}
 
@@ -775,20 +775,20 @@ namespace sub::Spooner
 									Menu::add_IB(INPUT_FRONTEND_UP, "Add to Database");
 									if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_UP))
 									{
-										EntityManagement::AddEntityToDb(SelectedEntity);
+										EntityManagement::AddEntityToDb(selectedEntity);
 									}
 								}
 
 								if (IS_DISABLED_CONTROL_JUST_PRESSED(0, INPUT_LOOK_BEHIND))
 								{
-									const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(SelectedEntity, isInDb, true, Submenus::_copyEntTexterValue);
+									const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, isInDb, true, Submenus::_copyEntTexterValue);
 									//EntityManagement::AddEntityToDb(copiedEntity);
-									SelectedEntity = copiedEntity;
+									selectedEntity = copiedEntity;
 								}
 								if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_CREATOR_DELETE))
 								{
-									SelectedEntity.Handle.RequestControl(600);
-									EntityManagement::DeleteEntity(SelectedEntity);
+									selectedEntity.handle.RequestControl(600);
+									EntityManagement::DeleteEntity(selectedEntity);
 									bIsSomethingHeld = false;
 								}
 							}
@@ -800,11 +800,11 @@ namespace sub::Spooner
 								switch (spoonerModeMode)
 								{
 								case eSpoonerModeMode::GroundEase:
-									SET_ENTITY_COLLISION(SelectedEntity.Handle.Handle(), bHeldEntityHasCollision, true);
+									SET_ENTITY_COLLISION(selectedEntity.handle.Handle(), bHeldEntityHasCollision, true);
 									freeCam.Detach(); // Just in case
 									break;
 								case eSpoonerModeMode::Precision:
-									SET_ENTITY_COLLISION(SelectedEntity.Handle.Handle(), bHeldEntityHasCollision, true);
+									SET_ENTITY_COLLISION(selectedEntity.handle.Handle(), bHeldEntityHasCollision, true);
 									freeCam.Detach();
 									break;
 								}
@@ -830,12 +830,12 @@ namespace sub::Spooner
 								{
 									const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(GetEntityPtrValue(currentEnt), isInDb, true, Submenus::_copyEntTexterValue);
 									//EntityManagement::AddEntityToDb(copiedEntity);
-									SelectedEntity = copiedEntity;
+									selectedEntity = copiedEntity;
 								}
 								else if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_CREATOR_DELETE))
 								{
 									auto entPtrVal = GetEntityPtrValue(currentEnt);
-									entPtrVal.Handle.RequestControl(600);
+									entPtrVal.handle.RequestControl(600);
 									EntityManagement::DeleteEntity(entPtrVal);
 									bIsSomethingHeld = false;
 								}
@@ -847,12 +847,12 @@ namespace sub::Spooner
 							{
 								SpoonerMode::SetAsSelectedEntity(currentEnt);
 							}
-							memset(Menu::currentsub_ar, 0, sizeof(Menu::currentsub_ar));
+							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
 							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentsub_ar[0] = SUB::MAINMENU;
+							Menu::currentArray[0] = SUB::MAINMENU;
 							Menu::currentop_ar[0] = 1;
-							Menu::currentsub_ar_index = 0;
-							Menu::SetSub_new(SUB::SPOONER_SELECTEDENTITYOPS);
+							Menu::currentArrayIndex = 0;
+							Menu::NewSetMenu(SUB::SPOONER_SELECTEDENTITYOPS);
 						}
 					}
 					else
@@ -889,12 +889,12 @@ namespace sub::Spooner
 			CamTick();
 
 			if (Settings::bShowBoxAroundSelectedEntity)
-				EntityManagement::ShowBoxAroundEntity(SelectedEntity.Handle);
+				EntityManagement::ShowBoxAroundEntity(selectedEntity.handle);
 
 			for (auto& ent : Databases::EntityDb)
 			{
-				if (ent.Handle.Exists())
-					ent.TaskSequence.Tick(reinterpret_cast<void*>(&ent)); //ent.TaskSequence.Tick((GTAped)ent.Handle);
+				if (ent.handle.Exists())
+					ent.taskSequence.Tick(reinterpret_cast<void*>(&ent)); //ent.taskSequence.Tick((GTAped)ent.handle);
 			}
 
 			if (!Databases::MarkerDb.empty())
@@ -917,7 +917,7 @@ namespace sub::Spooner
 		void TurnOff()
 		{
 			SpoonerMode::bEnabled = false;
-			auto& info = ModelPreviewInfo;
+			auto& info = modelPreviewInfo;
 			for (auto it = info.previousEntities.begin(); it != info.previousEntities.end();)
 			{
 				GTAentity e = *it;

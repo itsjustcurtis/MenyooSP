@@ -27,7 +27,7 @@ namespace sub::Spooner
 	namespace MenuOptions
 	{
 		void AddOption_AddProp(const std::string& text, const GTAmodel::Model& model);
-		void AddOption_AddPed(const std::string& text, const GTAmodel::Model& model);
+		void AddOptionAddPed(const std::string& text, const GTAmodel::Model& model);
 		void AddOption_AddVehicle(const std::string& text, const GTAmodel::Model& model);
 
 		void AddOption_RelationshipTextScroller();

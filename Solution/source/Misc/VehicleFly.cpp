@@ -37,16 +37,6 @@ namespace VehicleFly
 		PrintFlyInstructions();
 	}
 
-	/*void VehicleFly::oStationary()
-	{
-		float speed = vehicle.Speed_get() * 3.6f;
-
-		if (speed > 5)
-		{
-			//vehicle.SetForwardSpeed((speed - 0.5f) / 3.6f);
-			vehicle.SetForwardSpeed(GET_RANDOM_FLOAT_IN_RANGE(-1, 1) / 3.6f);
-		}
-	}*/
 	void VehicleFly::GoUp(float const& control)
 	{
 		if (!control)
@@ -61,71 +51,49 @@ namespace VehicleFly
 		PTFX::TriggerPTFX(fxAsset, fxName, vehicle, Vector3(vehicle_md.Dim1.x, -vehicle_md.Dim2.y, -vehicle_md.Dim2.z), Vector3(90, 0, 0), fxScale);
 
 		vehicle.ApplyForceRelative(Vector3(0, 0, 1.0f * control));
-
-		//vehicle.Position_set(vehicle.GetOffsetInWorldCoords(0, 0, 1.0f * control));
 	}
+
 	void VehicleFly::GoDown(float const& control)
 	{
 		if (!control)
 			return;
 
 		vehicle.ApplyForceRelative(Vector3(0, 0, -1.0f * control));
-
-		//vehicle.Position_set(vehicle.GetOffsetInWorldCoords(0, 0, -1.0f * control));
 	}
+
 	void VehicleFly::GoForward(float const& control)
 	{
 		if (!control)
 			return;
 
-		//PTFX::trigger_ptfx_1("scr_trevor1", "scr_trev1_trailer_boosh", vehicle, Vector3(0, -vehicle_md.Dim2.y, -0.2f), vehicle.Rotation_get() * Vector3(1, 1, -1), 0.5f);
 		PTFX::TriggerPTFX("scr_carsteal4", "scr_carsteal4_wheel_burnout", vehicle, Vector3(-vehicle_md.Dim1.x, -vehicle_md.Dim1.y, -0.2f), vehicle.Rotation_get() * Vector3(1, 1, -1), 0.08f);
 		PTFX::TriggerPTFX("scr_carsteal4", "scr_carsteal4_wheel_burnout", vehicle, Vector3(vehicle_md.Dim2.x, -vehicle_md.Dim1.y, -0.2f), vehicle.Rotation_get() * Vector3(1, 1, -1), 0.08f);
 
-		//vehicle.Position_set(vehicle.GetOffsetInWorldCoords(0, 1.0f * control, 0));
 		vehicle.ApplyForceRelative(Vector3(0, 1.0f * control, 0));
-
-		//Vector3& vehRot = Vector3(0, 0, vehicle.Heading_get()).RotToDir(); // Just heading
-		//vehicle.ApplyForce(vehRot);
 	}
+
 	void VehicleFly::GoBackward(float const& control)
 	{
 		if (!control)
 			return;
 
-		//PTFX::trigger_ptfx_1("scr_trevor1", "scr_trev1_trailer_boosh", vehicle, Vector3(0, vehicle_md.Dim1.y, -0.2f), vehicle.Rotation_get(), 0.5f);
-
-		//vehicle.Position_set(vehicle.GetOffsetInWorldCoords(0, -1.0f * control, 0));
 		vehicle.ApplyForceRelative(Vector3(0, -1.0f * control, 0));
-
-		//Vector3& vehRot = Vector3(0, 0, vehicle.Heading_get()).RotToDir(); // Just heading
-		//vehicle.ApplyForce(-vehRot);
 	}
+
 	void VehicleFly::GoRight(float const& control)
 	{
 		if (!control)
 			return;
 
-		//vehicle.ApplyForceRelative(Vector3(0, 0, -0.4f), Vector3(0, vehicle_md.Dim1.y - 0.2f, 0));
-		//vehicle.ApplyForce(Vector3(control, 0, 0), Vector3(-vehicle_md.Dim1.x + 0.2f, vehicle_md.Dim2.y - 0.2f, 0));
-
-		//vehicle.ApplyForceRelative(Vector3(control / 2, 0, 0), Vector3(control / 2, 0, 0));
 		vehicle.ApplyForceRelative(Vector3(1.2f * control, 0, 0));
-
-		//vehicle.Position_set(vehicle.GetOffsetInWorldCoords(1.0f * control, 0, 0));
 	}
+
 	void VehicleFly::GoLeft(float const& control)
 	{
 		if (!control)
 			return;
 
-		//vehicle.ApplyForceRelative(Vector3(0, 0, -0.4f), Vector3(0, vehicle_md.Dim1.y - 0.2f, 0));
-		//vehicle.ApplyForce(Vector3(control, 0, 0), Vector3(vehicle_md.Dim1.x - 0.2f, vehicle_md.Dim2.y - 0.2f, 0));
-
-		//vehicle.ApplyForceRelative(Vector3(control / 2, 0, 0), Vector3(control / 2, 0, 0));
 		vehicle.ApplyForceRelative(Vector3(-1.2 * control, 0, 0));
-
-		//vehicle.Position_set(vehicle.GetOffsetInWorldCoords(-1.0f * control, 0, 0));
 	}
 
 	float VehicleFly::Pressed_GoUp()
@@ -207,8 +175,6 @@ namespace VehicleFly
 			INPUT_VEH_BRAKE,
 			INPUT_VEH_HANDBRAKE,
 			INPUT_SPRINT,
-			//INPUT_SCRIPT_LEFT_AXIS_X,
-			//INPUT_SCRIPT_LEFT_AXIS_Y,
 		};
 
 		for (auto& control : list)
@@ -234,7 +200,6 @@ namespace VehicleFly
 
 		DisableDrivingControls();
 
-		//HoverTick();
 
 		vehicle.SetRotation(GameplayCamera::GetRotation());
 
@@ -245,18 +210,11 @@ namespace VehicleFly
 		float bGoRight = Pressed_GoRight();
 		float bGoLeft = Pressed_GoLeft();
 
-		/*if (!bGoUp && !bGoDown && !bGoForward && !bGoBackward && !bGoRight && !bGoLeft)
-		{
-		GoStationary();
-		}*/
 		if (bGoUp || bGoDown || bGoForward || bGoBackward || bGoRight || bGoLeft)
 		{
 			PLAY_SOUND_FROM_ENTITY(-1, "DISTANT_RACERS", vehicle.Handle(), "ROAD_RACE_SOUNDSET", 0, 0);
 			PLAY_SOUND_FROM_ENTITY(0, "GENERATOR", vehicle.Handle(), "THE_FERRIS_WHALE_SOUNDSET", 0, 0);
 		}
-
-		// NEED LOOPED PTFX, NOT NON LOOPED PTFX
-		//PTFX::trigger_ptfx_1("core", "ent_sht_flame", vehicle, Vector3(0, -vehicle_md.Dim2.y, -0.14f), vehicle.Rotation_get() * -1, 0.3f);
 
 		GoUp(bGoUp);
 		GoDown(bGoDown);
@@ -267,8 +225,7 @@ namespace VehicleFly
 
 
 	}
-	//void VehicleFly::HoverTick()
-
+	
 	void VehicleFly::PrintFlyInstructions()
 	{
 		const bool& c = Menu::bitController;
