@@ -539,7 +539,6 @@ void Menu::while_opened()
 	// Scroll up
 	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Up))
 	{
-		addlog(ige::LogType::LOG_TRACE, "Up Pressed, moving selection up");
 		if (currentop <= 1)
 			Bottom();
 		else
@@ -549,7 +548,6 @@ void Menu::while_opened()
 	// Scroll down
 	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Down))
 	{
-		addlog(ige::LogType::LOG_TRACE, "Down Pressed, moving selection down");
 		if (currentop >= totalop)
 			Top();
 		else
@@ -559,7 +557,6 @@ void Menu::while_opened()
 	// B press
 	if (MenuPressTimer::IsButtonTapped(MenuPressTimer::Button::Back))
 	{
-		addlog(ige::LogType::LOG_TRACE, "Back Pressed, returning to previous menu");
 		if (currentsub == SUB::MAINMENU)
 			SetSub_closed();
 		else
@@ -569,7 +566,6 @@ void Menu::while_opened()
 	// Binds press
 	if (isBinds())//&& currentsub != SUB::MAINMENU)
 	{
-		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, closing Menyoo");
 		SetSub_closed();
 	}
 
@@ -589,7 +585,6 @@ void Menu::Up(bool playSound)
 {
 	currentop--;
 	currentop_w_breaks--;
-	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 1;
@@ -598,7 +593,6 @@ void Menu::Down(bool playSound)
 {
 	currentop++;
 	currentop_w_breaks++;
-	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
@@ -607,7 +601,6 @@ void Menu::Bottom(bool playSound)
 {
 	currentop = totalop;
 	currentop_w_breaks = totalop;
-	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 1;
@@ -616,7 +609,6 @@ void Menu::Top(bool playSound)
 {
 	currentop = 1;
 	currentop_w_breaks = 1;
-	addlog(ige::LogType::LOG_TRACE, "Moved to option " + std::to_string(currentop));
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	breakscroll = 2;
