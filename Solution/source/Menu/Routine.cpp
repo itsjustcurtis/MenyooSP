@@ -179,17 +179,18 @@ inline void MenyooMain()
 	addlog(ige::LogType::LOG_TRACE, "Populate Cutscene Labels");
 	sub::CutscenePlayer_catind::PopulateCutsceneLabels();
 
-	srand(GetTickCount());
-	SET_RANDOM_SEED(GetTickCount());
-	g_MenyooConfigTick = GetTickCount();
-	g_FaderTick = GetTickCount();
-	g_NeonFaderTick = GetTickCount();
-	g_NeonSliderTick = GetTickCount();
-	g_NeonShifterTick = GetTickCount();
-	g_NeonHeartBeatTick = GetTickCount();
-	g_SpinTick = GetTickCount();
-	g_FwkTick = GetTickCount();
-	g_FlashTick = GetTickCount();
+	DWORD tickNow = GetTickCount();
+	srand(tickNow);
+	SET_RANDOM_SEED(tickNow);
+	g_MenyooConfigTick = tickNow;
+	g_FaderTick = tickNow;
+	g_NeonFaderTick = tickNow;
+	g_NeonSliderTick = tickNow;
+	g_NeonShifterTick = tickNow;
+	g_NeonHeartBeatTick = tickNow;
+	g_SpinTick = tickNow;
+	g_FwkTick = tickNow;
+	g_FlashTick = tickNow;
 
 
 	addlog(ige::LogType::LOG_TRACE, "Check Valid for Block Vehicles");
@@ -217,15 +218,15 @@ inline void MenyooMain()
 			addlog(ige::LogType::LOG_TRACE, "First Tick - Load MenyooConfig");
 		TickMenyooConfig();
 		if (firstTick)
-			addlog(ige::LogType::LOG_TRACE, "First Tick - Rainbow Fader");
-		TickRainbowFader();
-		TickNeonFlashAnim();
-		TickNeonFadeAnim();
-		TickNeonSlideAnim();
-		TickNeonShiftAnim();
-		TickNeonSpinAnim();
-		TickNeonFwkAnim();
-		TickNeonHeartbeatAnim();
+			addlog(ige::LogType::LOG_TRACE, "First Tick - Neonanims");
+		if (loop_neon_rgb)         TickRainbowFader();
+		if (loop_neon_fade == 1)   TickNeonFadeAnim();
+		if (loop_neon_fade == 2)   TickNeonHeartbeatAnim();
+		if (loop_neon_fade == 3)   TickNeonShiftAnim();
+		if (loop_neon_fade == 4)   TickNeonSlideAnim();
+		if (loop_neon_flash == 2 || loop_neon_flash == 3) TickNeonSpinAnim();
+		if (loop_neon_flash == 4)  TickNeonFwkAnim();
+		if (loop_neon_flash == 1)  TickNeonFlashAnim();
 		WAIT(0);
 		if (firstTick)
 			addlog(ige::LogType::LOG_TRACE, "First Tick - looping");
@@ -258,10 +259,11 @@ void TickMenyooConfig()
 
 void TickRainbowFader()
 {
+	const DWORD now = GetTickCount();
 	static bool firstTick = true;
 	if (firstTick)
 		addlog(ige::LogType::LOG_TRACE, "First Tick - Run TickRainbowFader");
-	if (GetTickCount() > g_FaderTick + 20U) {
+	if (now > g_FaderTick + 20U) {
 		auto& colour = g_fadedRGB;
 		if (colour.R > 0 && colour.B == 0)
 		{
@@ -280,27 +282,31 @@ void TickRainbowFader()
 		}
 		firstTick = false;
 
-		g_FaderTick = GetTickCount();
+		g_FaderTick = now;
+		s_neonDirty = true;
 	}
 }
 
 void TickNeonFlashAnim()
 {
-	if (GetTickCount() >= g_FlashTick + loop_neon_delay)
+	const DWORD now = GetTickCount();
+	if (now >= g_FlashTick + loop_neon_delay)
 	{
 		auto& neonpower = g_neonFlash;
 		neonpower = !neonpower;
 
-		g_FlashTick = GetTickCount();
+		g_FlashTick = now;
+		s_neonDirty = true;
 	}
 }
 void TickNeonFadeAnim()
 {
-	if (GetTickCount() > g_NeonFaderTick + 20U) 
+	const DWORD now = GetTickCount();
+	if (now > g_NeonFaderTick + 20U)
 	{
 		auto& fade = g_neonFade;
 		float loop_fade_multiplier = 1.0f;
-		int time = GetTickCount() % (2 * loop_neon_delay);
+		int time = now % (2 * loop_neon_delay);
 		if (time > 0)
 			loop_fade_multiplier = 0.5 * (cos((3.142 * time) / loop_neon_delay) + 1);
 		else
@@ -308,44 +314,50 @@ void TickNeonFadeAnim()
 		fade.R = g_setNeonColour.R * loop_fade_multiplier;
 		fade.G = g_setNeonColour.G * loop_fade_multiplier;
 		fade.B = g_setNeonColour.B * loop_fade_multiplier;
-		g_NeonFaderTick = GetTickCount();
+		g_NeonFaderTick = now;
+		s_neonDirty = true;
 	}
 
 }
 void TickNeonSlideAnim()
 {
-	if (GetTickCount() > g_NeonSliderTick + 20U)
+	const DWORD now = GetTickCount();
+	if (now > g_NeonSliderTick + 20U)
 	{
 		auto& slide = g_neonSlide;
 		float loop_slide_multiplier = 1.0f;
-		int time = GetTickCount() % (2 * loop_neon_delay);
+		int time = now % (2 * loop_neon_delay);
 		loop_slide_multiplier = ((abs(1.2*tanh(1.2 * sin(((0.5 * 3.142 * time / loop_neon_delay))))) - 1) * floor(cos(3.142 * ((time / loop_neon_delay) + 0.5)))) + (1.2*(-(abs(tanh(1.2 * cos(((0.5 * 3.142 * time) / loop_neon_delay)))))*floor(sin(((3.142 * time) / loop_neon_delay)))));
 		slide.R = g_setNeonColour.R * loop_slide_multiplier;
 		slide.G = g_setNeonColour.G * loop_slide_multiplier;
 		slide.B = g_setNeonColour.B * loop_slide_multiplier;
-		g_NeonSliderTick = GetTickCount();
+		g_NeonSliderTick = now;
+		s_neonDirty = true;
 	}
 
 }
 void TickNeonShiftAnim()
 {
-	if (GetTickCount() > g_NeonShifterTick + 20U)
+	const DWORD now = GetTickCount();
+	if (now > g_NeonShifterTick + 20U)
 	{
 		auto& shift = g_neonShift;
-		int time = GetTickCount() % (2*loop_neon_delay);
+		int time = now % (2*loop_neon_delay);
 		shift.R = (96 - (0.75 * g_setNeonColour.R)) * (sin((3.142 * time) / loop_neon_delay)) + 96 + (0.25 * g_setNeonColour.R);
 		shift.G = (96 - (0.75 * g_setNeonColour.G)) * (sin((3.142 * time) / loop_neon_delay)) + 96 + (0.25 * g_setNeonColour.G);
 		shift.B = (96 - 0.75 * (g_setNeonColour.B)) * (sin((3.142 * time) / loop_neon_delay)) + 96 + (0.25 * g_setNeonColour.B);
-		g_NeonShifterTick = GetTickCount();
+		g_NeonShifterTick = now;
+		s_neonDirty = true;
 	}
 
 }
 void TickNeonHeartbeatAnim() {
-	if (GetTickCount() > g_NeonHeartBeatTick + 20U) 
+	const DWORD now = GetTickCount();
+	if (now > g_NeonHeartBeatTick + 20U) 
 	{
 		float loop_heart_multiplier = 1.0f;
 		auto& fade = g_neonHeart;
-		int time = GetTickCount() % (loop_neon_delay);
+		int time = now % (loop_neon_delay);
 		if (time < loop_neon_delay / 2)
 			loop_heart_multiplier = 1 - abs(((cos((3.142 * (time)) / loop_neon_delay * 4))));
 		else
@@ -353,16 +365,22 @@ void TickNeonHeartbeatAnim() {
 		fade.R = g_setNeonColour.R * loop_heart_multiplier;
 		fade.G = g_setNeonColour.G * loop_heart_multiplier;
 		fade.B = g_setNeonColour.B * loop_heart_multiplier;
-		g_NeonHeartBeatTick = GetTickCount();
+		g_NeonHeartBeatTick = now;
+		s_neonDirty = true;
 	}
 }
 void TickNeonSpinAnim()
 {
-	if (GetTickCount() > g_SpinTick + (loop_neon_delay / 4))
+	const DWORD now = GetTickCount();
+	if (now > g_SpinTick + (loop_neon_delay / 4))
 	{
 		auto& spindex = g_neonSpin;
 		auto& spindex2 = g_neonSpinBack;
-		switch (spindex2)
+		static constexpr int kSpinNext[] = { 2, 3, 1, 0 }; // 0→2→1→3→0
+		static constexpr int kSpinBackNext[] = { 3, 2, 0, 1 }; // 0→3→1→2→0
+		spindex = kSpinNext[spindex];
+		spindex2 = kSpinBackNext[spindex2];
+		/*switch (spindex2)
 		{
 		case 0:
 		{
@@ -407,16 +425,18 @@ void TickNeonSpinAnim()
 			spindex = 0;
 			break;
 		}
-		}
-		g_SpinTick = GetTickCount();
+		}*/
+		g_SpinTick = now;
+		s_neonDirty = true;
 	}
 }
 void TickNeonFwkAnim()
 {
-	if (GetTickCount() > g_FwkTick + 20U)
+	const DWORD now = GetTickCount();
+	if (now > g_FwkTick + 20U)
 	{
 		auto& fwindex = g_neonFwk;
-		int time = GetTickCount() % loop_neon_delay;
+		int time = now % loop_neon_delay;
 		int step = time/(loop_neon_delay/20);
 		switch (step)
 		{
@@ -461,7 +481,8 @@ void TickNeonFwkAnim()
 			break;
 		}
 		}
-		g_FwkTick = GetTickCount();
+		g_FwkTick = now;
+		s_neonDirty = true;
 	}
 }
 
@@ -652,6 +673,8 @@ bool vehicleDisableSiren = false;
 bool fireworksDisplay = false;
 bool bitInfiniteAmmo = false; 
 bool selfInfiniteParachutes = false;
+
+bool s_neonDirty = false;
 
 extern int loop_neon_fade = 0, loop_neon_flash = 0, loop_neon_delay = 1000;
 
@@ -2568,6 +2591,7 @@ void SetVehicleRainbowMode(GTAvehicle vehicle, bool useFader)
 }
 void set_vehicle_neon_anim(GTAvehicle vehicle)
 {
+	addlog(ige::LogType::LOG_TRACE, "set_vehicle_neon_anim called");
 	if (g_Ped4 != g_myVeh)
 	{
 		loop_neon_fade = 0;
@@ -2577,78 +2601,60 @@ void set_vehicle_neon_anim(GTAvehicle vehicle)
 			neonstate[i] = 0;
 		}
 	}
+	vehicle.RequestControlOnce();
 	if (loop_neon_rgb)
 	{
 		g_setNeonColour = g_fadedRGB; 
-		vehicle.RequestControlOnce();
 		vehicle.NeonLightsColour_set(g_setNeonColour);
+		s_neonDirty = true;
 	}
+	static constexpr VehicleNeonLight kNeonLights[] = {
+		VehicleNeonLight::Left,
+		VehicleNeonLight::Right,
+		VehicleNeonLight::Front,
+		VehicleNeonLight::Back
+	};
 	switch (loop_neon_flash)
 	{
 		case 0:
 		{
-			vehicle.RequestControlOnce();
-			for (auto& i : std::map<VehicleNeonLight, std::pair<Hash, std::string>>{
-					{ VehicleNeonLight::Left,{ 0xCE8DADF3, "Left" } },
-					{ VehicleNeonLight::Right,{ 0x92E936A7, "Right" } },
-					{ VehicleNeonLight::Front,{ 0x79ABE687, "Front" } },
-					{ VehicleNeonLight::Back,{ 0x6BECCB09, "Back" } }
-				})
-				vehicle.SetNeonLightOn(i.first, neonstate[static_cast<int>(i.first)]);
+			for (auto light : kNeonLights)
+				vehicle.SetNeonLightOn(light, neonstate[static_cast<int>(light)]);
+			s_neonDirty = true;
 			break;
 		}
 		case 1:
 		{
-			vehicle.RequestControlOnce();
-			for (auto& i : std::map<VehicleNeonLight, std::pair<Hash, std::string>>{
-					{ VehicleNeonLight::Left,{ 0xCE8DADF3, "Left" } },
-					{ VehicleNeonLight::Right,{ 0x92E936A7, "Right" } },
-					{ VehicleNeonLight::Front,{ 0x79ABE687, "Front" } },
-					{ VehicleNeonLight::Back,{ 0x6BECCB09, "Back" } }
-				})
-				vehicle.SetNeonLightOn(i.first, g_neonFlash * neonstate[static_cast<int>(i.first)]);
+			for (auto light : kNeonLights)
+				vehicle.SetNeonLightOn(light, g_neonFlash * neonstate[static_cast<int>(light)]);
+			s_neonDirty = true;
 			break;
 		}
 		case 2:
 		{
-			vehicle.RequestControlOnce();
-			for (auto& i : std::map<VehicleNeonLight, std::pair<Hash, std::string>>{
-					{ VehicleNeonLight::Left,{ 0xCE8DADF3, "Left" } },
-					{ VehicleNeonLight::Right,{ 0x92E936A7, "Right" } },
-					{ VehicleNeonLight::Front,{ 0x79ABE687, "Front" } },
-					{ VehicleNeonLight::Back,{ 0x6BECCB09, "Back" } }
-				})
-				if (static_cast<int>(i.first) == g_neonSpin)
-					vehicle.SetNeonLightOn(i.first, true);
+			for (auto light : kNeonLights)
+				if (static_cast<int>(light) == g_neonSpin)
+					vehicle.SetNeonLightOn(light, true);
 				else
-					vehicle.SetNeonLightOn(i.first, false);
+					vehicle.SetNeonLightOn(light, false);
+			s_neonDirty = true;
 			break;
 		}
 		case 3:
 		{
-			vehicle.RequestControlOnce();
-			for (auto& i : std::map<VehicleNeonLight, std::pair<Hash, std::string>>{
-					{ VehicleNeonLight::Left,{ 0xCE8DADF3, "Left" } },
-					{ VehicleNeonLight::Right,{ 0x92E936A7, "Right" } },
-					{ VehicleNeonLight::Front,{ 0x79ABE687, "Front" } },
-					{ VehicleNeonLight::Back,{ 0x6BECCB09, "Back" } }
-				})
-				if (static_cast<int>(i.first) == g_neonSpinBack)
-					vehicle.SetNeonLightOn(i.first, true);
+			for (auto light : kNeonLights)
+				if (static_cast<int>(light) == g_neonSpinBack)
+					vehicle.SetNeonLightOn(light, true);
 				else
-					vehicle.SetNeonLightOn(i.first, false);
+					vehicle.SetNeonLightOn(light, false);
+			s_neonDirty = true;
 			break;
 		}
 		case 4:
 		{
-			vehicle.RequestControlOnce();
-			for (auto& i : std::map<VehicleNeonLight, std::pair<Hash, std::string>>{
-					{ VehicleNeonLight::Left,{ 0xCE8DADF3, "Left" } },
-					{ VehicleNeonLight::Right,{ 0x92E936A7, "Right" } },
-					{ VehicleNeonLight::Front,{ 0x79ABE687, "Front" } },
-					{ VehicleNeonLight::Back,{ 0x6BECCB09, "Back" } }
-				})
-				vehicle.SetNeonLightOn(i.first, g_neonFwk[static_cast<int>(i.first)]);
+			for (auto light : kNeonLights)
+				vehicle.SetNeonLightOn(light, g_neonFwk[static_cast<int>(light)]);
+			s_neonDirty = true;
 			break;
 		}
 	}
@@ -2657,32 +2663,32 @@ void set_vehicle_neon_anim(GTAvehicle vehicle)
 	{
 	case 0:
 	{
-		vehicle.RequestControlOnce();
 		vehicle.NeonLightsColour_set(g_setNeonColour);
+		s_neonDirty = true;
 		break;
 	}
 	case 1:
 	{
-		vehicle.RequestControlOnce();
 		vehicle.NeonLightsColour_set(g_neonFade);
+		s_neonDirty = true;
 		break;
 	}
 	case 2:
 	{
-		vehicle.RequestControlOnce();
 		vehicle.NeonLightsColour_set(g_neonHeart);
+		s_neonDirty = true;
 		break;
 	}
 	case 3:
 	{
-		vehicle.RequestControlOnce();
 		vehicle.NeonLightsColour_set(g_neonShift);
+		s_neonDirty = true;
 		break;
 	}
 	case 4:
 	{
-		vehicle.RequestControlOnce();
 		vehicle.NeonLightsColour_set(g_neonSlide);
+		s_neonDirty = true;
 		break;
 	}
 	}
@@ -3747,7 +3753,10 @@ static void TickVehicleEffects(bool gameIsPaused)
 		SetVehicleRainbowMode(g_myVeh, true);
 	}
 
-	set_vehicle_neon_anim(g_myVeh);
+	if (s_neonDirty) {
+		set_vehicle_neon_anim(g_myVeh);
+		s_neonDirty = false;
+	}
 
 	if (vehicleDisableSiren)
 	{

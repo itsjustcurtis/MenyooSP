@@ -3357,7 +3357,7 @@ namespace sub
 			})
 		{
 			bool bPressed_on = false, bPressed_off = false;
-			AddTickol(i.second.second, vehicle.IsNeonLightOn(i.first), bPressed_on, bPressed_off, TICKOL::CARTHING);
+			AddTickol(i.second.second, neonstate[static_cast<int>(i.first)], bPressed_on, bPressed_off, TICKOL::CARTHING);
 			if (bPressed_on || bPressed_off)
 			{
 				vehicle.RequestControl(300);
@@ -3414,12 +3414,12 @@ namespace sub
 		if (loop_neon_flash > 0 || loop_neon_fade > 0)
 			AddNumber("Animation Speed (ms)", loop_neon_delay, 0, neon_delay_input, neon_delay_plus, neon_delay_minus);
 
-		if (neon_delay_plus) loop_neon_delay += 50;
-		if (neon_delay_minus) loop_neon_delay -= 50;
+		if (neon_delay_plus && loop_neon_delay < 10000) loop_neon_delay += 50;
+		if (neon_delay_minus && loop_neon_delay > 50) loop_neon_delay -= 50;
 		if (neon_delay_input)
 		{
 			std::string inputStr = Game::InputBox("", 4U, "", std::to_string(loop_neon_delay));
-			if (inputStr.length() > 0)
+			if (inputStr.length() > 0 && std::stoi(inputStr) >= 50 && std::stoi(inputStr) <= 10000)
 			{
 				try { loop_neon_delay = std::stoi(inputStr); }
 				catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }

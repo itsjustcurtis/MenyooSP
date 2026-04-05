@@ -239,6 +239,7 @@ extern bool vehicleDisableSiren;
 extern bool fireworksDisplay;
 extern bool bitInfiniteAmmo;
 extern bool selfInfiniteParachutes;
+extern bool s_neonDirty;
 extern int loop_neon_fade, loop_neon_flash, loop_neon_delay;
 
 extern bool loop_neon_rgb, neonstate[4];
