@@ -2596,21 +2596,12 @@ inline void SetSelfVehicleNativeBoost()
 		{
 			if (IS_CONTROL_PRESSED(2, INPUT_VEH_HORN))
 			{
-				float* boostCharge = GeneralGlobalHax::GetVehicleBoostChargePtr();
-				if (boostCharge != nullptr)
-				{
-					*boostCharge = 1.24f; // 2.5f full 1.25f full after b944
-				}
-				GeneralGlobalHax::SetVehicleBoostState(1);
+					SET_ROCKET_BOOST_FILL(g_myVeh, 1.0f);
+					SET_ROCKET_BOOST_ACTIVE(g_myVeh, true);
 			}
 			else
 			{
-				float* boostCharge = GeneralGlobalHax::GetVehicleBoostChargePtr();
-				if (boostCharge != nullptr)
-				{
-					*boostCharge = 1.24f;
-				}
-				GeneralGlobalHax::SetVehicleBoostState(0);
+				SET_ROCKET_BOOST_ACTIVE(g_myVeh, false);
 			}
 		}
 	}

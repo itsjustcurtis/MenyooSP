@@ -2891,50 +2891,7 @@ void GeneralGlobalHax::SetPlayerMovementSpeed(float value)
 	}
 }
 
-int GeneralGlobalHax::GetVehicleBoostState()
-{
-	if (!g_isEnhanced) {
-		auto baddr = *GeneralGlobalHax::WorldPtrPtr();
-		if (baddr)
-		{
-			auto gameVersion = GTAmemory::GetGameVersion();
-			if (gameVersion <= eGameVersion::VER_1_0_2372_0_NOSTEAM)
-				return *(GetMultilayerPointer<int*>(baddr, std::vector<DWORD>{0x8, 0xD28, 0x318}));
-		}
-	}
-	return 0;
-}
-void GeneralGlobalHax::SetVehicleBoostState(int value)
-{
-	if (g_isEnhanced) return;
-	auto baddr = *GeneralGlobalHax::WorldPtrPtr();
-	if (baddr)
-	{
-		auto gameVersion = GTAmemory::GetGameVersion();
-		if (gameVersion <= eGameVersion::VER_1_0_2372_0_NOSTEAM)
-			*(GetMultilayerPointer<int*>(baddr, std::vector<DWORD>{0x8, 0xD28, 0x318})) = value;
-	}
-}
-float* GeneralGlobalHax::GetVehicleBoostChargePtr()
-{
-	if (!g_isEnhanced) {
-		auto baddr = *GeneralGlobalHax::WorldPtrPtr();
-		if (baddr)
-		{
-			auto gameVersion = GTAmemory::GetGameVersion();
-			if (gameVersion <= eGameVersion::VER_1_0_1103_2_NOSTEAM)
-				return (GetMultilayerPointer<float*>(baddr, std::vector<DWORD>{0x8, 0xD28, 0x31C}));
-			if (gameVersion <= eGameVersion::VER_1_0_2372_0_NOSTEAM)//VER_1_0_1868_1_NOSTEAM
-				return (GetMultilayerPointer<float*>(baddr, std::vector<DWORD>{0x8, 0xD28, 0x320})); // Might be off
-		}
-	}
-	return nullptr;
-}
-
 std::string GTAmemory::GetVehicleModelName(Hash hash) {
-	if(g_vehicleHashes.empty()) {
-		addlog(ige::LogType::LOG_ERROR, "g_vehicleHashes Empty");
-	}
 	auto modelIt = g_vehicleHashes.find(hash);
 	if (modelIt != g_vehicleHashes.end()) return modelIt->second;
 	return "NOTFOUND";

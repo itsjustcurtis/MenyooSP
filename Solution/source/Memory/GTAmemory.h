@@ -682,11 +682,6 @@ public:
 	static void SetPlayerSwimSpeed(float value);
 	static float GetPlayerMovementSpeed();
 	static void SetPlayerMovementSpeed(float value);
-
-	static int GetVehicleBoostState();
-	static void SetVehicleBoostState(int value);
-	static float* GetVehicleBoostChargePtr();
-
 };
 
 void setupHooks();
