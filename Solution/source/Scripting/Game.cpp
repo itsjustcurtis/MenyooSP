@@ -405,7 +405,7 @@ namespace Game
 			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Input: " + inputStr);
 			addlog(ige::LogType::LOG_ERROR, "Invalid Input: " + inputStr);
 		}
-		void PrintError_InvalidModel(std::string inputStr)
+		void PrintErrorInvalidModel(std::string inputStr)
 		{
 			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Model: " + inputStr);
 			addlog(ige::LogType::LOG_ERROR, "Invalid Model: " + inputStr);

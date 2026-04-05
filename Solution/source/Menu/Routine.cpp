@@ -159,25 +159,25 @@ inline void MenyooMain()
 	addlog(ige::LogType::LOG_TRACE, "Loading Textures");
 	DxHookIMG::LoadAllMenyooTexturesInit();
 	addlog(ige::LogType::LOG_TRACE, "Populate Anims List");
-	sub::AnimationSub_catind::PopulateAllPedAnimsList();
+	sub::AnimationMenu::PopulateAllPedAnimsList();
 	addlog(ige::LogType::LOG_TRACE, "Populate Favourites");
 	sub::WeaponFavourites_catind::PopulateFavouritesInfo();
 	addlog(ige::LogType::LOG_TRACE, "Populate Decals");
-	sub::PedDecals_catind::PopulateDecalsDict();
+	sub::PedDecals::PopulateDecalsDict();
 	addlog(ige::LogType::LOG_TRACE, "Populate Animals");
-	sub::AnimalRiding_catind::PopulateAnimals();
+	sub::AnimalRiding::PopulateAnimals();
 	addlog(ige::LogType::LOG_TRACE, "Populate Vehicle Previews");
-	sub::SpawnVehicle_catind::PopulateVehicleBmps();
+	sub::VehicleSpawner::PopulateVehicleBmps();
 	addlog(ige::LogType::LOG_TRACE, "Populate Folder Previews");
 	sub::FolderPreviewBmps_catind::PopulateFolderBmps();
 	addlog(ige::LogType::LOG_TRACE, "Populate Voice Data");
-	sub::Speech_catind::PopulateVoiceData();
+	sub::Speech::PopulateVoiceData();
 	addlog(ige::LogType::LOG_TRACE, "Populate Timecycle Names");
 	TimecycleModification::PopulateTimecycleNames();
 	addlog(ige::LogType::LOG_TRACE, "Populate Global Entity Arrays");
 	PopulateGlobalEntityModelsArrays();
 	addlog(ige::LogType::LOG_TRACE, "Populate Cutscene Labels");
-	sub::CutscenePlayer_catind::PopulateCutsceneLabels();
+	sub::CutscenePlayer::PopulateCutsceneLabels();
 
 	DWORD tickNow = GetTickCount();
 	srand(tickNow);
@@ -798,15 +798,15 @@ void SetPauseMenuTeleToWpCommand()
 // PTFX
 void SetPTFXLopTick()
 {
-	using sub::Ptfx_catind::fxLops;
+	using sub::PtfxSubs::fxLoops;
 
 	if (GET_GAME_TIMER() > Menu::delayedTimer)
 	{
-		for (auto it = fxLops.begin(); it != fxLops.end();)
+		for (auto it = fxLoops.begin(); it != fxLoops.end();)
 		{
 			if (!it->entity.Exists())
 			{
-				it = fxLops.erase(it);
+				it = fxLoops.erase(it);
 				continue;
 			}
 
@@ -1183,7 +1183,7 @@ void SetSoulSwitchGun()
 
 			soulSwitchEntity.Handle() = 0;
 			sub::Spooner::SpoonerEntity spe;
-			spe.Handle = playerPed;
+			spe.handle = playerPed;
 			if (!(sub::Spooner::EntityManagement::GetEntityIndexInDb(spe) >= 0))
 			{
 				playerPed.NoLongerNeeded();
@@ -1210,7 +1210,7 @@ void SetSelfDeleteGun()
 			if (targEntity.Handle())
 			{
 				sub::Spooner::SpoonerEntity ent;
-				ent.Handle = targEntity;
+				ent.handle = targEntity;
 				sub::Spooner::EntityManagement::DeleteEntity(ent);
 			}
 		}
@@ -1229,11 +1229,11 @@ void SetSelfResurrectionGun()
 			if (targPed.IsPed() && targPed.IsDead())
 			{
 				targPed.RequestControl();
-				targPed.Health_set(200);
+				targPed.SetHealth(200);
 				RESURRECT_PED(targPed.Handle());
 				REVIVE_INJURED_PED(targPed.Handle());
-				targPed.MaxHealth_set(400);
-				targPed.Health_set(200);
+				targPed.SetMaxHealth(400);
+				targPed.SetHealth(200);
 				SET_PED_GENERATES_DEAD_BODY_EVENTS(targPed.Handle(), false);
 				SET_PED_CONFIG_FLAG(targPed.Handle(), ePedConfigFlags::IsInjured, 0);
 				SET_PED_CONFIG_FLAG(targPed.Handle(), ePedConfigFlags::HasHurtStarted, 0);
@@ -1636,7 +1636,7 @@ void SetExplosionAtBulletHit(Ped ped, Hash type, bool invisible)
 	Vector3_t Pos;
 	if (!GET_PED_LAST_WEAPON_IMPACT_COORD(ped, &Pos) && ped == PLAYER_PED_ID())
 	{
-		const Vector3& camDir = GameplayCamera::Direction_get();
+		const Vector3& camDir = GameplayCamera::GetDirection();
 		const Vector3& camCoord = GameplayCamera::GetPosition();
 		Vector3 hitCoord = (camDir * 1000.0f) + camCoord;
 
@@ -1682,7 +1682,7 @@ void SetTriggerFXAtBulletHit(Ped ped, const std::string& fxAsset, const std::str
 	Vector3_t Pos;
 	if (!GET_PED_LAST_WEAPON_IMPACT_COORD(ped, &Pos) && ped == PLAYER_PED_ID())
 	{
-		const Vector3& camDir = GameplayCamera::Direction_get();
+		const Vector3& camDir = GameplayCamera::GetDirection();
 		const Vector3& camCoord = GameplayCamera::GetPosition();
 		Vector3 hitCoord = (camDir * 1000.0f) + camCoord;
 
@@ -2067,7 +2067,7 @@ void SetSelfRefillHealthWhenInCover()
 		auto maxHealth = playerPed.GetMaxHealth();
 		if (playerPed.IsInCover() && !playerPed.IsAimingFromCover() && health < maxHealth)
 		{
-			playerPed.Health_set(health + 4);
+			playerPed.SetHealth(health + 4);
 		}
 	}
 }
@@ -2082,11 +2082,11 @@ void XYZH()
 	Vector3 Pos = GET_ENTITY_COORDS(PLAYER_PED_ID(), 1);
 
 	Game::Print::SetupDraw(font_xyzh, Vector2(0.35f, 0.36f), false, false, true);
-	Game::Print::drawstring("Coords:", 0.90f, 0.066f);
-	xyzhDrawFloat(Pos.x, 0.90f, 0.10f);
-	xyzhDrawFloat(Pos.y, 0.90f, 0.13f);
-	xyzhDrawFloat(Pos.z, 0.90f, 0.16f);
-	xyzhDrawFloat(GET_ENTITY_HEADING(PLAYER_PED_ID()), 0.90f, 0.19f);
+	Game::Print::drawstring("Coords:", 0.94f, 0.03f);
+	xyzhDrawFloat(Pos.x, 0.94f, 0.06f);
+	xyzhDrawFloat(Pos.y, 0.94f, 0.09f);
+	xyzhDrawFloat(Pos.z, 0.94f, 0.12f);
+	xyzhDrawFloat(GET_ENTITY_HEADING(PLAYER_PED_ID()), 0.94f, 0.15f);
 }
 
 void SetLocalSupermanManual()
@@ -2572,8 +2572,8 @@ void SetVehicleRainbowMode(GTAvehicle vehicle, bool useFader)
 	vehicle.RequestControlOnce();
 	if (useFader)
 	{
-		vehicle.CustomPrimaryColour_set(g_fadedRGB);
-		vehicle.CustomSecondaryColour_set(g_fadedRGB);
+		vehicle.SetCustomPrimaryColour(g_fadedRGB);
+		vehicle.SetCustomSecondaryColour(g_fadedRGB);
 	}
 	else
 	{
@@ -2585,8 +2585,8 @@ void SetVehicleRainbowMode(GTAvehicle vehicle, bool useFader)
 		{
 			vehicle.ClearCustomSecondaryColour();
 		}
-		vehicle.PrimaryColour_set(rand() % 160);
-		vehicle.SecondaryColour_set(rand() % 160);
+		vehicle.SetPrimaryColour(rand() % 160);
+		vehicle.SetSecondaryColour(rand() % 160);
 	}
 }
 void set_vehicle_neon_anim(GTAvehicle vehicle)
@@ -2937,21 +2937,12 @@ inline void SetSelfVehicleNativeBoost()
 		{
 			if (IS_CONTROL_PRESSED(2, INPUT_VEH_HORN))
 			{
-				float* boostCharge = GeneralGlobalHax::GetVehicleBoostChargePtr();
-				if (boostCharge != nullptr)
-				{
-					*boostCharge = 1.24f; // 2.5f full 1.25f full after b944
-				}
-				GeneralGlobalHax::SetVehicleBoostState(1);
+					SET_ROCKET_BOOST_FILL(g_myVeh, 1.0f);
+					SET_ROCKET_BOOST_ACTIVE(g_myVeh, true);
 			}
 			else
 			{
-				float* boostCharge = GeneralGlobalHax::GetVehicleBoostChargePtr();
-				if (boostCharge != nullptr)
-				{
-					*boostCharge = 1.24f;
-				}
-				GeneralGlobalHax::SetVehicleBoostState(0);
+				SET_ROCKET_BOOST_ACTIVE(g_myVeh, false);
 			}
 		}
 	}
@@ -3052,7 +3043,7 @@ void SetVehicleEngineSoundName(GTAvehicle vehicle, const std::string& name)
 }
 
 std::unordered_set<Vehicle> g_vehWheelsInvisForRussian;
-bool are_vehicle_wheels_invisible(const GTAvehicle& vehicle)
+bool AreVehicleWheelsInvisible(const GTAvehicle& vehicle)
 {
 	return (g_vehWheelsInvisForRussian.find(vehicle.GetHandle()) != g_vehWheelsInvisForRussian.end());
 }
@@ -3260,20 +3251,20 @@ float NormalizeHSV(int h, int s, int v)
 static void TickSubsystems()
 {
 	sub::Spooner::SpoonerMode::Tick();
-	sub::GhostRiderMode_catind::Tick();
-	sub::VehicleAutoDrive_catind::Tick();
+	sub::GhostRiderMode::Tick();
+	sub::VehicleAutoDrive::Tick();
 	sub::GravityGun_catind::Tick();
 	MagnetGun::g_magnetGun.Tick();
 	g_spSnow.Tick();
 	VehicleTow::g_vehicleTow.Tick();
 	VehicleCruise::g_vehicleCruise.Tick();
 	VehicleFly::g_vehicleFly.Tick();
-	sub::WaterHack_catind::Tick();
+	sub::WaterHack::Tick();
 	sub::LaserSight_catind::Tick();
 	MeteorShower::g_meteorShower.Tick();
 	SmashAbility::g_smashAbility.Tick();
 	RopeGun::g_ropeGun.Tick();
-	sub::AnimalRiding_catind::Tick();
+	sub::AnimalRiding::Tick();
 	GTA2Cam::g_gta2Cam.Tick();
 	SetPTFXLopTick();
 }
@@ -3301,9 +3292,9 @@ static void TickWorldState()
 		{
 			SetSyncClockTime();
 		}
-		if (sub::Clock_catind::loop_clock)
+		if (sub::Clock::loopClock)
 		{
-			sub::Clock_catind::DisplayClock();
+			sub::Clock::DisplayClock();
 		}
 
 		if (hideHUD)
@@ -3403,8 +3394,8 @@ static void TickPlayerState(int player, int iped, GTAplayer& player2)
 
 	if (playerAutoClean)
 	{
-		sub::PedDamageTextures_catind::ClearAllBloodDamage(iped);
-		sub::PedDamageTextures_catind::ClearAllVisibleDamage(iped);
+		sub::PedDamageTextures::ClearAllBloodDamage(iped);
+		sub::PedDamageTextures::ClearAllVisibleDamage(iped);
 	}
 
 	if (fireworksDisplay)
@@ -3563,9 +3554,9 @@ static void TickWeaponEffects()
 		SetForgeGun();
 	}
 
-	if (sub::BreatheStuff_catind::loop_player_breatheStuff != sub::BreatheStuff_catind::BreathePtfxType::None)
+	if (sub::BreatheStuff::playerBreatheStuff != sub::BreatheStuff::BreathePtfxType::None)
 	{
-		sub::BreatheStuff_catind::set_self_breathe_ptfx(sub::BreatheStuff_catind::loop_player_breatheStuff);
+		sub::BreatheStuff::SetSelfBreathePTFX(sub::BreatheStuff::playerBreatheStuff);
 	}
 
 	if (explosiveRounds)
@@ -3809,9 +3800,9 @@ static void TickVehicleEffects(bool gameIsPaused)
 
 		SetVehicleWeapons();
 
-		if (sub::Speedo_catind::loop_speedo != sub::Speedo_catind::SPEEDOMODE_OFF)
+		if (sub::Speedo::loopSpeedo != sub::Speedo::SPEEDOMODE_OFF)
 		{
-			sub::Speedo_catind::SpeedoTick();
+			sub::Speedo::SpeedoTick();
 		}
 	}
 }
@@ -3825,8 +3816,8 @@ void Menu::loops()
 	// Apply default outfit on first load
 	if (!GET_IS_LOADING_SCREEN_ACTIVE() && !defaultPedSet)
 	{
-		sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
-		sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);
+		sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
+		sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);
 		defaultPedSet = true;
 	}
 
@@ -3931,9 +3922,9 @@ void ThreadMenuLoops2()
 
 		FlameThrower::Tick();
 
-		if (sub::TVChannelStuff_catind::loop_basictv)
+		if (sub::TVChannelStuff::loopBasicTV)
 		{
-			sub::TVChannelStuff_catind::DrawTvWhereItsSupposedToBe();
+			sub::TVChannelStuff::DrawTvWhereItsSupposedToBe();
 		}
 
 		TickSpectatePlayer();

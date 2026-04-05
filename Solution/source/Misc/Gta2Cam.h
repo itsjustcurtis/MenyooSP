@@ -11,9 +11,6 @@
 
 #include "GenericLoopedMode.h"
 
-//#include "..\Util\GTAmath.h"
-//#include "..\Scripting\Camera.h"
-
 class GTAentity;
 class Camera;
 
@@ -22,9 +19,6 @@ namespace GTA2Cam
 	class Gta2Cam final : public GenericLoopedMode
 	{
 	private:
-		//Camera gmCam2;
-		//Camera mainCam;
-		//Vector3 mainCamRelativePos;
 	public:
 		const Camera& MainCam();
 

@@ -28,14 +28,12 @@ namespace MagnetGun
 
 		void Tick() override;
 		inline void DoMagnetGunTick();
-
 		void DisplayMagnetGunHelp();
 
 	};
 
 
 	extern MagnetGun g_magnetGun;
-
 	void ToggleOnOff();
 }
 

@@ -174,10 +174,10 @@ void MenuConfig::ConfigRead()
 	sub::Spooner::SpoonerMode::bindsKeyboard = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeHotkey", sub::Spooner::SpoonerMode::bindsKeyboard);
 	sub::Spooner::SpoonerMode::bindsGamepad.first = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_1", sub::Spooner::SpoonerMode::bindsGamepad.first);
 	sub::Spooner::SpoonerMode::bindsGamepad.second = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_2", sub::Spooner::SpoonerMode::bindsGamepad.second);
-	sub::Spooner::Settings::CameraMovementSensitivityKeyboard = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityKeyboard", sub::Spooner::Settings::CameraMovementSensitivityKeyboard);
-	sub::Spooner::Settings::CameraRotationSensitivityMouse = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityMouse", sub::Spooner::Settings::CameraRotationSensitivityMouse);
-	sub::Spooner::Settings::CameraMovementSensitivityGamepad = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityGamepad", sub::Spooner::Settings::CameraMovementSensitivityGamepad);
-	sub::Spooner::Settings::CameraRotationSensitivityGamepad = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityGamepad", sub::Spooner::Settings::CameraRotationSensitivityGamepad);
+	sub::Spooner::Settings::cameraMovementSensitivityKeyboard = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityKeyboard", sub::Spooner::Settings::cameraMovementSensitivityKeyboard);
+	sub::Spooner::Settings::cameraRotationSensitivityMouse = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityMouse", sub::Spooner::Settings::cameraRotationSensitivityMouse);
+	sub::Spooner::Settings::cameraMovementSensitivityGamepad = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityGamepad", sub::Spooner::Settings::cameraMovementSensitivityGamepad);
+	sub::Spooner::Settings::cameraRotationSensitivityGamepad = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityGamepad", sub::Spooner::Settings::cameraRotationSensitivityGamepad);
 	sub::Spooner::Settings::bShowModelPreviews = ini.GetBoolValue(section_spooner.c_str(), "ShowModelPreviews", sub::Spooner::Settings::bShowModelPreviews);
 	sub::Spooner::Settings::bShowBoxAroundSelectedEntity = ini.GetBoolValue(section_spooner.c_str(), "ShowBoxAroundSelectedEntity", sub::Spooner::Settings::bShowBoxAroundSelectedEntity);
 	sub::Spooner::Settings::bSpawnDynamicProps = ini.GetBoolValue(section_spooner.c_str(), "SpawnDynamicProps", sub::Spooner::Settings::bSpawnDynamicProps);
@@ -189,7 +189,7 @@ void MenuConfig::ConfigRead()
 	sub::Spooner::Settings::bAddToDbAsMissionEntities = ini.GetBoolValue(section_spooner.c_str(), "AddToDbAsMissionEntities", sub::Spooner::Settings::bAddToDbAsMissionEntities);
 	sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile = ini.GetBoolValue(section_spooner.c_str(), "TeleportToReferenceWhenLoadingFile", sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile);
 	sub::Spooner::Settings::bKeepPositionWhenAttaching = ini.GetBoolValue(section_spooner.c_str(), "KeepPositionWhenAttaching", sub::Spooner::Settings::bKeepPositionWhenAttaching);
-	sub::Spooner::Settings::SpoonerModeMode = (sub::Spooner::eSpoonerModeMode)ini.GetLongValue(section_spooner.c_str(), "SpoonerModeMethod", (UINT8)sub::Spooner::Settings::SpoonerModeMode);
+	sub::Spooner::Settings::spoonerModeMode = (sub::Spooner::eSpoonerModeMode)ini.GetLongValue(section_spooner.c_str(), "SpoonerModeMethod", (UINT8)sub::Spooner::Settings::spoonerModeMode);
 
 
 	std::string section_haxValues = "hax-values";/////////
@@ -201,7 +201,7 @@ void MenuConfig::ConfigRead()
 	noClip = ini.GetBoolValue(section_haxValues.c_str(), "freecam", noClip);
 	xyzhCoords = ini.GetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", xyzhCoords);
 	FPSCounter::bDisplayFps = ini.GetBoolValue(section_haxValues.c_str(), "display_fps", FPSCounter::bDisplayFps);
-	sub::TVChannelStuff_catind::loop_basictv = ini.GetBoolValue(section_haxValues.c_str(), "basic_tv_player", sub::TVChannelStuff_catind::loop_basictv);
+	sub::TVChannelStuff::loopBasicTV = ini.GetBoolValue(section_haxValues.c_str(), "basic_tv_player", sub::TVChannelStuff::loopBasicTV);
 	syncClock = ini.GetBoolValue(section_haxValues.c_str(), "sync_clock", syncClock);
 	pauseClock = ini.GetBoolValue(section_haxValues.c_str(), "pause_clock", pauseClock);
 	pauseClockH = ini.GetLongValue(section_haxValues.c_str(), "pause_clock_hour", pauseClockH);
@@ -218,7 +218,7 @@ void MenuConfig::ConfigRead()
 	JumpAroundMode::bEnabled = ini.GetBoolValue(section_haxValues.c_str(), "jump_around_mode", JumpAroundMode::bEnabled);
 	g_frozenRadioStation = (INT16)ini.GetLongValue(section_haxValues.c_str(), "frozen_radio_station", g_frozenRadioStation);
 	g_spSnow.ToggleSnow(ini.GetBoolValue(section_haxValues.c_str(), "snow_on_terrain", g_spSnow.IsSnow()));
-	sub::AnimalRiding_catind::Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "animal_riding_mode", sub::AnimalRiding_catind::Enabled());
+	sub::AnimalRiding::Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "animal_riding_mode", sub::AnimalRiding::Enabled());
 
 	forgeGun = ini.GetBoolValue(section_haxValues.c_str(), "forge_gun", forgeGun);
 	g_forgeGunShootForce = ini.GetDoubleValue(section_haxValues.c_str(), "forge_gun_shoot_force", g_forgeGunShootForce);
@@ -309,17 +309,17 @@ void MenuConfig::ConfigRead()
 	g_LSCCustoms = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_menyoo_customs_lsc", g_LSCCustoms);
 	g_vehiclePVOpsName = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_PV_Options_Name", g_vehiclePVOpsName);
 
-	sub::Clock_catind::loop_clock = ini.GetDoubleValue(section_haxValues.c_str(), "clock", sub::Clock_catind::loop_clock);
-	sub::Clock_catind::_analogueClockPos.x = (float)ini.GetDoubleValue(section_haxValues.c_str(), "clock_screen_pos_x", sub::Clock_catind::_analogueClockPos.x);
-	sub::Clock_catind::_analogueClockPos.y = (float)ini.GetDoubleValue(section_haxValues.c_str(), "clock_screen_pos_y", sub::Clock_catind::_analogueClockPos.y);
+	sub::Clock::loopClock = ini.GetDoubleValue(section_haxValues.c_str(), "clock", sub::Clock::loopClock);
+	sub::Clock::analogueClockPosition.x = (float)ini.GetDoubleValue(section_haxValues.c_str(), "clock_screen_pos_x", sub::Clock::analogueClockPosition.x);
+	sub::Clock::analogueClockPosition.y = (float)ini.GetDoubleValue(section_haxValues.c_str(), "clock_screen_pos_y", sub::Clock::analogueClockPosition.y);
 
-	sub::Speedo_catind::loop_speedo = ini.GetLongValue(section_haxValues.c_str(), "speedo", sub::Speedo_catind::loop_speedo);
-	sub::Speedo_catind::bit_speedo_mph = ini.GetBoolValue(section_haxValues.c_str(), "speedo_mph_instead_of_kmph", sub::Speedo_catind::bit_speedo_mph);
-	sub::Speedo_catind::_speedoPosition.x = (float)ini.GetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_x", sub::Speedo_catind::_speedoPosition.x);
-	sub::Speedo_catind::_speedoPosition.y = (float)ini.GetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_y", sub::Speedo_catind::_speedoPosition.y);
-	sub::Speedo_catind::_currentSpeedoBg.fileName = ini.GetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
+	sub::Speedo::loopSpeedo = ini.GetLongValue(section_haxValues.c_str(), "speedo", sub::Speedo::loopSpeedo);
+	sub::Speedo::speedoMPH = ini.GetBoolValue(section_haxValues.c_str(), "speedo_mph_instead_of_kmph", sub::Speedo::speedoMPH);
+	sub::Speedo::speedoPosition.x = (float)ini.GetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_x", sub::Speedo::speedoPosition.x);
+	sub::Speedo::speedoPosition.y = (float)ini.GetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_y", sub::Speedo::speedoPosition.y);
+	sub::Speedo::currentSpeedoBG.fileName = ini.GetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo::currentSpeedoBG.fileName.c_str());
 	g_unlockMaxIDs = ini.GetBoolValue(section_haxValues.c_str(), "unlock_max_head_ids", g_unlockMaxIDs);
-	sub::Speedo_catind::SetCurrentBgIdFromBgNameForConfig();
+	sub::Speedo::SetCurrentBgIdFromBgNameForConfig();
 
     // Read camera configuration
     std::string section_freecam = "free-camera";
@@ -434,10 +434,10 @@ void MenuConfig::SaveConfig()
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeHotkey", sub::Spooner::SpoonerMode::bindsKeyboard);
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_1", sub::Spooner::SpoonerMode::bindsGamepad.first);
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_2", sub::Spooner::SpoonerMode::bindsGamepad.second);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityKeyboard", sub::Spooner::Settings::CameraMovementSensitivityKeyboard);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityMouse", sub::Spooner::Settings::CameraRotationSensitivityMouse);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityGamepad", sub::Spooner::Settings::CameraMovementSensitivityGamepad);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityGamepad", sub::Spooner::Settings::CameraRotationSensitivityGamepad);
+	ini.SetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityKeyboard", sub::Spooner::Settings::cameraMovementSensitivityKeyboard);
+	ini.SetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityMouse", sub::Spooner::Settings::cameraRotationSensitivityMouse);
+	ini.SetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityGamepad", sub::Spooner::Settings::cameraMovementSensitivityGamepad);
+	ini.SetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityGamepad", sub::Spooner::Settings::cameraRotationSensitivityGamepad);
 	ini.SetBoolValue(section_spooner.c_str(), "ShowModelPreviews", sub::Spooner::Settings::bShowModelPreviews);
 	ini.SetBoolValue(section_spooner.c_str(), "ShowBoxAroundSelectedEntity", sub::Spooner::Settings::bShowBoxAroundSelectedEntity);
 	ini.SetBoolValue(section_spooner.c_str(), "SpawnDynamicProps", sub::Spooner::Settings::bSpawnDynamicProps);
@@ -449,7 +449,7 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_spooner.c_str(), "AddToDbAsMissionEntities", sub::Spooner::Settings::bAddToDbAsMissionEntities);
 	ini.SetBoolValue(section_spooner.c_str(), "TeleportToReferenceWhenLoadingFile", sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile);
 	ini.SetBoolValue(section_spooner.c_str(), "KeepPositionWhenAttaching", sub::Spooner::Settings::bKeepPositionWhenAttaching);
-	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeMethod", (UINT8)sub::Spooner::Settings::SpoonerModeMode);
+	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeMethod", (UINT8)sub::Spooner::Settings::spoonerModeMode);
 
 
 	std::string section_haxValues = "hax-values";/////////
@@ -461,7 +461,7 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_haxValues.c_str(), "freecam", noClip);
 	ini.SetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", xyzhCoords);
 	ini.SetBoolValue(section_haxValues.c_str(), "display_fps", FPSCounter::bDisplayFps);
-	ini.SetBoolValue(section_haxValues.c_str(), "basic_tv_player", sub::TVChannelStuff_catind::loop_basictv);
+	ini.SetBoolValue(section_haxValues.c_str(), "basic_tv_player", sub::TVChannelStuff::loopBasicTV);
 	ini.SetBoolValue(section_haxValues.c_str(), "sync_clock", syncClock);
 	ini.SetBoolValue(section_haxValues.c_str(), "pause_clock", pauseClock);
 	ini.SetLongValue(section_haxValues.c_str(), "pause_clock_hour", pauseClockH);
@@ -478,7 +478,7 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_haxValues.c_str(), "jump_around_mode", JumpAroundMode::bEnabled);
 	ini.SetLongValue(section_haxValues.c_str(), "frozen_radio_station", g_frozenRadioStation);
 	ini.SetBoolValue(section_haxValues.c_str(), "snow_on_terrain", g_spSnow.IsSnow());
-	ini.SetBoolValue(section_haxValues.c_str(), "animal_riding_mode", sub::AnimalRiding_catind::Enabled());
+	ini.SetBoolValue(section_haxValues.c_str(), "animal_riding_mode", sub::AnimalRiding::Enabled());
 
 	ini.SetBoolValue(section_haxValues.c_str(), "forge_gun", forgeGun);
 	ini.SetDoubleValue(section_haxValues.c_str(), "forge_gun_shoot_force", g_forgeGunShootForce);
@@ -568,15 +568,15 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_menyoo_customs_lsc", g_LSCCustoms);
 	ini.SetLongValue(section_haxValues.c_str(), "vehicle_PV_Options_Name", g_vehiclePVOpsName);
 
-	ini.SetDoubleValue(section_haxValues.c_str(), "clock", sub::Clock_catind::loop_clock);
-	ini.SetDoubleValue(section_haxValues.c_str(), "clock_screen_pos_x", sub::Clock_catind::_analogueClockPos.x);
-	ini.SetDoubleValue(section_haxValues.c_str(), "clock_screen_pos_y", sub::Clock_catind::_analogueClockPos.y);
+	ini.SetDoubleValue(section_haxValues.c_str(), "clock", sub::Clock::loopClock);
+	ini.SetDoubleValue(section_haxValues.c_str(), "clock_screen_pos_x", sub::Clock::analogueClockPosition.x);
+	ini.SetDoubleValue(section_haxValues.c_str(), "clock_screen_pos_y", sub::Clock::analogueClockPosition.y);
 
-	ini.SetLongValue(section_haxValues.c_str(), "speedo", sub::Speedo_catind::loop_speedo);
-	ini.SetBoolValue(section_haxValues.c_str(), "speedo_mph_instead_of_kmph", sub::Speedo_catind::bit_speedo_mph);
-	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_x", sub::Speedo_catind::_speedoPosition.x);
-	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_y", sub::Speedo_catind::_speedoPosition.y);
-	ini.SetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
+	ini.SetLongValue(section_haxValues.c_str(), "speedo", sub::Speedo::loopSpeedo);
+	ini.SetBoolValue(section_haxValues.c_str(), "speedo_mph_instead_of_kmph", sub::Speedo::speedoMPH);
+	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_x", sub::Speedo::speedoPosition.x);
+	ini.SetDoubleValue(section_haxValues.c_str(), "speedo_screen_pos_y", sub::Speedo::speedoPosition.y);
+	ini.SetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo::currentSpeedoBG.fileName.c_str());
 	ini.SetBoolValue(section_haxValues.c_str(), "unlock_max_head_ids", g_unlockMaxIDs);
 
     // Save camera configuration
@@ -616,7 +616,7 @@ void MenuConfig::ConfigResetHaxValues()
 	ini.SetLongValue(section_haxValues.c_str(), "laser_sight_B", sub::LaserSight_catind::_colour.B);
 	ini.SetLongValue(section_haxValues.c_str(), "laser_sight_A", sub::LaserSight_catind::_colour.A);
 
-	ini.SetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo_catind::_currentSpeedoBg.fileName.c_str());
+	ini.SetValue(section_haxValues.c_str(), "speedo_bg_name", sub::Speedo::currentSpeedoBG.fileName.c_str());
 	ini.SetBoolValue(section_haxValues.c_str(), "unlock_max_head_ids", false);
 
 	MenuConfig::ConfigRead();

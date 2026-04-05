@@ -32,7 +32,7 @@
 #include <string>
 
 
-void teleport_net_ped(GTAentity ped, float X, float Y, float Z, bool bWait, bool bPtfx)
+void TeleportNetPed(GTAentity ped, float X, float Y, float Z, bool bWait, bool bPtfx)
 {
 	GTAped myPed = Game::PlayerPed();
 	GTAvehicle myVeh = myPed.CurrentVehicle();
@@ -88,7 +88,7 @@ void teleport_net_ped(GTAentity ped, float X, float Y, float Z, bool bWait, bool
 }
 void teleport_net_ped(GTAentity ped, const Vector3& pos, bool bWait, bool bPtfx)
 {
-	teleport_net_ped(ped, pos.x, pos.y, pos.z, bWait, bPtfx);
+	TeleportNetPed(ped, pos.x, pos.y, pos.z, bWait, bPtfx);
 }
 void teleport_to_missionBlip(GTAped ped)
 {
@@ -195,11 +195,11 @@ namespace sub::TeleportLocations_catind
 		{
 			auto& entityToTeleport = g_Ped1;
 			Vector3 yoffsetforward = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(entityToTeleport, 0.0f, 3.5f, 0.0f);
-			teleport_net_ped(entityToTeleport, yoffsetforward.x, yoffsetforward.y, yoffsetforward.z, true, false);
+			TeleportNetPed(entityToTeleport, yoffsetforward.x, yoffsetforward.y, yoffsetforward.z, true, false);
 		}
 		void ToCoordinates241(const Vector3& coord)
 		{
-			teleport_net_ped(g_Ped1, coord.x, coord.y, coord.z);
+			TeleportNetPed(g_Ped1, coord.x, coord.y, coord.z);
 		}
 		void ToTeleLocation241(const TeleLocation& loc)
 		{
@@ -271,7 +271,7 @@ namespace sub::TeleportLocations_catind
 				}
 			}
 
-			teleport_net_ped(entityToTeleport, loc.x, loc.y, loc.z);
+			TeleportNetPed(entityToTeleport, loc.x, loc.y, loc.z);
 
 			if (loc.bOnTheLine || loc.bOffTheLine)
 			{

@@ -35,7 +35,7 @@ namespace sub::Spooner
 			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()).status != pugi::status_ok)
 				return false;
 			pugi::xml_node nodeRoot = doc.child("FavouriteProps");
-			return nodeRoot.find_child_by_attribute("modelName", modelName.c_str()) || nodeRoot.find_child_by_attribute("modelHash", int_to_hexstring(modelHash == 0 ? GET_HASH_KEY(modelName) : modelHash, true).c_str());
+			return nodeRoot.find_child_by_attribute("modelName", modelName.c_str()) || nodeRoot.find_child_by_attribute("modelHash", IntToHexString(modelHash == 0 ? GET_HASH_KEY(modelName) : modelHash, true).c_str());
 		}
 		bool AddPropToFavourites(const std::string& modelName, Hash modelHash)
 		{
@@ -51,7 +51,7 @@ namespace sub::Spooner
 			}
 			pugi::xml_node nodeRoot = doc.child("FavouriteProps");
 
-			auto nodeOldLoc = nodeRoot.find_child_by_attribute("modelHash", int_to_hexstring(modelHash == 0 ? GET_HASH_KEY(modelName) : modelHash, true).c_str());
+			auto nodeOldLoc = nodeRoot.find_child_by_attribute("modelHash", IntToHexString(modelHash == 0 ? GET_HASH_KEY(modelName) : modelHash, true).c_str());
 			if (!nodeOldLoc) // If null
 			{
 				nodeOldLoc = nodeRoot.find_child_by_attribute("modelName", modelName.c_str());
@@ -62,7 +62,7 @@ namespace sub::Spooner
 			}
 			auto nodeNewLoc = nodeRoot.append_child("PropModel");
 			nodeNewLoc.append_attribute("modelName") = modelName.c_str();
-			nodeNewLoc.append_attribute("modelHash") = int_to_hexstring(modelHash == 0 ? GET_HASH_KEY(modelName) : modelHash, true).c_str();
+			nodeNewLoc.append_attribute("modelHash") = IntToHexString(modelHash == 0 ? GET_HASH_KEY(modelName) : modelHash, true).c_str();
 			return (doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()));
 		}
 		bool RemovePropFromFavourites(const std::string& modelName, Hash modelHash)
@@ -73,7 +73,7 @@ namespace sub::Spooner
 				return false;
 			pugi::xml_node nodeRoot = doc.child("FavouriteProps");
 
-			auto nodeOldLoc = nodeRoot.find_child_by_attribute("modelHash", int_to_hexstring(modelHash == 0 ? GET_HASH_KEY(modelName) : modelHash, true).c_str());
+			auto nodeOldLoc = nodeRoot.find_child_by_attribute("modelHash", IntToHexString(modelHash == 0 ? GET_HASH_KEY(modelName) : modelHash, true).c_str());
 			if (!nodeOldLoc) // If null
 			{
 				nodeOldLoc = nodeRoot.find_child_by_attribute("modelName", modelName.c_str());
@@ -85,9 +85,9 @@ namespace sub::Spooner
 			return (doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()));
 		}
 
-		bool(*IsVehicleAFavourite)(GTAmodel::Model vehModel) = SpawnVehicle_IsVehicleModelAFavourite;
-		bool(*AddVehicleToFavourites)(GTAmodel::Model vehModel, const std::string& customName) = SpawnVehicle_AddVehicleModelToFavourites;
-		bool(*RemoveVehicleFromFavourites)(GTAmodel::Model vehModel) = SpawnVehicle_RemoveVehicleModelFromFavourites;
+		bool(*IsVehicleAFavourite)(GTAmodel::Model vehModel) = SpawnVehicleIsVehicleModelAFavourite;
+		bool(*AddVehicleToFavourites)(GTAmodel::Model vehModel, const std::string& customName) = SpawnVehicleAddVehicleModelToFavourites;
+		bool(*RemoveVehicleFromFavourites)(GTAmodel::Model vehModel) = SpawnVehicleRemoveVehicleModelFromFavourites;
 	}
 
 }

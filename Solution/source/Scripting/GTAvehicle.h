@@ -83,10 +83,10 @@ public:
 	std::vector<GTAentity> Occupants_get(bool bIncludeDriver = true) const;
 	VehicleSeat FirstFreeSeat(VehicleSeat defaultReturn) const;
 
-	std::string NumberPlateText_get() const;
-	void NumberPlateText_set(const std::string& value);
-	int NumberPlateTextIndex_get() const;
-	void NumberPlateTextIndex_set(int value);
+	std::string GetNumberPlateText() const;
+	void SetNumberPlateText(const std::string& value);
+	int GetNumberPlateTextIndex() const;
+	void SetNumberPlateTextIndex(int value);
 
 	bool IsConvertible() const;
 
@@ -110,63 +110,63 @@ public:
 
 	void MaxSpeed_set(float value);
 
-	float DirtLevel_get() const;
-	void DirtLevel_set(float value);
-	float PaintFade_get() const;
-	void PaintFade_set(float value);
+	float GetDirtLevel() const;
+	void SetDirtLevel(float value);
+	float GetPaintFade() const;
+	void SetPaintFade(float value);
 
-	VehicleRoofState RoofState_get() const;
-	void RoofState_set(VehicleRoofState value);
+	VehicleRoofState GetRoofState() const;
+	void SetRoofState(VehicleRoofState value);
 
 	float BodyHealth_get() const;
 	void BodyHealth_set(float value);
 
-	float EngineHealth_get() const;
-	void EngineHealth_set(float value);
+	float GetEngineHealth() const;
+	void SetEngineHealth(float value);
 
 	float PetrolTankHealth_get() const;
 	void PetrolTankHealth_set(float value);
 
-	bool SirenActive_get() const;
-	void SirenActive_set(bool value);
+	bool GetSirenActive() const;
+	void SetSirenActive(bool value);
 
 	bool LoudRadioActive_get() const;
 	void LoudRadioActive_set(bool value);
 
-	int PrimaryColour_get() const;
-	void PrimaryColour_set(int value);
+	int GetPrimaryColour() const;
+	void SetPrimaryColour(int value);
 
-	int SecondaryColour_get() const;
-	void SecondaryColour_set(int value);
+	int GetSecondaryColour() const;
+	void SetSecondaryColour(int value);
 
-	int RimColour_get() const;
-	void RimColour_set(int value);
+	int GetRimColour() const;
+	void SetRimColour(int value);
 
-	int PearlescentColour_get() const;
-	void PearlescentColour_set(int value);
+	int GetPearlescentColour() const;
+	void SetPearlescentColour(int value);
 
 	// For Benny's supported vehicles
-	int InteriorColour_get() const;
-	void InteriorColour_set(int value);
-	int DashboardColour_get() const;
-	void DashboardColour_set(int value);
+	int GetInteriorColour() const;
+	void SetInteriorColour(int value);
+	int GetDashboardColour() const;
+	void SetDashboardColour(int value);
 	
 	// b1604
-	int HeadlightColour_get() const;
-	void HeadlightColour_set(int value);
+	int GetHeadlightColour() const;
+	void SetHeadlightColour(int value);
 
-	int WheelType_get() const;
-	void WheelType_set(int value);
+	int GetWheelType() const;
+	void SetWheelType(int value);
 
-	int WindowTint_get() const;
-	void WindowTint_set(int value);
+	int GetWindowTint() const;
+	void SetWindowTint(int value);
 	;
 	bool IsPrimaryColorCustom() const;
 	bool IsSecondaryColorCustom() const;
 
 	void Wanted_set(bool value);
 
-	void HasGravity_set(bool value) override;
+	void SetHasGravity(bool value) override;
 
 	bool GetEngineRunning() const;
 	void SetEngineRunning(bool value);
@@ -209,8 +209,8 @@ public:
 	bool NeedsToBeHotwired_get() const;
 	void NeedsToBeHotwired_set(bool value);
 
-	bool CanTyresBurst_get() const;
-	void CanTyresBurst_set(bool value);
+	bool GetCanTyresBurst() const;
+	void SetCanTyresBurst(bool value);
 
 	bool CanTyresDrift_get() const;
 	void CanTyresDrift_set(bool value);
@@ -220,24 +220,24 @@ public:
 	bool PreviouslyOwnedByPlayer_get() const;
 	void PreviouslyOwnedByPlayer_set(bool value);
 
-	RgbS CustomPrimaryColour_get() const;
-	void CustomPrimaryColour_set(RgbS value);
+	RgbS GetCustomPrimaryColour() const;
+	void SetCustomPrimaryColour(RgbS value);
 	void CustomPrimaryColour_set(BYTE r, BYTE g, BYTE b);
 
-	RgbS CustomSecondaryColour_get() const;
-	void CustomSecondaryColour_set(RgbS value);
+	RgbS GetCustomSecondaryColour() const;
+	void SetCustomSecondaryColour(RgbS value);
 	void CustomSecondaryColour_set(BYTE r, BYTE g, BYTE b);
 
-	RgbS NeonLightsColour_get() const;
-	void NeonLightsColour_set(RgbS value);
+	RgbS GetNeonLightsColour() const;
+	void SetNeonLightsColour(RgbS value);
 	void NeonLightsColour_set(BYTE r, BYTE g, BYTE b);
 
-	RgbS TyreSmokeColour_get() const;
-	void TyreSmokeColour_set(RgbS value);
+	RgbS GetTyreSmokeColour() const;
+	void SetTyreSmokeColour(RgbS value);
 	void TyreSmokeColour_set(BYTE r, BYTE g, BYTE b);
 
-	int Livery_get() const;
-	void Livery_set(int liveryIndex);
+	int GetLivery() const;
+	void SetLivery(int liveryIndex);
 	int LiveryCount() const;
 
 	bool AlarmActive_get() const;
@@ -259,12 +259,12 @@ public:
 	void FixDoor(VehicleDoor door);
 	void FixAllDoors();
 
-	void RadioStation_set(int value);
+	void SetRadioStation(int value);
 
 	VehicleClass ClassType_get();
 
-	VehicleLockStatus LockStatus_get() const;
-	void LockStatus_set(const VehicleLockStatus& value);
+	VehicleLockStatus GetLockStatus() const;
+	void SetLockStatus(const VehicleLockStatus& value);
 
 	int GetMod(int modType) const;
 	void SetMod(int modType, int modIndex, int variation);
@@ -317,8 +317,8 @@ public:
 	void SetNeonLightOn(VehicleNeonLight light, bool on);
 
 	bool DoesExtraExist(int extraId) const;
-	bool ExtraOn_get(int extraId) const;
-	void ExtraOn_set(int extraId, bool value);
+	bool GetExtraOn(int extraId) const;
+	void SetExtraOn(int extraId, bool value);
 
 	void SoundHorn(int duration);
 

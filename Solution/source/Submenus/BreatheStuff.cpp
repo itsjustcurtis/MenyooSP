@@ -9,44 +9,30 @@
 */
 #include "BreatheStuff.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Scripting\PTFX.h"
-#include "..\Util\keyboard.h"
-#include "..\Scripting\enums.h"
-#include "..\Scripting\GTAped.h"
-#include "..\Scripting\Model.h"
-#include "..\Scripting\Game.h"
-
-#include <string>
-#include <vector>
-#include <utility>
-
 namespace sub
 {
-	namespace BreatheStuff_catind
+	namespace BreatheStuff
 	{
-		const std::vector<std::pair<std::string, BreathePtfxType>> vCaptions_breatheStuffs
+		const std::vector<std::pair<std::string, BreathePtfxType>> captionsBreatheStuff
 		{
 			{ "None", BreathePtfxType::None },
 			{ "Bloody Puke", BreathePtfxType::Blood },
 			{ "Fire", BreathePtfxType::Fire }
 		};
-		PTFX::LoopedPTFX _globalBreatheStuff_ptfx;
-		BreathePtfxType loop_player_breatheStuff = BreathePtfxType::None;
 
-		void set_self_breathe_ptfx(const BreathePtfxType& type)
+		PTFX::LoopedPTFX g_breatheStuffPTFX;
+		BreathePtfxType playerBreatheStuff = BreathePtfxType::None;
+
+		void SetSelfBreathePTFX(const BreathePtfxType& type)
 		{
-			PTFX::LoopedPTFX& ptfx = _globalBreatheStuff_ptfx;
+			PTFX::LoopedPTFX& ptfx = g_breatheStuffPTFX;
 
 			if (Menu::bitController ? !IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : !IsKeyDown(VirtualKey::J))
 			{
 				if (ptfx.Exists())
+				{
 					ptfx.Remove();
+				}
 				return;
 			}
 
@@ -69,7 +55,9 @@ namespace sub
 			}
 
 			if (!ptfx.IsAssetLoaded())
+			{
 				ptfx.LoadAsset();
+			}
 
 			if (playerPed.IsHuman())
 			{
@@ -309,48 +297,42 @@ namespace sub
 			}
 
 			if (GET_GAME_TIMER() >= Menu::delayedTimer)
+			{
 				ptfx.SetColour(RgbS::Random());
-
-			/*Vector3& pos = GET_PED_BONE_COORDS(PLAYER_PED_ID(), Bone::SKEL_Head, 0.3f, 0.0f, 0.0f);
-
-			std::vector<Hash> hey;
-			hey.push_back(GET_HASH_KEY("EXP_VFXTAG_TREV3_TRAILER"));
-			hey.push_back(GET_HASH_KEY("EXP_VFXTAG_FBI4_TRUCK_DOORS"));
-			hey.push_back(0xdf6446b8);
-
-			_ADD_SPECFX_EXPLOSION(pos.x, pos.y, pos.z, GET_RANDOM_INT_IN_RANGE(0, 41), hey[GET_RANDOM_INT_IN_RANGE(0, (int)hey.size() - 1)], 0.0f, TRUE, FALSE, 0x3f800000);
-			//_ADD_SPECFX_EXPLOSION(pos.x, pos.y, pos.z, EXPLOSION::GRENADE, 12, 1.0f, TRUE, TRUE, 0x3f800000);*/
+			}
 		}
 
 
-		void __AddOption(const std::string& text, const BreathePtfxType& type)
+		void AddOption(const std::string& text, const BreathePtfxType& type)
 		{
 			null = 0;
-			AddTickol(text, type == loop_player_breatheStuff, null, null); if (null)
+			AddTickol(text, type == playerBreatheStuff, null, null); if (null)
 			{
-				if (loop_player_breatheStuff == BreathePtfxType::None && type != BreathePtfxType::None)
+				if (playerBreatheStuff == BreathePtfxType::None && type != BreathePtfxType::None)
+				{
 					Game::Print::PrintBottomLeft(oss_ << "Hold " << "~b~" << (Menu::bitController ? "LS" : "J") << "~s~" << " to breathe out stuff!");
+				}
 
-				if (_globalBreatheStuff_ptfx.Exists())
-					_globalBreatheStuff_ptfx.Remove();
+				if (g_breatheStuffPTFX.Exists())
+				{
+					g_breatheStuffPTFX.Remove();
+				}
 
-				loop_player_breatheStuff = type;
+				playerBreatheStuff = type;
 			}
 		}
 
-		void BreatheStuffSub_()
+		void BreatheStuffMenu()
 		{
 			AddTitle("Breathe StufF");
-			for (auto& bsfxn : vCaptions_breatheStuffs)
+			for (auto& bsfxn : captionsBreatheStuff)
 			{
-				__AddOption(bsfxn.first, bsfxn.second);
+				AddOption(bsfxn.first, bsfxn.second);
 			}
 		}
-
 	}
-
 }
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(BREATHESTUFF,            sub::BreatheStuff_catind::BreatheStuffSub_)
+REGISTER_SUBMENU(BREATHESTUFF,            sub::BreatheStuff::BreatheStuffMenu)

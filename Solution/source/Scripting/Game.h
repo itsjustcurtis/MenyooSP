@@ -116,7 +116,7 @@ namespace Game
 
 		// Messages - Errors
 		void PrintErrorInvalidInput(std::string inputStr);
-		void PrintError_InvalidModel(std::string inputStr);
+		void PrintErrorInvalidModel(std::string inputStr);
 
 		// Text width
 		float GetTextWidth(const std::string& s, bool gxt = false);

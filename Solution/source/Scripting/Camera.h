@@ -43,7 +43,7 @@ enum class CameraShake : int
 	DeathFail
 };
 
-extern const std::vector<std::string> CameraShakeNames;
+extern const std::vector<std::string> cameraShakeNames;
 
 class Camera
 {

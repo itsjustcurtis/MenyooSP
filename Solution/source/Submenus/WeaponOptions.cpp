@@ -309,7 +309,7 @@ namespace sub
 
 						SetForgeGunDist(distanceFromCam); // Use buttons to change the hold distance value
 
-						Vector3 targetPos = camPos + (GameplayCamera::Direction_get() * distanceFromCam);
+						Vector3 targetPos = camPos + (GameplayCamera::GetDirection() * distanceFromCam);
 
 						if (entityArray.size() == 1)
 						{
@@ -332,7 +332,7 @@ namespace sub
 							PLAY_SOUND_FROM_ENTITY(-1, "Chopper_Destroyed", ped.Handle(), "FBI_HEIST_FIGHT_CHOPPER_SOUNDS", 0, 0);
 							//PTFX::trigger_ptfx_1("scr_carsteal4", "scr_carsteal4_wheel_burnout", 0, entityArray.front().Position_get(), Vector3(), 0.66f);
 
-							Vector3 force = GameplayCamera::Direction_get() * shootForce;
+							Vector3 force = GameplayCamera::GetDirection() * shootForce;
 
 							for (GTAentity entity : entityArray)
 							{
@@ -461,9 +461,9 @@ namespace sub
 
 	}
 
-	namespace TriggerFxGun_catind
+	namespace TriggerFxGun
 	{
-		void __AddOption_GunFx(const sub::Ptfx_catind::PtfxS& fx)
+		void AddOptionGunFX(const sub::PtfxSubs::PtfxS& fx)
 		{
 			bool pressed = false;
 			AddTickol(fx.name, (triggerFXGunData.asset == fx.asset && triggerFXGunData.effect == fx.fx), pressed, pressed, TICKOL::TICK); if (pressed)
@@ -482,7 +482,7 @@ namespace sub
 		}
 	}
 
-	void AddkgunOption_(const std::string& text, Hash newHash, bool *extra_option_code, bool gxt)
+	void AddKaboomGunOption(const std::string& text, Hash newHash, bool *extra_option_code, bool gxt)
 	{
 		bool pressed = false;
 		AddTickol(text, (kaboomGunHash == newHash), pressed, pressed, TICKOL::TICK, TICKOL::NONE, gxt); if (pressed)
@@ -504,23 +504,23 @@ namespace sub
 		AddToggle("Gun Toggle", kaboomGun);
 		AddToggle("Invisibility Toggle", kaboomGunInvis);
 		AddToggle("Random Toggle", kaboomGunRandBit);
-		AddkgunOption_("Molotov", 3);
-		AddkgunOption_("Steam", 11);
-		AddkgunOption_("Flame", 12);
-		AddkgunOption_("Water Hydrant", 13);
-		AddkgunOption_("Flare", 22);
-		AddkgunOption_("Huge", 29);
-		AddkgunOption_("SuperFlame", 30);
-		AddkgunOption_("Firework", 38);
-		AddkgunOption_("Snowball", 39);
-		AddkgunOption_("Valkyrie Cannon", 40);
-		AddkgunOption_("Monkey", 3268439891);
-		AddkgunOption_("Mani", 3367706194);
-		AddkgunOption_("Zombie", 2890614022);
-		AddkgunOption_("Pogo", 3696858125);
-		AddkgunOption_("Police Bus", 2287941233);
-		AddkgunOption_("Slamvan", 833469436);
-		AddkgunOption_("Fixter", 3458454463);
+		AddKaboomGunOption("Molotov", 3);
+		AddKaboomGunOption("Steam", 11);
+		AddKaboomGunOption("Flame", 12);
+		AddKaboomGunOption("Water Hydrant", 13);
+		AddKaboomGunOption("Flare", 22);
+		AddKaboomGunOption("Huge", 29);
+		AddKaboomGunOption("SuperFlame", 30);
+		AddKaboomGunOption("Firework", 38);
+		AddKaboomGunOption("Snowball", 39);
+		AddKaboomGunOption("Valkyrie Cannon", 40);
+		AddKaboomGunOption("Monkey", 3268439891);
+		AddKaboomGunOption("Mani", 3367706194);
+		AddKaboomGunOption("Zombie", 2890614022);
+		AddKaboomGunOption("Pogo", 3696858125);
+		AddKaboomGunOption("Police Bus", 2287941233);
+		AddKaboomGunOption("Slamvan", 833469436);
+		AddKaboomGunOption("Fixter", 3458454463);
 		AddOption("All Vehicles", null, nullFunc, SUB::LIST_VEHICLECATS);
 		AddOption("~b~Input~s~ Model", KaboomGun_Input);
 
@@ -535,7 +535,7 @@ namespace sub
 					kaboomGunHash = model.hash;
 					model.Load();
 				}
-				else Game::Print::PrintError_InvalidModel(inputStr);
+				else Game::Print::PrintErrorInvalidModel(inputStr);
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::KaboomGunHash, std::string(), 64U, "Enter vehicle model name:");
 		}
@@ -587,7 +587,7 @@ namespace sub
 
 	}
 
-	void AddpgunOption_(const std::string& text, GTAmodel::Model newModel, bool *extra_option_code)
+	void AddPedGunOption(const std::string& text, GTAmodel::Model newModel, bool *extra_option_code)
 	{
 		bool pressed = false;
 		AddTickol(text, (pedGunHash == newModel), pressed, pressed); if (pressed)
@@ -617,26 +617,26 @@ namespace sub
 		AddToggle("Gun Toggle", pedGun);
 		AddToggle("Random Toggle", pedGunRandBit);
 		AddOption("All Peds", null, nullFunc, SUB::PEDGUN_ALLPEDS);
-		AddpgunOption_("Pogo", 3696858125);
-		AddpgunOption_("Mime", 1021093698);
-		AddpgunOption_("Mani", 3367706194);
-		AddpgunOption_("Imponent Rage", 880829941);
-		AddpgunOption_("Lester", 1302784073);
-		AddpgunOption_("Fattie", 3050275044);
-		AddpgunOption_("Cop", 368603149);
-		AddpgunOption_("Pilot", 2872052743);
-		AddpgunOption_("Tracy", 3728026165);
-		AddpgunOption_("Jimmy", 1459905209);
-		AddpgunOption_("Chimp", 2825402133);
-		AddpgunOption_("Monkey", 3268439891);
-		AddpgunOption_("Hen", 1794449327);
-		AddpgunOption_("Seagull", 3549666813);
-		AddpgunOption_("Shark", 113504370);
-		AddpgunOption_("Fish", 802685111);
-		AddpgunOption_("Cow", 4244282910);
-		AddpgunOption_("Mountain Lion", 307287994);
-		AddpgunOption_("Husky", 1318032802);
-		AddpgunOption_("Chop", 351016938);
+		AddPedGunOption("Pogo", 3696858125);
+		AddPedGunOption("Mime", 1021093698);
+		AddPedGunOption("Mani", 3367706194);
+		AddPedGunOption("Imponent Rage", 880829941);
+		AddPedGunOption("Lester", 1302784073);
+		AddPedGunOption("Fattie", 3050275044);
+		AddPedGunOption("Cop", 368603149);
+		AddPedGunOption("Pilot", 2872052743);
+		AddPedGunOption("Tracy", 3728026165);
+		AddPedGunOption("Jimmy", 1459905209);
+		AddPedGunOption("Chimp", 2825402133);
+		AddPedGunOption("Monkey", 3268439891);
+		AddPedGunOption("Hen", 1794449327);
+		AddPedGunOption("Seagull", 3549666813);
+		AddPedGunOption("Shark", 113504370);
+		AddPedGunOption("Fish", 802685111);
+		AddPedGunOption("Cow", 4244282910);
+		AddPedGunOption("Mountain Lion", 307287994);
+		AddPedGunOption("Husky", 1318032802);
+		AddPedGunOption("Chop", 351016938);
 		AddOption("~b~Input~s~ Model", PedGun_Input);
 
 		if (PedGun_Input)
@@ -650,7 +650,7 @@ namespace sub
 					pedGunHash = model;
 					model.Load();
 				}
-				else Game::Print::PrintError_InvalidModel(inputStr);
+				else Game::Print::PrintErrorInvalidModel(inputStr);
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::PedGunHash, std::string(), 64U, "Enter ped model name:");
 		}
@@ -676,7 +676,7 @@ namespace sub
 		AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
 	}
 
-	void AddogunOption_(const std::string& text, GTAmodel::Model newModel, bool *extra_option_code, bool gxt)
+	void AddObjectGunOption(const std::string& text, GTAmodel::Model newModel, bool *extra_option_code, bool gxt)
 	{
 		bool pressed = false;
 		AddTickol(text, (objectGunHash == newModel.hash), pressed, pressed, TICKOL::TICK, TICKOL::NONE, gxt); if (pressed)
@@ -711,28 +711,28 @@ namespace sub
 		AddOption("All Objects", clearSearchStr, nullFunc, SUB::OBJECTSPAWNER_OBJS); if (clearSearchStr)
 			dict.clear();
 		AddOption("All Vehicles", null, nullFunc, SUB::LIST_VEHICLECATS);
-		AddogunOption_("Poo", 2452367939);
-		AddogunOption_("Body Parts", 3026386862);
-		AddogunOption_("Corpse", 3283329087);
-		AddogunOption_("Cone", 3235319999);
-		AddogunOption_("Shopping Cart", 1395334609);
-		AddogunOption_("Gold Bar", 4031179319);
-		AddogunOption_("Jukebox", 1945457558);
-		AddogunOption_("Christmas Tree S", 238789712);
-		AddogunOption_("Bank Safe", 1089807209);
-		AddogunOption_("W33D", 3989082015);
-		AddogunOption_("EMP", 932490441);
-		AddogunOption_("Laptop", 3618439924);
-		AddogunOption_("Molten Gate", 735855031);
-		AddogunOption_("Case", 1037912790);
-		AddogunOption_("Snowman", 2677555217);
-		AddogunOption_("Doors", 672525579);
-		AddogunOption_("Fixter", 3458454463);
-		AddogunOption_("Barracks", 630371791);
-		AddogunOption_("Lectro", 640818791);
-		AddogunOption_("Hakuchou", 1265391242);
-		AddogunOption_("Thrust", 1836027715);
-		AddogunOption_("Panto", 3863274624);
+		AddObjectGunOption("Poo", 2452367939);
+		AddObjectGunOption("Body Parts", 3026386862);
+		AddObjectGunOption("Corpse", 3283329087);
+		AddObjectGunOption("Cone", 3235319999);
+		AddObjectGunOption("Shopping Cart", 1395334609);
+		AddObjectGunOption("Gold Bar", 4031179319);
+		AddObjectGunOption("Jukebox", 1945457558);
+		AddObjectGunOption("Christmas Tree S", 238789712);
+		AddObjectGunOption("Bank Safe", 1089807209);
+		AddObjectGunOption("W33D", 3989082015);
+		AddObjectGunOption("EMP", 932490441);
+		AddObjectGunOption("Laptop", 3618439924);
+		AddObjectGunOption("Molten Gate", 735855031);
+		AddObjectGunOption("Case", 1037912790);
+		AddObjectGunOption("Snowman", 2677555217);
+		AddObjectGunOption("Doors", 672525579);
+		AddObjectGunOption("Fixter", 3458454463);
+		AddObjectGunOption("Barracks", 630371791);
+		AddObjectGunOption("Lectro", 640818791);
+		AddObjectGunOption("Hakuchou", 1265391242);
+		AddObjectGunOption("Thrust", 1836027715);
+		AddObjectGunOption("Panto", 3863274624);
 		AddOption("~b~Input~s~ Model", bObjectGun_Input);
 
 		if (bObjectGun_Input)
@@ -746,7 +746,7 @@ namespace sub
 					objectGunHash = model;
 					model.Load();
 				}
-				else Game::Print::PrintError_InvalidModel(inputStr);
+				else Game::Print::PrintErrorInvalidModel(inputStr);
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::ObjectGunHash, std::string(), 64U, "Enter object/vehicle model name:");
 		}
@@ -755,39 +755,39 @@ namespace sub
 
 	void List_VehicleCats_Sub()
 	{
-		using SpawnVehicle_catind::AddvcatOption_;
-		typedef SpawnVehicle_catind::Indices Indices;
+		using VehicleSpawner::AddVehicleCategoryOption;
+		typedef VehicleSpawner::Indices Indices;
 
 		AddTitle("Vehicles");
 		AddOption("Favourites", null, nullFunc, SUB::SPAWNVEHICLE_FAVOURITES);
 
 		AddBreak("---Cars---");
-		AddvcatOption_("Open Wheel", Indices::OPENWHEEL);
-		AddvcatOption_("Super", Indices::SUPER);
-		AddvcatOption_("Sports", Indices::SPORT);
-		AddvcatOption_("Sports Classics", Indices::SPORTSCLASSIC);
-		AddvcatOption_("Coupes", Indices::COUPE);
-		AddvcatOption_("Muscle", Indices::MUSCLE);
-		AddvcatOption_("Offroad", Indices::OFFROAD);
-		AddvcatOption_("SUVs", Indices::SUV);
-		AddvcatOption_("Sedans", Indices::SEDAN);
-		AddvcatOption_("Compacts", Indices::COMPACT);
-		AddvcatOption_("Drift", Indices::DRIFT);
+		AddVehicleCategoryOption("Open Wheel", Indices::OPENWHEEL);
+		AddVehicleCategoryOption("Super", Indices::SUPER);
+		AddVehicleCategoryOption("Sports", Indices::SPORT);
+		AddVehicleCategoryOption("Sports Classics", Indices::SPORTSCLASSIC);
+		AddVehicleCategoryOption("Coupes", Indices::COUPE);
+		AddVehicleCategoryOption("Muscle", Indices::MUSCLE);
+		AddVehicleCategoryOption("Offroad", Indices::OFFROAD);
+		AddVehicleCategoryOption("SUVs", Indices::SUV);
+		AddVehicleCategoryOption("Sedans", Indices::SEDAN);
+		AddVehicleCategoryOption("Compacts", Indices::COMPACT);
+		AddVehicleCategoryOption("Drift", Indices::DRIFT);
 
 		AddBreak("---Industrial---");
-		AddvcatOption_("Vans", Indices::VAN);
-		AddvcatOption_("Services", Indices::SERVICE);
-		AddvcatOption_("Industrial", Indices::INDUSTRIAL);
-		AddvcatOption_("Commercial", Indices::COMMERCIAL);
-		AddvcatOption_("Utility", Indices::UTILITY);
-		AddvcatOption_("Trains", Indices::TRAIN);
+		AddVehicleCategoryOption("Vans", Indices::VAN);
+		AddVehicleCategoryOption("Services", Indices::SERVICE);
+		AddVehicleCategoryOption("Industrial", Indices::INDUSTRIAL);
+		AddVehicleCategoryOption("Commercial", Indices::COMMERCIAL);
+		AddVehicleCategoryOption("Utility", Indices::UTILITY);
+		AddVehicleCategoryOption("Trains", Indices::TRAIN);
 
 		AddBreak("---Others---");
-		AddvcatOption_("Emergency", Indices::EMERGENCY);
-		AddvcatOption_("Military", Indices::MILITARY);
-		AddvcatOption_("Motorcycles", Indices::MOTORCYCLE);
-		AddvcatOption_("Bicycles", Indices::BICYCLE);
-		AddvcatOption_("Others", Indices::OTHER);
+		AddVehicleCategoryOption("Emergency", Indices::EMERGENCY);
+		AddVehicleCategoryOption("Military", Indices::MILITARY);
+		AddVehicleCategoryOption("Motorcycles", Indices::MOTORCYCLE);
+		AddVehicleCategoryOption("Bicycles", Indices::BICYCLE);
+		AddVehicleCategoryOption("Others", Indices::OTHER);
 
 		/*PCHAR chartick;
 		for (const auto& vimg : vVehicleBmps)
@@ -828,7 +828,7 @@ namespace sub
 			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteWeapons).c_str()).status != pugi::status_ok)
 				return false;
 			pugi::xml_node nodeRoot = doc.document_element();
-			return nodeRoot.find_child_by_attribute("hash", int_to_hexstring(whash, true).c_str()) != NULL;
+			return nodeRoot.find_child_by_attribute("hash", IntToHexString(whash, true).c_str()) != NULL;
 		}
 		bool AddWeaponToFavourites(Hash whash, const std::string& customName)
 		{
@@ -847,7 +847,7 @@ namespace sub
 			}
 			pugi::xml_node nodeRoot = doc.document_element();
 
-			auto nodeOldLoc = nodeRoot.find_child_by_attribute("hash", int_to_hexstring(whash, true).c_str());
+			auto nodeOldLoc = nodeRoot.find_child_by_attribute("hash", IntToHexString(whash, true).c_str());
 			if (nodeOldLoc) // If not null
 			{
 				nodeOldLoc.parent().remove_child(nodeOldLoc);
@@ -861,7 +861,7 @@ namespace sub
 				}
 			}
 			auto nodeNewLoc = nodeRoot.append_child("Weapon");
-			nodeNewLoc.append_attribute("hash") = int_to_hexstring(whash, true).c_str();
+			nodeNewLoc.append_attribute("hash") = IntToHexString(whash, true).c_str();
 			nodeNewLoc.append_attribute("customName") = customName.c_str();
 
 			WeaponIndivs::vWeaponLabels[whash] = customName;
@@ -876,7 +876,7 @@ namespace sub
 			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteWeapons).c_str()).status != pugi::status_ok)
 				return false;
 			pugi::xml_node nodeRoot = doc.document_element();
-			auto nodeOldLoc = nodeRoot.find_child_by_attribute("hash", int_to_hexstring(whash, true).c_str());
+			auto nodeOldLoc = nodeRoot.find_child_by_attribute("hash", IntToHexString(whash, true).c_str());
 			if (nodeOldLoc) // If not null
 			{
 				nodeOldLoc.parent().remove_child(nodeOldLoc);
@@ -1191,7 +1191,7 @@ namespace sub
 				selWeapon = get_weapon(whash);
 				if (selWeapon == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				selWeaponComponents = &selWeapon->components;
@@ -1275,7 +1275,7 @@ namespace sub
 				selWeapon = get_weapon(whash);
 				if (selWeapon == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				selWeaponComponents = &selWeapon->components;
@@ -1456,14 +1456,14 @@ namespace sub
 			for (auto& c : wct)
 			{
 				auto nodeWeapon = nodeLoadout.append_child("Weapon");
-				nodeWeapon.append_attribute("hash") = int_to_hexstring(c.weaponHash, true).c_str();
+				nodeWeapon.append_attribute("hash") = IntToHexString(c.weaponHash, true).c_str();
 				nodeWeapon.append_attribute("tint") = c.tint;
 				auto nodeComponents = nodeWeapon.append_child("Components");
 				for (auto& cc : c.componentHashes)
 				{
 					auto nodeComponent = nodeComponents.append_child("Component");
-					nodeComponent.append_attribute("hash") = int_to_hexstring(cc.first, true).c_str();
-					nodeComponent.append_attribute("livery") = int_to_hexstring(cc.second, true).c_str();
+					nodeComponent.append_attribute("hash") = IntToHexString(cc.first, true).c_str();
+					nodeComponent.append_attribute("livery") = IntToHexString(cc.second, true).c_str();
 				}
 			}
 
@@ -1679,7 +1679,7 @@ namespace sub
 					Game::Print::PrintBottomLeft("File ~b~deleted~s~.");
 				else
 					Game::Print::PrintBottomCentre("~r~Error~s~ deleting file.");
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				Menu::Up();
 				return;
 			}
@@ -1791,10 +1791,10 @@ namespace sub
 		{
 			if (!_searchStr.empty()) { if (current.find(_searchStr) == std::string::npos) continue; }
 
-			switch (Menu::currentsub_ar[Menu::currentsub_ar_index])
+			switch (Menu::currentArray[Menu::currentArrayIndex])
 			{
 			case SUB::OBJECTGUN:
-				AddogunOption_(current, GET_HASH_KEY(current));
+				AddObjectGunOption(current, GET_HASH_KEY(current));
 				break;
 
 			}
@@ -1821,7 +1821,7 @@ REGISTER_SUBMENU(WEAPONOPS_LASERSIGHT,         	sub::LaserSight_catind::Sub_Lase
 REGISTER_SUBMENU(FORGEGUN,                     	sub::ForgeGun_)
 REGISTER_SUBMENU(GRAVITYGUN,                   	sub::GravityGun_catind::Sub_GravityGun)
 REGISTER_SUBMENU(KABOOMGUN,                    	sub::KaboomGun_)
-REGISTER_SUBMENU(TRIGGERFXGUN,                 	sub::TriggerFxGun_catind::Sub_GunMain)
+REGISTER_SUBMENU(TRIGGERFXGUN,                 	sub::TriggerFxGun::Sub_GunMain)
 REGISTER_SUBMENU(BULLETGUN,                    	sub::BulletGun_)
 REGISTER_SUBMENU(PEDGUN,                       	sub::PedGun_)
 REGISTER_SUBMENU(PEDGUN_ALLPEDS,               	sub::PedGun_AllPeds)

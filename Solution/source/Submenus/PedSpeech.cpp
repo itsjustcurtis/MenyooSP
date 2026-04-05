@@ -9,29 +9,11 @@
 */
 #include "PedSpeech.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Util\ExePath.h"
-#include "..\Scripting\GTAped.h"
-#include "..\Scripting\Game.h"
-#include "..\Util\StringManip.h"
-
-#include <string>
-#include <array>
-#include <vector>
-#include <set>
-#include <simpleini\SimpleIni.h>
-
 namespace sub
 {
-	namespace Speech_catind
+	namespace Speech
 	{
 #pragma region ambient speech names old
-		//struct SpeechNameS { std::string title, label; };
 		std::vector<SpeechNameS> vSpeechNames
 		{
 			{ "Whimper", "WHIMPER" },
@@ -101,7 +83,6 @@ namespace sub
 
 #pragma endregion
 #pragma region ambient speech voice names old
-		//struct VoiceNameS { std::string title, label; };
 		std::vector<VoiceNameS> vVoiceNames
 		{
 			{ "No Voice", "NO_VOICE" },
@@ -182,19 +163,16 @@ namespace sub
 		};
 #pragma endregion
 #pragma region ambient speech data organised old
-		//struct AmbientSpeechDataS { std::string title, voiceName, speechName, paramName; };
 		const std::vector<AmbientSpeechDataS> vSpeechData
 		{
 			{ "Frightened", "MAUDE", "GENERIC_FRIGHTENED_HIGH", "SPEECH_PARAMS_FORCE" },
 			{ "Whimper (Male)", "WAVELOAD_PAIN_MALE", "WHIMPER", "SPEECH_PARAMS_FORCE_NORMAL" },
 			{ "Whimper (Female)", "WAVELOAD_PAIN_FEMALE", "WHIMPER", "SPEECH_PARAMS_FORCE_NORMAL" },
 			{ "Scream Panic (Male)", "WAVELOAD_PAIN_MALE", "SCREAM_PANIC", "SPEECH_PARAMS_FORCE_SHOUTED" },
-			//{ "Scream Panic (Female)", "WAVELOAD_PAIN_FEMALE", "SCREAM_PANIC", "SPEECH_PARAMS_FORCE_SHOUTED" },
 			{ "Scream Terror (Male)", "WAVELOAD_PAIN_MALE", "SCREAM_TERROR", "SPEECH_PARAMS_FORCE_SHOUTED" },
 			{ "Scream Terror (Female)", "WAVELOAD_PAIN_FEMALE", "SCREAM_TERROR", "SPEECH_PARAMS_FORCE_SHOUTED" },
 			{ "Scream Falling (Male)", "WAVELOAD_PAIN_MALE", "SUPER_HIGH_FALL", "SPEECH_PARAMS_FORCE_SHOUTED" },
 			{ "Scream Falling (Female)", "WAVELOAD_PAIN_FEMALE", "SUPER_HIGH_FALL", "SPEECH_PARAMS_FORCE_SHOUTED" },
-			//{ "Threaten (Shout)", "FIBConstruction", "SHOUT_THREATEN", "SPEECH_PARAMS_FORCE_SHOUTED_CLEAR" },
 			{ "Threaten (Challenge)", "S_M_Y_Cop_01_WHITE_FULL_02", "CHALLENGE_THREATEN", "SPEECH_PARAMS_FORCE" },
 			{ "Provoke Staring", "S_M_Y_Cop_01_WHITE_FULL_02", "PROVOKE_STARING", "SPEECH_PARAMS_FORCE" },
 			{ "Arrest Player (White)", "S_M_Y_COP_01_WHITE_MINI_03", "ARREST_PLAYER", "SPEECH_PARAMS_FORCE" },
@@ -202,14 +180,9 @@ namespace sub
 			{ "Bump (White)", "S_M_Y_COP_01_WHITE_MINI_03", "BUMP", "SPEECH_PARAMS_FORCE" },
 			{ "Bump (Black)", "S_M_Y_COP_01_BLACK_MINI_04", "BUMP", "SPEECH_PARAMS_FORCE" },
 			{ "Beg", "A_M_Y_BevHills_02_Black_FULL_01", "GUN_BEG", "SPEECH_PARAMS_FORCE" },
-			//{ "Run (Shout)", "FIBConstruction", "FIGHT_RUN", "SPEECH_PARAMS_FORCE_SHOUTED_CLEAR" },
 			{ "Generic Cheer 1", "A_M_M_Hillbilly_01_White_mini_02", "generic_cheer", "SPEECH_PARAMS_FORCE_SHOUTED" },
 			{ "Generic Cheer 2", "A_M_M_Hillbilly_01_White_mini_03", "generic_cheer", "SPEECH_PARAMS_FORCE_SHOUTED" },
 			{ "Generic Curse Medium 1", "A_M_M_Hillbilly_01_White_mini_03", "GENERIC_CURSE_MED", "SPEECH_PARAMS_FORCE_SHOUTED" },
-			//{ "Generic Curse Medium 2", "S_M_M_TRUCKER_01_BLACK_FULL_02", "GENERIC_CURSE_MED", "SPEECH_PARAMS_FORCE" },
-			//{ "Generic Curse High", "S_M_M_TRUCKER_01_BLACK_FULL_02", "GENERIC_CURSE_HIGH", "SPEECH_PARAMS_FORCE" },
-			//{ "Generic Frightened Medium", "S_M_M_TRUCKER_01_BLACK_FULL_02", "GENERIC_FRIGHTENED_MED", "SPEECH_PARAMS_FORCE" },
-			//{ "Generic Frightened High", "S_M_M_TRUCKER_01_BLACK_FULL_02", "GENERIC_FRIGHTENED_HIGH", "SPEECH_PARAMS_FORCE" },
 			{ "Generic Insult", "A_M_M_Hillbilly_01_White_mini_03", "GENERIC_INSULT_MED", "SPEECH_PARAMS_FORCE_SHOUTED" },
 			{ "Chat State", "A_M_M_Hillbilly_01_White_mini_03", "CHAT_STATE", "SPEECH_PARAMS_FORCE_SHOUTED" },
 			{ "Greet (Indian)", "MP_M_SHOPKEEP_01_PAKISTANI_MINI_01", "SHOP_GREET", "SPEECH_PARAMS_FORCE" },
@@ -242,9 +215,6 @@ namespace sub
 			{ "Steal (Indian)", "MP_M_SHOPKEEP_01_PAKISTANI_MINI_01", "SHOP_STEAL", "SPEECH_PARAMS_FORCE" },
 			{ "Steal (Latino)", "MP_M_SHOPKEEP_01_LATINO_MINI_01", "SHOP_STEAL", "SPEECH_PARAMS_FORCE" },
 			{ "Steal (Asian)", "MP_M_SHOPKEEP_01_CHINESE_MINI_01", "SHOP_STEAL", "SPEECH_PARAMS_FORCE" },
-			//{ "Scream (Indian)", "MP_M_SHOPKEEP_01_PAKISTANI_MINI_01", "SCREAM_PANIC", "SPEECH_PARAMS_FORCE" },
-			//{ "Scream (Latino)", "MP_M_SHOPKEEP_01_LATINO_MINI_01", "SCREAM_PANIC", "SPEECH_PARAMS_FORCE" },
-			//{ "Scream (Asian)", "MP_M_SHOPKEEP_01_CHINESE_MINI_01", "SCREAM_PANIC", "SPEECH_PARAMS_FORCE" },
 			{ "Dfah (Shout)", "ARM2bum", "AR2_DFAH", "SPEECH_PARAMS_FORCE_SHOUTED" },
 			{ "Franklin Sees Trevor Dying", "FRANKLIN_NORMAL", "BUDDY_SEES_TREVOR_DEATH", "SPEECH_PARAMS_FORCE" },
 			{ "Franklin Sees Michael Dying", "FRANKLIN_NORMAL", "BUDDY_SEES_MICHAEL_DEATH", "SPEECH_PARAMS_FORCE" },
@@ -265,7 +235,6 @@ namespace sub
 		};
 #pragma endregion
 #pragma region ambient speech SPEECH_PARAM names
-		//struct SpeechParamS { std::string title, label; };
 		const std::array<SpeechParamS, 37> vSpeechParams
 		{ {
 			{ "Standard", "SPEECH_PARAMS_STANDARD" },
@@ -318,18 +287,19 @@ namespace sub
 #pragma endregion
 
 		std::vector<AmbientVoice_t> vVoiceData;
-
 		AmbientVoice_t* _currVoiceInfo = nullptr;
 		uint16_t _currSpeechParamIndex = 3; // SPEECH_PARAMS_FORCE
 
-		std::string& _searchStr = dict2;
+		std::string& searchStr = dict2;
 
 		bool PopulateVoiceData()
 		{
 			CSimpleIniA ini;
 			ini.SetMultiKey(true);
 			if (ini.LoadFile((GetPathffA(Pathff::Main, true) + "PedSpeechList.txt").c_str()) != SI_Error::SI_OK)
+			{
 				return false;
+			}
 
 			CSimpleIniA::TNamesDepend keys;
 			const char* section = "all";
@@ -342,7 +312,9 @@ namespace sub
 			for (auto& k : keys)
 			{
 				if (keysDone.find(k.pItem) != keysDone.end())
+				{
 					continue;
+				}
 
 				vVoiceData.push_back({ k.pItem,{} });
 				auto& finalV = vVoiceData.back();
@@ -359,12 +331,10 @@ namespace sub
 					std::string randomSpeech = v.pItem;
 					randomSpeech = randomSpeech.substr(0, randomSpeech.find(','));
 					if (valuesDone.find(randomSpeech) != valuesDone.end())
+					{
 						continue;
+					}
 					finalV.speechNames.push_back(randomSpeech);
-
-					//std::string val = v.pItem;
-					//val.replace(val.find(','), 2, val.substr(val.length()-3)[0] == ',' ? "_0" : "_");
-					//finalV.speechNames.push_back(val);
 
 					valuesDone.insert(randomSpeech);
 				}
@@ -376,70 +346,76 @@ namespace sub
 				[](const AmbientVoice_t& a, const AmbientVoice_t& b)
 				-> bool { return a.voiceName < b.voiceName; });
 			for (auto& i : vVoiceData)
+			{
 				std::sort(i.speechNames.begin(), i.speechNames.end());
-
+			}
 			return true;
 		}
 
-		void Sub_VoiceChanger()
+		void VoiceChangerMenu()
 		{
 			GTAped ped = g_Ped1;
 			if (!ped.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
-			bool pressed = 0;
-
+			bool pressed = false;
 			AddTitle("Voice Changer");
 
-			bool bSearchPressed = false;
-			AddOption(_searchStr.empty() ? "SEARCH" : _searchStr, bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
+			bool searchPressed = false;
+			AddOption(searchStr.empty() ? "SEARCH" : searchStr, searchPressed, nullFunc, -1, true); 
+			if (searchPressed)
 			{
-				_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", boost::to_lower_copy(_searchStr));
-				boost::to_upper(_searchStr);
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToUpper, _searchStr, 126U, std::string(), _searchStr);
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
+				searchStr = Game::InputBox(searchStr, 126U, "SEARCH", boost::to_lower_copy(searchStr));
+				boost::to_upper(searchStr);
 			}
 
 			for (auto& v : vVoiceData)
 			{
-				if (!_searchStr.empty()) { if (boost::to_upper_copy(v.voiceName).find(_searchStr) == std::string::npos) continue; }
+				if (!searchStr.empty()) 
+				{ 
+					if (boost::to_upper_copy(v.voiceName).find(searchStr) == std::string::npos) 
+					{
+						continue;
+					}
+				}
 
-				pressed = 0;
-				AddOption(v.voiceName, pressed); if (pressed)
+				pressed = false;
+				AddOption(v.voiceName, pressed); 
+				if (pressed)
 				{
 					ped.RequestControl();
 					ped.VoiceName_set(v.voiceName);
 					Game::Print::PrintBottomCentre("Voice ~b~changed~s~.\n ~r~Note:~s~ This does not work for all peds.");
 				}
 			}
-
 		}
 
-		void Sub_AmbientSpeechPlayer()
+		void AmbientSpeechPlayerMenu()
 		{
 			GTAped ped = g_Ped1;
 			_currVoiceInfo = nullptr;
 			if (!ped.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
 			AddTitle("Speech");
 
-			bool bSearchPressed = false;
-			AddOption(_searchStr.empty() ? "SEARCH" : _searchStr, bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
+			bool searchPressed = false;
+			AddOption(searchStr.empty() ? "SEARCH" : searchStr, searchPressed, nullFunc, -1, true); 
+			if (searchPressed)
 			{
-				_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", boost::to_lower_copy(_searchStr));
-				boost::to_upper(_searchStr);
+				searchStr = Game::InputBox(searchStr, 126U, "SEARCH", boost::to_lower_copy(searchStr));
+				boost::to_upper(searchStr);
 			}
 
 			for (auto& v : vVoiceData)
 			{
-				if (!_searchStr.empty()) { if (boost::to_upper_copy(v.voiceName).find(_searchStr) == std::string::npos) continue; }
+				if (!searchStr.empty()) { if (boost::to_upper_copy(v.voiceName).find(searchStr) == std::string::npos) continue; }
 
 				bool bVoicePressed = false;
 				AddOption(v.voiceName, bVoicePressed); if (bVoicePressed)
@@ -455,7 +431,7 @@ namespace sub
 			GTAped ped = g_Ped1;
 			if (_currVoiceInfo == nullptr || !ped.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 			auto& v = *_currVoiceInfo;
@@ -485,6 +461,6 @@ namespace sub
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(VOICECHANGER,            sub::Speech_catind::Sub_VoiceChanger)
-REGISTER_SUBMENU(SPEECHPLAYER,            sub::Speech_catind::Sub_AmbientSpeechPlayer)
-REGISTER_SUBMENU(SPEECHPLAYER_INVOICE,    sub::Speech_catind::Sub_AmbientSpeechPlayer_InVoice)
+REGISTER_SUBMENU(VOICECHANGER,            sub::Speech::VoiceChangerMenu)
+REGISTER_SUBMENU(SPEECHPLAYER,            sub::Speech::AmbientSpeechPlayerMenu)
+REGISTER_SUBMENU(SPEECHPLAYER_INVOICE,    sub::Speech::Sub_AmbientSpeechPlayer_InVoice)

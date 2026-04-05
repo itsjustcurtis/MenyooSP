@@ -169,7 +169,7 @@ namespace sub::TeleportLocations_catind
 			{
 				if (currentClubhouseInfo.location == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				GTAped ped = g_Ped1;
@@ -325,7 +325,7 @@ namespace sub::TeleportLocations_catind
 			{
 				if (currentBusinessInfo.location == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				GTAped ped = g_Ped1;

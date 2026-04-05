@@ -110,9 +110,6 @@ namespace GTA2Cam
 				Vector3 myPos = myPed.GetPosition();
 
 				mainCam.SetPosition(myPos + mainCamRelativePos);
-				//mainCam.Rotation_set(-89.5f, 0.0f, 0.0f);
-
-				//SET_THIRD_PERSON_CAM_RELATIVE_PITCH_LIMITS_THIS_UPDATE(-90.0f, -90.0f);
 				SET_THIRD_PERSON_CAM_RELATIVE_PITCH_LIMITS_THIS_UPDATE(0.0f, 0.0f);
 				SET_THIRD_PERSON_CAM_RELATIVE_HEADING_LIMITS_THIS_UPDATE(0.0f, 0.0f);
 
@@ -131,12 +128,6 @@ namespace GTA2Cam
 						if (mainCamRelativePos.z > 19.0f)
 							mainCamRelativePos.z -= 0.14f;
 					}
-					//if (IS_CONTROL_PRESSED(0, INPUT_AIM))
-					//{
-					//}
-					//else //if (IS_CONTROL_JUST_RELEASED(0, INPUT_AIM))
-					//{
-					//}
 				}
 				else if (myVeh.Exists())
 				{
@@ -157,7 +148,6 @@ namespace GTA2Cam
 			{
 				mainCam.SetActive(true);
 				Camera::RenderScriptCams(true);
-				//mainCamRelativePos = Vector3(0.0f, -0.5f, 19.0f);
 			}
 		}
 		else // Cam doesn't exist
@@ -173,8 +163,4 @@ namespace GTA2Cam
 	{
 		g_gta2Cam.Toggle();
 	}
-
 }
-
-
-

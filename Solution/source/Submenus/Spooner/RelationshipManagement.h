@@ -21,13 +21,13 @@ namespace sub::Spooner
 	namespace RelationshipManagement
 	{
 		//struct RelationshipGroup_t{ std::string name; Hash handle; };
-		extern bool RG_Created;
-		extern std::string RG_SpoonerFriends;
-		extern std::string RG_SpoonerEnemies;
-		extern std::string RG_SpoonerNeutral;
-		extern std::string RG_Me;
+		extern bool rgCreated;
+		extern std::string rgSpoonerFriends;
+		extern std::string rgSpoonerEnemies;
+		extern std::string rgSpoonerNeutral;
+		extern std::string rgMe;
 
-		extern std::vector<std::string> vRGs;
+		extern std::vector<std::string> relationshipGroups;
 
 		//bool GetPedRelationshipGroup(const GTAped& ped, std::string& outGrp)
 		bool GetPedRelationshipGroup(const GTAped& ped, Hash& outHash);

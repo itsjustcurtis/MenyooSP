@@ -90,7 +90,7 @@ namespace sub::Spooner
 		}
 		void SetHealth::Run(void* ve)
 		{
-			reinterpret_cast<SpoonerEntity*>(ve)->Handle.Health_set(this->healthValue);
+			reinterpret_cast<SpoonerEntity*>(ve)->handle.SetHealth(this->healthValue);
 		}
 
 		void AddBlip::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -179,10 +179,10 @@ namespace sub::Spooner
 		{
 			SpoonerEntity& e = *reinterpret_cast<SpoonerEntity*>(ve);
 
-			//GTAblip(e.Handle.CurrentBlip()).Remove();
-			if (!GTAblip(e.Handle.CurrentBlip()).Exists()) // Only add new blip if none present already
+			//GTAblip(e.handle.CurrentBlip()).Remove();
+			if (!GTAblip(e.handle.CurrentBlip()).Exists()) // Only add new blip if none present already
 			{
-				this->blip = e.Handle.AddBlip();
+				this->blip = e.handle.AddBlip();
 				this->blip.SetFriendly(this->isFriendly);
 				this->blip.SetFlashing(this->isFlashing);
 				this->blip.SetIcon(this->icon);
@@ -202,7 +202,7 @@ namespace sub::Spooner
 
         			if (this->syncRotation)
         			{
-            			this->blip.SyncRotationWithEntity(e.Handle.GetHandle());
+            			this->blip.SyncRotationWithEntity(e.handle.GetHandle());
         			}
     			}
 				// New Functions
@@ -222,7 +222,7 @@ namespace sub::Spooner
 		{
 			SpoonerEntity& e = *reinterpret_cast<SpoonerEntity*>(ve);
 
-			GTAblip(e.Handle.CurrentBlip()).Remove();
+			GTAblip(e.handle.CurrentBlip()).Remove();
 		}
 
 		Pause::Pause()
@@ -849,7 +849,7 @@ namespace sub::Spooner
 		}
 		void ScenarioAction::RunP(GTAped& ep)
 		{
-			//const PCHAR scen = (const PCHAR)AnimationSub_TaskScenarios::vNamedScenarios[scenarioArrIndex].label.c_str();
+			//const PCHAR scen = (const PCHAR)AnimationTaskScenarios::vNamedScenarios[scenarioArrIndex].label.c_str();
 			//const PCHAR scen = (const PCHAR)this->scenarioName.c_str();
 			//if (!IS_PED_USING_SCENARIO(ep.Handle(), scen))
 			ep.Task().StartScenario(this->scenarioName);
@@ -905,7 +905,7 @@ namespace sub::Spooner
 			if (this->durationToAnimDuration)
 				this->duration = GET_ENTITY_ANIM_TOTAL_TIME(ep.Handle(), this->animDict.c_str(), this->animName.c_str());
 
-			//if (IS_ENTITY_PLAYING_ANIM(ep.Handle, animDict.c_str(), animDict.c_str(), 3))
+			//if (IS_ENTITY_PLAYING_ANIM(ep.handle, animDict.c_str(), animDict.c_str(), 3))
 			ep.Task().PlayAnimation(this->animDict, this->animName, this->speed, this->speedMultiplier, this->durationAfterLife > 0 ? -1 : this->duration, this->flag, 0.0f, this->lockPos);
 		}
 		void PlayAnimation::LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle)
@@ -916,7 +916,7 @@ namespace sub::Spooner
 
 		void SetActiveWeapon::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
 		{
-			nodeTask.append_child("WeaponHash").text() = int_to_hexstring(weaponHash, true).c_str();
+			nodeTask.append_child("WeaponHash").text() = IntToHexString(weaponHash, true).c_str();
 		}
 		void SetActiveWeapon::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
 		{
@@ -1913,10 +1913,10 @@ namespace sub::Spooner
 		{
 			SpoonerEntity& e = *reinterpret_cast<SpoonerEntity*>(ve);
 			GTAentity att;
-			if (e.AttachmentArgs.isAttached && sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.Handle, att))
-				EntityManagement::AttachEntity(e, att, e.AttachmentArgs.boneIndex, e.AttachmentArgs.offset, (this->isRelative ? e.AttachmentArgs.rotation : Vector3()) + rotationValue);
+			if (e.attachmentArgs.isAttached && sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.handle, att))
+				EntityManagement::AttachEntity(e, att, e.attachmentArgs.boneIndex, e.attachmentArgs.offset, (this->isRelative ? e.attachmentArgs.rotation : Vector3()) + rotationValue);
 			else
-				e.Handle.SetRotation((this->isRelative ? e.Handle.Rotation_get() : Vector3()) + rotationValue);
+				e.handle.SetRotation((this->isRelative ? e.handle.Rotation_get() : Vector3()) + rotationValue);
 		}
 
 		void ChangeOpacity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -1946,7 +1946,7 @@ namespace sub::Spooner
 			if (this->opacityValue == 269)
 				ep.ResetAlpha();
 			else
-				ep.Alpha_set(this->opacityValue);
+				ep.SetAlpha(this->opacityValue);
 		}
 
 		void TriggerFx::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const

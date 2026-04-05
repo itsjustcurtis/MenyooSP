@@ -9,33 +9,20 @@
 */
 #include "StatManager.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-//#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Scripting\Game.h"
-#include "..\Util\FileLogger.h"
-
-#include <string>
-#include <vector>
-#include <utility>
-
 namespace sub
 {
-	namespace SpStatManager_catind
+	namespace SpStatManager
 	{
-		//enum class StatDataType_t
-		//struct CharStat_t { std::string name, caption; StatDataType_t type; float min, max; };
-		struct NamedCharStatList_t { std::string title; std::vector<CharStat_t> list; };
-
-#pragma region character stats		
+		struct NamedCharStatList_t 
+		{ 
+			std::string title; 
+			std::vector<CharStat_t> list; 
+		};
+	
 		const std::array<NamedCharStatList_t, 5> vCharStatLists
 		{ {
 			{ "Cash",{
 				{ "TOTAL_CASH", "Total Cash", StatDataType_t::INT, 0, static_cast<float>(INT_MAX) }
-				//{ "TOTAL_CASH_EARNED", "Earned Cash", StatDataType_t::INT, 0, INT_MAX }
 			} },
 			{ "Abilities (ALPHA)",{
 				{ "STAMINA", "Stamina", StatDataType_t::INT, 0, 100 },
@@ -73,9 +60,8 @@ namespace sub
 				{ "PROP_BOUGHT_STRIP", "Strip Club", StatDataType_t::BOOL, 0, 0 }
 			} }
 			} };
-#pragma endregion
 
-		std::pair<std::string, std::string> vCharNames[3] = { { "SP0_", "Michael" },{ "SP1_", "Franklin" },{ "SP2_", "Trevor" } };
+		std::pair<std::string, std::string> charNames[3] = { { "SP0_", "Michael" },{ "SP1_", "Franklin" },{ "SP2_", "Trevor" } };
 		std::pair<std::string, std::string>* selectedCharName;
 		const NamedCharStatList_t* selectedStatList;
 
@@ -86,40 +72,47 @@ namespace sub
 			STAT_GET_INT(GET_HASH_KEY(name), &tempp, -1);
 			return tempp;
 		}
+
 		bool StatGetBool(const std::string& name)
 		{
 			int tempp;
 			STAT_GET_BOOL(GET_HASH_KEY(name), &tempp, -1);
 			return tempp != 0;
 		}
+
 		float StatGetFloat(const std::string& name)
 		{
 			float tempp;
 			STAT_GET_FLOAT(GET_HASH_KEY(name), &tempp, -1);
 			return tempp;
 		}
+
 		std::string StatGetString(const std::string& name)
 		{
 			return STAT_GET_STRING(GET_HASH_KEY(name), -1);
 		}
+
 		void StatSetInt(const std::string& name, int value)
 		{
 			STAT_SET_INT(GET_HASH_KEY(name), value, 1);
 		}
+
 		void StatSetBool(const std::string& name, bool value)
 		{
 			STAT_SET_BOOL(GET_HASH_KEY(name), value, 1);
 		}
+
 		void StatSetFloat(const std::string& name, float value)
 		{
 			STAT_SET_FLOAT(GET_HASH_KEY(name), value, 1);
 		}
+
 		void StatSetString(const std::string& name, const std::string& value)
 		{
 			STAT_SET_STRING(GET_HASH_KEY(name), value.c_str(), 1);
 		}
 
-		void __AddOption(const CharStat_t& stat)
+		void AddOptionStats(const CharStat_t& stat)
 		{
 			bool bStatValue_plus = false, bStatValue_minus = false, bStatValue_input = false;
 
@@ -150,17 +143,29 @@ namespace sub
 							statValue = stoi(inputStr);
 							StatSetInt(statName, statValue);
 						}
-						catch (...) { 
+						catch (...) 
+						{ 
 							Game::Print::PrintErrorInvalidInput(inputStr); 
 							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Integer for " + stat.caption + " Entered");
 						}
 					}
-					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpStatManagerInputInt, std::string(), (int)std::to_string((int)stat.max).length(), "Enter integer value:", std::to_string(statValue));
-					//OnscreenKeyboard::State::arg1._uint = GET_HASH_KEY(statName);
-					//OnscreenKeyboard::State::arg2._int = statValue;
 				}
-				if (bStatValue_plus) { if (statValue < stat.max) { statValue += 1.0f; StatSetInt(statName, statValue); } }
-				if (bStatValue_minus) { if (statValue > stat.min) { statValue -= 1.0f; StatSetInt(statName, statValue); } }
+				if (bStatValue_plus) 
+				{ 
+					if (statValue < stat.max) 
+					{ 
+						statValue += 1.0f; 
+						StatSetInt(statName, statValue); 
+					} 
+				}
+				if (bStatValue_minus) 
+				{ 
+					if (statValue > stat.min) 
+					{ 
+						statValue -= 1.0f; 
+						StatSetInt(statName, statValue); 
+					} 
+				}
 				break;
 			}
 			case StatDataType_t::FLOAT:
@@ -176,27 +181,39 @@ namespace sub
 							statValue = stof(inputStr);
 							StatSetFloat(statName, statValue);
 						}
-						catch (...) { 
+						catch (...) 
+						{ 
 							Game::Print::PrintErrorInvalidInput(inputStr);
 							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Float for " + stat.caption + " Entered");
 						}
 					}
-					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpStatManagerInputFloat, std::string(), 13U, "Enter floating point value:", std::to_string(statValue));
-					//OnscreenKeyboard::State::arg1._uint = GET_HASH_KEY(statName);
-					//OnscreenKeyboard::State::arg2._float = statValue;
 				}
-				if (bStatValue_plus) { if (statValue < stat.max) { statValue += 0.05f; StatSetInt(statName, statValue); } }
-				if (bStatValue_minus) { if (statValue > stat.min) { statValue -= 0.05f; StatSetInt(statName, statValue); } }
+				if (bStatValue_plus) 
+				{ 
+					if (statValue < stat.max) 
+					{ 
+						statValue += 0.05f; 
+						StatSetInt(statName, statValue); 
+					} 
+				}
+				if (bStatValue_minus) 
+				{ 
+					if (statValue > stat.min) 
+					{ 
+						statValue -= 0.05f; 
+						StatSetInt(statName, statValue); 
+					} 
+				}
 				break;
 			}
 			}
 		}
 
-		void Sub_SpStatManager()
+		void SPStatsManagerMenu()
 		{
 			AddTitle("Stat Manager");
 
-			for (auto& charName : vCharNames)
+			for (auto& charName : charNames)
 			{
 				bool bGoToCharacterPressed = false;
 				AddOption(charName.second, bGoToCharacterPressed, nullFunc, SUB::SPSTATMANAGER_INCHAR); if (bGoToCharacterPressed)
@@ -205,19 +222,23 @@ namespace sub
 				}
 			}
 
-			// Is this legal?
 			AddBreak("---Achievements---");
-			bool bUnlockAllAch = false;
-			AddOption("Unlock All Achievements", bUnlockAllAch); if (bUnlockAllAch)
+			bool unlockAllAchievements = false;
+			AddOption("Unlock All Achievements", unlockAllAchievements); 
+			if (unlockAllAchievements)
 			{
 				int numAchievements = 78;
-				//gamever
 				for (int i = 0; i < numAchievements; i++)
+				{
 					if (!HAS_ACHIEVEMENT_BEEN_PASSED(i))
+					{
 						GIVE_ACHIEVEMENT_TO_PLAYER(i);
+					}
+				}
 			}
 
-			auto unlockAchievement = [](int id, const char* description) {
+			auto unlockAchievement = [](int id, const char* description) 
+			{
 				bool unlockFlag = false;
 				AddOption(std::to_string(id) + ". " + description, unlockFlag);
 				if (unlockFlag && !HAS_ACHIEVEMENT_BEEN_PASSED(id))
@@ -305,14 +326,16 @@ namespace sub
 			unlockAchievement(77, "Unlock 'Masterminds'");
 
 		}
-		void Sub_InChar()
+		void SPStatsInCharMenu()
 		{
 			AddTitle(selectedCharName->second);
 
 			for (auto& statList : vCharStatLists)
 			{
 				if (statList.list.size() == 1)
-					__AddOption(statList.list.front());
+				{
+					AddOptionStats(statList.list.front());
+				}
 				else
 				{
 					bool bStatListPressed = false;
@@ -323,23 +346,21 @@ namespace sub
 				}
 			}
 		}
-		void Sub_InChar_InList()
+		void InCharInListMenu()
 		{
 			AddTitle(selectedStatList->title);
 
 			for (auto& stat : selectedStatList->list)
 			{
-				__AddOption(stat);
+				AddOptionStats(stat);
 			}
 		}
-
 	}
-
 }
 
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(SPSTATMANAGER,               	sub::SpStatManager_catind::Sub_SpStatManager)
-REGISTER_SUBMENU(SPSTATMANAGER_INCHAR,        	sub::SpStatManager_catind::Sub_InChar)
-REGISTER_SUBMENU(SPSTATMANAGER_INCHAR_INLIST, 	sub::SpStatManager_catind::Sub_InChar_InList)
+REGISTER_SUBMENU(SPSTATMANAGER,               	sub::SpStatManager::SPStatsManagerMenu)
+REGISTER_SUBMENU(SPSTATMANAGER_INCHAR,        	sub::SpStatManager::SPStatsInCharMenu)
+REGISTER_SUBMENU(SPSTATMANAGER_INCHAR_INLIST, 	sub::SpStatManager::InCharInListMenu)

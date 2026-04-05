@@ -12,7 +12,7 @@
 #include <string>
 
 // Integer/String manipulation
-std::string int_to_hexstring(unsigned long i, bool zerox);
+std::string IntToHexString(unsigned long i, bool zerox);
 
 namespace boost
 {

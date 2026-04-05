@@ -141,7 +141,7 @@ void GTAentity::Dynamic_set(bool value)
 	}
 }
 
-float GTAentity::Heading_get() const
+float GTAentity::GetHeading() const
 {
 	return GET_ENTITY_HEADING(this->mHandle);
 }
@@ -154,7 +154,7 @@ int GTAentity::GetHealth() const
 {
 	return GET_ENTITY_HEALTH(this->mHandle);
 }
-void GTAentity::Health_set(int value)
+void GTAentity::SetHealth(int value)
 {
 	SET_ENTITY_HEALTH(this->mHandle, value, 0);
 }
@@ -272,7 +272,7 @@ bool GTAentity::MissionEntity_get() const
 {
 	return IS_ENTITY_A_MISSION_ENTITY(this->mHandle) != 0;
 }
-void GTAentity::MissionEntity_set(bool value)
+void GTAentity::SetMissionEntity(bool value)
 {
 	SET_ENTITY_AS_MISSION_ENTITY(this->mHandle, value, 1);
 }
@@ -283,8 +283,8 @@ bool GTAentity::IsUpright() const
 }
 void GTAentity::SetUpright()
 {
-	SET_ENTITY_HEADING(this->mHandle, Heading_get() + 1.0f);
-	SET_ENTITY_HEADING(this->mHandle, Heading_get() - 1.0f);
+	SET_ENTITY_HEADING(this->mHandle, GetHeading() + 1.0f);
+	SET_ENTITY_HEADING(this->mHandle, GetHeading() - 1.0f);
 }
 
 bool GTAentity::IsUpsideDown() const
@@ -305,7 +305,7 @@ int GTAentity::GetMaxHealth() const
 {
 	return GET_ENTITY_MAX_HEALTH(this->mHandle);
 }
-void GTAentity::MaxHealth_set(int value)
+void GTAentity::SetMaxHealth(int value)
 {
 	SET_ENTITY_MAX_HEALTH(this->mHandle, value);
 }
@@ -412,11 +412,11 @@ Vector3 GTAentity::SpeedVector_get(bool relative)
 	return GET_ENTITY_SPEED_VECTOR(this->mHandle, relative);
 }
 
-int GTAentity::Alpha_get() const
+int GTAentity::GetAlpha() const
 {
 	return GET_ENTITY_ALPHA(this->mHandle);
 }
-void GTAentity::Alpha_set(int value)
+void GTAentity::SetAlpha(int value)
 {
 	if (value == 255)
 		RESET_ENTITY_ALPHA(this->mHandle);
@@ -428,16 +428,16 @@ void GTAentity::ResetAlpha()
 	RESET_ENTITY_ALPHA(this->mHandle);
 }
 
-int GTAentity::LodDistance_get() const
+int GTAentity::GetLODDistance() const
 {
 	return GET_ENTITY_LOD_DIST(this->mHandle);
 }
-void GTAentity::LodDistance_set(int value)
+void GTAentity::SetLODDistance(int value)
 {
 	SET_ENTITY_LOD_DIST(this->mHandle, value);
 }
 
-bool GTAentity::HasGravity_get() const
+bool GTAentity::GetHasGravity() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -446,7 +446,7 @@ bool GTAentity::HasGravity_get() const
 	}
 	else return true;
 }
-void GTAentity::HasGravity_set(bool value)
+void GTAentity::SetHasGravity(bool value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -720,7 +720,7 @@ void GTAentity::Delete(bool tele)
 	GTAblip blip = this->CurrentBlip();
 	if (blip.Exists()) blip.Remove();
 
-	this->MissionEntity_set(false);
+	this->SetMissionEntity(false);
 
 	if (tele) SET_ENTITY_COORDS_NO_OFFSET(this->mHandle, 32.2653f, 7683.5249f, 0.5696f, 0, 0, 0);
 

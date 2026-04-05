@@ -74,12 +74,12 @@ namespace sub
 		float _fSaveRangeRadius = 5.0f;
 		UINT8 _copyEntTexterValue = 0;
 		UINT8 _entTypeToShowTexterValue = 0;
-		void SetEnt241() { g_Ped1 = SelectedEntity.Handle.Handle(); }
-		void SetEnt12() { g_Ped4 = SelectedEntity.Handle.Handle(); }
+		void SetEnt241() { g_Ped1 = selectedEntity.handle.Handle(); }
+		void SetEnt12() { g_Ped4 = selectedEntity.handle.Handle(); }
 
 		void Sub_SpoonerMain()
 		{
-			SelectedEntity.Handle = 0;
+			selectedEntity.handle = 0;
 			_searchStr.clear(); // Sub_SaveFiles _searchStr
 			dict3.clear(); // Sub_SaveFiles _dir
 
@@ -113,27 +113,27 @@ namespace sub
 			AddToggle("Spawn Still Peds (Block Fleeing)", Settings::bSpawnStillPeds);
 			AddToggle("Make Added (To DB) Entities Persistent", Settings::bAddToDbAsMissionEntities);
 			AddToggle("Teleport To Reference When Loading File", Settings::bTeleportToReferenceWhenLoadingFile);
-			AddTexter("Spooner Mode Method", static_cast<UINT8>(Settings::SpoonerModeMode), vSpoonerModeMode, null, bSmm_plus, bSmm_minus);
+			AddTexter("Spooner Mode Method", static_cast<UINT8>(Settings::spoonerModeMode), spoonerModeModeNames, null, bSmm_plus, bSmm_minus);
 
 			if (Menu::bitController)
 			{
-				AddNumber("Movement Sensitivity (Gamepad)", Settings::CameraMovementSensitivityGamepad, 4, movsensG_input, movsensG_plus, movsensG_minus);
-				AddNumber("Rotation Sensitivity (Gamepad)", Settings::CameraRotationSensitivityGamepad, 4, rotsensG_input, rotsensG_plus, rotsensG_minus);
+				AddNumber("Movement Sensitivity (Gamepad)", Settings::cameraMovementSensitivityGamepad, 4, movsensG_input, movsensG_plus, movsensG_minus);
+				AddNumber("Rotation Sensitivity (Gamepad)", Settings::cameraRotationSensitivityGamepad, 4, rotsensG_input, rotsensG_plus, rotsensG_minus);
 			}
 			else
 			{
-				AddNumber("Movement Sensitivity (Keyboard)", Settings::CameraMovementSensitivityKeyboard, 4, movsensK_input, movsensK_plus, movsensK_minus);
-				AddNumber("Rotation Sensitivity (Mouse)", Settings::CameraRotationSensitivityMouse, 4, rotsensK_input, rotsensK_plus, rotsensK_minus);
+				AddNumber("Movement Sensitivity (Keyboard)", Settings::cameraMovementSensitivityKeyboard, 4, movsensK_input, movsensK_plus, movsensK_minus);
+				AddNumber("Rotation Sensitivity (Mouse)", Settings::cameraRotationSensitivityMouse, 4, rotsensK_input, rotsensK_plus, rotsensK_minus);
 			}
 
 			AddOption("Reload Model List Files", null, PopulateGlobalEntityModelsArrays);
 
-			if (bSmm_plus) { if ((UINT8)Settings::SpoonerModeMode < vSpoonerModeMode.size() - 1) Settings::SpoonerModeMode = eSpoonerModeMode((UINT8)Settings::SpoonerModeMode + 1); }
-			if (bSmm_minus) { if ((UINT8)Settings::SpoonerModeMode > 0) Settings::SpoonerModeMode = eSpoonerModeMode((UINT8)Settings::SpoonerModeMode - 1); }
+			if (bSmm_plus) { if ((UINT8)Settings::spoonerModeMode < spoonerModeModeNames.size() - 1) Settings::spoonerModeMode = eSpoonerModeMode((UINT8)Settings::spoonerModeMode + 1); }
+			if (bSmm_minus) { if ((UINT8)Settings::spoonerModeMode > 0) Settings::spoonerModeMode = eSpoonerModeMode((UINT8)Settings::spoonerModeMode - 1); }
 
 			if (movsensK_input || movsensG_input)
 			{
-				float& val = (movsensK_input ? Settings::CameraMovementSensitivityKeyboard : Settings::CameraMovementSensitivityGamepad);
+				float& val = (movsensK_input ? Settings::cameraMovementSensitivityKeyboard : Settings::cameraMovementSensitivityGamepad);
 				std::string inputStr = Game::InputBox("", 11U, "", std::to_string(val).substr(0, 10));
 				if (inputStr.length() > 0)
 				{
@@ -145,20 +145,20 @@ namespace sub
 			}
 			if (movsensK_plus || movsensG_plus)
 			{
-				float& val = (movsensK_plus ? Settings::CameraMovementSensitivityKeyboard : Settings::CameraMovementSensitivityGamepad);
+				float& val = (movsensK_plus ? Settings::cameraMovementSensitivityKeyboard : Settings::cameraMovementSensitivityGamepad);
 				if (val < FLT_MAX)
 					val += (movsensK_minus ? 0.0005f : 0.0005f);
 			}
 			if (movsensK_minus || movsensG_minus)
 			{
-				float& val = (movsensK_minus ? Settings::CameraMovementSensitivityKeyboard : Settings::CameraMovementSensitivityGamepad);
+				float& val = (movsensK_minus ? Settings::cameraMovementSensitivityKeyboard : Settings::cameraMovementSensitivityGamepad);
 				if (val > 0.0f)
 					val -= (movsensK_minus ? 0.0005f : 0.0005f);
 			}
 
 			if (rotsensK_input || rotsensG_input)
 			{
-				float& val = (rotsensK_input ? Settings::CameraRotationSensitivityMouse : Settings::CameraRotationSensitivityGamepad);
+				float& val = (rotsensK_input ? Settings::cameraRotationSensitivityMouse : Settings::cameraRotationSensitivityGamepad);
 				std::string inputStr = Game::InputBox("", 11U, "", std::to_string(val).substr(0, 10));
 				if (inputStr.length() > 0)
 				{
@@ -171,13 +171,13 @@ namespace sub
 			if (rotsensK_plus || rotsensG_plus)
 			{
 				bool isK = rotsensK_plus;
-				float& val = (rotsensK_plus ? Settings::CameraRotationSensitivityMouse : Settings::CameraRotationSensitivityGamepad);
+				float& val = (rotsensK_plus ? Settings::cameraRotationSensitivityMouse : Settings::cameraRotationSensitivityGamepad);
 				if (val < FLT_MAX)
 					val += (rotsensK_plus ? 0.0005f : 0.0005f);
 			}
 			if (rotsensK_minus || rotsensG_minus)
 			{
-				float& val = (rotsensK_minus ? Settings::CameraRotationSensitivityMouse : Settings::CameraRotationSensitivityGamepad);
+				float& val = (rotsensK_minus ? Settings::cameraRotationSensitivityMouse : Settings::cameraRotationSensitivityGamepad);
 				if (val > 0.0f)
 					val -= (rotsensK_minus ? 0.0005f : 0.0005f);
 			}
@@ -502,7 +502,7 @@ namespace sub
 					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to delete file.");
 					addlog(ige::LogType::LOG_ERROR, "Attempt to delete file " + filePath + " failed");
 				}
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				Menu::Up();
 				return;
 			}
@@ -871,14 +871,14 @@ namespace sub
 					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to delete file.");
 					addlog(ige::LogType::LOG_ERROR, "Attempt to delete file" + filePath + " failed");
 				}
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				Menu::Up();
 				return;
 			}
 		}
 		void Sub_ManageEntities()
 		{
-			SelectedEntity.Handle = 0;
+			selectedEntity.handle = 0;
 
 			SpoonerEntity* p_entityToDelete = nullptr;
 			GTAentity myPed = PLAYER_PED_ID();
@@ -892,17 +892,17 @@ namespace sub
 			bool bPressedSelf = false;
 			AddOption((std::string)"Self (" + (bIsSelfInDb ? "Is In Database)" : "Is Not In Database)"), bPressedSelf); if (bPressedSelf)
 			{
-				if (bIsSelfInDb) SelectedEntity = Databases::EntityDb[myIndexInDb];
+				if (bIsSelfInDb) selectedEntity = Databases::EntityDb[myIndexInDb];
 				else
 				{
-					SelectedEntity = SpoonerEntity();
-					SelectedEntity.Dynamic = true;
-					SelectedEntity.Handle = myPed;
-					SelectedEntity.HashName = get_ped_model_label(myPed.Model(), true);
-					if (SelectedEntity.HashName.length() == 0)
-						SelectedEntity.HashName = "Player (Unk Model)";
-					SelectedEntity.IsStill = true;
-					SelectedEntity.Type = EntityType::PED;
+					selectedEntity = SpoonerEntity();
+					selectedEntity.dynamic = true;
+					selectedEntity.handle = myPed;
+					selectedEntity.hashName = GetPedModelLabel(myPed.Model(), true);
+					if (selectedEntity.hashName.length() == 0)
+						selectedEntity.hashName = "Player (Unk Model)";
+					selectedEntity.isStill = true;
+					selectedEntity.type = EntityType::PED;
 				}
 				Menu::SetSub_delayed = SUB::SPOONER_SELECTEDENTITYOPS;
 				return;
@@ -920,17 +920,17 @@ namespace sub
 				for (UINT i = 0; i < Databases::EntityDb.size(); i++)
 				{
 					auto& e = Databases::EntityDb[i];
-					if (_entTypeToShowTexterValue != 0 && static_cast<UINT8>(e.Type) != _entTypeToShowTexterValue)
+					if (_entTypeToShowTexterValue != 0 && static_cast<UINT8>(e.type) != _entTypeToShowTexterValue)
 						continue;
-					bool bEntityExists = e.Handle.Exists();
+					bool bEntityExists = e.handle.Exists();
 					bool bEntityPressed = false;
 
 					const std::string& strEntTypeConcat = (*Menu::currentopATM == Menu::printingop + 1 ? "  ~bold~[" + e.TypeName() + "]~bold~" : std::string());
-					AddOption(e.HashName + (bEntityExists ? "" : " (Invalid)") + strEntTypeConcat, bEntityPressed); if (bEntityPressed)
+					AddOption(e.hashName + (bEntityExists ? "" : " (Invalid)") + strEntTypeConcat, bEntityPressed); if (bEntityPressed)
 					{
 						if (bEntityExists)
 						{
-							SelectedEntity = e;
+							selectedEntity = e;
 							Menu::SetSub_delayed = SUB::SPOONER_SELECTEDENTITYOPS;
 						}
 					}
@@ -938,7 +938,7 @@ namespace sub
 
 					if (*Menu::currentopATM == Menu::printingop)
 					{
-						EntityManagement::ShowArrowAboveEntity(e.Handle);
+						EntityManagement::ShowArrowAboveEntity(e.handle);
 
 						bool bShortcutDeletePressed;
 						if (Menu::bitController)
@@ -966,9 +966,9 @@ namespace sub
 			if (p_entityToDelete != nullptr)
 			{
 				auto e = *p_entityToDelete;
-				if (e.Handle.Exists())
+				if (e.handle.Exists())
 				{
-					e.Handle.RequestControl(600);
+					e.handle.RequestControl(600);
 					EntityManagement::DeleteEntity(e);
 				}
 				else
@@ -1016,15 +1016,15 @@ namespace sub
 
 			for (auto& e : Databases::EntityDb)
 			{
-				bool bEntityExists = e.Handle.Exists();
+				bool bEntityExists = e.handle.Exists();
 				bool bEntityPressed = false;
-				AddOption(e.HashName + (bEntityExists ? "" : " (Invalid)"), bEntityPressed);
-				if (*Menu::currentopATM == Menu::printingop) EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(255, 0, 0, 200));
+				AddOption(e.hashName + (bEntityExists ? "" : " (Invalid)"), bEntityPressed);
+				if (*Menu::currentopATM == Menu::printingop) EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(255, 0, 0, 200));
 				if (bEntityPressed)
 				{
 					if (bEntityExists)
 					{
-						e.Handle.RequestControl(600);
+						e.handle.RequestControl(600);
 						EntityManagement::DeleteEntity(e);
 					}
 					else
@@ -1038,37 +1038,37 @@ namespace sub
 		}*/
 		void Sub_SelectedEntityOps()
 		{
-			if (!SelectedEntity.Handle.Exists())
+			if (!selectedEntity.handle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
-			SelectedEntity.Handle.RequestControlOnce();
-			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(SelectedEntity);
+			selectedEntity.handle.RequestControlOnce();
+			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(selectedEntity);
 			bool isThisEntityInDb = thisEntityIndexInDb >= 0;
 			if (isThisEntityInDb)
 			{
-				SelectedEntity.TaskSequence = Databases::EntityDb[thisEntityIndexInDb].TaskSequence;
-				Databases::EntityDb[thisEntityIndexInDb] = SelectedEntity;
+				selectedEntity.taskSequence = Databases::EntityDb[thisEntityIndexInDb].taskSequence;
+				Databases::EntityDb[thisEntityIndexInDb] = selectedEntity;
 			}
-			Model selectedEntityModel = SelectedEntity.Handle.Model();
+			Model selectedEntityModel = selectedEntity.handle.Model();
 
-			AddTitle(SelectedEntity.HashName);
+			AddTitle(selectedEntity.hashName);
 
-			switch (SelectedEntity.Type)
+			switch (selectedEntity.type)
 			{
 			case EntityType::PROP:
 			{
-				bool bIsAFav = FavouritesManagement::IsPropAFavourite(SelectedEntity.HashName, selectedEntityModel.hash);
+				bool bIsAFav = FavouritesManagement::IsPropAFavourite(selectedEntity.hashName, selectedEntityModel.hash);
 				bool bAddToFav = false, bRemoveFromFav = false;
 				AddTickol("Model Is A Favourite", bIsAFav, bAddToFav, bRemoveFromFav, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 				if (bAddToFav)
 				{
-					FavouritesManagement::AddPropToFavourites(SelectedEntity.HashName, selectedEntityModel.hash);
+					FavouritesManagement::AddPropToFavourites(selectedEntity.hashName, selectedEntityModel.hash);
 				}
 				else if (bRemoveFromFav)
 				{
-					FavouritesManagement::RemovePropFromFavourites(SelectedEntity.HashName, selectedEntityModel.hash);
+					FavouritesManagement::RemovePropFromFavourites(selectedEntity.hashName, selectedEntityModel.hash);
 				}
 			}
 			break;
@@ -1099,16 +1099,16 @@ namespace sub
 			AddTickol("Entity Is In Database", isThisEntityInDb, bAddToOrDb, bRemoveFromDb, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 			if (bAddToOrDb)
 			{
-				EntityManagement::AddEntityToDb(SelectedEntity);
-				Game::Print::PrintBottomLeft(SelectedEntity.HashName + " added to database.");
+				EntityManagement::AddEntityToDb(selectedEntity);
+				Game::Print::PrintBottomLeft(selectedEntity.hashName + " added to database.");
 			}
 			else if (bRemoveFromDb)
 			{
-				EntityManagement::RemoveEntityFromDb(SelectedEntity);
-				Game::Print::PrintBottomLeft(SelectedEntity.HashName + " removed from database. Properties will no longer be stored in Spooner's memory.");
-				if (Menu::currentsub_ar[Menu::currentsub_ar_index] == SUB::SPOONER_MANAGEDB)
+				EntityManagement::RemoveEntityFromDb(selectedEntity);
+				Game::Print::PrintBottomLeft(selectedEntity.hashName + " removed from database. Properties will no longer be stored in Spooner's memory.");
+				if (Menu::currentArray[Menu::currentArrayIndex] == SUB::SPOONER_MANAGEDB)
 				{
-					Menu::currentop_ar[Menu::currentsub_ar_index] -= 1;
+					Menu::currentop_ar[Menu::currentArrayIndex] -= 1;
 				}
 			}
 
@@ -1118,67 +1118,67 @@ namespace sub
 			if (bCopy_minus) { if (_copyEntTexterValue > 0) _copyEntTexterValue--; }
 			if (bCopyPressed)
 			{
-				const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(SelectedEntity, isThisEntityInDb, true, _copyEntTexterValue);
+				const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, isThisEntityInDb, true, _copyEntTexterValue);
 				//EntityManagement::AddEntityToDb(copiedEntity);
-				SelectedEntity = copiedEntity;
+				selectedEntity = copiedEntity;
 			}
 
 			bool bDeletePressed = false;
 			AddOption("Delete", bDeletePressed); if (bDeletePressed)
 			{
-				SelectedEntity.Handle.RequestControl(600);
-				EntityManagement::DeleteEntity(SelectedEntity);
-				if (Menu::currentsub_ar[Menu::currentsub_ar_index] == SUB::SPOONER_MANAGEDB)
+				selectedEntity.handle.RequestControl(600);
+				EntityManagement::DeleteEntity(selectedEntity);
+				if (Menu::currentArray[Menu::currentArrayIndex] == SUB::SPOONER_MANAGEDB)
 				{
-					Menu::currentop_ar[Menu::currentsub_ar_index] -= 1;
+					Menu::currentop_ar[Menu::currentArrayIndex] -= 1;
 				}
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
 			bool bDynamicPressed = false;
-			AddLocal("Dynamic", SelectedEntity.Dynamic, bDynamicPressed, bDynamicPressed); if (bDynamicPressed)
+			AddLocal("Dynamic", selectedEntity.dynamic, bDynamicPressed, bDynamicPressed); if (bDynamicPressed)
 			{
-				SelectedEntity.Dynamic = !SelectedEntity.Dynamic;
-				SelectedEntity.Handle.Dynamic_set(SelectedEntity.Dynamic);
-				SelectedEntity.Handle.FreezePosition(!SelectedEntity.Dynamic);
+				selectedEntity.dynamic = !selectedEntity.dynamic;
+				selectedEntity.handle.Dynamic_set(selectedEntity.dynamic);
+				selectedEntity.handle.FreezePosition(!selectedEntity.dynamic);
 			}
 
 			bool bFreezePosPressed = false;
-			AddLocal("Frozen In Place", SelectedEntity.Handle.IsPositionFrozen(), bFreezePosPressed, bFreezePosPressed); if (bFreezePosPressed)
+			AddLocal("Frozen In Place", selectedEntity.handle.IsPositionFrozen(), bFreezePosPressed, bFreezePosPressed); if (bFreezePosPressed)
 			{
-				SelectedEntity.Handle.FreezePosition(!SelectedEntity.Handle.IsPositionFrozen());
+				selectedEntity.handle.FreezePosition(!selectedEntity.handle.IsPositionFrozen());
 			}
-			if (SelectedEntity.Type == EntityType::VEHICLE && SelectedEntity.Handle.GetLandingGearState() != -1)
+			if (selectedEntity.type == EntityType::VEHICLE && selectedEntity.handle.GetLandingGearState() != -1)
 			{
-				bool bLandingGearDown = (SelectedEntity.Handle.GetLandingGearState() == 0); // 0 = Deployed
+				bool bLandingGearDown = (selectedEntity.handle.GetLandingGearState() == 0); // 0 = Deployed
 				bool oldValue = bLandingGearDown;
 
 				AddToggle("Landing Gear", bLandingGearDown);
 
 				if (bLandingGearDown != oldValue)
 				{
-					SelectedEntity.Handle.SetLandingGear(bLandingGearDown);
+					selectedEntity.handle.SetLandingGear(bLandingGearDown);
 				}
 			}
 
-			if (SelectedEntity.Type == EntityType::PROP)
+			if (selectedEntity.type == EntityType::PROP)
 			{
-				auto& thisTextureVariation = SelectedEntity.TextureVariation;
+				auto& thisTextureVariation = selectedEntity.textureVariation;
 				bool bTextureVariation_plus = false, bTextureVariation_minus = false;
 				AddNumber("Texture Variation", thisTextureVariation, 0, null, bTextureVariation_plus, bTextureVariation_minus);
-				if (bTextureVariation_plus) { if (thisTextureVariation < UINT8_MAX) { thisTextureVariation++; SET_OBJECT_TINT_INDEX(SelectedEntity.Handle.Handle(), thisTextureVariation); } }
-				if (bTextureVariation_minus) { if (thisTextureVariation > 0) { thisTextureVariation--; SET_OBJECT_TINT_INDEX(SelectedEntity.Handle.Handle(), thisTextureVariation); } }
+				if (bTextureVariation_plus) { if (thisTextureVariation < UINT8_MAX) { thisTextureVariation++; SET_OBJECT_TINT_INDEX(selectedEntity.handle.Handle(), thisTextureVariation); } }
+				if (bTextureVariation_minus) { if (thisTextureVariation > 0) { thisTextureVariation--; SET_OBJECT_TINT_INDEX(selectedEntity.handle.Handle(), thisTextureVariation); } }
 			}
 
-			int thisHealth = SelectedEntity.Handle.GetHealth();
+			int thisHealth = selectedEntity.handle.GetHealth();
 			bool bHealth_plus = false, bHealth_minus = false, bHealth_input = false;
 			AddNumber("Health", thisHealth, 0, bHealth_input, bHealth_plus, bHealth_minus);
-			if (bHealth_plus) { if (thisHealth < INT_MAX) { thisHealth++; if (SelectedEntity.Handle.GetMaxHealth() < thisHealth) { SelectedEntity.Handle.MaxHealth_set(thisHealth); } SelectedEntity.Handle.Health_set(thisHealth); } }
-			if (bHealth_minus) { if (thisHealth > 0) { thisHealth--; if (SelectedEntity.Handle.GetMaxHealth() > thisHealth + 30) { SelectedEntity.Handle.MaxHealth_set(thisHealth + 30); } SelectedEntity.Handle.Health_set(thisHealth); } }
+			if (bHealth_plus) { if (thisHealth < INT_MAX) { thisHealth++; if (selectedEntity.handle.GetMaxHealth() < thisHealth) { selectedEntity.handle.SetMaxHealth(thisHealth); } selectedEntity.handle.SetHealth(thisHealth); } }
+			if (bHealth_minus) { if (thisHealth > 0) { thisHealth--; if (selectedEntity.handle.GetMaxHealth() > thisHealth + 30) { selectedEntity.handle.SetMaxHealth(thisHealth + 30); } selectedEntity.handle.SetHealth(thisHealth); } }
 			if (bHealth_input)
 			{
-				GTAentity& ent = SelectedEntity.Handle;
+				GTAentity& ent = selectedEntity.handle;
 				std::string inputStr = Game::InputBox("", 5U, "", std::to_string(thisHealth));
 				if (inputStr.length() > 0)
 				{
@@ -1187,9 +1187,9 @@ namespace sub
 						thisHealth = stoi(inputStr);
 						if (ent.GetMaxHealth() < thisHealth)
 						{
-							ent.MaxHealth_set(thisHealth);
+							ent.SetMaxHealth(thisHealth);
 						}
-						ent.Health_set(thisHealth);
+						ent.SetHealth(thisHealth);
 					}
 					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 				}
@@ -1198,57 +1198,57 @@ namespace sub
 			}
 
 			bool bInvinciblePressed = false;
-			AddLocal("Invincible", SelectedEntity.Handle.IsInvincible(), bInvinciblePressed, bInvinciblePressed); if (bInvinciblePressed)
+			AddLocal("Invincible", selectedEntity.handle.IsInvincible(), bInvinciblePressed, bInvinciblePressed); if (bInvinciblePressed)
 			{
-				bool bEnable = !SelectedEntity.Handle.IsInvincible();
-				SelectedEntity.Handle.SetInvincible(bEnable);
-				SelectedEntity.Handle.SetExplosionProof(bEnable);
-				SelectedEntity.Handle.SetMeleeProof(bEnable);
+				bool bEnable = !selectedEntity.handle.IsInvincible();
+				selectedEntity.handle.SetInvincible(bEnable);
+				selectedEntity.handle.SetExplosionProof(bEnable);
+				selectedEntity.handle.SetMeleeProof(bEnable);
 			}
 
 			bool bFireProofPressed = false;
-			AddLocal("Fireproof", SelectedEntity.Handle.IsFireProof(), bFireProofPressed, bFireProofPressed); if (bFireProofPressed)
+			AddLocal("Fireproof", selectedEntity.handle.IsFireProof(), bFireProofPressed, bFireProofPressed); if (bFireProofPressed)
 			{
-				bool bEnable = !SelectedEntity.Handle.IsFireProof();
-				SelectedEntity.Handle.SetFireProof(bEnable);
+				bool bEnable = !selectedEntity.handle.IsFireProof();
+				selectedEntity.handle.SetFireProof(bEnable);
 			}
 			bool bOnFirePressed = false;
-			AddLocal("Is On Fire (For Peds)", SelectedEntity.Handle.IsOnFire(), bOnFirePressed, bOnFirePressed); if (bOnFirePressed)
+			AddLocal("Is On Fire (For Peds)", selectedEntity.handle.IsOnFire(), bOnFirePressed, bOnFirePressed); if (bOnFirePressed)
 			{
-				bool bEnable = !SelectedEntity.Handle.IsOnFire();
-				SelectedEntity.Handle.SetOnFire(bEnable);
+				bool bEnable = !selectedEntity.handle.IsOnFire();
+				selectedEntity.handle.SetOnFire(bEnable);
 			}
 
 			bool bVisiblePressed = false;
-			AddLocal("Visible", SelectedEntity.Handle.IsVisible(), bVisiblePressed, bVisiblePressed); if (bVisiblePressed)
+			AddLocal("Visible", selectedEntity.handle.IsVisible(), bVisiblePressed, bVisiblePressed); if (bVisiblePressed)
 			{
-				SelectedEntity.Handle.SetVisible(!SelectedEntity.Handle.IsVisible());
+				selectedEntity.handle.SetVisible(!selectedEntity.handle.IsVisible());
 			}
 
 			AddOption("Opacity (Local)", null, SetEnt12, SUB::ENTITYALPHALEVEL);
 
 			bool bCollisionPressed = false;
-			AddLocal("Collision", SelectedEntity.Handle.GetIsCollisionEnabled(), bCollisionPressed, bCollisionPressed); if (bCollisionPressed)
+			AddLocal("Collision", selectedEntity.handle.GetIsCollisionEnabled(), bCollisionPressed, bCollisionPressed); if (bCollisionPressed)
 			{
 				GTAentity attBaseEnt;
-				EntityManagement::GetEntityThisEntityIsAttachedTo(SelectedEntity.Handle, attBaseEnt);
-				SelectedEntity.Handle.SetIsCollisionEnabled(!SelectedEntity.Handle.GetIsCollisionEnabled());
-				if (SelectedEntity.AttachmentArgs.isAttached)
+				EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, attBaseEnt);
+				selectedEntity.handle.SetIsCollisionEnabled(!selectedEntity.handle.GetIsCollisionEnabled());
+				if (selectedEntity.attachmentArgs.isAttached)
 				{
-					EntityManagement::AttachEntity(SelectedEntity, attBaseEnt, SelectedEntity.AttachmentArgs.boneIndex, SelectedEntity.AttachmentArgs.offset, SelectedEntity.AttachmentArgs.rotation);
+					EntityManagement::AttachEntity(selectedEntity, attBaseEnt, selectedEntity.attachmentArgs.boneIndex, selectedEntity.attachmentArgs.offset, selectedEntity.attachmentArgs.rotation);
 				}
 			}
 
-			bool bHasGravity = SelectedEntity.Handle.HasGravity_get();
+			bool bHasGravity = selectedEntity.handle.GetHasGravity();
 			bool bGravityTogglePressed = false;
 			AddLocal("Gravity", bHasGravity, bGravityTogglePressed, bGravityTogglePressed); if (bGravityTogglePressed)
 			{
-				switch (SelectedEntity.Type)
+				switch (selectedEntity.type)
 				{
-				case EntityType::PED: GTAped(SelectedEntity.Handle).HasGravity_set(!bHasGravity); break;
-				case EntityType::VEHICLE: GTAvehicle(SelectedEntity.Handle).HasGravity_set(!bHasGravity); break;
-				case EntityType::PROP: GTAprop(SelectedEntity.Handle).HasGravity_set(!bHasGravity); break;
-				default: SelectedEntity.Handle.HasGravity_set(!bHasGravity); break;
+				case EntityType::PED: GTAped(selectedEntity.handle).SetHasGravity(!bHasGravity); break;
+				case EntityType::VEHICLE: GTAvehicle(selectedEntity.handle).SetHasGravity(!bHasGravity); break;
+				case EntityType::PROP: GTAprop(selectedEntity.handle).SetHasGravity(!bHasGravity); break;
+				default: selectedEntity.handle.SetHasGravity(!bHasGravity); break;
 				}
 				bHasGravity = !bHasGravity;
 			}
@@ -1259,61 +1259,61 @@ namespace sub
 				if (SpoonerMode::spoonerModeCamera.IsActive())
 				{
 					auto& cam = SpoonerMode::spoonerModeCamera;
-					cam.SetPosition(SelectedEntity.Handle.GetOffsetInWorldCoords(0, -5.0f - SelectedEntity.Handle.Dim2().y, 0));
+					cam.SetPosition(selectedEntity.handle.GetOffsetInWorldCoords(0, -5.0f - selectedEntity.handle.Dim2().y, 0));
 				}
 				else
 				{
 					GTAped myPed = PLAYER_PED_ID();
-					myPed.SetPosition(SelectedEntity.Handle.GetPosition());
+					myPed.SetPosition(selectedEntity.handle.GetPosition());
 				}
 			}
 
 			bool bBringEntityToSelfPressed = false;
-			AddOption((std::string)"Bring Entity To Self" + (SelectedEntity.Handle.IsAttached() ? " (And Detach)" : ""), bBringEntityToSelfPressed); if (bBringEntityToSelfPressed)
+			AddOption((std::string)"Bring Entity To Self" + (selectedEntity.handle.IsAttached() ? " (And Detach)" : ""), bBringEntityToSelfPressed); if (bBringEntityToSelfPressed)
 			{
-				//GTAentity entityToTele = SelectedEntity.Handle;
+				//GTAentity entityToTele = selectedEntity.handle;
 				//GTAentity entityToTeleMaybe;
 				//while (EntityManagement::GetEntityThisEntityIsAttachedTo(entityToTele, entityToTeleMaybe))
 					//entityToTele = entityToTeleMaybe;
-				if (SelectedEntity.Handle.IsAttached()) EntityManagement::DetachEntity(SelectedEntity); // Detach if attached :(
+				if (selectedEntity.handle.IsAttached()) EntityManagement::DetachEntity(selectedEntity); // Detach if attached :(
 
 				if (SpoonerMode::spoonerModeCamera.IsActive())
 				{
 					auto& cam = SpoonerMode::spoonerModeCamera;
-					SelectedEntity.Handle.SetPosition(cam.GetOffsetInWorldCoords(0, 5.0f + SelectedEntity.Handle.Dim2().y, 0));
+					selectedEntity.handle.SetPosition(cam.GetOffsetInWorldCoords(0, 5.0f + selectedEntity.handle.Dim2().y, 0));
 				}
 				else
 				{
 					GTAped myPed = PLAYER_PED_ID();
-					SelectedEntity.Handle.SetPosition(myPed.GetPosition() + (myPed.ForwardVector() * (SelectedEntity.Handle.Dim1().y + 4.0f)));
+					selectedEntity.handle.SetPosition(myPed.GetPosition() + (myPed.ForwardVector() * (selectedEntity.handle.Dim1().y + 4.0f)));
 				}
 			}
 
 			bool bPlaceOnGround = false;
 			AddOption("Place On Ground", bPlaceOnGround); if (bPlaceOnGround)
 			{
-				SelectedEntity.Handle.PlaceOnGround();
+				selectedEntity.handle.PlaceOnGround();
 			}
 
 			bool bResetRotation = false;
 			AddOption("Reset rotation", bResetRotation); if (bResetRotation)
 			{
-				SelectedEntity.Handle.SetRotation(Vector3::Zero());
+				selectedEntity.handle.SetRotation(Vector3::Zero());
 			}
 
 			AddOption("TriggerFX", null, SetEnt241, SUB::PTFXSUB);
 
 			bool bGoToTaskSeqMenu = false;
-			AddTexter("Task Sequence", SelectedEntity.TaskSequence.IsActive() ? 1 : 0, std::vector<std::string>{"Inactive", "Active"}, bGoToTaskSeqMenu); if (bGoToTaskSeqMenu)
+			AddTexter("Task Sequence", selectedEntity.taskSequence.IsActive() ? 1 : 0, std::vector<std::string>{"Inactive", "Active"}, bGoToTaskSeqMenu); if (bGoToTaskSeqMenu)
 			{
 				Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_TASKLIST;
 			}
 
-			if (SelectedEntity.Type == EntityType::PED)
+			if (selectedEntity.type == EntityType::PED)
 			{
 				AddOption("Ped Options", null, nullFunc, SUB::SPOONER_PEDOPS);
 			}
-			else if (SelectedEntity.Type == EntityType::VEHICLE)
+			else if (selectedEntity.type == EntityType::VEHICLE)
 			{
 				AddOption("Menyoo Customs", null, SetEnt12, SUB::MODSHOP);
 			}
@@ -1325,22 +1325,22 @@ namespace sub
 		}
 		void Sub_AttachmentOps()
 		{
-			if (!SelectedEntity.Handle.Exists())
+			if (!selectedEntity.handle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
-			SelectedEntity.Handle.RequestControlOnce();
-			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(SelectedEntity);
+			selectedEntity.handle.RequestControlOnce();
+			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(selectedEntity);
 			bool isThisEntityInDb = thisEntityIndexInDb >= 0;
 			if (isThisEntityInDb)
 			{
-				SelectedEntity.TaskSequence = Databases::EntityDb[thisEntityIndexInDb].TaskSequence;
-				Databases::EntityDb[thisEntityIndexInDb] = SelectedEntity;
+				selectedEntity.taskSequence = Databases::EntityDb[thisEntityIndexInDb].taskSequence;
+				Databases::EntityDb[thisEntityIndexInDb] = selectedEntity;
 			}
 
 			GTAentity baseEntityIfExists;
-			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(SelectedEntity.Handle, baseEntityIfExists);
+			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, baseEntityIfExists);
 			EntityType baseEntityType = (EntityType)baseEntityIfExists.Type();
 
 			bool prec_plus = 0, prec_minus = 0;
@@ -1356,7 +1356,7 @@ namespace sub
 				bool bDetachPressed = false;
 				AddOption("Detach", bDetachPressed); if (bDetachPressed)
 				{
-					EntityManagement::DetachEntity(SelectedEntity);
+					EntityManagement::DetachEntity(selectedEntity);
 				}
 			}
 
@@ -1373,9 +1373,9 @@ namespace sub
 				bool roll_plus = 0, roll_minus = 0;
 				bool yaw_plus = 0, yaw_minus = 0;
 
-				int nextBoneIndex = SelectedEntity.AttachmentArgs.boneIndex;
-				Vector3 nextOffset = SelectedEntity.AttachmentArgs.offset;
-				Vector3 nextRot = SelectedEntity.AttachmentArgs.rotation;
+				int nextBoneIndex = selectedEntity.attachmentArgs.boneIndex;
+				Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
+				Vector3 nextRot = selectedEntity.attachmentArgs.rotation;
 
 				// Bone text scroller if type is PED or VEHICLE. Reattach and reset args on bone change.
 				if (baseEntityType == EntityType::PED)
@@ -1510,18 +1510,18 @@ namespace sub
 				if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
 				if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
 
-				if (nextOffset != SelectedEntity.AttachmentArgs.offset || nextRot != SelectedEntity.AttachmentArgs.rotation || nextBoneIndex != SelectedEntity.AttachmentArgs.boneIndex)
+				if (nextOffset != selectedEntity.attachmentArgs.offset || nextRot != selectedEntity.attachmentArgs.rotation || nextBoneIndex != selectedEntity.attachmentArgs.boneIndex)
 				{
-					EntityManagement::AttachEntity(SelectedEntity, baseEntityIfExists, nextBoneIndex, nextOffset, nextRot);
+					EntityManagement::AttachEntity(selectedEntity, baseEntityIfExists, nextBoneIndex, nextOffset, nextRot);
 				}
 			}
 
 		}
 		void Sub_AttachmentOps_AttachTo()
 		{
-			if (!SelectedEntity.Handle.Exists())
+			if (!selectedEntity.handle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 			GTAped myPed = PLAYER_PED_ID();
@@ -1538,8 +1538,8 @@ namespace sub
 			bool bSelf = false;
 			AddOption("Self", bSelf); if (bSelf)
 			{
-				EntityManagement::AttachEntityInit(SelectedEntity, myPed, Settings::bKeepPositionWhenAttaching);
-				Menu::SetSub_previous();
+				EntityManagement::AttachEntityInit(selectedEntity, myPed, Settings::bKeepPositionWhenAttaching);
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -1548,46 +1548,46 @@ namespace sub
 				bool bSelfVeh = false;
 				AddOption(std::string(myPed.IsInVehicle() ? "Current" : "Last Seated") + " Vehicle", bSelfVeh); if (bSelfVeh)
 				{
-					EntityManagement::AttachEntityInit(SelectedEntity, myVehicle, Settings::bKeepPositionWhenAttaching);
-					Menu::SetSub_previous();
+					EntityManagement::AttachEntityInit(selectedEntity, myVehicle, Settings::bKeepPositionWhenAttaching);
+					Menu::SetPreviousMenu();
 					return;
 				}
 			}
 
 			if (!Databases::EntityDb.empty())
 			{
-				if (Databases::EntityDb.size() > 1 || Databases::EntityDb.front().Handle != SelectedEntity.Handle)
+				if (Databases::EntityDb.size() > 1 || Databases::EntityDb.front().handle != selectedEntity.handle)
 				{
 					AddBreak("---Database---");
 					for (auto& e : Databases::EntityDb)
 					{
-						if (e.Handle != SelectedEntity.Handle)
+						if (e.handle != selectedEntity.handle)
 						{
-							if (e.Handle.Exists())
+							if (e.handle.Exists())
 							{
-								if (!SelectedEntity.Handle.IsAttachedTo(e.Handle))
+								if (!selectedEntity.handle.IsAttachedTo(e.handle))
 								{
 									bool bEntityPressed = false;
-									AddOption(e.HashName, bEntityPressed); if (bEntityPressed)
+									AddOption(e.hashName, bEntityPressed); if (bEntityPressed)
 									{
-										EntityManagement::AttachEntityInit(SelectedEntity, e.Handle, Settings::bKeepPositionWhenAttaching);
-										Menu::SetSub_previous();
+										EntityManagement::AttachEntityInit(selectedEntity, e.handle, Settings::bKeepPositionWhenAttaching);
+										Menu::SetPreviousMenu();
 										return;
 									}
 									if (*Menu::currentopATM == Menu::printingop)
-										EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(0, 255, 0, 200));
+										EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 								}
 								else
 								{
-									AddOption(e.HashName + " (already attached)", null);
+									AddOption(e.hashName + " (already attached)", null);
 									if (*Menu::currentopATM == Menu::printingop)
-										EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(255, 0, 0, 200));
+										EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(255, 0, 0, 200));
 								}
 								
 							}
 							else
 							{
-								AddOption(e.HashName + " (Invalid)", null);
+								AddOption(e.hashName + " (Invalid)", null);
 							}
 						}
 					}
@@ -1596,34 +1596,34 @@ namespace sub
 		}
 		void Sub_AttachmentOps_SelectBone()
 		{
-			if (!SelectedEntity.Handle.Exists())
+			if (!selectedEntity.handle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				Menu::currentop = 1;
 				return;
 			}
-			SelectedEntity.Handle.RequestControlOnce();
-			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(SelectedEntity);
+			selectedEntity.handle.RequestControlOnce();
+			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(selectedEntity);
 			bool isThisEntityInDb = thisEntityIndexInDb >= 0;
 			if (isThisEntityInDb)
 			{
-				SelectedEntity.TaskSequence = Databases::EntityDb[thisEntityIndexInDb].TaskSequence;
-				Databases::EntityDb[thisEntityIndexInDb] = SelectedEntity;
+				selectedEntity.taskSequence = Databases::EntityDb[thisEntityIndexInDb].taskSequence;
+				Databases::EntityDb[thisEntityIndexInDb] = selectedEntity;
 			}
 
 			GTAentity baseEntity;
-			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(SelectedEntity.Handle, baseEntity);
+			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, baseEntity);
 			EntityType baseEntityType = (EntityType)baseEntity.Type();
 			if (!baseEntity.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				Menu::currentop = 1;
 				return;
 			}
 
-			int nextBoneIndex = SelectedEntity.AttachmentArgs.boneIndex;
-			Vector3 nextOffset = SelectedEntity.AttachmentArgs.offset;
-			Vector3 nextRot = SelectedEntity.AttachmentArgs.rotation;
+			int nextBoneIndex = selectedEntity.attachmentArgs.boneIndex;
+			Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
+			Vector3 nextRot = selectedEntity.attachmentArgs.rotation;
 
 			bool bSelectedBoneIndexExists = false; // Idek what this is doing here
 			int defaultBone;
@@ -1678,24 +1678,24 @@ namespace sub
 				}
 			}
 
-			if (nextBoneIndex != SelectedEntity.AttachmentArgs.boneIndex)
+			if (nextBoneIndex != selectedEntity.attachmentArgs.boneIndex)
 			{
-				EntityManagement::AttachEntity(SelectedEntity, baseEntity, nextBoneIndex, nextOffset, nextRot);
+				EntityManagement::AttachEntity(selectedEntity, baseEntity, nextBoneIndex, nextOffset, nextRot);
 			}
 
 		}
 		void Sub_ManualPlacement()
 		{
-			if (!SelectedEntity.Handle.Exists())
+			if (!selectedEntity.handle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
-			SelectedEntity.Handle.RequestControlOnce();
+			selectedEntity.handle.RequestControlOnce();
 
-			GTAped thisPed = SelectedEntity.Handle;
-			Vector3 currPos = SelectedEntity.Handle.GetPosition();
-			Vector3 currRot = SelectedEntity.Handle.Rotation_get();
+			GTAped thisPed = selectedEntity.handle;
+			Vector3 currPos = selectedEntity.handle.GetPosition();
+			Vector3 currRot = selectedEntity.handle.Rotation_get();
 			Vector3 nextPos = currPos;
 			Vector3 nextRot = currRot;
 
@@ -1735,47 +1735,47 @@ namespace sub
 
 			if (nextPos != currPos)
 			{
-				SelectedEntity.Handle.SetPosition(nextPos);
-				currPos = SelectedEntity.Handle.GetPosition();
+				selectedEntity.handle.SetPosition(nextPos);
+				currPos = selectedEntity.handle.GetPosition();
 				GTAentity attBase;
-				if (EntityManagement::GetEntityThisEntityIsAttachedTo(SelectedEntity.Handle, attBase))
+				if (EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, attBase))
 					World::DrawLine(attBase.GetPosition(), currPos, RGBA::AllWhite()); // Just pointing out that it's attached
 			}
 			if (nextRot != currRot)
 			{
-				/*bool doPedIdleAnim = !SelectedEntity.TaskSequence.IsActive() && SelectedEntity.Type == EntityType::PED && (nextRot.y != currRot.y || nextRot.x != currRot.x);
+				/*bool doPedIdleAnim = !selectedEntity.taskSequence.IsActive() && selectedEntity.type == EntityType::PED && (nextRot.y != currRot.y || nextRot.x != currRot.x);
 				INT8 pedWasPlayingAnimOrScenario = 0;
-				if (doPedIdleAnim) pedWasPlayingAnimOrScenario = thisPed.Task().IsPlayingAnimation(SelectedEntity.LastAnimation.dict, SelectedEntity.LastAnimation.name) ? 1 : thisPed.Task().IsUsingScenario(SelectedEntity.LastAnimation.name) ? 2 : 0;
+				if (doPedIdleAnim) pedWasPlayingAnimOrScenario = thisPed.Task().IsPlayingAnimation(selectedEntity.lastAnimation.dict, selectedEntity.lastAnimation.name) ? 1 : thisPed.Task().IsUsingScenario(selectedEntity.lastAnimation.name) ? 2 : 0;
 				if (doPedIdleAnim) thisPed.Task().PlayAnimation("idle", "mp_sleep");
-				SelectedEntity.Handle.Rotation_set(nextRot);
+				selectedEntity.handle.Rotation_set(nextRot);
 				if (doPedIdleAnim) {
 					if (pedWasPlayingAnimOrScenario == 1)
-						thisPed.Task().PlayAnimation(SelectedEntity.LastAnimation.dict, SelectedEntity.LastAnimation.name);
+						thisPed.Task().PlayAnimation(selectedEntity.lastAnimation.dict, selectedEntity.lastAnimation.name);
 					else if (pedWasPlayingAnimOrScenario == 2)
-						thisPed.Task().StartScenario(SelectedEntity.LastAnimation.name, 0, false);
+						thisPed.Task().StartScenario(selectedEntity.lastAnimation.name, 0, false);
 					else thisPed.Task().ClearAnimation("idle", "mp_sleep");
 				}*/
 
-				SelectedEntity.Handle.SetRotation(nextRot);
-				currRot = SelectedEntity.Handle.Rotation_get();
+				selectedEntity.handle.SetRotation(nextRot);
+				currRot = selectedEntity.handle.Rotation_get();
 				GTAentity attBase;
-				if (EntityManagement::GetEntityThisEntityIsAttachedTo(SelectedEntity.Handle, attBase))
+				if (EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, attBase))
 					World::DrawLine(attBase.GetPosition(), currPos, RGBA::AllWhite()); // Just pointing out that it's attached
 			}
 		}
 
 		void Sub_SizeManipulation()
 		{
-			if (!SelectedEntity.Handle.Exists())
+			if (!selectedEntity.handle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
-			SelectedEntity.Handle.RequestControlOnce();
+			selectedEntity.handle.RequestControlOnce();
 
 			AddTitle("Size Manipulation");
 
-			UINT64 ptr = GTAmemory::_entityAddressFunc(SelectedEntity.Handle.Handle());
+			UINT64 ptr = GTAmemory::_entityAddressFunc(selectedEntity.handle.Handle());
 			if (!ptr) return;
 
 			float length = GTAmemory::ReadFloat(ptr + 0x60);
@@ -1815,28 +1815,28 @@ namespace sub
 		{
 			if (SpoonerMode::bIsSomethingHeld)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				Game::Print::PrintBottomCentre("~r~Error:~s~ There is an entity held in Spooner Mode.");
 				return;
 			}
 
-			auto currIndexInDb = EntityManagement::GetEntityIndexInDb(SelectedEntity);
-			if (currIndexInDb < 0 || !SelectedEntity.Handle.Exists())
+			auto currIndexInDb = EntityManagement::GetEntityIndexInDb(selectedEntity);
+			if (currIndexInDb < 0 || !selectedEntity.handle.Exists())
 			{
 				bool bFoundExistingEntity = false;
 				for (UINT i = 0; i < Databases::EntityDb.size(); i++)
 				{
-					if (Databases::EntityDb[i].Handle.Exists())
+					if (Databases::EntityDb[i].handle.Exists())
 					{
 						currIndexInDb = i;
-						SelectedEntity = Databases::EntityDb[currIndexInDb];
+						selectedEntity = Databases::EntityDb[currIndexInDb];
 						bFoundExistingEntity = true;
 						break;
 					}
 				}
 				if (!bFoundExistingEntity)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					Game::Print::PrintBottomCentre("~r~Error:~s~ No valid entities found in the database.");
 					return;
 				}
@@ -1846,9 +1846,9 @@ namespace sub
 			AddTitle("Manual Placement");
 
 			bool bPropertiesSubPressed = false, bEnt_plus = false, bEnt_minus = false;
-			AddTexter(SelectedEntity.HashName, currIndexInDb, std::vector<std::string>{}, bPropertiesSubPressed, bEnt_plus, bEnt_minus);
+			AddTexter(selectedEntity.hashName, currIndexInDb, std::vector<std::string>{}, bPropertiesSubPressed, bEnt_plus, bEnt_minus);
 			if (*Menu::currentopATM == Menu::printingop)
-				EntityManagement::ShowArrowAboveEntity(SelectedEntity.Handle, RGBA(51, 153, 255, 200));
+				EntityManagement::ShowArrowAboveEntity(selectedEntity.handle, RGBA(51, 153, 255, 200));
 			if (bPropertiesSubPressed)
 			{
 				Menu::SetSub_delayed = SUB::SPOONER_SELECTEDENTITYOPS;
@@ -1858,10 +1858,10 @@ namespace sub
 				auto newIndexInDb = currIndexInDb + 1;
 				while (newIndexInDb < Databases::EntityDb.size())
 				{
-					if (Databases::EntityDb[newIndexInDb].Handle.Exists())
+					if (Databases::EntityDb[newIndexInDb].handle.Exists())
 					{
 						currIndexInDb = newIndexInDb;
-						SelectedEntity = Databases::EntityDb[currIndexInDb];
+						selectedEntity = Databases::EntityDb[currIndexInDb];
 						break;
 					}
 					newIndexInDb++;
@@ -1872,10 +1872,10 @@ namespace sub
 				auto newIndexInDb = currIndexInDb - 1;
 				while (newIndexInDb >= 0)
 				{
-					if (Databases::EntityDb[newIndexInDb].Handle.Exists())
+					if (Databases::EntityDb[newIndexInDb].handle.Exists())
 					{
 						currIndexInDb = newIndexInDb;
-						SelectedEntity = Databases::EntityDb[currIndexInDb];
+						selectedEntity = Databases::EntityDb[currIndexInDb];
 						break;
 					}
 					newIndexInDb--;
@@ -1884,10 +1884,10 @@ namespace sub
 
 			// It's the normal ManualPlacement stuff from here on
 
-			SelectedEntity.Handle.RequestControlOnce();
+			selectedEntity.handle.RequestControlOnce();
 
-			Vector3 currPos = SelectedEntity.Handle.GetPosition();
-			Vector3 currRot = SelectedEntity.Handle.Rotation_get();
+			Vector3 currPos = selectedEntity.handle.GetPosition();
+			Vector3 currRot = selectedEntity.handle.Rotation_get();
 			Vector3 nextPos = currPos;
 			Vector3 nextRot = currRot;
 
@@ -1925,14 +1925,14 @@ namespace sub
 			if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
 			if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
 
-			if (nextPos != currPos) SelectedEntity.Handle.SetPosition(nextPos);
-			if (nextRot != currRot) SelectedEntity.Handle.SetRotation(nextRot);
+			if (nextPos != currPos) selectedEntity.handle.SetPosition(nextPos);
+			if (nextRot != currRot) selectedEntity.handle.SetRotation(nextRot);
 		}
 		void Sub_Vector3_ManualPlacement()
 		{
 			if (std::get<1>(SpoonerVector3ManualPlacementPtrs) == nullptr && std::get<2>(SpoonerVector3ManualPlacementPtrs) == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -1992,12 +1992,12 @@ namespace sub
 		}
 		void Sub_GroupSpoon()
 		{
-			auto& vGroup = SelectedSpoonGroup;
+			auto& vGroup = selectedSpoonGroup;
 			SpoonerEntity refEnt;
 			bool bEntitiesExist = false;
 			for (auto it = vGroup.begin(); it != vGroup.end();)
 			{
-				if (!it->Handle.Exists())
+				if (!it->handle.Exists())
 				{
 					it = vGroup.erase(it);
 				}
@@ -2023,8 +2023,8 @@ namespace sub
 				AddBreak("---Place---");
 
 				bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
-				Vector3 refPos = refEnt.Handle.GetPosition();
-				Vector3 refRot = refEnt.Handle.Rotation_get();
+				Vector3 refPos = refEnt.handle.GetPosition();
+				Vector3 refRot = refEnt.handle.Rotation_get();
 				Vector3 nextPosOffset;
 				Vector3 nextRotOffset;
 
@@ -2066,8 +2066,8 @@ namespace sub
 					for (auto& e : vGroup)
 					{
 						if (isOnTheLine)
-							e.Handle.RequestControl(100);
-						e.Handle.SetPosition(e.Handle.GetPosition() + nextPosOffset);
+							e.handle.RequestControl(100);
+						e.handle.SetPosition(e.handle.GetPosition() + nextPosOffset);
 					}
 				}
 				if (!nextRotOffset.IsZero())
@@ -2075,8 +2075,8 @@ namespace sub
 					for (auto& e : vGroup)
 					{
 						if (isOnTheLine)
-							e.Handle.RequestControl(100);
-						e.Handle.SetRotation(e.Handle.Rotation_get() + nextRotOffset);
+							e.handle.RequestControl(100);
+						e.handle.SetRotation(e.handle.Rotation_get() + nextRotOffset);
 					}
 				}
 
@@ -2093,8 +2093,8 @@ namespace sub
 						if (eiidb >= 0)
 						{
 							if (isOnTheLine)
-								e.Handle.RequestControl();
-							Databases::EntityDb[eiidb].TaskSequence.Start();
+								e.handle.RequestControl();
+							Databases::EntityDb[eiidb].taskSequence.Start();
 						}
 					}
 				}
@@ -2107,25 +2107,25 @@ namespace sub
 						auto eiidb = EntityManagement::GetEntityIndexInDb(e);
 						if (eiidb >= 0)
 						{
-							if (e.Handle.IsPed())
+							if (e.handle.IsPed())
 							{
 								if (isOnTheLine)
-									e.Handle.RequestControl();
-								TASK_CLEAR_LOOK_AT(e.Handle.Handle());
-								CLEAR_PED_TASKS_IMMEDIATELY(e.Handle.Handle());
+									e.handle.RequestControl();
+								TASK_CLEAR_LOOK_AT(e.handle.Handle());
+								CLEAR_PED_TASKS_IMMEDIATELY(e.handle.Handle());
 							}
-							Databases::EntityDb[eiidb].TaskSequence.Reset();
+							Databases::EntityDb[eiidb].taskSequence.Reset();
 						}
 					}
 				}
 
 				AddBreak("---Edit---");
 
-				int opacityLevel = refEnt.Handle.Alpha_get();
+				int opacityLevel = refEnt.handle.GetAlpha();
 				bool bOpacity_plus = false, bOpacity_minus = false;
 				AddNumber("Opacity (Local)", opacityLevel, 0, null, bOpacity_plus, bOpacity_minus);
-				if (bOpacity_plus) { if (opacityLevel < 255) opacityLevel++; else opacityLevel = 0; for (auto& e : vGroup) { if (isOnTheLine) e.Handle.RequestControl(); e.Handle.Alpha_set(opacityLevel); } }
-				if (bOpacity_minus) { if (opacityLevel > 0) opacityLevel--; else opacityLevel = 255; for (auto& e : vGroup) { if (isOnTheLine) e.Handle.RequestControl(); e.Handle.Alpha_set(opacityLevel); } }
+				if (bOpacity_plus) { if (opacityLevel < 255) opacityLevel++; else opacityLevel = 0; for (auto& e : vGroup) { if (isOnTheLine) e.handle.RequestControl(); e.handle.SetAlpha(opacityLevel); } }
+				if (bOpacity_minus) { if (opacityLevel > 0) opacityLevel--; else opacityLevel = 255; for (auto& e : vGroup) { if (isOnTheLine) e.handle.RequestControl(); e.handle.SetAlpha(opacityLevel); } }
 
 				AddOption("Attach To Something", null, nullFunc, SUB::SPOONER_GROUPSPOON_ATTACHTO);
 				bool bDetachPressed = false;
@@ -2134,7 +2134,7 @@ namespace sub
 					for (auto& e : vGroup)
 					{
 						if (isOnTheLine)
-							e.Handle.RequestControl(400);
+							e.handle.RequestControl(400);
 						EntityManagement::DetachEntity(e);
 					}
 				}
@@ -2158,7 +2158,7 @@ namespace sub
 					for (auto& e : vGroup)
 					{
 						if (isOnTheLine)
-							e.Handle.RequestControl(400);
+							e.handle.RequestControl(400);
 						EntityManagement::DeleteEntity(e);
 					}
 					vGroup.clear();
@@ -2169,7 +2169,7 @@ namespace sub
 		}
 		void Sub_GroupSpoon_SelectEntities()
 		{
-			auto& vGroup = SelectedSpoonGroup;
+			auto& vGroup = selectedSpoonGroup;
 
 			AddTitle("Select Entities");
 
@@ -2192,8 +2192,8 @@ namespace sub
 				auto grpIt = std::find(vGroup.begin(), vGroup.end(), e);
 				bool bEntityIsInGroup = grpIt != vGroup.end();
 				bool bEntityPressed = false;
-				AddTickol(e.HashName + (e.Handle.Exists() ? "" : " (Invalid)"), bEntityIsInGroup, bEntityPressed, bEntityPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
-				if (*Menu::currentopATM == Menu::printingop) EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(127, 0, 255, 200));
+				AddTickol(e.hashName + (e.handle.Exists() ? "" : " (Invalid)"), bEntityIsInGroup, bEntityPressed, bEntityPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				if (*Menu::currentopATM == Menu::printingop) EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(127, 0, 255, 200));
 				if (bEntityPressed)
 				{
 					if (bEntityIsInGroup)
@@ -2209,7 +2209,7 @@ namespace sub
 		}
 		void Sub_GroupSpoon_AttachTo()
 		{
-			auto& vGroup = SelectedSpoonGroup;
+			auto& vGroup = selectedSpoonGroup;
 			GTAped myPed = PLAYER_PED_ID();
 			GTAvehicle myVehicle = g_myVeh;
 			bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
@@ -2227,14 +2227,14 @@ namespace sub
 			{
 				for (auto& e : vGroup)
 				{
-					if (e.Handle.Exists())
+					if (e.handle.Exists())
 					{
 						if (isOnTheLine)
-							e.Handle.RequestControl(400);
+							e.handle.RequestControl(400);
 						EntityManagement::AttachEntityInit(e, myPed, Settings::bKeepPositionWhenAttaching);
 					}
 				}
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -2245,14 +2245,14 @@ namespace sub
 				{
 					for (auto& e : vGroup)
 					{
-						if (e.Handle.Exists())
+						if (e.handle.Exists())
 						{
 							if (isOnTheLine)
-								e.Handle.RequestControl(400);
+								e.handle.RequestControl(400);
 							EntityManagement::AttachEntityInit(e, myVehicle, Settings::bKeepPositionWhenAttaching);
 						}
 					}
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 			}
@@ -2266,30 +2266,30 @@ namespace sub
 					{
 						if (std::find(vGroup.begin(), vGroup.end(), e) == vGroup.end())
 						{
-							if (e.Handle.Exists())
+							if (e.handle.Exists())
 							{
 								bool bEntityPressed = false;
-								AddOption(e.HashName, bEntityPressed); if (bEntityPressed)
+								AddOption(e.hashName, bEntityPressed); if (bEntityPressed)
 								{
 									for (auto& eig : vGroup)
 									{
-										if (eig.Handle.Exists())
+										if (eig.handle.Exists())
 										{
 											if (isOnTheLine)
-												eig.Handle.RequestControl(400);
-											EntityManagement::AttachEntityInit(eig, e.Handle, Settings::bKeepPositionWhenAttaching);
+												eig.handle.RequestControl(400);
+											EntityManagement::AttachEntityInit(eig, e.handle, Settings::bKeepPositionWhenAttaching);
 										}
 									}
-									Menu::SetSub_previous();
+									Menu::SetPreviousMenu();
 									return;
 								}
 
 								if (*Menu::currentopATM == Menu::printingop)
-									EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(0, 255, 0, 200));
+									EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 							}
 							else
 							{
-								AddOption(e.HashName + " (Invalid)", null);
+								AddOption(e.hashName + " (Invalid)", null);
 							}
 						}
 					}
@@ -2299,22 +2299,22 @@ namespace sub
 
 		void Sub_PedOps()
 		{
-			if (!SelectedEntity.Handle.Exists())
+			if (!selectedEntity.handle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
-			SelectedEntity.Handle.RequestControlOnce();
-			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(SelectedEntity);
+			selectedEntity.handle.RequestControlOnce();
+			auto thisEntityIndexInDb = EntityManagement::GetEntityIndexInDb(selectedEntity);
 			bool isThisEntityInDb = thisEntityIndexInDb >= 0;
 			if (isThisEntityInDb)
 			{
-				SelectedEntity.TaskSequence = Databases::EntityDb[thisEntityIndexInDb].TaskSequence;
-				Databases::EntityDb[thisEntityIndexInDb] = SelectedEntity;
+				selectedEntity.taskSequence = Databases::EntityDb[thisEntityIndexInDb].taskSequence;
+				Databases::EntityDb[thisEntityIndexInDb] = selectedEntity;
 			}
 
 			GTAped myPed = PLAYER_PED_ID();
-			GTAped thisPed = SelectedEntity.Handle;
+			GTAped thisPed = selectedEntity.handle;
 			bool butAmIOnline = NETWORK_IS_IN_SESSION() != 0;
 			bool isPedMyPed = thisPed.Handle() == myPed.Handle();
 			bool bIsPedShortHeighted = GET_PED_CONFIG_FLAG(thisPed.Handle(), ePedConfigFlags::_Shrink, false) != 0;
@@ -2335,9 +2335,9 @@ namespace sub
 
 			if (!isPedMyPed)
 				MenuOptions::AddOption_RelationshipTextScroller();
-			AddToggle("Is Still (Block Fleeing)", SelectedEntity.IsStill, pedops_isStill_toggle, pedops_isStill_toggle); if (pedops_isStill_toggle) { thisPed.BlockPermanentEvents_set(SelectedEntity.IsStill); }
+			AddToggle("Is Still (Block Fleeing)", selectedEntity.isStill, pedops_isStill_toggle, pedops_isStill_toggle); if (pedops_isStill_toggle) { thisPed.BlockPermanentEvents_set(selectedEntity.isStill); }
 			AddLocal("Can Ragdoll", thisPed.CanRagdoll_get(), pedops_canRagdoll_toggle, pedops_canRagdoll_toggle); if (pedops_canRagdoll_toggle) { bool ns = !thisPed.CanRagdoll_get(); thisPed.CanRagdoll_set(ns); SET_PED_RAGDOLL_ON_COLLISION(thisPed.Handle(), ns); }
-			AddLocal("Is Short Heighted (Small)", bIsPedShortHeighted, pedops_shortHeighted_toggle, pedops_shortHeighted_toggle); if (pedops_shortHeighted_toggle) { SET_PED_CONFIG_FLAG(SelectedEntity.Handle.Handle(), ePedConfigFlags::_Shrink, bIsPedShortHeighted ? 0 : 1); }
+			AddLocal("Is Short Heighted (Small)", bIsPedShortHeighted, pedops_shortHeighted_toggle, pedops_shortHeighted_toggle); if (pedops_shortHeighted_toggle) { SET_PED_CONFIG_FLAG(selectedEntity.handle.Handle(), ePedConfigFlags::_Shrink, bIsPedShortHeighted ? 0 : 1); }
 
 			int thisArmour = thisPed.Armour_get();
 			bool bArmour_plus = false, bArmour_minus = false, bArmour_input = false;
@@ -2369,7 +2369,7 @@ namespace sub
 			}
 
 			AddOption("Animations", null, SetEnt241, SUB::ANIMATIONSUB);
-			AddOption("Scenario Actions", null, SetEnt241, SUB::ANIMATIONSUB_TASKSCENARIOS);
+			AddOption("Scenario Actions", null, SetEnt241, SUB::AnimationTaskScenarios);
 			AddOption("Moods", null, SetEnt241, SUB::FACIALMOOD);
 			AddOption("Movement Styles", null, SetEnt241, SUB::MOVEMENTGROUP);
 			AddOption("Weapon", null, nullFunc, SUB::SPOONER_PEDOPS_WEAPON);
@@ -2398,8 +2398,8 @@ namespace sub
 					if (!myPedGroup.Contains(thisPed))
 					{
 						myPedGroup.Add(thisPed, false);
-						myPedGroup.SeparationRange_set(100.0f);
-						myPedGroup.FormationSpacing_set(1.5f);
+						myPedGroup.SetSeparationRange(100.0f);
+						myPedGroup.SetFormationSpacing(1.5f);
 						thisPed.Task().FightAgainstHatedTargets(400.0f);
 					}
 					else
@@ -2411,8 +2411,8 @@ namespace sub
 				{
 					myPedGroup = PedGroup::CreateNewGroup();
 					myPedGroup.Add(myPed, true);
-					myPedGroup.SeparationRange_set(100.0f);
-					myPedGroup.FormationSpacing_set(1.5f);
+					myPedGroup.SetSeparationRange(100.0f);
+					myPedGroup.SetFormationSpacing(1.5f);
 				}
 			}
 
@@ -2487,7 +2487,7 @@ namespace sub
 		{
 			auto& selectedCategoryIndex = msCurrentPaintIndex;
 			GTAped myPed = PLAYER_PED_ID();
-			GTAped thisPed = SelectedEntity.Handle;
+			GTAped thisPed = selectedEntity.handle;
 			Hash pedCurrWeapon = thisPed.Weapon_get();
 			bool isPedMyPed = thisPed.Handle() == myPed.Handle();
 
@@ -2530,7 +2530,7 @@ namespace sub
 			auto& selectedCategoryIndex = msCurrentPaintIndex;
 			AddTitle(WeaponIndivs::vCategoryNames[selectedCategoryIndex]);
 
-			GTAped thisPed = SelectedEntity.Handle;
+			GTAped thisPed = selectedEntity.handle;
 			Hash currentWeapon = thisPed.Weapon_get();
 
 			for (auto& wc : *WeaponIndivs::vAllWeapons[selectedCategoryIndex])
@@ -2601,7 +2601,7 @@ namespace sub
 				{
 					GTAentity myPed = PLAYER_PED_ID();
 					Vector3 myPos = myPed.GetPosition();
-					SelectedMarker = MarkerManagement::AddMarker(myPos, Vector3(0, 0, myPed.Heading_get()));
+					SelectedMarker = MarkerManagement::AddMarker(myPos, Vector3(0, 0, myPed.GetHeading()));
 				}
 				else
 				{
@@ -2647,7 +2647,7 @@ namespace sub
 		{
 			if (SelectedMarker == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -2868,14 +2868,14 @@ namespace sub
 				SelectedMarker->m_name = Game::InputBox(SelectedMarker->m_name, 26U, "Enter custom marker name:", SelectedMarker->m_name);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1String, SelectedMarker->m_name, 26U, "Enter custom marker name:", SelectedMarker->m_name);
 				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&SelectedMarker->m_name);
-				Menu::currentop_ar[Menu::currentsub_ar_index]++;
+				Menu::currentop_ar[Menu::currentArrayIndex]++;
 			}
 		}
 		void Sub_ManageMarkers_InMarker_Dest2Marker()
 		{
 			if (SelectedMarker == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -2891,7 +2891,7 @@ namespace sub
 					{
 						SelectedMarker->m_destinationPtr = &m;
 						SelectedMarker->m_destinationVal = m;
-						Menu::SetSub_previous();
+						Menu::SetPreviousMenu();
 						return;
 					}
 
@@ -2936,7 +2936,7 @@ namespace sub
 		{
 			if (SelectedMarker == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -2964,31 +2964,31 @@ namespace sub
 				AddBreak("---Database---");
 				for (auto& e : Databases::EntityDb)
 				{
-					if (e.Handle.Exists())
+					if (e.handle.Exists())
 					{
 						bool bEntityPressed = false;
-						AddTickol(e.HashName, SelectedMarker->m_attachmentArgs.attachedTo == e.Handle, bEntityPressed, bEntityPressed, TICKOL::TICK2); if (bEntityPressed)
+						AddTickol(e.hashName, SelectedMarker->m_attachmentArgs.attachedTo == e.handle, bEntityPressed, bEntityPressed, TICKOL::TICK2); if (bEntityPressed)
 						{
-							SelectedMarker->m_attachmentArgs.attachedTo = e.Handle;
+							SelectedMarker->m_attachmentArgs.attachedTo = e.handle;
 							if (Settings::bKeepPositionWhenAttaching)
 							{
-								SelectedMarker->m_attachmentArgs.offset = e.Handle.GetOffsetGivenWorldCoords(SelectedMarker->m_position);
-								SelectedMarker->m_attachmentArgs.rotation = SelectedMarker->m_rotation - e.Handle.Rotation_get();
+								SelectedMarker->m_attachmentArgs.offset = e.handle.GetOffsetGivenWorldCoords(SelectedMarker->m_position);
+								SelectedMarker->m_attachmentArgs.rotation = SelectedMarker->m_rotation - e.handle.Rotation_get();
 							}
 							else
 							{
 								SelectedMarker->m_attachmentArgs.offset.clear();
 								SelectedMarker->m_attachmentArgs.rotation.clear();
 							}
-							Menu::SetSub_previous();
+							Menu::SetPreviousMenu();
 							return;
 						}
 
-						if (*Menu::currentopATM == Menu::printingop) EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(0, 255, 0, 200));
+						if (*Menu::currentopATM == Menu::printingop) EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 					else
 					{
-						AddOption(e.HashName + " (Invalid)", null);
+						AddOption(e.hashName + " (Invalid)", null);
 					}
 				}
 			}
@@ -3164,8 +3164,8 @@ namespace sub
 
 					if (currentModel.IsInCdImage())
 					{
-						MenuOptions::AddOption_AddPed(current.second, currentModel);
-						if (*Menu::currentopATM == Menu::printingop) PedFavourites_catind::ShowInstructionalButton(currentModel);
+						MenuOptions::AddOptionAddPed(current.second, currentModel);
+						if (*Menu::currentopATM == Menu::printingop) PedFavourites::ShowInstructionalButton(currentModel);
 					}
 				}
 			}
@@ -3195,8 +3195,8 @@ namespace sub
 		}
 		void Sub_SpawnVehicle()
 		{
-			using SpawnVehicle_catind::AddvcatOption_;
-			typedef SpawnVehicle_catind::Indices Indices;
+			using VehicleSpawner::AddVehicleCategoryOption;
+			typedef VehicleSpawner::Indices Indices;
 
 			g_Ped1 = PLAYER_PED_ID();
 
@@ -3204,35 +3204,35 @@ namespace sub
 			AddOption("Favourites", null, nullFunc, SUB::SPAWNVEHICLE_FAVOURITES);
 
 			AddBreak("---Cars---");
-			AddvcatOption_("Open Wheel", Indices::OPENWHEEL);
-			AddvcatOption_("Super", Indices::SUPER);
-			AddvcatOption_("Sports", Indices::SPORT);
-			AddvcatOption_("Sports Classics", Indices::SPORTSCLASSIC);
-			AddvcatOption_("Coupes", Indices::COUPE);
-			AddvcatOption_("Muscle", Indices::MUSCLE);
-			AddvcatOption_("Offroad", Indices::OFFROAD);
-			AddvcatOption_("SUVs", Indices::SUV);
-			AddvcatOption_("Sedans", Indices::SEDAN);
-			AddvcatOption_("Compacts", Indices::COMPACT);
-			AddvcatOption_("Drift", Indices::DRIFT);
+			AddVehicleCategoryOption("Open Wheel", Indices::OPENWHEEL);
+			AddVehicleCategoryOption("Super", Indices::SUPER);
+			AddVehicleCategoryOption("Sports", Indices::SPORT);
+			AddVehicleCategoryOption("Sports Classics", Indices::SPORTSCLASSIC);
+			AddVehicleCategoryOption("Coupes", Indices::COUPE);
+			AddVehicleCategoryOption("Muscle", Indices::MUSCLE);
+			AddVehicleCategoryOption("Offroad", Indices::OFFROAD);
+			AddVehicleCategoryOption("SUVs", Indices::SUV);
+			AddVehicleCategoryOption("Sedans", Indices::SEDAN);
+			AddVehicleCategoryOption("Compacts", Indices::COMPACT);
+			AddVehicleCategoryOption("Drift", Indices::DRIFT);
 
 			AddBreak("---Industrial---");
-			AddvcatOption_("Vans", Indices::VAN);
-			AddvcatOption_("Services", Indices::SERVICE);
-			AddvcatOption_("Industrial", Indices::INDUSTRIAL);
-			AddvcatOption_("Commercial", Indices::COMMERCIAL);
-			AddvcatOption_("Utility", Indices::UTILITY);
-			AddvcatOption_("Trains", Indices::TRAIN);
+			AddVehicleCategoryOption("Vans", Indices::VAN);
+			AddVehicleCategoryOption("Services", Indices::SERVICE);
+			AddVehicleCategoryOption("Industrial", Indices::INDUSTRIAL);
+			AddVehicleCategoryOption("Commercial", Indices::COMMERCIAL);
+			AddVehicleCategoryOption("Utility", Indices::UTILITY);
+			AddVehicleCategoryOption("Trains", Indices::TRAIN);
 
 			AddBreak("---Others---");
-			AddvcatOption_("Emergency", Indices::EMERGENCY);
-			AddvcatOption_("Military", Indices::MILITARY);
-			AddvcatOption_("Motorcycles", Indices::MOTORCYCLE);
-			AddvcatOption_("Bicycles", Indices::BICYCLE);
-			AddvcatOption_("Planes", Indices::PLANE);
-			AddvcatOption_("Helicopters", Indices::HELICOPTER);
-			AddvcatOption_("Boats", Indices::BOAT);
-			AddvcatOption_("Others", Indices::OTHER);
+			AddVehicleCategoryOption("Emergency", Indices::EMERGENCY);
+			AddVehicleCategoryOption("Military", Indices::MILITARY);
+			AddVehicleCategoryOption("Motorcycles", Indices::MOTORCYCLE);
+			AddVehicleCategoryOption("Bicycles", Indices::BICYCLE);
+			AddVehicleCategoryOption("Planes", Indices::PLANE);
+			AddVehicleCategoryOption("Helicopters", Indices::HELICOPTER);
+			AddVehicleCategoryOption("Boats", Indices::BOAT);
+			AddVehicleCategoryOption("Others", Indices::OTHER);
 
 			bool bInputPressed = false;
 			AddOption("INPUT MODEL", bInputPressed); if (bInputPressed)
@@ -3246,7 +3246,7 @@ namespace sub
 	void EntityAlphaLevelSub_()
 	{
 		GTAentity entity = g_Ped4;
-		auto alphaLevel = entity.Alpha_get();
+		auto alphaLevel = entity.GetAlpha();
 
 		AddTitle("Opacity");
 
@@ -3265,15 +3265,15 @@ namespace sub
 			AddTickol(std::to_string((int)(((float)(lvl) / 255.0f) * 100)) + "%", alphaLevel == lvl, bAlphaLevelPressed, null); if (bAlphaLevelPressed)
 			{
 				entity.RequestControl();
-				entity.Alpha_set(lvl);
+				entity.SetAlpha(lvl);
 			}
 		}
 
 		AddBreak("---Manual---");
 		bool bInputPressed = false, bPlusPressed = false, bMinusPressed = false;
 		AddNumber("Level", alphaLevel, 0, bInputPressed, bPlusPressed, bMinusPressed);
-		if (bPlusPressed) { if (alphaLevel < 255) { alphaLevel++; entity.RequestControl(); entity.Alpha_set(alphaLevel); } }
-		if (bMinusPressed) { if (alphaLevel > 0) { alphaLevel--; entity.RequestControl(); entity.Alpha_set(alphaLevel); } }
+		if (bPlusPressed) { if (alphaLevel < 255) { alphaLevel++; entity.RequestControl(); entity.SetAlpha(alphaLevel); } }
+		if (bMinusPressed) { if (alphaLevel > 0) { alphaLevel--; entity.RequestControl(); entity.SetAlpha(alphaLevel); } }
 		if (bInputPressed)
 		{
 			std::string inputStr = Game::InputBox(std::string(), 4U, "Enter an alpha level (0-255):", std::to_string(alphaLevel));
@@ -3285,7 +3285,7 @@ namespace sub
 					if (alphaLevel < 0 || alphaLevel > 255)
 						throw;
 					entity.RequestControl();
-					entity.Alpha_set(alphaLevel);
+					entity.SetAlpha(alphaLevel);
 				}
 				catch (...)
 				{
@@ -3305,7 +3305,7 @@ namespace sub
 
 		if (!thisPed.Exists())
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -3864,7 +3864,7 @@ namespace sub
 			{
 				Entity tempEntity = g_Ped1;
 				Hash tempHash = GET_HASH_KEY(inputStr);
-				if (!IS_MODEL_IN_CDIMAGE(tempHash)) Game::Print::PrintError_InvalidModel(inputStr);
+				if (!IS_MODEL_IN_CDIMAGE(tempHash)) Game::Print::PrintErrorInvalidModel(inputStr);
 				else
 				{
 					if (IS_PED_IN_ANY_VEHICLE(g_Ped1, 0)) tempEntity = GET_VEHICLE_PED_IS_IN(g_Ped1, 0);
@@ -3895,22 +3895,22 @@ namespace sub
 		}
 
 		if (Network_ObjectSub_Mani) {
-			att_ped_to_veh(PedHash::Mani, g_Ped1, Vector3(), Vector3(), false, true);
+			AttachPedToVehicle(PedHash::Mani, g_Ped1, Vector3(), Vector3(), false, true);
 			return;
 		}
 
 		if (Network_ObjectSub_Chop) {
-			att_ped_to_veh(PedHash::Chop, g_Ped1, Vector3(), Vector3(), false, true);
+			AttachPedToVehicle(PedHash::Chop, g_Ped1, Vector3(), Vector3(), false, true);
 			return;
 		}
 
 		if (Network_ObjectSub_Alien) {
-			att_ped_to_veh(PedHash::MovAlien01, g_Ped1, Vector3(), Vector3(), false, true);
+			AttachPedToVehicle(PedHash::MovAlien01, g_Ped1, Vector3(), Vector3(), false, true);
 			return;
 		}
 
 		if (Network_ObjectSub_Cow) {
-			att_ped_to_veh(PedHash::Cow, g_Ped1, Vector3(), Vector3(), false, false);
+			AttachPedToVehicle(PedHash::Cow, g_Ped1, Vector3(), Vector3(), false, false);
 			return;
 		}
 
@@ -3919,12 +3919,12 @@ namespace sub
 			if (inputStr.length() > 0)
 			{
 				Hash tempHash = GET_HASH_KEY(inputStr);
-				if (!IS_MODEL_IN_CDIMAGE(tempHash)) Game::Print::PrintError_InvalidModel(inputStr);
+				if (!IS_MODEL_IN_CDIMAGE(tempHash)) Game::Print::PrintErrorInvalidModel(inputStr);
 				else
 				{
 					Entity tempEntity = g_Ped1;
 					if (IS_PED_IN_ANY_VEHICLE(g_Ped1, 0)) tempEntity = GET_VEHICLE_PED_IS_IN(g_Ped1, 0);
-					att_ped_to_veh(tempHash, tempEntity, Vector3(), Vector3(), false, true);
+					AttachPedToVehicle(tempHash, tempEntity, Vector3(), Vector3(), false, true);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::NetworkAttachObjectsCustomPed, "", 64U, "Enter ped name:");

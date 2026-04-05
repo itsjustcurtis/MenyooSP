@@ -21,9 +21,7 @@ class GTAplayer;
 namespace FlameThrower
 {
 	extern Hash _whash;
-
-	//void TurnOn();
-
+	
 	bool IsPlayerAdded(GTAplayer player);
 	void RemovePlayer(GTAplayer player);
 	void AddPlayer(GTAplayer player);

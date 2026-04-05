@@ -108,7 +108,7 @@ Vector3 GameplayCamera::GetRotation()
 {
 	return GET_GAMEPLAY_CAM_ROT(2);
 }
-Vector3 GameplayCamera::Direction_get()
+Vector3 GameplayCamera::GetDirection()
 {
 	return Vector3::RotationToDirection(GET_GAMEPLAY_CAM_ROT(2));
 }
@@ -116,14 +116,14 @@ float GameplayCamera::Zoom_get()
 {
 	return GET_FIRST_PERSON_AIM_CAM_ZOOM_FACTOR();
 }
-void GameplayCamera::ShakeAmplitude_set(float value)
+void GameplayCamera::SetShakeAmplitude(float value)
 {
 	SET_GAMEPLAY_CAM_SHAKE_AMPLITUDE(value);
 }
 
 void GameplayCamera::Shake(CameraShake shakeType, float amplitude)
 {
-	SHAKE_GAMEPLAY_CAM(CameraShakeNames[static_cast<int>(shakeType)].c_str(), amplitude);
+	SHAKE_GAMEPLAY_CAM(cameraShakeNames[static_cast<int>(shakeType)].c_str(), amplitude);
 }
 
 void GameplayCamera::StopShaking(bool value)

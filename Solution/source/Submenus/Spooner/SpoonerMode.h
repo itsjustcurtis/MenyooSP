@@ -45,7 +45,7 @@ namespace sub::Spooner
 			GTAentity entity;
 			std::set<GTAentity> previousEntities;
 		};
-		extern ModelPreviewInfoStructure ModelPreviewInfo;
+		extern ModelPreviewInfoStructure modelPreviewInfo;
 		void SpawnModelPreview();
 
 		void ResetSelectedEntity();

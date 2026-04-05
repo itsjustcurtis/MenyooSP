@@ -165,7 +165,7 @@ namespace sub::TeleportLocations_catind
 			{
 				if (currentBunkerInfo.location == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				GTAped ped = g_Ped1;
@@ -280,7 +280,7 @@ namespace sub::TeleportLocations_catind
 			{
 				if (currentMocInfo.location == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
 				GTAped ped = g_Ped1;

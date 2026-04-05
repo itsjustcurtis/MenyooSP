@@ -22,18 +22,18 @@
 namespace sub::Spooner
 {
 	//enum class eSpoonerModeMode : UINT8 { GroundEase, Precision };
-	const std::vector<std::string> vSpoonerModeMode{ "Surface Ease", "Precision" };
+	const std::vector<std::string> spoonerModeModeNames{ "Surface Ease", "Precision" };
 
 	namespace Settings
 	{
 //#define GTA_MAX_ENTITIES 2048
 
-		float CameraMovementSensitivityKeyboard = 0.33f;
-		float CameraRotationSensitivityMouse = 6.5f;
-		float CameraMovementSensitivityGamepad = 0.9f;
-		float CameraRotationSensitivityGamepad = 1.4f;
+		float cameraMovementSensitivityKeyboard = 0.33f;
+		float cameraRotationSensitivityMouse = 6.5f;
+		float cameraMovementSensitivityGamepad = 0.9f;
+		float cameraRotationSensitivityGamepad = 1.4f;
 
-		eSpoonerModeMode SpoonerModeMode = eSpoonerModeMode::GroundEase;
+		eSpoonerModeMode spoonerModeMode = eSpoonerModeMode::GroundEase;
 
 		bool bShowModelPreviews = true;
 		bool bShowBoxAroundSelectedEntity = false;

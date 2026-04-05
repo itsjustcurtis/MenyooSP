@@ -110,7 +110,7 @@ namespace sub
 		AddTitle("Wardrobe");
 		AddLocal("Front View", g_cam_componentChanger.Exists(), frontView, frontView);
 		AddOption("Outfits", null, nullFunc, SUB::COMPONENTS_OUTFITS);
-		AddOption("Decal Overlays", null, PedDecals_catind::OpenSubDecals, -1, true);
+		AddOption("Decal Overlays", null, PedDecals::OpenSubDecals, -1, true);
 		AddOption("Damage Overlays", null, nullFunc, SUB::PEDDAMAGET_CATEGORYLIST);
 		AddOption("Head Features", null, nullFunc, SUB::PED_HEADFEATURES_MAIN);
 		AddOption("Accessories", null, nullFunc, SUB::COMPONENTSPROPS);
@@ -580,7 +580,7 @@ namespace sub
 
 	// Decals, tattoos & badges
 
-	namespace PedDecals_catind
+	namespace PedDecals
 	{
 		std::map<Ped, std::vector<PedDecalValue>> vPedsAndDecals;
 
@@ -688,7 +688,7 @@ namespace sub
 			const auto& vPed = vAllDecals.find(pedModel.hash);
 			if (vPed == vAllDecals.end())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -767,7 +767,7 @@ namespace sub
 
 	// Damage/blood textures
 
-	namespace PedDamageTextures_catind
+	namespace PedDamageTextures
 	{
 		auto& selectedPedHandle = g_Ped1;
 		int boneToUse = 0;
@@ -1004,7 +1004,7 @@ namespace sub
 				{
 					vPedHeads.erase(pit);
 				}
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				Game::Print::PrintBottomLeft("~r~Error:~s~ Either the ped died or it isn't an MP freemode model.");
 				return;
 			}
@@ -1322,16 +1322,16 @@ namespace sub
 
 	// Outfits (saver)
 
-	namespace ComponentChanger_Outfit_catind
+	namespace ComponentChangerOutfit
 	{
 		UINT8 persistentAttachmentsTexterIndex = 0;
 
 		bool Create(GTAentity ped, std::string filePath)
 		{
 			sub::Spooner::SpoonerEntity eped;
-			eped.Handle = ped;
-			eped.Type = EntityType::PED;
-			eped.Dynamic = true;
+			eped.handle = ped;
+			eped.type = EntityType::PED;
+			eped.dynamic = true;
 
 			bool bClearDecalOverlays = true;
 			bool bAddAttachmentsToSpoonerDb = false;
@@ -1362,10 +1362,10 @@ namespace sub
 			nodeAttachments.append_attribute("StartTaskSequencesOnLoad") = bStartTaskSeqsOnLoad;
 			for (auto& e : sub::Spooner::Databases::EntityDb)
 			{
-				if (e.AttachmentArgs.isAttached)
+				if (e.attachmentArgs.isAttached)
 				{
 					GTAentity att;
-					if (sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.Handle, att))
+					if (sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.handle, att))
 					{
 						if (att.Handle() == ped.Handle())
 						{
@@ -1399,7 +1399,7 @@ namespace sub
 				if (ep.Handle() == PLAYER_PED_ID())
 				{
 					bool bWas241 = (g_Ped1 == ep.Handle());
-					ChangeModel_(eModel);
+					ChangeModel(eModel);
 					ep = PLAYER_PED_ID();
 					if (bWas241) g_Ped1 = ep.Handle();
 				}
@@ -1468,7 +1468,7 @@ namespace sub
 				int opacityLevel = nodeEntity.child("OpacityLevel").text().as_int(255);
 				if (opacityLevel < 255)
 				{
-					ep.Alpha_set(opacityLevel);
+					ep.SetAlpha(opacityLevel);
 				}
 				ep.SetVisible(nodeEntity.child("IsVisible").text().as_bool());
 			}
@@ -1477,7 +1477,7 @@ namespace sub
 			{
 				CLEAR_PED_DECORATIONS(ep.Handle());	
 			}
-			auto& decalsApplied = sub::PedDecals_catind::vPedsAndDecals[ep.Handle()];
+			auto& decalsApplied = sub::PedDecals::vPedsAndDecals[ep.Handle()];
 			decalsApplied.clear();
 			if (applyDecals)
 			{
@@ -1486,7 +1486,7 @@ namespace sub
 				{
 					for (auto nodeDecal = nodePedTattooLogoDecals.first_child(); nodeDecal; nodeDecal = nodeDecal.next_sibling())
 					{
-						sub::PedDecals_catind::PedDecalValue decal(nodeDecal.attribute("collection").as_uint(), nodeDecal.attribute("value").as_uint());
+						sub::PedDecals::PedDecalValue decal(nodeDecal.attribute("collection").as_uint(), nodeDecal.attribute("value").as_uint());
 						decalsApplied.push_back(decal);
 						ADD_PED_DECORATION_FROM_HASHES(ep.Handle(), decal.collection, decal.value);
 					}
@@ -1527,14 +1527,14 @@ namespace sub
 				}
 			}
 
-			sub::PedDamageTextures_catind::ClearAllBloodDamage(ep);
-			sub::PedDamageTextures_catind::ClearAllVisibleDamage(ep);
+			sub::PedDamageTextures::ClearAllBloodDamage(ep);
+			sub::PedDamageTextures::ClearAllVisibleDamage(ep);
 			if (applyDamageTextures)
 			{
 				auto nodePedDamagePacks = nodePedStuff.child("DamagePacks");
 				if (nodePedDamagePacks)
 				{
-					auto& dmgPacksApplied = sub::PedDamageTextures_catind::vPedsAndDamagePacks[ep.Handle()];
+					auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
 					dmgPacksApplied.clear();
 					for (auto nodePedDamagePack = nodePedDamagePacks.first_child(); nodePedDamagePack; nodePedDamagePack = nodePedDamagePack.next_sibling())
 					{
@@ -1561,27 +1561,27 @@ namespace sub
 				for (auto nodeAttachment = nodeAttachments.first_child(); nodeAttachment; nodeAttachment = nodeAttachment.next_sibling())
 				{
 					auto e = sub::Spooner::FileManagement::SpawnEntityFromXmlNode(nodeAttachment, vModelHashes);
-					sub::Spooner::EntityManagement::AttachEntity(e.e, ep, e.e.AttachmentArgs.boneIndex, e.e.AttachmentArgs.offset, e.e.AttachmentArgs.rotation);
+					sub::Spooner::EntityManagement::AttachEntity(e.e, ep, e.e.attachmentArgs.boneIndex, e.e.attachmentArgs.offset, e.e.attachmentArgs.rotation);
 					vSpawnedAttachments.push_back(e);
 					if (bAddAttachmentsToSpoonerDb)
 					{
-						if (!e.e.TaskSequence.empty())
+						if (!e.e.taskSequence.empty())
 						{
-							auto& vTskPtrs = e.e.TaskSequence.AllTasks();
+							auto& vTskPtrs = e.e.taskSequence.AllTasks();
 							for (auto& u : vSpawnedAttachments)
 							{
 								for (auto& tskPtr : vTskPtrs)
 								{
-									tskPtr->LoadTargetingDressing(u.initHandle, u.e.Handle.Handle());
+									tskPtr->LoadTargetingDressing(u.initHandle, u.e.handle.Handle());
 								}
 							}
-							if (bStartTaskSeqsOnLoad) e.e.TaskSequence.Start();
+							if (bStartTaskSeqsOnLoad) e.e.taskSequence.Start();
 						}
 						sub::Spooner::Databases::EntityDb.push_back(e.e);
 					}
 					else
 					{
-						e.e.Handle.NoLongerNeeded();
+						e.e.handle.NoLongerNeeded();
 					}
 				}
 				for (auto& amh : vModelHashes)
@@ -1596,7 +1596,7 @@ namespace sub
 
 	void ComponentChanger_Outfits()
 	{
-		using ComponentChanger_Outfit_catind::persistentAttachmentsTexterIndex;
+		using ComponentChangerOutfit::persistentAttachmentsTexterIndex;
 		std::string& name = dict;
 		std::string& searchStr = dict2;
 		std::string& dir = dict3;
@@ -1697,7 +1697,7 @@ namespace sub
 			std::string inputStr = Game::InputBox("", 28U, "FMMC_KEY_TIP9");
 			if (inputStr.length() > 0)
 			{
-				ComponentChanger_Outfit_catind::Create(g_Ped1, dir + "\\" + inputStr + ".xml");
+				ComponentChangerOutfit::Create(g_Ped1, dir + "\\" + inputStr + ".xml");
 				Game::Print::PrintBottomLeft("File ~b~created~s~.");
 			}
 			else Game::Print::PrintErrorInvalidInput(inputStr);
@@ -1751,20 +1751,20 @@ namespace sub
 		if (outfits2_applyModel)
 		{
 			bool s1isme = g_Ped1 == PLAYER_PED_ID();
-			ComponentChanger_Outfit_catind::Apply(g_Ped1, filePath, true, false, false, false, false, false);
+			ComponentChangerOutfit::Apply(g_Ped1, filePath, true, false, false, false, false, false);
 			if (s1isme) g_Ped1 = PLAYER_PED_ID();
 		}
 
 		if (outfits2_applyAllFeatures)
 		{
-			ComponentChanger_Outfit_catind::Apply(g_Ped1, filePath, false, true, true, true, true, true);
+			ComponentChangerOutfit::Apply(g_Ped1, filePath, false, true, true, true, true, true);
 		}
 
 		if (outfits2_applySetDefault)
 		{
-			ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), filePath, true, false, false, false, false, false);
-			ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), filePath, false, true, true, true, true, true);
-			if (ComponentChanger_Outfit_catind::Create(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml"))
+			ComponentChangerOutfit::Apply(PLAYER_PED_ID(), filePath, true, false, false, false, false, false);
+			ComponentChangerOutfit::Apply(PLAYER_PED_ID(), filePath, false, true, true, true, true, true);
+			if (ComponentChangerOutfit::Create(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml"))
 			{
 				Game::Print::PrintBottomLeft("Set as ~b~Default~s~, Outfit will be auto loaded on next game launch.");
 			}
@@ -1777,7 +1777,7 @@ namespace sub
 
 		if (outfits2_overwrite)
 		{
-			if (ComponentChanger_Outfit_catind::Create(g_Ped1, filePath))
+			if (ComponentChangerOutfit::Create(g_Ped1, filePath))
 				Game::Print::PrintBottomLeft("File ~b~overwritten~s~.");
 			else
 			{
@@ -1816,7 +1816,7 @@ namespace sub
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to delete file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to delete file " + filePath + " failed");
 			}
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			Menu::Up();
 			return;
 		}
@@ -1895,14 +1895,14 @@ REGISTER_SUBMENU(COMPONENTSPROPS, sub::ComponentChangerProps_)
 REGISTER_SUBMENU(COMPONENTSPROPS2, sub::ComponentChangerProps2)
 REGISTER_SUBMENU(COMPONENTS_OUTFITS, sub::ComponentChanger_Outfits)
 REGISTER_SUBMENU(COMPONENTS_OUTFITS2, sub::ComponentChanger_Outfits2)
-REGISTER_SUBMENU(PEDDECALS_TYPES, sub::PedDecals_catind::Sub_Decals_Types)
-REGISTER_SUBMENU(PEDDECALS_ZONES, sub::PedDecals_catind::Sub_Decals_Zones)
-REGISTER_SUBMENU(PEDDECALS_INZONE, sub::PedDecals_catind::Sub_Decals_InZone)
-REGISTER_SUBMENU(PEDDAMAGET_CATEGORYLIST, sub::PedDamageTextures_catind::Sub_CategoryList)
-REGISTER_SUBMENU(PEDDAMAGET_BONESELECTION, sub::PedDamageTextures_catind::Sub_BoneSelection)
-REGISTER_SUBMENU(PEDDAMAGET_BLOOD, sub::PedDamageTextures_catind::Sub_Blood)
-REGISTER_SUBMENU(PEDDAMAGET_DAMAGEDECALS, sub::PedDamageTextures_catind::Sub_DamageDecals)
-REGISTER_SUBMENU(PEDDAMAGET_DAMAGEPACKS, sub::PedDamageTextures_catind::Sub_DamagePacks)
+REGISTER_SUBMENU(PEDDECALS_TYPES, sub::PedDecals::Sub_Decals_Types)
+REGISTER_SUBMENU(PEDDECALS_ZONES, sub::PedDecals::Sub_Decals_Zones)
+REGISTER_SUBMENU(PEDDECALS_INZONE, sub::PedDecals::Sub_Decals_InZone)
+REGISTER_SUBMENU(PEDDAMAGET_CATEGORYLIST, sub::PedDamageTextures::Sub_CategoryList)
+REGISTER_SUBMENU(PEDDAMAGET_BONESELECTION, sub::PedDamageTextures::Sub_BoneSelection)
+REGISTER_SUBMENU(PEDDAMAGET_BLOOD, sub::PedDamageTextures::Sub_Blood)
+REGISTER_SUBMENU(PEDDAMAGET_DAMAGEDECALS, sub::PedDamageTextures::Sub_DamageDecals)
+REGISTER_SUBMENU(PEDDAMAGET_DAMAGEPACKS, sub::PedDamageTextures::Sub_DamagePacks)
 REGISTER_SUBMENU(PED_HEADFEATURES_MAIN, sub::PedHeadFeatures_catind::Sub_Main)
 REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS, sub::PedHeadFeatures_catind::Sub_HeadOverlays)
 REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS_INITEM, sub::PedHeadFeatures_catind::Sub_HeadOverlays_InItem)

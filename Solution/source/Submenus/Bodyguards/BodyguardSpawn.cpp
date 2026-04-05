@@ -57,8 +57,8 @@ namespace sub::BodyguardMenu
 
 					if (currentModel.IsInCdImage())
 					{
-						sub::BodyguardMenu::BodyguardManagement::AddOption_BodyguardPed(current.second, currentModel);
-						if (*Menu::currentopATM == Menu::printingop) PedFavourites_catind::ShowInstructionalButton(currentModel);
+						sub::BodyguardMenu::BodyguardManagement::AddOptionBodyGuardPed(current.second, currentModel);
+						if (*Menu::currentopATM == Menu::printingop) PedFavourites::ShowInstructionalButton(currentModel);
 
 					}
 				}
@@ -86,7 +86,7 @@ namespace sub::BodyguardMenu
 namespace sub::BodyguardMenu::BodyguardManagement
 {
 	std::vector<Ped> s_bodyguards;
-	void AddOption_BodyguardPed(const std::string& text, const GTAmodel::Model& model)
+	void AddOptionBodyGuardPed(const std::string& text, const GTAmodel::Model& model)
 	{
 		bool bPressed = false;
 		AddOption(text, bPressed);
@@ -141,7 +141,7 @@ namespace sub::BodyguardMenu::BodyguardManagement
 		ent.Handle = GTAentity(ped);
 		ent.Type = EntityType::PED;
 		ent.Name = text;
-		ent.HashName = int_to_hexstring(model.hash, true);
+		ent.HashName = IntToHexString(model.hash, true);
 
 		sub::BodyguardMenu::BodyguardManagement::AddBodyguardToDb(ent);
 		for (auto& bg : sub::BodyguardMenu::BodyguardDb)

@@ -21,7 +21,7 @@
 #include <vector>
 #include <math.h>
 
-const std::vector<std::string> CameraShakeNames{ "HAND_SHAKE", "SMALL_EXPLOSION_SHAKE", "MEDIUM_EXPLOSION_SHAKE", "LARGE_EXPLOSION_SHAKE", "JOLT_SHAKE", "VIBRATE_SHAKE", "ROAD_VIBRATION_SHAKE", "DRUNK_SHAKE", "SKY_DIVING_SHAKE", "FAMILY5_DRUG_TRIP_SHAKE", "DEATH_FAIL_IN_EFFECT_SHAKE" };
+const std::vector<std::string> cameraShakeNames{ "HAND_SHAKE", "SMALL_EXPLOSION_SHAKE", "MEDIUM_EXPLOSION_SHAKE", "LARGE_EXPLOSION_SHAKE", "JOLT_SHAKE", "VIBRATE_SHAKE", "ROAD_VIBRATION_SHAKE", "DRUNK_SHAKE", "SKY_DIVING_SHAKE", "FAMILY5_DRUG_TRIP_SHAKE", "DEATH_FAIL_IN_EFFECT_SHAKE" };
 
 Camera::Camera() : mHandle(0), mShakeType(CameraShake::Hand), mShakeAmplitude(0.0f)
 {
@@ -122,7 +122,7 @@ void Camera::SetShake(bool status)
 {
 	if (status)
 	{
-		SHAKE_CAM(this->mHandle, CameraShakeNames[static_cast<int>(this->mShakeType)].c_str(), this->mShakeAmplitude);
+		SHAKE_CAM(this->mHandle, cameraShakeNames[static_cast<int>(this->mShakeType)].c_str(), this->mShakeAmplitude);
 	}
 	else
 	{
@@ -246,7 +246,7 @@ void Camera::ShakeType_set(CameraShake value)
 
 	if (this->IsShaking())
 	{
-		SHAKE_CAM(this->mHandle, CameraShakeNames[static_cast<int>(this->mShakeType)].c_str(), this->mShakeAmplitude);
+		SHAKE_CAM(this->mHandle, cameraShakeNames[static_cast<int>(this->mShakeType)].c_str(), this->mShakeAmplitude);
 	}
 }
 

@@ -47,9 +47,9 @@ public:
 	static float GetRelativePitch();
 	static void RelativePitch_set(float value);
 	static Vector3 GetRotation();
-	static Vector3 Direction_get();
+	static Vector3 GetDirection();
 	static float Zoom_get();
-	static void ShakeAmplitude_set(float value);
+	static void SetShakeAmplitude(float value);
 
 	static void Shake(CameraShake shakeType, float amplitude);
 
