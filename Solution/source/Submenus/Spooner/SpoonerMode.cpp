@@ -42,6 +42,7 @@
 #include <utility>
 #include <set>
 #include <math.h>
+#include <Menu/Routine.h>
 
 namespace sub::Spooner
 {
@@ -269,15 +270,16 @@ namespace sub::Spooner
 						}
 					}
 					bool bRightJus = get_xcoord_at_menu_leftEdge(0.0f, false) < 0.5f; // left edge of menu is on the left of the centre of the screen
-					float infoX = bRightJus ? 0.94f : 0.008f;
-					Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
-					Game::Print::drawstring("Total Entities Spawned: " + std::to_string(totalNumEntities), infoX, 0.064f);
-					Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
-					Game::Print::drawstring("Objects Spawned: " + std::to_string(totalNumProps), infoX, 0.094f);
-					Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
-					Game::Print::drawstring("Peds Spawned: " + std::to_string(totalNumPeds), infoX, 0.124f);
-					Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.37f, 0.37f), false, bRightJus, false);
-					Game::Print::drawstring("Vehicles Spawned: " + std::to_string(totalNumVehicles), infoX, 0.154f);
+					float infoX = bRightJus ? 0.90f : 0.008f;
+					float infoY = xyzhCoords ? 0.184f : 0.064f;
+					Game::Print::SetupDraw(font_xyzh, Vector2(0.37f, 0.37f), false, bRightJus, true);
+					Game::Print::drawstring("Total Entities Spawned: " + std::to_string(totalNumEntities), infoX, infoY);
+					Game::Print::SetupDraw(font_xyzh, Vector2(0.37f, 0.37f), false, bRightJus, true);
+					Game::Print::drawstring("Objects Spawned: " + std::to_string(totalNumProps), infoX, infoY + 0.03f);
+					Game::Print::SetupDraw(font_xyzh, Vector2(0.37f, 0.37f), false, bRightJus, true);
+					Game::Print::drawstring("Peds Spawned: " + std::to_string(totalNumPeds), infoX, infoY + 0.06f);
+					Game::Print::SetupDraw(font_xyzh, Vector2(0.37f, 0.37f), false, bRightJus, true);
+					Game::Print::drawstring("Vehicles Spawned: " + std::to_string(totalNumVehicles), infoX, infoY + 0.09f);
 				}
 
 				if (!freeCam.Exists())

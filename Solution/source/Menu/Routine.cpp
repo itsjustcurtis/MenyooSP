@@ -1845,11 +1845,11 @@ void XYZH()
 	Vector3 Pos = GET_ENTITY_COORDS(PLAYER_PED_ID(), 1);
 
 	Game::Print::SetupDraw(font_xyzh, Vector2(0.35f, 0.36f), false, false, true);
-	Game::Print::drawstring("Coords:", 0.90f, 0.066f);
-	xyzhDrawFloat(Pos.x, 0.90f, 0.10f);
-	xyzhDrawFloat(Pos.y, 0.90f, 0.13f);
-	xyzhDrawFloat(Pos.z, 0.90f, 0.16f);
-	xyzhDrawFloat(GET_ENTITY_HEADING(PLAYER_PED_ID()), 0.90f, 0.19f);
+	Game::Print::drawstring("Coords:", 0.94f, 0.03f);
+	xyzhDrawFloat(Pos.x, 0.94f, 0.06f);
+	xyzhDrawFloat(Pos.y, 0.94f, 0.09f);
+	xyzhDrawFloat(Pos.z, 0.94f, 0.12f);
+	xyzhDrawFloat(GET_ENTITY_HEADING(PLAYER_PED_ID()), 0.94f, 0.15f);
 }
 
 void SetLocalSupermanManual()

@@ -56,7 +56,7 @@ namespace FPSCounter
 	{
 		g_fpsCounter.Tick();
 		Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.4f, 0.4f), false, false, false);
-		Game::Print::drawstring("~y~" + g_fpsCounter.GetString() + " FPS", 0.945f, 0.034f);
+		Game::Print::drawstring("~y~" + g_fpsCounter.GetString() + " FPS", 0.965f, 0.008f);
 	}
 
 	void DisplayFpsTick()
