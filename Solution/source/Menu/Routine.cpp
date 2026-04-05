@@ -2605,7 +2605,7 @@ void set_vehicle_neon_anim(GTAvehicle vehicle)
 	if (loop_neon_rgb)
 	{
 		g_setNeonColour = g_fadedRGB; 
-		vehicle.NeonLightsColour_set(g_setNeonColour);
+		vehicle.SetNeonLightsColour(g_setNeonColour);
 		s_neonDirty = true;
 	}
 	static constexpr VehicleNeonLight kNeonLights[] = {
@@ -2663,31 +2663,31 @@ void set_vehicle_neon_anim(GTAvehicle vehicle)
 	{
 	case 0:
 	{
-		vehicle.NeonLightsColour_set(g_setNeonColour);
+		vehicle.SetNeonLightsColour(g_setNeonColour);
 		s_neonDirty = true;
 		break;
 	}
 	case 1:
 	{
-		vehicle.NeonLightsColour_set(g_neonFade);
+		vehicle.SetNeonLightsColour(g_neonFade);
 		s_neonDirty = true;
 		break;
 	}
 	case 2:
 	{
-		vehicle.NeonLightsColour_set(g_neonHeart);
+		vehicle.SetNeonLightsColour(g_neonHeart);
 		s_neonDirty = true;
 		break;
 	}
 	case 3:
 	{
-		vehicle.NeonLightsColour_set(g_neonShift);
+		vehicle.SetNeonLightsColour(g_neonShift);
 		s_neonDirty = true;
 		break;
 	}
 	case 4:
 	{
-		vehicle.NeonLightsColour_set(g_neonSlide);
+		vehicle.SetNeonLightsColour(g_neonSlide);
 		s_neonDirty = true;
 		break;
 	}
