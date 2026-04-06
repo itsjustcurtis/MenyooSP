@@ -1748,7 +1748,7 @@ void SetPedInvincibleOn(Ped ped)
 {
 	SET_ENTITY_INVINCIBLE(ped, 1);
 	SET_PED_DIES_IN_WATER(ped, 0);
-	SET_ENTITY_PROOFS(ped, 1, 0, 1, 1, 1, 1, 1, 1);
+	SET_ENTITY_PROOFS(ped, 1, 1, 1, 1, 1, 1, 1, 1);
 }
 void SetPedInvincibleOff(Ped ped)
 {
