@@ -1132,7 +1132,7 @@ namespace sub
 				}
 
 				SET_PED_HEAD_OVERLAY(ped.Handle(), overlayIndex, overlayValue, currentOverlayData.opacity);
-				ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour = -1, currentOverlayData.colourSecondary = -1);
+				ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
 			}
 
 			if (overlayMinus)
@@ -1147,7 +1147,7 @@ namespace sub
 				}
 
 				SET_PED_HEAD_OVERLAY(ped.Handle(), overlayIndex, overlayValue, currentOverlayData.opacity);
-				ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour = -1, currentOverlayData.colourSecondary = -1);
+				ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
 			}
 
 			// OPACITY
