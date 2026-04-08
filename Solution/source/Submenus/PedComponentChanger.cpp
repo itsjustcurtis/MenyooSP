@@ -1296,10 +1296,12 @@ namespace sub
 			// Shape IDs
 			addBlendIdTexter("Shape Inherited From Father", blendData.shapeFirstID, true);
 			addBlendIdTexter("Shape Inherited From Mother", blendData.shapeSecondID, true);
+			addBlendIdTexter("Shape Inherited From Ancestor", blendData.shapeThirdID, true);
 
 			// Skin IDs
 			addBlendIdTexter("Tone Inherited From Father", blendData.skinFirstID, true);
 			addBlendIdTexter("Tone Inherited From Mother", blendData.skinSecondID, true);
+			addBlendIdTexter("Tone Inherited From Ancestor", blendData.skinThirdID, true);
 
 			// Mixes
 			AddBreak("---Adjustment---");
@@ -1317,6 +1319,7 @@ namespace sub
 
 			addMixSlider("Shape", blendData.shapeMix);
 			addMixSlider("Tone", blendData.skinMix);
+			addMixSlider("Ancestor (Shape & Tone)", blendData.thirdMix);
 		}
 	}
 
