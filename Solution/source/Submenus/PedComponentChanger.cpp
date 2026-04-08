@@ -30,6 +30,7 @@
 #include "..\Util\ExePath.h"
 #include "..\Util\FileLogger.h"
 #include "..\Util\StringManip.h"
+#include "..\Util\keyboard.h"
 
 #include "..\Menu\FolderPreviewBmps.h"
 #include "..\Submenus\PedModelChanger.h"
@@ -584,6 +585,18 @@ namespace sub
 	{
 		std::map<Ped, std::vector<PedDecalValue>> vPedsAndDecals;
 
+		bool g_tattooPreviewMode = false;
+		const NamedPedDecal* g_previewTattoo = nullptr;
+
+		void ClearPreviewTattoo()
+		{
+			if (g_previewTattoo && DOES_ENTITY_EXIST(g_Ped1))
+			{
+				g_previewTattoo->Remove(g_Ped1);
+				g_previewTattoo = nullptr;
+			}
+		}
+
 		bool NamedPedDecal::IsOnPed(GTAentity ped) const
 		{
 			auto it = vPedsAndDecals.find(ped.Handle());
@@ -732,19 +745,65 @@ namespace sub
 		{
 			GTAentity ped = g_Ped1;
 
+			bool bShortcutDecalPreviewPressed = false;
+
+			if (Menu::OnSubBack == nullptr)
+			{
+				Menu::OnSubBack = []
+				{
+					PedDecals::ClearPreviewTattoo();
+				};
+			}
+
 			AddTitle(selectedZone->first);
 
 			for (const auto& decal : selectedZone->second)
 			{
+				bool isHovered = (*Menu::currentopATM == Menu::printingop + 1);
 				bool bDecalPressedApply = false, bDecalPressedRemove = false;
-				AddTickol(decal.caption, decal.IsOnPed(ped), bDecalPressedApply, bDecalPressedRemove, TICKOL::TATTOOTHING);
+				bool bIsOnPed = decal.IsOnPed(ped);
+
+				AddTickol(decal.caption, bIsOnPed, bDecalPressedApply, bDecalPressedRemove, TICKOL::TATTOOTHING);
+
+				if (g_tattooPreviewMode && isHovered)
+				{
+					
+					if (g_previewTattoo != &decal)
+					{
+						ClearPreviewTattoo();
+						if (!bIsOnPed) {
+							decal.Apply(ped);
+							g_previewTattoo = &decal;
+						}
+					}
+				}
+
 				if (bDecalPressedApply)
 				{
+					decal.Apply(ped);
+				
+				}
+				// permanently adding a decal while it's being previewed
+				else if (bDecalPressedRemove && g_previewTattoo == &decal)
+				{
+					ClearPreviewTattoo();
 					decal.Apply(ped);
 				}
 				else if (bDecalPressedRemove)
 				{
 					decal.Remove(ped);
+				}
+			}
+
+			Menu::add_IB(VirtualKey::B, g_tattooPreviewMode ? "Preview: ON " : "Preview: OFF ");
+			bShortcutDecalPreviewPressed = IsKeyJustUp(VirtualKey::B);
+			if (bShortcutDecalPreviewPressed)
+			{
+				g_tattooPreviewMode = !g_tattooPreviewMode;
+				
+				if (!g_tattooPreviewMode)
+				{
+					ClearPreviewTattoo();
 				}
 			}
 

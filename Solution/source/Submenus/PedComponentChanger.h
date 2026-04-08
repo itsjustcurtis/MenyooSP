@@ -75,6 +75,9 @@ namespace sub
 		extern std::pair<std::string, std::map<std::string, std::vector<NamedPedDecal>>>* selectedType;
 		extern std::pair<std::string, std::vector<NamedPedDecal>>* selectedZone;
 
+		extern bool g_tattooPreviewMode;
+		extern const NamedPedDecal* g_previewTattoo;
+
 		void Sub_Decals_Types();
 		void Sub_Decals_Zones();
 		void Sub_Decals_InZone();
