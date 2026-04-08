@@ -1332,7 +1332,7 @@ namespace sub
 			GET_PED_HEAD_BLEND_DATA(ped.Handle(), (Any*)&blendData);
 			std::vector<std::string> idNames;
 			float maxMix = 1.0f;
-			float minMix = -1.0f;
+			float minMix = 0.0f;
 			float mixStep = 0.01f;
 
 			AddTitle("Shape & Skin Tone");
@@ -1355,10 +1355,12 @@ namespace sub
 			// Shape IDs
 			addBlendIdTexter("Shape Inherited From Father", blendData.shapeFirstID, true);
 			addBlendIdTexter("Shape Inherited From Mother", blendData.shapeSecondID, true);
+			addBlendIdTexter("Shape Inherited From Ancestor", blendData.shapeThirdID, true);
 
 			// Skin IDs
 			addBlendIdTexter("Tone Inherited From Father", blendData.skinFirstID, true);
 			addBlendIdTexter("Tone Inherited From Mother", blendData.skinSecondID, true);
+			addBlendIdTexter("Tone Inherited From Ancestor", blendData.skinThirdID, true);
 
 			// Mixes
 			AddBreak("---Adjustment---");
@@ -1376,6 +1378,7 @@ namespace sub
 
 			addMixSlider("Shape", blendData.shapeMix);
 			addMixSlider("Tone", blendData.skinMix);
+			addMixSlider("Ancestor (Shape & Tone)", blendData.thirdMix);
 		}
 	}
 
