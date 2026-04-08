@@ -1273,7 +1273,7 @@ namespace sub
 			GET_PED_HEAD_BLEND_DATA(ped.Handle(), (Any*)&blendData);
 			std::vector<std::string> idNames;
 			float maxMix = 1.0f;
-			float minMix = -1.0f;
+			float minMix = 0.0f;
 			float mixStep = 0.01f;
 
 			AddTitle("Shape & Skin Tone");
