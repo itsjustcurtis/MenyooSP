@@ -213,7 +213,7 @@ namespace sub
 		{
 			AddTitle("Stat Manager");
 
-			for (auto& charName : charNames)
+			/*for (auto& charName : charNames)
 			{
 				bool bGoToCharacterPressed = false;
 				AddOption(charName.second, bGoToCharacterPressed, nullFunc, SUB::SPSTATMANAGER_INCHAR); if (bGoToCharacterPressed)
@@ -222,7 +222,7 @@ namespace sub
 				}
 			}
 
-			AddBreak("---Achievements---");
+			AddBreak("---Achievements---");*/
 			bool unlockAllAchievements = false;
 			AddOption("Unlock All Achievements", unlockAllAchievements); 
 			if (unlockAllAchievements)
