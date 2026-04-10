@@ -351,7 +351,6 @@ namespace sub
 
 	void ModelChangerMenu()
 	{
-		addlog(ige::LogType::LOG_TRACE, "Entering ModelChanger");
 		bool modelChangerRandomPedVariation = false;
 		bool modelChangerInput = false;
 		rngped = { "", "" };
@@ -376,7 +375,6 @@ namespace sub
 		AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
 		AddOption("~b~Input~s~ Model", modelChangerInput);
 
-		addlog(ige::LogType::LOG_TRACE, "Created ModelChanger Options");
 		if (modelChangerRandomPedVariation) 
 		{
 			addlog(ige::LogType::LOG_TRACE, "Random Ped Selected");
