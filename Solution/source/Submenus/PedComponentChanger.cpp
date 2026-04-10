@@ -457,35 +457,30 @@ namespace sub
 
 		bool increment = false, decrement = false;
 
-		int typeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0);
-		int textureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
-		int typeOld = typeCurrent;
-		int textureOld = textureCurrent;
-
-		int	propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0),
-			prop_texture_current = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
-		int prop_type_old = propTypeCurrent,
-			prop_texture_old = prop_texture_current;
+		int propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0),
+			propTextureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
+		int propTypeOld = propTypeCurrent,
+			propTextureOld = propTextureCurrent;
 
 		AddTitle("Set Variation");
 
 		if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", propTypeCurrent, 0, null, increment, decrement);
-		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) > 0) AddNumber("Texture", prop_texture_current, 0, null, increment, decrement);
+		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) > 0) AddNumber("Texture", propTextureCurrent, 0, null, increment, decrement);
 
 		switch (Menu::currentop)
 		{
 		case 1:
-			if (increment || decrement)
+			if (increment)
 			{
 				if (propTypeCurrent < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
 				{
 					propTypeCurrent++;
-					prop_texture_current = 0;
+					propTextureCurrent = 0;
 				}
 				else
 				{
 					propTypeCurrent = -1;
-					prop_texture_current = 0;
+					propTextureCurrent = 0;
 				}
 			}
 			else if (decrement)
@@ -493,59 +488,60 @@ namespace sub
 				if (propTypeCurrent > -1)
 				{
 					propTypeCurrent--;
-					prop_texture_current = 0;
+					propTextureCurrent = 0;
 				}
 				else
 				{
 					propTypeCurrent = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-					prop_texture_current = 0;
+					propTextureCurrent = 0;
 				}
 			}
 			break;
 		case 2:
-			if (increment || decrement)
+			if (increment)
 			{
-				if (prop_texture_current < GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1)
+				if (propTextureCurrent < GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1)
 				{
-					prop_texture_current++;
+					propTextureCurrent++;
 				}
-				else prop_texture_current = 0;
+				else propTextureCurrent = 0;
 			}
 			else if (decrement)
 			{
-				if (prop_texture_current > 0)
+				if (propTextureCurrent > 0)
 				{
-					prop_texture_current--;
+					propTextureCurrent--;
 				}
-				else prop_texture_current = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1;
+				else propTextureCurrent = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1;
 			}
 			break;
 		}
-
-		if (ped.Exists() && (typeCurrent != typeOld || textureCurrent != textureOld))
+		if (ped.Exists() && (propTypeCurrent != propTypeOld || propTextureCurrent != propTextureOld))
 		{
-			if (typeCurrent == -1)
+			Game::Print::PrintBottomCentre("propTypeCurrent: " + std::to_string(propTypeCurrent));
+			if (propTypeCurrent == -1)
 			{
 				CLEAR_PED_PROP(ped.Handle(), propId, 0);
 			}
 			else
 			{
-				SET_PED_PROP_INDEX(ped.Handle(), propId, typeCurrent, textureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+				SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 
 				// Skip prop types that don't actually apply to this ped
-				while (!HasPedSpecificPropType(typeCurrent))
+				while (!HasPedSpecificPropType(propTypeCurrent))
 				{
 					if (increment)
 					{
+
 						if (propTypeCurrent < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
 						{
 							propTypeCurrent++;
-							prop_texture_current = 0;
+							propTextureCurrent = 0;
 						}
 						else
 						{
 							propTypeCurrent = -1;
-							prop_texture_current = 0;
+							propTextureCurrent = 0;
 						}
 					}
 					else if (decrement)
@@ -553,15 +549,15 @@ namespace sub
 						if (propTypeCurrent > -1)
 						{
 							propTypeCurrent--;
-							prop_texture_current = 0;
+							propTextureCurrent = 0;
 						}
 						else
 						{
 							propTypeCurrent = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-							prop_texture_current = 0;
+							propTextureCurrent = 0;
 						}
 					}
-					SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, prop_texture_current, NETWORK_IS_GAME_IN_PROGRESS(), 0);					
+					SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);					
 				}
 			}
 		}
