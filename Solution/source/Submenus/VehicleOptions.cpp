@@ -766,7 +766,6 @@ namespace sub
 			inline void MainTick()
 			{
 				myPed = PLAYER_PED_ID();
-				int currentTime = GET_GAME_TIMER();
 			
 				if (myPed.IsInVehicle() && (IS_WAYPOINT_ACTIVE() || bRandDestinationMode))
 				{
@@ -778,7 +777,7 @@ namespace sub
 					vehicle = myPed.CurrentVehicle();
 					vehicleModel = vehicle.Model();
 					Vector3 currentPos = vehicle.GetPosition();
-					// 1. DISTANCE & BOUNDARY CHECK
+
 					// If we are within 300m of destination OR outside map bounds, pick a new target
 					bool outOfBounds = (currentPos.x > 4000.0f || currentPos.x < -4000.0f || currentPos.y > 7000.0f || currentPos.y < -3500.0f);
 					bool arrived = currentPos.DistanceTo(destination) < 300.0f;
@@ -787,12 +786,10 @@ namespace sub
 					{
 						if (arrived || outOfBounds || !initialSet)
 						{
-							// If out of bounds, target the center of the map (0,0)
-							if (outOfBounds) {
+							if (outOfBounds) { // out of bounds, target the center of the map (0,0)
 								destination = { 0.0f, 0.0f, 400.0f };
 							}
 							else {
-								// Pick a random cardinal direction
 								int currentDir = MISC::GET_RANDOM_INT_IN_RANGE(1, 5);
 								float offset = 4000.0f;
 								float targetZ = 400.0f; // Sane cruising altitude to avoid mountains
@@ -802,7 +799,7 @@ namespace sub
 								else if (currentDir == 3) destination = { currentPos.x, currentPos.y - offset, targetZ }; // S
 								else destination = { currentPos.x - offset, currentPos.y, targetZ }; // W
 							}
-							initialSet = false; // Force re-tasking in Tick functions
+							initialSet = false;
 						}
 					}
 					else if (!initialSet && IS_WAYPOINT_ACTIVE())
