@@ -96,6 +96,8 @@ namespace sub::Spooner
 		case STSTaskType::FaceEntity: tskPtr = (new STSTasks::FaceEntity); break;
 		case STSTaskType::LookAtCoord: tskPtr = (new STSTasks::LookAtCoord); break;
 		case STSTaskType::LookAtEntity: tskPtr = (new STSTasks::LookAtEntity); break;
+		case STSTaskType::LookAtCoordEyesOnly: tskPtr = (new STSTasks::LookAtCoordEyesOnly); break;
+		case STSTaskType::LookAtEntityEyesOnly: tskPtr = (new STSTasks::LookAtEntityEyesOnly); break;
 		case STSTaskType::TeleportToCoord: tskPtr = (new STSTasks::TeleportToCoord); break;
 		case STSTaskType::SeekCoverAtCoord: tskPtr = (new STSTasks::SeekCoverAtCoord); break;
 		case STSTaskType::SlideToCoord: tskPtr = (new STSTasks::SlideToCoord); break;

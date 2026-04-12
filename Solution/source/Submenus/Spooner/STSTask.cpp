@@ -43,6 +43,8 @@ namespace sub::Spooner
 		{ STSTaskType::FaceEntity,{ "Face Entity", EntityType::PED } },
 		{ STSTaskType::LookAtCoord,{ "Keep Looking At Position", EntityType::PED } },
 		{ STSTaskType::LookAtEntity,{ "Keep Looking At Entity", EntityType::PED } },
+		{ STSTaskType::LookAtCoordEyesOnly,{ "Keep Looking At Position (Eyes Only)", EntityType::PED } },
+		{ STSTaskType::LookAtEntityEyesOnly,{ "Keep Looking At Entity (Eyes Only)", EntityType::PED } },
 		{ STSTaskType::TeleportToCoord,{ "Teleport To Position", EntityType::ALL } },
 		{ STSTaskType::SeekCoverAtCoord,{ "Seek Cover At Position", EntityType::PED } },
 		//{ STSTaskType::SlideToCoord, {"Slide To Position", EntityType::PED }},
