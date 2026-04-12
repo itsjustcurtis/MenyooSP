@@ -736,6 +736,8 @@ namespace sub
 			int drivingStyle = 5;
 			UINT8 drivingStyleIndex = 0;
 			bool bPushEmAway = true;
+			bool bRandDestinationMode = false;
+			float pushRadius = 4.0f;
 			bool initialSet = false;
 
 			void TurnOn() override
@@ -764,8 +766,8 @@ namespace sub
 			inline void MainTick()
 			{
 				myPed = PLAYER_PED_ID();
-
-				if (myPed.IsInVehicle() && IS_WAYPOINT_ACTIVE())
+			
+				if (myPed.IsInVehicle() && (IS_WAYPOINT_ACTIVE() || bRandDestinationMode))
 				{
 					if (!initialSet)
 					{
@@ -774,23 +776,45 @@ namespace sub
 
 					vehicle = myPed.CurrentVehicle();
 					vehicleModel = vehicle.Model();
+					Vector3 currentPos = vehicle.GetPosition();
 
+					// If we are within 300m of destination OR outside map bounds, pick a new target
+					bool outOfBounds = (currentPos.x > 4000.0f || currentPos.x < -4000.0f || currentPos.y > 7000.0f || currentPos.y < -3500.0f);
+					bool arrived = currentPos.DistanceTo(destination) < 300.0f;
+
+					if (bRandDestinationMode && (vehicleModel.IsHeli() || vehicleModel.IsPlane()))
+					{
+						if (arrived || outOfBounds || !initialSet)
+						{
+							if (outOfBounds) { // out of bounds, target the center of the map (0,0)
+								destination = { 0.0f, 0.0f, 400.0f };
+							}
+							else {
+								int currentDir = MISC::GET_RANDOM_INT_IN_RANGE(1, 5);
+								float offset = 4000.0f;
+								float targetZ = 400.0f; // Sane cruising altitude to avoid mountains
+
+								if (currentDir == 1) destination = { currentPos.x, currentPos.y + offset, targetZ }; // N
+								else if (currentDir == 2) destination = { currentPos.x + offset, currentPos.y, targetZ }; // E
+								else if (currentDir == 3) destination = { currentPos.x, currentPos.y - offset, targetZ }; // S
+								else destination = { currentPos.x - offset, currentPos.y, targetZ }; // W
+							}
+							initialSet = false;
+						}
+					}
+					else if (!initialSet && IS_WAYPOINT_ACTIVE())
+					{
+						destination = GET_BLIP_COORDS(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint));
+					}
+					
 					if (vehicleModel.IsHeli())
-					{
 						HeliTick();
-					}
 					else if (vehicleModel.IsPlane())
-					{
 						PlaneTick();
-					}
-					else if (vehicleModel.IsBoat())
-					{
+					else if (vehicleModel.IsBoat())						
 						BoatTick();
-					}
 					else
-					{
 						NormalTick();
-					}
 
 					if (bPushEmAway)
 					{
@@ -811,8 +835,12 @@ namespace sub
 					ScrHandle tsk;
 					OPEN_SEQUENCE_TASK(&tsk);
 
-					TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(0, vehicle.Handle(), destination.x, destination.y, destination.z, speed, drivingStyle, 7.0f);
-
+					if (bRandDestinationMode) {
+						TASK_VEHICLE_DRIVE_WANDER(0, vehicle.Handle(), speed, drivingStyle);
+					}
+					else {
+							TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(0, vehicle.Handle(), destination.x, destination.y, destination.z, speed, drivingStyle, 7.0f);
+					}
 					CLOSE_SEQUENCE_TASK(tsk);
 					TASK_PERFORM_SEQUENCE(myPed.Handle(), tsk);
 					CLEAR_SEQUENCE_TASK(&tsk);
@@ -865,8 +893,12 @@ namespace sub
 					ScrHandle tsk;
 					OPEN_SEQUENCE_TASK(&tsk);
 
-					TASK_BOAT_MISSION(0, vehicle.Handle(), 0, 0, destination.x, destination.y, destination.z, 4, speed, 786469, 10.0f, 1071);
-
+					if (bRandDestinationMode) {
+						TASK_VEHICLE_DRIVE_WANDER(0, vehicle.Handle(), speed, drivingStyle);
+					}
+					else {
+						TASK_BOAT_MISSION(0, vehicle.Handle(), 0, 0, destination.x, destination.y, destination.z, 4, speed, 786469, 10.0f, 1071);
+					}
 					CLOSE_SEQUENCE_TASK(tsk);
 					TASK_PERFORM_SEQUENCE(myPed.Handle(), tsk);
 					CLEAR_SEQUENCE_TASK(&tsk);
@@ -899,7 +931,7 @@ namespace sub
 					{
 						continue;
 					}
-					if (v.IsInRangeOf(myFrontBumper, 4.0f))
+					if (v.IsInRangeOf(myFrontBumper, pushRadius))
 					{
 						v.ApplyForce(dir * 10.0f);
 					}
@@ -922,9 +954,11 @@ namespace sub
 			GTAped myPed = Game::PlayerPed();
 
 			auto& speed = Methods.speed;
+			auto& bRandDestinationMode = Methods.bRandDestinationMode;
 			auto& drivingStyle = Methods.drivingStyle;
 			auto& drivingStyleIndex = Methods.drivingStyleIndex;
 			auto& bPushEmAway = Methods.bPushEmAway;
+			auto& pushRadius = Methods.pushRadius;
 
 			std::vector<std::string> drivingStyleNames;
 			for (auto& dsns : DrivingStyle::nameArray)
@@ -936,13 +970,17 @@ namespace sub
 			bool speedMinus = false;
 			bool drivingStylePlus = false;
 			bool drivingStyleMinus = false;
+			bool radiusPlus = false;
+			bool radiusMinus = false;
 
 			AddTitle("Auto Drive");
 
-			AddLocal("Go To Waypoint", Methods.Enabled(), ToggleOnOff, ToggleOnOff);
+			AddToggle("Random Destination", bRandDestinationMode, ToggleOnOff, ToggleOnOff);
+			AddLocal("Go To Waypoint", Methods.Enabled() && !bRandDestinationMode, ToggleOnOff, ToggleOnOff);
 			AddNumber("Speed (KMPH)", speed * 3.6f, 1, null, speedPlus, speedMinus);
 			AddTexter("Driving Style", drivingStyleIndex, drivingStyleNames, null, drivingStylePlus, drivingStyleMinus);
 			AddToggle("Push Other Vehicles Away", bPushEmAway);
+			AddNumber("Forcefield Radius", pushRadius, 1, null, radiusPlus, radiusMinus);
 
 			if (speedPlus) 
 			{
@@ -981,6 +1019,18 @@ namespace sub
 				myPed.SetDrivingStyle(DrivingStyle::nameArray[drivingStyleIndex].style);
 				return;
 			}
+
+			if (radiusPlus) {
+				pushRadius += 0.5f;
+				return;
+			}
+			if (radiusMinus) {
+				if (pushRadius > 1.0f)
+					pushRadius -= 0.5f;
+				return;
+			}
+
+
 		}
 	}
 
