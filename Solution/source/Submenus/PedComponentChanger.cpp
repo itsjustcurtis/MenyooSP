@@ -1480,7 +1480,7 @@ namespace sub
 					headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
 					headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
 					headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
-					if (!g_unlockMaxIDs && headBlend.shapeFirstID > 45 || headBlend.shapeSecondID > 45 || headBlend.shapeThirdID > 45)
+					if (!g_unlockMaxIDs && (headBlend.shapeFirstID > 45 || headBlend.shapeSecondID > 45 || headBlend.shapeThirdID > 45))
 					{
 						Game::Print::PrintBottomCentre("~r~Warning:~s~ Parent Head Index outside normal range. Ensure Addon Heads are installed and Max Head IDs are unlocked");
 						addlog(ige::LogType::LOG_WARNING, "Ped Head Index " + std::to_string(max(headBlend.shapeFirstID, max(headBlend.shapeSecondID, headBlend.shapeThirdID))) + " outside normal range of 0-45. Ensure Matching Addon Heads are installed from XML Source and Max Head IDs are unlocked.");
