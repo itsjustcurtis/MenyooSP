@@ -1758,13 +1758,13 @@ void SetPedInvincibleOff(Ped ped)
 }
 void SetPedNoRagdollOn(Ped ped)
 {
-	SET_PED_CAN_RAGDOLL(ped, 2);
-	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 2);
+	SET_PED_CAN_RAGDOLL(ped, 0);
+	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 0);
 }
 void SetPedNoRagdollOff(Ped ped)
 {
-	SET_PED_CAN_RAGDOLL(ped, 0);
-	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 0);
+	SET_PED_CAN_RAGDOLL(ped, 1);
+	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 1);
 }
 void SetPedSeatbeltOn(Ped ped)
 {

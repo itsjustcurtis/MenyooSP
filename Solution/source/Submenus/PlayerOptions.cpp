@@ -154,22 +154,26 @@ namespace sub
 
 		if (invisibilityOff)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Turning Off Invisibility");
 			myPed.SetVisible(!myPed.IsVisible());
 		}
 
 		if (noRagdollOff) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Turning Off No Ragdoll");
 			SetPedNoRagdollOff(PLAYER_PED_ID()); 
 			return; 
 		}
 		if (seatbeltOff) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Turning Off Seatbelt");
 			SetPedSeatbeltOff(PLAYER_PED_ID()); 
 			return; 
 		}
 
 		if (forceFieldPlus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Increase Force Field");
 			if (forceField < forceFieldNames.size() - 1) 
 			{
 				forceField++; 
@@ -177,7 +181,8 @@ namespace sub
 			}
 		}
 		if (forceFieldMinus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Decrease Force Field");
 			if (forceField > 0) 
 			{
 				forceField--; 
@@ -217,6 +222,7 @@ namespace sub
 
 		if (ignoredByEveryoneOff) 
 		{
+			addlog(ige::LogType::LOG_TRACE, "Ignore By Everyone Off");
 			Player temp = PLAYER_ID();
 			SET_POLICE_IGNORE_PLAYER(temp, neverWanted);
 			SET_EVERYONE_IGNORE_PLAYER(temp, 0);
@@ -227,18 +233,21 @@ namespace sub
 
 		if (neverWantedOn) 
 		{
+			addlog(ige::LogType::LOG_TRACE, "Never Wanted On");
 			SET_PLAYER_WANTED_LEVEL(PLAYER_ID(), 0, 0);
 			SET_PLAYER_WANTED_LEVEL_NOW(PLAYER_ID(), 0);
 			return;
 		}
 		if (neverWantedOff) 
 		{
+			addlog(ige::LogType::LOG_TRACE, "Never Wanted Off");
 			SET_MAX_WANTED_LEVEL(6);
 			SET_WANTED_LEVEL_MULTIPLIER(1.0f);
 			return;
 		}
 		if (wantedPlus) 
 		{
+			addlog(ige::LogType::LOG_TRACE, "Increase Wanted Level");
 			if (wantedLevel < 6)
 			{
 				wantedLevel += 1;
@@ -255,6 +264,7 @@ namespace sub
 		}
 		if (wantedMinus) 
 		{
+			addlog(ige::LogType::LOG_TRACE, "Decrease Wanted Level");
 			if (wantedLevel > 0)
 			{
 				if (wantedLevel == 1)
@@ -279,17 +289,20 @@ namespace sub
 
 		if (wantedFreezeOn)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Freeze Wanted Level On");
 			selfFreezeWantedLevel = Game::Player().GetWantedLevel();
 			return;
 		}
 		if (wantedFreezeOff) 
 		{
+			addlog(ige::LogType::LOG_TRACE, "Freeze Wanted Level Off");
 			selfFreezeWantedLevel = 0;
 			return;
 		}
 
 		if (burnModeOn) 
 		{
+			addlog(ige::LogType::LOG_TRACE, "Burn Mode On");
 			if (GET_PLAYER_INVINCIBLE(g_Ped2)) 
 			{
 				SET_PLAYER_INVINCIBLE(g_Ped2, 0);
@@ -305,6 +318,7 @@ namespace sub
 		}
 		if (burnModeOff) 
 		{
+			addlog(ige::LogType::LOG_TRACE, "Burn Mode Off");
 			if (IS_ENTITY_ON_FIRE(g_Ped1)) 
 			{
 				STOP_ENTITY_FIRE(g_Ped1);
@@ -314,41 +328,47 @@ namespace sub
 
 		if (heightPlus) 
 		{ 
+			addlog(ige::LogType::LOG_TRACE, "Increase Height");
 			if (height < 2.5f) 
 			{ 
 				height += 0.1f; GeneralGlobalHax::SetPlayerHeight(height); 
 			}
 		}
 		if (heightMinus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Decrease Height");
 			if (height > -2.5f) 
 			{ 
 				height -= 0.1f; GeneralGlobalHax::SetPlayerHeight(height); 
 			} 
 		}
 		if (movementSpeedPlus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Increase Movement Speed");
 			if (movementSpeed < 9.0f) 
 			{ 
 				movementSpeed += 0.1f; GeneralGlobalHax::SetPlayerMovementSpeed(movementSpeed); 
 			} 
 		}
 		if (movementSpeedMinus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Decrease Movement Speed");
 			if (movementSpeed > 0.0f) 
 			{ 
 				movementSpeed -= 0.1f; GeneralGlobalHax::SetPlayerMovementSpeed(movementSpeed); 
 			} 
 		}
 		if (swimSpeedPlus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Increase Swim Speed");
 			if (swimSpeed < 9.0f) 
 			{ 
 				swimSpeed += 0.1f; GeneralGlobalHax::SetPlayerSwimSpeed(swimSpeed); 
 			} 
 		}
 		if (swimSpeedMinus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Decrease Swim Speed");
 			if (swimSpeed > 0.0f) 
 			{ 
 				swimSpeed -= 0.1f; GeneralGlobalHax::SetPlayerSwimSpeed(swimSpeed); 
@@ -357,6 +377,7 @@ namespace sub
 
 		if (movementSpeedModifierPlus) 
 		{
+			addlog(ige::LogType::LOG_TRACE, "Increase Movement Speed Modifier");
 			if (swimSpeedMult < 1.40f) 
 			{
 				swimSpeedMult += 0.1f;
@@ -365,6 +386,7 @@ namespace sub
 		}
 		if (movementSpeedModifierMinus) 
 		{
+			addlog(ige::LogType::LOG_TRACE, "Decrease Movement Speed Modifier");
 			if (swimSpeedMult > 0.0f) 
 			{
 				swimSpeedMult -= 0.1f;
@@ -373,7 +395,8 @@ namespace sub
 		}
 
 		if (sweatPlus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Increase Sweat");
 			if (selfSweatMult < 5.5f) 
 			{
 				selfSweatMult += 0.1f;
@@ -381,20 +404,8 @@ namespace sub
 			return; 
 		}
 		if (sweatMinus) 
-		{ 
-			if (selfSweatMult > 0.0f) 
-			{
-				selfSweatMult -= 0.1f;
-			}
-			if (selfSweatMult == 0.0f) 
-			{ 
-				SET_PED_SWEAT(g_Ped1, selfSweatMult); 
-				CLEAR_PED_WETNESS(g_Ped1); 
-			} 
-			return; 
-		}
-		if (sweatMinus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Decrease Sweat");
 			if (selfSweatMult > 0.0f) 
 			{
 				selfSweatMult -= 0.1f;
@@ -407,7 +418,8 @@ namespace sub
 			return; 
 		}
 		if (noiseValuePlus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Increase Noise");
 			if (playerNoiseMult < 10.0f) 
 			{
 				playerNoiseMult += 0.1f;
@@ -415,7 +427,8 @@ namespace sub
 			return; 
 		}
 		if (noiseValueMinus) 
-		{ 
+		{
+			addlog(ige::LogType::LOG_TRACE, "Decrease Noise");
 			if (playerNoiseMult > 0.0f) 
 			{
 				playerNoiseMult -= 0.1f;
