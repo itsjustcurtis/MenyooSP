@@ -616,6 +616,22 @@ namespace sub
 			}
 			return;
 		};
+		if (flagPlus)
+		{
+			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
+			{
+				if (it->first == g_customAnimFlag)
+				{
+					++it;
+					if (it != AnimFlag::vFlagNames.end())
+					{
+						g_customAnimFlag = it->first;
+					}
+					break;
+				}
+			}
+			return;
+		};
 		if (flagMinus)
 		{
 			for (auto it = AnimFlag::vFlagNames.rbegin(); it != AnimFlag::vFlagNames.rend(); ++it)
