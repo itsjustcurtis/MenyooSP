@@ -133,12 +133,37 @@ namespace sub
 {
     void BodyguardMainMenu()
     {
+        bool bHealth_plus = false, bHealth_minus = false, bHealth_input = false;
+        bool bArmor_plus = false, bArmor_minus = false, bArmor_input = false;
+        int blipIndex = 0;
+        static const std::vector<std::pair<int, std::string>> blipOptions =
+        {
+            { 1,   "Standard" },
+            { 280, "Friend"   },
+            { 480, "VIP"      }
+        };
+        bool bBlipInput = false;
+        bool icon_plus = false, icon_minus = false;
+        bool oldGodmode = sub::BodyguardMenu::godmode;
+
+        int formationIndex = 0;
+        static const std::vector<std::pair<int, std::string>> formationOptions =
+        {
+            { 0, "Default Formation" },
+            { 1, "Circle (Inward)" },
+            { 2, "Circle (North)" },
+            { 3, "Line" }
+        };
+
+        bool bFormationInput = false;
+        bool form_plus = false, form_minus = false;
+        bool bTeleportBodyguards = false;
+
         AddTitle("Bodyguards");
 
         AddOption("Spawn Bodyguard", null, nullFunc, SUB::BODYGUARD_SPAWN);
         AddOption("Bodyguard List", null, nullFunc, SUB::BODYGUARD_LIST);
 
-        static bool bHealth_plus = false, bHealth_minus = false, bHealth_input = false;
         AddNumber("Default Health", sub::BodyguardMenu::health, 0, bHealth_input, bHealth_plus, bHealth_minus);
         if (bHealth_plus && sub::BodyguardMenu::health < INT_MAX) ++sub::BodyguardMenu::health;
         if (bHealth_minus && sub::BodyguardMenu::health > 0) --sub::BodyguardMenu::health;
@@ -152,7 +177,6 @@ namespace sub
             }
         }
 
-        static bool bArmor_plus = false, bArmor_minus = false, bArmor_input = false;
         AddNumber("Default Armor", sub::BodyguardMenu::armor, 0, bArmor_input, bArmor_plus, bArmor_minus);
         if (bArmor_plus && sub::BodyguardMenu::armor < INT_MAX) ++sub::BodyguardMenu::armor;
         if (bArmor_minus && sub::BodyguardMenu::armor > 0) --sub::BodyguardMenu::armor;
@@ -166,7 +190,6 @@ namespace sub
             }
         }
 
-        bool oldGodmode = sub::BodyguardMenu::godmode;
         AddToggle("Godmode", sub::BodyguardMenu::godmode);
 
         if (oldGodmode != sub::BodyguardMenu::godmode)
@@ -182,22 +205,9 @@ namespace sub
             }
         }
 
-        static int blipIndex = 0;
-        static const std::vector<std::pair<int, std::string>> blipOptions =
-        {
-            { 1,   "Standard" },
-            { 280, "Friend"   },
-            { 480, "VIP"      }
-        };
 
-        // show labels using AddTexter
-        static bool bBlipInput = false;
-        bool icon_plus = false, icon_minus = false;
-
-        // current label from our restricted blipOptions array
         AddTexter("Bodyguard Blip", 0, { blipOptions[blipIndex].second }, bBlipInput, icon_plus, icon_minus);
 
-        // scroll through our 3-choice array
         if (icon_plus)
         {
             blipIndex = (blipIndex + 1) % blipOptions.size();
@@ -212,18 +222,6 @@ namespace sub
             sub::BodyguardMenu::RefreshAllBodyguardBlips();
         }
 
-        static int formationIndex = 0;
-        static const std::vector<std::pair<int, std::string>> formationOptions =
-        {
-            { 0, "Default Formation" },
-            { 1, "Circle (Inward)" },
-            { 2, "Circle (North)" },
-            { 3, "Line" }
-        };
-
-        static bool bFormationInput = false;
-        bool form_plus = false, form_minus = false;
-
         AddTexter("Formation", 0, { formationOptions[formationIndex].second }, bFormationInput, form_plus, form_minus);
 
         if (form_plus || form_minus)
@@ -237,7 +235,6 @@ namespace sub
             PED::SET_GROUP_FORMATION(playerGroup, formationOptions[formationIndex].first);
         }
 
-        bool bTeleportBodyguards = false;
         AddOption("Bring Bodyguards To Self", bTeleportBodyguards);
 
         if (bTeleportBodyguards)
