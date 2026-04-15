@@ -449,6 +449,90 @@ namespace sub::Spooner
 				this->targetEntity = u_e_Handle;
 		}
 
+		void LookAtCoordEyesOnly::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
+		{
+			auto nodePos = nodeTask.append_child("Position");
+			nodePos.append_attribute("X") = this->coord.x;
+			nodePos.append_attribute("Y") = this->coord.y;
+			nodePos.append_attribute("Z") = this->coord.z;
+		}
+		void LookAtCoordEyesOnly::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
+		{
+			auto nodePos = nodeTask.child("Position");
+			this->coord.x = nodePos.attribute("X").as_float();
+			this->coord.y = nodePos.attribute("Y").as_float();
+			this->coord.z = nodePos.attribute("Z").as_float();
+		}
+		void LookAtCoordEyesOnly::ImportTaskDataSpecific(STSTask* otherTsk)
+		{
+			auto otherTskT = otherTsk->GetTypeTask<STSTasks::LookAtCoordEyesOnly>();
+			this->coord = otherTskT->coord;
+		}
+		LookAtCoordEyesOnly::LookAtCoordEyesOnly()
+		{
+			this->type = STSTaskType::LookAtCoordEyesOnly;
+			this->submenu = Submenus::Sub_TaskSequence::LookAtCoordEyesOnly;
+			this->duration = 10000;
+			this->durationAfterLife = 0;
+			this->isLoopedTask = false;
+		}
+		void LookAtCoordEyesOnly::RunP(GTAped& ep)
+		{
+			TASK_LOOK_AT_COORD(ep.Handle(), this->coord.x, this->coord.y, this->coord.z, this->durationAfterLife > 0 ? -1 : this->duration, 8192, 2);
+		}
+		void LookAtCoordEyesOnly::EndP(GTAped& ep)
+		{
+			if (this->durationAfterLife == 0)
+			{
+				ep.Task().ClearLookAt();
+			}
+		}
+
+		void LookAtEntityEyesOnly::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
+		{
+			auto targetHandle = this->targetEntity.GetHandle();
+			if (targetHandle == PLAYER_PED_ID())
+				nodeTask.append_child("TargetInitHandle").text() = "PLAYER";
+			else
+				nodeTask.append_child("TargetInitHandle").text() = targetHandle;
+		}
+		void LookAtEntityEyesOnly::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
+		{
+			if (strcmp(nodeTask.child("TargetInitHandle").text().as_string(), "PLAYER") == 0)
+				this->targetEntity.Handle() = PLAYER_PED_ID();
+			else
+				this->targetEntity.Handle() = nodeTask.child("TargetInitHandle").text().as_int();
+		}
+		void LookAtEntityEyesOnly::ImportTaskDataSpecific(STSTask* otherTsk)
+		{
+			auto otherTskT = otherTsk->GetTypeTask<STSTasks::LookAtEntityEyesOnly>();
+			this->targetEntity = otherTskT->targetEntity;
+		}
+		LookAtEntityEyesOnly::LookAtEntityEyesOnly()
+		{
+			this->type = STSTaskType::LookAtEntityEyesOnly;
+			this->submenu = Submenus::Sub_TaskSequence::LookAtEntityEyesOnly;
+			this->duration = 10000;
+			this->durationAfterLife = 0;
+			this->isLoopedTask = false;
+		}
+		void LookAtEntityEyesOnly::RunP(GTAped& ep)
+		{
+			TASK_LOOK_AT_ENTITY(ep.Handle(), this->targetEntity.Handle(), this->durationAfterLife > 0 ? -1 : this->duration, 8192, 2);
+		}
+		void LookAtEntityEyesOnly::EndP(GTAped& ep)
+		{
+			if (this->durationAfterLife == 0)
+			{
+				ep.Task().ClearLookAt();
+			}
+		}
+		void LookAtEntityEyesOnly::LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle)
+		{
+			if (this->targetEntity == u_initHandle && this->targetEntity != PLAYER_PED_ID())
+				this->targetEntity = u_e_Handle;
+		}
+
 		void TeleportToCoord::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
 		{
 			nodeTask.append_child("TakeVehicleToo").text() = this->takeVehicleToo;

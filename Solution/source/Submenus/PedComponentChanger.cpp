@@ -30,6 +30,7 @@
 #include "..\Util\ExePath.h"
 #include "..\Util\FileLogger.h"
 #include "..\Util\StringManip.h"
+#include "..\Util\keyboard.h"
 
 #include "..\Menu\FolderPreviewBmps.h"
 #include "..\Submenus\PedModelChanger.h"
@@ -580,6 +581,18 @@ namespace sub
 	{
 		std::map<Ped, std::vector<PedDecalValue>> vPedsAndDecals;
 
+		bool g_tattooPreviewMode = false;
+		const NamedPedDecal* g_previewTattoo = nullptr;
+
+		void ClearPreviewTattoo()
+		{
+			if (g_previewTattoo && DOES_ENTITY_EXIST(g_Ped1))
+			{
+				g_previewTattoo->Remove(g_Ped1);
+				g_previewTattoo = nullptr;
+			}
+		}
+
 		bool NamedPedDecal::IsOnPed(GTAentity ped) const
 		{
 			auto it = vPedsAndDecals.find(ped.Handle());
@@ -728,19 +741,65 @@ namespace sub
 		{
 			GTAentity ped = g_Ped1;
 
+			bool bShortcutDecalPreviewPressed = false;
+
+			if (Menu::OnSubBack == nullptr)
+			{
+				Menu::OnSubBack = []
+				{
+					PedDecals::ClearPreviewTattoo();
+				};
+			}
+
 			AddTitle(selectedZone->first);
 
 			for (const auto& decal : selectedZone->second)
 			{
+				bool isHovered = (*Menu::currentopATM == Menu::printingop + 1);
 				bool bDecalPressedApply = false, bDecalPressedRemove = false;
-				AddTickol(decal.caption, decal.IsOnPed(ped), bDecalPressedApply, bDecalPressedRemove, TICKOL::TATTOOTHING);
+				bool bIsOnPed = decal.IsOnPed(ped);
+
+				AddTickol(decal.caption, bIsOnPed, bDecalPressedApply, bDecalPressedRemove, TICKOL::TATTOOTHING);
+
+				if (g_tattooPreviewMode && isHovered)
+				{
+					
+					if (g_previewTattoo != &decal)
+					{
+						ClearPreviewTattoo();
+						if (!bIsOnPed) {
+							decal.Apply(ped);
+							g_previewTattoo = &decal;
+						}
+					}
+				}
+
 				if (bDecalPressedApply)
 				{
+					decal.Apply(ped);
+				
+				}
+				// permanently adding a decal while it's being previewed
+				else if (bDecalPressedRemove && g_previewTattoo == &decal)
+				{
+					ClearPreviewTattoo();
 					decal.Apply(ped);
 				}
 				else if (bDecalPressedRemove)
 				{
 					decal.Remove(ped);
+				}
+			}
+
+			Menu::add_IB(VirtualKey::B, g_tattooPreviewMode ? "Preview: ON " : "Preview: OFF ");
+			bShortcutDecalPreviewPressed = IsKeyJustUp(VirtualKey::B);
+			if (bShortcutDecalPreviewPressed)
+			{
+				g_tattooPreviewMode = !g_tattooPreviewMode;
+				
+				if (!g_tattooPreviewMode)
+				{
+					ClearPreviewTattoo();
 				}
 			}
 
@@ -1128,7 +1187,7 @@ namespace sub
 				}
 
 				SET_PED_HEAD_OVERLAY(ped.Handle(), overlayIndex, overlayValue, currentOverlayData.opacity);
-				ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour = -1, currentOverlayData.colourSecondary = -1);
+				ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
 			}
 
 			if (overlayMinus)
@@ -1143,7 +1202,7 @@ namespace sub
 				}
 
 				SET_PED_HEAD_OVERLAY(ped.Handle(), overlayIndex, overlayValue, currentOverlayData.opacity);
-				ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour = -1, currentOverlayData.colourSecondary = -1);
+				ApplyHeadOverlayTint(ped, overlayIndex, colourType, currentOverlayData.colour, currentOverlayData.colourSecondary);
 			}
 
 			// OPACITY
@@ -1269,7 +1328,7 @@ namespace sub
 			GET_PED_HEAD_BLEND_DATA(ped.Handle(), (Any*)&blendData);
 			std::vector<std::string> idNames;
 			float maxMix = 1.0f;
-			float minMix = -1.0f;
+			float minMix = 0.0f;
 			float mixStep = 0.01f;
 
 			AddTitle("Shape & Skin Tone");
@@ -1292,10 +1351,12 @@ namespace sub
 			// Shape IDs
 			addBlendIdTexter("Shape Inherited From Father", blendData.shapeFirstID, true);
 			addBlendIdTexter("Shape Inherited From Mother", blendData.shapeSecondID, true);
+			addBlendIdTexter("Shape Inherited From Ancestor", blendData.shapeThirdID, true);
 
 			// Skin IDs
 			addBlendIdTexter("Tone Inherited From Father", blendData.skinFirstID, true);
 			addBlendIdTexter("Tone Inherited From Mother", blendData.skinSecondID, true);
+			addBlendIdTexter("Tone Inherited From Ancestor", blendData.skinThirdID, true);
 
 			// Mixes
 			AddBreak("---Adjustment---");
@@ -1313,6 +1374,7 @@ namespace sub
 
 			addMixSlider("Shape", blendData.shapeMix);
 			addMixSlider("Tone", blendData.skinMix);
+			addMixSlider("Ancestor (Shape & Tone)", blendData.thirdMix);
 		}
 	}
 
@@ -1418,7 +1480,7 @@ namespace sub
 					headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
 					headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
 					headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
-					if (!g_unlockMaxIDs && headBlend.shapeFirstID > 45 || headBlend.shapeSecondID > 45 || headBlend.shapeThirdID > 45)
+					if (!g_unlockMaxIDs && (headBlend.shapeFirstID > 45 || headBlend.shapeSecondID > 45 || headBlend.shapeThirdID > 45))
 					{
 						Game::Print::PrintBottomCentre("~r~Warning:~s~ Parent Head Index outside normal range. Ensure Addon Heads are installed and Max Head IDs are unlocked");
 						addlog(ige::LogType::LOG_WARNING, "Ped Head Index " + std::to_string(max(headBlend.shapeFirstID, max(headBlend.shapeSecondID, headBlend.shapeThirdID))) + " outside normal range of 0-45. Ensure Matching Addon Heads are installed from XML Source and Max Head IDs are unlocked.");

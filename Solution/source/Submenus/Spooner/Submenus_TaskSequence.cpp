@@ -332,6 +332,18 @@ namespace sub::Spooner
 
 				PAtEntity(tskPtr->targetEntity);
 			}
+			void LookAtCoordEyesOnly()
+			{
+				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::LookAtCoordEyesOnly>();
+
+				PAtCoord(tskPtr->coord);
+			}
+			void LookAtEntityEyesOnly()
+			{
+				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::LookAtEntityEyesOnly>();
+
+				PAtEntity(tskPtr->targetEntity);
+			}
 			void TeleportToCoord()
 			{
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::TeleportToCoord>();
