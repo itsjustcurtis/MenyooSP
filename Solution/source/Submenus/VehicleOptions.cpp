@@ -8,6 +8,7 @@
 * (at your option) any later version.
 */
 #include "VehicleOptions.h"
+#include "..\Util\FileLogger.h"
 
 namespace sub
 {
@@ -834,11 +835,12 @@ namespace sub
 				{
 					ScrHandle tsk;
 					OPEN_SEQUENCE_TASK(&tsk);
-
+					
 					if (bRandDestinationMode) {
 						TASK_VEHICLE_DRIVE_WANDER(0, vehicle.Handle(), speed, drivingStyle);
 					}
 					else {
+						addlog(ige::LogType::LOG_DEBUG, "Driving to: " + std::to_string(destination.x) + ", " + std::to_string(destination.y) + ", " + std::to_string(destination.z));
 							TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(0, vehicle.Handle(), destination.x, destination.y, destination.z, speed, drivingStyle, 7.0f);
 					}
 					CLOSE_SEQUENCE_TASK(tsk);
@@ -855,8 +857,9 @@ namespace sub
 				{
 					ScrHandle tsk;
 					OPEN_SEQUENCE_TASK(&tsk);
+					addlog(ige::LogType::LOG_DEBUG, "Heli Flying to: " + std::to_string(destination.x) + ", " + std::to_string(destination.y) + ", " + std::to_string(destination.z));
 
-					TASK_HELI_MISSION(0, vehicle.Handle(), 0, 0, destination.x, destination.y, destination.z, 4, speed, 50.0f, -1.0f, 100, 200, 0xbf800000, 0);
+					TASK_HELI_MISSION(0, vehicle.Handle(), 0, 0, destination.x, destination.y, destination.z, 9, speed, 250.0f, -1.0f, 100, 200, 0xbf800000, 0);
 
 					CLOSE_SEQUENCE_TASK(tsk);
 					TASK_PERFORM_SEQUENCE(myPed.Handle(), tsk);
@@ -874,6 +877,7 @@ namespace sub
 				{
 					ScrHandle tsk;
 					OPEN_SEQUENCE_TASK(&tsk);
+					addlog(ige::LogType::LOG_DEBUG, "Plane Flying to: " + std::to_string(destination.x) + ", " + std::to_string(destination.y) + ", " + std::to_string(destination.z));
 
 					TASK_PLANE_MISSION(0, vehicle.Handle(), 0, 0, destination.x, destination.y, destination.z, 4, speed, 50.0f, -1.0f, 100.0f, 200.0f, false);
 
@@ -897,6 +901,7 @@ namespace sub
 						TASK_VEHICLE_DRIVE_WANDER(0, vehicle.Handle(), speed, drivingStyle);
 					}
 					else {
+						addlog(ige::LogType::LOG_DEBUG, "Sailing to: " + std::to_string(destination.x) + ", " + std::to_string(destination.y) + ", " + std::to_string(destination.z));
 						TASK_BOAT_MISSION(0, vehicle.Handle(), 0, 0, destination.x, destination.y, destination.z, 4, speed, 786469, 10.0f, 1071);
 					}
 					CLOSE_SEQUENCE_TASK(tsk);

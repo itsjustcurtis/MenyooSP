@@ -8,6 +8,7 @@
 * (at your option) any later version.
 */
 #include "VehicleSpawner.h"
+#include "..\Util\FileLogger.h"
 
 namespace sub
 {
