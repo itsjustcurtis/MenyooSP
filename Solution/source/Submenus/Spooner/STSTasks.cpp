@@ -1136,7 +1136,7 @@ namespace sub::Spooner
 		}
 		void ShootAtCoord::RunP(GTAped& ep)
 		{
-			Hash currWeapon = ep.Weapon_get();
+			Hash currWeapon = ep.GetWeapon();
 			ScrHandle pedHandle = ep.Handle();
 
 			int ammo;
@@ -1178,7 +1178,7 @@ namespace sub::Spooner
 		}
 		void ShootAtEntity::RunP(GTAped& ep)
 		{
-			Hash currWeapon = ep.Weapon_get();
+			Hash currWeapon = ep.GetWeapon();
 			ScrHandle pedHandle = ep.Handle();
 
 			int ammo;
@@ -1236,7 +1236,7 @@ namespace sub::Spooner
 					squ.AddTask().FightAgainst(target, this->durationAfterLife > 0 ? -1 : this->duration);
 					continue; break;
 				}
-				switch (World::GetRelationshipBetweenGroups(ep.RelationshipGroup_get(), target.RelationshipGroup_get()))
+				switch (World::GetRelationshipBetweenGroups(ep.GetRelationshipGroup(), target.GetRelationshipGroup()))
 				{
 				case PedRelationship::Hate:
 				case PedRelationship::Dislike:
@@ -1485,7 +1485,7 @@ namespace sub::Spooner
 		void DriveWander::RunP(GTAped& ep)
 		{
 			float speedInMps = this->speedInKmph / 3.6f;
-			ep.MaxDrivingSpeed_set(speedInMps + 1.0f);
+			ep.SetMaxDrivingSpeed(speedInMps + 1.0f);
 
 			ep.Task().CruiseWithVehicle(ep.CurrentVehicle(), speedInMps, this->drivingStyle);
 		}
@@ -1530,7 +1530,7 @@ namespace sub::Spooner
 		void DriveToCoord::RunP(GTAped& ep)
 		{
 			float speedInMps = this->speedInKmph / 3.6f;
-			ep.MaxDrivingSpeed_set(speedInMps + 1.0f);
+			ep.SetMaxDrivingSpeed(speedInMps + 1.0f);
 
 			GTAvehicle veh = ep.CurrentVehicle();
 			const Model& vehModel = veh.Model();
@@ -1764,7 +1764,7 @@ namespace sub::Spooner
 		}
 		void AchieveVelocity::RunP(GTAped& ep)
 		{
-			ep.Velocity_set(Vector3::RotationToDirection((this->isRelative ? ep.Rotation_get() : Vector3::Zero()) + Vector3(this->pitch, 0.0f, this->heading)) * this->magnitude);
+			ep.SetVelocity(Vector3::RotationToDirection((this->isRelative ? ep.Rotation_get() : Vector3::Zero()) + Vector3(this->pitch, 0.0f, this->heading)) * this->magnitude);
 		}
 
 		void AchievePushForce::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -1960,7 +1960,6 @@ namespace sub::Spooner
 			case FreezeInPlace::eFreezeType::FREEZETYPE_RESETVELOCITY:
 				ep.FreezePosition(true);
 				ep.FreezePosition(false);
-				//ep.Velocity_set(Vector3::Zero());
 				break;
 			}
 		}

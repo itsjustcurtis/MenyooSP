@@ -81,16 +81,16 @@ public:
 	bool IsPositionFrozen() const;
 	void FreezePosition(bool value);
 
-	void Dynamic_set(bool value);
+	void SetDynamic(bool value);
 
 	float GetHeading() const;
-	void Heading_set(float value);
+	void SetHeading(float value);
 
 	int GetHealth() const;
 	void SetHealth(int value);
 
-	float Vehicle_engine_get() const;
-	void Vehicle_engine_set(float value);
+	float GetVehicleEngine() const;
+	void SetVehicleEngine(float value);
 
 	float HeightAboveGround() const;
 	float GetGroundZ() const;
@@ -147,15 +147,15 @@ public:
 
 	Vector3 Rotation_get() const;
 	void SetRotation(Vector3 value);
-	Vector3 Direction_get() const;
-	void Direction_set(Vector3 value);
+	Vector3 GetDirection() const;
+	void SetDirection(Vector3 value);
 
-	Vector3 Velocity_get() const;
-	void Velocity_set(Vector3 value);
-	Vector3 RotationVelocity_get() const;
+	Vector3 GetVelocity() const;
+	void SetVelocity(Vector3 value);
+	Vector3 GetRotationVelocity() const;
 	float GetSpeed() const;
-	void MaxSpeed_set(float value);
-	Vector3 SpeedVector_get(bool relative);
+	void SetMaxSpeed(float value);
+	Vector3 GetSpeedVector(bool relative);
 
 
 	int GetAlpha() const;
@@ -170,8 +170,8 @@ public:
 
 	Vector3 CollisionNormal() const;
 	bool HasCollided() const;
-	void IsRecordingCollisions_set(bool value);
-	void HasCollisionWithEntity_set(const GTAentity& ent, bool value);
+	void SetIsRecordingCollisions(bool value);
+	void SetHasCollisionWithEntity(const GTAentity& ent, bool value);
 	bool GetIsCollisionEnabled() const;
 	void SetIsCollisionEnabled(bool value);
 	void ToggleLandingGear();

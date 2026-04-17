@@ -2192,6 +2192,61 @@ namespace sub
 		UINT8 _persistentAttachmentsTexterIndex = 0;
 		UINT8 _driverVisibilityTexterIndex = 0;
 
+		static void writeRgbChannels(pugi::xml_node parent, const char* prefix, const RgbS& c)
+		{
+			parent.append_child((std::string(prefix) + "R").c_str()).text() = c.R;
+			parent.append_child((std::string(prefix) + "G").c_str()).text() = c.G;
+			parent.append_child((std::string(prefix) + "B").c_str()).text() = c.B;
+		}
+
+		static RgbS readRgbChannels(pugi::xml_node parent, const char* prefix)
+		{
+			RgbS c;
+			c.R = parent.child((std::string(prefix) + "R").c_str()).text().as_int();
+			c.G = parent.child((std::string(prefix) + "G").c_str()).text().as_int();
+			c.B = parent.child((std::string(prefix) + "B").c_str()).text().as_int();
+			return c;
+		}
+
+		template<typename MapT, typename KeyT>
+		static void writeMultiplierIfPresent(pugi::xml_node parent, const char* name, const MapT& map, const KeyT& key)
+		{
+			auto it = map.find(key);
+			if (it != map.end()) parent.append_child(name).text() = it->second;
+		}
+
+		struct VehicleDoorEntry { const char* xmlName; VehicleDoor door; };
+		static const VehicleDoorEntry kVehicleDoors[] = {
+			{ "BackLeftDoor",   VehicleDoor::BackLeftDoor   },
+			{ "BackRightDoor",  VehicleDoor::BackRightDoor  },
+			{ "FrontLeftDoor",  VehicleDoor::FrontLeftDoor  },
+			{ "FrontRightDoor", VehicleDoor::FrontRightDoor },
+			{ "Hood",           VehicleDoor::Hood           },
+			{ "Trunk",          VehicleDoor::Trunk          },
+			{ "Trunk2",         VehicleDoor::Trunk2         },
+		};
+
+		struct VehicleTyreEntry { const char* xmlName; int index; };
+		static const VehicleTyreEntry kVehicleTyres[] = {
+			{ "FrontLeft",  0 }, 
+			{ "FrontRight", 1 },
+			{ "_2",         2 }, 
+			{ "_3",         3 },
+			{ "BackLeft",   4 }, 
+			{ "BackRight",  5 },
+			{ "_6",         6 },
+			{ "_7",         7 },
+			{ "_8", 8 },
+		};
+
+		struct VehicleNeonEntry { const char* xmlName; VehicleNeonLight light; };
+		static const VehicleNeonEntry kVehicleNeons[] = {
+			{ "Left",  VehicleNeonLight::Left  },
+			{ "Right", VehicleNeonLight::Right },
+			{ "Front", VehicleNeonLight::Front },
+			{ "Back",  VehicleNeonLight::Back  },
+		};
+
 		void VehicleSaveToFile(std::string filePath, GTAvehicle ev)
 		{
 			if (!ev.IsVehicle())
@@ -2251,22 +2306,16 @@ namespace sub
 			nodeVehicleColours.append_child("Mod2_a").text() = mod2a;
 			nodeVehicleColours.append_child("Mod2_b").text() = mod2b;
 			nodeVehicleColours.append_child("IsPrimaryColourCustom").text() = isPrimaryColourCustom;
-			if (isPrimaryColourCustom)
+			if (isPrimaryColourCustom) 
 			{
-				nodeVehicleColours.append_child("Cust1_R").text() = cust1.R;
-				nodeVehicleColours.append_child("Cust1_G").text() = cust1.G;
-				nodeVehicleColours.append_child("Cust1_B").text() = cust1.B;
+				writeRgbChannels(nodeVehicleColours, "Cust1_", cust1);
 			}
 			nodeVehicleColours.append_child("IsSecondaryColourCustom").text() = isSecondaryColourCustom;
-			if (isSecondaryColourCustom)
+			if (isSecondaryColourCustom) 
 			{
-				nodeVehicleColours.append_child("Cust2_R").text() = cust2.R;
-				nodeVehicleColours.append_child("Cust2_G").text() = cust2.G;
-				nodeVehicleColours.append_child("Cust2_B").text() = cust2.B;
+				writeRgbChannels(nodeVehicleColours, "Cust2_", cust2);
 			}
-			nodeVehicleColours.append_child("tyreSmoke_R").text() = tyreSmokeRgb.R;
-			nodeVehicleColours.append_child("tyreSmoke_G").text() = tyreSmokeRgb.G;
-			nodeVehicleColours.append_child("tyreSmoke_B").text() = tyreSmokeRgb.B;
+			writeRgbChannels(nodeVehicleColours, "tyreSmoke_", tyreSmokeRgb);
 			nodeVehicleColours.append_child("LrInterior").text() = ev.GetInteriorColour();
 			nodeVehicleColours.append_child("LrDashboard").text() = ev.GetDashboardColour();
 			nodeVehicleColours.append_child("LrXenonHeadlights").text() = ev.GetHeadlightColour();
@@ -2292,14 +2341,11 @@ namespace sub
 
 			// Neons
 			auto nodeVehicleNeons = nodeVehicleStuff.append_child("Neons");
-			RgbS neonLightsRgb = ev.GetNeonLightsColour();
-			nodeVehicleNeons.append_child("Left").text() = ev.IsNeonLightOn(VehicleNeonLight::Left);
-			nodeVehicleNeons.append_child("Right").text() = ev.IsNeonLightOn(VehicleNeonLight::Right);
-			nodeVehicleNeons.append_child("Front").text() = ev.IsNeonLightOn(VehicleNeonLight::Front);
-			nodeVehicleNeons.append_child("Back").text() = ev.IsNeonLightOn(VehicleNeonLight::Back);
-			nodeVehicleNeons.append_child("R").text() = neonLightsRgb.R;
-			nodeVehicleNeons.append_child("G").text() = neonLightsRgb.G;
-			nodeVehicleNeons.append_child("B").text() = neonLightsRgb.B;
+			for (const auto& n : kVehicleNeons)
+			{
+				nodeVehicleNeons.append_child(n.xmlName).text() = ev.IsNeonLightOn(n.light);
+			}
+			writeRgbChannels(nodeVehicleNeons, "", ev.GetNeonLightsColour());
 
 			// Extras (modExtras)
 			auto nodeVehicleModExtras = nodeVehicleStuff.append_child("ModExtras");
@@ -2325,51 +2371,28 @@ namespace sub
 
 			// Doors
 			auto nodeVehicleDoorsOpen = nodeVehicleStuff.append_child("DoorsOpen");
-			nodeVehicleDoorsOpen.append_child("BackLeftDoor").text() = ev.IsDoorOpen(VehicleDoor::BackLeftDoor);
-			nodeVehicleDoorsOpen.append_child("BackRightDoor").text() = ev.IsDoorOpen(VehicleDoor::BackRightDoor);
-			nodeVehicleDoorsOpen.append_child("FrontLeftDoor").text() = ev.IsDoorOpen(VehicleDoor::FrontLeftDoor);
-			nodeVehicleDoorsOpen.append_child("FrontRightDoor").text() = ev.IsDoorOpen(VehicleDoor::FrontRightDoor);
-			nodeVehicleDoorsOpen.append_child("Hood").text() = ev.IsDoorOpen(VehicleDoor::Hood);
-			nodeVehicleDoorsOpen.append_child("Trunk").text() = ev.IsDoorOpen(VehicleDoor::Trunk);
-			nodeVehicleDoorsOpen.append_child("Trunk2").text() = ev.IsDoorOpen(VehicleDoor::Trunk2);
+			for (const auto& d : kVehicleDoors)
+			{
+				nodeVehicleDoorsOpen.append_child(d.xmlName).text() = ev.IsDoorOpen(d.door);
+			}
 			auto nodeVehicleDoorsBroken = nodeVehicleStuff.append_child("DoorsBroken");
-			nodeVehicleDoorsBroken.append_child("BackLeftDoor").text() = ev.IsDoorBroken(VehicleDoor::BackLeftDoor);
-			nodeVehicleDoorsBroken.append_child("BackRightDoor").text() = ev.IsDoorBroken(VehicleDoor::BackRightDoor);
-			nodeVehicleDoorsBroken.append_child("FrontLeftDoor").text() = ev.IsDoorBroken(VehicleDoor::FrontLeftDoor);
-			nodeVehicleDoorsBroken.append_child("FrontRightDoor").text() = ev.IsDoorBroken(VehicleDoor::FrontRightDoor);
-			nodeVehicleDoorsBroken.append_child("Hood").text() = ev.IsDoorBroken(VehicleDoor::Hood);
-			nodeVehicleDoorsBroken.append_child("Trunk").text() = ev.IsDoorBroken(VehicleDoor::Trunk);
-			nodeVehicleDoorsBroken.append_child("Trunk2").text() = ev.IsDoorBroken(VehicleDoor::Trunk2);
+			for (const auto& d : kVehicleDoors)
+			{
+				nodeVehicleDoorsBroken.append_child(d.xmlName).text() = ev.IsDoorBroken(d.door);
+			}
 
 			// Tyres Bursted
 			auto nodeVehicleTyresBursted = nodeVehicleStuff.append_child("TyresBursted");
-			nodeVehicleTyresBursted.append_child("FrontLeft").text() = ev.IsTyreBursted(0);
-			nodeVehicleTyresBursted.append_child("FrontRight").text() = ev.IsTyreBursted(1);
-			nodeVehicleTyresBursted.append_child("_2").text() = ev.IsTyreBursted(2);
-			nodeVehicleTyresBursted.append_child("_3").text() = ev.IsTyreBursted(3);
-			nodeVehicleTyresBursted.append_child("BackLeft").text() = ev.IsTyreBursted(4);
-			nodeVehicleTyresBursted.append_child("BackRight").text() = ev.IsTyreBursted(5);
-			nodeVehicleTyresBursted.append_child("_6").text() = ev.IsTyreBursted(6);
-			nodeVehicleTyresBursted.append_child("_7").text() = ev.IsTyreBursted(7);
-			nodeVehicleTyresBursted.append_child("_8").text() = ev.IsTyreBursted(8);
+			for (const auto& t : kVehicleTyres)
+			{
+				nodeVehicleTyresBursted.append_child(t.xmlName).text() = ev.IsTyreBursted(t.index);
+			}
 
 			// Multipliers
-			if (g_multListRPM.count(ev.Handle())) 
-			{
-				nodeVehicleStuff.append_child("RpmMultiplier").text() = g_multListRPM[ev.Handle()];
-			}
-			if (g_multListTorque.count(ev.Handle())) 
-			{
-				nodeVehicleStuff.append_child("TorqueMultiplier").text() = g_multListTorque[ev.Handle()];
-			}
-			if (g_multListMaxSpeed.count(ev.Handle())) 
-			{
-				nodeVehicleStuff.append_child("MaxSpeed").text() = g_multListMaxSpeed[ev.Handle()];
-			}
-			if (g_multListHeadLights.count(ev.Handle())) 
-			{
-				nodeVehicleStuff.append_child("HeadlightIntensity").text() = g_multListHeadLights[ev.Handle()];
-			}
+			writeMultiplierIfPresent(nodeVehicleStuff, "RpmMultiplier",      g_multListRPM,        ev.Handle());
+			writeMultiplierIfPresent(nodeVehicleStuff, "TorqueMultiplier",   g_multListTorque,     ev.Handle());
+			writeMultiplierIfPresent(nodeVehicleStuff, "MaxSpeed",           g_multListMaxSpeed,   ev.Handle());
+			writeMultiplierIfPresent(nodeVehicleStuff, "HeadlightIntensity", g_multListHeadLights, ev.Handle());
 
 			nodeVehicle.append_child("OpacityLevel").text() = ev.GetAlpha();
 			nodeVehicle.append_child("LodDistance").text() = ev.GetLODDistance();
@@ -2497,25 +2520,13 @@ namespace sub
 			bool isSecondaryColourCustom = nodeVehicleColours.child("IsSecondaryColourCustom").text().as_bool();
 			if (isPrimaryColourCustom)
 			{
-				RgbS cust1;
-				cust1.R = nodeVehicleColours.child("Cust1_R").text().as_int();
-				cust1.G = nodeVehicleColours.child("Cust1_G").text().as_int();
-				cust1.B = nodeVehicleColours.child("Cust1_B").text().as_int();
-				ev.SetCustomPrimaryColour(cust1);
+				ev.SetCustomPrimaryColour(readRgbChannels(nodeVehicleColours, "Cust1_"));
 			}
 			if (isSecondaryColourCustom)
 			{
-				RgbS cust2;
-				cust2.R = nodeVehicleColours.child("Cust2_R").text().as_int();
-				cust2.G = nodeVehicleColours.child("Cust2_G").text().as_int();
-				cust2.B = nodeVehicleColours.child("Cust2_B").text().as_int();
-				ev.SetCustomSecondaryColour(cust2);
+				ev.SetCustomSecondaryColour(readRgbChannels(nodeVehicleColours, "Cust2_"));
 			}
-			RgbS tyreSmokeRgb;
-			tyreSmokeRgb.R = nodeVehicleColours.child("tyreSmoke_R").text().as_int();
-			tyreSmokeRgb.G = nodeVehicleColours.child("tyreSmoke_G").text().as_int();
-			tyreSmokeRgb.B = nodeVehicleColours.child("tyreSmoke_B").text().as_int();
-			ev.SetTyreSmokeColour(tyreSmokeRgb);
+			ev.SetTyreSmokeColour(readRgbChannels(nodeVehicleColours, "tyreSmoke_"));
 			ev.SetInteriorColour(nodeVehicleColours.child("LrInterior").text().as_int());
 			ev.SetDashboardColour(nodeVehicleColours.child("LrDashboard").text().as_int());
 			ev.SetHeadlightColour(nodeVehicleColours.child("LrXenonHeadlights").text().as_int());
@@ -2551,15 +2562,11 @@ namespace sub
 
 			// Neons
 			auto nodeVehicleNeons = nodeVehicleStuff.child("Neons");
-			RgbS neonLightsRgb;
-			ev.SetNeonLightOn(VehicleNeonLight::Left, nodeVehicleNeons.child("Left").text().as_bool());
-			ev.SetNeonLightOn(VehicleNeonLight::Right, nodeVehicleNeons.child("Right").text().as_bool());
-			ev.SetNeonLightOn(VehicleNeonLight::Front, nodeVehicleNeons.child("Front").text().as_bool());
-			ev.SetNeonLightOn(VehicleNeonLight::Back, nodeVehicleNeons.child("Back").text().as_bool());
-			neonLightsRgb.R = nodeVehicleNeons.child("R").text().as_int();
-			neonLightsRgb.G = nodeVehicleNeons.child("G").text().as_int();
-			neonLightsRgb.B = nodeVehicleNeons.child("B").text().as_int();
-			ev.SetNeonLightsColour(neonLightsRgb);
+			for (const auto& n : kVehicleNeons)
+			{
+				ev.SetNeonLightOn(n.light, nodeVehicleNeons.child(n.xmlName).text().as_bool());
+			}
+			ev.SetNeonLightsColour(readRgbChannels(nodeVehicleNeons, ""));
 
 			// Extras (modExtras)
 			auto nodeVehicleModExtras = nodeVehicleStuff.child("ModExtras");
@@ -2588,39 +2595,41 @@ namespace sub
 			auto nodeVehicleDoorsOpen = nodeVehicleStuff.child("DoorsOpen");
 			if (nodeVehicleDoorsOpen)
 			{
-				nodeVehicleDoorsOpen.child("BackLeftDoor").text().as_bool() ? ev.OpenDoor(VehicleDoor::BackLeftDoor, false, true) : ev.CloseDoor(VehicleDoor::BackLeftDoor, true);
-				nodeVehicleDoorsOpen.child("BackRightDoor").text().as_bool() ? ev.OpenDoor(VehicleDoor::BackRightDoor, false, true) : ev.CloseDoor(VehicleDoor::BackRightDoor, true);
-				nodeVehicleDoorsOpen.child("FrontLeftDoor").text().as_bool() ? ev.OpenDoor(VehicleDoor::FrontLeftDoor, false, true) : ev.CloseDoor(VehicleDoor::FrontLeftDoor, true);
-				nodeVehicleDoorsOpen.child("FrontRightDoor").text().as_bool() ? ev.OpenDoor(VehicleDoor::FrontRightDoor, false, true) : ev.CloseDoor(VehicleDoor::FrontRightDoor, true);
-				nodeVehicleDoorsOpen.child("Hood").text().as_bool() ? ev.OpenDoor(VehicleDoor::Hood, false, true) : ev.CloseDoor(VehicleDoor::Hood, true);
-				nodeVehicleDoorsOpen.child("Trunk").text().as_bool() ? ev.OpenDoor(VehicleDoor::Trunk, false, true) : ev.CloseDoor(VehicleDoor::Trunk, true);
-				nodeVehicleDoorsOpen.child("Trunk2").text().as_bool() ? ev.OpenDoor(VehicleDoor::Trunk2, false, true) : ev.CloseDoor(VehicleDoor::Trunk2, true);
+				for (const auto& d : kVehicleDoors)
+				{
+					if (nodeVehicleDoorsOpen.child(d.xmlName).text().as_bool())
+					{
+						ev.OpenDoor(d.door, false, true);
+					}
+					else
+					{
+						ev.CloseDoor(d.door, true);
+					}
+				}
 			}
 			auto nodeVehicleDoorsBroken = nodeVehicleStuff.child("DoorsBroken");
 			if (nodeVehicleDoorsBroken)
 			{
-				if (nodeVehicleDoorsBroken.child("BackLeftDoor").text().as_bool()) ev.BreakDoor(VehicleDoor::BackLeftDoor, true);
-				if (nodeVehicleDoorsBroken.child("BackRightDoor").text().as_bool()) ev.BreakDoor(VehicleDoor::BackRightDoor, true);
-				if (nodeVehicleDoorsBroken.child("FrontLeftDoor").text().as_bool()) ev.BreakDoor(VehicleDoor::FrontLeftDoor, true);
-				if (nodeVehicleDoorsBroken.child("FrontRightDoor").text().as_bool()) ev.BreakDoor(VehicleDoor::FrontRightDoor, true);
-				if (nodeVehicleDoorsBroken.child("Hood").text().as_bool()) ev.BreakDoor(VehicleDoor::Hood, true);
-				if (nodeVehicleDoorsBroken.child("Trunk").text().as_bool()) ev.BreakDoor(VehicleDoor::Trunk, true);
-				if (nodeVehicleDoorsBroken.child("Trunk2").text().as_bool()) ev.BreakDoor(VehicleDoor::Trunk2, true);
+				for (const auto& d : kVehicleDoors)
+				{
+					if (nodeVehicleDoorsBroken.child(d.xmlName).text().as_bool())
+					{
+						ev.BreakDoor(d.door, true);
+					}
+				}
 			}
 
 			// Tyres
 			auto nodeVehicleTyresBursted = nodeVehicleStuff.child("TyresBursted");
 			if (nodeVehicleTyresBursted)
 			{
-				if (nodeVehicleTyresBursted.child("FrontLeft").text().as_bool()) ev.BurstTyre(0);
-				if (nodeVehicleTyresBursted.child("FrontRight").text().as_bool()) ev.BurstTyre(1);
-				if (nodeVehicleTyresBursted.child("_2").text().as_bool()) ev.BurstTyre(2);
-				if (nodeVehicleTyresBursted.child("_3").text().as_bool()) ev.BurstTyre(3);
-				if (nodeVehicleTyresBursted.child("BackLeft").text().as_bool()) ev.BurstTyre(4);
-				if (nodeVehicleTyresBursted.child("BackRight").text().as_bool()) ev.BurstTyre(5);
-				if (nodeVehicleTyresBursted.child("_6").text().as_bool()) ev.BurstTyre(6);
-				if (nodeVehicleTyresBursted.child("_7").text().as_bool()) ev.BurstTyre(7);
-				if (nodeVehicleTyresBursted.child("_8").text().as_bool()) ev.BurstTyre(8);
+				for (const auto& t : kVehicleTyres)
+				{
+					if (nodeVehicleTyresBursted.child(t.xmlName).text().as_bool())
+					{
+						ev.BurstTyre(t.index);
+					}
+				}
 			}
 
 			if (nodeVehicleStuff.child("WheelsInvisible").text().as_bool()) 

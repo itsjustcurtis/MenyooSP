@@ -74,7 +74,7 @@ namespace sub
 		{
 			g_cam_componentChanger.SetActive(false);
 			g_cam_componentChanger.Destroy();
-			World::RenderingCamera_set(0);
+			World::SetRenderingCamera(0);
 		}
 		
 		AddOption("Animations", null, nullFunc, SUB::ANIMATIONSUB);
@@ -138,7 +138,7 @@ namespace sub
 		{
 			addlog(ige::LogType::LOG_TRACE, "Replenishing Player");
 			myPed.SetHealth(myPed.GetMaxHealth());
-			myPed.Armour_set(myPlayer.MaxArmour_get());
+			myPed.SetArmour(myPlayer.MaxArmour_get());
 			PedDamageTextures::ClearAllBloodDamage(myPed);
 			PedDamageTextures::ClearAllVisibleDamage(myPed);
 			return;
@@ -545,7 +545,7 @@ namespace sub
 			Game::RequestControlOfId(cloneNetId);
 			SET_NETWORK_ID_CAN_MIGRATE(cloneNetId, true);
 			SET_NETWORK_ID_EXISTS_ON_ALL_MACHINES(cloneNetId, true);
-			clone.BlockPermanentEvents_set(true);
+			clone.SetBlockPermanentEvent(true);
 			SET_PED_COMBAT_ABILITY(cloneNetId, 100);
 			clone.SetMissionEntity(true);
 			clone.NoLongerNeeded();
@@ -567,7 +567,7 @@ namespace sub
 			Hash weaponToGive = WEAPON_APPISTOL;
 			GIVE_DELAYED_WEAPON_TO_PED(clone.Handle(), weaponToGive, 9999, true);
 			clone.SetWeapon(weaponToGive);
-			clone.FiringPattern_set(FiringPattern::FullAuto);
+			clone.SetFiringPattern(FiringPattern::FullAuto);
 			clone.SetShootRate(100);
 			sub::Spooner::SpoonerEntity cloneEnt;
 			cloneEnt.dynamic = true;
@@ -580,7 +580,7 @@ namespace sub
 			PedGroup grp;
 			if (playerPed.IsInGroup())
 			{
-				grp = playerPed.CurrentPedGroup_get();
+				grp = playerPed.GetCurrentPedGroup();
 			}
 			else
 			{
@@ -591,7 +591,7 @@ namespace sub
 			grp.SetSeparationRange(100.0f);
 			grp.SetFormationSpacing(1.5f);
 
-			Game::Print::PrintBottomLeft(oss_ << "Cloned ~b~" << player.GetName() << "~s~ and made the clone " << (playerPed.Gender_get() == Gender::Female ? "her" : "his") << " companion.");
+			Game::Print::PrintBottomLeft(oss_ << "Cloned ~b~" << player.GetName() << "~s~ and made the clone " << (playerPed.GetGender() == Gender::Female ? "her" : "his") << " companion.");
 			Game::Print::PrintBottomLeft("Clone added to Spooner Database as a persistent entity.");
 		}
 
@@ -605,12 +605,12 @@ namespace sub
 			Game::RequestControlOfId(cloneNetId);
 			SET_NETWORK_ID_CAN_MIGRATE(cloneNetId, true);
 			SET_NETWORK_ID_EXISTS_ON_ALL_MACHINES(cloneNetId, true);
-			clone.BlockPermanentEvents_set(true);
+			clone.SetBlockPermanentEvent(true);
 			SET_PED_COMBAT_ABILITY(cloneNetId, 100);
 			Hash weaponToGive = WEAPON_APPISTOL;
 			GIVE_DELAYED_WEAPON_TO_PED(clone.Handle(), weaponToGive, 9999, true);
 			clone.SetWeapon(weaponToGive);
-			clone.FiringPattern_set(FiringPattern::FullAuto);
+			clone.SetFiringPattern(FiringPattern::FullAuto);
 			clone.SetShootRate(100);
 			sub::Spooner::SpoonerEntity cloneEnt;
 			cloneEnt.dynamic = true;
@@ -631,7 +631,7 @@ namespace sub
 			clone.SetAlwaysKeepTask(true); // May ruin the task sequence. Not sure.
 			squ.Clear();
 
-			Game::Print::PrintBottomLeft(oss_ << "Cloned ~b~" << player.GetName() << "~s~ and made the clone " << (playerPed.Gender_get() == Gender::Female ? "her" : "his") << " enemy.");
+			Game::Print::PrintBottomLeft(oss_ << "Cloned ~b~" << player.GetName() << "~s~ and made the clone " << (playerPed.GetGender() == Gender::Female ? "her" : "his") << " enemy.");
 			Game::Print::PrintBottomLeft("Clone added to Spooner Database as a persistent entity.");
 		}
 	}

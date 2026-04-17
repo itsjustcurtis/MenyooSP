@@ -926,12 +926,12 @@ void MouseSupport::DoMouseTick()
 
 	if (IsMouseInBounds(Vector2(0.0078f, 0.5f), Vector2(0.0156f, 1.0f)))
 	{
-		GameplayCamera::RelativeHeading_set(GameplayCamera::RelativeHeading_get() + 5.0f);
+		GameplayCamera::SetRelativeHeading(GameplayCamera::GetRelativeHeading() + 5.0f);
 		SET_MOUSE_CURSOR_STYLE(6);
 	}
 	else if (IsMouseInBounds(Vector2(1.0 - 0.0078f, 0.5f), Vector2(0.0156f, 1.0f)))
 	{
-		GameplayCamera::RelativeHeading_set(GameplayCamera::RelativeHeading_get() - 5.0f);
+		GameplayCamera::SetRelativeHeading(GameplayCamera::GetRelativeHeading() - 5.0f);
 		SET_MOUSE_CURSOR_STYLE(7);
 	}
 	else

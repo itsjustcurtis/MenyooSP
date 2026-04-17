@@ -30,12 +30,12 @@ namespace sub
 		if (newPed.Exists())
 		{
 			const Vector3& vehPos = vehicle.GetPosition();
-			newPed.BlockPermanentEvents_set(true);
+			newPed.SetBlockPermanentEvent(true);
 			TASK_HELI_MISSION(newPed.Handle(), vehicle.Handle(), 0, 0, vehPos.x, vehPos.y, vehPos.z, 4, 0.0f, 50.0f, -1.0f, 10000, 100, -1082130432, 0);
 			newPed.SetAlwaysKeepTask(true);
 		}
 
-		vehicle.Velocity_set(Vector3::Zero());
+		vehicle.SetVelocity(Vector3::Zero());
 
 		ped.RequestControl();
 		TASK_RAPPEL_FROM_HELI(ped.Handle(), 1); // 1092616192 0x41200000

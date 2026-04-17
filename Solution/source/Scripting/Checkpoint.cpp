@@ -39,7 +39,7 @@ UINT64 Checkpoint::MemoryAddress() const
 	return GTAmemory::GetCheckpointAddress(this->mHandle);
 }
 
-Vector3 Checkpoint::Position_get() const
+Vector3 Checkpoint::GetPosition() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -48,7 +48,7 @@ Vector3 Checkpoint::Position_get() const
 	}
 	else return Vector3();
 }
-void Checkpoint::Position_set(const Vector3& value)
+void Checkpoint::SetPosition(const Vector3& value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -57,7 +57,7 @@ void Checkpoint::Position_set(const Vector3& value)
 	}
 }
 
-Vector3 Checkpoint::TargetPosition_get() const
+Vector3 Checkpoint::GetTargetPosition() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -66,7 +66,7 @@ Vector3 Checkpoint::TargetPosition_get() const
 	}
 	else return Vector3();
 }
-void Checkpoint::TargetPosition_set(const Vector3& value)
+void Checkpoint::SetTargetPosition(const Vector3& value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -75,7 +75,7 @@ void Checkpoint::TargetPosition_set(const Vector3& value)
 	}
 }
 
-CheckpointIcon Checkpoint::Icon_get() const
+CheckpointIcon Checkpoint::GetIcon() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -84,7 +84,7 @@ CheckpointIcon Checkpoint::Icon_get() const
 	}
 	else return CheckpointIcon(0);
 }
-void Checkpoint::Icon_set(const CheckpointIcon& value)
+void Checkpoint::SetIcon(const CheckpointIcon& value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -93,7 +93,7 @@ void Checkpoint::Icon_set(const CheckpointIcon& value)
 	}
 }
 
-BYTE Checkpoint::Reserved_get() const
+BYTE Checkpoint::GetReserved() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -102,7 +102,7 @@ BYTE Checkpoint::Reserved_get() const
 	}
 	else return 0;
 }
-void Checkpoint::Reserved_set(BYTE value)
+void Checkpoint::SetReserved(BYTE value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -111,7 +111,7 @@ void Checkpoint::Reserved_set(BYTE value)
 	}
 }
 
-float Checkpoint::Radius_get() const
+float Checkpoint::GetRadius() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -120,7 +120,7 @@ float Checkpoint::Radius_get() const
 	}
 	else return 0.0f;
 }
-void Checkpoint::Radius_set(float value)
+void Checkpoint::SetRadius(float value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -129,7 +129,7 @@ void Checkpoint::Radius_set(float value)
 	}
 }
 
-RGBA Checkpoint::Colour_get() const
+RGBA Checkpoint::GetColour() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -138,7 +138,7 @@ RGBA Checkpoint::Colour_get() const
 	}
 	else return RGBA();
 }
-void Checkpoint::Colour_set(const RGBA& value)
+void Checkpoint::SetColour(const RGBA& value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -146,7 +146,7 @@ void Checkpoint::Colour_set(const RGBA& value)
 		*(UINT32*)(memoryAddress + 80) = value.ToArgb();
 	}
 }
-RGBA Checkpoint::IconColour_get() const
+RGBA Checkpoint::GetIconColour() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -155,7 +155,7 @@ RGBA Checkpoint::IconColour_get() const
 	}
 	else return RGBA();
 }
-void Checkpoint::IconColour_set(const RGBA& value)
+void Checkpoint::SetIconColour(const RGBA& value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -164,7 +164,7 @@ void Checkpoint::IconColour_set(const RGBA& value)
 	}
 }
 
-float Checkpoint::CylinderNearHeight_get() const
+float Checkpoint::GetCylinderNearHeight() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -173,7 +173,7 @@ float Checkpoint::CylinderNearHeight_get() const
 	}
 	else return 0.0f;
 }
-void Checkpoint::CylinderNearHeight_set(float value)
+void Checkpoint::SetCylinderNearHeight(float value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -182,7 +182,7 @@ void Checkpoint::CylinderNearHeight_set(float value)
 	}
 }
 
-float Checkpoint::CylinderFarHeight_get() const
+float Checkpoint::GetCylinderFarHeight() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -191,7 +191,7 @@ float Checkpoint::CylinderFarHeight_get() const
 	}
 	else return 0.0f;
 }
-void Checkpoint::CylinderFarHeight_set(float value)
+void Checkpoint::SetCyclinderFarHeight(float value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -200,7 +200,7 @@ void Checkpoint::CylinderFarHeight_set(float value)
 	}
 }
 
-float Checkpoint::CylinderRadius_get() const
+float Checkpoint::GetCylinderRadius() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -209,7 +209,7 @@ float Checkpoint::CylinderRadius_get() const
 	}
 	else return 0.0f;
 }
-void Checkpoint::CylinderRadius_set(float value)
+void Checkpoint::SetCylinderRadius(float value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)

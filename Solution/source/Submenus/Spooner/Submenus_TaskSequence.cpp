@@ -220,7 +220,7 @@ namespace sub::Spooner
 					AddOption("Set Target To Waypoint", bSetPosToWp); if (bSetPosToWp)
 					{
 						GTAblip wpBlip = GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint);
-						Vector3 wpCoords = wpBlip.Position_get();
+						Vector3 wpCoords = wpBlip.GetPosition();
 						wpCoords.z = World::GetGroundHeight(wpCoords);
 						coord = wpCoords;
 					}
@@ -1153,7 +1153,7 @@ namespace sub::Spooner
 						AddOption("Set To Waypoint", bSetPosToWp); if (bSetPosToWp)
 						{
 							GTAblip wpBlip = GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint);
-							Vector3 wpCoords = wpBlip.Position_get();
+							Vector3 wpCoords = wpBlip.GetPosition();
 							wpCoords.z = World::GetGroundHeight(wpCoords);
 							*nas.second = wpCoords;
 						}

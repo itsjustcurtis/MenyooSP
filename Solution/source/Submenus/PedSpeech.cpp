@@ -387,7 +387,7 @@ namespace sub
 				if (pressed)
 				{
 					ped.RequestControl();
-					ped.VoiceName_set(v.voiceName);
+					ped.SetVoiceName(v.voiceName);
 					Game::Print::PrintBottomCentre("Voice ~b~changed~s~.\n ~r~Note:~s~ This does not work for all peds.");
 				}
 			}

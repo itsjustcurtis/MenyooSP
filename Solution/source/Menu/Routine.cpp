@@ -1727,8 +1727,8 @@ void SetBecomePed(GTAped ped)
 	SetPedInvincibleOff(oldPed.Handle());
 	CHANGE_PLAYER_PED(PLAYER_ID(), ped.Handle(), true, true);
 
-	GameplayCamera::RelativeHeading_set(0.0f);
-	GameplayCamera::RelativePitch_set(camPitchRelative);
+	GameplayCamera::SetRelativeHeading(0.0f);
+	GameplayCamera::SetRelativePitch(camPitchRelative);
 
 	ped = PLAYER_PED_ID();
 
@@ -1807,7 +1807,7 @@ void SetNoclipOff2()
 	{
 		cam.SetActive(false);
 		cam.Destroy();
-		World::RenderingCamera_set(0);
+		World::SetRenderingCamera(0);
 	}
 }
 void SetNoclip()
@@ -1878,8 +1878,8 @@ void SetNoclip()
 			cam.SetRotation(GameplayCamera::GetRotation());
 			cam.AttachTo(ent, camOffset);
 			cam.SetFieldOfView(MenuConfig::FreeCam::defaultFov); // Use configured FOV
-			cam.DepthOfFieldStrength_set(0.0f);
-			World::RenderingCamera_set(cam);
+			cam.SetDepthOfFieldStrength(0.0f);
+			World::SetRenderingCamera(cam);
 		}
 
 		ent.RequestControl();
@@ -1888,7 +1888,7 @@ void SetNoclip()
 		ent.SetVisible(false);
 		myPed.SetVisible(false);
 
-		Vector3 nextRot = cam.Rotation_get() - Vector3(GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD), 0, GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR)) * (Menu::bitController ? 2.5f : 11.0f);
+		Vector3 nextRot = cam.GetRotation() - Vector3(GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD), 0, GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR)) * (Menu::bitController ? 2.5f : 11.0f);
 		nextRot.y = 0.0f; // No roll
 		ent.SetRotation(Vector3(0, 0, nextRot.z));
 		cam.SetRotation(nextRot);
@@ -2000,7 +2000,7 @@ void SetNoclip()
 			// Space + scroll wheel to control camera FOV
 			if (IsKeyDown(VK_SPACE))
 			{
-				float currentFov = cam.FieldOfView_get();
+				float currentFov = cam.GetFieldOfView();
 				if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
 				{
 					currentFov = min(currentFov + MenuConfig::FreeCam::fovAdjustStep, MenuConfig::FreeCam::maxFov);
@@ -3039,7 +3039,7 @@ std::string GetVehicleEngineSoundName(const GTAvehicle& vehicle)
 void SetVehicleEngineSoundName(GTAvehicle vehicle, const std::string& name)
 {
 	g_vehListEngineSounds[vehicle.GetHandle()] = name;
-	vehicle.EngineSound_set(name);
+	vehicle.SetEngineSound(name);
 }
 
 std::unordered_set<Vehicle> g_vehWheelsInvisForRussian;

@@ -232,7 +232,7 @@ namespace sub
 
 				std::vector<s_Weapon_Components_Tint> weaponsBackup;
 				playerPed.StoreWeaponsInArray(weaponsBackup);
-				Hash currWeaponHash = playerPed.Weapon_get();
+				Hash currWeaponHash = playerPed.GetWeapon();
 
 				GTAentity att;
 				auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(playerPed);

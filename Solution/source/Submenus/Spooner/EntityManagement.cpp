@@ -375,16 +375,16 @@ namespace sub::Spooner
 				Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + dimensions.Dim2.y);
 				spawnPos.z += dimensions.Dim1.z;
 
-				newEntity.handle = World::CreateProp(model, spawnPos, Vector3(0, 0, spoocam.Rotation_get().z), bDynamic, false);
+				newEntity.handle = World::CreateProp(model, spawnPos, Vector3(0, 0, spoocam.GetRotation().z), bDynamic, false);
 				if (unloadModel)
 					model.Unload();
 			}
 
 			SET_NETWORK_ID_CAN_MIGRATE(OBJ_TO_NET(newEntity.handle.Handle()), true);
-			newEntity.handle.Dynamic_set(false);
+			newEntity.handle.SetDynamic(false);
 			newEntity.handle.FreezePosition(true);
 			newEntity.handle.FreezePosition(bFreezePos);
-			newEntity.handle.Dynamic_set(bDynamic);
+			newEntity.handle.SetDynamic(bDynamic);
 			newEntity.handle.SetLODDistance(1000000);
 			newEntity.handle.SetMissionEntity(true);
 			newEntity.handle.SetInvincible(Settings::bSpawnInvincibleEntities);
@@ -447,7 +447,7 @@ namespace sub::Spooner
 				Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + dimensions.Dim2.y);
 				spawnPos.z += dimensions.Dim1.z;
 
-				newEntity.handle = World::CreatePed(model, spawnPos, Vector3(0, 0, spoocam.Rotation_get().z), false);
+				newEntity.handle = World::CreatePed(model, spawnPos, Vector3(0, 0, spoocam.GetRotation().z), false);
 				if (unloadModel)
 					model.Unload();
 			}
@@ -455,14 +455,14 @@ namespace sub::Spooner
 			GTAped ep = newEntity.handle;
 			SET_NETWORK_ID_CAN_MIGRATE(PED_TO_NET(newEntity.handle.Handle()), true);
 			newEntity.handle.FreezePosition(bFreezePos);
-			newEntity.handle.Dynamic_set(bDynamic);
+			newEntity.handle.SetDynamic(bDynamic);
 			newEntity.handle.SetLODDistance(1000000);
 			newEntity.handle.SetMissionEntity(true);
 			newEntity.handle.SetInvincible(Settings::bSpawnInvincibleEntities);
 			newEntity.handle.SetExplosionProof(Settings::bSpawnInvincibleEntities);
 			newEntity.handle.SetMeleeProof(Settings::bSpawnInvincibleEntities);
 			newEntity.isStill = Settings::bSpawnStillPeds;
-			ep.BlockPermanentEvents_set(Settings::bSpawnStillPeds);
+			ep.SetBlockPermanentEvent(Settings::bSpawnStillPeds);
 
 			SET_PED_CAN_PLAY_AMBIENT_ANIMS(ep.Handle(), true);
 			SET_PED_CAN_PLAY_AMBIENT_BASE_ANIMS(ep.Handle(), true);
@@ -477,7 +477,7 @@ namespace sub::Spooner
 			//SET_PED_PATH_AVOID_FIRE(ep.Handle(), true);
 			SET_PED_COMBAT_ABILITY(ep.Handle(), 2);
 			SET_PED_COMBAT_MOVEMENT(ep.Handle(), 2);
-			ep.CanSwitchWeapons_set(false);
+			ep.SetCanSwitchWeapons(false);
 			model.LoadCollision(100);
 			newEntity.handle.SetIsCollisionEnabled(bCollision);
 			model.Unload();
@@ -538,7 +538,7 @@ namespace sub::Spooner
 				Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + dimensions.Dim2.y);
 				spawnPos.z += dimensions.Dim1.z;
 
-				newEntity.handle = World::CreateVehicle(model, spawnPos, Vector3(0, 0, spoocam.Rotation_get().z), false);
+				newEntity.handle = World::CreateVehicle(model, spawnPos, Vector3(0, 0, spoocam.GetRotation().z), false);
 				if (unloadModel) model.Unload();
 			}
 
@@ -548,7 +548,7 @@ namespace sub::Spooner
 			SET_VEHICLE_ENVEFF_SCALE(newEntity.handle.Handle(), 0.3f);
 			GTAvehicle(newEntity.handle).CloseAllDoors(true);
 			newEntity.handle.FreezePosition(bFreezePos);
-			newEntity.handle.Dynamic_set(bDynamic);
+			newEntity.handle.SetDynamic(bDynamic);
 			newEntity.handle.SetLODDistance(1000000);
 			newEntity.handle.SetMissionEntity(true);
 			newEntity.handle.SetInvincible(Settings::bSpawnInvincibleEntities);
@@ -600,7 +600,7 @@ namespace sub::Spooner
 			SpoonerEntity newEntity(orig);
 			bool bDynamic = orig.dynamic;
 			bool bFreezePos = orig.handle.IsPositionFrozen();
-			newEntity.handle.Dynamic_set(false);
+			newEntity.handle.SetDynamic(false);
 			newEntity.handle.FreezePosition(true);
 
 			GTAped myPed = PLAYER_PED_ID();
@@ -667,7 +667,7 @@ namespace sub::Spooner
 				//GTAped(orig.handle).StoreWeaponsInArray(weaponsBackup);
 				//GTAped(newEntity.handle).GiveWeaponsFromArray(weaponsBackup);
 				SET_NETWORK_ID_CAN_MIGRATE(ep.NetID(), true);
-				ep.BlockPermanentEvents_set(orig.isStill);
+				ep.SetBlockPermanentEvent(orig.isStill);
 				SET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, GET_PED_CONFIG_FLAG(origPed.Handle(), ePedConfigFlags::_Shrink, false));
 
 				SET_PED_CAN_PLAY_AMBIENT_ANIMS(ep.Handle(), true);
@@ -690,9 +690,9 @@ namespace sub::Spooner
 				if (!facialMoodStr.empty())
 					SetPedFacialMood(ep, facialMoodStr);
 
-				ep.Armour_set(origPed.Armour_get());
-				ep.SetWeapon(origPed.Weapon_get());
-				ep.CanSwitchWeapons_set(false);
+				ep.SetArmour(origPed.GetArmour());
+				ep.SetWeapon(origPed.GetWeapon());
+				ep.SetCanSwitchWeapons(false);
 				SET_PED_PATH_CAN_USE_CLIMBOVERS(ep.Handle(), true);
 				SET_PED_PATH_CAN_USE_LADDERS(ep.Handle(), true);
 				SET_PED_PATH_CAN_DROP_FROM_HEIGHT(ep.Handle(), true);
@@ -714,7 +714,7 @@ namespace sub::Spooner
 			}
 
 			newEntity.handle.FreezePosition(bFreezePos);
-			newEntity.handle.Dynamic_set(bDynamic);
+			newEntity.handle.SetDynamic(bDynamic);
 			newEntity.handle.SetLODDistance(1000000);
 			newEntity.handle.SetMissionEntity(true);
 			newEntity.handle.SetVisible(orig.handle.IsVisible());
@@ -778,7 +778,7 @@ namespace sub::Spooner
 
 			//bug?
 			orig.handle.FreezePosition(bFreezePos);
-			orig.handle.Dynamic_set(bDynamic);
+			orig.handle.SetDynamic(bDynamic);
 
 			if (unloadModel)
 				newEntity.handle.Model().Unload();
@@ -828,6 +828,7 @@ namespace sub::Spooner
 			to = 0;
 			return false;
 		}
+		
 		void AttachEntity(SpoonerEntity& ent, GTAentity to, int boneIndex, const Vector3& offset, const Vector3& rotation)
 		{
 			if (ent.handle.Handle() != to.Handle())
@@ -838,20 +839,19 @@ namespace sub::Spooner
 				if (isOnTheLine)
 				{
 					ent.handle.RequestControl();
-					//to.RequestControl();
 				}
 				ent.handle.AttachTo(to, boneIndex, bHasCollision, offset, rotation);
 				ent.attachmentArgs.isAttached = true;
 				ent.attachmentArgs.boneIndex = boneIndex;
 				ent.attachmentArgs.offset = offset;
 				ent.attachmentArgs.rotation = rotation;
-				ent.handle.Dynamic_set(ent.dynamic);
-				//ent.handle.IsCollisionEnabled_set(bHasCollision);
+				ent.handle.SetDynamic(ent.dynamic);
 				SET_ENTITY_LIGHTS(ent.handle.Handle(), 0);
 				if (wheelsAreInvis)
 					SetVehicleWheelsInvisible(ent.handle, true);
 			}
 		}
+
 		void AttachEntityInit(SpoonerEntity& ent, GTAentity to, bool bAttachWithRelativePosRot)
 		{
 			if (to.IsAttachedTo(ent.handle))

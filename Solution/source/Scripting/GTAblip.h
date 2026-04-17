@@ -918,10 +918,10 @@ public:
 	bool IsShortRange() const;
 	void SetShortRange(bool value);
 
-	Vector3 Position_get() const;
-	void Position_set(const Vector3& value);
+	Vector3 GetPosition() const;
+	void SetPosition(const Vector3& value);
 
-	void Rotation_set(float value);
+	void SetRotation(float value);
 
 	void SetScale(float value);
 

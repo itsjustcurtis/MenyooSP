@@ -63,7 +63,7 @@ namespace GTA2Cam
 
 		Vector3 gmCamPos = GameplayCamera::GetPosition();
 		Vector3 gmCamRot = GameplayCamera::GetRotation();
-		float gmCamFov = GameplayCamera::FieldOfView_get();
+		float gmCamFov = GameplayCamera::GetFieldOfView();
 		gmCam2 = World::CreateCamera(gmCamPos, gmCamRot, gmCamFov);
 
 		CreateMainCam(myPed);

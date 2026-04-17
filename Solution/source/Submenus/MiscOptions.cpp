@@ -63,9 +63,9 @@ namespace sub
 		AddOption("Delete All Cameras", bDeleteAllCams);
 		if (bDeleteAllCams)
 		{
-			World::RenderingCamera_set(0);
+			World::SetRenderingCamera(0);
 			World::DestroyAllCameras();
-			World::RenderingCamera_set(0);
+			World::SetRenderingCamera(0);
 		}
 
 		AddOption("Rectangle Draw Tool (Mouse) (ALPHA) [DEV]", null, DrawToolsMenu, -1, true);

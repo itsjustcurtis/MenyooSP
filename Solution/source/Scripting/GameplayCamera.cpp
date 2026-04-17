@@ -19,11 +19,11 @@
 
 #include <math.h>
 
-float GameplayCamera::FieldOfView_get()
+float GameplayCamera::GetFieldOfView()
 {
 	return GET_GAMEPLAY_CAM_FOV();
 }
-void GameplayCamera::FieldOfView_set(float value)
+void GameplayCamera::SetFieldOfView(float value)
 {
 	SET_GAMEPLAY_CAM_MOTION_BLUR_SCALING_THIS_UPDATE(value);
 }
@@ -53,7 +53,6 @@ Vector3 GameplayCamera::GetPosition()
 }
 Vector3 GameplayCamera::GetOffsetInWorldCoords(const Vector3& offset)
 {
-	//return GameplayCamera::Position_get() + (GameplayCamera::Direction_get() * offset);
 	const Vector3& rotation = GameplayCamera::GetRotation();
 	const Vector3& forward = Vector3::RotationToDirection(rotation);
 	const double D2R = 0.01745329251994329576923690768489;
@@ -71,7 +70,6 @@ Vector3 GameplayCamera::GetOffsetInWorldCoords(float X, float Y, float Z)
 }
 Vector3 GameplayCamera::GetOffsetGivenWorldCoords(const Vector3& worldCoords)
 {
-	//return GameplayCamera::Position_get() + (GameplayCamera::Direction_get() * Vector3(X, Y, Z));
 	Vector3 rotation = GameplayCamera::GetRotation();
 	Vector3 forward = Vector3::RotationToDirection(rotation);
 	const double D2R = 0.01745329251994329576923690768489;
@@ -88,11 +86,11 @@ Vector3 GameplayCamera::GetOffsetGivenWorldCoords(float X, float Y, float Z)
 {
 	return GameplayCamera::GetOffsetGivenWorldCoords(Vector3(X, Y, Z));
 }
-float GameplayCamera::RelativeHeading_get()
+float GameplayCamera::GetRelativeHeading()
 {
 	return GET_GAMEPLAY_CAM_RELATIVE_HEADING();
 }
-void GameplayCamera::RelativeHeading_set(float value)
+void GameplayCamera::SetRelativeHeading(float value)
 {
 	SET_GAMEPLAY_CAM_RELATIVE_HEADING(value);
 }
@@ -100,7 +98,7 @@ float GameplayCamera::GetRelativePitch()
 {
 	return GET_GAMEPLAY_CAM_RELATIVE_PITCH();
 }
-void GameplayCamera::RelativePitch_set(float value)
+void GameplayCamera::SetRelativePitch(float value)
 {
 	SET_GAMEPLAY_CAM_RELATIVE_PITCH(value, 0.0f);
 }
@@ -112,7 +110,7 @@ Vector3 GameplayCamera::GetDirection()
 {
 	return Vector3::RotationToDirection(GET_GAMEPLAY_CAM_ROT(2));
 }
-float GameplayCamera::Zoom_get()
+float GameplayCamera::GetZoom()
 {
 	return GET_FIRST_PERSON_AIM_CAM_ZOOM_FACTOR();
 }

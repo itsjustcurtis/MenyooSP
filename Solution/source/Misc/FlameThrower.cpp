@@ -106,7 +106,7 @@ namespace FlameThrower // Why have I made this for 'players' when this is sp and
 			playerPed = player.GetPed();
 			auto& fxHandle1 = ft.fxHandle1;
 
-			whash = playerPed.Weapon_get();
+			whash = playerPed.GetWeapon();
 
 			if ((!player.IsFreeAiming() && !player.IsTargetingAnything()) || whash != _whash)
 			{
