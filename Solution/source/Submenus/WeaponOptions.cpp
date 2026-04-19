@@ -898,7 +898,7 @@ namespace sub
 		void Sub_WeaponFavourites()
 		{
 			GTAped ped = g_Ped1;
-			Hash currentPedWeapon = ped.Weapon_get();
+			Hash currentPedWeapon = ped.GetWeapon();
 
 			AddTitle("Favourites");
 
@@ -1700,7 +1700,7 @@ namespace sub
 				return;
 			GTAplayer myPlayer = PLAYER_ID();
 
-			Hash weap = myPed.Weapon_get();
+			Hash weap = myPed.GetWeapon();
 			switch (GET_WEAPONTYPE_GROUP(weap))
 			{
 			case WeaponGroupHash::FireExtinguisher:

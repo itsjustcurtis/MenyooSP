@@ -58,19 +58,19 @@ public:
 	int& Handle();
 	int GetHandle() const;
 
-	void DepthOfFieldStrength_set(float value);
+	void SetDepthOfFieldStrength(float value);
 
-	float FieldOfView_get() const;
+	float GetFieldOfView() const;
 	void SetFieldOfView(float value);
 
-	float FarClip_get() const;
-	void FarClip_set(float value);
-	float FarDepthOfField_get() const;
-	void FarDepthOfField_set(float value);
+	float GetFarClip() const;
+	void SetFarClip(float value);
+	float GetFarDepthOfField() const;
+	void SetFarDepthOfField(float value);
 
-	float NearClip_get() const;
-	void NearClip_set(float value);
-	void NearDepthOfField_set(float value);
+	float GetNearClip() const;
+	void SetNearClip(float value);
+	void SetNearDepthOfField(float value);
 
 	bool IsActive() const;
 	void SetActive(bool value);
@@ -81,23 +81,23 @@ public:
 
 	void SetShake(bool status);
 
-	void MotionBlurStrength_set(float value);
+	void SetMotionBlurStrength(float value);
 
-	Vector3 Position_get() const;
+	Vector3 GetPosition() const;
 	void SetPosition(Vector3 coord);
-	void Position_set(float X, float Y, float Z);
+	void SetPosition(float X, float Y, float Z);
 
-	Vector3 Rotation_get(__int8 unk = 2) const;
+	Vector3 GetRotation(__int8 unk = 2) const;
 	void SetRotation(const Vector3& rot, __int8 unk = 2);
-	void Rotation_set(float X, float Y, float Z, __int8 unk = 2);
+	void SetRotation(float X, float Y, float Z, __int8 unk = 2);
 
 
-	Vector3 Direction_get(__int8 unk = 2) const;
-	void Direction_set(Vector3 dir, __int8 unk = 2);
-	void Direction_set(float X, float Y, float Z, __int8 unk = 2);
+	Vector3 GetDirection(__int8 unk = 2) const;
+	void SetDirection(Vector3 dir, __int8 unk = 2);
+	void SetDirection(float X, float Y, float Z, __int8 unk = 2);
 	
-	float Heading_get() const;
-	void Heading_set(float value);
+	float GetHeading() const;
+	void SetHeading(float value);
 
 
 	Vector3 GetOffsetInWorldCoords(const Vector3& offset) const;
@@ -105,11 +105,11 @@ public:
 	Vector3 GetOffsetGivenWorldCoords(const Vector3& worldCoords) const;
 	Vector3 GetOffsetGivenWorldCoords(float X, float Y, float Z) const;
 
-	float ShakeAmplitude_get() const;
-	void ShakeAmplitude_set(float value);
+	float GetShakeAmplitude() const;
+	void SetShakeAmplitude(float value);
 
-	CameraShake ShakeType_get() const;
-	void ShakeType_set(CameraShake value);
+	CameraShake GetShakeType() const;
+	void SetShakeType(CameraShake value);
 
 	void AttachTo(GTAentity entity, Vector3 offset);
 	void AttachTo(GTAped ped, int boneIndex, Vector3 offset);
@@ -137,7 +137,7 @@ public:
 
 	Vector3 RaycastForCoord(const Vector2& screenCoord, GTAentity ignoreEntity, float maxDistance = 100.0f, float failDistance = 100.0f) const;
 
-	Vector3 DirectionFromScreenCentre_get() const;
+	Vector3 GetDirectionFromScreenCentre() const;
 
 
 private:
@@ -149,5 +149,5 @@ private:
 };
 
 
-Vector3 get_coords_from_cam(int camid, float distance);
+Vector3 GetCoordsFromCamera(int camid, float distance);
 

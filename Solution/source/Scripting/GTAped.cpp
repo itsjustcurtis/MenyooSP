@@ -28,23 +28,22 @@ PedGroup::PedGroup()
 	: _handle(0)// _handle(CREATE_GROUP(0))
 {
 }
+
 PedGroup::PedGroup(int handle)
 	: _handle(handle)
 {
 }
-/*PedGroup::~PedGroup()
-{
-REMOVE_GROUP(this->_handle);
-}*/
 
 PedGroup PedGroup::operator =(const PedGroup& right)
 {
 	return (this->_handle = right._handle);
 }
+
 bool PedGroup::operator ==(const PedGroup& right) const
 {
 	return (this->_handle == right._handle);
 }
+
 bool PedGroup::operator !=(const PedGroup& right) const
 {
 	return (this->_handle != right._handle);
@@ -59,16 +58,18 @@ int& PedGroup::Handle()
 {
 	return this->_handle;
 }
+
 int PedGroup::GetHandle() const
 {
 	return this->_handle;
 }
 
-GTAentity PedGroup::Leader_get() const
+GTAentity PedGroup::GetLeader() const
 {
 	return GET_PED_AS_GROUP_LEADER(this->_handle);
 }
-void PedGroup::Leader_set(GTAentity ped)
+
+void PedGroup::SetLeader(GTAentity ped)
 {
 	SET_PED_AS_GROUP_LEADER(ped.Handle(), this->_handle);
 }
@@ -90,12 +91,13 @@ void PedGroup::SetFormationSpacing(float spacing)
 {
 	SET_GROUP_FORMATION_SPACING(this->_handle, spacing, 0xbf800000, 0xbf800000);
 }
+
 void PedGroup::ResetFormationSpacing()
 {
 	RESET_GROUP_FORMATION_DEFAULT_SPACING(this->_handle);
 }
 
-void PedGroup::FormationType_set(FormationType value)
+void PedGroup::SetFormationType(FormationType value)
 {
 	SET_GROUP_FORMATION(this->_handle, static_cast<int>(value));
 }
@@ -112,16 +114,17 @@ void PedGroup::Add(GTAentity ped, bool leader, bool teleportWithLeader)
 		if (teleportWithLeader) SET_PED_CAN_TELEPORT_TO_GROUP_LEADER(ped.Handle(), this->_handle, true);
 	}
 }
+
 void PedGroup::Remove(GTAentity ped)
 {
 	REMOVE_PED_FROM_GROUP(ped.Handle());
-	//SET_PED_CAN_TELEPORT_TO_GROUP_LEADER(ped.Handle(), this->_handle, false);
 }
 
 bool PedGroup::Exists() const
 {
 	return DOES_GROUP_EXIST(this->_handle) != 0;
 }
+
 bool PedGroup::Exists(PedGroup pedGroup)
 {
 	return DOES_GROUP_EXIST(pedGroup.Handle()) != 0;
@@ -141,7 +144,7 @@ void PedGroup::ToVector(std::vector<GTAentity>& result, bool includeLeader) cons
 {
 	if (includeLeader)
 	{
-		auto leader = this->Leader_get();
+		auto leader = this->GetLeader();
 
 		if (leader.Exists())
 		{
@@ -161,7 +164,8 @@ void PedGroup::ToVector(std::vector<GTAentity>& result, bool includeLeader) cons
 }
 
 
-namespace PedBloodDecals {
+namespace PedBloodDecals
+{
 	const std::vector<std::string> vBloodDecals
 	{
 		{ "soak_splat" },
@@ -180,7 +184,8 @@ namespace PedBloodDecals {
 		{ "BackSplash" }
 	};
 }
-namespace PedDamageDecals {
+namespace PedDamageDecals
+{
 	const std::vector<std::string> vDamageDecals
 	{
 		{ "None" },
@@ -201,7 +206,8 @@ namespace PedDamageDecals {
 		{ "cs_trev1_dirt" }
 	};
 }
-namespace PedDamagePacks {
+namespace PedDamagePacks
+{
 	const std::vector<std::string> vDamagePacks
 	{
 		//{ "None" },
@@ -280,9 +286,11 @@ namespace PedDamagePacks {
 GTAped::GTAped() : GTAentity(), _tasks(0)//, _euphoria(NaturalMotion::Euphoria(0))
 {
 }
+
 GTAped::GTAped(int handle) : GTAentity(handle), _tasks(Tasks(handle))//, _euphoria(NaturalMotion::Euphoria(handle))
 {
 }
+
 GTAped::GTAped(GTAentity handle) : GTAentity(handle), _tasks(Tasks(handle))//, _euphoria(NaturalMotion::Euphoria(handle.Handle()))
 {
 }
@@ -291,9 +299,9 @@ GTAped& GTAped::operator = (const GTAped& value)
 {
 	this->mHandle = value.mHandle;
 	this->_tasks = value._tasks;
-	//this->_euphoria = value._euphoria;
 	return *this;
 }
+
 bool operator == (const GTAped& left, const GTAped& right)
 {
 	return left.mHandle == right.mHandle;
@@ -341,20 +349,21 @@ bool GTAped::IsSubTaskActive(const PedSubTask& taskType)
 	return GET_IS_TASK_ACTIVE(this->mHandle, static_cast<int>(taskType)) != 0;
 }
 
-PedHeadBlendData GTAped::HeadBlendData_get() const
+PedHeadBlendData GTAped::GetHeadBlendData() const
 {
 	PedHeadBlendData blendData;
 	GET_PED_HEAD_BLEND_DATA(this->mHandle, (Any*)&blendData);
 	return blendData;
 }
-void GTAped::HeadBlendData_set(const PedHeadBlendData& blendData)
+
+void GTAped::SetHeadBlendData(const PedHeadBlendData& blendData)
 {
 	SET_PED_HEAD_BLEND_DATA(this->mHandle, blendData.shapeFirstID, blendData.shapeSecondID, blendData.shapeThirdID,
 		blendData.skinFirstID, blendData.skinSecondID, blendData.skinThirdID, blendData.shapeMix,
 		blendData.skinMix, blendData.thirdMix, blendData.isParent);
 }
 
-void GTAped::VoiceName_set(const std::string& value)
+void GTAped::SetVoiceName(const std::string& value)
 {
 	SET_AMBIENT_VOICE_NAME(this->mHandle, value.c_str());
 }
@@ -369,18 +378,20 @@ void GTAped::PlaySpeechWithVoice(const std::string& speechName, const std::strin
 	PLAY_PED_AMBIENT_SPEECH_WITH_VOICE_NATIVE(this->mHandle, (PCHAR)speechName.c_str(), (PCHAR)voiceName.c_str(), (PCHAR)speechParam.c_str(), unk);
 }
 
-Hash GTAped::Weapon_get() const
+Hash GTAped::GetWeapon() const
 {
 	Hash weap = 0;
 	GET_CURRENT_PED_WEAPON(this->mHandle, &weap, true);
 	return weap;
 }
+
 void GTAped::SetWeapon(Hash weaponHash)
 {
 	if (!HAS_PED_GOT_WEAPON(this->mHandle, weaponHash, false))
 		GIVE_WEAPON_TO_PED(this->mHandle, weaponHash, 9999, true, false);
 	SET_CURRENT_PED_WEAPON(this->mHandle, weaponHash, true);
 }
+
 void GTAped::RemoveAllWeapons()
 {
 	REMOVE_ALL_PED_WEAPONS(this->mHandle, true);
@@ -394,21 +405,22 @@ Vector3 GTAped::LastWeaponImpactCoord() const
 	else return Vector3();
 }
 
-ParachuteState GTAped::ParachuteState_get() const
+ParachuteState GTAped::GetParachuteState() const
 {
 	return (ParachuteState)GET_PED_PARACHUTE_STATE(this->mHandle);
 }
 
-int GTAped::Accuracy_get() const
+int GTAped::GetAccuracy() const
 {
 	return GET_PED_ACCURACY(this->mHandle);
 }
-void GTAped::Accuracy_set(int value)
+
+void GTAped::SetAccuracy(int value)
 {
 	SET_PED_ACCURACY(this->mHandle, value);
 }
 
-void GTAped::AlwaysDiesWhenInjured_set(bool value)
+void GTAped::SetAlwaysDiesWhenInjured(bool value)
 {
 	SET_PED_DIES_WHEN_INJURED(this->mHandle, value);
 }
@@ -418,64 +430,67 @@ void GTAped::SetAlwaysKeepTask(bool value)
 	SET_PED_KEEP_TASK(this->mHandle, value);
 }
 
-int GTAped::Armour_get() const
+int GTAped::GetArmour() const
 {
 	return GET_PED_ARMOUR(this->mHandle);
 }
-void GTAped::Armour_set(int value)
+
+void GTAped::SetArmour(int value)
 {
 	SET_PED_ARMOUR(this->mHandle, value);
 }
 
-void GTAped::BlockPermanentEvents_set(bool value)
+void GTAped::SetBlockPermanentEvent(bool value)
 {
 	SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(this->mHandle, value);
 }
 
-bool GTAped::CanRagdoll_get() const
+bool GTAped::GetCanRagdoll() const
 {
 	return CAN_PED_RAGDOLL(this->mHandle) != 0;
 }
-void GTAped::CanRagdoll_set(bool value)
+
+void GTAped::SetCanRagdoll(bool value)
 {
 	SET_PED_CAN_RAGDOLL(this->mHandle, value);
 }
 
-void GTAped::CanSwitchWeapons_set(bool value)
+void GTAped::SetCanSwitchWeapons(bool value)
 {
 	SET_PED_CAN_SWITCH_WEAPON(this->mHandle, value);
 }
 
-void GTAped::CanSufferCriticalHits_set(bool value)
+void GTAped::SetCanSufferCriticalHits(bool value)
 {
 	SET_PED_SUFFERS_CRITICAL_HITS(this->mHandle, value);
 }
 
-bool GTAped::CanFlyThroughWindscreen_get() const
+bool GTAped::GetCanFlyThroughWindscreen() const
 {
 	return GET_PED_CONFIG_FLAG(this->mHandle, ePedConfigFlags::WillFlyThruWindscreen, true) != 0;
 }
-void GTAped::CanFlyThroughWindscreen_set(bool value)
+
+void GTAped::SetCanFlyThroughWindscreen(bool value)
 {
 	SET_PED_CONFIG_FLAG(this->mHandle, ePedConfigFlags::WillFlyThruWindscreen, value);
 }
 
-void GTAped::CanBeKnockedOffBike_set(int state)
+void GTAped::SetCanBeKnockedOffBike(int state)
 {
 	SET_PED_CAN_BE_KNOCKED_OFF_VEHICLE(this->mHandle, state);
 }
 
-void GTAped::CanBeDraggedOutOfVehicle_set(bool value)
+void GTAped::SetCanBeDraggedOutOfVehicle(bool value)
 {
 	SET_PED_CAN_BE_DRAGGED_OUT(this->mHandle, value);
 }
 
-void GTAped::CanBeTargetted_set(bool value)
+void GTAped::SetCanBeTargetted(bool value)
 {
 	SET_PED_CAN_BE_TARGETTED(this->mHandle, value);
 }
 
-void GTAped::CanPlayGestures_set(bool value)
+void GTAped::SetCanPlayGestures(bool value)
 {
 	SET_PED_CAN_PLAY_GESTURE_ANIMS(this->mHandle, value);
 }
@@ -484,28 +499,33 @@ bool GTAped::IsInGroup() const
 {
 	return IS_PED_IN_GROUP(this->mHandle) != 0;
 }
-PedGroup GTAped::CurrentPedGroup_get() const
+
+PedGroup GTAped::GetCurrentPedGroup() const
 {
 	return GET_PED_GROUP_INDEX(this->mHandle);
 }
-void GTAped::NeverLeavesGroup_set(bool value)
+
+void GTAped::SetNeverLeavesGroup(bool value)
 {
 	SET_PED_NEVER_LEAVES_GROUP(this->mHandle, value);
 }
-void GTAped::TeleportsWithGroupLeader_set(bool value, const PedGroup& grp)
+
+void GTAped::SetTeleportsWithGroupLeader(bool value, const PedGroup& grp)
 {
 	SET_PED_CAN_TELEPORT_TO_GROUP_LEADER(this->mHandle, grp.GetHandle() == 0 ? GET_PED_GROUP_INDEX(this->mHandle) : grp.GetHandle(), value);
 }
 
-void GTAped::DiesInstantlyInWater_set(bool value)
+void GTAped::SetDiesInstantlyInWater(bool value)
 {
 	SET_PED_DIES_INSTANTLY_IN_WATER(this->mHandle, value);
 }
-void GTAped::DrownsInWater_set(bool value)
+
+void GTAped::SetDrownsInWater(bool value)
 {
 	SET_PED_DIES_IN_WATER(this->mHandle, value);
 }
-void GTAped::DrownsInSinkingVehicle_set(bool value)
+
+void GTAped::SetDrownsInSinkingVehicle(bool value)
 {
 	SET_PED_DIES_IN_SINKING_VEHICLE(this->mHandle, value);
 }
@@ -514,7 +534,8 @@ void GTAped::SetDrivingSpeed(float value)
 {
 	SET_DRIVE_TASK_CRUISE_SPEED(this->mHandle, value);
 }
-void GTAped::MaxDrivingSpeed_set(float value)
+
+void GTAped::SetMaxDrivingSpeed(float value)
 {
 	SET_DRIVE_TASK_MAX_CRUISE_SPEED(this->mHandle, value);
 }
@@ -524,17 +545,12 @@ void GTAped::SetDrivingStyle(int value)
 	SET_DRIVE_TASK_DRIVING_STYLE(this->mHandle, value);
 }
 
-/*NaturalMotion::Euphoria GTAped::Euphoria_get() const
-{
-	return _euphoria;
-}*/
-
-void GTAped::FiringPattern_set(FiringPattern::FiringPattern value)
+void GTAped::SetFiringPattern(FiringPattern::FiringPattern value)
 {
 	SET_PED_FIRING_PATTERN(this->mHandle, value);
 }
 
-Gender GTAped::Gender_get() const
+Gender GTAped::GetGender() const
 {
 	return IS_PED_MALE(this->mHandle) ? Gender::Male : Gender::Female;
 }
@@ -553,6 +569,7 @@ bool GTAped::IsBeingStealthKilled() const
 {
 	return IS_PED_BEING_STEALTH_KILLED(this->mHandle) != 0;
 }
+
 bool GTAped::IsPerformingStealthKill() const
 {
 	return IS_PED_PERFORMING_STEALTH_KILL(this->mHandle) != 0;
@@ -572,6 +589,7 @@ bool GTAped::IsDucking() const
 {
 	return IS_PED_DUCKING(this->mHandle) != 0;
 }
+
 void GTAped::SetDucking(bool value)
 {
 	SET_PED_DUCKING(this->mHandle, value);
@@ -635,6 +653,7 @@ bool GTAped::IsInCombat() const
 {
 	return IS_PED_IN_COMBAT(this->mHandle, 0) != 0;
 }
+
 bool GTAped::IsInCombatWith(const GTAped& target) const
 {
 	return IS_PED_IN_COMBAT(this->mHandle, target.mHandle) != 0;
@@ -654,26 +673,32 @@ bool GTAped::IsInHeli() const
 {
 	return IS_PED_IN_ANY_HELI(this->mHandle) != 0;
 }
+
 bool GTAped::IsInPlane() const
 {
 	return IS_PED_IN_ANY_PLANE(this->mHandle) != 0;
 }
+
 bool GTAped::IsInPoliceVehicle() const
 {
 	return IS_PED_IN_ANY_POLICE_VEHICLE(this->mHandle) != 0;
 }
+
 bool GTAped::IsInSub() const
 {
 	return IS_PED_IN_ANY_SUB(this->mHandle) != 0;
 }
+
 bool GTAped::IsInTrain() const
 {
 	return IS_PED_IN_ANY_TRAIN(this->mHandle) != 0;
 }
+
 bool GTAped::IsOnBike() const
 {
 	return IS_PED_ON_ANY_BIKE(this->mHandle) != 0;
 }
+
 bool GTAped::IsOnFoot() const
 {
 	return IS_PED_ON_FOOT(this->mHandle) != 0;
@@ -739,6 +764,7 @@ bool GTAped::IsSwimming() const
 {
 	return IS_PED_SWIMMING(this->mHandle) != 0;
 }
+
 bool GTAped::IsSwimmingUnderWater() const
 {
 	return IS_PED_SWIMMING_UNDER_WATER(this->mHandle) != 0;
@@ -749,23 +775,26 @@ bool GTAped::IsTryingToEnterALockedVehicle() const
 	return IS_PED_TRYING_TO_ENTER_A_LOCKED_VEHICLE(this->mHandle) != 0;
 }
 
-int GTAped::Money_get() const
+int GTAped::GetMoney() const
 {
 	return GET_PED_MONEY(this->mHandle);
 }
-void GTAped::Money_set(int value)
+
+void GTAped::SetMoney(int value)
 {
 	SET_PED_MONEY(this->mHandle, value);
 }
 
-Hash GTAped::RelationshipGroup_get() const
+Hash GTAped::GetRelationshipGroup() const
 {
 	return GET_PED_RELATIONSHIP_GROUP_HASH(this->mHandle);
 }
-void GTAped::RelationshipGroup_set(Hash grpHash)
+
+void GTAped::SetRelationshipGroup(Hash grpHash)
 {
 	SET_PED_RELATIONSHIP_GROUP_HASH(this->mHandle, grpHash);
 }
+
 void GTAped::SetRelationshipGroup(const std::string& grpName)
 {
 	SET_PED_RELATIONSHIP_GROUP_HASH(this->mHandle, GET_HASH_KEY(grpName));
@@ -786,10 +815,12 @@ Tasks GTAped::Task()
 {
 	return _tasks;
 }
-int GTAped::TaskSequenceProgress_get() const
+
+int GTAped::GetTaskSequenceProgress() const
 {
 	return GET_SEQUENCE_PROGRESS(this->mHandle);
 }
+
 bool GTAped::IsPerformingAnyTaskSequence() const
 {
 	return GET_SEQUENCE_PROGRESS(this->mHandle) > -1;
@@ -799,26 +830,27 @@ bool GTAped::WasKilledByStealth() const
 {
 	return WAS_PED_KILLED_BY_STEALTH(this->mHandle) != 0;
 }
+
 bool GTAped::WasKilledByTakedown() const
 {
 	return WAS_PED_KILLED_BY_TAKEDOWN(this->mHandle) != 0;
 }
 
-void GTAped::WetnessHeight_set(float value)
+void GTAped::SetWetnessHeight(float value)
 {
 	SET_PED_WETNESS_HEIGHT(this->mHandle, value);
 }
 
 bool GTAped::IsInVehicle() const
 {
-	//return IS_PED_SITTING_IN_ANY_VEHICLE(this->mHandle) != 0;
 	return DOES_ENTITY_EXIST(GET_VEHICLE_PED_IS_USING(this->mHandle)) != 0;
 }
+
 bool GTAped::IsInVehicle(GTAvehicle vehicle) const
 {
-	//return IS_PED_SITTING_IN_VEHICLE(this->mHandle, vehicle.Handle()) != 0;
 	return GET_VEHICLE_PED_IS_USING(this->mHandle) == vehicle.Handle();
 }
+
 GTAvehicle GTAped::CurrentVehicle() const
 {
 	return GET_VEHICLE_PED_IS_USING(this->mHandle);
@@ -852,6 +884,7 @@ bool GTAped::IsInCover() const
 {
 	return this->IsInCover(false);
 }
+
 bool GTAped::IsInCover(bool expectUseWeapon) const
 {
 	return IS_PED_IN_COVER(this->mHandle, expectUseWeapon) != 0;
@@ -861,18 +894,22 @@ GTAentity GTAped::GetJacker() const
 {
 	return GET_PEDS_JACKER(this->mHandle);
 }
+
 GTAentity GTAped::GetJackTarget() const
 {
 	return GET_JACK_TARGET(this->mHandle);
 }
+
 GTAentity GTAped::GetSourceOfDeath() const
 {
 	return GET_PED_SOURCE_OF_DEATH(this->mHandle);
 }
+
 void GTAped::Kill()
 {
 	this->SetHealth(0);
 }
+
 void GTAped::ExplodeHead(Hash weaponHash)
 {
 	EXPLODE_PED_HEAD(this->mHandle, weaponHash);
@@ -882,10 +919,12 @@ void GTAped::ResetVisibleDamage()
 {
 	RESET_PED_VISIBLE_DAMAGE(this->mHandle);
 }
+
 void GTAped::ClearBloodDamage()
 {
 	CLEAR_PED_BLOOD_DAMAGE(this->mHandle);
 }
+
 void GTAped::ApplyDamage(int damageAmount)
 {
 	APPLY_DAMAGE_TO_PED(this->mHandle, damageAmount, true, 0);
@@ -895,10 +934,12 @@ Vector3 GTAped::GetBoneCoord(int boneID) const
 {
 	return GET_PED_BONE_COORDS(this->mHandle, boneID, 0, 0, 0);
 }
+
 Vector3 GTAped::GetBoneCoord(int boneID, const Vector3& offset) const
 {
 	return GET_PED_BONE_COORDS(this->mHandle, boneID, offset.x, offset.y, offset.z);
 }
+
 int GTAped::GetBoneIndex(int boneID) const
 {
 	return GET_PED_BONE_INDEX(this->mHandle, boneID);
@@ -908,6 +949,7 @@ void GTAped::ApplyBlood(const std::string& bloodDecalName, int boneID)
 {
 	this->ApplyBlood(bloodDecalName, boneID, Vector3());
 }
+
 void GTAped::ApplyBlood(const std::string& bloodDecalName, int boneID, const Vector3& rotation)
 {
 	APPLY_PED_BLOOD(this->mHandle, boneID, rotation.x, rotation.y, rotation.z, (PCHAR)bloodDecalName.c_str());
@@ -917,6 +959,7 @@ void GTAped::ApplyDamageDecal(const std::string& damageDecalName, int boneID, co
 {
 	APPLY_PED_DAMAGE_DECAL(this->mHandle, boneID, rotation.x, rotation.y, rotation.z, damageScale, multiplier, state, b1, (PCHAR)damageDecalName.c_str());
 }
+
 void GTAped::ApplyDamagePack(const std::string& damagePackName, float damageAmount, float multiplier)
 {
 	APPLY_PED_DAMAGE_PACK(this->mHandle, (PCHAR)damagePackName.c_str(), damageAmount, multiplier);
@@ -956,6 +999,7 @@ void GTAped::StoreWeaponsInArray(std::vector<s_Weapon_Components_Tint>& result)
 	}
 	// Armour??
 }
+
 void GTAped::GiveWeaponsFromArray(const std::vector<s_Weapon_Components_Tint>& value)
 {
 	bool bHasControl = this->HasControl();
@@ -988,9 +1032,3 @@ void GTAped::GiveWeaponsFromArray(const std::vector<s_Weapon_Components_Tint>& v
 		}
 	}
 }
-
-
-
-
-
-

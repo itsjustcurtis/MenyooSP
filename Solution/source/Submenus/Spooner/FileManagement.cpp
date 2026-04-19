@@ -129,13 +129,13 @@ namespace sub::Spooner
 
 				nodePedStuff.append_child("IsStill").text() = e.isStill;
 
-				nodePedStuff.append_child("CanRagdoll").text() = ep.CanRagdoll_get();
+				nodePedStuff.append_child("CanRagdoll").text() = ep.GetCanRagdoll();
 
 				nodePedStuff.append_child("HasShortHeight").text() = GET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, false) != 0;
 
-				nodePedStuff.append_child("Armour").text() = ep.Armour_get();
+				nodePedStuff.append_child("Armour").text() = ep.GetArmour();
 
-				nodePedStuff.append_child("CurrentWeapon").text() = IntToHexString(ep.Weapon_get(), true).c_str();
+				nodePedStuff.append_child("CurrentWeapon").text() = IntToHexString(ep.GetWeapon(), true).c_str();
 
 				auto nodePedProps = nodePedStuff.append_child("PedProps");
 				auto nodePedComps = nodePedStuff.append_child("PedComps");
@@ -153,7 +153,7 @@ namespace sub::Spooner
 					auto nodePedHeadFeatures = nodePedStuff.append_child("HeadFeatures");
 
 					auto nodePedHeadBlend = nodePedHeadFeatures.append_child("ShapeAndSkinTone");
-					const auto& headBlend = ep.HeadBlendData_get();
+					const auto& headBlend = ep.GetHeadBlendData();
 					nodePedHeadBlend.append_child("ShapeFatherId").text() = headBlend.shapeFirstID;
 					nodePedHeadBlend.append_child("ShapeMotherId").text() = headBlend.shapeSecondID;
 					nodePedHeadBlend.append_child("ShapeOverrideId").text() = headBlend.shapeThirdID;
@@ -513,16 +513,16 @@ namespace sub::Spooner
 				auto nodePedStuff = nodeEntity.child("PedProperties");
 
 				e.e.isStill = nodePedStuff.child("IsStill") ? nodePedStuff.child("IsStill").text().as_bool() : true;
-				ep.BlockPermanentEvents_set(e.e.isStill);
+				ep.SetBlockPermanentEvent(e.e.isStill);
 
-				ep.CanRagdoll_set(nodePedStuff.child("CanRagdoll").text().as_bool(true));
+				ep.SetCanRagdoll(nodePedStuff.child("CanRagdoll").text().as_bool(true));
 				SET_PED_RAGDOLL_ON_COLLISION(ep.Handle(), nodePedStuff.child("CanRagdoll").text().as_bool(false));
 
 				if (nodePedStuff.child("HasShortHeight").text().as_bool()) SET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, 1);
 
-				ep.Armour_set(nodePedStuff.child("Armour").text().as_int());
+				ep.SetArmour(nodePedStuff.child("Armour").text().as_int());
 				ep.SetWeapon(nodePedStuff.child("CurrentWeapon").text().as_uint());
-				ep.CanSwitchWeapons_set(false);
+				ep.SetCanSwitchWeapons(false);
 				SET_PED_PATH_CAN_USE_CLIMBOVERS(ep.Handle(), true);
 				SET_PED_PATH_CAN_USE_LADDERS(ep.Handle(), true);
 				SET_PED_PATH_CAN_DROP_FROM_HEIGHT(ep.Handle(), true);
@@ -576,7 +576,7 @@ namespace sub::Spooner
 					headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
 					headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
 					headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
-					ep.HeadBlendData_set(headBlend);
+					ep.SetHeadBlendData(headBlend);
 
 					if (nodePedHeadFeatures.attribute("WasInArray").as_bool())
 					{
@@ -926,9 +926,9 @@ namespace sub::Spooner
 			e.e.handle.SetOnFire(nodeEntity.child("IsOnFire").text().as_bool());
 			e.e.handle.SetInvincible(nodeEntity.child("IsInvincible").text().as_bool());
 			e.e.handle.SetBulletProof(nodeEntity.child("IsBulletProof").text().as_bool());
-			e.e.handle.Dynamic_set(false);
+			e.e.handle.SetDynamic(false);
 			e.e.handle.FreezePosition(true);
-			e.e.handle.Dynamic_set(e.e.dynamic);
+			e.e.handle.SetDynamic(e.e.dynamic);
 			e.e.handle.FreezePosition(bFrozenPos);
 			e.e.handle.SetExplosionProof(nodeEntity.child("IsExplosionProof").text().as_bool());
 			e.e.handle.SetFireProof(nodeEntity.child("IsFireProof").text().as_bool());
@@ -1363,7 +1363,7 @@ namespace sub::Spooner
 						}
 						else
 						{
-							wpCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).Position_get();
+							wpCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).GetPosition();
 							wpCoords.z = World::GetGroundHeight(wpCoords);
 						}
 						nodeReferenceCoords.append_child("X").text() = wpCoords.x;
@@ -2072,7 +2072,7 @@ namespace sub::Spooner
 					e.dynamic = true;
 					auto ep = World::CreatePed(eModel, position, rotation, false);
 					e.handle = ep;
-					ep.BlockPermanentEvents_set(e.isStill);
+					ep.SetBlockPermanentEvent(e.isStill);
 				}
 				else if (e.type == EntityType::VEHICLE)
 				{
@@ -2081,8 +2081,6 @@ namespace sub::Spooner
 					e.handle = ev;
 				}
 
-				//e.handle.Position_set(position);
-				//e.handle.Rotation_set(rotation);
 				e.handle.FreezePosition(!e.dynamic);
 				e.handle.SetMissionEntity(true);
 				int opacityLevel = ini.GetLongValue(section.pItem, "Opacity", 255);

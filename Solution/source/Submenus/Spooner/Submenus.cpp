@@ -679,7 +679,7 @@ namespace sub
 						AddOption("Set To Waypoint", bSetPosToWp); if (bSetPosToWp)
 						{
 							GTAblip wpBlip = GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint);
-							Vector3 wpCoords = wpBlip.Position_get();
+							Vector3 wpCoords = wpBlip.GetPosition();
 							wpCoords.z = World::GetGroundHeight(wpCoords);
 							*std::get<1>(nas) = wpCoords;
 							if (!xNode)
@@ -790,7 +790,7 @@ namespace sub
 				{
 					AddBreak("Weather To Set");
 					std::string weatherToSetStr = nodeWeatherToSet.text().as_string();
-					int weatherToSetInt = static_cast<int>(World::Weather_get(weatherToSetStr));
+					int weatherToSetInt = static_cast<int>(World::GetWeather(weatherToSetStr));
 					//bool weatherToSet_plus = false, weatherToSet_minus = false;
 					//AddTexter("Weather To Set", (weatherToSetInt == -1 ? 0 : weatherToSetInt), (weatherToSetInt == -1 ? std::vector<std::string>{"None"} : World::sWeatherNames), null, weatherToSet_plus, weatherToSet_minus);
 					//if (weatherToSet_plus){ if (weatherToSetInt < World::sWeatherNames.size() - 1){ weatherToSetInt++; nodeWeatherToSet.text() = World::WeatherName_get(static_cast<WeatherType>(weatherToSetInt)).c_str(); doc.save_file((const char*)filePath.c_str()); } }
@@ -1140,7 +1140,7 @@ namespace sub
 			AddLocal("Dynamic", selectedEntity.dynamic, bDynamicPressed, bDynamicPressed); if (bDynamicPressed)
 			{
 				selectedEntity.dynamic = !selectedEntity.dynamic;
-				selectedEntity.handle.Dynamic_set(selectedEntity.dynamic);
+				selectedEntity.handle.SetDynamic(selectedEntity.dynamic);
 				selectedEntity.handle.FreezePosition(!selectedEntity.dynamic);
 			}
 
@@ -1743,19 +1743,6 @@ namespace sub
 			}
 			if (nextRot != currRot)
 			{
-				/*bool doPedIdleAnim = !selectedEntity.taskSequence.IsActive() && selectedEntity.type == EntityType::PED && (nextRot.y != currRot.y || nextRot.x != currRot.x);
-				INT8 pedWasPlayingAnimOrScenario = 0;
-				if (doPedIdleAnim) pedWasPlayingAnimOrScenario = thisPed.Task().IsPlayingAnimation(selectedEntity.lastAnimation.dict, selectedEntity.lastAnimation.name) ? 1 : thisPed.Task().IsUsingScenario(selectedEntity.lastAnimation.name) ? 2 : 0;
-				if (doPedIdleAnim) thisPed.Task().PlayAnimation("idle", "mp_sleep");
-				selectedEntity.handle.Rotation_set(nextRot);
-				if (doPedIdleAnim) {
-					if (pedWasPlayingAnimOrScenario == 1)
-						thisPed.Task().PlayAnimation(selectedEntity.lastAnimation.dict, selectedEntity.lastAnimation.name);
-					else if (pedWasPlayingAnimOrScenario == 2)
-						thisPed.Task().StartScenario(selectedEntity.lastAnimation.name, 0, false);
-					else thisPed.Task().ClearAnimation("idle", "mp_sleep");
-				}*/
-
 				selectedEntity.handle.SetRotation(nextRot);
 				currRot = selectedEntity.handle.Rotation_get();
 				GTAentity attBase;
@@ -2318,7 +2305,7 @@ namespace sub
 			bool butAmIOnline = NETWORK_IS_IN_SESSION() != 0;
 			bool isPedMyPed = thisPed.Handle() == myPed.Handle();
 			bool bIsPedShortHeighted = GET_PED_CONFIG_FLAG(thisPed.Handle(), ePedConfigFlags::_Shrink, false) != 0;
-			PedGroup myPedGroup = myPed.CurrentPedGroup_get();
+			PedGroup myPedGroup = myPed.GetCurrentPedGroup();
 
 			bool pedops_isStill_toggle = false,
 				pedops_canRagdoll_toggle = false,
@@ -2335,15 +2322,15 @@ namespace sub
 
 			if (!isPedMyPed)
 				MenuOptions::AddOption_RelationshipTextScroller();
-			AddToggle("Is Still (Block Fleeing)", selectedEntity.isStill, pedops_isStill_toggle, pedops_isStill_toggle); if (pedops_isStill_toggle) { thisPed.BlockPermanentEvents_set(selectedEntity.isStill); }
-			AddLocal("Can Ragdoll", thisPed.CanRagdoll_get(), pedops_canRagdoll_toggle, pedops_canRagdoll_toggle); if (pedops_canRagdoll_toggle) { bool ns = !thisPed.CanRagdoll_get(); thisPed.CanRagdoll_set(ns); SET_PED_RAGDOLL_ON_COLLISION(thisPed.Handle(), ns); }
+			AddToggle("Is Still (Block Fleeing)", selectedEntity.isStill, pedops_isStill_toggle, pedops_isStill_toggle); if (pedops_isStill_toggle) { thisPed.SetBlockPermanentEvent(selectedEntity.isStill); }
+			AddLocal("Can Ragdoll", thisPed.GetCanRagdoll(), pedops_canRagdoll_toggle, pedops_canRagdoll_toggle); if (pedops_canRagdoll_toggle) { bool ns = !thisPed.GetCanRagdoll(); thisPed.SetCanRagdoll(ns); SET_PED_RAGDOLL_ON_COLLISION(thisPed.Handle(), ns); }
 			AddLocal("Is Short Heighted (Small)", bIsPedShortHeighted, pedops_shortHeighted_toggle, pedops_shortHeighted_toggle); if (pedops_shortHeighted_toggle) { SET_PED_CONFIG_FLAG(selectedEntity.handle.Handle(), ePedConfigFlags::_Shrink, bIsPedShortHeighted ? 0 : 1); }
 
-			int thisArmour = thisPed.Armour_get();
+			int thisArmour = thisPed.GetArmour();
 			bool bArmour_plus = false, bArmour_minus = false, bArmour_input = false;
 			AddNumber("Armour", thisArmour, 0, bArmour_input, bArmour_plus, bArmour_minus);
-			if (bArmour_plus) { if (thisArmour < INT_MAX) { thisArmour++; thisPed.Armour_set(thisArmour); } }
-			if (bArmour_minus) { if (thisArmour > 0) { thisArmour--;  thisPed.Armour_set(thisArmour); } }
+			if (bArmour_plus) { if (thisArmour < INT_MAX) { thisArmour++; thisPed.SetArmour(thisArmour); } }
+			if (bArmour_minus) { if (thisArmour > 0) { thisArmour--;  thisPed.SetArmour(thisArmour); } }
 			if (bArmour_input)
 			{
 				std::string inputStr = Game::InputBox("", 5U, "", std::to_string(thisArmour));
@@ -2352,7 +2339,7 @@ namespace sub
 					try
 					{
 						thisArmour = stoi(inputStr);
-						thisPed.Armour_set(thisArmour);
+						thisPed.SetArmour(thisArmour);
 					}
 					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 				}
@@ -2365,7 +2352,7 @@ namespace sub
 			{
 				g_cam_componentChanger.SetActive(false);
 				g_cam_componentChanger.Destroy();
-				World::RenderingCamera_set(0);
+				World::SetRenderingCamera(0);
 			}
 
 			AddOption("Animations", null, SetEnt241, SUB::ANIMATIONSUB);
@@ -2488,7 +2475,7 @@ namespace sub
 			auto& selectedCategoryIndex = msCurrentPaintIndex;
 			GTAped myPed = PLAYER_PED_ID();
 			GTAped thisPed = selectedEntity.handle;
-			Hash pedCurrWeapon = thisPed.Weapon_get();
+			Hash pedCurrWeapon = thisPed.GetWeapon();
 			bool isPedMyPed = thisPed.Handle() == myPed.Handle();
 
 			AddTitle("Weapon");
@@ -2506,7 +2493,7 @@ namespace sub
 				//std::vector<s_Weapon_Components_Tint> weaponsBackup;
 				//myPed.StoreWeaponsInArray(weaponsBackup);
 				//GTAped(thisPed).GiveWeaponsFromArray(weaponsBackup);
-				Hash weaponHash = myPed.Weapon_get();
+				Hash weaponHash = myPed.GetWeapon();
 				GIVE_DELAYED_WEAPON_TO_PED(thisPed.Handle(), weaponHash, 9999, true);
 				GIVE_WEAPON_TO_PED(thisPed.Handle(), weaponHash, 1, true, false);
 				int ammo;
@@ -2531,7 +2518,7 @@ namespace sub
 			AddTitle(WeaponIndivs::vCategoryNames[selectedCategoryIndex]);
 
 			GTAped thisPed = selectedEntity.handle;
-			Hash currentWeapon = thisPed.Weapon_get();
+			Hash currentWeapon = thisPed.GetWeapon();
 
 			for (auto& wc : *WeaponIndivs::vAllWeapons[selectedCategoryIndex])
 			{
@@ -2607,7 +2594,7 @@ namespace sub
 				{
 					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + SpoonerMarker().m_scale / 2);
 					spawnPos.z += SpoonerMarker().m_scale / 2;
-					SelectedMarker = MarkerManagement::AddMarker(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+					SelectedMarker = MarkerManagement::AddMarker(spawnPos, Vector3(0, 0, spoocam.GetRotation().z));
 				}
 				Menu::SetSub_delayed = SUB::SPOONER_MANAGEMARKERS_INMARKER;
 			}
@@ -2750,7 +2737,7 @@ namespace sub
 					AddOption("Set To Waypoint", bSetPosToWp); if (bSetPosToWp)
 					{
 						GTAblip wpBlip = GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint);
-						Vector3 wpCoords = wpBlip.Position_get();
+						Vector3 wpCoords = wpBlip.GetPosition();
 						wpCoords.z = World::GetGroundHeight(wpCoords);
 						SelectedMarker->m_position = wpCoords;
 						SelectedMarker->m_attachmentArgs.attachedTo = 0;
@@ -2820,7 +2807,7 @@ namespace sub
 					AddOption("Set To Waypoint", bSetPosToWp); if (bSetPosToWp)
 					{
 						GTAblip wpBlip = GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint);
-						Vector3 wpCoords = wpBlip.Position_get();
+						Vector3 wpCoords = wpBlip.GetPosition();
 						wpCoords.z = World::GetGroundHeight(wpCoords);
 						SelectedMarker->m_destinationVal.m_position = wpCoords;
 						SelectedMarker->m_destinationVal.m_attachmentArgs.attachedTo = 0;
@@ -3889,7 +3876,7 @@ namespace sub
 
 		if (Network_ObjectSub_Clear) {
 			Vector3 temp = GET_ENTITY_COORDS(g_Ped1, 1);
-			clear_attachments_off_entity(g_Ped1, EntityType::PROP);
+			ClearAttachmentsOffEntity(g_Ped1, EntityType::PROP);
 			CLEAR_AREA_OF_OBJECTS(temp.x, temp.y, temp.z, 2.5f, 0);
 			return;
 		}
@@ -3933,14 +3920,14 @@ namespace sub
 
 		if (Network_ObjectSub_ClearPeds) {
 			Vector3 temp = GET_ENTITY_COORDS(g_Ped1, 1);
-			clear_attachments_off_entity(g_Ped1, EntityType::PED);
+			ClearAttachmentsOffEntity(g_Ped1, EntityType::PED);
 			CLEAR_AREA_OF_PEDS(temp.x, temp.y, temp.z, 2.5f, 0);
 			return;
 		}
 
 		if (Network_ObjectSub_ClearVehicles) {
 			Vector3 temp = GET_ENTITY_COORDS(g_Ped1, 1);
-			clear_attachments_off_entity(g_Ped1, EntityType::VEHICLE);
+			ClearAttachmentsOffEntity(g_Ped1, EntityType::VEHICLE);
 			CLEAR_AREA_OF_PEDS(temp.x, temp.y, temp.z, 2.5f, 0);
 			return;
 		}

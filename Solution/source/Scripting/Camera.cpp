@@ -55,12 +55,12 @@ int Camera::GetHandle() const
 	return this->mHandle;
 }
 
-void Camera::DepthOfFieldStrength_set(float value)
+void Camera::SetDepthOfFieldStrength(float value)
 {
 	SET_CAM_DOF_STRENGTH(this->mHandle, value);
 }
 
-float Camera::FieldOfView_get() const
+float Camera::GetFieldOfView() const
 {
 	return GET_CAM_FOV(this->mHandle);
 }
@@ -69,32 +69,32 @@ void Camera::SetFieldOfView(float value)
 	SET_CAM_FOV(this->mHandle, value);
 }
 
-float Camera::FarClip_get() const
+float Camera::GetFarClip() const
 {
 	return GET_CAM_FAR_CLIP(this->mHandle);
 }
-void Camera::FarClip_set(float value)
+void Camera::SetFarClip(float value)
 {
 	SET_CAM_FAR_CLIP(this->mHandle, value);
 }
-float Camera::FarDepthOfField_get() const
+float Camera::GetFarDepthOfField() const
 {
 	return GET_CAM_FAR_DOF(this->mHandle);
 }
-void Camera::FarDepthOfField_set(float value)
+void Camera::SetFarDepthOfField(float value)
 {
 	SET_CAM_FAR_DOF(this->mHandle, value);
 }
 
-float Camera::NearClip_get() const
+float Camera::GetNearClip() const
 {
 	return GET_CAM_NEAR_CLIP(this->mHandle);
 }
-void Camera::NearClip_set(float value)
+void Camera::SetNearClip(float value)
 {
 	SET_CAM_NEAR_CLIP(this->mHandle, value);
 }
-void Camera::NearDepthOfField_set(float value)
+void Camera::SetNearDepthOfField(float value)
 {
 	SET_CAM_NEAR_DOF(this->mHandle, value);
 }
@@ -130,12 +130,12 @@ void Camera::SetShake(bool status)
 	}
 }
 
-void Camera::MotionBlurStrength_set(float value)
+void Camera::SetMotionBlurStrength(float value)
 {
 	SET_CAM_MOTION_BLUR_STRENGTH(this->mHandle, value);
 }
 
-Vector3 Camera::Position_get() const
+Vector3 Camera::GetPosition() const
 {
 	return GET_CAM_COORD(this->mHandle);
 }
@@ -143,12 +143,12 @@ void Camera::SetPosition(Vector3 coord)
 {
 	SET_CAM_COORD(this->mHandle, coord.x, coord.y, coord.z);
 }
-void Camera::Position_set(float X, float Y, float Z)
+void Camera::SetPosition(float X, float Y, float Z)
 {
 	SET_CAM_COORD(this->mHandle, X, Y, Z);
 }
 
-Vector3 Camera::Rotation_get(__int8 unk) const
+Vector3 Camera::GetRotation(__int8 unk) const
 {
 	return GET_CAM_ROT(this->mHandle, unk);
 }
@@ -156,42 +156,41 @@ void Camera::SetRotation(const Vector3& rot, __int8 unk)
 {
 	SET_CAM_ROT(this->mHandle, rot.x, rot.y, rot.z, unk);
 }
-void Camera::Rotation_set(float X, float Y, float Z, __int8 unk)
+void Camera::SetRotation(float X, float Y, float Z, __int8 unk)
 {
 	SET_CAM_ROT(this->mHandle, X, Y, Z, unk);
 }
 
 
-Vector3 Camera::Direction_get(__int8 unk) const
+Vector3 Camera::GetDirection(__int8 unk) const
 {
 	return Vector3::RotationToDirection(GET_CAM_ROT(this->mHandle, unk));
 }
-void Camera::Direction_set(Vector3 dir, __int8 unk)
+void Camera::SetDirection(Vector3 dir, __int8 unk)
 {
 	dir = Vector3::DirectionToRotation(dir);
 	SET_CAM_ROT(this->mHandle, dir.x, dir.y, dir.z, unk);
 }
-void Camera::Direction_set(float X, float Y, float Z, __int8 unk)
+void Camera::SetDirection(float X, float Y, float Z, __int8 unk)
 {
 	const auto& dir = Vector3::DirectionToRotation(Vector3(X, Y, Z));
 	SET_CAM_ROT(this->mHandle, dir.x, dir.y, dir.z, unk);
 }
 
-float Camera::Heading_get() const
+float Camera::GetHeading() const
 {
 	return GET_CAM_ROT(this->mHandle, 2).z;
 }
-void Camera::Heading_set(float value)
+void Camera::SetHeading(float value)
 {
-	const Vector3& oldRot = this->Rotation_get();
+	const Vector3& oldRot = this->GetRotation();
 	SET_CAM_ROT(this->mHandle, oldRot.x, oldRot.y, value, 2);
 }
 
 
 Vector3 Camera::GetOffsetInWorldCoords(const Vector3& offset) const
 {
-	//return this->Position_get() + (this->Direction_get() * offset);
-	const Vector3& rotation = this->Rotation_get();
+	const Vector3& rotation = this->GetRotation();
 	const Vector3& forward = Vector3::RotationToDirection(rotation);
 	const double D2R = 0.01745329251994329576923690768489;
 	double num1 = cos(rotation.y * D2R);
@@ -200,16 +199,17 @@ Vector3 Camera::GetOffsetInWorldCoords(const Vector3& offset) const
 	double z = sin(-rotation.y * D2R);
 	const Vector3& right = Vector3(x, y, z);
 	const Vector3& Up = Vector3::Cross(right, forward);
-	return this->Position_get() + (right * offset.x) + (forward * offset.y) + (Up * offset.z);
+	return this->GetPosition() + (right * offset.x) + (forward * offset.y) + (Up * offset.z);
 }
+
 Vector3 Camera::GetOffsetInWorldCoords(float X, float Y, float Z) const
 {
 	return this->GetOffsetInWorldCoords(Vector3(X, Y, Z));
 }
+
 Vector3 Camera::GetOffsetGivenWorldCoords(const Vector3& worldCoords) const
 {
-	//return this->Position_get() + (this->Direction_get() * Vector3(X, Y, Z));
-	const Vector3& rotation = this->Rotation_get();
+	const Vector3& rotation = this->GetRotation();
 	const Vector3& forward = Vector3::RotationToDirection(rotation);
 	const double D2R = 0.01745329251994329576923690768489;
 	double num1 = cos(rotation.y * D2R);
@@ -218,29 +218,32 @@ Vector3 Camera::GetOffsetGivenWorldCoords(const Vector3& worldCoords) const
 	double z = sin(-rotation.y * D2R);
 	const Vector3& right = Vector3(x, y, z);
 	const Vector3& up = Vector3::Cross(right, forward);
-	const Vector3& delta = worldCoords - this->Position_get();
+	const Vector3& delta = worldCoords - this->GetPosition();
 	return Vector3(Vector3::Dot(right, delta), Vector3::Dot(forward, delta), Vector3::Dot(up, delta));
 }
+
 Vector3 Camera::GetOffsetGivenWorldCoords(float X, float Y, float Z) const
 {
 	return this->GetOffsetGivenWorldCoords(Vector3(X, Y, Z));
 }
 
-float Camera::ShakeAmplitude_get() const
+float Camera::GetShakeAmplitude() const
 {
 	return this->mShakeAmplitude;
 }
-void Camera::ShakeAmplitude_set(float value)
+
+void Camera::SetShakeAmplitude(float value)
 {
 	this->mShakeAmplitude = value;
 	SET_CAM_SHAKE_AMPLITUDE(this->mHandle, value);
 }
 
-CameraShake Camera::ShakeType_get() const
+CameraShake Camera::GetShakeType() const
 {
 	return this->mShakeType;
 }
-void Camera::ShakeType_set(CameraShake value)
+
+void Camera::SetShakeType(CameraShake value)
 {
 	this->mShakeType = value;
 
@@ -254,10 +257,12 @@ void Camera::AttachTo(GTAentity entity, Vector3 offset)
 {
 	ATTACH_CAM_TO_ENTITY(this->mHandle, entity.Handle(), offset.x, offset.y, offset.z, true);
 }
+
 void Camera::AttachTo(GTAped ped, int boneIndex, Vector3 offset)
 {
 	ATTACH_CAM_TO_PED_BONE(this->mHandle, ped.Handle(), boneIndex, offset.x, offset.y, offset.z, true);
 }
+
 void Camera::Detach()
 {
 	DETACH_CAM(this->mHandle);
@@ -272,22 +277,27 @@ void Camera::PointAt(Vector3 target)
 {
 	POINT_CAM_AT_COORD(this->mHandle, target.x, target.y, target.z);
 }
+
 void Camera::PointAt(GTAentity target)
 {
 	POINT_CAM_AT_ENTITY(this->mHandle, target.Handle(), 0.0f, 0.0f, 0.0f, true);
 }
+
 void Camera::PointAt(GTAentity target, Vector3 offset)
 {
 	POINT_CAM_AT_ENTITY(this->mHandle, target.Handle(), offset.x, offset.y, offset.z, true);
 }
+
 void Camera::PointAt(GTAped target, int boneIndex)
 {
 	POINT_CAM_AT_PED_BONE(this->mHandle, target.Handle(), boneIndex, 0.0f, 0.0f, 0.0f, true);
 }
+
 void Camera::PointAt(GTAped target, int boneIndex, Vector3 offset)
 {
 	POINT_CAM_AT_PED_BONE(this->mHandle, target.Handle(), boneIndex, offset.x, offset.y, offset.z, true);
 }
+
 void Camera::StopPointing()
 {
 	STOP_CAM_POINTING(this->mHandle);
@@ -314,8 +324,8 @@ void Camera::RenderScriptCams(bool render)
 Vector3 Camera::ScreenToWorld(const Vector2& screenCoord) const
 {
 	// Credit to Guadmaz
-	const Vector3& camRot = this->Rotation_get();
-	const Vector3& camPos = this->Position_get();
+	const Vector3& camRot = this->GetRotation();
+	const Vector3& camPos = this->GetPosition();
 
 	Vector2 vector2;
 	Vector2 vector21;
@@ -349,7 +359,7 @@ GTAentity Camera::RaycastForEntity(const Vector2& screenCoord, GTAentity ignoreE
 {
 	// Credit to Guadmaz
 	const Vector3& world = this->ScreenToWorld(screenCoord);
-	const Vector3& vector3 = this->Position_get();
+	const Vector3& vector3 = this->GetPosition();
 	Vector3 vector31 = world - vector3;
 	vector31.Normalize();
 	RaycastResult raycastResult = RaycastResult::Raycast(vector3 + (vector31 * 1.f), vector3 + (vector31 * maxDistance), IntersectOptions(287), ignoreEntity);
@@ -359,7 +369,7 @@ GTAentity Camera::RaycastForEntity(const Vector2& screenCoord, GTAentity ignoreE
 Vector3 Camera::RaycastForCoord(const Vector2& screenCoord, GTAentity ignoreEntity, float maxDistance, float failDistance) const
 {
 	// Credit to Guadmaz
-	const Vector3& position = this->Position_get();
+	const Vector3& position = this->GetPosition();
 	const Vector3& world = this->ScreenToWorld(screenCoord);
 	Vector3 vector3 = position;
 	Vector3 vector31 = world - vector3;
@@ -368,9 +378,9 @@ Vector3 Camera::RaycastForCoord(const Vector2& screenCoord, GTAentity ignoreEnti
 	return raycastResult.DidHitAnything() ? raycastResult.HitCoords() : position + (vector31 * failDistance);
 }
 
-Vector3 Camera::DirectionFromScreenCentre_get() const
+Vector3 Camera::GetDirectionFromScreenCentre() const
 {
-	const Vector3& position = this->Position_get();
+	const Vector3& position = this->GetPosition();
 	const Vector3& world = this->ScreenToWorld(Vector2(0.0f, 0.0f));
 	return Vector3::Normalize(world - position);
 }
@@ -386,7 +396,7 @@ bool Camera::WorldToScreenRel(const Vector3& worldCoords, Vector2& screenCoords)
 }
 
 
-Vector3 get_coords_from_cam(int camid, float distance)
+Vector3 GetCoordsFromCamera(int camid, float distance)
 {
 	Vector3 Rot = DegreeToRadian(GET_CAM_ROT(camid, 2));
 	Vector3 Coord = GET_CAM_COORD(camid);

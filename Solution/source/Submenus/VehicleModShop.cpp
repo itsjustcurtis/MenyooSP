@@ -821,9 +821,9 @@ namespace sub
 				int randb = rand() % 255;
 				paintCarUsing_index(g_Ped4, msCurrentPaintIndex, 0, -1);
 				if (msCurrentPaintIndex == 1)
-					vehicle.CustomPrimaryColour_set(randr, randg, randb);
+					vehicle.SetCustomPrimaryColour(randr, randg, randb);
 				else if (msCurrentPaintIndex == 2)
-					vehicle.CustomSecondaryColour_set(randr, randg, randb);
+					vehicle.SetCustomSecondaryColour(randr, randg, randb);
 				getpaint = true;
 			}
 			return;
@@ -893,14 +893,14 @@ namespace sub
 				if (GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(g_Ped4))
 				{
 					RgbS copy = vehicle.GetCustomPrimaryColour();
-					vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
+					vehicle.SetCustomSecondaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			case 2:
 				if (GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(g_Ped4))
 				{
 					RgbS copy = vehicle.GetCustomSecondaryColour();
-					vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
+					vehicle.SetCustomPrimaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			}
@@ -1119,11 +1119,11 @@ namespace sub
 
 		switch (bitMSPaintsRGBMode)
 		{
-		case 0: vehicle.CustomPrimaryColour_set(R, G, B);
+		case 0: vehicle.SetCustomPrimaryColour(R, G, B);
 			break;
-		case 1: vehicle.CustomSecondaryColour_set(R, G, B);
+		case 1: vehicle.SetCustomSecondaryColour(R, G, B);
 			break;
-		case 2: vehicle.NeonLightsColour_set(R, G, B);
+		case 2: vehicle.SetNeonLightsColour(R, G, B);
 			break;
 		case 3:
 			g_multiPlatNeonsColor.R = R;
@@ -1132,7 +1132,7 @@ namespace sub
 			break;
 		case 4:
 			vehicle.ToggleMod(VehicleMod::TireSmoke, true);
-			vehicle.TyreSmokeColour_set(R, G, B);
+			vehicle.SetTyreSmokeColour(R, G, B);
 			break;
 
 			/*case 7: GET_PLAYER_PARACHUTE_TINT_INDEX(Static_240, &inull); _SET_PLAYER_PARACHUTE_SMOKE_COLOUR(Static_240, R, G, B);
@@ -1510,14 +1510,14 @@ namespace sub
 			{
 				RgbS copy = vehicle.GetCustomPrimaryColour();
 				paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
-				vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
+				vehicle.SetCustomPrimaryColour(copy.R, copy.G, copy.B);
 				break;
 			}
 			case 2:
 			{
 				RgbS copy = vehicle.GetCustomSecondaryColour();
 				paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
-				vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
+				vehicle.SetCustomSecondaryColour(copy.R, copy.G, copy.B);
 				break;
 			}
 			}
@@ -1535,7 +1535,7 @@ namespace sub
 				{
 					RgbS copy = vehicle.GetCustomPrimaryColour();
 					paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
-					vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
+					vehicle.SetCustomPrimaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			case 2:
@@ -1543,7 +1543,7 @@ namespace sub
 				{
 					RgbS copy = vehicle.GetCustomSecondaryColour();
 					paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
-					vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
+					vehicle.SetCustomSecondaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			}
@@ -1804,7 +1804,7 @@ namespace sub
 			if (GET_NUM_VEHICLE_MODS(g_Ped4, i) > 0)
 			{
 				lastMod = -2;
-				AddOption(get_mod_slot_name(g_Ped4, i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
+				AddOption(GetModSlotName(g_Ped4, i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
 				{
 					msCurrentPaintIndex = i;
 				}
@@ -1882,9 +1882,7 @@ namespace sub
 		AddNumber("Torque Multiplier", torqueMultVal, 2, torque_input, torque_plus, torque_minus);
 		AddNumber(Game::GetGXTEntry("FMMC_VEHST_0", "Top Speed") + " (Kmph)", maxSpeedMultVal * 3.6f, 0, maxSpeed_input, maxSpeed_plus, maxSpeed_minus);
 		AddOption(Game::GetGXTEntry("CMOD_MOD_LGT", "Lights"), null, nullFunc, SUB::MSLIGHTS);
-		//bool bLightsOnTogglePressed = false; AddTickol(Game::GetGXTEntry("CMOD_MOD_LGT", "Lights"), vehicle.LightsOn_get(), bLightsOnTogglePressed, bLightsOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bLightsOnTogglePressed) vehicle.LightsOn_set(!vehicle.LightsOn_get());
 		bool bEngineOnTogglePressed = false; AddTickol(Game::GetGXTEntry("CMM_MOD_G3", "Engine"), vehicle.GetEngineRunning(), bEngineOnTogglePressed, bEngineOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bEngineOnTogglePressed) vehicle.SetEngineRunning(!vehicle.GetEngineRunning());
-		//bool bLoudRadioTogglePressed = false; AddTickol("Loud Radio", vehicle.LoudRadioActive_get(), bLoudRadioTogglePressed, bLoudRadioTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bLoudRadioTogglePressed) vehicle.LoudRadioActive_set(!vehicle.LoudRadioActive_get());
 
 		if (Static_12_veh_model.IsPlane()) {
 			AddOption("Plane Aileron On", aileron_on);
@@ -2174,7 +2172,7 @@ namespace sub
 				{
 					headLightsMultVal = stof(inputStr);
 					vehicle.RequestControl();
-					vehicle.LightsMultiplier_set(headLightsMultVal);
+					vehicle.SetLightsMultiplier(headLightsMultVal);
 					if (headLightsMultIt != g_multListHeadLights.end())
 						headLightsMultIt->second = headLightsMultVal;
 					else
@@ -2195,7 +2193,7 @@ namespace sub
 			{
 				headLightsMultVal += 0.1f;
 				vehicle.RequestControl();
-				vehicle.LightsMultiplier_set(headLightsMultVal);
+				vehicle.SetLightsMultiplier(headLightsMultVal);
 				if (headLightsMultIt != g_multListHeadLights.end())
 					headLightsMultIt->second = headLightsMultVal;
 				else
@@ -2209,7 +2207,7 @@ namespace sub
 			{
 				headLightsMultVal -= 0.1f;
 				vehicle.RequestControl();
-				vehicle.LightsMultiplier_set(headLightsMultVal);
+				vehicle.SetLightsMultiplier(headLightsMultVal);
 				if (headLightsMultIt != g_multListHeadLights.end())
 					headLightsMultIt->second = headLightsMultVal;
 				else
@@ -2231,7 +2229,7 @@ namespace sub
 				{
 					rpmMultVal = stof(inputStr);
 					vehicle.RequestControl(400);
-					vehicle.EnginePowerMultiplier_set(rpmMultVal);
+					vehicle.SetEnginePowerMultiplier(rpmMultVal);
 					if (rpmMultIt != g_multListRPM.end())
 						rpmMultIt->second = rpmMultVal;
 					else
@@ -2252,7 +2250,7 @@ namespace sub
 			{
 				rpmMultVal += 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EnginePowerMultiplier_set(rpmMultVal);
+				vehicle.SetEnginePowerMultiplier(rpmMultVal);
 				if (rpmMultIt != g_multListRPM.end())
 					rpmMultIt->second = rpmMultVal;
 				else
@@ -2266,7 +2264,7 @@ namespace sub
 			{
 				rpmMultVal -= 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EnginePowerMultiplier_set(rpmMultVal);
+				vehicle.SetEnginePowerMultiplier(rpmMultVal);
 				if (rpmMultIt != g_multListRPM.end())
 					rpmMultIt->second = rpmMultVal;
 				else
@@ -2288,7 +2286,7 @@ namespace sub
 				{
 					torqueMultVal = stof(inputStr);
 					vehicle.RequestControl(400);
-					vehicle.EngineTorqueMultiplier_set(torqueMultVal);
+					vehicle.SetEngineTorqueMulitplier(torqueMultVal);
 					if (torqueMultIt != g_multListTorque.end())
 						torqueMultIt->second = torqueMultVal;
 					else
@@ -2309,7 +2307,7 @@ namespace sub
 			{
 				torqueMultVal += 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EngineTorqueMultiplier_set(torqueMultVal);
+				vehicle.SetEngineTorqueMulitplier(torqueMultVal);
 				if (torqueMultIt != g_multListTorque.end())
 					torqueMultIt->second = torqueMultVal;
 				else
@@ -2323,7 +2321,7 @@ namespace sub
 			{
 				torqueMultVal -= 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EngineTorqueMultiplier_set(torqueMultVal);
+				vehicle.SetEngineTorqueMulitplier(torqueMultVal);
 				if (torqueMultIt != g_multListTorque.end())
 					torqueMultIt->second = torqueMultVal;
 				else
@@ -2345,7 +2343,7 @@ namespace sub
 				{
 					maxSpeedMultVal = stof(inputStr) / 3.6f;
 					vehicle.RequestControl(400);
-					vehicle.MaxSpeed_set(maxSpeedMultVal);
+					vehicle.SetMaxSpeed(maxSpeedMultVal);
 					if (maxSpeedMultIt != g_multListMaxSpeed.end())
 						maxSpeedMultIt->second = maxSpeedMultVal;
 					else
@@ -2365,7 +2363,7 @@ namespace sub
 			{
 				maxSpeedMultVal += 1.0f / 3.6f;
 				vehicle.RequestControl(400);
-				vehicle.MaxSpeed_set(maxSpeedMultVal);
+				vehicle.SetMaxSpeed(maxSpeedMultVal);
 				if (maxSpeedMultIt != g_multListMaxSpeed.end())
 					maxSpeedMultIt->second = maxSpeedMultVal;
 				else
@@ -2379,7 +2377,7 @@ namespace sub
 			{
 				maxSpeedMultVal -= 1.0f / 3.6f;
 				vehicle.RequestControl(400);
-				vehicle.MaxSpeed_set(maxSpeedMultVal);
+				vehicle.SetMaxSpeed(maxSpeedMultVal);
 				if (maxSpeedMultIt != g_multListMaxSpeed.end())
 					maxSpeedMultIt->second = maxSpeedMultVal;
 				else
@@ -2443,7 +2441,7 @@ namespace sub
 				if (GET_NUM_VEHICLE_MODS(vehicle.Handle(), i) > 0)
 				{
 					lastMod = -2;
-					AddOption(get_mod_slot_name(vehicle.Handle(), i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
+					AddOption(GetModSlotName(vehicle.Handle(), i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
 					{
 						msCurrentPaintIndex = i;
 					}
@@ -2474,14 +2472,14 @@ namespace sub
 			selectmod = false;
 		}
 
-		AddTitle(get_mod_slot_name(vehicle, modType, true));
+		AddTitle(GetModSlotName(vehicle, modType, true));
 
 		if (g_LSCCustoms) //to allow toggleable LSC style menu nav
 		{
 			for (INT i = -1; i <= maxMod; i++)
 			{
 				bool pressed = false;
-				AddTickol(get_mod_text_label(vehicle, modType, i, true), lastMod == i, pressed, pressed,
+				AddTickol(GetModTextLabel(vehicle, modType, i, true), lastMod == i, pressed, pressed,
 					IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING, TICKOL::NONE, false);
 				if (*Menu::currentopATM == Menu::printingop && currMod != i)
 					SET_VEHICLE_MOD(vehicle, modType, i, GET_VEHICLE_MOD_VARIATION(vehicle, modType));
@@ -2504,7 +2502,7 @@ namespace sub
 			for (INT i = -1; i <= maxMod; i++)
 			{
 				bool pressed = false;
-				AddTickol(get_mod_text_label(vehicle, modType, i, true), currMod == i, pressed, pressed,
+				AddTickol(GetModTextLabel(vehicle, modType, i, true), currMod == i, pressed, pressed,
 					IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING, TICKOL::NONE, false); if (pressed)
 				{
 					SET_VEHICLE_MOD(vehicle, modType, i, GET_VEHICLE_MOD_VARIATION(vehicle, modType));
@@ -2766,7 +2764,7 @@ namespace sub
 
 		if (MSWheelsDriftTyresOn_) {
 			vehicle.RequestControlOnce();
-			vehicle.CanTyresDrift_set(!vehicle.CanTyresDrift_get());
+			vehicle.SetCanTyresDrift(!vehicle.GetCanTyresDrift());
 			return;
 		}
 	}
@@ -2923,7 +2921,7 @@ namespace sub
 			{
 				for (i = ids[j]; i < ids[j + 1]; i++)
 				{
-					__AddOption(get_mod_text_label(g_Ped4, VehicleMod::FrontWheels, i, false), g_Ped4, wtype, i, chrtype == 2);
+					__AddOption(GetModTextLabel(g_Ped4, VehicleMod::FrontWheels, i, false), g_Ped4, wtype, i, chrtype == 2);
 				}
 			}
 			addlog(ige::LogType::LOG_TRACE, "Finished Adding Wheel Options");
@@ -2957,7 +2955,7 @@ namespace sub
 		AddTitle(bIsChromeSelected ? "Chrome Wheels" : "Normal Wheels");
 		for (; i < windices2; i++)
 		{
-			__AddOption(get_mod_text_label(g_Ped4, VehicleMod::FrontWheels, i, false), g_Ped4, wtype, i, chrtype == 2);
+			__AddOption(GetModTextLabel(g_Ped4, VehicleMod::FrontWheels, i, false), g_Ped4, wtype, i, chrtype == 2);
 		}
 
 		if (g_LSCCustoms)
@@ -3255,8 +3253,8 @@ namespace sub
 		{
 			rightind = false;
 			hazard = false;
-			vehicle.LeftIndicatorLightOn_set(!leftind);
-			vehicle.RightIndicatorLightOn_set(false);
+			vehicle.SetLeftIndicatorLightOn(!leftind);
+			vehicle.SetRightIndicatorLightOn(false);
 			leftind = !leftind;
 		}
 		bool bRindOnTogglePressed = false;
@@ -3265,8 +3263,8 @@ namespace sub
 		{
 			leftind = false;
 			hazard = false;
-			vehicle.RightIndicatorLightOn_set(!rightind);
-			vehicle.LeftIndicatorLightOn_set(false);
+			vehicle.SetRightIndicatorLightOn(!rightind);
+			vehicle.SetLeftIndicatorLightOn(false);
 			rightind = !rightind;
 		}
 		bool bHzdOnTogglePressed = false;
@@ -3277,16 +3275,16 @@ namespace sub
 			{
 				rightind = false;
 				leftind = false;
-				vehicle.RightIndicatorLightOn_set(!hazard);
-				vehicle.LeftIndicatorLightOn_set(!hazard);
+				vehicle.SetRightIndicatorLightOn(!hazard);
+				vehicle.SetLeftIndicatorLightOn(!hazard);
 				hazard = !hazard;
 			}
 			else
 			{
 				rightind = false;
 				leftind = false;
-				vehicle.RightIndicatorLightOn_set(true);
-				vehicle.LeftIndicatorLightOn_set(true);
+				vehicle.SetRightIndicatorLightOn(true);
+				vehicle.SetLeftIndicatorLightOn(true);
 				hazard = true;
 			}
 

@@ -862,17 +862,17 @@ void GTAblip::SetShortRange(bool value)
 	SET_BLIP_AS_SHORT_RANGE(this->mHandle, value);
 }
 
-Vector3 GTAblip::Position_get() const
+Vector3 GTAblip::GetPosition() const
 {
-	//return infoid ? GET_BLIP_INFO_ID_COORD(this->mHandle) : GET_BLIP_COORDS(this->mHandle);
 	return GET_BLIP_COORDS(this->mHandle);
 }
-void GTAblip::Position_set(const Vector3& value)
+
+void GTAblip::SetPosition(const Vector3& value)
 {
 	SET_BLIP_COORDS(this->mHandle, value.x, value.y, value.z);
 }
 
-void GTAblip::Rotation_set(float valueInDegrees)
+void GTAblip::SetRotation(float valueInDegrees)
 {
 	SET_BLIP_ROTATION(this->mHandle, valueInDegrees);
 }
@@ -899,20 +899,6 @@ void GTAblip::SetSelectableOnMap(bool selectable)
     SET_BLIP_DISPLAY(this->mHandle, selectable ? 2 : 8);
 }
 
-//void GTAblip::SetPriority(int priority)
-//{
-    //SET_BLIP_PRIORITY(this->mHandle, priority);
-//}
-// New Blip functions
-
-//int GTAblip::GetPriority() const
-//{
-	//return mPriority;
-//}
-//void GTAblip::SetDisplayMode(int value)
-//{
-	//SET_BLIP_DISPLAY(this->mHandle, value);
-//}
 // New Blip functions end here.
 void GTAblip::SetRotationWithFloat(float heading)
 {
@@ -935,11 +921,6 @@ void GTAblip::SetIcon(int value)
 
 std::string GTAblip::IconName() const
 {
-	/*auto icon = this->Icon();
-	for (auto& i : BlipIcon::vNames)
-	{
-		if (i.iconId == icon) return i.name;
-	}*/
 	const auto& it = BlipIcon::vNames.find(this->Icon());
 	if (it != BlipIcon::vNames.end())
 	{

@@ -103,7 +103,7 @@ namespace MeteorShower
 
 			GTAprop rock = CREATE_OBJECT(model.hash, pos.x, pos.y, pos.z, 1, 1, 1);
 			SET_NETWORK_ID_CAN_MIGRATE(rock.NetID(), true);
-			rock.Heading_set(GET_RANDOM_FLOAT_IN_RANGE(0.0f, 360.0f));
+			rock.SetHeading(GET_RANDOM_FLOAT_IN_RANGE(0.0f, 360.0f));
 			rock.FreezePosition(false);
 			SET_ENTITY_LOD_DIST(rock.Handle(), 1000000);
 			rock.SetMissionEntity(true);

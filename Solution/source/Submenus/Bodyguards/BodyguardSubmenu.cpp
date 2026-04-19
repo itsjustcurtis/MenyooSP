@@ -72,7 +72,7 @@ namespace sub::BodyguardMenu
         {
             g_cam_componentChanger.SetActive(false);
             g_cam_componentChanger.Destroy();
-            World::RenderingCamera_set(0);
+            World::SetRenderingCamera(0);
         }
         AddOption("Voice Changer", null, SetEnt242, SUB::VOICECHANGER);
         AddOption("Weapons", null, nullFunc, SUB::BODYGUARD_WEAPONOPS);

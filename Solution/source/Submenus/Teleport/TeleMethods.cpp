@@ -78,7 +78,7 @@ void TeleportNetPed(GTAentity ped, float X, float Y, float Z, bool bWait, bool b
 	if (ped.Equals(myPed) || ped.Equals(myVeh))
 	{
 		if (sub::Spooner::SpoonerMode::spoonerModeCamera.Exists())
-			sub::Spooner::SpoonerMode::spoonerModeCamera.Position_set(X, Y, Z + 3.0f);
+			sub::Spooner::SpoonerMode::spoonerModeCamera.SetPosition(X, Y, Z + 3.0f);
 	}
 
 	//LOAD_ALL_OBJECTS_NOW();
@@ -86,11 +86,11 @@ void TeleportNetPed(GTAentity ped, float X, float Y, float Z, bool bWait, bool b
 	//SET_STREAMING(TRUE);
 
 }
-void teleport_net_ped(GTAentity ped, const Vector3& pos, bool bWait, bool bPtfx)
+void TeleportNetPed(GTAentity ped, const Vector3& pos, bool bWait, bool bPtfx)
 {
 	TeleportNetPed(ped, pos.x, pos.y, pos.z, bWait, bPtfx);
 }
-void teleport_to_missionBlip(GTAped ped)
+void TeleportToMissionBlip(GTAped ped)
 {
 	//GTAblip blip;
 	addlog(ige::LogType::LOG_DEBUG, "Teleporting to Mission Objective");
@@ -159,7 +159,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (IS_WAYPOINT_ACTIVE())
 			{
-				Vector3 blipCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).Position_get();
+				Vector3 blipCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).GetPosition();
 
 				GTAentity e = ped;
 				if (ped.IsInVehicle())
@@ -189,7 +189,7 @@ namespace sub::TeleportLocations_catind
 		}
 		void ToMissionBlip241()
 		{
-			teleport_to_missionBlip(g_Ped1);
+			TeleportToMissionBlip(g_Ped1);
 		}
 		void ToForward241()
 		{

@@ -267,7 +267,7 @@ namespace sub
 			{
 				g_cam_componentChanger.SetActive(false);
 				g_cam_componentChanger.Destroy();
-				World::RenderingCamera_set(0);
+				World::SetRenderingCamera(0);
 			}
 			else
 			{
@@ -278,14 +278,14 @@ namespace sub
 				g_cam_componentChanger.AttachTo(thisPed, Vector3(0.0f, 1.5f + thisPed.Dim1().y, 0.5f));
 				g_cam_componentChanger.PointAt(thisPed);
 
-				gmCam.SetPosition(World::RenderingCamera_get().Handle() == 0 ? GameplayCamera::GetPosition() : World::RenderingCamera_get().Position_get());
-				gmCam.SetRotation(World::RenderingCamera_get().Handle() == 0 ? GameplayCamera::GetRotation() : World::RenderingCamera_get().Rotation_get());
+				gmCam.SetPosition(World::GetRenderingCamera().Handle() == 0 ? GameplayCamera::GetPosition() : World::GetRenderingCamera().GetPosition());
+				gmCam.SetRotation(World::GetRenderingCamera().Handle() == 0 ? GameplayCamera::GetRotation() : World::GetRenderingCamera().GetRotation());
 
 				gmCam.InterpTo(g_cam_componentChanger, 1000, true, true);
 				while (gmCam.IsInterpolating())
 					WAIT(0);
 				gmCam.Destroy();
-				World::RenderingCamera_set(g_cam_componentChanger);
+				World::SetRenderingCamera(g_cam_componentChanger);
 			}
 			return;
 		}
@@ -1044,7 +1044,7 @@ namespace sub
 
 		void UpdatePedHeadBlendData(GTAped& ped, const PedHeadBlendData& blendData, bool bUnused)
 		{
-			ped.HeadBlendData_set(blendData);
+			ped.SetHeadBlendData(blendData);
 		}
 
 		void Sub_Main()
@@ -1074,7 +1074,7 @@ namespace sub
 
 			int maxIds = getMaxShapeAndSkinIds();
 
-			auto headBlend = ped.HeadBlendData_get();
+			auto headBlend = ped.GetHeadBlendData();
 			if (headBlend.shapeFirstID < 0 || headBlend.shapeFirstID > maxIds || headBlend.shapeSecondID < 0 || headBlend.shapeSecondID > maxIds
 				|| headBlend.shapeThirdID < 0 || headBlend.shapeThirdID > maxIds || headBlend.skinFirstID < 0 || headBlend.skinFirstID > maxIds
 				|| headBlend.skinSecondID < 0 || headBlend.skinSecondID > maxIds || headBlend.skinThirdID < 0 || headBlend.skinThirdID > maxIds
@@ -1090,7 +1090,7 @@ namespace sub
 				headBlend.skinMix = 0.0f;
 				headBlend.thirdMix = 0.0f;
 				headBlend.isParent = false;
-				ped.HeadBlendData_set(headBlend);
+				ped.SetHeadBlendData(headBlend);
 			}
 
 			int maxHairColours = GET_NUM_PED_HAIR_TINTS() - 1;
@@ -1491,7 +1491,7 @@ namespace sub
 						Game::Print::PrintBottomCentre("~r~Warning:~s~ Parent Head Index outside normal range. Ensure Addon Heads are installed and Max Head IDs are unlocked");
 						addlog(ige::LogType::LOG_WARNING, "Ped Head Index " + std::to_string(max(headBlend.shapeFirstID, max(headBlend.shapeSecondID, headBlend.shapeThirdID))) + " outside normal range of 0-45. Ensure Matching Addon Heads are installed from XML Source and Max Head IDs are unlocked.");
 					}
-					ep.HeadBlendData_set(headBlend);
+					ep.SetHeadBlendData(headBlend);
 
 					if (nodePedHeadFeatures.attribute("WasInArray").as_bool())
 					{

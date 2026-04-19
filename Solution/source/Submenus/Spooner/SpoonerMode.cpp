@@ -124,7 +124,7 @@ namespace sub::Spooner
 				{
 					const ModelDimensions& dimensions = info.model.Dimensions();
 
-					Vector3 spawnRot(0, 0, spoonerModeCamera.Rotation_get().z);
+					Vector3 spawnRot(0, 0, spoonerModeCamera.GetRotation().z);
 
 					const Vector3& geSep = info.entity.GetPosition();
 					//auto& geGroundRay = RaycastResult::Raycast(geSep, Vector3::WorldDown(), max(max(dimensions.Dim1.x, dimensions.Dim2.x), max(max(dimensions.Dim1.y, dimensions.Dim2.y), max(dimensions.Dim1.z, dimensions.Dim2.z))) + 2.0f, IntersectOptions::Everything, info.entity);
@@ -168,8 +168,6 @@ namespace sub::Spooner
 						info.entity.FreezePosition(true);
 						info.entity.SetIsCollisionEnabled(false);
 						info.entity.SetAlpha(120);
-						//info.entity.Rotation_set()
-						//info.entity.Position_set(spawnPos);
 					}
 				}
 			}
@@ -321,7 +319,7 @@ namespace sub::Spooner
 					if (!bIsSomethingHeld || spoonerModeMode == eSpoonerModeMode::GroundEase)
 					{
 						if (!bIsSomethingHeld)
-							nextRot.y = -freeCam.Rotation_get().y; // Roll should be 0 when no entity is held
+							nextRot.y = -freeCam.GetRotation().y; // Roll should be 0 when no entity is held
 						if (nextOffset.x || nextOffset.y)
 							freeCam.SetPosition(freeCam.GetOffsetInWorldCoords(nextOffset.x, nextOffset.y, 0));
 
@@ -330,7 +328,7 @@ namespace sub::Spooner
 					}
 					if (!nextRot.IsZero())
 					{
-						Vector3 nextRotFinal = freeCam.Rotation_get() + nextRot;
+						Vector3 nextRotFinal = freeCam.GetRotation() + nextRot;
 						//float fcrXfinal = fmod(nextRotFinal.x, 360.0f); // What if -10/350/710?
 						//if (fcrXfinal > -10.0f && fcrXfinal < 0.0f)
 						//	nextRotFinal.x = -10.0f;
@@ -366,7 +364,7 @@ namespace sub::Spooner
 							Menu::add_IB(INPUT_FRONTEND_DOWN, "Place Marker");
 							if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_DOWN))
 							{
-								auto newMarkerPtr = MarkerManagement::AddMarker(coordInFrontOfCam, Vector3(0, 0, freeCam.Rotation_get().z));
+								auto newMarkerPtr = MarkerManagement::AddMarker(coordInFrontOfCam, Vector3(0, 0, freeCam.GetRotation().z));
 								if (newMarkerPtr != nullptr)
 								{
 									newMarkerPtr->m_position.z += (newMarkerPtr->m_scale / 2);
@@ -419,7 +417,7 @@ namespace sub::Spooner
 
 							selectedEntity.handle.RequestControl();
 							Vector3 rotSelected = selectedEntity.handle.Rotation_get();
-							Vector3 rotFreeCam = freeCam.Rotation_get();
+							Vector3 rotFreeCam = freeCam.GetRotation();
 							switch (spoonerModeMode)
 							{
 							case eSpoonerModeMode::GroundEase:
@@ -600,7 +598,7 @@ namespace sub::Spooner
 					if (!bIsSomethingHeld || spoonerModeMode == eSpoonerModeMode::GroundEase)
 					{
 						if (!bIsSomethingHeld)
-							nextRot.y = -freeCam.Rotation_get().y; // Roll should be 0 when no entity is held
+							nextRot.y = -freeCam.GetRotation().y; // Roll should be 0 when no entity is held
 						if (!nextOffset.IsZero())
 							freeCam.SetPosition(freeCam.GetOffsetInWorldCoords(nextOffset));
 
@@ -609,7 +607,7 @@ namespace sub::Spooner
 					}
 					if (!nextRot.IsZero())
 					{
-						Vector3 nextRotFinal = freeCam.Rotation_get() + nextRot;
+						Vector3 nextRotFinal = freeCam.GetRotation() + nextRot;
 						//float fcrXfinal = fmod(nextRotFinal.x, 360.0f); // What if -10/350/710?
 						//if (fcrXfinal > -10.0f && fcrXfinal < 0.0f)
 						//	nextRotFinal.x = -10.0f;
@@ -645,7 +643,7 @@ namespace sub::Spooner
 							Menu::add_IB(VirtualKey::M, "Place Marker");
 							if (IsKeyJustUp(VirtualKey::M))
 							{
-								auto newMarkerPtr = MarkerManagement::AddMarker(coordInFrontOfCam, Vector3(0, 0, freeCam.Rotation_get().z));
+								auto newMarkerPtr = MarkerManagement::AddMarker(coordInFrontOfCam, Vector3(0, 0, freeCam.GetRotation().z));
 								if (newMarkerPtr != nullptr)
 								{
 									newMarkerPtr->m_position.z += (newMarkerPtr->m_scale / 2);
@@ -698,7 +696,7 @@ namespace sub::Spooner
 
 							selectedEntity.handle.RequestControl();
 							Vector3 rotSelected = selectedEntity.handle.Rotation_get();
-							Vector3 rotFreeCam = freeCam.Rotation_get();
+							Vector3 rotFreeCam = freeCam.GetRotation();
 							switch (spoonerModeMode)
 							{
 							case eSpoonerModeMode::GroundEase:
@@ -868,9 +866,6 @@ namespace sub::Spooner
 			{
 				if (freeCam.Handle() != 0)
 				{
-					//myPed.Position_set(freeCam.Position_get() - Vector3(0, 0, 5.0f));
-					//myPed.PlaceOnGround();
-
 					myPlayer.SetControl(true, 0);
 
 					bIsSomethingHeld = false;
@@ -878,7 +873,7 @@ namespace sub::Spooner
 
 					freeCam.SetActive(false);
 					freeCam.Destroy();
-					World::RenderingCamera_set(0);
+					World::SetRenderingCamera(0);
 					freeCam = Camera();
 				}
 			}

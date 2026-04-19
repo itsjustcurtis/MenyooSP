@@ -70,8 +70,8 @@ namespace sub::Spooner
 				};
 			}
 
-			const auto& renderingCam = World::RenderingCamera_get();
-			const Vector3& camPos = (renderingCam == 0 ? GameplayCamera::GetPosition() : renderingCam.Position_get());
+			const auto& renderingCam = World::GetRenderingCamera();
+			const Vector3& camPos = (renderingCam == 0 ? GameplayCamera::GetPosition() : renderingCam.GetPosition());
 
 			for (auto& marker : Databases::MarkerDb)
 			{
@@ -149,7 +149,7 @@ namespace sub::Spooner
 									}
 
 									entityToTeleport->SetPosition(finalDest);
-									entityToTeleport->Heading_set(finalDestHeading);
+									entityToTeleport->SetHeading(finalDestHeading);
 									switch ((EntityType)entityToTeleport->Type())
 									{
 									case EntityType::PED:
@@ -163,11 +163,11 @@ namespace sub::Spooner
 										break;
 									}
 									case EntityType::VEHICLE:
-										GTAvehicle(*entityToTeleport).Speed_set(4.2f); // Approx 15 km/h
+										GTAvehicle(*entityToTeleport).SetSpeed(4.2f); // Approx 15 km/h
 										break;
 									}
-									GameplayCamera::RelativeHeading_set(0.0f);
-									GameplayCamera::RelativePitch_set(0.0f);
+									GameplayCamera::SetRelativeHeading(0.0f);
+									GameplayCamera::SetRelativePitch(0.0f);
 									WAIT(100);
 									DO_SCREEN_FADE_IN(300);
 									return;
