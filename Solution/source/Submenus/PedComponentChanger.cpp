@@ -290,6 +290,14 @@ namespace sub
 			return;
 		}
 	}
+	void DrawPedVariationInfo(const std::string& info)
+	{
+		FLOAT x_coord = 0.066f + menuPos.x;
+		FLOAT y_coord = OptionY + menuPos.y + 0.035f;
+
+		Game::Print::SetupDraw(font_selection, Vector2(0.0f, (font_options == 0 ? 0.33f : 0.4f)), false, false, false, selectedtext);
+		Game::Print::drawstring(info, x_coord, y_coord);
+	}
 	void ComponentChanger2()
 	{
 		bool increment = false, decrement = false, inputPressed = false;
@@ -310,6 +318,8 @@ namespace sub
 		if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", drawableCurrent, 0, inputPressed, increment, decrement);
 		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent)) AddNumber("Texture", textureCurrent, 0, null, increment, decrement);
 		//AddNumber("Palette", paletteCurrent, 0, null, increment, decrement);
+
+		DrawPedVariationInfo("debug " + std::to_string(drawableCurrent) + ":" + std::to_string(textureCurrent));
 
 		switch (*Menu::currentopATM)
 		{
@@ -473,6 +483,8 @@ namespace sub
 
 		if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", propTypeCurrent, 0, null, increment, decrement);
 		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) > 0) AddNumber("Texture", propTextureCurrent, 0, null, increment, decrement);
+
+		DrawPedVariationInfo("debug " + std::to_string(propTypeCurrent) + ":" + std::to_string(propTextureCurrent));
 
 		switch (Menu::currentop)
 		{
