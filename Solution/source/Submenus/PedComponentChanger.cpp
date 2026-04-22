@@ -19,6 +19,8 @@
 #include "..\Menu\Menu.h"
 #include "..\Menu\Routine.h"
 
+#include "..\Memory\GTAmemory.h"
+
 #include "..\Natives\natives2.h"
 #include "..\Scripting\GTAped.h"
 #include "..\Scripting\GTAentity.h"
@@ -319,7 +321,10 @@ namespace sub
 		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent)) AddNumber("Texture", textureCurrent, 0, null, increment, decrement);
 		//AddNumber("Palette", paletteCurrent, 0, null, increment, decrement);
 
-		DrawPedVariationInfo("debug " + std::to_string(drawableCurrent) + ":" + std::to_string(textureCurrent));
+		// Displaying collection info (collection:local_id), doesn't support enhanced yet.
+		if (!g_isEnhanced) {
+			DrawPedVariationInfo(GTAmemory::GetPedDrawableCollectionString(g_Ped1, g_Ped4));
+		}
 
 		switch (*Menu::currentopATM)
 		{
@@ -484,7 +489,10 @@ namespace sub
 		if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", propTypeCurrent, 0, null, increment, decrement);
 		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) > 0) AddNumber("Texture", propTextureCurrent, 0, null, increment, decrement);
 
-		DrawPedVariationInfo("debug " + std::to_string(propTypeCurrent) + ":" + std::to_string(propTextureCurrent));
+		// Displaying collection info (collection:local_id), doesn't support enhanced yet.
+		if (!g_isEnhanced) {
+			DrawPedVariationInfo(GTAmemory::GetPedPropCollectionString(g_Ped1, g_Ped4));
+		}
 
 		switch (Menu::currentop)
 		{
