@@ -2118,7 +2118,7 @@ void DrawGameInfo()
 		hudY += HUD_LINE_HEIGHT/2; // for visual separation between hud elements
 	}
 
-	if (sub::Spooner::SpoonerMode::bEnabled)
+	if (sub::Spooner::SpoonerMode::bEnabled && sub::Spooner::Settings::bDisplaySpoonerInfo)
 	{
 		auto stats = sub::Spooner::SpoonerMode::GetSpoonerStats();
 		drawText("Total Entities Spawned: " + std::to_string(stats.totalNumEntities));
