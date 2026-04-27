@@ -183,7 +183,7 @@ extern bool playerInvincibility;
 extern bool noClip;
 extern bool noClipToggle;
 extern bool superRun;
-extern bool xyzhCoords;
+extern bool bDisplayXyzhCoords;
 extern bool ignoredByEveryone;
 extern bool neverWanted;
 extern bool superman;

@@ -31,6 +31,7 @@ namespace sub::Spooner
 		extern eSpoonerModeMode spoonerModeMode;
 
 		extern bool bShowModelPreviews;
+		extern bool bDisplaySpoonerInfo;
 		extern bool bShowBoxAroundSelectedEntity;
 		extern bool bSpawnDynamicProps;
 		extern bool bSpawnDynamicPeds;

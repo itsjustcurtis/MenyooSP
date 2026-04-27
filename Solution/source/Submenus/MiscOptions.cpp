@@ -868,7 +868,7 @@ namespace sub
 				SET_MINIMAP_HIDE_FOW(revealMinimap);
 			}
 
-			AddToggle("Display XYZH Coords", xyzhCoords);
+			AddToggle("Display XYZH Coords", bDisplayXyzhCoords);
 			AddToggle("Display FPS", FPSCounter::bDisplayFps);
 			AddToggle("Hide HUD", hideHUD);
 			AddToggle("Show Full HUD", showFullHUD);

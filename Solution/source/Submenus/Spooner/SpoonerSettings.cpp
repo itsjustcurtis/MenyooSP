@@ -36,6 +36,7 @@ namespace sub::Spooner
 		eSpoonerModeMode spoonerModeMode = eSpoonerModeMode::GroundEase;
 
 		bool bShowModelPreviews = true;
+		bool bDisplaySpoonerInfo = true;
 		bool bShowBoxAroundSelectedEntity = false;
 		bool bSpawnDynamicProps = false;
 		bool bSpawnDynamicPeds = true;
@@ -45,7 +46,7 @@ namespace sub::Spooner
 		bool bSpawnStillPeds = true;
 		bool bAddToDbAsMissionEntities = true;
 		bool bKeepPositionWhenAttaching = false;
-
+		
 		bool bTeleportToReferenceWhenLoadingFile = true;
 	}
 

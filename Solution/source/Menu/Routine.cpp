@@ -616,7 +616,7 @@ bool playerInvincibility = false;
 bool noClip = false;
 bool noClipToggle = false; 
 bool superRun = false;
-bool xyzhCoords = false; 
+bool bDisplayXyzhCoords = false; 
 bool ignoredByEveryone = false; 
 bool neverWanted = false;
 bool superman = false;
@@ -2072,21 +2072,61 @@ void SetSelfRefillHealthWhenInCover()
 	}
 }
 
-void xyzhDrawFloat(float text, float x_coord, float y_coord)
+void DrawGameInfo()
 {
-	Game::Print::SetupDraw(font_xyzh, Vector2(0.35f, 0.35f), false, false, true);
-	Game::Print::drawfloat(text, 4, x_coord, y_coord);
-}
-void XYZH()
-{
-	Vector3 Pos = GET_ENTITY_COORDS(PLAYER_PED_ID(), 1);
+	constexpr float HUD_LINE_HEIGHT = 0.025f;
+	const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
 
-	Game::Print::SetupDraw(font_xyzh, Vector2(0.35f, 0.36f), false, false, true);
-	Game::Print::drawstring("Coords:", 0.94f, 0.03f);
-	xyzhDrawFloat(Pos.x, 0.94f, 0.06f);
-	xyzhDrawFloat(Pos.y, 0.94f, 0.09f);
-	xyzhDrawFloat(Pos.z, 0.94f, 0.12f);
-	xyzhDrawFloat(GET_ENTITY_HEADING(PLAYER_PED_ID()), 0.94f, 0.15f);
+	float hudY = 0.09f; // automatically increments with each drawn line
+
+	// automatically move the HUD to the left if menyoo menus are on the right to make sure that neither is obstructed
+	bool bRightJustified = get_xcoord_at_menu_leftEdge(0.0f, false) < 0.5f;
+	float hudX = bRightJustified ? 0.98f : 0.02f;
+	Vector2 hudTextWrap = bRightJustified ? Vector2(0.0f, 0.98f) : Vector2(0.0f, 1.0f);
+
+
+	auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
+	{
+		Game::Print::SetupDraw(font_hud, HUD_FONT_SIZE, false, bRightJustified, true, colour, hudTextWrap);
+		Game::Print::drawstring(text, hudX, hudY);
+		hudY += HUD_LINE_HEIGHT;
+	};
+
+	auto drawFloat = [&](float value, UINT8 decimals, RGBA colour = {255, 255, 255, 255})
+	{
+		Game::Print::SetupDraw(font_hud, HUD_FONT_SIZE, false, bRightJustified, true, colour, hudTextWrap);
+		Game::Print::drawfloat(value, decimals, hudX, hudY);
+		hudY += HUD_LINE_HEIGHT;
+	};
+
+	if (FPSCounter::bDisplayFps)
+	{
+		auto fps = FPSCounter::g_fpsCounter.Get();
+		drawText(std::to_string(fps) + " FPS");
+		hudY += HUD_LINE_HEIGHT/2; // for visual separation between hud elements
+	}
+
+	if (bDisplayXyzhCoords)
+	{
+		Vector3 pos = GET_ENTITY_COORDS(PLAYER_PED_ID(), 1);
+		float heading = GET_ENTITY_HEADING(PLAYER_PED_ID());
+		drawText("Coords:");
+		drawFloat(pos.x, 4);
+		drawFloat(pos.y, 4);
+		drawFloat(pos.z, 4);
+		drawFloat(heading, 4);
+		hudY += HUD_LINE_HEIGHT/2; // for visual separation between hud elements
+	}
+
+	if (sub::Spooner::SpoonerMode::bEnabled && sub::Spooner::Settings::bDisplaySpoonerInfo)
+	{
+		auto stats = sub::Spooner::SpoonerMode::GetSpoonerStats();
+		drawText("Total Entities Spawned: " + std::to_string(stats.totalNumEntities));
+		drawText("Objects Spawned: " + std::to_string(stats.totalNumProps));
+		drawText("Peds Spawned: " + std::to_string(stats.totalNumPeds));
+		drawText("Vehicles Spawned: " + std::to_string(stats.totalNumVehicles));
+		hudY += HUD_LINE_HEIGHT/2; // for visual separation between hud elements
+	}
 }
 
 void SetLocalSupermanManual()
@@ -3874,14 +3914,7 @@ void Menu::loops()
 	TickPlayerAbilities();
 
 	// HUD overlays
-	if (xyzhCoords)
-	{
-		XYZH();
-	}
-	if (FPSCounter::bDisplayFps)
-	{
-		FPSCounter::DisplayFps();
-	}
+	DrawGameInfo();
 
 	TickVehicleEffects(gameIsPaused);
 	SetPVOpsVehicleTextWorld2Screen();

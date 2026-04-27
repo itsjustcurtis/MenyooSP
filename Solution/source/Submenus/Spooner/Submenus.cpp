@@ -104,6 +104,7 @@ namespace sub
 
 			AddTitle("Settings");
 			AddToggle("Display Model Previews (Spooner Mode)", Settings::bShowModelPreviews);
+			AddToggle("Display Spooner Info", Settings::bDisplaySpoonerInfo);
 			AddToggle("Display Entity Surrounding Box", Settings::bShowBoxAroundSelectedEntity);
 			AddToggle("Spawn Dynamic Objects", Settings::bSpawnDynamicProps);
 			AddToggle("Spawn Dynamic Peds", Settings::bSpawnDynamicPeds);

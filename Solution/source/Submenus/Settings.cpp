@@ -292,7 +292,7 @@ namespace sub
 		AddsettingsfonOption("Options", -1, font_options);
 		AddsettingsfonOption("Selected Option", -1, font_selection);
 		AddsettingsfonOption("Option Breaks", -1, font_breaks);
-		AddsettingsfonOption("XYZH Coords", -1, font_xyzh);
+		AddsettingsfonOption("HUD Font", -1, font_hud);
 		AddsettingsfonOption("Speedo Text", -1, font_speedo);
 	}
 	
@@ -365,7 +365,7 @@ namespace sub
 		INT8 f_options;
 		INT8 f_selection;
 		INT8 f_breaks;
-		INT8 f_xyzh;
+		INT8 f_hud;
 		INT8 f_speedo;
 	public:
 		MenyooTheme()
@@ -373,7 +373,7 @@ namespace sub
 		}
 		MenyooTheme(bool _grads, bool _rainbow, bool _thinLineOverFooter,
 			RGBA _ttbox, RGBA _bgbox, RGBA _tttext, RGBA _optext, RGBA _seltext, RGBA _opbreak, RGBA _opcount, RGBA _selhi, RGBA _pedtrackers,
-			INT8 _f_title, INT8 _f_options, INT8 _f_selection, INT8 _f_breaks, INT8 _f_xyzh, INT8 _f_speedo)
+			INT8 _f_title, INT8 _f_options, INT8 _f_selection, INT8 _f_breaks, INT8 _f_hud, INT8 _f_speedo)
 		{
 			grads = _grads;
 			rainbow = _rainbow;
@@ -393,7 +393,7 @@ namespace sub
 			f_options = _f_options;
 			f_selection = _f_selection;
 			f_breaks = _f_breaks;
-			f_xyzh = _f_xyzh;
+			f_hud = _f_hud;
 			f_speedo = _f_speedo;
 		}
 
@@ -417,7 +417,7 @@ namespace sub
 			font_options = f_options;
 			font_selection = f_selection;
 			font_breaks = f_breaks;
-			font_xyzh = f_xyzh;
+			font_hud = f_hud;
 			font_speedo = f_speedo;
 		}
 		bool IsActive()
@@ -441,7 +441,7 @@ namespace sub
 				font_options == f_options &&
 				font_selection == f_selection &&
 				font_breaks == f_breaks &&
-				font_xyzh == f_xyzh &&
+				font_hud == f_hud &&
 				font_speedo == f_speedo;
 		}
 
@@ -467,7 +467,7 @@ namespace sub
 			curr.f_options = font_options;
 			curr.f_selection = font_selection;
 			curr.f_breaks = font_breaks;
-			curr.f_xyzh = font_xyzh;
+			curr.f_hud = font_hud;
 			curr.f_speedo = font_speedo;
 
 			return curr;
@@ -496,7 +496,7 @@ namespace sub
 				value1.f_options == value2.f_options &&
 				value1.f_selection == value2.f_selection &&
 				value1.f_breaks == value2.f_breaks &&
-				value1.f_xyzh == value2.f_xyzh &&
+				value1.f_hud == value2.f_hud &&
 				value1.f_speedo == value2.f_speedo;
 		}
 		bool Equals(MenyooTheme const& value2)
