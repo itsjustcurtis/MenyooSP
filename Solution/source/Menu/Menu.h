@@ -77,7 +77,7 @@ extern INT8 font_title;
 extern INT8 font_options;
 extern INT8 font_selection;
 extern INT8 font_breaks;
-extern INT8 font_xyzh;
+extern INT8 font_hud;
 extern INT8 font_speedo;
 
 extern RGBA titlebox;

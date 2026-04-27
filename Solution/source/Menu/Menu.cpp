@@ -147,7 +147,7 @@ INT8 font_title = 7;
 INT8 font_options = 4;
 INT8 font_selection = 4;
 INT8 font_breaks = 1;
-INT8 font_xyzh = 0;
+INT8 font_hud = 0;
 INT8 font_speedo = 0;
 
 RGBA titlebox(0, 255, 255, 247);

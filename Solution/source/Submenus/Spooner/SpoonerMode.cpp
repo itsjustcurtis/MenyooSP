@@ -58,6 +58,22 @@ namespace sub::Spooner
 		float spoonerModeCameraCamDistance = 5.0f;
 		eSpoonerModeMode& spoonerModeMode = Settings::spoonerModeMode;
 
+		SpoonerStats GetSpoonerStats()
+		{
+			SpoonerStats stats = { 0, 0, 0, 0 };
+			stats.totalNumEntities = (UINT)Databases::EntityDb.size();
+			for (auto& spoonerEntity : Databases::EntityDb)
+			{
+				switch (spoonerEntity.type)
+				{
+				case EntityType::PROP: stats.totalNumProps++; break;
+				case EntityType::PED: stats.totalNumPeds++; break;
+				case EntityType::VEHICLE: stats.totalNumVehicles++; break;
+				}
+			}
+			return stats;
+		}
+
 		bool IsHotkeyPressed()
 		{
 			if (std::find(std::begin(Menu::currentArray), std::end(Menu::currentArray), SUB::SPOONER_MAIN) == std::end(Menu::currentArray))
@@ -253,32 +269,6 @@ namespace sub::Spooner
 			if (SpoonerMode::bEnabled)
 			{
 				HIDE_HUD_AND_RADAR_THIS_FRAME();
-
-				//if (setting)
-				{
-					UINT totalNumProps = 0, totalNumPeds = 0, totalNumVehicles = 0;
-					UINT totalNumEntities = (UINT)Databases::EntityDb.size();
-					for (auto& eee : Databases::EntityDb)
-					{
-						switch (eee.type)
-						{
-						case EntityType::PROP: totalNumProps++; break;
-						case EntityType::PED: totalNumPeds++; break;
-						case EntityType::VEHICLE: totalNumVehicles++; break;
-						}
-					}
-					bool bRightJus = get_xcoord_at_menu_leftEdge(0.0f, false) < 0.5f; // left edge of menu is on the left of the centre of the screen
-					float infoX = bRightJus ? 0.90f : 0.008f;
-					float infoY = xyzhCoords ? 0.184f : 0.064f;
-					Game::Print::SetupDraw(font_xyzh, Vector2(0.37f, 0.37f), false, bRightJus, true);
-					Game::Print::drawstring("Total Entities Spawned: " + std::to_string(totalNumEntities), infoX, infoY);
-					Game::Print::SetupDraw(font_xyzh, Vector2(0.37f, 0.37f), false, bRightJus, true);
-					Game::Print::drawstring("Objects Spawned: " + std::to_string(totalNumProps), infoX, infoY + 0.03f);
-					Game::Print::SetupDraw(font_xyzh, Vector2(0.37f, 0.37f), false, bRightJus, true);
-					Game::Print::drawstring("Peds Spawned: " + std::to_string(totalNumPeds), infoX, infoY + 0.06f);
-					Game::Print::SetupDraw(font_xyzh, Vector2(0.37f, 0.37f), false, bRightJus, true);
-					Game::Print::drawstring("Vehicles Spawned: " + std::to_string(totalNumVehicles), infoX, infoY + 0.09f);
-				}
 
 				if (!freeCam.Exists())
 				{

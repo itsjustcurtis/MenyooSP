@@ -35,6 +35,14 @@ namespace sub::Spooner
 		extern Camera spoonerModeCamera;
 		extern float spoonerModeCameraCamDistance;
 
+		struct SpoonerStats {
+			int totalNumEntities;
+			int totalNumProps;
+			int totalNumPeds;
+			int totalNumVehicles;
+		};
+		SpoonerStats GetSpoonerStats();
+
 		bool IsHotkeyPressed();
 
 		struct ModelPreviewInfoStructure
