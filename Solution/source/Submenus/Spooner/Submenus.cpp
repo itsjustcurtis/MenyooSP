@@ -77,8 +77,89 @@ namespace sub
 		void SetEnt241() { g_Ped1 = selectedEntity.handle.Handle(); }
 		void SetEnt12() { g_Ped4 = selectedEntity.handle.Handle(); }
 
-		void Sub_SpoonerMain()
+		void HandleKeyboardPlacementInput(Vector3& position, Vector3& rotation)
 		{
+			// toggling the keyboard controls on and off
+			static bool lastBToggle = false;
+			bool currentBToggle = IsKeyJustUp(VirtualKey::B);
+			if (currentBToggle && !lastBToggle)
+			{
+				SpoonerMode::bKeyboardEntityEditingEnabled = !SpoonerMode::bKeyboardEntityEditingEnabled;
+			}
+			lastBToggle = currentBToggle;
+			
+			// toggling between the rotation / position modes
+			static bool lastRToggle = false;
+			bool currentRToggle = IsKeyJustUp(VirtualKey::R);
+			if (currentRToggle && !lastRToggle)
+			{
+				SpoonerMode::bKeyboardEntityEditingRotationMode = !SpoonerMode::bKeyboardEntityEditingRotationMode;
+			}
+			lastRToggle = currentRToggle;
+
+			// text drawing variables
+			constexpr float HUD_LINE_HEIGHT = 0.025f;
+			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
+			const float hudX = 0.02f;
+			float hudY = 0.8f;
+
+			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
+			{
+				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
+				Game::Print::drawstring(text, hudX, hudY);
+				hudY += HUD_LINE_HEIGHT;
+			};
+
+			if (!SpoonerMode::bKeyboardEntityEditingEnabled)
+			{
+				drawText("~r~Keyboard controls DISABLED.");
+				drawText("~r~You can click B to use your keyboard to position and rotate the entity.");
+				return;
+			}
+
+			if(SpoonerMode::bKeyboardEntityEditingRotationMode) 
+			{
+				drawText("~y~Rotation Mode:");
+				drawText("~b~W/S: ~w~Pitch+ / Pitch-");
+				drawText("~b~A/D: ~w~Yaw+ / Yaw-");
+				drawText("~b~E/Q: ~w~Roll+ / Roll-");
+				drawText("~b~=/-: ~w~+/- Sensitivity");
+				drawText("~b~R: ~w~Toggle position");
+			} else 
+			{
+				drawText("~y~Position Mode:");
+				drawText("~b~W/S: ~w~X+ / X-");
+				drawText("~b~A/D: ~w~Y+ / Y-");
+				drawText("~b~E/Q: ~w~Z+ / Z-");
+				drawText("~b~=/-: ~w~+/- Sensitivity");
+				drawText("~b~R: ~w~Toggle rotation");
+			}
+			drawText("~b~B: ~w~Unlock camera and disable keyboard controls.");
+
+			static DWORD lastSensitivityChange = 0;
+			if (IsKeyJustUp(VirtualKey::OEMPlus) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
+				lastSensitivityChange = GetTickCount();
+			}
+			if (IsKeyJustUp(VirtualKey::OEMMinus) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10;
+				lastSensitivityChange = GetTickCount();
+			}
+
+			auto& target = SpoonerMode::bKeyboardEntityEditingRotationMode ? rotation : position;
+			if (IsKeyDown(VirtualKey::W)) target.x += _manualPlacementPrecision;
+			if (IsKeyDown(VirtualKey::S)) target.x -= _manualPlacementPrecision;
+			if (IsKeyDown(VirtualKey::A)) target.y += _manualPlacementPrecision;
+			if (IsKeyDown(VirtualKey::D)) target.y -= _manualPlacementPrecision;
+			if (IsKeyDown(VirtualKey::E)) target.z += _manualPlacementPrecision;
+			if (IsKeyDown(VirtualKey::Q)) target.z -= _manualPlacementPrecision;
+		}
+
+	void Sub_SpoonerMain()
+		{
+			SpoonerMode::bKeyboardEntityEditingEnabled = false;
 			selectedEntity.handle = 0;
 			_searchStr.clear(); // Sub_SaveFiles _searchStr
 			dict3.clear(); // Sub_SaveFiles _dir
@@ -1038,6 +1119,7 @@ namespace sub
 		}*/
 		void Sub_SelectedEntityOps()
 		{
+			SpoonerMode::bKeyboardEntityEditingEnabled = false;
 			if (!selectedEntity.handle.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -1377,6 +1459,8 @@ namespace sub
 				Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
 				Vector3 nextRot = selectedEntity.attachmentArgs.rotation;
 
+				HandleKeyboardPlacementInput(nextOffset, nextRot);
+
 				// Bone text scroller if type is PED or VEHICLE. Reattach and reset args on bone change.
 				if (baseEntityType == EntityType::PED)
 				{
@@ -1503,12 +1587,16 @@ namespace sub
 				if (z_plus) nextOffset.z += _manualPlacementPrecision;
 				if (z_minus) nextOffset.z -= _manualPlacementPrecision;
 
-				if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-				if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-				if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-				if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-				if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-				if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+				if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+				if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+				if (roll_plus) nextRot.y += _manualPlacementPrecision;
+				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+				WrapAngle(nextRot.x);
+				WrapAngle(nextRot.y);
+				WrapAngle(nextRot.z);
 
 				if (nextOffset != selectedEntity.attachmentArgs.offset || nextRot != selectedEntity.attachmentArgs.rotation || nextBoneIndex != selectedEntity.attachmentArgs.boneIndex)
 				{
@@ -1719,6 +1807,8 @@ namespace sub
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
+			HandleKeyboardPlacementInput(nextPos, nextRot);
+
 			if (x_plus) nextPos.x += _manualPlacementPrecision;
 			if (x_minus) nextPos.x -= _manualPlacementPrecision;
 			if (y_plus) nextPos.y += _manualPlacementPrecision;
@@ -1726,12 +1816,16 @@ namespace sub
 			if (z_plus) nextPos.z += _manualPlacementPrecision;
 			if (z_minus) nextPos.z -= _manualPlacementPrecision;
 
-			if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-			if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-			if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-			if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-			if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-			if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+			if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+			if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+			if (roll_plus) nextRot.y += _manualPlacementPrecision;
+			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+			WrapAngle(nextRot.x);
+			WrapAngle(nextRot.y);
+			WrapAngle(nextRot.z);
 
 			if (nextPos != currPos)
 			{
@@ -1898,6 +1992,8 @@ namespace sub
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
+			HandleKeyboardPlacementInput(nextPos, nextRot);
+
 			if (x_plus) nextPos.x += _manualPlacementPrecision;
 			if (x_minus) nextPos.x -= _manualPlacementPrecision;
 			if (y_plus) nextPos.y += _manualPlacementPrecision;
@@ -1905,12 +2001,16 @@ namespace sub
 			if (z_plus) nextPos.z += _manualPlacementPrecision;
 			if (z_minus) nextPos.z -= _manualPlacementPrecision;
 
-			if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-			if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-			if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-			if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-			if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-			if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+			if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+			if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+			if (roll_plus) nextRot.y += _manualPlacementPrecision;
+			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+			WrapAngle(nextRot.x);
+			WrapAngle(nextRot.y);
+			WrapAngle(nextRot.z);
 
 			if (nextPos != currPos) selectedEntity.handle.SetPosition(nextPos);
 			if (nextRot != currRot) selectedEntity.handle.SetRotation(nextRot);
@@ -1968,12 +2068,17 @@ namespace sub
 				AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 				AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 				AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
-				if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-				if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-				if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-				if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-				if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-				if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+				
+				if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+				if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+				if (roll_plus) nextRot.y += _manualPlacementPrecision;
+				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+				WrapAngle(nextRot.x);
+				WrapAngle(nextRot.y);
+				WrapAngle(nextRot.z);
 			}
 
 		}
@@ -2034,6 +2139,8 @@ namespace sub
 				if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 				if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
+				HandleKeyboardPlacementInput(nextPosOffset, nextRotOffset);
+
 				if (x_plus) nextPosOffset.x += _manualPlacementPrecision;
 				if (x_minus) nextPosOffset.x -= _manualPlacementPrecision;
 				if (y_plus) nextPosOffset.y += _manualPlacementPrecision;
@@ -2041,12 +2148,16 @@ namespace sub
 				if (z_plus) nextPosOffset.z += _manualPlacementPrecision;
 				if (z_minus) nextPosOffset.z -= _manualPlacementPrecision;
 
-				if (pitch_plus) { nextRotOffset.x += _manualPlacementPrecision; if (nextRotOffset.x > 180.0f) nextRotOffset.x -= 360.0f; }
-				if (pitch_minus) { nextRotOffset.x -= _manualPlacementPrecision; if (nextRotOffset.x < -180.0f) nextRotOffset.x += 360.0f; }
-				if (roll_plus) { nextRotOffset.y += _manualPlacementPrecision; if (nextRotOffset.y > 180.0f) nextRotOffset.y -= 360.0f; }
-				if (roll_minus) { nextRotOffset.y -= _manualPlacementPrecision; if (nextRotOffset.y < -180.0f) nextRotOffset.y += 360.0f; }
-				if (yaw_plus) { nextRotOffset.z += _manualPlacementPrecision; if (nextRotOffset.z > 180.0f) nextRotOffset.z -= 360.0f; }
-				if (yaw_minus) { nextRotOffset.z -= _manualPlacementPrecision; if (nextRotOffset.z < -180.0f) nextRotOffset.z += 360.0f; }
+				if (pitch_plus) nextRotOffset.x += _manualPlacementPrecision;
+				if (pitch_minus) nextRotOffset.x -= _manualPlacementPrecision;
+				if (roll_plus) nextRotOffset.y += _manualPlacementPrecision;
+				if (roll_minus) nextRotOffset.y -= _manualPlacementPrecision;
+				if (yaw_plus) nextRotOffset.z += _manualPlacementPrecision;
+				if (yaw_minus) nextRotOffset.z -= _manualPlacementPrecision;
+
+				WrapAngle(nextRotOffset.x);
+				WrapAngle(nextRotOffset.y);
+				WrapAngle(nextRotOffset.z);
 
 				if (!nextPosOffset.IsZero())
 				{

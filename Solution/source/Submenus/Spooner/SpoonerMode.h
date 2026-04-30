@@ -32,6 +32,8 @@ namespace sub::Spooner
 		extern bool bEnabled;
 		extern bool bIsSomethingHeld;
 		extern bool bHeldEntityHasCollision;
+		extern bool bKeyboardEntityEditingEnabled;
+		extern bool bKeyboardEntityEditingRotationMode;
 		extern Camera spoonerModeCamera;
 		extern float spoonerModeCameraCamDistance;
 
@@ -62,6 +64,3 @@ namespace sub::Spooner
 	}
 
 }
-
-
-
