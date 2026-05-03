@@ -54,6 +54,8 @@ namespace sub::Spooner
 		bool bEnabled = false;
 		bool bIsSomethingHeld = false;
 		bool bHeldEntityHasCollision = true;
+		bool bKeyboardEntityEditingEnabled = false;
+		bool bKeyboardEntityEditingRotationMode = false;
 		Camera spoonerModeCamera;
 		float spoonerModeCameraCamDistance = 5.0f;
 		eSpoonerModeMode& spoonerModeMode = Settings::spoonerModeMode;
@@ -575,10 +577,14 @@ namespace sub::Spooner
 					float movementSensitivity = Settings::cameraMovementSensitivityKeyboard;
 					if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
 						movementSensitivity = 4.0f * movementSensitivity;
-
-					nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
-					nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
-					nextOffset.z = IsKeyDown(VirtualKey::X) ? movementSensitivity / 2 : IsKeyDown(VirtualKey::Z) ? -movementSensitivity / 2 : 0.0f;
+					
+					// blocks camera movements while we are using the keyboard to edit entity pos / rot using the keyboard
+					if (!bKeyboardEntityEditingEnabled)  
+					{
+						nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
+						nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
+						nextOffset.z = IsKeyDown(VirtualKey::X) ? movementSensitivity / 2 : IsKeyDown(VirtualKey::Z) ? -movementSensitivity / 2 : 0.0f;
+					}
 
 					float rotationSensitivity = Settings::cameraRotationSensitivityMouse;
 					nextRot.z = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR) * rotationSensitivity;
@@ -927,6 +933,3 @@ namespace sub::Spooner
 	}
 
 }
-
-
-
