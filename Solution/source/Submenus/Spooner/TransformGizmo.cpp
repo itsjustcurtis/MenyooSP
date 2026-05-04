@@ -10,6 +10,7 @@
 #include "TransformGizmo.h"
 
 #include "..\..\Natives\natives2.h"
+#include "..\..\Natives\natives.h"
 #include "..\..\Scripting\World.h"
 #include "..\..\Scripting\GameplayCamera.h"
 #include "..\..\Scripting\Game.h"
@@ -53,18 +54,12 @@ void TransformGizmo::FrameData::ComputeForEntity(GTAentity& entity, const Vector
 {
 	distanceToEntity = GameplayCamera::GetPosition().DistanceTo(worldPos);
 
-	Vector3 rotation = entity.Rotation_get();
-	float yaw = DegreeToRadian(rotation.z);
-	float pitch = DegreeToRadian(rotation.y);
-	float roll = DegreeToRadian(rotation.x);
+	Vector3_t forward_t, right_t, up_t, pos_t;
+	GET_ENTITY_MATRIX(entity.GetHandle(), &forward_t, &right_t, &up_t, &pos_t);
 
-	float cY = std::cos(yaw), sY = std::sin(yaw);
-	float cP = std::cos(pitch), sP = std::sin(pitch);
-	float cR = std::cos(roll), sR = std::sin(roll);
-
-	localAxes[0] = Vector3(cY * cP, sY * cP, -sP);
-	localAxes[1] = Vector3(-sY * cR + cY * sP * sR, cY * cR + sY * sP * sR, cP * sR);
-	localAxes[2] = Vector3(sY * sR + cY * sP * cR, -cY * sR + sY * sP * cR, cP * cR);
+	localAxes[0] = Vector3(right_t);
+	localAxes[1] = -Vector3(forward_t);
+	localAxes[2] = Vector3(up_t);
 
 	auto dims = entity.ModelDimensions();
 	float halfX = std::abs(dims.Dim2.x - dims.Dim1.x) * 0.5f;
@@ -165,13 +160,13 @@ Vector3 TransformGizmo::WorldToBoneRelative(const Vector3& worldOffset, const Ve
 	float pitch = DegreeToRadian(boneRotEuler.y);
 	float roll = DegreeToRadian(boneRotEuler.x);
 
-	float cY = std::cos(yaw), sY = std::sin(yaw);
-	float cP = std::cos(pitch), sP = std::sin(pitch);
-	float cR = std::cos(roll), sR = std::sin(roll);
+	float cZ = std::cos(yaw), sZ = std::sin(yaw);
+	float cX = std::cos(roll), sX = std::sin(roll);
+	float cY = std::cos(pitch), sY = std::sin(pitch);
 
-	Vector3 xAxis(cY * cP, sY * cP, -sP);
-	Vector3 yAxis(-sY * cR + cY * sP * sR, cY * cR + sY * sP * sR, cP * sR);
-	Vector3 zAxis(sY * sR + cY * sP * cR, -cY * sR + sY * sP * cR, cP * cR);
+	Vector3 xAxis = Vector3(cZ * cY - sZ * sX * sY, sZ * cY + cZ * sX * sY, -cX * sY);
+	Vector3 yAxis = Vector3(-sZ * cX, cZ * cX, sX);
+	Vector3 zAxis = Vector3(cZ * sY + sZ * sX * cY, sZ * sY - cZ * sX * cY, cX * cY);
 
 	return Vector3(
 		Vector3::Dot(worldOffset, xAxis),
