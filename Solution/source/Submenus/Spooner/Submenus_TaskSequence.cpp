@@ -167,7 +167,7 @@ namespace sub::Spooner
 				if (number_plus) { if (tskPtr->showNumber < INT_MAX) tskPtr->showNumber++; }
 				if (number_minus) { if (tskPtr->showNumber > INT_MIN) tskPtr->showNumber--; }
 
-				AddToggle("Show Cone (Peds only)", tskPtr->showCone);
+				//AddToggle("Show Cone (Peds only)", tskPtr->showCone);
 				
     				bool displayId_plus = false, displayId_minus = false;
    				//AddNumber("Display ID", tskPtr->displayId, 1, null, displayId_plus, displayId_minus);
@@ -182,7 +182,7 @@ namespace sub::Spooner
 				//AddToggle("Sync Rotation With Entity", tskPtr->syncRotation);
 
 				bool nonSelectable = (tskPtr->displayMode == 8);
-				AddToggle("Non-Selectable", nonSelectable);
+				//AddToggle("Non-Selectable", nonSelectable);
 				tskPtr->displayMode = nonSelectable ? 8 : 2;
 			}
 			void RemoveBlip()

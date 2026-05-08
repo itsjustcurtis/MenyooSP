@@ -11,6 +11,7 @@ namespace sub::Spooner
     namespace BlipCustoms
     {
         void DrawAll();
+        void UpdateAttachedBlips();
 
         SpoonerBlip* AddBlip(const std::string& name, const Vector3& position, const Vector3& rotation);
         SpoonerBlip* AddBlip(const Vector3& position, const Vector3& rotation);
@@ -24,5 +25,11 @@ namespace sub::Spooner
         void RemoveAllBlips();
 
         SpoonerBlip* CopyBlip(SpoonerBlip& blip);
+
+        void RemoveBlip(int index);
+        void RemoveBlip(SpoonerBlip& blip);
+
+        void RefreshBlip(SpoonerBlip& blip);
+        void RefreshAllBlips();
     }
 }

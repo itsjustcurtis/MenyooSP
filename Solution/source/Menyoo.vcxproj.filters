@@ -319,7 +319,9 @@
     <ClCompile Include="Submenus\Bodyguards\BodyguardSettings.cpp" />
     <ClCompile Include="Submenus\Bodyguards\BodyguardSpawn.cpp" />
     <ClCompile Include="Submenus\Bodyguards\BodyguardSubmenu.cpp" />
-    <ClCompile Include="Submenus\Spooner\BlipCustoms.cpp" />
+    <ClCompile Include="Submenus\Spooner\BlipCustoms.cpp">
+      <Filter>Submenus\Spooner</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util\ExePath.h">
