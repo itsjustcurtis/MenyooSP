@@ -2,15 +2,54 @@
 
 #include "..\..\Util\GTAmath.h"
 #include <string>
+#include "../../Natives/natives.h"
 
 namespace sub::Spooner
 {
+    class SpoonerBlipPosition
+    {
+    public:
+        struct Attachment_t
+        {
+            int attachedTo;     // Entity handle
+            Vector3 offset;
 
+            Attachment_t()
+                : attachedTo(0), offset(Vector3(0, 0, 0))
+            {
+            }
+
+            Attachment_t& operator = (const Attachment_t& right)
+            {
+                this->attachedTo = right.attachedTo;
+                this->offset = right.offset;
+                return *this;
+            }
+
+            bool IsAttached() const
+            {
+                return attachedTo != 0;
+            }
+        };
+
+        Vector3 m_position;
+        Attachment_t m_attachmentArgs;
+
+        SpoonerBlipPosition()
+            : m_position(Vector3(0, 0, 0))
+        {
+        }
+
+        SpoonerBlipPosition& operator = (const SpoonerBlipPosition& right)
+        {
+            this->m_position = right.m_position;
+            this->m_attachmentArgs = right.m_attachmentArgs;
+            return *this;
+        }
+    };
     class SpoonerBlip
     {
     public:
-
-        int Handle = 0;
 
         enum class Type
         {
@@ -21,25 +60,35 @@ namespace sub::Spooner
 
         Type BlipType = Type::Coord;
 
-        float X = 0.0f;
-        float Y = 0.0f;
-        float Z = 0.0f;
+        int EntityHandle = 0;   // entity this blip may attach to
+        std::string m_name;
+        bool m_selectedInSub;
+
+        float RadialSize = 60.0f;
+        float Scale = 0.80f;
+        int Colour = 0;
+        int Alpha = 190;
+
+        float X;
+        float Y;
+        float Z;
 
         Vector3 Rotation = Vector3();
+        Vector3 Offset = Vector3(0, 0, 0);
+        bool bAttached = false;
 
-        float Radius = 0.0f;
+        Blip BlipHandle = 0;
 
-        int Entity = 0;
-
-        std::string Name = "BLIP";
+        std::string Name = "Blip";
 
         SpoonerBlip() = default;
 
         SpoonerBlip(const std::string& name, const Vector3& position, const Vector3& rotation)
-            : Handle(0), BlipType(Type::Coord),
-            X(position.x), Y(position.y), Z(position.z),
-            Rotation(rotation),
-            Radius(0.0f), Entity(0), Name(name)
+            : Name(name),
+            X(position.x),
+            Y(position.y),
+            Z(position.z),
+            Rotation(rotation)
         {
         }
 
@@ -48,28 +97,56 @@ namespace sub::Spooner
             return this == &other;
         }
 
-        void Create();
-        void Remove();
+        void Create()
+        {
+            if (BlipType == Type::Radial)
+            {
+                BlipHandle = HUD::ADD_BLIP_FOR_RADIUS(X, Y, Z, RadialSize);
+
+                HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
+                HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
+            }
+            else
+            {
+                BlipHandle = HUD::ADD_BLIP_FOR_COORD(X, Y, Z);
+
+                HUD::SET_BLIP_SCALE(BlipHandle, Scale);
+                HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
+                HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
+            }
+        }
+
+        void Remove()
+        {
+            if (BlipHandle != 0)
+            {
+                HUD::REMOVE_BLIP(&BlipHandle);
+                BlipHandle = 0;
+            }
+        }
+
         void Update();
     };
 
-	namespace Submenus
-	{
 
-		void Sub_Blip_Management();
-		void Sub_Blip_Select();
+    namespace Submenus
+    {
 
-		void Sub_Blip_Radial();
-		void Sub_Blip_Entity();
-		void Sub_Blip_Coord();
+        void Sub_Blip_Management();
+        void Sub_Blip_Select();
 
-		void Sub_Blip_RadialInBlip();
-		void Sub_Blip_EntityInBlip();
-		void Sub_Blip_CoordInBlip();
+        void Sub_Blip_Radial();
+        void Sub_Blip_Entity();
+        void Sub_Blip_Coord();
 
-	}
+        void Sub_Blip_RadialInBlip();
+        void Sub_Blip_EntityInBlip();
+        void Sub_Blip_CoordInBlip();
 
-	// Selected blip pointer
-	extern SpoonerBlip* SelectedBlip;
+        void Sub_Blip_Attach();
+
+    }
+
+    extern SpoonerBlip* SelectedBlip;
 
 }
