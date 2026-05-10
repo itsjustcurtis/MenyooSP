@@ -12,12 +12,13 @@
 #include <tuple>
 #include <string>
 
+#include "..\..\Util\GTAmath.h"
+
 typedef unsigned char UINT8, BYTE;
 typedef unsigned int UINT;
 typedef unsigned long DWORD, Hash;
 
 class GTAentity;
-class Vector3;
 
 namespace sub
 {
@@ -27,6 +28,8 @@ namespace sub
 		extern std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualPlacementPtrs;
 		extern float _manualPlacementPrecision;
 		extern UINT8 _copyEntTexterValue;
+
+		void HandleKeyboardPlacementInput(Vector3& position, Vector3& rotation);
 
 		void SetEnt241();
 		void SetEnt12();

@@ -32,6 +32,11 @@ namespace sub::Spooner
 		extern bool bEnabled;
 		extern bool bIsSomethingHeld;
 		extern bool bHeldEntityHasCollision;
+
+		enum class eEntityEditMode : UINT8 { Disabled, Keyboard, Gizmo };
+		extern eEntityEditMode entityEditMode;
+		extern bool bEntityEditRotationMode;
+		extern bool bGizmoCameraLocked;
 		extern Camera spoonerModeCamera;
 		extern float spoonerModeCameraCamDistance;
 
@@ -70,6 +75,3 @@ namespace sub::Spooner
 	}
 
 }
-
-
-

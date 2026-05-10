@@ -38,6 +38,7 @@
 #include "SpoonerEntity.h"
 #include "SpoonerMode.h"
 #include "SpoonerSettings.h"
+#include "TransformGizmo.h"
 #include "Databases.h"
 #include "FileManagement.h"
 #include "EntityManagement.h"
@@ -77,8 +78,204 @@ namespace sub
 		void SetEnt241() { g_Ped1 = selectedEntity.handle.Handle(); }
 		void SetEnt12() { g_Ped4 = selectedEntity.handle.Handle(); }
 
-		void Sub_SpoonerMain()
+		void HandleKeyboardManipulation(Vector3& position, Vector3& rotation)
 		{
+			constexpr float HUD_LINE_HEIGHT = 0.025f;
+			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
+			const float hudX = 0.02f;
+			float hudY = 0.8f;
+
+			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
+			{
+				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
+				Game::Print::drawstring(text, hudX, hudY);
+				hudY += HUD_LINE_HEIGHT;
+			};
+
+			if (SpoonerMode::bEntityEditRotationMode)
+			{
+				drawText("~y~Rotation Mode:");
+				drawText("~b~W/S: ~w~Pitch+ / Pitch-");
+				drawText("~b~A/D: ~w~Yaw+ / Yaw-");
+				drawText("~b~E/Q: ~w~Roll+ / Roll-");
+				drawText("~b~=/-: ~w~+/- Sensitivity");
+				drawText("~b~R: ~w~Toggle position");
+			}
+			else
+			{
+				drawText("~y~Position Mode:");
+				drawText("~b~W/S: ~w~X+ / X-");
+				drawText("~b~A/D: ~w~Y+ / Y-");
+				drawText("~b~E/Q: ~w~Z+ / Z-");
+				drawText("~b~=/-: ~w~+/- Sensitivity");
+				drawText("~b~R: ~w~Toggle rotation");
+			}
+			drawText("~b~B: ~w~Switch to gizmo / disable controls.");
+
+			static DWORD lastSensitivityChange = 0;
+			if (IsKeyJustUp(VirtualKey::OEMPlus) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
+				lastSensitivityChange = GetTickCount();
+			}
+			if (IsKeyJustUp(VirtualKey::OEMMinus) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10;
+				lastSensitivityChange = GetTickCount();
+			}
+
+			auto& target = SpoonerMode::bEntityEditRotationMode ? rotation : position;
+			if (IsKeyDown(VirtualKey::W)) target.x += _manualPlacementPrecision;
+			if (IsKeyDown(VirtualKey::S)) target.x -= _manualPlacementPrecision;
+			if (IsKeyDown(VirtualKey::A)) target.y += _manualPlacementPrecision;
+			if (IsKeyDown(VirtualKey::D)) target.y -= _manualPlacementPrecision;
+			if (IsKeyDown(VirtualKey::E)) target.z += _manualPlacementPrecision;
+			if (IsKeyDown(VirtualKey::Q)) target.z -= _manualPlacementPrecision;
+		}
+
+		void HandleGizmoManipulation()
+		{
+			constexpr float HUD_LINE_HEIGHT = 0.025f;
+			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
+			const float hudX = 0.02f;
+			float hudY = 0.8f;
+
+			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
+			{
+				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
+				Game::Print::drawstring(text, hudX, hudY);
+				hudY += HUD_LINE_HEIGHT;
+			};
+
+			if (selectedEntity.handle.Exists())
+			{
+				static TransformGizmo gizmo;
+				gizmo.SetMode(SpoonerMode::bEntityEditRotationMode ? GizmoMode::Rotate : GizmoMode::Translate);
+				gizmo.Update();
+				gizmo.Draw(selectedEntity.handle.GetPosition());
+				if (gizmo.IsActive())
+					gizmo.ApplyMovement(selectedEntity.handle);
+			}
+
+			if (SpoonerMode::bEntityEditRotationMode)
+				drawText("~y~Gizmo Mode ~s~(Rotation Mode):");
+			else
+				drawText("~y~Gizmo Mode ~s~(Position Mode):");
+			drawText("~b~Left Click:~w~ Grab axis handle");
+			drawText("~b~R:~w~ Toggle position/rotation");
+			drawText("~b~B:~w~ Disable controls");
+			drawText(SpoonerMode::bGizmoCameraLocked ? "~r~Camera LOCKED ~s~- Mouse drag freely" : "~g~Camera UNLOCKED ~s~- Mouse rotates camera");
+			drawText("~b~C:~w~ Toggle camera lock");
+		}
+
+		void HandleGizmoAttachmentManipulation(GTAentity& parentEntity, Vector3& position, Vector3& rotation)
+		{
+			constexpr float HUD_LINE_HEIGHT = 0.025f;
+			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
+			const float hudX = 0.02f;
+			float hudY = 0.8f;
+
+			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
+			{
+				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
+				Game::Print::drawstring(text, hudX, hudY);
+				hudY += HUD_LINE_HEIGHT;
+			};
+
+			static TransformGizmo gizmo;
+			gizmo.SetMode(SpoonerMode::bEntityEditRotationMode ? GizmoMode::Rotate : GizmoMode::Translate);
+			gizmo.ApplyAttachmentMovement(parentEntity, selectedEntity.handle, position, rotation, selectedEntity.attachmentArgs.boneIndex);
+
+			if (SpoonerMode::bEntityEditRotationMode)
+				drawText("~y~Gizmo Mode ~s~(Rotation Mode):");
+			else
+				drawText("~y~Gizmo Mode ~s~(Position Mode):");
+			drawText("~b~Left Click:~w~ Grab axis handle");
+			drawText("~b~R:~w~ Toggle position/rotation");
+			drawText("~b~B:~w~ Disable controls");
+			drawText(SpoonerMode::bGizmoCameraLocked ? "~r~Camera LOCKED ~s~- Mouse drag freely" : "~g~Camera UNLOCKED ~s~- Mouse rotates camera");
+			drawText("~b~C:~w~ Toggle camera lock");
+		}
+
+		void HandleEntityEditingLogic(Vector3& position, Vector3& rotation, GTAentity* parentEntity)
+		{
+			// toggling between Disabled / Keyboard / Gizmo modes
+			static bool lastBToggle = false;
+			bool currentBToggle = IsKeyJustUp(VirtualKey::B);
+			if (currentBToggle && !lastBToggle)
+			{
+				switch (SpoonerMode::entityEditMode)
+				{
+				case SpoonerMode::eEntityEditMode::Disabled:
+					SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Keyboard;
+					SpoonerMode::bGizmoCameraLocked = false;
+					break;
+				case SpoonerMode::eEntityEditMode::Keyboard:
+					SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Gizmo;
+					SpoonerMode::bGizmoCameraLocked = false;
+					break;
+				case SpoonerMode::eEntityEditMode::Gizmo:
+					SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
+					SpoonerMode::bGizmoCameraLocked = false;
+					break;
+				}
+			}
+			lastBToggle = currentBToggle;
+
+			// toggling between the rotation / position modes
+			static bool lastRToggle = false;
+			bool currentRToggle = IsKeyJustUp(VirtualKey::R);
+			if (currentRToggle && !lastRToggle)
+			{
+				SpoonerMode::bEntityEditRotationMode = !SpoonerMode::bEntityEditRotationMode;
+			}
+			lastRToggle = currentRToggle;
+
+			// toggling camera lock in gizmo mode
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::C))
+			{
+				SpoonerMode::bGizmoCameraLocked = !SpoonerMode::bGizmoCameraLocked;
+			}
+
+			constexpr float HUD_LINE_HEIGHT = 0.025f;
+			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
+			const float hudX = 0.02f;
+			float hudY = 0.8f;
+
+			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
+			{
+				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
+				Game::Print::drawstring(text, hudX, hudY);
+				hudY += HUD_LINE_HEIGHT;
+			};
+
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Disabled)
+			{
+				drawText("~r~Entity manipulation DISABLED.");
+				drawText("~b~Press B:~w~ Enable keyboard controls or gizmo editing mode.");
+				return;
+			}
+
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Keyboard)
+			{
+				HandleKeyboardManipulation(position, rotation);
+			}
+			else if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo)
+			{
+				if (parentEntity != nullptr && parentEntity->Exists())
+				{
+					HandleGizmoAttachmentManipulation(*parentEntity, position, rotation);
+				}
+				else
+				{
+					HandleGizmoManipulation();
+				}
+			}
+		}
+
+	void Sub_SpoonerMain()
+		{
+			SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
 			selectedEntity.handle = 0;
 			_searchStr.clear(); // Sub_SaveFiles _searchStr
 			dict3.clear(); // Sub_SaveFiles _dir
@@ -1039,6 +1236,7 @@ namespace sub
 		}*/
 		void Sub_SelectedEntityOps()
 		{
+			SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
 			if (!selectedEntity.handle.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -1340,9 +1538,9 @@ namespace sub
 				Databases::EntityDb[thisEntityIndexInDb] = selectedEntity;
 			}
 
-			GTAentity baseEntityIfExists;
-			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, baseEntityIfExists);
-			EntityType baseEntityType = (EntityType)baseEntityIfExists.Type();
+			GTAentity parentEntity;
+			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, parentEntity);
+			EntityType parentEntityType = (EntityType)parentEntity.Type();
 
 			bool prec_plus = 0, prec_minus = 0;
 
@@ -1378,13 +1576,15 @@ namespace sub
 				Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
 				Vector3 nextRot = selectedEntity.attachmentArgs.rotation;
 
+				HandleEntityEditingLogic(nextOffset, nextRot, &parentEntity);
+
 				// Bone text scroller if type is PED or VEHICLE. Reattach and reset args on bone change.
-				if (baseEntityType == EntityType::PED)
+				if (parentEntityType == EntityType::PED)
 				{
 					int obj_currentPedBoneArrayIndex = 17; // SKEL_ROOT is at index 17 idk
 					for (int i = 0; i < Bone::vBoneNames.size(); i++)
 					{
-						if (nextBoneIndex == GTAped(baseEntityIfExists).GetBoneIndex(Bone::vBoneNames[i].boneid))
+						if (nextBoneIndex == GTAped(parentEntity).GetBoneIndex(Bone::vBoneNames[i].boneid))
 						{
 							obj_currentPedBoneArrayIndex = i;
 							break;
@@ -1399,7 +1599,7 @@ namespace sub
 						if (obj_currentPedBoneArrayIndex < Bone::vBoneNames.size() - 1)
 						{
 							obj_currentPedBoneArrayIndex++;
-							nextBoneIndex = GTAped(baseEntityIfExists).GetBoneIndex(Bone::vBoneNames[obj_currentPedBoneArrayIndex].boneid);
+							nextBoneIndex = GTAped(parentEntity).GetBoneIndex(Bone::vBoneNames[obj_currentPedBoneArrayIndex].boneid);
 							//nextOffset = Vector3::Zero();
 							//nextRot = Vector3::Zero();
 						}
@@ -1409,7 +1609,7 @@ namespace sub
 						if (obj_currentPedBoneArrayIndex > 0)
 						{
 							obj_currentPedBoneArrayIndex--;
-							nextBoneIndex = GTAped(baseEntityIfExists).GetBoneIndex(Bone::vBoneNames[obj_currentPedBoneArrayIndex].boneid);
+							nextBoneIndex = GTAped(parentEntity).GetBoneIndex(Bone::vBoneNames[obj_currentPedBoneArrayIndex].boneid);
 							//nextOffset = Vector3::Zero();
 							//nextRot = Vector3::Zero();
 						}
@@ -1423,7 +1623,7 @@ namespace sub
 						//	if (pb.name.find(srch) != std::string::npos)
 						//	{
 						//		bool found = true;
-						//		nextBoneIndex = GTAped(baseEntityIfExists).GetBoneIndex(pb.boneid);
+						//		nextBoneIndex = GTAped(parentEntity).GetBoneIndex(pb.boneid);
 						//		//obj_currentPedBoneArrayIndex = index; // Not needed
 						//		nextOffset = Vector3::Zero();
 						//		nextRot = Vector3::Zero();
@@ -1434,12 +1634,12 @@ namespace sub
 						Menu::SetSub_delayed = SUB::SPOONER_ATTACHMENTOPS_SELECTBONE;
 					}
 				}
-				else if (baseEntityType == EntityType::VEHICLE)
+				else if (parentEntityType == EntityType::VEHICLE)
 				{
 					int obj_currentVehBoneArrayIndex = 10; // 10 is bodyshell idk
 					for (int i = 0; i < VBone::vNames.size(); i++)
 					{
-						if (nextBoneIndex == GTAvehicle(baseEntityIfExists).GetBoneIndex(VBone::vNames[i]))
+						if (nextBoneIndex == GTAvehicle(parentEntity).GetBoneIndex(VBone::vNames[i]))
 						{
 							obj_currentVehBoneArrayIndex = i;
 							break;
@@ -1454,7 +1654,7 @@ namespace sub
 						if (obj_currentVehBoneArrayIndex < VBone::vNames.size() - 1)
 						{
 							obj_currentVehBoneArrayIndex++;
-							nextBoneIndex = GTAvehicle(baseEntityIfExists).GetBoneIndex(VBone::vNames[obj_currentVehBoneArrayIndex]);
+							nextBoneIndex = GTAvehicle(parentEntity).GetBoneIndex(VBone::vNames[obj_currentVehBoneArrayIndex]);
 							//nextOffset = Vector3::Zero();
 							//nextRot = Vector3::Zero();
 						}
@@ -1464,7 +1664,7 @@ namespace sub
 						if (obj_currentVehBoneArrayIndex > 0)
 						{
 							obj_currentVehBoneArrayIndex--;
-							nextBoneIndex = GTAvehicle(baseEntityIfExists).GetBoneIndex(VBone::vNames[obj_currentVehBoneArrayIndex]);
+							nextBoneIndex = GTAvehicle(parentEntity).GetBoneIndex(VBone::vNames[obj_currentVehBoneArrayIndex]);
 							//nextOffset = Vector3::Zero();
 							//nextRot = Vector3::Zero();
 						}
@@ -1478,7 +1678,7 @@ namespace sub
 						//	if (vbn.find(srch) != std::string::npos)
 						//	{
 						//		bool found = true;
-						//		nextBoneIndex = GTAvehicle(baseEntityIfExists).GetBoneIndex(vbn);
+						//		nextBoneIndex = GTAvehicle(parentEntity).GetBoneIndex(vbn);
 						//		//obj_currentVehBoneArrayIndex = index; // Not needed
 						//		nextOffset = Vector3::Zero();
 						//		nextRot = Vector3::Zero();
@@ -1504,16 +1704,20 @@ namespace sub
 				if (z_plus) nextOffset.z += _manualPlacementPrecision;
 				if (z_minus) nextOffset.z -= _manualPlacementPrecision;
 
-				if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-				if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-				if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-				if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-				if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-				if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+				if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+				if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+				if (roll_plus) nextRot.y += _manualPlacementPrecision;
+				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+				WrapAngle(nextRot.x);
+				WrapAngle(nextRot.y);
+				WrapAngle(nextRot.z);
 
 				if (nextOffset != selectedEntity.attachmentArgs.offset || nextRot != selectedEntity.attachmentArgs.rotation || nextBoneIndex != selectedEntity.attachmentArgs.boneIndex)
 				{
-					EntityManagement::AttachEntity(selectedEntity, baseEntityIfExists, nextBoneIndex, nextOffset, nextRot);
+					EntityManagement::AttachEntity(selectedEntity, parentEntity, nextBoneIndex, nextOffset, nextRot);
 				}
 			}
 
@@ -1614,7 +1818,7 @@ namespace sub
 
 			GTAentity baseEntity;
 			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, baseEntity);
-			EntityType baseEntityType = (EntityType)baseEntity.Type();
+			EntityType parentEntityType = (EntityType)baseEntity.Type();
 			if (!baseEntity.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -1632,7 +1836,7 @@ namespace sub
 			AddTitle("Bone");
 
 			// Bone text scroller if type is PED or VEHICLE. Reattach and reset args on bone change.
-			if (baseEntityType == EntityType::PED)
+			if (parentEntityType == EntityType::PED)
 			{
 				GTAped baseEntityPed = baseEntity;
 				defaultBone = baseEntityPed.GetBoneIndex(Bone::SKEL_ROOT);
@@ -1655,7 +1859,7 @@ namespace sub
 					}
 				}
 			}
-			else if (baseEntityType == EntityType::VEHICLE)
+			else if (parentEntityType == EntityType::VEHICLE)
 			{
 				GTAvehicle baseEntityVeh = baseEntity;
 				defaultBone = baseEntityVeh.GetBoneIndex(VBone::bodyshell);
@@ -1720,6 +1924,8 @@ namespace sub
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
+			HandleEntityEditingLogic(nextPos, nextRot, nullptr);
+
 			if (x_plus) nextPos.x += _manualPlacementPrecision;
 			if (x_minus) nextPos.x -= _manualPlacementPrecision;
 			if (y_plus) nextPos.y += _manualPlacementPrecision;
@@ -1727,12 +1933,16 @@ namespace sub
 			if (z_plus) nextPos.z += _manualPlacementPrecision;
 			if (z_minus) nextPos.z -= _manualPlacementPrecision;
 
-			if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-			if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-			if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-			if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-			if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-			if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+			if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+			if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+			if (roll_plus) nextRot.y += _manualPlacementPrecision;
+			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+			WrapAngle(nextRot.x);
+			WrapAngle(nextRot.y);
+			WrapAngle(nextRot.z);
 
 			if (nextPos != currPos)
 			{
@@ -1899,6 +2109,8 @@ namespace sub
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
+			HandleEntityEditingLogic(nextPos, nextRot, nullptr);
+
 			if (x_plus) nextPos.x += _manualPlacementPrecision;
 			if (x_minus) nextPos.x -= _manualPlacementPrecision;
 			if (y_plus) nextPos.y += _manualPlacementPrecision;
@@ -1906,12 +2118,16 @@ namespace sub
 			if (z_plus) nextPos.z += _manualPlacementPrecision;
 			if (z_minus) nextPos.z -= _manualPlacementPrecision;
 
-			if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-			if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-			if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-			if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-			if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-			if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+			if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+			if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+			if (roll_plus) nextRot.y += _manualPlacementPrecision;
+			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+			WrapAngle(nextRot.x);
+			WrapAngle(nextRot.y);
+			WrapAngle(nextRot.z);
 
 			if (nextPos != currPos) selectedEntity.handle.SetPosition(nextPos);
 			if (nextRot != currRot) selectedEntity.handle.SetRotation(nextRot);
@@ -1969,12 +2185,17 @@ namespace sub
 				AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 				AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 				AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
-				if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-				if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-				if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-				if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-				if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-				if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+				
+				if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+				if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+				if (roll_plus) nextRot.y += _manualPlacementPrecision;
+				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+				WrapAngle(nextRot.x);
+				WrapAngle(nextRot.y);
+				WrapAngle(nextRot.z);
 			}
 
 		}
@@ -2035,6 +2256,8 @@ namespace sub
 				if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 				if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
+				// HandleEntityEditingLogic(nextPosOffset, nextRotOffset, nullptr); // doesn't really work as expected, just applies the delta to all objects instead of calculating a centroid and making changes based on it. 
+
 				if (x_plus) nextPosOffset.x += _manualPlacementPrecision;
 				if (x_minus) nextPosOffset.x -= _manualPlacementPrecision;
 				if (y_plus) nextPosOffset.y += _manualPlacementPrecision;
@@ -2042,12 +2265,16 @@ namespace sub
 				if (z_plus) nextPosOffset.z += _manualPlacementPrecision;
 				if (z_minus) nextPosOffset.z -= _manualPlacementPrecision;
 
-				if (pitch_plus) { nextRotOffset.x += _manualPlacementPrecision; if (nextRotOffset.x > 180.0f) nextRotOffset.x -= 360.0f; }
-				if (pitch_minus) { nextRotOffset.x -= _manualPlacementPrecision; if (nextRotOffset.x < -180.0f) nextRotOffset.x += 360.0f; }
-				if (roll_plus) { nextRotOffset.y += _manualPlacementPrecision; if (nextRotOffset.y > 180.0f) nextRotOffset.y -= 360.0f; }
-				if (roll_minus) { nextRotOffset.y -= _manualPlacementPrecision; if (nextRotOffset.y < -180.0f) nextRotOffset.y += 360.0f; }
-				if (yaw_plus) { nextRotOffset.z += _manualPlacementPrecision; if (nextRotOffset.z > 180.0f) nextRotOffset.z -= 360.0f; }
-				if (yaw_minus) { nextRotOffset.z -= _manualPlacementPrecision; if (nextRotOffset.z < -180.0f) nextRotOffset.z += 360.0f; }
+				if (pitch_plus) nextRotOffset.x += _manualPlacementPrecision;
+				if (pitch_minus) nextRotOffset.x -= _manualPlacementPrecision;
+				if (roll_plus) nextRotOffset.y += _manualPlacementPrecision;
+				if (roll_minus) nextRotOffset.y -= _manualPlacementPrecision;
+				if (yaw_plus) nextRotOffset.z += _manualPlacementPrecision;
+				if (yaw_minus) nextRotOffset.z -= _manualPlacementPrecision;
+
+				WrapAngle(nextRotOffset.x);
+				WrapAngle(nextRotOffset.y);
+				WrapAngle(nextRotOffset.z);
 
 				if (!nextPosOffset.IsZero())
 				{
