@@ -602,6 +602,8 @@ namespace sub
 				g_customAnimDuration -= 100;
 				return;
 			}
+		}
+		if (flagPlus) {
 			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
 			{
 				if (it->first == g_customAnimFlag)

@@ -54,6 +54,9 @@ namespace sub::Spooner
 		bool bEnabled = false;
 		bool bIsSomethingHeld = false;
 		bool bHeldEntityHasCollision = true;
+		eEntityEditMode entityEditMode = eEntityEditMode::Disabled;
+		bool bEntityEditRotationMode = false;
+		bool bGizmoCameraLocked = false;
 		Camera spoonerModeCamera;
 		float spoonerModeCameraCamDistance = 5.0f;
 		eSpoonerModeMode& spoonerModeMode = Settings::spoonerModeMode;
@@ -585,15 +588,23 @@ namespace sub::Spooner
 					float movementSensitivity = Settings::cameraMovementSensitivityKeyboard;
 					if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
 						movementSensitivity = 4.0f * movementSensitivity;
+					
+					// blocks camera movement while we are using the keyboard to edit entity pos / rot
+					if (entityEditMode != eEntityEditMode::Keyboard)
+					{
+						nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
+						nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
+						nextOffset.z = IsKeyDown(VirtualKey::X) ? movementSensitivity / 2 : IsKeyDown(VirtualKey::Z) ? -movementSensitivity / 2 : 0.0f;
+					}
 
-					nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
-					nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
-					nextOffset.z = IsKeyDown(VirtualKey::X) ? movementSensitivity / 2 : IsKeyDown(VirtualKey::Z) ? -movementSensitivity / 2 : 0.0f;
-
-					float rotationSensitivity = Settings::cameraRotationSensitivityMouse;
-					nextRot.z = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR) * rotationSensitivity;
-					nextRot.x = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD) * rotationSensitivity;
-					nextRot.y = !IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? (IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -2.0f : 0.0f) : 2.0f;
+					// blocks camera rotation while we are using the gizmo to edit entity pos / rot
+					if (!bGizmoCameraLocked || entityEditMode != eEntityEditMode::Gizmo)
+					{
+						float rotationSensitivity = Settings::cameraRotationSensitivityMouse;
+						nextRot.z = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR) * rotationSensitivity;
+						nextRot.x = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD) * rotationSensitivity;
+						nextRot.y = !IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? (IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -2.0f : 0.0f) : 2.0f;
+					}
 
 					if (!bIsSomethingHeld || spoonerModeMode == eSpoonerModeMode::GroundEase)
 					{
@@ -659,7 +670,8 @@ namespace sub::Spooner
 						}
 					}
 
-					if (entityInFrontOfCam.Exists() || bIsSomethingHeld)
+					// does not draw the cursor when inside gizmo entity editing mode.
+					if (entityEditMode != eEntityEditMode::Gizmo && (entityInFrontOfCam.Exists() || bIsSomethingHeld))
 					{
 						DRAW_RECT(0.5f, 0.5f, 0.02f, 0.002f, 0, 255, 0, 255, false);
 						DRAW_RECT(0.5f, 0.5f, 0.001f, 0.03f, 0, 255, 0, 255, false);
@@ -855,7 +867,8 @@ namespace sub::Spooner
 							Menu::NewSetMenu(SUB::SPOONER_SELECTEDENTITYOPS);
 						}
 					}
-					else
+					// does not draw the cursor when inside gizmo entity editing mode.
+					else if (entityEditMode != eEntityEditMode::Gizmo)
 					{
 						DRAW_RECT(0.5f, 0.5f, 0.02f, 0.002f, 255, 255, 255, 255, false);
 						DRAW_RECT(0.5f, 0.5f, 0.001f, 0.03f, 255, 255, 255, 255, false);
@@ -937,6 +950,3 @@ namespace sub::Spooner
 	}
 
 }
-
-
-
