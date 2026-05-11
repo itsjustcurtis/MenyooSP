@@ -25,7 +25,7 @@
 
 
 PedGroup::PedGroup()
-	: _handle(0)// _handle(CREATE_GROUP(0))
+	: _handle(0)
 {
 }
 
@@ -59,7 +59,7 @@ int& PedGroup::Handle()
 	return this->_handle;
 }
 
-int PedGroup::GetHandle() const
+int PedGroup::GetHandle() const noexcept
 {
 	return this->_handle;
 }
@@ -407,7 +407,7 @@ Vector3 GTAped::LastWeaponImpactCoord() const
 
 ParachuteState GTAped::GetParachuteState() const
 {
-	return (ParachuteState)GET_PED_PARACHUTE_STATE(this->mHandle);
+	return static_cast<ParachuteState>(GET_PED_PARACHUTE_STATE(this->mHandle));
 }
 
 int GTAped::GetAccuracy() const
@@ -864,7 +864,7 @@ VehicleSeat GTAped::GetCurrentVehicleSeat()
 		for (INT8 i = -1; i < GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(vehHandle) - 1; i++)
 		{
 			if (GET_PED_IN_VEHICLE_SEAT(vehHandle, i, 0) == this->mHandle)
-				return (VehicleSeat)i;
+				return static_cast<VehicleSeat>(i);
 		}
 	}
 	return VehicleSeat::SEAT_ANY;

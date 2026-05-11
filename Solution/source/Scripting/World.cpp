@@ -50,7 +50,6 @@ std::vector<Entity> nearbyPeds, nearbyVehicles, worldPeds, worldVehicles, worldO
 
 namespace World
 {
-	//const std::vector<std::string> World::sWeatherNames{ "ExtraSunny", "Clear", "Clouds", "Smog", "Foggy", "Overcast", "Rain", "Thunder", "Clearing", "Neutral", "Snow", "Blizzard", "SnowLight", "Christmas", "Halloween", "Halloween Snow", "Halloween Rain"};
 	const std::vector<std::pair<std::string, std::string>> World::sWeatherNames{
 	{"ExtraSunny", "ExtraSunny"},
 	{"Clear", "Clear"},
@@ -140,11 +139,11 @@ namespace World
 		{
 			if (fr == GET_HASH_KEY(sWeatherNames[i].second))
 			{
-				from = (WeatherType)i;
+				from = static_cast<WeatherType>(i);
 			}
 			if (t == GET_HASH_KEY(sWeatherNames[i].second))
 			{
-				to = (WeatherType)i;
+				to = static_cast<WeatherType>(i);
 			}
 		}
 	}

@@ -60,7 +60,7 @@ void Camera::SetDepthOfFieldStrength(float value)
 	SET_CAM_DOF_STRENGTH(this->mHandle, value);
 }
 
-float Camera::GetFieldOfView() const
+float Camera::GetFieldOfView() const noexcept
 {
 	return GET_CAM_FOV(this->mHandle);
 }
@@ -69,7 +69,7 @@ void Camera::SetFieldOfView(float value)
 	SET_CAM_FOV(this->mHandle, value);
 }
 
-float Camera::GetFarClip() const
+float Camera::GetFarClip() const noexcept
 {
 	return GET_CAM_FAR_CLIP(this->mHandle);
 }
@@ -77,7 +77,7 @@ void Camera::SetFarClip(float value)
 {
 	SET_CAM_FAR_CLIP(this->mHandle, value);
 }
-float Camera::GetFarDepthOfField() const
+float Camera::GetFarDepthOfField() const noexcept
 {
 	return GET_CAM_FAR_DOF(this->mHandle);
 }
@@ -86,7 +86,7 @@ void Camera::SetFarDepthOfField(float value)
 	SET_CAM_FAR_DOF(this->mHandle, value);
 }
 
-float Camera::GetNearClip() const
+float Camera::GetNearClip() const noexcept
 {
 	return GET_CAM_NEAR_CLIP(this->mHandle);
 }

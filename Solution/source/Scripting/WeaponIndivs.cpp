@@ -222,8 +222,6 @@ const std::vector<std::string> WeaponIndivs::vCaptions_ChuteTints
 #pragma endregion
 
 #pragma region weapons and components
-//struct WeaponComponent{ std::string name; Hash hash; };
-//struct WeaponAndComponents{ Hash weaponHash; std::vector<NamedWeaponComponent> components; std::vector<std::string>* tintCaptions; };
 
 #pragma region melee
 std::vector<WeaponAndComponents> WeaponIndivs::wc_MELEE
@@ -502,7 +500,6 @@ std::vector<WeaponAndComponents> WeaponIndivs::wc_PISTOLS
 	}, &WeaponIndivs::vCaptions_Tints },   
 
 	{ WEAPON_STUNGUN_MP,{
-		//{ "Bottom Dollar Bail Enforcement", GET_HASH_KEY("COMPONENT_STUNGUN_VARMOD_BAIL") },
 	}, &WeaponIndivs::vCaptions_Tints },
 
 	{ WEAPON_PISTOLXM3,{
@@ -1293,7 +1290,7 @@ bool WeaponIndivs::is_weapon_tintable(Hash weaponHash)
 
 
 // Weapon - labels
-std::string get_weapon_label(Hash hash, bool gxt)
+std::string GetWeaponLabel(Hash hash, bool gxt)
 {
 	auto wit = WeaponIndivs::vWeaponLabels.find(hash);
 	if (wit != WeaponIndivs::vWeaponLabels.end())
@@ -1315,7 +1312,7 @@ void GivePedParachute(GTAentity ped)
 		}
 	}
 }
-void give_ped_max_ammo(GTAentity ped)
+void GivePedMaxAmmo(GTAentity ped)
 {
 	for (auto& cc : WeaponIndivs::vAllWeapons)
 	{
@@ -1331,7 +1328,7 @@ void give_ped_max_ammo(GTAentity ped)
 		}
 	}
 }
-void give_all_weapons_to_ped(GTAentity ped, bool bInfAmmo)
+void GiveAllWeaponsToPed(GTAentity ped, bool bInfAmmo)
 {
 	if (ped.Exists())
 	{
@@ -1364,8 +1361,6 @@ void give_all_weapons_to_ped(GTAentity ped, bool bInfAmmo)
 					SET_AMMO_IN_CLIP(ped.Handle(), c.weaponHash, GET_MAX_AMMO_IN_CLIP(ped.Handle(), c.weaponHash, false));
 					SET_PED_AMMO(ped.Handle(), c.weaponHash, maxAmmo, 0);
 				}
-
-				//SET_PED_WEAPON_TINT_INDEX(ped.Handle(), c.weaponHash, c.tintCaptions->size() - 1);
 			}
 			i++;
 		}

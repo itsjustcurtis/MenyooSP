@@ -818,7 +818,7 @@ int& GTAblip::Handle()
 
 uint8_t GTAblip::Alpha() const
 {
-	return (uint8_t)GET_BLIP_ALPHA(this->mHandle);
+	return static_cast<uint8_t>(GET_BLIP_ALPHA(this->mHandle));
 }
 void GTAblip::SetAlpha(uint8_t value)
 {

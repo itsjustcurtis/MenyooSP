@@ -3377,7 +3377,7 @@ namespace sub
 		if (neon_fade_minus)
 		{
 			if (loop_neon_fade == 0)
-				loop_neon_fade = NEON_FADE.size()-1;
+				loop_neon_fade = static_cast<int>(NEON_FADE.size())-1;
 			else
 				loop_neon_fade--;
 		}
@@ -3391,7 +3391,7 @@ namespace sub
 		if (neon_flash_minus)
 		{
 			if (loop_neon_flash == 0)
-				loop_neon_flash = NEON_FLASH.size()-1;
+				loop_neon_flash = static_cast<int>(NEON_FLASH.size())-1;
 			else
 				loop_neon_flash--;
 		}

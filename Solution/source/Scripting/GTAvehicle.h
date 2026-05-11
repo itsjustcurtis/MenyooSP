@@ -21,6 +21,7 @@
 #pragma once
 
 #include "GTAentity.h"
+#include "GTAvehicleData.h"
 
 #include <vector>
 #include <string>
@@ -45,8 +46,6 @@ namespace GTAmodel {
 }
 class RgbS;
 
-extern const std::vector<std::string> vValues_HornNames;
-extern const std::vector<std::string> vValues_ModSlotNames;
 std::string GetModSlotName(Vehicle vehicle, INT modType, bool gxt);
 std::string GetModTextLabel(Vehicle vehicle, INT modType, INT modValue, bool gxt);
 

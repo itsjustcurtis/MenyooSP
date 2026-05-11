@@ -60,15 +60,15 @@ public:
 
 	void SetDepthOfFieldStrength(float value);
 
-	float GetFieldOfView() const;
+	float GetFieldOfView() const noexcept;
 	void SetFieldOfView(float value);
 
-	float GetFarClip() const;
+	float GetFarClip() const noexcept;
 	void SetFarClip(float value);
-	float GetFarDepthOfField() const;
+	float GetFarDepthOfField() const noexcept;
 	void SetFarDepthOfField(float value);
 
-	float GetNearClip() const;
+	float GetNearClip() const noexcept;
 	void SetNearClip(float value);
 	void SetNearDepthOfField(float value);
 

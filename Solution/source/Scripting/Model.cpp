@@ -176,39 +176,39 @@ namespace GTAmodel
 		return dim2;
 	}
 
-	bool Model::IsBicycle() const
+	bool Model::IsBicycle() const noexcept
 	{
 		return IS_THIS_MODEL_A_BICYCLE(this->hash) != 0;
 	}
-	bool Model::IsBike() const
+	bool Model::IsBike() const noexcept
 	{
 		return IS_THIS_MODEL_A_BIKE(this->hash) || this->hash == VEHICLE_CHIMERA;
 	}
-	bool Model::IsQuadbike() const
+	bool Model::IsQuadbike() const noexcept
 	{
 		return IS_THIS_MODEL_A_QUADBIKE(this->hash) != 0;
 	}
-	bool Model::IsBoat() const
+	bool Model::IsBoat() const noexcept
 	{
 		return IS_THIS_MODEL_A_BOAT(this->hash) != 0;
 	}
-	bool Model::IsCar() const
+	bool Model::IsCar() const noexcept
 	{
 		return IS_THIS_MODEL_A_CAR(this->hash) != 0;
 	}
-	bool Model::IsHeli() const
+	bool Model::IsHeli() const noexcept
 	{
 		return IS_THIS_MODEL_A_HELI(this->hash) != 0;
 	}
-	bool Model::IsPlane() const
+	bool Model::IsPlane() const noexcept
 	{
 		return IS_THIS_MODEL_A_PLANE(this->hash) != 0;
 	}
-	bool Model::IsTrain() const
+	bool Model::IsTrain() const noexcept
 	{
 		return IS_THIS_MODEL_A_TRAIN(this->hash) != 0;
 	}
-	bool Model::IsFastBoat() const
+	bool Model::IsFastBoat() const noexcept
 	{
 		return IS_THIS_MODEL_A_JETSKI(this->hash) != 0;
 	}
@@ -326,7 +326,7 @@ namespace GTAmodel
 		return false;
 	}
 
-	bool Model::IsVehicle() const
+	bool Model::IsVehicle() const noexcept
 	{
 		return IS_MODEL_A_VEHICLE(this->hash) != 0;
 	}
@@ -359,7 +359,7 @@ namespace GTAmodel
 	{
 		this->Load(7500);
 	}
-	bool Model::IsLoaded() const
+	bool Model::IsLoaded() const noexcept
 	{
 		return HAS_MODEL_LOADED(this->hash) != 0;
 	}
@@ -384,7 +384,7 @@ namespace GTAmodel
 		}
 		return false;
 	}
-	bool Model::IsCollisionLoaded() const
+	bool Model::IsCollisionLoaded() const noexcept
 	{
 		return HAS_COLLISION_FOR_MODEL_LOADED(this->hash) != 0;
 	}
@@ -394,11 +394,11 @@ namespace GTAmodel
 	}
 
 
-	bool Model::IsValid() const
+	bool Model::IsValid() const noexcept
 	{
 		return IS_MODEL_VALID(this->hash) != 0;
 	}
-	bool Model::IsInCdImage() const
+	bool Model::IsInCdImage() const noexcept
 	{
 		return IS_MODEL_IN_CDIMAGE(this->hash) != 0;
 	}

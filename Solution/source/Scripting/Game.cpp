@@ -285,13 +285,13 @@ namespace Game
 			if (decimal_places == 0 && text > 16777216.0)
 			{
 				BEGIN_TEXT_COMMAND_DISPLAY_TEXT("STRING");
-				ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(std::to_string((long long)text).c_str());
+				ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(std::to_string(static_cast<long long>(text)).c_str());
 				END_TEXT_COMMAND_DISPLAY_TEXT(X, Y, 0);
 			}
 			else
 			{
 				BEGIN_TEXT_COMMAND_DISPLAY_TEXT("NUMBER");
-				ADD_TEXT_COMPONENT_FLOAT((float)text, decimal_places);
+				ADD_TEXT_COMPONENT_FLOAT(static_cast<float>(text), decimal_places);
 				END_TEXT_COMMAND_DISPLAY_TEXT(X, Y, 0);
 			}
 		}

@@ -2523,7 +2523,7 @@ namespace sub
 			for (auto& wc : *WeaponIndivs::vAllWeapons[selectedCategoryIndex])
 			{
 				bool bWeapPressed = false;
-				AddTickol(get_weapon_label(wc.weaponHash, true), currentWeapon == wc.weaponHash, bWeapPressed, bWeapPressed); if (bWeapPressed)
+				AddTickol(GetWeaponLabel(wc.weaponHash, true), currentWeapon == wc.weaponHash, bWeapPressed, bWeapPressed); if (bWeapPressed)
 				{
 					GIVE_DELAYED_WEAPON_TO_PED(thisPed.Handle(), wc.weaponHash, 9999, true);
 					GIVE_WEAPON_TO_PED(thisPed.Handle(), wc.weaponHash, 1, true, false);

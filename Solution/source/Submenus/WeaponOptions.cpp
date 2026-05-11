@@ -109,7 +109,7 @@ namespace sub
 		AddToggle("Soul-Switch Gun (SP)", soulSwitchGun, Weaponops_soulswitch_on);
 		AddLocal("Rope Gun (Glitchy)", RopeGun::g_ropeGun.Enabled(), RopeGun::ToggleOnOff, RopeGun::ToggleOnOff);
 		AddLocal("Magnet Gun", MagnetGun::g_magnetGun.Enabled(), MagnetGun::ToggleOnOff, MagnetGun::ToggleOnOff);
-		AddLocal("Flamethrower " + get_weapon_label(FlameThrower::_whash, true), FlameThrower::IsPlayerAdded(g_Ped2), FlameThrower::AddSelf, FlameThrower::RemoveSelf);
+		AddLocal("Flamethrower " + GetWeaponLabel(FlameThrower::_whash, true), FlameThrower::IsPlayerAdded(g_Ped2), FlameThrower::AddSelf, FlameThrower::RemoveSelf);
 		AddToggle("Teleport Gun", teleportGun, bTeleportGunOn);
 		AddToggle("Ped Revival Gun", selfResurrectionGun, bSelfResurrectionGunOn);
 		AddToggle("Entity Removal Gun", selfDeleteGun, bSelfDeleteGunOn);
@@ -130,8 +130,8 @@ namespace sub
 		if (bSelfDeleteGunOn) { Game::Print::PrintBottomLeft("Shoot ~b~anything*~s~ with the ~b~SNS pistol~s~ to delete it."); return; }
 		if (bSelfResurrectionGunOn) { Game::Print::PrintBottomLeft("Shoot ~b~dead people~s~ with the ~b~stun gun~s~ to bring them back from the other side."); return; }
 
-		if (ped_weaps_all) { give_all_weapons_to_ped(g_Ped1); WAIT(15); give_ped_max_ammo(g_Ped1); return; }
-		if (bGiveMaxAmmoPressed) { give_ped_max_ammo(g_Ped1); return; }
+		if (ped_weaps_all) { GiveAllWeaponsToPed(g_Ped1); WAIT(15); GivePedMaxAmmo(g_Ped1); return; }
+		if (bGiveMaxAmmoPressed) { GivePedMaxAmmo(g_Ped1); return; }
 		if (WeaponopsRemoveWeaps_) { REMOVE_ALL_PED_WEAPONS(g_Ped1, 1); return; }
 
 
@@ -162,7 +162,7 @@ namespace sub
 		if (WeaponopsBulletTimeOff_) { SET_TIME_SCALE(currentTimescale); return; }
 
 		if (WeaponopsInfiniteAmmoOn_) {
-			give_ped_max_ammo(g_Ped1);
+			GivePedMaxAmmo(g_Ped1);
 			SET_PED_INFINITE_AMMO_CLIP(g_Ped1, true);
 			return;
 		}
@@ -435,7 +435,7 @@ namespace sub
 			AddNumber("Launch Force", shootForce, 0, setForce_custom, setForce_plus, setForce_minus);
 
 			if (printInstructions) {
-				Game::Print::PrintBottomLeft("Use the ~b~" + get_weapon_label(g_gravityGun.WHASH(), true) + "~s~ for hax.");
+				Game::Print::PrintBottomLeft("Use the ~b~" + GetWeaponLabel(g_gravityGun.WHASH(), true) + "~s~ for hax.");
 				Game::Print::PrintBottomLeft((std::string)"Use ~b~" + (Menu::bitController ? "RS/LS" : "mouse scroll") + "~s~ to change the hold distance.");
 				Game::Print::PrintBottomLeft("Shoot to launch.");
 				return;
@@ -925,7 +925,7 @@ namespace sub
 					Hash hashNameHash = GET_HASH_KEY(hashNameStr);
 					if (IS_WEAPON_VALID(hashNameHash))
 					{
-						std::string customNameStr = Game::InputBox("", 28U, "Enter custom name:", get_weapon_label(hashNameHash, true));
+						std::string customNameStr = Game::InputBox("", 28U, "Enter custom name:", GetWeaponLabel(hashNameHash, true));
 						if (customNameStr.length() > 0)
 						{
 							if (AddWeaponToFavourites(hashNameHash, customNameStr))
@@ -953,7 +953,7 @@ namespace sub
 				AddTickol("Currently Held Weapon", bIsCurrentWeaponAFav, bAddCurrentWeaponToFav, bRemoveCurrentWeaponFromFav, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 				if (bAddCurrentWeaponToFav)
 				{
-					std::string customNameStr = Game::InputBox("", 28U, "Enter custom name:", get_weapon_label(currentPedWeapon, true));
+					std::string customNameStr = Game::InputBox("", 28U, "Enter custom name:", GetWeaponLabel(currentPedWeapon, true));
 					if (customNameStr.length())
 					{
 						if (AddWeaponToFavourites(currentPedWeapon, customNameStr))
@@ -1079,7 +1079,7 @@ namespace sub
 				switch (pedCurrentWeapon)
 				{
 				case WEAPON_UNARMED:
-					Game::Print::PrintBottomCentre(oss_ << "This weapon isn't exactly valid: ~b~" << get_weapon_label(pedCurrentWeapon, true) << "~s~.");
+					Game::Print::PrintBottomCentre(oss_ << "This weapon isn't exactly valid: ~b~" << GetWeaponLabel(pedCurrentWeapon, true) << "~s~.");
 					break;
 				default:
 					selectedCategory = WEAPONTYPE::WEAPE_CURRENTLYHELD;
@@ -1119,7 +1119,7 @@ namespace sub
 			{
 				auto& thisWeaponInfo = vAllWeapons[selectedCategory]->at(i);
 				bool bWeapPressed = false;
-				AddOption(get_weapon_label(thisWeaponInfo.weaponHash, true), bWeapPressed); if (bWeapPressed)
+				AddOption(GetWeaponLabel(thisWeaponInfo.weaponHash, true), bWeapPressed); if (bWeapPressed)
 				{
 					selectedWeapon = i;
 					Menu::SetSub_delayed = SUB::WEAPONOPS_INDIVS_ITEM;
@@ -1135,7 +1135,7 @@ namespace sub
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
 						{
 							!bIsAFav ?
-								WeaponFavourites_catind::AddWeaponToFavourites(thisWeaponInfo.weaponHash, Game::InputBox("", 28U, "Enter custom name:", get_weapon_label(thisWeaponInfo.weaponHash, true)))
+								WeaponFavourites_catind::AddWeaponToFavourites(thisWeaponInfo.weaponHash, Game::InputBox("", 28U, "Enter custom name:", GetWeaponLabel(thisWeaponInfo.weaponHash, true)))
 								: WeaponFavourites_catind::RemoveWeaponFromFavourites(thisWeaponInfo.weaponHash);
 							/*if (!bIsAFav)
 							{
@@ -1152,7 +1152,7 @@ namespace sub
 						if (IsKeyJustUp(VirtualKey::B))
 						{
 							!bIsAFav ?
-								WeaponFavourites_catind::AddWeaponToFavourites(thisWeaponInfo.weaponHash, Game::InputBox("", 28U, "Enter custom name:", get_weapon_label(thisWeaponInfo.weaponHash, true)))
+								WeaponFavourites_catind::AddWeaponToFavourites(thisWeaponInfo.weaponHash, Game::InputBox("", 28U, "Enter custom name:", GetWeaponLabel(thisWeaponInfo.weaponHash, true)))
 								: WeaponFavourites_catind::RemoveWeaponFromFavourites(thisWeaponInfo.weaponHash);
 							/*if (!bIsAFav)
 							{
@@ -1205,7 +1205,7 @@ namespace sub
 				selWeaponTints = selWeapon->tintCaptions;
 			}
 
-			std::string displayName = get_weapon_label(whash, true);
+			std::string displayName = GetWeaponLabel(whash, true);
 
 			AddTitle(displayName);
 

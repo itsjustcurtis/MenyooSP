@@ -32,6 +32,14 @@
 
 #include <string>
 
+namespace 
+{
+	inline constexpr UINT64 kEntityFreezeOffset      = 0x2E; // bit 1 = position frozen
+	inline constexpr UINT64 kEntityRightVecOffset    = 0x60; // matrix row, right vector
+	inline constexpr UINT64 kEntityForwardVecOffset  = 0x70; // matrix row, forward vector
+	inline constexpr UINT64 kEntityUpVecOffset       = 0x80; // matrix row, up vector
+}
+
 GTAentity& GTAentity::operator = (const GTAentity& value)
 {
 	this->mHandle = value.mHandle;
@@ -67,21 +75,17 @@ int& GTAentity::Handle()
 {
 	return this->mHandle;
 }
-int GTAentity::GetHandle() const
+int GTAentity::GetHandle() const noexcept
 {
 	return this->mHandle;
 }
-//void GTAentity::SetHandle(Entity handle)
-//{
-//	this->mHandle = handle;
-//}
 
 UINT64 GTAentity::MemoryAddress() const
 {
 	return GTAmemory::GetEntityAddress(this->GetHandle());
 }
 
-int GTAentity::Type() const
+int GTAentity::Type() const noexcept
 {
 	return GET_ENTITY_TYPE(this->mHandle);
 }
@@ -93,24 +97,23 @@ GTAblip GTAentity::CurrentBlip() const
 
 Vector3 GTAentity::ForwardVector() const
 {
-	//return GET_ENTITY_FORWARD_VECTOR(this->mHandle);
 	auto addr = this->MemoryAddress();
 	if (!addr) return Vector3();
-	return GTAmemory::ReadVector3(addr + 0x70);
+	return GTAmemory::ReadVector3(addr + kEntityForwardVecOffset);
 }
+
 Vector3 GTAentity::RightVector() const
 {
-	//return Vector3::Cross(ForwardVector(), Vector3::WorldUp());
 	auto addr = this->MemoryAddress();
 	if (!addr) return Vector3();
-	return GTAmemory::ReadVector3(addr + 0x60);
+	return GTAmemory::ReadVector3(addr + kEntityRightVecOffset);
 }
+
 Vector3 GTAentity::UpVector() const
 {
-	//return Vector3::Cross(RightVector(), ForwardVector());
 	auto addr = this->MemoryAddress();
 	if (!addr) return Vector3();
-	return GTAmemory::ReadVector3(addr + 0x80);
+	return GTAmemory::ReadVector3(addr + kEntityUpVecOffset);
 }
 
 bool GTAentity::IsPositionFrozen() const
@@ -118,16 +121,17 @@ bool GTAentity::IsPositionFrozen() const
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return IsBitSet(*(int*)(this->MemoryAddress() + 0x2E), 1);
+		return IsBitSet(*reinterpret_cast<int*>(this->MemoryAddress() + kEntityFreezeOffset), 1);
 	}
 	else return false;
 }
+
 void GTAentity::FreezePosition(bool value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		SetClearBit(*(int*)(this->MemoryAddress() + 0x2E), 1, value);
+		SetClearBit(*reinterpret_cast<int*>(this->MemoryAddress() + kEntityFreezeOffset), 1, value);
 	}
 	FREEZE_ENTITY_POSITION(this->mHandle, value);
 }
@@ -141,19 +145,21 @@ void GTAentity::SetDynamic(bool value)
 	}
 }
 
-float GTAentity::GetHeading() const
+float GTAentity::GetHeading() const noexcept
 {
 	return GET_ENTITY_HEADING(this->mHandle);
 }
+
 void GTAentity::SetHeading(float value)
 {
 	SET_ENTITY_HEADING(this->mHandle, value);
 }
 
-int GTAentity::GetHealth() const
+int GTAentity::GetHealth() const noexcept
 {
 	return GET_ENTITY_HEALTH(this->mHandle);
 }
+
 void GTAentity::SetHealth(int value)
 {
 	SET_ENTITY_HEALTH(this->mHandle, value, 0);
@@ -175,7 +181,7 @@ void GTAentity::SetVehicleEngine(float value)
 	SET_VEHICLE_ENGINE_HEALTH(this->mHandle, value);
 }
 
-float GTAentity::HeightAboveGround() const
+float GTAentity::HeightAboveGround() const noexcept
 {
 	return GET_ENTITY_HEIGHT_ABOVE_GROUND(this->mHandle);
 }
@@ -205,7 +211,6 @@ void GTAentity::PlaceOnGround()
 	}
 
 	pos.z = this->GetGroundZ() + this->Dim1().z;
-	//NETWORK_REQUEST_CONTROL_OF_ENTITY(this->mHandle);
 	SET_ENTITY_COORDS(this->mHandle, pos.x, pos.y, pos.z, 0, 0, 0, 1);
 	PLACE_OBJECT_ON_GROUND_PROPERLY(this->mHandle);
 }
@@ -311,7 +316,7 @@ void GTAentity::SetVisible(bool value)
 	SET_ENTITY_VISIBLE(this->mHandle, value, false);
 }
 
-int GTAentity::GetMaxHealth() const
+int GTAentity::GetMaxHealth() const noexcept
 {
 	return GET_ENTITY_MAX_HEALTH(this->mHandle);
 }
@@ -435,7 +440,7 @@ Vector3 GTAentity::GetSpeedVector(bool relative)
 	return GET_ENTITY_SPEED_VECTOR(this->mHandle, relative);
 }
 
-int GTAentity::GetAlpha() const
+int GTAentity::GetAlpha() const noexcept
 {
 	return GET_ENTITY_ALPHA(this->mHandle);
 }
@@ -453,7 +458,7 @@ void GTAentity::ResetAlpha()
 	RESET_ENTITY_ALPHA(this->mHandle);
 }
 
-int GTAentity::GetLODDistance() const
+int GTAentity::GetLODDistance() const noexcept
 {
 	return GET_ENTITY_LOD_DIST(this->mHandle);
 }
@@ -468,7 +473,7 @@ bool GTAentity::GetHasGravity() const
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return !IsBitSet(*(int*)(memoryAddress + 26), 4);
+		return !IsBitSet(*reinterpret_cast<int*>(memoryAddress + 26), 4);
 	}
 	else return true;
 }
@@ -478,7 +483,7 @@ void GTAentity::SetHasGravity(bool value)
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		SetClearBit(*(int*)(memoryAddress + 26), 4, !value);
+		SetClearBit(*reinterpret_cast<int*>(memoryAddress + 26), 4, !value);
 	}
 	SET_ENTITY_HAS_GRAVITY(this->mHandle, value);
 }
@@ -628,7 +633,7 @@ Vector3 GTAentity::GetOffsetFromBoneInWorldCoords(int boneIndex, const Vector3& 
 		auto addr = GTAmemory::GetEntityBoneMatrixAddress(this->mHandle, boneIndex);
 		if (addr)
 		{
-			float* Addr = (float*)(addr);
+			float* Addr = reinterpret_cast<float*>(addr);
 			const Vector3& right = Vector3(Addr[0], Addr[1], Addr[2]);
 			const Vector3& front = Vector3(Addr[4], Addr[5], Addr[6]);
 			const Vector3& up = Vector3(Addr[8], Addr[9], Addr[10]);
@@ -719,7 +724,6 @@ void OscillateEntity(GTAentity entity, const Vector3& position, float angleFreq,
 void GTAentity::ApplyForce(Vector3 direction, ForceType forceType)
 {
 	this->ApplyForce(direction, Vector3(0, 0, 0), forceType);
-	//APPLY_FORCE_TO_ENTITY_CENTER_OF_MASS(this->mHandle, forceType, direction.x, direction.y, direction.z, false, true, true, false);
 }
 
 void GTAentity::ApplyForce(Vector3 direction, Vector3 offset, ForceType forceType)
@@ -792,7 +796,7 @@ void GTAentity::Delete(bool tele)
 
 	if (tele) SET_ENTITY_COORDS_NO_OFFSET(this->mHandle, 32.2653f, 7683.5249f, 0.5696f, 0, 0, 0);
 
-	auto type = (EntityType)this->Type();
+	auto type = static_cast<EntityType>(this->Type());
 	auto handle = this->mHandle;
 	this->mHandle = 0;
 
@@ -832,7 +836,7 @@ bool GTAentity::IsBulletProof() const
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return IsBitSet(*(int*)(memoryAddress + 392), 4);
+		return IsBitSet(*reinterpret_cast<int*>(memoryAddress + 392), 4);
 	}
 	else return false;
 }
@@ -842,7 +846,7 @@ void GTAentity::SetBulletProof(bool value)
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return SetClearBit(*(int*)(memoryAddress + 392), 4, value);
+		return SetClearBit(*reinterpret_cast<int*>(memoryAddress + 392), 4, value);
 	}
 }
 
@@ -851,7 +855,7 @@ bool GTAentity::IsExplosionProof() const
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return IsBitSet(*(int*)(memoryAddress + 392), 11);
+		return IsBitSet(*reinterpret_cast<int*>(memoryAddress + 392), 11);
 	}
 	else return false;
 }
@@ -861,7 +865,7 @@ void GTAentity::SetExplosionProof(bool value)
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return SetClearBit(*(int*)(memoryAddress + 392), 11, value);
+		return SetClearBit(*reinterpret_cast<int*>(memoryAddress + 392), 11, value);
 	}
 }
 
@@ -870,7 +874,7 @@ bool GTAentity::IsFireProof() const
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return IsBitSet(*(int*)(memoryAddress + 392), 5);
+		return IsBitSet(*reinterpret_cast<int*>(memoryAddress + 392), 5);
 	}
 	else return false;
 }
@@ -880,7 +884,7 @@ void GTAentity::SetFireProof(bool value)
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return SetClearBit(*(int*)(memoryAddress + 392), 5, value);
+		return SetClearBit(*reinterpret_cast<int*>(memoryAddress + 392), 5, value);
 	}
 }
 
@@ -889,7 +893,7 @@ bool GTAentity::IsInvincible() const
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return IsBitSet(*(int*)(memoryAddress + 392), 8);
+		return IsBitSet(*reinterpret_cast<int*>(memoryAddress + 392), 8);
 	}
 	else return false;
 }
@@ -899,7 +903,7 @@ void GTAentity::SetInvincible(bool value)
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return SetClearBit(*(int*)(memoryAddress + 392), 8, value);
+		return SetClearBit(*reinterpret_cast<int*>(memoryAddress + 392), 8, value);
 	}
 
 	SET_ENTITY_INVINCIBLE(this->mHandle, value);
@@ -910,7 +914,7 @@ bool GTAentity::IsMeleeProof() const
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return IsBitSet(*(int*)(memoryAddress + 392), 7);
+		return IsBitSet(*reinterpret_cast<int*>(memoryAddress + 392), 7);
 	}
 	else return false;
 }
@@ -920,7 +924,7 @@ void GTAentity::SetMeleeProof(bool value)
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return SetClearBit(*(int*)(memoryAddress + 392), 7, value);
+		return SetClearBit(*reinterpret_cast<int*>(memoryAddress + 392), 7, value);
 	}
 }
 
@@ -929,7 +933,7 @@ bool GTAentity::IsOnlyDamagedByPlayer() const
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return IsBitSet(*(int*)(memoryAddress + 392), 9);
+		return IsBitSet(*reinterpret_cast<int*>(memoryAddress + 392), 9);
 	}
 	else return false;
 }
@@ -939,7 +943,7 @@ void GTAentity::SetOnlyDamagedByPlayer(bool value)
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		return SetClearBit(*(int*)(memoryAddress + 392), 9, value);
+		return SetClearBit(*reinterpret_cast<int*>(memoryAddress + 392), 9, value);
 	}
 
 	SET_ENTITY_ONLY_DAMAGED_BY_PLAYER(this->mHandle, value);

@@ -142,7 +142,7 @@ public:
 	static PedGroup CreateNewGroup();
 
 	int& Handle();
-	int GetHandle() const;
+	int GetHandle() const noexcept;
 
 	GTAentity GetLeader() const;
 	void SetLeader(GTAentity ped);

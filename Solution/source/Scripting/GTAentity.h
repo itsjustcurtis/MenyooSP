@@ -65,12 +65,12 @@ public:
 	//virtual ~GTAentity();
 
 	int& Handle();
-	int GetHandle() const;
+	int GetHandle() const noexcept;
 	//void SetHandle(Entity newHandle);
 
 	UINT64 MemoryAddress() const;
 
-	int Type() const;
+	int Type() const noexcept;
 
 	GTAblip CurrentBlip() const;
 
@@ -83,16 +83,16 @@ public:
 
 	void SetDynamic(bool value);
 
-	float GetHeading() const;
+	float GetHeading() const noexcept;
 	void SetHeading(float value);
 
-	int GetHealth() const;
+	int GetHealth() const noexcept;
 	void SetHealth(int value);
 
 	float GetVehicleEngine() const;
 	void SetVehicleEngine(float value);
 
-	float HeightAboveGround() const;
+	float HeightAboveGround() const noexcept;
 	float GetGroundZ() const;
 	virtual void PlaceOnGround();
 
@@ -128,7 +128,7 @@ public:
 	int LandingGearState_get() const;
 	void SetLandingGearState(int state);
 
-	int GetMaxHealth() const;
+	int GetMaxHealth() const noexcept;
 	void SetMaxHealth(int value);
 
 	bool ToggleLandingGear() const;
@@ -158,11 +158,11 @@ public:
 	Vector3 GetSpeedVector(bool relative);
 
 
-	int GetAlpha() const;
+	int GetAlpha() const noexcept;
 	void SetAlpha(int value);
 	void ResetAlpha();
 
-	int GetLODDistance() const;
+	int GetLODDistance() const noexcept;
 	void SetLODDistance(int value);
 
 	bool GetHasGravity() const;

@@ -147,8 +147,6 @@ namespace World
 
 	bool WorldToScreen(const Vector3& worldCoords, Vector2& screenCoords);
 
-	//RaycastResult Raycast(Vector3 source, Vector3 target, IntersectOptions options);
-	//RaycastResult Raycast(Vector3 source, Vector3 target, IntersectOptions options, GTAentity entity);
 	GTAentity EntityFromAimCamRay();
 
 	void DrawMarker(int type, const Vector3& pos, const Vector3& dir, const Vector3& rot, const Vector3& scale, const RGBA& colour);

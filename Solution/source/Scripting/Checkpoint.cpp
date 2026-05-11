@@ -89,7 +89,7 @@ void Checkpoint::SetIcon(const CheckpointIcon& value)
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
 	{
-		*(int*)(memoryAddress + 56) = (int)value;
+		*(int*)(memoryAddress + 56) = static_cast<int>(value);
 	}
 }
 

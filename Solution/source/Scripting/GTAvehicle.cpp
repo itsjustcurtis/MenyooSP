@@ -37,122 +37,6 @@
 #include <vector>
 #include <map>
 
-#pragma region vehicle mod slot names
-const std::vector<std::string> vValues_HornNames
-{
-	"CMOD_HRN_TRK",
-	"CMOD_HRN_COP",
-	"CMOD_HRN_CLO",
-	"CMOD_HRN_MUS1",
-	"CMOD_HRN_MUS2",
-	"CMOD_HRN_MUS3",
-	"CMOD_HRN_MUS4",
-	"CMOD_HRN_MUS5",
-	"CMOD_HRN_SAD", 
-	"HORN_CLAS1", 
-	"HORN_CLAS2", 
-	"HORN_CLAS3",
-	"HORN_CLAS4",
-	"HORN_CLAS5",
-	"HORN_CLAS6",
-	"HORN_CLAS7",
-	"HORN_CNOTE_C0",
-	"HORN_CNOTE_D0",
-	"HORN_CNOTE_E0",
-	"HORN_CNOTE_F0",
-	"HORN_CNOTE_G0",
-	"HORN_CNOTE_A0",
-	"HORN_CNOTE_B0",
-	"HORN_CNOTE_C1",
-	"HORN_HIPS1",
-	"HORN_HIPS2",
-	"HORN_HIPS3",
-	"HORN_HIPS4",
-	"HORN_INDI_1",
-	"HORN_INDI_2",
-	"HORN_INDI_3",
-	"HORN_INDI_4",
-	"HORN_LUXE1",
-	"HORN_LUXE2",
-	"HORN_LUXE3",
-	"",
-	"",
-	"",
-	"HORN_HWEEN1",
-	"",
-	"HORN_HWEEN2",
-	"",
-	"HORN_LOWRDER1",
-	"",
-	"HORN_LOWRDER2",
-	"",
-	"HORN_XM15_1",
-	"",
-	"HORN_XM15_2",
-	"",
-	"HORN_XM15_3",
-	"",
-	"CMOD_AIRHORN_01",
-	"",
-	"CMOD_AIRHORN_02",
-	"",
-	"CMOD_AIRHORN_03",
-	""
-};
-
-const std::vector<std::string> vValues_ModSlotNames
-{
-	"CMOD_MOD_SPO",
-	"CMOD_BUM_1",
-	"CMOD_BUM_4",
-	"CMOD_MOD_SKI",
-	"CMOD_MOD_MUF",
-	"CMOD_MOD_CHA",
-	"CMOD_MOD_GRL",
-	"CMOD_MOD_HOD",
-	"CMOD_MOD_FEN",
-	"CMOD_MOD_FEN",
-	"CMOD_MOD_ROF",
-	"CMOD_MOD_ENG",
-	"CMOD_MOD_BRA",
-	"CMOD_MOD_TRN",
-	"CMOD_MOD_HRN",
-	"CMOD_MOD_SUS",
-	"CMOD_MOD_ARM",
-	"Unknown 17",
-	"CMOD_MOD_TUR",
-	"Unknown 19",
-	"Tyre Smoke",
-	"Unknown 21",
-	"CMOD_MOD_LGT",
-	"CMOD_MOD_WHEM",
-	"CMOD_WHE0_1",
-	"CMM_MOD_S0",//"Plateholder",
-	"CMM_MOD_S1",//"Vanity Plate",
-	"CMM_MOD_S2",//"Trim Design",
-	"CMM_MOD_S3",//"Ornament",
-	"CMM_MOD_S4",//"Dash",
-	"CMM_MOD_S5",//"Dial Design",
-	"CMM_MOD_S6",//"Doorcards",
-	"CMM_MOD_S7",//"Leather Seats",
-	"CMM_MOD_S8",//"Steering Wheel",
-	"CMM_MOD_S9",//"Column Shifter Lever",
-	"CMM_MOD_S10",//"Plaque",
-	"CMM_MOD_S11",//"Speakers",
-	"CMM_MOD_S12",//"Trunk",
-	"CMM_MOD_S13",//"Hydraulics",
-	"CMM_MOD_S14",//"Engine Block",
-	"CMM_MOD_S15",//"Air Filter",
-	"CMM_MOD_S16",//"Struts",
-	"CMM_MOD_S17",//"Arch Cover",
-	"CMM_MOD_S18",//"Aerials",
-	"CMM_MOD_S19",//"Trim",
-	"CMM_MOD_S20",//"Tank",
-	"CMM_MOD_S21",//"Windows",
-	"CMM_MOD_S22",//"Unknown 47",
-	"CMM_MOD_S23",//"Livery",
-};
-#pragma endregion
 
 std::string GetModSlotName(Vehicle vehicle, INT modType, bool gxt)
 {
@@ -1236,11 +1120,11 @@ void GTAvehicle::FixDoor(VehicleDoor door)
 		typedef void CVehicleDoor;
 		// EB 03 49 8B C0 0F BF 40 0C - 0x25
 		typedef CVehicleDoor*(__thiscall * tCVehicle__GetDoorByID)(CVehicle* This, uint32_t doorId);
-		static auto doorByIdPattern = MemryScan::PatternScanner::FindPattern("EB 03 49 8B C0 0F BF 40 0C");
+		static auto doorByIdPattern = MemryScan::PatternScanner::FindPattern("\xEB\x03\x49\x8B\xC0\x0F\xBF\x40\x0C", "xxxxxxxxx");
 		static tCVehicle__GetDoorByID CVehicle__GetDoorByID = doorByIdPattern ? (tCVehicle__GetDoorByID)(doorByIdPattern - 0x25) : nullptr;
 		// C1 E8 14 A8 01 0F 85 ? ? ? ? 33 DB - 0x1A
 		typedef void(__thiscall * tCVehicleDoor__Fix)(CVehicleDoor* This, CVehicle* veh);
-		static auto doorFixPattern = MemryScan::PatternScanner::FindPattern("C1 E8 14 A8 01 0F 85 ? ? ? ? 33 DB");
+		static auto doorFixPattern = MemryScan::PatternScanner::FindPattern("\xC1\xE8\x14\xA8\x01\x0F\x85\x00\x00\x00\x00\x33\xDB", "xxxxxxx????xx");
 		static tCVehicleDoor__Fix CVehicleDoor__Fix = doorFixPattern ? (tCVehicleDoor__Fix)(doorFixPattern - 0x1A) : nullptr;
 
 		if (!CVehicle__GetDoorByID || !CVehicleDoor__Fix) return;
