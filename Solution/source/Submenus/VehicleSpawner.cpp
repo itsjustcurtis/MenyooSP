@@ -3100,7 +3100,14 @@ namespace sub
 					std::string inputStr = Game::InputBox("", 28U, "Enter file name:");
 					if (inputStr.length() > 0)
 					{
-						VehicleSaveToFile(_dir + "\\" + inputStr + ".xml", vehicle);
+						if (!IsSafePath(inputStr))
+						{
+							Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						}
+						else
+						{
+							VehicleSaveToFile(_dir + "\\" + inputStr + ".xml", vehicle);
+						}
 					}
 					else
 					{
@@ -3127,7 +3134,11 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter folder name:");
 				if (inputStr.length() > 0)
 				{
-					if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
+					if (!IsSafePath(inputStr))
+					{
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					}
+					else if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
 					{
 						_dir = _dir + "\\" + inputStr;
 						Menu::currentop = 6;
@@ -3177,16 +3188,23 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter new name:", _name);
 				if (inputStr.length() > 0)
 				{
-					std::string oldPath = _dir + "\\" + _name + ".xml";
-					std::string newPath = _dir + "\\" + inputStr + ".xml";
-					if (rename(oldPath.c_str(), (newPath).c_str()) == 0)
+					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
-						_name = inputStr;
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
 					}
-					else 
+					else
 					{
-						Game::Print::PrintBottomCentre("~r~Error~s~ renaming file.");
+						std::string oldPath = _dir + "\\" + _name + ".xml";
+						std::string newPath = _dir + "\\" + inputStr + ".xml";
+						if (rename(oldPath.c_str(), (newPath).c_str()) == 0)
+						{
+							Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
+							_name = inputStr;
+						}
+						else 
+						{
+							Game::Print::PrintBottomCentre("~r~Error~s~ renaming file.");
+						}
 					}
 				}
 				else 

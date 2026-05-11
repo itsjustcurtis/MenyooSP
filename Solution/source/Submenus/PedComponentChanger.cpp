@@ -1786,8 +1786,15 @@ namespace sub
 			std::string inputStr = Game::InputBox("", 28U, "FMMC_KEY_TIP9");
 			if (inputStr.length() > 0)
 			{
-				ComponentChangerOutfit::Create(g_Ped1, dir + "\\" + inputStr + ".xml");
-				Game::Print::PrintBottomLeft("File ~b~created~s~.");
+				if (!IsSafePath(inputStr))
+				{
+					Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+				}
+				else
+				{
+					ComponentChangerOutfit::Create(g_Ped1, dir + "\\" + inputStr + ".xml");
+					Game::Print::PrintBottomLeft("File ~b~created~s~.");
+				}
 			}
 			else Game::Print::PrintErrorInvalidInput(inputStr);
 			return;
@@ -1798,7 +1805,11 @@ namespace sub
 			std::string inputStr = Game::InputBox("", 28U, "Enter folder name:");
 			if (inputStr.length() > 0)
 			{
-				if (CreateDirectoryA((dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
+				if (!IsSafePath(inputStr))
+				{
+					Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+				}
+				else if (CreateDirectoryA((dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
 				{
 					dir = dir + "\\" + inputStr;
 					Menu::currentop = 5;
@@ -1880,7 +1891,11 @@ namespace sub
 			std::string newName = Game::InputBox("", 28U, "FMMC_KEY_TIP9", name);
 			if (newName.length() > 0)
 			{
-				if (rename(filePath.c_str(), (dir + "\\" + newName + ".xml").c_str()) == 0)
+				if (!IsSafePath(newName))
+				{
+					Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+				}
+				else if (rename(filePath.c_str(), (dir + "\\" + newName + ".xml").c_str()) == 0)
 				{
 					name = newName;
 					Game::Print::PrintBottomLeft("File ~b~renamed~s~.");

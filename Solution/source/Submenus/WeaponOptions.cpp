@@ -1587,7 +1587,11 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter loadout name:");
 				if (inputStr.length() > 0)
 				{
-					if (WeaponsLoadouts_catind::Create(_ped, _dir + "\\" + inputStr + ".xml"))
+					if (!IsSafePath(inputStr))
+					{
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					}
+					else if (WeaponsLoadouts_catind::Create(_ped, _dir + "\\" + inputStr + ".xml"))
 						Game::Print::PrintBottomLeft("Loadout ~b~saved~s~.");
 					else
 						Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to save loadout.");
@@ -1604,7 +1608,11 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter folder name:");
 				if (inputStr.length() > 0)
 				{
-					if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) ||
+					if (!IsSafePath(inputStr))
+					{
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					}
+					else if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) ||
 						GetLastError() == ERROR_ALREADY_EXISTS)
 					{
 						_dir = _dir + "\\" + inputStr;
@@ -1650,7 +1658,11 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter new name:", _name);
 				if (inputStr.length())
 				{
-					if (rename(filePath.c_str(), (_dir + "\\" + inputStr + ".xml").c_str()) == 0)
+					if (!IsSafePath(inputStr))
+					{
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					}
+					else if (rename(filePath.c_str(), (_dir + "\\" + inputStr + ".xml").c_str()) == 0)
 					{
 						_name = inputStr;
 						Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
