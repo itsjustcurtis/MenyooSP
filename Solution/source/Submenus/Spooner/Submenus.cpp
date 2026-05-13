@@ -147,25 +147,21 @@ namespace sub
 				hudY += HUD_LINE_HEIGHT;
 			};
 
-			if (selectedEntity.handle.Exists())
-			{
-				static TransformGizmo gizmo;
-				gizmo.SetMode(SpoonerMode::bEntityEditRotationMode ? GizmoMode::Rotate : GizmoMode::Translate);
-				gizmo.Update();
-				gizmo.Draw(selectedEntity.handle.GetPosition());
-				if (gizmo.IsActive())
-					gizmo.ApplyMovement(selectedEntity.handle);
-			}
-
 			if (SpoonerMode::bEntityEditRotationMode)
+			{
 				drawText("~y~Gizmo Mode ~s~(Rotation Mode):");
+			}
 			else
+			{
 				drawText("~y~Gizmo Mode ~s~(Position Mode):");
+			}
 			drawText("~b~Left Click:~w~ Grab axis handle");
 			drawText("~b~R:~w~ Toggle position/rotation");
 			drawText("~b~B:~w~ Disable controls");
 			drawText(SpoonerMode::bGizmoCameraLocked ? "~r~Camera LOCKED ~s~- Mouse drag freely" : "~g~Camera UNLOCKED ~s~- Mouse rotates camera");
 			drawText("~b~C:~w~ Toggle camera lock");
+			drawText(SpoonerMode::bGizmoLocalSpace ? "~y~Gizmo Axes: LOCAL" : "~y~Gizmo Axes: WORLD");
+			drawText("~b~L:~w~ Toggle world/local axes");
 		}
 
 		void HandleGizmoAttachmentManipulation(GTAentity& parentEntity, Vector3& position, Vector3& rotation)
@@ -195,6 +191,8 @@ namespace sub
 			drawText("~b~B:~w~ Disable controls");
 			drawText(SpoonerMode::bGizmoCameraLocked ? "~r~Camera LOCKED ~s~- Mouse drag freely" : "~g~Camera UNLOCKED ~s~- Mouse rotates camera");
 			drawText("~b~C:~w~ Toggle camera lock");
+			drawText(SpoonerMode::bGizmoLocalSpace ? "~y~Gizmo Axes: LOCAL" : "~y~Gizmo Axes: WORLD");
+			drawText("~b~L:~w~ Toggle world/local axes");
 		}
 
 		void HandleEntityEditingLogic(Vector3& position, Vector3& rotation, GTAentity* parentEntity)
@@ -235,6 +233,12 @@ namespace sub
 			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::C))
 			{
 				SpoonerMode::bGizmoCameraLocked = !SpoonerMode::bGizmoCameraLocked;
+			}
+
+			// toggling world / local gizmo orientation in gizmo mode
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::L))
+			{
+				SpoonerMode::bGizmoLocalSpace = !SpoonerMode::bGizmoLocalSpace;
 			}
 
 			constexpr float HUD_LINE_HEIGHT = 0.025f;
@@ -2045,8 +2049,6 @@ namespace sub
 
 			bool bPropertiesSubPressed = false, bEnt_plus = false, bEnt_minus = false;
 			AddTexter(selectedEntity.hashName, currIndexInDb, std::vector<std::string>{}, bPropertiesSubPressed, bEnt_plus, bEnt_minus);
-			if (*Menu::currentopATM == Menu::printingop)
-				EntityManagement::ShowArrowAboveEntity(selectedEntity.handle, RGBA(51, 153, 255, 200));
 			if (bPropertiesSubPressed)
 			{
 				Menu::SetSub_delayed = SUB::SPOONER_SELECTEDENTITYOPS;

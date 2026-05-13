@@ -13,6 +13,7 @@
 
 #include "Menu.h"
 #include "MenuConfig.h"
+#include "ImGuiSpooner.h"
 
 #include "..\Util\FileLogger.h"
 #include "..\Util\ExePath.h"
@@ -236,6 +237,17 @@ inline void MenyooMain()
 }
 void ThreadMenyooMain()
 {
+	static bool s_imguiInitAttempted = false;
+	if (!s_imguiInitAttempted && !g_isEnhanced)
+	{
+		s_imguiInitAttempted = true;
+		addlog(ige::LogType::LOG_TRACE, "Spawning ImGui spooner init thread");
+		CreateThread(NULL, 0, [](LPVOID) -> DWORD {
+			sub::Spooner::ImGuiSpooner::Initialize();
+			return 0;
+		}, NULL, 0, NULL);
+	}
+
 	addlog(ige::LogType::LOG_TRACE, "Launching MenyooMain");
 	MenyooMain();
 }

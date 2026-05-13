@@ -9,6 +9,7 @@
 */
 #include "SpoonerMode.h"
 
+#include "..\..\Menu\ImGuiSpooner.h"
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
@@ -57,6 +58,7 @@ namespace sub::Spooner
 		eEntityEditMode entityEditMode = eEntityEditMode::Disabled;
 		bool bEntityEditRotationMode = false;
 		bool bGizmoCameraLocked = false;
+		bool bGizmoLocalSpace = false;
 		Camera spoonerModeCamera;
 		float spoonerModeCameraCamDistance = 5.0f;
 		eSpoonerModeMode& spoonerModeMode = Settings::spoonerModeMode;
@@ -579,8 +581,7 @@ namespace sub::Spooner
 					if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
 						movementSensitivity = 4.0f * movementSensitivity;
 					
-					// blocks camera movement while we are using the keyboard to edit entity pos / rot
-					if (entityEditMode != eEntityEditMode::Keyboard)
+					if (entityEditMode != eEntityEditMode::Keyboard && !(entityEditMode == eEntityEditMode::Gizmo && bGizmoCameraLocked))
 					{
 						nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
 						nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
@@ -886,6 +887,8 @@ namespace sub::Spooner
 			if (SpoonerMode::IsHotkeyPressed())
 				SpoonerMode::Toggle(); // Hotkey (when mayo closed)
 
+			sub::Spooner::ImGuiSpooner::Tick();
+
 			CamTick();
 
 			if (Settings::bShowBoxAroundSelectedEntity)
@@ -906,6 +909,7 @@ namespace sub::Spooner
 			if (!g_menuNotOpenedYet)
 			{
 				SpoonerMode::bEnabled = true;
+				sub::Spooner::ImGuiSpooner::SetVisible(true);
 				if (Menu::currentsub != SUB::CLOSED)
 					Game::Print::PrintBottomLeft("~b~Note:~s~ Spooner Mode instructions only appear when Menyoo is closed.");
 			}
@@ -917,6 +921,7 @@ namespace sub::Spooner
 		void TurnOff()
 		{
 			SpoonerMode::bEnabled = false;
+			sub::Spooner::ImGuiSpooner::SetVisible(false);
 			auto& info = modelPreviewInfo;
 			for (auto it = info.previousEntities.begin(); it != info.previousEntities.end();)
 			{
