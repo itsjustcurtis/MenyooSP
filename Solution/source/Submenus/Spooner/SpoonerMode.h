@@ -37,6 +37,7 @@ namespace sub::Spooner
 		extern eEntityEditMode entityEditMode;
 		extern bool bEntityEditRotationMode;
 		extern bool bGizmoCameraLocked;
+		extern bool bGizmoLocalSpace; // false = world-aligned, true = entity-local axes
 		extern Camera spoonerModeCamera;
 		extern float spoonerModeCameraCamDistance;
 
