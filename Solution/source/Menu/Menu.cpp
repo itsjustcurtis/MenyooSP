@@ -1,4 +1,4 @@
-﻿/*
+/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -454,26 +454,23 @@ void Menu::optionhi()
 	if (totalop < 1) { if (bit_glare_test && !titletext_ALPHA_DIS_TEMP) glare_test(); return; }
 
 	float Y_coord;
-	if (currentop > GTA_SCROLLOP && totalop > GTA_MAXOP)
+	if (*currentopATM > GTA_SCROLLOP && totalop > GTA_MAXOP)
 	{
 		Y_coord = GTA_SCROLLOP;
 
-		if (currentop > totalop - GTA_BETOP)
+		if (*currentopATM > totalop - GTA_BETOP)
 		{
 			//for (inull = 0; inull <= GTA_BETOP; inull++)
 			//if (currentop == totalop - GTA_BETOP + inull) break;
-			Y_coord = GTA_SCROLLOP + currentop - totalop + GTA_BETOP;
+			Y_coord = GTA_SCROLLOP + *currentopATM - totalop + GTA_BETOP;
 		}
 	}
-	else Y_coord = currentop;
+	else Y_coord = *currentopATM;
 
 	Y_coord = (Y_coord * 0.035f) + 0.1415f;
 
-	if (!Menu::bit_mouse)
-	{
-		if (gradients) DRAW_SPRITE("CommonMenu", "Gradient_Nav", 0.16f + menuPos.x, Y_coord + menuPos.y, 0.20f, 0.035f, 0.0f, selectionhi.R, selectionhi.G, selectionhi.B, selectionhi.A, false, 0);
-		else DRAW_RECT(0.16f + menuPos.x, Y_coord + menuPos.y, 0.20f, 0.035f, selectionhi.R, selectionhi.G, selectionhi.B, selectionhi.A, false);
-	}
+	if (gradients) DRAW_SPRITE("CommonMenu", "Gradient_Nav", 0.16f + menuPos.x, Y_coord + menuPos.y, 0.20f, 0.035f, 0.0f, selectionhi.R, selectionhi.G, selectionhi.B, selectionhi.A, false, 0);
+	else DRAW_RECT(0.16f + menuPos.x, Y_coord + menuPos.y, 0.20f, 0.035f, selectionhi.R, selectionhi.G, selectionhi.B, selectionhi.A, false);
 
 	if (bit_glare_test && !titletext_ALPHA_DIS_TEMP) glare_test();
 }
@@ -536,22 +533,25 @@ void Menu::while_opened()
 	//set_THEPHONEDOWN();
 	set_opened_IB();
 
-	// Scroll up
-	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Up))
+	if (totalop > 0)
 	{
-		if (currentop <= 1)
-			Bottom();
-		else
-			Up();
-	}
+		// Scroll up
+		if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Up))
+		{
+			if (*currentopATM <= 1)
+				Bottom();
+			else
+				Up();
+		}
 
-	// Scroll down
-	if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Down))
-	{
-		if (currentop >= totalop)
-			Top();
-		else
-			Down();
+		// Scroll down
+		if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Down))
+		{
+			if (*currentopATM >= totalop)
+				Top();
+			else
+				Down();
+		}
 	}
 
 	// B press
@@ -583,7 +583,7 @@ void Menu::while_stopanim()
 }
 void Menu::Up(bool playSound)
 {
-	currentop--;
+	(*currentopATM)--;
 	currentop_w_breaks--;
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
@@ -591,7 +591,7 @@ void Menu::Up(bool playSound)
 }
 void Menu::Down(bool playSound)
 {
-	currentop++;
+	(*currentopATM)++;
 	currentop_w_breaks++;
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
@@ -599,7 +599,7 @@ void Menu::Down(bool playSound)
 }
 void Menu::Bottom(bool playSound)
 {
-	currentop = totalop;
+	*currentopATM = totalop;
 	currentop_w_breaks = totalop;
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
@@ -607,7 +607,7 @@ void Menu::Bottom(bool playSound)
 }
 void Menu::Top(bool playSound)
 {
-	currentop = 1;
+	*currentopATM = 1;
 	currentop_w_breaks = 1;
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
@@ -644,7 +644,7 @@ void Menu::NewSetMenu(INT sub_index)
 	currentArray[currentArrayIndex] = currentsub; // Store current submenu index in array
 	currentsub = sub_index; // Set new submenu as current submenu
 
-	currentop_ar[currentArrayIndex] = currentop; // Store currently selected option in array
+	currentop_ar[currentArrayIndex] = *currentopATM; // Store currently selected option in array
 	currentop = 1; currentop_w_breaks = 1; // Set new selected option as first option in submenu
 
 	printingop = 0; // Reset currently printing option var
@@ -880,10 +880,31 @@ void MouseSupport::Tick()
 
 	pressedSelectAfterSelect = false;
 
-	if (Menu::bit_mouse)
+	if (Menu::bit_mouse && Menu::currentsub != SUB::CLOSED)
 	{
+		// sometimes hover/selected gets set to 0 temp fix 
+		if (currentopM < 1)
+			currentopM = Menu::currentop;
+		if (Menu::totalop > 0 && currentopM > Menu::totalop)
+			currentopM = Menu::currentop;
+
 		DisableControls();
-		DoMouseTick();
+
+		if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_AIM))
+		{
+			if (Menu::currentsub == SUB::MAINMENU)
+				Menu::SetSub_closed();
+			else
+				Menu::SetPreviousMenu();
+		}
+
+		if (Menu::currentsub != SUB::CLOSED)
+		{
+			DoMouseTick();
+		}
+
+		// Keep currentop in sync so the scroll window follows the selection
+		Menu::currentop = currentopM;
 	}
 }
 
@@ -892,6 +913,14 @@ void MouseSupport::DisableControls()
 	std::vector<ControllerInput> list
 	{
 		INPUT_ATTACK,
+		INPUT_ATTACK2,
+		INPUT_AIM,
+		INPUT_VEH_ATTACK,
+		INPUT_VEH_ATTACK2,
+		INPUT_WEAPON_WHEEL_NEXT,
+		INPUT_WEAPON_WHEEL_PREV,
+		INPUT_SELECT_NEXT_WEAPON,
+		INPUT_SELECT_PREV_WEAPON,
 		INPUT_FRONTEND_ACCEPT,
 		INPUT_FRONTEND_AXIS_X,
 		INPUT_FRONTEND_AXIS_Y,
@@ -899,22 +928,29 @@ void MouseSupport::DisableControls()
 		INPUT_FRONTEND_SELECT,
 		INPUT_CURSOR_SCROLL_UP,
 		INPUT_CURSOR_SCROLL_DOWN,
-		INPUT_CURSOR_SCROLL_UP,
 		INPUT_CURSOR_X,
 		INPUT_CURSOR_Y,
+		INPUT_LOOK_LR,
+		INPUT_LOOK_UD,
 		INPUT_VEH_FLY_YAW_LEFT,
 		INPUT_VEH_FLY_YAW_RIGHT,
 		INPUT_VEH_FLY_ROLL_LR,
 		INPUT_VEH_FLY_PITCH_UD,
 		INPUT_VEH_HANDBRAKE
-
 	};
 
 	for (auto& control : list)
 	{
 		DISABLE_CONTROL_ACTION(0, control, true);
+		DISABLE_CONTROL_ACTION(2, control, true);
 	}
-
+	//not sure if needed 
+	DISABLE_CONTROL_ACTION(2, INPUT_FRONTEND_UP, true);
+	DISABLE_CONTROL_ACTION(2, INPUT_FRONTEND_DOWN, true);
+	DISABLE_CONTROL_ACTION(2, INPUT_FRONTEND_LEFT, true);
+	DISABLE_CONTROL_ACTION(2, INPUT_FRONTEND_RIGHT, true);
+	DISABLE_CONTROL_ACTION(2, INPUT_FRONTEND_ACCEPT, true);
+	DISABLE_CONTROL_ACTION(2, INPUT_FRONTEND_CANCEL, true);
 }
 
 void MouseSupport::DoMouseTick()
@@ -923,21 +959,7 @@ void MouseSupport::DoMouseTick()
 	//Vector2& safezoneOffset = GetSafezoneBounds();
 
 	SET_MOUSE_CURSOR_THIS_FRAME();
-
-	if (IsMouseInBounds(Vector2(0.0078f, 0.5f), Vector2(0.0156f, 1.0f)))
-	{
-		GameplayCamera::SetRelativeHeading(GameplayCamera::GetRelativeHeading() + 5.0f);
-		SET_MOUSE_CURSOR_STYLE(6);
-	}
-	else if (IsMouseInBounds(Vector2(1.0 - 0.0078f, 0.5f), Vector2(0.0156f, 1.0f)))
-	{
-		GameplayCamera::SetRelativeHeading(GameplayCamera::GetRelativeHeading() - 5.0f);
-		SET_MOUSE_CURSOR_STYLE(7);
-	}
-	else
-	{
-		SET_MOUSE_CURSOR_STYLE(1);
-	}
+	SET_MOUSE_CURSOR_STYLE(1);
 
 	DoScrollChecks();
 
@@ -1030,17 +1052,19 @@ std::pair<int, int> MouseSupport::GetScreenResolutionMantainRatio()
 
 void MouseSupport::DoScrollChecks()
 {
-	if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_CURSOR_SCROLL_UP))
+	if (Menu::totalop > 0)
 	{
-		if (Menu::currentop > 1)
-			Menu::Up();
+		if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_CURSOR_SCROLL_UP))
+		{
+			if (*Menu::currentopATM > 1)
+				Menu::Up();
+		}
+		else if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_CURSOR_SCROLL_DOWN))
+		{
+			if (*Menu::currentopATM < Menu::totalop)
+				Menu::Down();
+		}
 	}
-	else if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_CURSOR_SCROLL_DOWN))
-	{
-		if (Menu::currentop < Menu::totalop)
-			Menu::Down();
-	}
-
 }
 
 //--------------------------------Menu option drawing functions--------------------------------
