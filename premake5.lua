@@ -23,8 +23,6 @@ project "Menyoo"
         "Solution/external/pugixml/src/pugixml.hpp",
         "Solution/external/imgui/imgui.cpp",
         "Solution/external/imgui/imgui_draw.cpp",
-        "Solution/external/imgui/imgui_tables.cpp",
-        "Solution/external/imgui/imgui_widgets.cpp",
         "Solution/external/imgui/imgui_impl_dx11.cpp",
         "Solution/external/imgui/imgui_impl_win32.cpp",
         "Solution/external/imgui/ImGizmo3D.cpp",
