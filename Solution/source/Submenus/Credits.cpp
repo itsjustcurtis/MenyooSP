@@ -99,7 +99,7 @@ namespace sub
         if (g_CreditsTiers.empty())
         {
             bool dummy = false;
-            AddOption("No credits found - Check Supporters.xml from your download", nullFunc);
+            AddOption("No credits found - Check Supporters.xml from your download", null);
             return;
         }
 
@@ -109,7 +109,7 @@ namespace sub
             for (const auto& member : tier.members)
             {
                 bool dummy = false;
-                AddOption(member, nullFunc);
+                AddOption(member, null);
             }
         }
     }
