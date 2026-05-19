@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Credits>
+  <Tier name="Creator">
+    <Member>MAFINS</Member>
+  <Tier name="Maintainer">
+    <Member>ItsJustCurtis</Member>
+  <Tier name="Contributors">
+    <Member>akiner</Member>
+    <Member>BB - Bodyguards n' Blips Guy</Member>
+    <Member>Chiheb-Bacha</Member>
+    <Member>greygods</Member>
+    <Member>katsutosh</Member>
+    <Member>lucien</Member>
+    <Member>milliondollarthug</Member>
+    <Member>ook</Member>
+    <Member>The Milk Man</Member>
+  </Tier>
+  <Tier name="Curators">
+  </Tier>
+  <Tier name="Directors">
+  </Tier>
+  <Tier name="Testers">
+    <Member>enfreakque</Member>
+    <Member>jae.</Member>
+    <Member>LJ</Member>
+    <Member>trixxi_tranc3</Member>
+  </Tier>
+  <Tier name="Supporters">
+    <Member>molloni</Member>
+    <Member>Shanto</Member>
+  </Tier>
+</Credits>
