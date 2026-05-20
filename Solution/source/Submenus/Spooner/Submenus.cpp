@@ -75,6 +75,12 @@ namespace sub
 		float _fSaveRangeRadius = 5.0f;
 		UINT8 _copyEntTexterValue = 0;
 		UINT8 _entTypeToShowTexterValue = 0;
+		Entity _vehScaleEntity = 0;
+		float _vehScaleX = 1.0f, _vehScaleY = 1.0f, _vehScaleZ = 1.0f;
+		Entity _pedScaleEntity = 0;
+		float _pedScaleX = 1.0f, _pedScaleY = 1.0f, _pedScaleZ = 1.0f;
+		Entity _objScaleEntity = 0;
+		float _objScaleX = 1.0f, _objScaleY = 1.0f, _objScaleZ = 1.0f;
 		void SetEnt241() { g_Ped1 = selectedEntity.handle.Handle(); }
 		void SetEnt12() { g_Ped4 = selectedEntity.handle.Handle(); }
 
@@ -1552,7 +1558,7 @@ namespace sub
 
 			AddOption("Attachment Options", null, nullFunc, SUB::SPOONER_ATTACHMENTOPS);
 			AddOption("Manual Placement", null, nullFunc, SUB::SPOONER_MANUALPLACEMENT);
-			AddOption("Manual Resize (beta)", null, nullFunc, SUB::SPOONER_SIZEMANIPULATION);
+			AddOption("Manual Resize", null, nullFunc, SUB::SPOONER_SIZEMANIPULATION);
 
 		}
 		void Sub_AttachmentOps()
@@ -2009,9 +2015,7 @@ namespace sub
 			UINT64 ptr = GTAmemory::_entityAddressFunc(selectedEntity.handle.Handle());
 			if (!ptr) return;
 
-			float length = GTAmemory::ReadFloat(ptr + 0x60);
-			float width = GTAmemory::ReadFloat(ptr + 0x74);
-			float height = GTAmemory::ReadFloat(ptr + 0x88);
+			Entity handle = selectedEntity.handle.Handle();
 
 			bool prec_plus = false, prec_minus = false;
 			bool x_plus = false, x_minus = false;
@@ -2019,27 +2023,124 @@ namespace sub
 			bool z_plus = false, z_minus = false;
 
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
-			AddNumber("Length (Y)", length, 4, null, y_plus, y_minus);
-			AddNumber("Width (X)", width, 4, null, x_plus, x_minus);
-			AddNumber("Height (Z)", height, 4, null, z_plus, z_minus);
 
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
-			if (y_plus) length += (_manualPlacementPrecision * 25.0f);
-			if (y_minus) length -= (_manualPlacementPrecision * 25.0f);
-			if (x_plus) width += (_manualPlacementPrecision * 25.0f);
-			if (x_minus) width -= (_manualPlacementPrecision * 25.0f);
-			if (z_plus) height += (_manualPlacementPrecision * 25.0f);
-			if (z_minus) height -= (_manualPlacementPrecision * 25.0f);
+			if (IS_ENTITY_A_VEHICLE(handle))
+			{
+				UINT64 physicsMatrix = ptr + 0x60;
+				UINT64 drawMatrixPtr = *(UINT64*)(ptr + 0x30);
+				if (!drawMatrixPtr) return;
+				UINT64 vehicleMatrix = drawMatrixPtr + 0x20;
 
-			if (length < 0.01f) length = 0.01f;
-			if (width < 0.01f) width = 0.01f;
-			if (height < 0.01f) height = 0.01f;
+				// Reset stored scale when entity changes
+				if (_vehScaleEntity != handle)
+				{
+					_vehScaleEntity = handle;
+					Vector3 row = GTAmemory::ReadVector3(physicsMatrix + 0x00);
+					_vehScaleX = row.Length();
+					row = GTAmemory::ReadVector3(physicsMatrix + 0x10);
+					_vehScaleY = row.Length();
+					row = GTAmemory::ReadVector3(physicsMatrix + 0x20);
+					_vehScaleZ = row.Length();
+				}
 
-			GTAmemory::WriteFloat(ptr + 0x60, length);
-			GTAmemory::WriteFloat(ptr + 0x74, width);
-			GTAmemory::WriteFloat(ptr + 0x88, height);
+				AddNumber("Scale X (Width)",  _vehScaleX, 4, null, x_plus, x_minus);
+				AddNumber("Scale Y (Length)", _vehScaleY, 4, null, y_plus, y_minus);
+				AddNumber("Scale Z (Height)", _vehScaleZ, 4, null, z_plus, z_minus);
+
+				if (x_plus)  _vehScaleX = max(0.001f, _vehScaleX + _manualPlacementPrecision);
+				if (x_minus) _vehScaleX = max(0.001f, _vehScaleX - _manualPlacementPrecision);
+				if (y_plus)  _vehScaleY = max(0.001f, _vehScaleY + _manualPlacementPrecision);
+				if (y_minus) _vehScaleY = max(0.001f, _vehScaleY - _manualPlacementPrecision);
+				if (z_plus)  _vehScaleZ = max(0.001f, _vehScaleZ + _manualPlacementPrecision);
+				if (z_minus) _vehScaleZ = max(0.001f, _vehScaleZ - _manualPlacementPrecision);
+
+				auto applyScale = [](UINT64 matrix, float sx, float sy, float sz)
+				{
+					Vector3 r = GTAmemory::ReadVector3(matrix + 0x00);
+					Vector3 f = GTAmemory::ReadVector3(matrix + 0x10);
+					Vector3 u = GTAmemory::ReadVector3(matrix + 0x20);
+					float lr = r.Length(), lf = f.Length(), lu = u.Length();
+					if (lr > 0.0001f) GTAmemory::WriteVector3(matrix + 0x00, r * (sx / lr));
+					if (lf > 0.0001f) GTAmemory::WriteVector3(matrix + 0x10, f * (sy / lf));
+					if (lu > 0.0001f) GTAmemory::WriteVector3(matrix + 0x20, u * (sz / lu));
+				};
+
+				applyScale(physicsMatrix, _vehScaleX, _vehScaleY, _vehScaleZ);
+				applyScale(vehicleMatrix,   _vehScaleX, _vehScaleY, _vehScaleZ);
+			}
+			else if (IS_ENTITY_A_PED(handle))
+			{
+				if (_pedScaleEntity != handle)
+				{
+					_pedScaleEntity = handle;
+					_pedScaleX = GTAmemory::ReadVector3(ptr + 0x60).Length();
+					_pedScaleY = GTAmemory::ReadVector3(ptr + 0x70).Length();
+					_pedScaleZ = GTAmemory::ReadVector3(ptr + 0x80).Length();
+				}
+
+				AddNumber("Scale X (Width)",  _pedScaleX, 4, null, x_plus, x_minus);
+				AddNumber("Scale Y (Length)", _pedScaleY, 4, null, y_plus, y_minus);
+				AddNumber("Scale Z (Height)", _pedScaleZ, 4, null, z_plus, z_minus);
+
+				if (x_plus)  _pedScaleX = max(0.001f, _pedScaleX + _manualPlacementPrecision);
+				if (x_minus) _pedScaleX = max(0.001f, _pedScaleX - _manualPlacementPrecision);
+				if (y_plus)  _pedScaleY = max(0.001f, _pedScaleY + _manualPlacementPrecision);
+				if (y_minus) _pedScaleY = max(0.001f, _pedScaleY - _manualPlacementPrecision);
+				if (z_plus)  _pedScaleZ = max(0.001f, _pedScaleZ + _manualPlacementPrecision);
+				if (z_minus) _pedScaleZ = max(0.001f, _pedScaleZ - _manualPlacementPrecision);
+
+				auto applyScale = [](UINT64 matrix, float sx, float sy, float sz)
+				{
+					Vector3 r = GTAmemory::ReadVector3(matrix + 0x00);
+					Vector3 f = GTAmemory::ReadVector3(matrix + 0x10);
+					Vector3 u = GTAmemory::ReadVector3(matrix + 0x20);
+					float lr = r.Length(), lf = f.Length(), lu = u.Length();
+					if (lr > 0.0001f) GTAmemory::WriteVector3(matrix + 0x00, r * (sx / lr));
+					if (lf > 0.0001f) GTAmemory::WriteVector3(matrix + 0x10, f * (sy / lf));
+					if (lu > 0.0001f) GTAmemory::WriteVector3(matrix + 0x20, u * (sz / lu));
+				};
+
+				applyScale(ptr + 0x60, _pedScaleX, _pedScaleY, _pedScaleZ);
+			}
+			else // IS_ENTITY_AN_OBJECT
+			{
+				// Reset stored scale when entity changes
+				if (_objScaleEntity != handle)
+				{
+					_objScaleEntity = handle;
+					_objScaleY = GTAmemory::ReadFloat(ptr + 0x60); // length
+					_objScaleX = GTAmemory::ReadFloat(ptr + 0x74); // width
+					_objScaleZ = GTAmemory::ReadFloat(ptr + 0x88); // height
+				}
+
+				AddNumber("Length (Y)", _objScaleY, 4, null, y_plus, y_minus);
+				AddNumber("Width (X)",  _objScaleX, 4, null, x_plus, x_minus);
+				AddNumber("Height (Z)", _objScaleZ, 4, null, z_plus, z_minus);
+
+				if (y_plus)  _objScaleY += (_manualPlacementPrecision * 25.0f);
+				if (y_minus) _objScaleY -= (_manualPlacementPrecision * 25.0f);
+				if (x_plus)  _objScaleX += (_manualPlacementPrecision * 25.0f);
+				if (x_minus) _objScaleX -= (_manualPlacementPrecision * 25.0f);
+				if (z_plus)  _objScaleZ += (_manualPlacementPrecision * 25.0f);
+				if (z_minus) _objScaleZ -= (_manualPlacementPrecision * 25.0f);
+
+				if (y_plus || y_minus || x_plus || x_minus || z_plus || z_minus)
+				{
+					selectedEntity.handle.SetIsCollisionEnabled(false);
+					selectedEntity.handle.FreezePosition(true);
+				}
+
+				if (_objScaleY < 0.01f) _objScaleY = 0.01f;
+				if (_objScaleX < 0.01f) _objScaleX = 0.01f;
+				if (_objScaleZ < 0.01f) _objScaleZ = 0.01f;
+
+				GTAmemory::WriteFloat(ptr + 0x60, _objScaleY);
+				GTAmemory::WriteFloat(ptr + 0x74, _objScaleX);
+				GTAmemory::WriteFloat(ptr + 0x88, _objScaleZ);
+			}
 		}
 
 		void Sub_QuickManualPlacement()
