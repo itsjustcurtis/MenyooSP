@@ -225,8 +225,8 @@ namespace sub::Spooner
 					: get_vehicle_model_label(outEntityModel, true));
 			if (outEntity->hashName.length() == 0) outEntity->hashName = IntToHexString(outEntityModel.hash, true);
 			outEntity->dynamic = !outEntity->handle.IsPositionFrozen();//outEntity->type == EntityType::PED || outEntity->type == EntityType::VEHICLE;
-			//outEntity->lastAnimation.dict.clear();
-			//outEntity->lastAnimation.name.clear();
+			//outEntity->lastAnimations.clear();
+			//outEntity->currentScenario.clear();
 			outEntity->isStill = false;
 
 			auto idInDb = EntityManagement::GetEntityIndexInDb(*outEntity);

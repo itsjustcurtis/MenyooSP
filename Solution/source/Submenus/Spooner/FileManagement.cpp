@@ -234,27 +234,36 @@ namespace sub::Spooner
 					nodePedStuff.append_child("WeaponMovementGroupName").text() = wmovGrpIter->second.c_str();
 				}
 
-				bool isUsingScenario = IS_PED_USING_SCENARIO(ep.Handle(), e.lastAnimation.name.c_str()) != 0;
-				bool isPlayingAnim = IS_ENTITY_PLAYING_ANIM(ep.Handle(), e.lastAnimation.dict.c_str(), e.lastAnimation.name.c_str(), 3) != 0;
+				bool isUsingScenario = !e.currentScenario.empty() && IS_PED_USING_SCENARIO(ep.Handle(), e.currentScenario.c_str()) != 0;
 
 				if (isUsingScenario && !(bEntTaskSequenceIsActive && e.taskSequence.ContainsType(STSTaskType::ScenarioAction)))
 				{
 					nodePedStuff.append_child("ScenarioActive").text() = true;
-					nodePedStuff.append_child("ScenarioName").text() = e.lastAnimation.name.c_str();
+					nodePedStuff.append_child("ScenarioName").text() = e.currentScenario.c_str();
 				}
 				else
 				{
 					nodePedStuff.append_child("ScenarioActive").text() = false;
 				}
-				if (isPlayingAnim && !(bEntTaskSequenceIsActive && e.taskSequence.ContainsType(STSTaskType::PlayAnimation)))
+
+				if (!(bEntTaskSequenceIsActive && e.taskSequence.ContainsType(STSTaskType::PlayAnimation)))
 				{
-					nodePedStuff.append_child("AnimActive").text() = true;
-					nodePedStuff.append_child("AnimDict").text() = e.lastAnimation.dict.c_str();
-					nodePedStuff.append_child("AnimName").text() = e.lastAnimation.name.c_str();
-				}
-				else
-				{
-					nodePedStuff.append_child("AnimActive").text() = false;
+					auto nodeAnimations = nodePedStuff.append_child("Animations");
+					for (const auto& anim : e.lastAnimations)
+					{
+						if (IS_ENTITY_PLAYING_ANIM(ep.Handle(), anim.dict.c_str(), anim.name.c_str(), 3))
+						{
+							auto nodeAnim = nodeAnimations.append_child("Animation");
+							nodeAnim.append_child("Dict").text() = anim.dict.c_str();
+							nodeAnim.append_child("Name").text() = anim.name.c_str();
+							nodeAnim.append_child("Speed").text() = anim.speed;
+							nodeAnim.append_child("SpeedMultiplier").text() = anim.speedMultiplier;
+							nodeAnim.append_child("PlaybackRate").text() = anim.playbackRate;
+							nodeAnim.append_child("Duration").text() = anim.duration;
+							nodeAnim.append_child("Flag").text() = anim.flag;
+							nodeAnim.append_child("LockPos").text() = anim.lockPos;
+						}
+					}
 				}
 
 				const auto& facialMoodStr = GetPedFacialMood(ep);
@@ -670,20 +679,53 @@ namespace sub::Spooner
 					FREEZE_ENTITY_POSITION(ep.Handle(), !bFrozenPos);
 				}
 
+				// retained for backwards compatibility, old single-animation format
 				bool isUsingScenario = nodePedStuff.child("ScenarioActive").text().as_bool();
 				bool isUsingAnim = nodePedStuff.child("AnimActive").text().as_bool();
 
 				if (isUsingScenario)
 				{
-					e.e.lastAnimation.name = nodePedStuff.child("ScenarioName").text().as_string();
-					ep.Task().StartScenario(e.e.lastAnimation.name);
+					e.e.currentScenario = nodePedStuff.child("ScenarioName").text().as_string();
+					ep.Task().StartScenario(e.e.currentScenario);
 				}
-				if (isUsingAnim)
+
+				auto nodeAnimations = nodePedStuff.child("Animations");
+				// new format, multiple animations with full parameters
+				if (nodeAnimations)
 				{
-					e.e.lastAnimation.dict = nodePedStuff.child("AnimDict").text().as_string();
-					e.e.lastAnimation.name = nodePedStuff.child("AnimName").text().as_string();
-					Game::RequestAnimDict(e.e.lastAnimation.dict, 1800);
-					ep.Task().PlayAnimation(e.e.lastAnimation.dict, e.e.lastAnimation.name);
+					for (auto nodeAnim = nodeAnimations.first_child(); nodeAnim; nodeAnim = nodeAnim.next_sibling())
+					{
+						SpoonerEntity::Animation animData;
+						animData.dict = nodeAnim.child("Dict").text().as_string();
+						animData.name = nodeAnim.child("Name").text().as_string();
+						animData.speed = nodeAnim.child("Speed").text().as_float(4.0f);
+						animData.speedMultiplier = nodeAnim.child("SpeedMultiplier").text().as_float(-4.0f);
+						animData.playbackRate = nodeAnim.child("PlaybackRate").text().as_float(0.0f);
+						animData.duration = nodeAnim.child("Duration").text().as_int(-1);
+						animData.flag = nodeAnim.child("Flag").text().as_int(AnimFlag::Loop);
+						animData.lockPos = nodeAnim.child("LockPos").text().as_bool(false);
+
+						Game::RequestAnimDict(animData.dict, 1800);
+						ep.Task().PlayAnimation(animData.dict, animData.name, animData.speed, animData.speedMultiplier, animData.duration, animData.flag, animData.playbackRate, animData.lockPos);
+						e.e.AddOrUpdateLastAnimation(animData);
+					}
+				}
+				// old format, single animation with defaults
+				else if (isUsingAnim)
+				{
+					SpoonerEntity::Animation animData;
+					animData.dict = nodePedStuff.child("AnimDict").text().as_string();
+					animData.name = nodePedStuff.child("AnimName").text().as_string();
+					animData.speed = 4.0f;
+					animData.speedMultiplier = -4.0f;
+					animData.playbackRate = 0.0f;
+					animData.duration = -1;
+					animData.flag = AnimFlag::Loop;
+					animData.lockPos = false;
+
+					Game::RequestAnimDict(animData.dict, 1800);
+					ep.Task().PlayAnimation(animData.dict, animData.name);
+					e.e.AddOrUpdateLastAnimation(animData);
 				}
 
 				auto nodeFacialMood = nodePedStuff.child("FacialMood");
@@ -1622,17 +1664,25 @@ namespace sub::Spooner
 							{
 								if (IS_ENTITY_PLAYING_ANIM(e.handle.Handle(), anmnm.animDict.c_str(), anmnm.animName.c_str(), 3))
 								{
-									e.lastAnimation.dict = anmnm.animDict;
-									e.lastAnimation.name = anmnm.animName;
+									SpoonerEntity::Animation anim;
+									anim.dict = anmnm.animDict;
+									anim.name = anmnm.animName;
+									anim.flag = AnimFlag::Loop;
+									anim.speed = 4.0f;
+									anim.speedMultiplier = -4.0f;
+									anim.playbackRate = 0.0f;
+									anim.duration = -1;
+									anim.lockPos = false;
+									e.AddOrUpdateLastAnimation(anim);
 								}
 							}
-							if (e.lastAnimation.dict.empty() && IS_PED_USING_ANY_SCENARIO(e.handle.Handle()))
+							if (IS_PED_USING_ANY_SCENARIO(e.handle.Handle()))
 							{
 								for (auto& scnnm : AnimationTaskScenarios::vValues_TaskScenarios)
 								{
 									if (IS_PED_USING_SCENARIO(e.handle.Handle(), scnnm.c_str()))
 									{
-										e.lastAnimation.name = scnnm;
+										e.currentScenario = scnnm;
 									}
 								}
 							}

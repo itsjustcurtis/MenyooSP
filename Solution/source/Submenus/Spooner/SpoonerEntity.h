@@ -25,7 +25,13 @@ namespace sub::Spooner
 	class SpoonerEntity
 	{
 	public:
-		struct Animation { std::string dict, name; };
+		struct Animation
+		{
+			std::string dict, name;
+			float speed, speedMultiplier, playbackRate;
+			int duration, flag;
+			bool lockPos;
+		};
 		struct Attachment { bool isAttached; int boneIndex; Vector3 offset, rotation; };
 
 		GTAentity handle;
@@ -33,7 +39,8 @@ namespace sub::Spooner
 		std::string hashName;
 		bool dynamic;
 		//bool Door;
-		SpoonerEntity::Animation lastAnimation;
+		std::vector<SpoonerEntity::Animation> lastAnimations;
+		std::string currentScenario;
 		SpoonerEntity::Attachment attachmentArgs;
 		UINT8 textureVariation;
 		bool isStill;
@@ -45,6 +52,11 @@ namespace sub::Spooner
 		SpoonerEntity();
 		//const SpoonerEntity& operator = (const SpoonerEntity& right)
 		SpoonerEntity(const SpoonerEntity& right);
+
+		void AddOrUpdateLastAnimation(const Animation& anim);
+		void RemoveFromLastAnimations(int flag);
+		bool HasInLastAnimations(int flag) const;
+		void ClearLastAnimations();
 
 		friend bool operator == (const SpoonerEntity& left, const SpoonerEntity& right);
 		friend bool operator != (const SpoonerEntity& left, const SpoonerEntity& right);
