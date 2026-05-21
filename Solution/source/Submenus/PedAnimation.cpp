@@ -336,18 +336,17 @@ namespace sub
 			if (spi >= 0)
 			{
 				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				{
-					sub::Spooner::SpoonerEntity::Animation animData;
-					animData.dict = animDict;
-					animData.name = animName;
-					animData.speed = g_customAnimSpeed;
-					animData.speedMultiplier = g_customAnimSpeedMult;
-					animData.playbackRate = g_CustomAnimRate;
-					animData.duration = g_customAnimDuration;
-					animData.flag = g_customAnimFlag;
-					animData.lockPos = g_customAnimLockPos;
-					spe.AddOrUpdateLastAnimation(animData);
-				}
+				sub::Spooner::SpoonerEntity::Animation animData;
+				animData.dict = animDict;
+				animData.name = animName;
+				animData.speed = g_customAnimSpeed;
+				animData.speedMultiplier = g_customAnimSpeedMult;
+				animData.playbackRate = g_CustomAnimRate;
+				animData.duration = g_customAnimDuration;
+				animData.flag = g_customAnimFlag;
+				animData.lockPos = g_customAnimLockPos;
+				spe.AddOrUpdateLastAnimation(animData);
+
 				if (att.Exists() && spe.attachmentArgs.isAttached)
 				{
 					spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
