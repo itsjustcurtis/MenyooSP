@@ -113,6 +113,7 @@ namespace sub
 		AddTitle("Wardrobe");
 		AddLocal("Front View", g_cam_componentChanger.Exists(), frontView, frontView);
 		AddOption("Outfits", null, nullFunc, SUB::COMPONENTS_OUTFITS);
+		AddOption("Default Outfits (Beta)", null, nullFunc, SUB::COMPONENTS_OUTFITS_DEFAULT);
 		AddOption("Decal Overlays", null, PedDecals::OpenSubDecals, -1, true);
 		AddOption("Damage Overlays", null, nullFunc, SUB::PEDDAMAGET_CATEGORYLIST);
 		AddOption("Head Features", null, nullFunc, SUB::PED_HEADFEATURES_MAIN);
@@ -1993,12 +1994,183 @@ namespace sub
 
 #include "..\Menu\submenu_switch.h"
 #include "..\Menu\submenu_enum.h"
+
+namespace sub
+{
+	struct DefaultOutfitCacheEntry {
+		int index;
+		Hash hash;
+		int price;
+		int totalProps;
+		int totalComponents;
+		std::string gxt;
+		std::string name;
+	};
+
+	static std::vector<DefaultOutfitCacheEntry> g_defaultOutfitCache;
+	static int g_defaultOutfitCacheCharType = -1;
+	static std::string g_defaultOutfitSearch = "";
+
+	void ComponentChanger_DefaultOutfits()
+	{
+		GTAped ped = g_Ped1;
+		Hash modelHash = ped.Model().hash;
+		int charType = -1;
+		// Only Freemode Characters seem to work.  It should work for Story Mode Characters but nothing comes up.  They don't have many anyway.
+		if (modelHash == GET_HASH_KEY("Player_Zero")) { charType = 0; }
+		else if (modelHash == GET_HASH_KEY("Player_One")) { charType = 1; }
+		else if (modelHash == GET_HASH_KEY("Player_Two")) { charType = 2; }
+		else if (modelHash == GET_HASH_KEY("MP_M_Freemode_01")) { charType = 3; }
+		else if (modelHash == GET_HASH_KEY("MP_F_Freemode_01")) { charType = 4; }
+
+		AddTitle("Default Outfits");
+
+		if (charType != g_defaultOutfitCacheCharType)
+		{
+			g_defaultOutfitCache.clear();
+			g_defaultOutfitCacheCharType = charType;
+			g_defaultOutfitSearch = "";
+		}
+
+		if (g_defaultOutfitCache.empty() && charType >= 0)
+		{
+			int numOutfits = FILES::SETUP_SHOP_PED_OUTFIT_QUERY(charType, false);
+			if (numOutfits > 0)
+			{
+				for (int i = 0; i < numOutfits; ++i)
+				{
+					int blob[32]; // 128 bytes
+					memset(blob, 0, sizeof(blob));
+					FILES::GET_SHOP_PED_QUERY_OUTFIT(i, (Any*)blob);
+					
+					DefaultOutfitCacheEntry entry;
+					entry.index = i;
+					entry.hash = (Hash)blob[2]; // byte 8
+					entry.price = blob[4]; // byte 16
+					entry.totalProps = blob[6]; // byte 24
+					entry.totalComponents = blob[8]; // byte 32
+					
+					const char* gxt = (const char*)blob + 56; // 56 bytes offset
+					if (gxt) entry.gxt = gxt;
+						
+					std::string displayName = entry.gxt;
+					if (!entry.gxt.empty())
+					{
+						const char* resolved = DOES_TEXT_LABEL_EXIST((char*)entry.gxt.c_str()) ? GET_FILENAME_FOR_AUDIO_CONVERSATION((char*)entry.gxt.c_str()) : nullptr;
+						if (resolved && strlen(resolved) > 0 && strcmp(resolved, "NULL") != 0)
+						{
+							displayName = resolved;
+						}
+					}
+					entry.name = displayName;
+					g_defaultOutfitCache.push_back(entry);
+				}
+			}
+		}
+
+		if (charType < 0)
+		{
+			bool dummy = false;
+			AddOption("No outfits found - unsupported ped model", dummy);
+			return;
+		}
+
+		bool bSearchPressed = false;
+		AddOption(g_defaultOutfitSearch.empty() ? "SEARCH" : g_defaultOutfitSearch, bSearchPressed, nullFunc, -1, true);
+		if (bSearchPressed)
+		{
+			g_defaultOutfitSearch = Game::InputBox(g_defaultOutfitSearch, 126U, "SEARCH", boost::to_lower_copy(g_defaultOutfitSearch));
+			boost::to_lower(g_defaultOutfitSearch);
+		}
+
+		bool refreshPressed = false;
+		AddOption("Refresh Cache", refreshPressed);
+		if (refreshPressed)
+		{
+			g_defaultOutfitCache.clear();
+			g_defaultOutfitCacheCharType = -1;
+		}
+
+		for (const auto& outfit : g_defaultOutfitCache)
+		{
+			if (!g_defaultOutfitSearch.empty())
+			{
+				std::string lowerName = boost::to_lower_copy(outfit.name);
+				std::string lowerGxt = boost::to_lower_copy(outfit.gxt);
+				if (lowerName.find(g_defaultOutfitSearch) == std::string::npos &&
+					lowerGxt.find(g_defaultOutfitSearch) == std::string::npos)
+				{
+					continue;
+				}
+			}
+
+			bool outfitPressed = false;
+			AddOption(outfit.name, outfitPressed);
+			if (outfitPressed)
+			{
+				ped.RequestControl(200);
+				
+				// Reset to default
+				SET_PED_DEFAULT_COMPONENT_VARIATION(ped.Handle());
+				
+				for (int i = 0; i <= 10; ++i)
+				{
+					CLEAR_PED_PROP(ped.Handle(), i, 0);
+				}
+				
+				int clearComps[] = { 1, 5, 7, 8, 9, 10 };
+				for (int c : clearComps)
+				{
+					SET_PED_COMPONENT_VARIATION(ped.Handle(), c, 0, 0, 0);
+				}
+				
+				Game::Print::PrintBottomCentre("Applied outfit: " + outfit.name);
+				addlog(ige::LogType::LOG_INFO, "Applied Default Outfit: " + outfit.name + " | Hash: " + std::to_string(outfit.hash) + " | Comps: " + std::to_string(outfit.totalComponents) + " | Props: " + std::to_string(outfit.totalProps));
+				
+				// Apply components
+				for (int ci = 0; ci < outfit.totalComponents; ++ci)
+				{
+					int vb[8]; // 32 bytes
+					memset(vb, 0, sizeof(vb));
+					FILES::GET_SHOP_PED_OUTFIT_COMPONENT_VARIANT(outfit.hash, ci, (Any*)vb);
+					Hash compHash = (Hash)vb[0];
+					int compType = vb[4]; // byte 16
+					
+					int cb[20]; // 80 bytes
+					memset(cb, 0, sizeof(cb));
+					FILES::GET_SHOP_PED_COMPONENT(compHash, (Any*)cb);
+					int drawable = cb[6]; // byte 24
+					int texture = cb[8];  // byte 32
+					SET_PED_COMPONENT_VARIATION(ped.Handle(), compType, drawable, texture, 0);
+				}
+				
+				// Apply props
+				for (int pi = 0; pi < outfit.totalProps; ++pi)
+				{
+					int vb[8];
+					memset(vb, 0, sizeof(vb));
+					FILES::GET_SHOP_PED_OUTFIT_PROP_VARIANT(outfit.hash, pi, (Any*)vb);
+					Hash propHash = (Hash)vb[0];
+					int anchorPoint = vb[4]; // byte 16
+					
+					int pb[20];
+					memset(pb, 0, sizeof(pb));
+					FILES::GET_SHOP_PED_PROP(propHash, (Any*)pb);
+					int drawable = pb[6]; // byte 24
+					int texture = pb[8];  // byte 32
+					SET_PED_PROP_INDEX(ped.Handle(), anchorPoint, drawable, texture, true, 0);
+				}
+			}
+		}
+	}
+}
 REGISTER_SUBMENU(COMPONENTS, sub::ComponentChanger)
 REGISTER_SUBMENU(COMPONENTS2, sub::ComponentChanger2)
 REGISTER_SUBMENU(COMPONENTSPROPS, sub::ComponentChangerProps_)
 REGISTER_SUBMENU(COMPONENTSPROPS2, sub::ComponentChangerProps2)
 REGISTER_SUBMENU(COMPONENTS_OUTFITS, sub::ComponentChanger_Outfits)
 REGISTER_SUBMENU(COMPONENTS_OUTFITS2, sub::ComponentChanger_Outfits2)
+REGISTER_SUBMENU(COMPONENTS_OUTFITS_DEFAULT, sub::ComponentChanger_DefaultOutfits)
 REGISTER_SUBMENU(PEDDECALS_TYPES, sub::PedDecals::Sub_Decals_Types)
 REGISTER_SUBMENU(PEDDECALS_ZONES, sub::PedDecals::Sub_Decals_Zones)
 REGISTER_SUBMENU(PEDDECALS_INZONE, sub::PedDecals::Sub_Decals_InZone)
