@@ -69,6 +69,7 @@
 #include "..\Submenus\BreatheStuff.h"
 #include "..\Submenus\MiscOptions.h"
 #include "..\Submenus\Teleport\Yachts.h"
+#include "..\Submenus\Teleport\CayoPerico.h"
 #include "..\Submenus\Teleport\TeleMethods.h"
 #include "..\Submenus\PtfxSubs.h"
 #include "..\Submenus\Spooner\SpoonerEntity.h"
@@ -3991,6 +3992,7 @@ void ThreadMenuLoops2()
 		}
 
 		sub::TeleportLocations_catind::Yachts::Tick();
+		sub::TeleportLocations_catind::CayoPerico::Tick();
 		ManualRespawn::g_manualRespawn.Tick();
 
 		if (unlimitedVehicleBoost)
