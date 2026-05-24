@@ -17,6 +17,7 @@ namespace sub
 
 		bool goToAlphaLevel = false;
 		bool replenishPlayer = false;
+		bool maxAllStats = false;
 		bool invincibilityOff = false;
 		bool invisibilityOff = false;
 		bool noRagdollOff = false;
@@ -97,6 +98,7 @@ namespace sub
 		AddOption("Cloning Options", null, nullFunc, SUB::CLONECOMPANIONSUB);
 
 		AddOption("Replenish Player", replenishPlayer);
+		AddOption("Max All Stats (SP)", maxAllStats);
 		AddToggle("Refill Health When In Cover", selfRefillHealthInCover);
 		AddToggle("Invincibility", playerInvincibility, null, invincibilityOff);
 		AddLocal("Invisibility", !myPed.IsVisible(), invisibilityOff, invisibilityOff);
@@ -134,13 +136,63 @@ namespace sub
 			myPed.SetIsCollisionEnabled(!myPed.GetIsCollisionEnabled());
 		}
 
-		if (replenishPlayer) 
+		if (replenishPlayer)
 		{
 			addlog(ige::LogType::LOG_TRACE, "Replenishing Player");
 			myPed.SetHealth(myPed.GetMaxHealth());
 			myPed.SetArmour(myPlayer.MaxArmour_get());
 			PedDamageTextures::ClearAllBloodDamage(myPed);
 			PedDamageTextures::ClearAllVisibleDamage(myPed);
+			return;
+		}
+
+		if (maxAllStats)
+		{
+			const char* spChars[] = { "SP0_", "SP1_", "SP2_" };
+			for (auto& ch : spChars)
+			{
+				auto setInt = [&](const char* name, int val) {
+					STAT_SET_INT(GET_HASH_KEY(std::string(ch) + name), val, true);
+				};
+				auto setFloat = [&](const char* name, float val) {
+					STAT_SET_FLOAT(GET_HASH_KEY(std::string(ch) + name), val, true);
+				};
+
+				setFloat("DIST_RUNNING", 20000.0f);
+				setInt("TIME_SWIMMING", 100);
+				setInt("TIME_DRIVING_BICYCLE", 100);
+				setInt("UNARMED_HITS", 2500);
+				STAT_INCREMENT(GET_HASH_KEY(std::string(ch) + "TIME_UNDERWATER"), 6000.0f);
+				setInt("NUMBER_NEAR_MISS", 6000);
+				setInt("TIME_DRIVING_PLANE", 1000);
+				setInt("TIME_DRIVING_HELI", 1000);
+				setInt("PLANE_LANDINGS", 100);
+				setInt("HITS_MISSION", 5000);
+				setInt("HITS_PEDS_VEHICLES", 10000);
+				setFloat("DIST_WALK_ST", 5000.0f);
+				setInt("KILLS_STEALTH", 200);
+				setInt("SPECIAL_ABILITY_UNLOCKED", 100);
+
+				setInt("STAMINA", 100);
+				setInt("STRENGTH", 100);
+				setInt("LUNG_CAPACITY", 100);
+				setInt("WHEELIE_ABILITY", 100);
+				setInt("FLYING_ABILITY", 100);
+				setInt("SHOOTING_ABILITY", 100);
+				setInt("STEALTH_ABILITY", 100);
+
+				STAT_SET_BOOL(GET_HASH_KEY(std::string(ch) + "STAMINA_MAXED"), true, true);
+				STAT_SET_BOOL(GET_HASH_KEY(std::string(ch) + "STRENGTH_MAXED"), true, true);
+				STAT_SET_BOOL(GET_HASH_KEY(std::string(ch) + "LUNG_CAPACITY_MAXED"), true, true);
+				STAT_SET_BOOL(GET_HASH_KEY(std::string(ch) + "WHEELIE_ABILITY_MAXED"), true, true);
+				STAT_SET_BOOL(GET_HASH_KEY(std::string(ch) + "FLYING_ABILITY_MAXED"), true, true);
+				STAT_SET_BOOL(GET_HASH_KEY(std::string(ch) + "SHOOTING_ABILITY_MAXED"), true, true);
+				STAT_SET_BOOL(GET_HASH_KEY(std::string(ch) + "STEALTH_ABILITY_MAXED"), true, true);
+			}
+			if (!STAT_SAVE_PENDING_OR_REQUESTED())
+				STAT_SAVE(0, 0, 3, 0);
+			DO_AUTO_SAVE();
+			Game::Print::PrintBottomLeft("All stats maxed!");
 			return;
 		}
 

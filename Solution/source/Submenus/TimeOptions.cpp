@@ -24,6 +24,8 @@ namespace sub
 		int hour = GET_CLOCK_HOURS();
 		int minute = GET_CLOCK_MINUTES();
 
+		bool presetSunrise = false, presetNoon = false, presetSunset = false, presetNight = false;
+
 		AddTitle("Time");
 		AddOption("Clock (System Time)", null, nullFunc, SUB::CLOCK);
 		AddToggle("Pause Clock Time", pauseClock, pauseClockToggle);
@@ -31,6 +33,16 @@ namespace sub
 		AddNumber("Hour", hour, 0, null, hourPlus, hourMinus);
 		AddNumber("Minute", minute, 0, null, minutePlus, minuteMinus);
 		AddNumber("World Speed", currentTimescale, 1, null, timeScalePlus, timeScaleMinus);
+		AddBreak("---Presets---");
+		AddOption("Sunrise (06:00)", presetSunrise);
+		AddOption("Noon (12:00)", presetNoon);
+		AddOption("Sunset (19:00)", presetSunset);
+		AddOption("Night (23:00)", presetNight);
+
+		if (presetSunrise) { NETWORK_OVERRIDE_CLOCK_TIME(6, 0, 0); if (pauseClock) { pauseClockH = 6; pauseClockM = 0; } return; }
+		if (presetNoon) { NETWORK_OVERRIDE_CLOCK_TIME(12, 0, 0); if (pauseClock) { pauseClockH = 12; pauseClockM = 0; } return; }
+		if (presetSunset) { NETWORK_OVERRIDE_CLOCK_TIME(19, 0, 0); if (pauseClock) { pauseClockH = 19; pauseClockM = 0; } return; }
+		if (presetNight) { NETWORK_OVERRIDE_CLOCK_TIME(23, 0, 0); if (pauseClock) { pauseClockH = 23; pauseClockM = 0; } return; }
 
 		if (hourPlus) 
 		{
@@ -83,7 +95,7 @@ namespace sub
 
 		if (minutePlus) 
 		{
-			if ((minute + 1) == 61)
+			if ((minute + 1) == 60)
 			{
 				if (hour + 1 == 24)
 				{
@@ -122,11 +134,11 @@ namespace sub
 					{
 						SET_CLOCK_DATE(GET_CLOCK_DAY_OF_MONTH() - 1, GET_CLOCK_MONTH(), GET_CLOCK_YEAR());
 					}
-					NETWORK_OVERRIDE_CLOCK_TIME(23, 60, GET_CLOCK_SECONDS());
+					NETWORK_OVERRIDE_CLOCK_TIME(23, 59, GET_CLOCK_SECONDS());
 				}
 				else
 				{
-					NETWORK_OVERRIDE_CLOCK_TIME(hour - 1, 60, GET_CLOCK_SECONDS());
+					NETWORK_OVERRIDE_CLOCK_TIME(hour - 1, 59, GET_CLOCK_SECONDS());
 				}
 			}
 			else

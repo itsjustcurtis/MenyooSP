@@ -374,8 +374,18 @@ namespace sub::Spooner
 			{
 				Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + dimensions.Dim2.y);
 				spawnPos.z += dimensions.Dim1.z;
+				if (Settings::bGridSnapEnabled && Settings::gridSnapSize > 0.0f)
+				{
+					float g = Settings::gridSnapSize;
+					spawnPos.x = round(spawnPos.x / g) * g;
+					spawnPos.y = round(spawnPos.y / g) * g;
+					spawnPos.z = round(spawnPos.z / g) * g;
+				}
+				float spawnYaw = spoocam.GetRotation().z + SpoonerMode::previewYawOffset;
+				if (Settings::rotationSnapDegrees > 0.0f)
+					spawnYaw = round(spawnYaw / Settings::rotationSnapDegrees) * Settings::rotationSnapDegrees;
 
-				newEntity.handle = World::CreateProp(model, spawnPos, Vector3(0, 0, spoocam.GetRotation().z), bDynamic, false);
+				newEntity.handle = World::CreateProp(model, spawnPos, Vector3(0, 0, spawnYaw), bDynamic, false);
 				if (unloadModel)
 					model.Unload();
 			}
@@ -446,8 +456,18 @@ namespace sub::Spooner
 			{
 				Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + dimensions.Dim2.y);
 				spawnPos.z += dimensions.Dim1.z;
+				if (Settings::bGridSnapEnabled && Settings::gridSnapSize > 0.0f)
+				{
+					float g = Settings::gridSnapSize;
+					spawnPos.x = round(spawnPos.x / g) * g;
+					spawnPos.y = round(spawnPos.y / g) * g;
+					spawnPos.z = round(spawnPos.z / g) * g;
+				}
+				float spawnYaw = spoocam.GetRotation().z + SpoonerMode::previewYawOffset;
+				if (Settings::rotationSnapDegrees > 0.0f)
+					spawnYaw = round(spawnYaw / Settings::rotationSnapDegrees) * Settings::rotationSnapDegrees;
 
-				newEntity.handle = World::CreatePed(model, spawnPos, Vector3(0, 0, spoocam.GetRotation().z), false);
+				newEntity.handle = World::CreatePed(model, spawnPos, Vector3(0, 0, spawnYaw), false);
 				if (unloadModel)
 					model.Unload();
 			}
@@ -537,8 +557,18 @@ namespace sub::Spooner
 			{
 				Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + dimensions.Dim2.y);
 				spawnPos.z += dimensions.Dim1.z;
+				if (Settings::bGridSnapEnabled && Settings::gridSnapSize > 0.0f)
+				{
+					float g = Settings::gridSnapSize;
+					spawnPos.x = round(spawnPos.x / g) * g;
+					spawnPos.y = round(spawnPos.y / g) * g;
+					spawnPos.z = round(spawnPos.z / g) * g;
+				}
+				float spawnYaw = spoocam.GetRotation().z + SpoonerMode::previewYawOffset;
+				if (Settings::rotationSnapDegrees > 0.0f)
+					spawnYaw = round(spawnYaw / Settings::rotationSnapDegrees) * Settings::rotationSnapDegrees;
 
-				newEntity.handle = World::CreateVehicle(model, spawnPos, Vector3(0, 0, spoocam.GetRotation().z), false);
+				newEntity.handle = World::CreateVehicle(model, spawnPos, Vector3(0, 0, spawnYaw), false);
 				if (unloadModel) model.Unload();
 			}
 

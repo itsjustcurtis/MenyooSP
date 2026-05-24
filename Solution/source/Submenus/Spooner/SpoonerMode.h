@@ -60,6 +60,7 @@ namespace sub::Spooner
 			std::set<GTAentity> previousEntities;
 		};
 		extern ModelPreviewInfoStructure modelPreviewInfo;
+		extern float previewYawOffset;
 		void SpawnModelPreview();
 
 		void ResetSelectedEntity();

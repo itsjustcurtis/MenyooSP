@@ -48,6 +48,10 @@ namespace sub::Spooner
 		bool bKeepPositionWhenAttaching = false;
 		
 		bool bTeleportToReferenceWhenLoadingFile = true;
+
+		bool bGridSnapEnabled = false;
+		float gridSnapSize = 1.0f;
+		float rotationSnapDegrees = 0.0f;
 	}
 
 }

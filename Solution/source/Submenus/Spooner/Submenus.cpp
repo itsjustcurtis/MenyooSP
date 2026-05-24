@@ -55,6 +55,7 @@
 #include "..\..\Submenus\PtfxSubs.h"
 #include "..\..\Submenus\FunnyVehicles.h"
 #include "..\..\Util\FileLogger.h"
+#include "..\..\Util\ObjectCategories.h"
 
 #include <Shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
@@ -329,6 +330,31 @@ namespace sub
 			}
 
 			AddOption("Reload Model List Files", null, PopulateGlobalEntityModelsArrays);
+
+			AddBreak("---Grid Snap---");
+			AddToggle("Grid Snap", Settings::bGridSnapEnabled);
+
+			bool gridSize_input = false, gridSize_plus = false, gridSize_minus = false;
+			AddNumber("Grid Size (m)", Settings::gridSnapSize, 2, gridSize_input, gridSize_plus, gridSize_minus);
+			if (gridSize_plus && Settings::gridSnapSize < 100.0f) Settings::gridSnapSize += 0.25f;
+			if (gridSize_minus && Settings::gridSnapSize > 0.25f) Settings::gridSnapSize -= 0.25f;
+			if (gridSize_input)
+			{
+				std::string inputStr = Game::InputBox("", 10U, "Grid size in meters:", std::to_string(Settings::gridSnapSize).substr(0, 8));
+				if (inputStr.length() > 0) { try { Settings::gridSnapSize = stof(inputStr); } catch (...) {} }
+				if (Settings::gridSnapSize < 0.01f) Settings::gridSnapSize = 0.25f;
+			}
+
+			bool rotSnap_input = false, rotSnap_plus = false, rotSnap_minus = false;
+			AddNumber("Rotation Snap (deg)", Settings::rotationSnapDegrees, 1, rotSnap_input, rotSnap_plus, rotSnap_minus);
+			if (rotSnap_plus && Settings::rotationSnapDegrees < 90.0f) Settings::rotationSnapDegrees += 5.0f;
+			if (rotSnap_minus && Settings::rotationSnapDegrees > 0.0f) Settings::rotationSnapDegrees -= 5.0f;
+			if (rotSnap_input)
+			{
+				std::string inputStr = Game::InputBox("", 10U, "Rotation snap degrees (0=off):", std::to_string(Settings::rotationSnapDegrees).substr(0, 6));
+				if (inputStr.length() > 0) { try { Settings::rotationSnapDegrees = stof(inputStr); } catch (...) {} }
+				if (Settings::rotationSnapDegrees < 0.0f) Settings::rotationSnapDegrees = 0.0f;
+			}
 
 			if (bSmm_plus) { if ((UINT8)Settings::spoonerModeMode < spoonerModeModeNames.size() - 1) Settings::spoonerModeMode = eSpoonerModeMode((UINT8)Settings::spoonerModeMode + 1); }
 			if (bSmm_minus) { if ((UINT8)Settings::spoonerModeMode > 0) Settings::spoonerModeMode = eSpoonerModeMode((UINT8)Settings::spoonerModeMode - 1); }
@@ -3250,11 +3276,313 @@ namespace sub
 			AddOption("Ped", null, nullFunc, SUB::SPOONER_SPAWN_PED);
 			AddOption("Vehicle", null, nullFunc, SUB::SPOONER_SPAWN_VEHICLE);
 		}
+
+		namespace ObjectSearch
+		{
+			static constexpr size_t MaxVisibleResults = 500;
+			static int sortIndex = 0;
+			static int categoryFilter = 0;
+			static int dlcFilter = 0;
+			static int stuntFilter = 0;
+			static int lodFilter = 0;
+			static int sizeFilter = 0;
+			static std::vector<std::string> results;
+			static std::vector<std::string> categoryOptions;
+			static std::vector<std::string> dlcOptions;
+			static std::vector<std::string> stuntOptions;
+			static std::vector<std::string> sizeOptions;
+			static std::string lastSearch = "\x01";
+			static int lastSort = -1, lastCategory = -1, lastDlc = -1, lastStunt = -1, lastLod = -1, lastSize = -1;
+			static size_t lastObjectCount = 0;
+			static bool dirty = true;
+
+			static const std::vector<std::string> sortOptionsList = { "Name (A-Z)", "Name (Z-A)" };
+			static const std::vector<std::string> lodOptionsList = { "Hide LOD", "Show All" };
+
+			void BuildCategoryOptions()
+			{
+				std::array<int, ObjectCategories::Category_Count> counts = {};
+				for (const auto& modelName : objectModels)
+				{
+					counts[ObjectCategories::GetObjectCategory(modelName)]++;
+				}
+
+				categoryOptions.clear();
+				categoryOptions.push_back("All (" + std::to_string(objectModels.size()) + ")");
+				for (int i = 0; i < ObjectCategories::Category_Count; i++)
+				{
+					const auto category = static_cast<ObjectCategories::Category>(i);
+					categoryOptions.push_back(std::string(ObjectCategories::GetObjectCategoryName(category)) + " (" + std::to_string(counts[i]) + ")");
+				}
+			}
+
+			void BuildDlcOptions()
+			{
+				std::array<int, ObjectCategories::DLC_Count> counts = {};
+				for (const auto& modelName : objectModels)
+				{
+					counts[ObjectCategories::GetObjectDlcGroup(modelName)]++;
+				}
+
+				dlcOptions.clear();
+				dlcOptions.push_back("All (" + std::to_string(objectModels.size()) + ")");
+				for (int i = 0; i < ObjectCategories::DLC_Count; i++)
+				{
+					const auto group = static_cast<ObjectCategories::DlcGroup>(i);
+					dlcOptions.push_back(std::string(ObjectCategories::GetObjectDlcGroupName(group)) + " (" + std::to_string(counts[i]) + ")");
+				}
+			}
+
+			void BuildStuntOptions()
+			{
+				std::array<int, ObjectCategories::Stunt_Count> counts = {};
+				for (const auto& modelName : objectModels)
+				{
+					auto st = ObjectCategories::GetStuntType(modelName);
+					if (st != ObjectCategories::Stunt_None) counts[st]++;
+				}
+
+				int totalStunt = 0;
+				for (int i = 1; i < ObjectCategories::Stunt_Count; i++) totalStunt += counts[i];
+
+				stuntOptions.clear();
+				stuntOptions.push_back("All");
+				stuntOptions.push_back("All Stunt (" + std::to_string(totalStunt) + ")");
+				for (int i = 1; i < ObjectCategories::Stunt_Count; i++)
+				{
+					if (counts[i] > 0)
+						stuntOptions.push_back(std::string(ObjectCategories::GetStuntTypeName(static_cast<ObjectCategories::StuntType>(i))) + " (" + std::to_string(counts[i]) + ")");
+					else
+						stuntOptions.push_back(ObjectCategories::GetStuntTypeName(static_cast<ObjectCategories::StuntType>(i)));
+				}
+			}
+
+			void BuildSizeOptions()
+			{
+				std::array<int, ObjectCategories::Size_Count> counts = {};
+				for (const auto& modelName : objectModels)
+				{
+					auto sz = ObjectCategories::GetNamedSize(modelName);
+					if (sz != ObjectCategories::Size_Unknown) counts[sz]++;
+				}
+
+				int totalSized = 0;
+				for (int i = 1; i < ObjectCategories::Size_Count; i++) totalSized += counts[i];
+
+				sizeOptions.clear();
+				sizeOptions.push_back("All");
+				sizeOptions.push_back("Has Size (" + std::to_string(totalSized) + ")");
+				for (int i = 1; i < ObjectCategories::Size_Count; i++)
+				{
+					auto sz = static_cast<ObjectCategories::SizeClass>(i);
+					sizeOptions.push_back(std::string(ObjectCategories::GetSizeClassName(sz)) + " (" + std::to_string(counts[i]) + ")");
+				}
+			}
+
+			void EnsureOptions()
+			{
+				if (categoryOptions.empty() || dlcOptions.empty() || stuntOptions.empty() || sizeOptions.empty() || lastObjectCount != objectModels.size())
+				{
+					BuildCategoryOptions();
+					BuildDlcOptions();
+					BuildStuntOptions();
+					BuildSizeOptions();
+					lastObjectCount = objectModels.size();
+					dirty = true;
+				}
+			}
+
+			void RebuildResults(const std::string& searchStr)
+			{
+				results.clear();
+				std::string searchUpper = boost::to_upper_copy(searchStr);
+
+				for (const auto& modelName : objectModels)
+				{
+					if (lodFilter == 0 && ObjectCategories::IsLodProxy(modelName))
+						continue;
+
+					if (categoryFilter != 0)
+					{
+						const auto category = ObjectCategories::GetObjectCategory(modelName);
+						if (static_cast<int>(category) != (categoryFilter - 1))
+							continue;
+					}
+
+					if (dlcFilter != 0)
+					{
+						const auto dlcGroup = ObjectCategories::GetObjectDlcGroup(modelName);
+						if (static_cast<int>(dlcGroup) != (dlcFilter - 1))
+							continue;
+					}
+
+					if (stuntFilter != 0)
+					{
+						auto st = ObjectCategories::GetStuntType(modelName);
+						if (stuntFilter == 1)
+						{
+							if (st == ObjectCategories::Stunt_None) continue;
+						}
+						else
+						{
+							if (static_cast<int>(st) != (stuntFilter - 1)) continue;
+						}
+					}
+
+					if (sizeFilter != 0)
+					{
+						auto sz = ObjectCategories::GetNamedSize(modelName);
+						if (sizeFilter == 1)
+						{
+							if (sz == ObjectCategories::Size_Unknown) continue;
+						}
+						else
+						{
+							if (static_cast<int>(sz) != (sizeFilter - 1)) continue;
+						}
+					}
+
+					if (!searchUpper.empty())
+					{
+						std::string modelUpper = boost::to_upper_copy(modelName);
+						if (modelUpper.find(searchUpper) == std::string::npos)
+							continue;
+					}
+
+					results.push_back(modelName);
+				}
+
+				switch (sortIndex)
+				{
+				case 0:
+					std::sort(results.begin(), results.end(), [](const auto& a, const auto& b) {
+						return boost::to_lower_copy(a) < boost::to_lower_copy(b);
+					});
+					break;
+				case 1:
+					std::sort(results.begin(), results.end(), [](const auto& a, const auto& b) {
+						return boost::to_lower_copy(a) > boost::to_lower_copy(b);
+					});
+					break;
+				}
+			}
+		}
+
+		void ObjectSpawnerSearchMenu()
+		{
+			using namespace ObjectSearch;
+			auto& searchStr = dict;
+
+			EnsureOptions();
+
+			AddTitle("Object Search");
+
+			bool bSearchPressed = false;
+			AddOption(searchStr.empty() ? "~b~SEARCH~s~" : ("~b~" + searchStr + "~s~"), bSearchPressed, nullFunc, -1, true);
+			if (bSearchPressed)
+			{
+				searchStr = Game::InputBox(searchStr, 64U, "Search objects:", boost::to_lower_copy(searchStr));
+				boost::to_upper(searchStr);
+			}
+
+			bool sortRight = false, sortLeft = false;
+			AddTexter("Sort", sortIndex, sortOptionsList, null, sortRight, sortLeft);
+			if (sortRight && sortIndex < (int)(sortOptionsList.size() - 1)) sortIndex++;
+			if (sortLeft && sortIndex > 0) sortIndex--;
+
+			bool catRight = false, catLeft = false;
+			AddTexter("Category", categoryFilter, categoryOptions, null, catRight, catLeft);
+			if (catRight && categoryFilter < (int)(categoryOptions.size() - 1)) categoryFilter++;
+			if (catLeft && categoryFilter > 0) categoryFilter--;
+
+			bool dlcRight = false, dlcLeft = false;
+			AddTexter("DLC", dlcFilter, dlcOptions, null, dlcRight, dlcLeft);
+			if (dlcRight && dlcFilter < (int)(dlcOptions.size() - 1)) dlcFilter++;
+			if (dlcLeft && dlcFilter > 0) dlcFilter--;
+
+			bool stuntRight = false, stuntLeft = false;
+			AddTexter("Stunt", stuntFilter, stuntOptions, null, stuntRight, stuntLeft);
+			if (stuntRight && stuntFilter < (int)(stuntOptions.size() - 1)) stuntFilter++;
+			if (stuntLeft && stuntFilter > 0) stuntFilter--;
+
+			bool sizeRight = false, sizeLeft = false;
+			AddTexter("Size", sizeFilter, sizeOptions, null, sizeRight, sizeLeft);
+			if (sizeRight && sizeFilter < (int)(sizeOptions.size() - 1)) sizeFilter++;
+			if (sizeLeft && sizeFilter > 0) sizeFilter--;
+
+			bool lodRight = false, lodLeft = false;
+			AddTexter("LOD/Proxy", lodFilter, lodOptionsList, null, lodRight, lodLeft);
+			if (lodRight && lodFilter < 1) lodFilter++;
+			if (lodLeft && lodFilter > 0) lodFilter--;
+
+			if (searchStr != lastSearch || sortIndex != lastSort ||
+				categoryFilter != lastCategory || dlcFilter != lastDlc ||
+				stuntFilter != lastStunt || lodFilter != lastLod ||
+				sizeFilter != lastSize)
+			{
+				dirty = true;
+			}
+
+			if (dirty)
+			{
+				RebuildResults(searchStr);
+				lastSearch = searchStr;
+				lastSort = sortIndex;
+				lastCategory = categoryFilter;
+				lastDlc = dlcFilter;
+				lastStunt = stuntFilter;
+				lastLod = lodFilter;
+				lastSize = sizeFilter;
+				dirty = false;
+			}
+
+			if (results.size() > MaxVisibleResults)
+				AddBreak("---Results: " + std::to_string(results.size()) + " (showing " + std::to_string(MaxVisibleResults) + ")---");
+			else
+				AddBreak("---Results: " + std::to_string(results.size()) + "---");
+
+			const size_t visibleCount = results.size() < MaxVisibleResults ? results.size() : MaxVisibleResults;
+			for (size_t i = 0; i < visibleCount; i++)
+			{
+				const auto& modelName = results[i];
+				Model currentModel = GET_HASH_KEY(modelName);
+
+				MenuOptions::AddOption_AddProp(modelName, currentModel.hash);
+
+				if (Menu::printingop == *Menu::currentopATM)
+				{
+					bool bIsAFav = FavouritesManagement::IsPropAFavourite(modelName, currentModel.hash);
+					if (Menu::bitController)
+					{
+						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+
+						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
+						{
+							!bIsAFav ? FavouritesManagement::AddPropToFavourites(modelName, currentModel.hash) : FavouritesManagement::RemovePropFromFavourites(modelName, currentModel.hash);
+						}
+					}
+					else
+					{
+						Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+
+						if (IsKeyJustUp(VirtualKey::B))
+						{
+							!bIsAFav ? FavouritesManagement::AddPropToFavourites(modelName, currentModel.hash) : FavouritesManagement::RemovePropFromFavourites(modelName, currentModel.hash);
+						}
+					}
+				}
+			}
+		}
+
 		void Sub_SpawnProp()
 		{
 			AddTitle("Spawn Object");
 
 			AddOption("Favourites", null, nullFunc, SUB::SPOONER_SPAWN_PROP_FAVOURITES);
+			bool bOpenObjectSearch = false;
+			AddOption("Search Objects", bOpenObjectSearch, nullFunc, SUB::OBJECTSPAWNER_SEARCH);
+			if (bOpenObjectSearch)
+				dict.clear();
 
 			bool bSearchPressed = false;
 			AddOption(_searchStr.empty() ? "SEARCH" : boost::to_upper_copy(_searchStr), bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
@@ -3389,55 +3717,22 @@ namespace sub
 			AddTitle("Spawn Ped");
 
 			AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
+			AddOption("~b~Search~s~ Peds", null, nullFunc, SUB::MODELCHANGER_SEARCH);
 
-			bool bSearchPressed = false;
-			AddOption(_searchStr.empty() ? "SEARCH" : boost::to_upper_copy(_searchStr), bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
-			{
-				_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", _searchStr);
-				boost::to_lower(_searchStr);
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToLower, _searchStr, 126U, std::string(), _searchStr);
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
-			}
-
-			if (!_searchStr.empty())
-			{
-				for (auto& current : g_pedModels)
-				{
-					if (current.first.find(_searchStr) == std::string::npos && current.second.find(_searchStr) == std::string::npos)
-						continue;
-
-					Model currentModel = GET_HASH_KEY(current.first);
-
-					if (currentModel.IsInCdImage())
-					{
-						MenuOptions::AddOptionAddPed(current.second, currentModel);
-						if (*Menu::currentopATM == Menu::printingop) PedFavourites::ShowInstructionalButton(currentModel);
-					}
-				}
-			}
-			else
-			{
-				AddOption("Player", null, nullFunc, SUB::MODELCHANGER_PLAYER);
-				AddOption("Animals", null, nullFunc, SUB::MODELCHANGER_ANIMAL);
-				AddOption("Ambient Females", null, nullFunc, SUB::MODELCHANGER_AMBFEMALES);
-				AddOption("Ambient Males", null, nullFunc, SUB::MODELCHANGER_AMBMALES);
-				AddOption("Cutscene Models", null, nullFunc, SUB::MODELCHANGER_CS);
-				AddOption("Gang Females", null, nullFunc, SUB::MODELCHANGER_GANGFEMALES);
-				AddOption("Gang Males", null, nullFunc, SUB::MODELCHANGER_GANGMALES);
-				AddOption("Story Models", null, nullFunc, SUB::MODELCHANGER_STORY);
-				AddOption("Multiplayer Models", null, nullFunc, SUB::MODELCHANGER_MP);
-				AddOption("Scenario Females", null, nullFunc, SUB::MODELCHANGER_SCENARIOFEMALES);
-				AddOption("Scenario Males", null, nullFunc, SUB::MODELCHANGER_SCENARIOMALES);
-				AddOption("Story Scenario Females", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOFEMALES);
-				AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
-				AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
-			}
-
-			bool bInputPressed = false;
-			AddOption("INPUT MODEL", bInputPressed); if (bInputPressed)
-			{
-				EntityManagement::InputEntityIntoDb(EntityType::PED);
-			}
+			AddOption("Player", null, nullFunc, SUB::MODELCHANGER_PLAYER);
+			AddOption("Animals", null, nullFunc, SUB::MODELCHANGER_ANIMAL);
+			AddOption("Ambient Females", null, nullFunc, SUB::MODELCHANGER_AMBFEMALES);
+			AddOption("Ambient Males", null, nullFunc, SUB::MODELCHANGER_AMBMALES);
+			AddOption("Cutscene Models", null, nullFunc, SUB::MODELCHANGER_CS);
+			AddOption("Gang Females", null, nullFunc, SUB::MODELCHANGER_GANGFEMALES);
+			AddOption("Gang Males", null, nullFunc, SUB::MODELCHANGER_GANGMALES);
+			AddOption("Story Models", null, nullFunc, SUB::MODELCHANGER_STORY);
+			AddOption("Multiplayer Models", null, nullFunc, SUB::MODELCHANGER_MP);
+			AddOption("Scenario Females", null, nullFunc, SUB::MODELCHANGER_SCENARIOFEMALES);
+			AddOption("Scenario Males", null, nullFunc, SUB::MODELCHANGER_SCENARIOMALES);
+			AddOption("Story Scenario Females", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOFEMALES);
+			AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
+			AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
 		}
 		void Sub_SpawnVehicle()
 		{
@@ -3448,6 +3743,7 @@ namespace sub
 
 			AddTitle("Spawn Vehicle");
 			AddOption("Favourites", null, nullFunc, SUB::SPAWNVEHICLE_FAVOURITES);
+			AddOption("~b~Search~s~ Vehicles", null, nullFunc, SUB::SPAWNVEHICLE_SEARCH);
 
 			AddBreak("---Cars---");
 			AddVehicleCategoryOption("Open Wheel", Indices::OPENWHEEL);
@@ -3479,12 +3775,6 @@ namespace sub
 			AddVehicleCategoryOption("Helicopters", Indices::HELICOPTER);
 			AddVehicleCategoryOption("Boats", Indices::BOAT);
 			AddVehicleCategoryOption("Others", Indices::OTHER);
-
-			bool bInputPressed = false;
-			AddOption("INPUT MODEL", bInputPressed); if (bInputPressed)
-			{
-				EntityManagement::InputEntityIntoDb(EntityType::VEHICLE);
-			}
 		}
 	}
 
@@ -4234,3 +4524,4 @@ REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_ATTACHTO,                      	sub::Spoo
 REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_SELECTBONE,                    	sub::Spooner::Submenus::Sub_AttachmentOps_SelectBone)
 REGISTER_SUBMENU(SPOONER_MANUALPLACEMENT,                             	sub::Spooner::Submenus::Sub_ManualPlacement)
 REGISTER_SUBMENU(SPOONER_SIZEMANIPULATION,                            	sub::Spooner::Submenus::Sub_SizeManipulation)
+REGISTER_SUBMENU(OBJECTSPAWNER_SEARCH,                                	sub::Spooner::Submenus::ObjectSpawnerSearchMenu)

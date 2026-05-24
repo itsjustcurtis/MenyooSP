@@ -324,19 +324,27 @@ namespace sub
 	{
 		if (model.IsInCdImage())
 		{
-			switch (Menu::currentArray[Menu::currentArrayIndex])
+			int context = 0;
+			for (int ci = Menu::currentArrayIndex; ci >= 0; ci--)
 			{
-			case SUB::MODELCHANGER:
-				AddModelChangerOption(text, model.hash, tickTrue);
-				break;
-			case SUB::PEDGUN_ALLPEDS:
-				AddPedGunOption(text, model.hash, extraOptionCode);
-				break;
-			case SUB::SPOONER_SPAWN_PED:
+				if (Menu::currentArray[ci] == SUB::SPOONER_SPAWN_PED) { context = 1; break; }
+				if (Menu::currentArray[ci] == SUB::BODYGUARD_SPAWN) { context = 2; break; }
+				if (Menu::currentArray[ci] == SUB::PEDGUN_ALLPEDS) { context = 3; break; }
+			}
+
+			switch (context)
+			{
+			case 1:
 				sub::Spooner::MenuOptions::AddOptionAddPed(text, model);
 				break;
-			case SUB::BODYGUARD_SPAWN:
+			case 2:
 				sub::BodyguardMenu::BodyguardManagement::AddOptionBodyGuardPed(text, model);
+				break;
+			case 3:
+				AddPedGunOption(text, model.hash, extraOptionCode);
+				break;
+			default:
+				AddModelChangerOption(text, model.hash, tickTrue);
 				break;
 			}
 
@@ -352,59 +360,48 @@ namespace sub
 	void ModelChangerMenu()
 	{
 		bool modelChangerRandomPedVariation = false;
-		bool modelChangerInput = false;
 		rngped = { "", "" };
+		dict3.clear();
 
 		g_Ped1 = PLAYER_PED_ID();
 		AddTitle("Model Changer");
-		AddOption("Randomize Ped Variation", modelChangerRandomPedVariation);
+		AddOption("~b~Search~s~ Peds", null, nullFunc, SUB::MODELCHANGER_SEARCH);
 		AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
+		AddOption("Randomize Ped Variation", modelChangerRandomPedVariation);
+
+		AddBreak("---Categories---");
 		AddOption("Player", null, nullFunc, SUB::MODELCHANGER_PLAYER);
+		AddOption("Story Models", null, nullFunc, SUB::MODELCHANGER_STORY);
+		AddOption("Cutscene Models", null, nullFunc, SUB::MODELCHANGER_CS);
+		AddOption("Multiplayer Models", null, nullFunc, SUB::MODELCHANGER_MP);
 		AddOption("Animals", null, nullFunc, SUB::MODELCHANGER_ANIMAL);
+
+		AddBreak("---Ambient---");
 		AddOption("Ambient Females", null, nullFunc, SUB::MODELCHANGER_AMBFEMALES);
 		AddOption("Ambient Males", null, nullFunc, SUB::MODELCHANGER_AMBMALES);
-		AddOption("Cutscene Models", null, nullFunc, SUB::MODELCHANGER_CS);
 		AddOption("Gang Female", null, nullFunc, SUB::MODELCHANGER_GANGFEMALES);
 		AddOption("Gang Males", null, nullFunc, SUB::MODELCHANGER_GANGMALES);
-		AddOption("Story Models", null, nullFunc, SUB::MODELCHANGER_STORY);
-		AddOption("Multiplayer Models", null, nullFunc, SUB::MODELCHANGER_MP);
+
+		AddBreak("---Scenario---");
 		AddOption("Scenario Females", null, nullFunc, SUB::MODELCHANGER_SCENARIOFEMALES);
 		AddOption("Scenario Males", null, nullFunc, SUB::MODELCHANGER_SCENARIOMALES);
 		AddOption("Story Scenario Females", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOFEMALES);
 		AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
 		AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
-		AddOption("~b~Input~s~ Model", modelChangerInput);
 
-		if (modelChangerRandomPedVariation) 
+		if (modelChangerRandomPedVariation)
 		{
 			addlog(ige::LogType::LOG_TRACE, "Random Ped Selected");
 			SET_PED_RANDOM_COMPONENT_VARIATION(g_Ped1, 0);
 			SET_PED_RANDOM_PROPS(g_Ped1);
 			return;
 		}
-
-		if (modelChangerInput) 
-		{
-			std::string inputStr = Game::InputBox("", 64U, "Enter ped model name (e.g. IG_BENNY):");
-			if (inputStr.length() > 0)
-			{
-				Model model = (inputStr);
-				if (model.IsInCdImage())
-				{
-					ChangeModel(model);
-				}
-				else
-				{
-					Game::Print::PrintErrorInvalidModel(inputStr);
-				}
-				return;
-			}
-		}
 	}
 
 	GTAmodel::Model ModelChangerRandom(std::vector<std::pair<std::string, std::string>> pedModels)
 	{
-		addlog(ige::LogType::LOG_TRACE, "Getting Random Ped Model");		
+		addlog(ige::LogType::LOG_TRACE, "Getting Random Ped Model");
+		if (pedModels.empty()) return 0;
 		rngped = pedModels[std::rand() % pedModels.size()];
 		addlog(ige::LogType::LOG_TRACE, "Got Random Ped Model: " + rngped.first + ", " + rngped.second);
 		return rngped.first;
@@ -595,7 +592,7 @@ namespace sub
 	void ModelChangerOthers()
 	{
 		AddTitle("Others");
-		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "") 
+		if (rngped.first == Game::PlayerPed().Model() || rngped.first == "")
 		{
 			ModelChangerRandom(g_pedModels_Others);
 		}
@@ -605,7 +602,140 @@ namespace sub
 			AddModelOption(pmn.second, (pmn.first));
 		}
 	}
-}
+
+	namespace PedSearch
+	{
+		static int sortIndex = 0;
+		static int categoryFilter = 0;
+		static std::vector<std::pair<std::string, std::string>> results;
+		static std::vector<std::string> categoryOptions;
+		static bool dirty = true;
+		static std::string lastSearch;
+		static int lastSort = -1, lastCategory = -1;
+
+		static const std::vector<std::string> sortOptions = { "Name (A-Z)", "Name (Z-A)", "Model Name" };
+
+		struct CategoryEntry {
+			const char* name;
+			std::vector<std::pair<std::string, std::string>>* vec;
+		};
+
+		static const CategoryEntry categories[] = {
+			{ "Player", &g_pedModels_Player },
+			{ "Animals", &g_pedModels_Animal },
+			{ "Ambient Females", &g_pedModels_AmbientFemale },
+			{ "Ambient Males", &g_pedModels_AmbientMale },
+			{ "Cutscene", &g_pedModels_Cutscene },
+			{ "Gang Females", &g_pedModels_GangFemale },
+			{ "Gang Males", &g_pedModels_GangMale },
+			{ "Story", &g_pedModels_Story },
+			{ "Multiplayer", &g_pedModels_Multiplayer },
+			{ "Scenario Females", &g_pedModels_ScenarioFemale },
+			{ "Scenario Males", &g_pedModels_ScenarioMale },
+			{ "Story Scenario F", &g_pedModels_StoryScenarioFemale },
+			{ "Story Scenario M", &g_pedModels_StoryScenarioMale },
+			{ "Others", &g_pedModels_Others },
+		};
+		static const int numCategories = 14;
+
+		void BuildCategoryOptions()
+		{
+			categoryOptions.clear();
+			categoryOptions.push_back("All (" + std::to_string(g_pedModels.size()) + ")");
+			for (int i = 0; i < numCategories; i++)
+			{
+				categoryOptions.push_back(std::string(categories[i].name) + " (" + std::to_string(categories[i].vec->size()) + ")");
+			}
+		}
+
+		void RebuildResults(const std::string& searchStr)
+		{
+			results.clear();
+			std::string searchUpper = boost::to_upper_copy(searchStr);
+
+			auto* sourceVec = &g_pedModels;
+			if (categoryFilter > 0 && categoryFilter <= numCategories)
+				sourceVec = categories[categoryFilter - 1].vec;
+
+			for (auto& ped : *sourceVec)
+			{
+				if (!searchUpper.empty())
+				{
+					std::string nameUpper = boost::to_upper_copy(ped.second);
+					std::string modelUpper = boost::to_upper_copy(ped.first);
+					if (nameUpper.find(searchUpper) == std::string::npos &&
+						modelUpper.find(searchUpper) == std::string::npos)
+						continue;
+				}
+				results.push_back(ped);
+			}
+
+			switch (sortIndex)
+			{
+			case 0:
+				std::sort(results.begin(), results.end(), [](const auto& a, const auto& b) {
+					return boost::to_lower_copy(a.second) < boost::to_lower_copy(b.second);
+				});
+				break;
+			case 1:
+				std::sort(results.begin(), results.end(), [](const auto& a, const auto& b) {
+					return boost::to_lower_copy(a.second) > boost::to_lower_copy(b.second);
+				});
+				break;
+			case 2:
+				std::sort(results.begin(), results.end(), [](const auto& a, const auto& b) {
+					return boost::to_lower_copy(a.first) < boost::to_lower_copy(b.first);
+				});
+				break;
+			}
+		}
+	}
+
+	void ModelChangerSearchMenu()
+	{
+		using namespace PedSearch;
+		auto& searchStr = dict3;
+
+		if (categoryOptions.empty()) BuildCategoryOptions();
+
+		AddTitle("Ped Search");
+
+		bool bSearchPressed = false;
+		AddOption(searchStr.empty() ? "~b~SEARCH~s~" : ("~b~" + searchStr + "~s~"), bSearchPressed, nullFunc, -1, true);
+		if (bSearchPressed)
+		{
+			searchStr = Game::InputBox(searchStr, 64U, "Search peds:", boost::to_lower_copy(searchStr));
+			boost::to_upper(searchStr);
+		}
+
+		bool sortRight = false, sortLeft = false;
+		AddTexter("Sort", sortIndex, sortOptions, null, sortRight, sortLeft);
+		if (sortRight && sortIndex < (int)(sortOptions.size() - 1)) sortIndex++;
+		if (sortLeft && sortIndex > 0) sortIndex--;
+
+		bool catRight = false, catLeft = false;
+		AddTexter("Category", categoryFilter, categoryOptions, null, catRight, catLeft);
+		if (catRight && categoryFilter < (int)(categoryOptions.size() - 1)) categoryFilter++;
+		if (catLeft && categoryFilter > 0) categoryFilter--;
+
+		if (dirty || searchStr != lastSearch || sortIndex != lastSort || categoryFilter != lastCategory)
+		{
+			RebuildResults(searchStr);
+			lastSearch = searchStr;
+			lastSort = sortIndex;
+			lastCategory = categoryFilter;
+			dirty = false;
+		}
+
+		AddBreak("---Results: " + std::to_string(results.size()) + "---");
+
+		for (auto& ped : results)
+		{
+			AddModelOption(ped.second, (ped.first));
+		}
+	}
+
+} // namespace sub
 
 
 #include "..\Menu\submenu_switch.h"
@@ -626,3 +756,4 @@ REGISTER_SUBMENU(MODELCHANGER_SCENARIOMALES,       sub::ModelChangerScenarioMale
 REGISTER_SUBMENU(MODELCHANGER_ST_SCENARIOFEMALES,  sub::ModelChangerStoryScenarioFemale)
 REGISTER_SUBMENU(MODELCHANGER_ST_SCENARIOMALES,    sub::ModelChangerStoryScenarioMale)
 REGISTER_SUBMENU(MODELCHANGER_OTHERS,              sub::ModelChangerOthers)
+REGISTER_SUBMENU(MODELCHANGER_SEARCH,              sub::ModelChangerSearchMenu)
