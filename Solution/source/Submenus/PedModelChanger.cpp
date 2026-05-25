@@ -290,8 +290,8 @@ namespace sub
 					{
 						IntToHexString(model.hash, true);
 					}
-					spe.lastAnimation.dict.clear();
-					spe.lastAnimation.name.clear();
+					spe.ClearLastAnimations();
+					spe.currentScenario.clear();
 					if (att.Exists() && spe.attachmentArgs.isAttached)
 					{
 						spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);

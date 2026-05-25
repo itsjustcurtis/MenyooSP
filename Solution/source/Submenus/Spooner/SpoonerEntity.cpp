@@ -53,8 +53,8 @@ namespace sub::Spooner
 		this->type = (EntityType)right.type;
 		this->hashName = right.hashName;
 		this->dynamic = right.dynamic;
-		this->lastAnimation.dict = right.lastAnimation.dict;
-		this->lastAnimation.name = right.lastAnimation.name;
+		this->lastAnimations = right.lastAnimations;
+		this->currentScenario = right.currentScenario;
 		this->attachmentArgs.isAttached = right.attachmentArgs.isAttached;
 		this->attachmentArgs.boneIndex = right.attachmentArgs.boneIndex;
 		this->attachmentArgs.offset = right.attachmentArgs.offset;
@@ -64,6 +64,39 @@ namespace sub::Spooner
 		this->taskSequence = right.taskSequence;
 
 		//return *this;
+	}
+
+	// helper for automatically removing old animation with the same flag before adding a new one
+	void SpoonerEntity::AddOrUpdateLastAnimation(const Animation& anim)
+	{
+		RemoveFromLastAnimations(anim.flag);
+		lastAnimations.push_back(anim);
+	}
+
+	void SpoonerEntity::RemoveFromLastAnimations(int flag)
+	{
+		for (auto it = lastAnimations.begin(); it != lastAnimations.end(); ++it)
+		{
+			if (it->flag == flag)
+			{
+				lastAnimations.erase(it);
+				return;
+			}
+		}
+	}
+
+	bool SpoonerEntity::HasInLastAnimations(int flag) const
+	{
+		for (const auto& a : lastAnimations)
+		{
+			if (a.flag == flag) return true;
+		}
+		return false;
+	}
+
+	void SpoonerEntity::ClearLastAnimations()
+	{
+		lastAnimations.clear();
 	}
 
 	bool operator == (const SpoonerEntity& left, const SpoonerEntity& right)
