@@ -169,6 +169,7 @@ namespace sub
 
 	void ComponentChanger_Outfits();
 	void ComponentChanger_Outfits2();
+	void ComponentChanger_DefaultOutfits();
 }
 
 
