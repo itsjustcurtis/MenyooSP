@@ -43,6 +43,10 @@ namespace sub::Spooner
 		extern bool bKeepPositionWhenAttaching;
 
 		extern bool bTeleportToReferenceWhenLoadingFile;
+
+		extern bool bGridSnapEnabled;
+		extern float gridSnapSize;
+		extern float rotationSnapDegrees;
 	}
 
 }

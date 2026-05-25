@@ -75,15 +75,21 @@ namespace sub
 
 		void PopulateVehicleBmps();
 		void AddVehicleCategoryOption(const std::string& text, UINT8 index, bool *extra_option_code = nullptr);
+		std::string GetVehicleClassName(int classId);
+		void DrawVehicleStats(const GTAmodel::Model& vehModel);
 
 	}
 
 	void SpawnVehicleMenu();
+	void SpawnVehicleSearchMenu();
 	void SpawnVehicleOptions();
 
 	bool SpawnVehicleIsVehicleModelAFavourite(GTAmodel::Model vehModel);
 	bool SpawnVehicleAddVehicleModelToFavourites(GTAmodel::Model vehModel, const std::string& customName);
 	bool SpawnVehicleRemoveVehicleModelFromFavourites(GTAmodel::Model vehModel);
+
+	void SaveVehiclePropsToNode(pugi::xml_node& node, GTAvehicle ev);
+	void ApplyVehiclePropsFromNode(pugi::xml_node& node, GTAvehicle ev);
 
 	void SpawnVehicleDLC();
 	void SpawnVehicleDLCSelection();

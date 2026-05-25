@@ -81,7 +81,9 @@ namespace sub::Spooner
 
 		bool IsHotkeyPressed()
 		{
-			if (std::find(std::begin(Menu::currentArray), std::end(Menu::currentArray), SUB::SPOONER_MAIN) == std::end(Menu::currentArray))
+			bool bInSpoonerMenu = std::find(std::begin(Menu::currentArray), std::end(Menu::currentArray), SUB::SPOONER_MAIN) != std::end(Menu::currentArray);
+
+			if (!bInSpoonerMenu || !bIsSomethingHeld)
 			{
 				UINT8 index1 = bindsGamepad.first < 50 ? 0 : 2;
 				UINT8 index2 = bindsGamepad.second < 50 ? 0 : 2;
@@ -90,7 +92,44 @@ namespace sub::Spooner
 			return false;
 		}
 
+		Vector3 SnapPos(Vector3 pos)
+		{
+			if (Settings::bGridSnapEnabled && Settings::gridSnapSize > 0.0f)
+			{
+				float g = Settings::gridSnapSize;
+				pos.x = round(pos.x / g) * g;
+				pos.y = round(pos.y / g) * g;
+				pos.z = round(pos.z / g) * g;
+			}
+			return pos;
+		}
+
 		ModelPreviewInfoStructure modelPreviewInfo = { EntityType::ALL, 0, 0, 0,{} };
+		float previewYawOffset = 0.0f;
+
+		void UpdatePreviewRotation()
+		{
+			if (modelPreviewInfo.entity.Exists() && Menu::currentsub != SUB::CLOSED)
+			{
+				Menu::add_IB(INPUT_FRONTEND_RB, "");
+				Menu::add_IB(INPUT_FRONTEND_LB, "Rotate Preview");
+
+				bool lbPressed = IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LB);
+				bool rbPressed = IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_RB);
+				bool dpadPressed = IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LEFT) ||
+					IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_RIGHT) ||
+					IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_UP) ||
+					IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_DOWN);
+
+				if (!dpadPressed)
+				{
+					if (lbPressed && !rbPressed) previewYawOffset -= 2.0f;
+					if (rbPressed && !lbPressed) previewYawOffset += 2.0f;
+					if (previewYawOffset > 360.0f || previewYawOffset < -360.0f) previewYawOffset = fmod(previewYawOffset, 360.0f);
+				}
+			}
+		}
+
 		void SpawnModelPreview()
 		{
 			bool bOnTheLine = NETWORK_IS_IN_SESSION() != 0;
@@ -124,6 +163,7 @@ namespace sub::Spooner
 			}
 			else if (info.model != info.previousModel)
 			{
+				previewYawOffset = 0.0f;
 				if (bOnTheLine)
 				{
 					info.previousEntities.insert(info.entity);
@@ -145,7 +185,7 @@ namespace sub::Spooner
 				{
 					const ModelDimensions& dimensions = info.model.Dimensions();
 
-					Vector3 spawnRot(0, 0, spoonerModeCamera.GetRotation().z);
+					Vector3 spawnRot(0, 0, spoonerModeCamera.GetRotation().z + previewYawOffset);
 
 					const Vector3& geSep = info.entity.GetPosition();
 					//auto& geGroundRay = RaycastResult::Raycast(geSep, Vector3::WorldDown(), max(max(dimensions.Dim1.x, dimensions.Dim2.x), max(max(dimensions.Dim1.y, dimensions.Dim2.y), max(dimensions.Dim1.z, dimensions.Dim2.z))) + 2.0f, IntersectOptions::Everything, info.entity);
@@ -163,6 +203,13 @@ namespace sub::Spooner
 					else if (abs(spawnRot.x) > 70.0f) geGroundZ = dimensions.Dim1.y;
 					else if (abs(spawnRot.y) > 70.0f) geGroundZ = dimensions.Dim1.x;
 					Vector3 spawnPos(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), info.entity, 120.0f, 23.0f + dimensions.Dim2.y) + Vector3(0, 0, geGroundZ));
+
+					spawnPos = SnapPos(spawnPos);
+					if (Settings::rotationSnapDegrees > 0.0f)
+					{
+						float r = Settings::rotationSnapDegrees;
+						spawnRot.z = round(spawnRot.z / r) * r;
+					}
 
 					if (bOnTheLine)
 						info.entity.RequestControlOnce();
@@ -450,7 +497,7 @@ namespace sub::Spooner
 									geGroundZ = mdSelectedEntity.Dim1.y;
 								else if (abs(rotSelected.y) > 70.0f)
 									geGroundZ = mdSelectedEntity.Dim1.x;
-								selectedEntity.handle.SetPosition(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), selectedEntity.handle, 90.0f, 15.0f + mdSelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ));
+								selectedEntity.handle.SetPosition(SnapPos(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), selectedEntity.handle, 90.0f, 15.0f + mdSelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ)));
 								break;
 							}
 							case eSpoonerModeMode::Precision:
@@ -460,7 +507,7 @@ namespace sub::Spooner
 									freeCamCamDistance += 0.1f; // Zoom out LS
 								Vector3 attachmentOffset = { 0.0f, -mdSelectedEntity.Dim2.y - freeCamCamDistance, 0.0f };
 								freeCam.AttachTo(selectedEntity.handle, attachmentOffset);
-								selectedEntity.handle.SetPosition(selectedEntity.handle.GetOffsetInWorldCoords(nextOffset));
+								selectedEntity.handle.SetPosition(SnapPos(selectedEntity.handle.GetOffsetInWorldCoords(nextOffset)));
 								if (Settings::bFreezeEntityWhenMovingIt)
 									selectedEntity.handle.FreezePosition(Settings::bFreezeEntityWhenMovingIt);
 								break;
@@ -737,7 +784,7 @@ namespace sub::Spooner
 									geGroundZ = mdSelectedEntity.Dim1.y;
 								else if (abs(rotSelected.y) > 70.0f)
 									geGroundZ = mdSelectedEntity.Dim1.x;
-								selectedEntity.handle.SetPosition(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), selectedEntity.handle, 90.0f, 15.0f + mdSelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ));
+								selectedEntity.handle.SetPosition(SnapPos(spoonerModeCamera.RaycastForCoord(Vector2(0.0f, 0.0f), selectedEntity.handle, 90.0f, 15.0f + mdSelectedEntity.Dim2.y) + Vector3(0, 0, geGroundZ)));
 								break;
 							}
 							case eSpoonerModeMode::Precision:
@@ -747,7 +794,7 @@ namespace sub::Spooner
 									freeCamCamDistance += 0.23f; // Zoom out LS
 								Vector3 attachmentOffset = { 0.0f, -mdSelectedEntity.Dim2.y - freeCamCamDistance, 0.0f };
 								freeCam.AttachTo(selectedEntity.handle, attachmentOffset);
-								selectedEntity.handle.SetPosition(selectedEntity.handle.GetOffsetInWorldCoords(nextOffset));
+								selectedEntity.handle.SetPosition(SnapPos(selectedEntity.handle.GetOffsetInWorldCoords(nextOffset)));
 								if (Settings::bFreezeEntityWhenMovingIt)
 									selectedEntity.handle.FreezePosition(Settings::bFreezeEntityWhenMovingIt);
 								break;
@@ -885,10 +932,11 @@ namespace sub::Spooner
 		void Tick()
 		{
 			if (SpoonerMode::IsHotkeyPressed())
-				SpoonerMode::Toggle(); // Hotkey (when mayo closed)
+				SpoonerMode::Toggle();
 
 			sub::Spooner::ImGuiSpooner::Tick();
 
+			UpdatePreviewRotation();
 			CamTick();
 
 			if (Settings::bShowBoxAroundSelectedEntity)
