@@ -200,18 +200,55 @@ namespace sub::Spooner::ImGuiSpooner
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	}
 
+	static Vector3 WorldDeltaToBoneRelative(const Vector3& worldDelta, const Vector3& boneRotEuler)
+	{
+		float yaw = DegreeToRadian(boneRotEuler.z);
+		float pitch = DegreeToRadian(boneRotEuler.y);
+		float roll = DegreeToRadian(boneRotEuler.x);
+		float cZ = cosf(yaw), sZ = sinf(yaw);
+		float cX = cosf(roll), sX = sinf(roll);
+		float cY = cosf(pitch), sY = sinf(pitch);
+		Vector3 xAxis = Vector3(cZ * cY - sZ * sX * sY, sZ * cY + cZ * sX * sY, -cX * sY);
+		Vector3 yAxis = Vector3(-sZ * cX, cZ * cX, sX);
+		Vector3 zAxis = Vector3(cZ * sY + sZ * sX * cY, sZ * sY - cZ * sX * cY, cX * cY);
+		return Vector3(Vector3::Dot(worldDelta, xAxis), Vector3::Dot(worldDelta, yAxis), Vector3::Dot(worldDelta, zAxis));
+	}
+
+	static void GetAttachmentOffset(SpoonerEntity& sel, const GTAentity& parentEntity, const Vector3& newWorldPos)
+	{
+		if (sel.attachmentArgs.boneIndex >= 0)
+		{
+			Vector3 worldDelta = newWorldPos - sel.handle.GetPosition();
+			Vector3 boneRot = ENTITY::GET_ENTITY_BONE_ROTATION(parentEntity.GetHandle(), sel.attachmentArgs.boneIndex);
+			sel.attachmentArgs.offset = sel.attachmentArgs.offset + WorldDeltaToBoneRelative(worldDelta, boneRot);
+		}
+		else
+		{
+			sel.attachmentArgs.offset = parentEntity.GetOffsetGivenWorldCoords(newWorldPos);
+		}
+	}
+
 	static void DrainPending_ScriptThread(SharedState& s)
 	{
 		SpoonerEntity& sel = selectedEntity;
 		if (sel.handle.Exists())
 		{
-			if (s.pending.positionDirty)
+			GTAentity parentEntity(ENTITY::GET_ENTITY_ATTACHED_TO(sel.handle.Handle()));
+
+			if (!sel.attachmentArgs.isAttached)
 			{
-				sel.handle.SetPosition(s.pending.positionVal);
+				if (s.pending.positionDirty) sel.handle.SetPosition(s.pending.positionVal);
+				if (s.pending.rotationDirty) sel.handle.SetRotation(s.pending.rotationVal);
 			}
-			if (s.pending.rotationDirty)
+			else if (parentEntity.Exists())
 			{
-				sel.handle.SetRotation(s.pending.rotationVal);
+				if (s.pending.positionDirty) GetAttachmentOffset(sel, parentEntity, s.pending.positionVal);
+				if (s.pending.rotationDirty) sel.attachmentArgs.rotation = sel.attachmentArgs.rotation + (s.pending.rotationVal - sel.handle.Rotation_get());
+
+				if (s.pending.positionDirty || s.pending.rotationDirty)
+				{
+					sel.handle.AttachTo(parentEntity, sel.attachmentArgs.boneIndex, sel.handle.GetIsCollisionEnabled(), sel.attachmentArgs.offset, sel.attachmentArgs.rotation);
+				}
 			}
 		}
 		s.pending = PendingWrites{};
