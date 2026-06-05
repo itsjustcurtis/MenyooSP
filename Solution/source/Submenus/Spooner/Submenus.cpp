@@ -149,11 +149,9 @@ namespace sub
 			drawText(SpoonerMode::bEntityEditRotationMode ? "~y~Gizmo Mode ~s~(Rotation Mode):" : "~y~Gizmo Mode ~s~(Position Mode):");
 			drawText("~b~Left Click:~w~ Grab axis handle");
 			drawText("~b~R:~w~ Toggle position/rotation");
-			drawText("~b~B:~w~ Disable controls");
-			drawText(SpoonerMode::bGizmoCameraLocked ? "~r~Camera LOCKED ~s~- Mouse drag freely" : "~g~Camera UNLOCKED ~s~- Mouse rotates camera");
-			drawText("~b~C:~w~ Toggle camera lock");
-			drawText(SpoonerMode::bGizmoLocalSpace ? "~y~Gizmo Axes: LOCAL" : "~y~Gizmo Axes: WORLD");
-			drawText("~b~L:~w~ Toggle world/local axes");
+			drawText("~b~B:~w~ Disable gizmo mode");
+			drawText(SpoonerMode::bGizmoCameraLocked ? "~b~C:~w~ Unlock camera" : "~b~C:~w~ Lock camera");
+			drawText(SpoonerMode::bGizmoLocalSpace ? "~b~L:~w~ Edit in world space" : "~b~L:~w~ Edit in local space");
 		}
 
 		void HandleEntityEditingLogic(Vector3& position, Vector3& rotation, GTAentity* parentEntity)

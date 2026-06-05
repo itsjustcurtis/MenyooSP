@@ -9,7 +9,7 @@
 */
 #include "SpoonerMode.h"
 
-#include "..\..\Menu\ImGuiSpooner.h"
+#include "ImGuiSpooner.h"
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"

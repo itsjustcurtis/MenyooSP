@@ -3,7 +3,8 @@
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
-#include "ImGizmo3D.h"
+#include "ImGuizmo.h"
+#include <cfloat>
 #include "D3D11Hook.h"
 
 #include <d3d11.h>
@@ -12,11 +13,11 @@
 #include <mutex>
 #include <cmath>
 
-#include "..\Natives\natives.h"
-#include "..\Submenus\Spooner\SpoonerEntity.h"
-#include "..\Submenus\Spooner\SpoonerMode.h"
-#include "..\Scripting\GTAentity.h"
-#include "..\Util\GTAmath.h"
+#include "SpoonerEntity.h"
+#include "SpoonerMode.h"
+#include "..\..\Scripting\GTAentity.h"
+#include "..\..\Util\GTAmath.h"
+#include "..\..\Natives\natives.h"
 
 namespace sub::Spooner::ImGuiSpooner
 {
@@ -55,6 +56,84 @@ namespace sub::Spooner::ImGuiSpooner
 	static std::atomic<bool> g_Visible{ false };
 	static std::atomic<bool> g_ShuttingDown{ false };
 	static bool g_ImGuiInitialized = false;
+
+	static void BuildTransformMatrix(const Vector3& pos, const Vector3& rot, const Vector3& scale, float* matrix)
+	{
+		constexpr float DEG2RAD = 3.14159265358979323846f / 180.0f;
+		float pitch = rot.x * DEG2RAD;
+		float roll  = rot.y * DEG2RAD;
+		float yaw   = rot.z * DEG2RAD;
+		float cp = cosf(pitch), sp = sinf(pitch);
+		float cr = cosf(roll),  sr = sinf(roll);
+		float cy = cosf(yaw),   sy = sinf(yaw);
+
+		float col0[3] = { cy*cr - sy*sp*sr, sy*cr + cy*sp*sr, -cp*sr };
+		float col1[3] = { -sy*cp, cy*cp, sp };
+		float col2[3] = { cy*sr + sy*sp*cr, sy*sr - cy*sp*cr, cp*cr };
+
+		matrix[0]  = col0[0] * scale.x;
+		matrix[1]  = col0[1] * scale.x;
+		matrix[2]  = col0[2] * scale.x;
+		matrix[3]  = 0.0f;
+
+		matrix[4]  = col1[0] * scale.y;
+		matrix[5]  = col1[1] * scale.y;
+		matrix[6]  = col1[2] * scale.y;
+		matrix[7]  = 0.0f;
+
+		matrix[8]  = col2[0] * scale.z;
+		matrix[9]  = col2[1] * scale.z;
+		matrix[10] = col2[2] * scale.z;
+		matrix[11] = 0.0f;
+
+		matrix[12] = pos.x;
+		matrix[13] = pos.y;
+		matrix[14] = pos.z;
+		matrix[15] = 1.0f;
+	}
+
+	static void DecomposeTransformMatrix(const float* matrix, Vector3& pos, Vector3& rot, Vector3& scale)
+	{
+		pos.x = matrix[12];
+		pos.y = matrix[13];
+		pos.z = matrix[14];
+
+		scale.x = sqrtf(matrix[0]*matrix[0] + matrix[1]*matrix[1] + matrix[2]*matrix[2]);
+		scale.y = sqrtf(matrix[4]*matrix[4] + matrix[5]*matrix[5] + matrix[6]*matrix[6]);
+		scale.z = sqrtf(matrix[8]*matrix[8] + matrix[9]*matrix[9] + matrix[10]*matrix[10]);
+
+		float invSx = (scale.x > 1e-8f) ? 1.0f / scale.x : 0.0f;
+		float invSy = (scale.y > 1e-8f) ? 1.0f / scale.y : 0.0f;
+		float invSz = (scale.z > 1e-8f) ? 1.0f / scale.z : 0.0f;
+
+		float col0[3] = { matrix[0] * invSx, matrix[1] * invSx, matrix[2] * invSx };
+		float col1[3] = { matrix[4] * invSy, matrix[5] * invSy, matrix[6] * invSy };
+		float col2[3] = { matrix[8] * invSz, matrix[9] * invSz, matrix[10] * invSz };
+
+		constexpr float RAD2DEG = 180.0f / 3.14159265358979323846f;
+
+		float sp = col1[2];
+		if (sp > 1.0f) sp = 1.0f;
+		if (sp < -1.0f) sp = -1.0f;
+		float pitch = asinf(sp);
+		float cp = cosf(pitch);
+
+		float yaw, roll;
+		if (fabsf(cp) > 1e-5f)
+		{
+			yaw  = atan2f(-col1[0], col1[1]);
+			roll = atan2f(-col0[2], col2[2]);
+		}
+		else
+		{
+			yaw  = atan2f(col0[1], col0[0]);
+			roll = 0.0f;
+		}
+
+		rot.x = pitch * RAD2DEG;
+		rot.y = roll  * RAD2DEG;
+		rot.z = yaw   * RAD2DEG;
+	}
 
 	static void BuildCameraMatricesFromCache(const Vector3& camCoord, const Vector3& camRot,
 		float camFov, float screenW, float screenH,
@@ -107,9 +186,38 @@ namespace sub::Spooner::ImGuiSpooner
 		outProj[14] = (2.0f * farZ * nearZ) / (nearZ - farZ);
 	}
 
+	static float UnwrapAngle(float cur, float prev)
+	{
+		float diff = cur - prev;
+		if (diff > 180.0f) cur -= 360.0f;
+		if (diff < -180.0f) cur += 360.0f;
+		return cur;
+	}
+
+	static void Mat4Mul(const float a[16], const float b[16], float out[16])
+	{
+		for (int row = 0; row < 4; row++)
+			for (int col = 0; col < 4; col++) {
+				out[row + col * 4] =
+					a[row + 0 * 4] * b[0 + col * 4] +
+					a[row + 1 * 4] * b[1 + col * 4] +
+					a[row + 2 * 4] * b[2 + col * 4] +
+					a[row + 3 * 4] * b[3 + col * 4];
+			}
+	}
+
+	static void Mat4Transpose(const float in[16], float out[16])
+	{
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				out[i + j * 4] = in[j + i * 4];
+			}
+		}
+	}
+
+
 	static void RunGizmo_NoLock(SharedState& s)
 	{
-		// Reset interaction flags every frame
 		s.gizmoOver = false;
 		s.gizmoUsing = false;
 
@@ -120,34 +228,79 @@ namespace sub::Spooner::ImGuiSpooner
 		float viewMat[16], projMat[16];
 		BuildCameraMatricesFromCache(s.camCoord, s.camRot, s.camFov, io.DisplaySize.x, io.DisplaySize.y, viewMat, projMat);
 
-		ImGizmo3D::BeginFrame();
-		ImGizmo3D::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-		ImGizmo3D::SetMouseOverGui(false);
+		ImGuizmo::BeginFrame();
+		ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
-		const ImGizmo3D::Operation op = s.rotationMode ? ImGizmo3D::ROTATE : ImGizmo3D::TRANSLATE;
+		ImGuizmo::OPERATION op = s.rotationMode ? ImGuizmo::ROTATE : ImGuizmo::TRANSLATE;
+		ImGuizmo::MODE gizmoMode = s.localSpace ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
 
-		float position[3] = { s.position.x, s.position.y, s.position.z };
-		float rotation[3] = { s.rotation.x, s.rotation.y, s.rotation.z };
-		float scale[3] = { 1.0f, 1.0f, 1.0f };
-
-		const ImGizmo3D::Mode gizmoMode = s.localSpace ? ImGizmo3D::Local : ImGizmo3D::World;
-
-		if (ImGizmo3D::Manipulate(viewMat, projMat, op, position, rotation, scale, nullptr, gizmoMode))
+		if (op == ImGuizmo::TRANSLATE)
 		{
-			if (op == ImGizmo3D::TRANSLATE)
+			float matrix[16];
+			BuildTransformMatrix(s.position, s.rotation, Vector3(1.0f, 1.0f, 1.0f), matrix);
+
+			float deltaMatrix[16]{};
+			ImGuizmo::Manipulate(viewMat, projMat, op, gizmoMode, matrix, deltaMatrix, nullptr);
+
+			if (ImGuizmo::IsUsing())
 			{
-				s.pending.positionDirty = true;
-				s.pending.positionVal = Vector3(position[0], position[1], position[2]);
+				Vector3 newPos(
+					s.position.x + deltaMatrix[12],
+					s.position.y + deltaMatrix[13],
+					s.position.z + deltaMatrix[14]
+				);
+
+				if (fabsf(newPos.x - s.position.x) > FLT_EPSILON ||
+					fabsf(newPos.y - s.position.y) > FLT_EPSILON ||
+					fabsf(newPos.z - s.position.z) > FLT_EPSILON)
+				{
+					s.pending.positionDirty = true;
+					s.pending.positionVal = newPos;
+				}
 			}
-			else
+		}
+		else if (op == ImGuizmo::ROTATE)
+		{
+			static float s_DragMatrix[16];
+			static float s_LastEuler[3];
+
+			if (!ImGuizmo::IsUsing())
 			{
-				s.pending.rotationDirty = true;
-				s.pending.rotationVal = Vector3(rotation[0], rotation[1], rotation[2]);
+				BuildTransformMatrix(s.position, s.rotation, Vector3(1.0f, 1.0f, 1.0f), s_DragMatrix);
+				s_LastEuler[0] = s.rotation.x;
+				s_LastEuler[1] = s.rotation.y;
+				s_LastEuler[2] = s.rotation.z;
+			}
+
+			float oldRot[3] = { s_LastEuler[0], s_LastEuler[1], s_LastEuler[2] };
+
+			ImGuizmo::Manipulate(viewMat, projMat, op, gizmoMode, s_DragMatrix, nullptr, nullptr);
+
+			if (ImGuizmo::IsUsing())
+			{
+				Vector3 newPos, newRot, newScale;
+				DecomposeTransformMatrix(s_DragMatrix, newPos, newRot, newScale);
+
+				newRot.x = UnwrapAngle(newRot.x, oldRot[0]);
+				newRot.y = UnwrapAngle(newRot.y, oldRot[1]);
+				newRot.z = UnwrapAngle(newRot.z, oldRot[2]);
+
+				if (fabsf(newRot.x - oldRot[0]) > FLT_EPSILON ||
+					fabsf(newRot.y - oldRot[1]) > FLT_EPSILON ||
+					fabsf(newRot.z - oldRot[2]) > FLT_EPSILON)
+				{
+					s.pending.rotationDirty = true;
+					s.pending.rotationVal = newRot;
+				}
+
+				s_LastEuler[0] = newRot.x;
+				s_LastEuler[1] = newRot.y;
+				s_LastEuler[2] = newRot.z;
 			}
 		}
 
-		s.gizmoOver  = ImGizmo3D::IsOver();
-		s.gizmoUsing = ImGizmo3D::IsUsing();
+		s.gizmoOver  = ImGuizmo::IsOver();
+		s.gizmoUsing = ImGuizmo::IsUsing();
 	}
 
 	static void OnRender(ID3D11Device* device, ID3D11DeviceContext* context, IDXGISwapChain* swapChain)
@@ -243,7 +396,23 @@ namespace sub::Spooner::ImGuiSpooner
 			else if (parentEntity.Exists())
 			{
 				if (s.pending.positionDirty) GetAttachmentOffset(sel, parentEntity, s.pending.positionVal);
-				if (s.pending.rotationDirty) sel.attachmentArgs.rotation = sel.attachmentArgs.rotation + (s.pending.rotationVal - sel.handle.Rotation_get());
+				if (s.pending.rotationDirty)
+				{
+					float oldWorldM[16], newWorldM[16], oldLocalM[16];
+					Vector3 curWorldRot = sel.handle.Rotation_get();
+					BuildTransformMatrix(Vector3(), curWorldRot, Vector3(1.0f, 1.0f, 1.0f), oldWorldM);
+					BuildTransformMatrix(Vector3(), s.pending.rotationVal, Vector3(1.0f, 1.0f, 1.0f), newWorldM);
+					BuildTransformMatrix(Vector3(), sel.attachmentArgs.rotation, Vector3(1.0f, 1.0f, 1.0f), oldLocalM);
+
+					float worldT[16], temp[16], newLocalM[16];
+					Mat4Transpose(oldWorldM, worldT);
+					Mat4Mul(oldLocalM, worldT, temp);
+					Mat4Mul(temp, newWorldM, newLocalM);
+
+					Vector3 pos, newLocalRot, scale;
+					DecomposeTransformMatrix(newLocalM, pos, newLocalRot, scale);
+					sel.attachmentArgs.rotation = newLocalRot;
+				}
 
 				if (s.pending.positionDirty || s.pending.rotationDirty)
 				{
