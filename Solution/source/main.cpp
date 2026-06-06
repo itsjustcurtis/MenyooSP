@@ -18,7 +18,7 @@ http://dev-c.com
 #include "Menu\Routine.h"
 #include "Menu\Menu.h"
 #include "Menu\MenuConfig.h"
-#include "Menu\ImGuiSpooner.h"
+#include "Submenus/Spooner/ImGuiSpooner.h"
 
 #include <Windows.h>
 #include <Psapi.h>

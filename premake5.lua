@@ -27,8 +27,9 @@ project "Menyoo"
         "Solution/external/imgui/imgui_widgets.cpp",
         "Solution/external/imgui/imgui_impl_dx11.cpp",
         "Solution/external/imgui/imgui_impl_win32.cpp",
-        "Solution/external/imgui/ImGizmo3D.cpp",
         "Solution/external/imgui/**.h",
+        "Solution/external/ImGuizmo/ImGuizmo.cpp",
+        "Solution/external/ImGuizmo/**.h",
         "Solution/external/d3dhook/D3D11Hook.cpp",
         "Solution/external/d3dhook/**.h",
         "Solution/external/MinHook/include/MinHook.h",
@@ -40,6 +41,7 @@ project "Menyoo"
         "Solution/source",
         "Solution/external",
         "Solution/external/imgui",
+        "Solution/external/ImGuizmo",
         "Solution/external/d3dhook",
         "Solution/external/MinHook/include",
     }

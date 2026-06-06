@@ -13,7 +13,7 @@
 
 #include "Menu.h"
 #include "MenuConfig.h"
-#include "ImGuiSpooner.h"
+#include "../Submenus/Spooner/ImGuiSpooner.h"
 
 #include "..\Util\FileLogger.h"
 #include "..\Util\ExePath.h"

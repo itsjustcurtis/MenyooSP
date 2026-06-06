@@ -38,7 +38,6 @@
 #include "SpoonerEntity.h"
 #include "SpoonerMode.h"
 #include "SpoonerSettings.h"
-#include "TransformGizmo.h"
 #include "Databases.h"
 #include "FileManagement.h"
 #include "EntityManagement.h"
@@ -140,7 +139,7 @@ namespace sub
 			if (IsKeyDown(VirtualKey::Q)) target.z -= _manualPlacementPrecision;
 		}
 
-		void HandleGizmoManipulation()
+		void DrawGizmoHUD()
 		{
 			constexpr float HUD_LINE_HEIGHT = 0.025f;
 			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
@@ -154,52 +153,12 @@ namespace sub
 				hudY += HUD_LINE_HEIGHT;
 			};
 
-			if (SpoonerMode::bEntityEditRotationMode)
-			{
-				drawText("~y~Gizmo Mode ~s~(Rotation Mode):");
-			}
-			else
-			{
-				drawText("~y~Gizmo Mode ~s~(Position Mode):");
-			}
+			drawText(SpoonerMode::bEntityEditRotationMode ? "~y~Gizmo Mode ~s~(Rotation Mode):" : "~y~Gizmo Mode ~s~(Position Mode):");
 			drawText("~b~Left Click:~w~ Grab axis handle");
 			drawText("~b~R:~w~ Toggle position/rotation");
-			drawText("~b~B:~w~ Disable controls");
-			drawText(SpoonerMode::bGizmoCameraLocked ? "~r~Camera LOCKED ~s~- Mouse drag freely" : "~g~Camera UNLOCKED ~s~- Mouse rotates camera");
-			drawText("~b~C:~w~ Toggle camera lock");
-			drawText(SpoonerMode::bGizmoLocalSpace ? "~y~Gizmo Axes: LOCAL" : "~y~Gizmo Axes: WORLD");
-			drawText("~b~L:~w~ Toggle world/local axes");
-		}
-
-		void HandleGizmoAttachmentManipulation(GTAentity& parentEntity, Vector3& position, Vector3& rotation)
-		{
-			constexpr float HUD_LINE_HEIGHT = 0.025f;
-			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
-			const float hudX = 0.02f;
-			float hudY = 0.8f;
-
-			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
-			{
-				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
-				Game::Print::drawstring(text, hudX, hudY);
-				hudY += HUD_LINE_HEIGHT;
-			};
-
-			static TransformGizmo gizmo;
-			gizmo.SetMode(SpoonerMode::bEntityEditRotationMode ? GizmoMode::Rotate : GizmoMode::Translate);
-			gizmo.ApplyAttachmentMovement(parentEntity, selectedEntity.handle, position, rotation, selectedEntity.attachmentArgs.boneIndex);
-
-			if (SpoonerMode::bEntityEditRotationMode)
-				drawText("~y~Gizmo Mode ~s~(Rotation Mode):");
-			else
-				drawText("~y~Gizmo Mode ~s~(Position Mode):");
-			drawText("~b~Left Click:~w~ Grab axis handle");
-			drawText("~b~R:~w~ Toggle position/rotation");
-			drawText("~b~B:~w~ Disable controls");
-			drawText(SpoonerMode::bGizmoCameraLocked ? "~r~Camera LOCKED ~s~- Mouse drag freely" : "~g~Camera UNLOCKED ~s~- Mouse rotates camera");
-			drawText("~b~C:~w~ Toggle camera lock");
-			drawText(SpoonerMode::bGizmoLocalSpace ? "~y~Gizmo Axes: LOCAL" : "~y~Gizmo Axes: WORLD");
-			drawText("~b~L:~w~ Toggle world/local axes");
+			drawText("~b~B:~w~ Disable gizmo mode");
+			drawText(SpoonerMode::bGizmoCameraLocked ? "~b~C:~w~ Unlock camera" : "~b~C:~w~ Lock camera");
+			drawText(SpoonerMode::bGizmoLocalSpace ? "~b~L:~w~ Edit in world space" : "~b~L:~w~ Edit in local space");
 		}
 
 		void HandleEntityEditingLogic(Vector3& position, Vector3& rotation, GTAentity* parentEntity)
@@ -273,14 +232,7 @@ namespace sub
 			}
 			else if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo)
 			{
-				if (parentEntity != nullptr && parentEntity->Exists())
-				{
-					HandleGizmoAttachmentManipulation(*parentEntity, position, rotation);
-				}
-				else
-				{
-					HandleGizmoManipulation();
-				}
+				DrawGizmoHUD();
 			}
 		}
 
