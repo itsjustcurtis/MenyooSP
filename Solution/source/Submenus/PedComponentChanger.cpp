@@ -2124,8 +2124,7 @@ namespace sub
 					SET_PED_COMPONENT_VARIATION(ped.Handle(), c, 0, 0, 0);
 				}
 				
-				Game::Print::PrintBottomCentre("Applied outfit: " + outfit.name);
-				addlog(ige::LogType::LOG_INFO, "Applied Default Outfit: " + outfit.name + " | Hash: " + std::to_string(outfit.hash) + " | Comps: " + std::to_string(outfit.totalComponents) + " | Props: " + std::to_string(outfit.totalProps));
+				addlog(ige::LogType::LOG_DEBUG, "Applied Default Outfit: " + outfit.name + " | Hash: " + std::to_string(outfit.hash) + " | Comps: " + std::to_string(outfit.totalComponents) + " | Props: " + std::to_string(outfit.totalProps));
 				
 				// Apply components
 				for (int ci = 0; ci < outfit.totalComponents; ++ci)
