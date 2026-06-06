@@ -676,14 +676,20 @@ namespace sub::Spooner
 				SET_PED_CAN_PLAY_VISEME_ANIMS(ep.Handle(), true, TRUE);
 				SET_PED_IS_IGNORED_BY_AUTO_OPEN_DOORS(ep.Handle(), true);
 
-				if (!bTaskSeqIsActive && IS_PED_USING_SCENARIO(orig.handle.Handle(), orig.lastAnimation.name.c_str()))
+				if (!bTaskSeqIsActive && !orig.currentScenario.empty() && IS_PED_USING_SCENARIO(orig.handle.Handle(), orig.currentScenario.c_str()))
 				{
 					WAIT(40);
-					ep.Task().StartScenario(orig.lastAnimation.name, -1, false);
+					ep.Task().StartScenario(orig.currentScenario, -1, false);
 				}
-				if (!bTaskSeqIsActive && IS_ENTITY_PLAYING_ANIM(orig.handle.Handle(), orig.lastAnimation.dict.c_str(), orig.lastAnimation.name.c_str(), 3))
+				if (!bTaskSeqIsActive)
 				{
-					ep.Task().PlayAnimation(orig.lastAnimation.dict, orig.lastAnimation.name);
+					for (const auto& anim : orig.lastAnimations)
+					{
+						if (IS_ENTITY_PLAYING_ANIM(orig.handle.Handle(), anim.dict.c_str(), anim.name.c_str(), 3))
+						{
+							ep.Task().PlayAnimation(anim.dict, anim.name, anim.speed, anim.speedMultiplier, anim.duration, anim.flag, anim.playbackRate, anim.lockPos);
+						}
+					}
 				}
 
 				const auto& facialMoodStr = GetPedFacialMood(orig.handle);
