@@ -20,13 +20,15 @@ namespace sub
 		{
 			if (NETWORK_IS_PLAYER_ACTIVE(i))
 			{
+				const char* name = GET_PLAYER_NAME(i);
+				if (!name) continue;
 				bool bPlayerPressed = false;
-				AddOption(GET_PLAYER_NAME(i), bPlayerPressed);
+				AddOption(name, bPlayerPressed);
 				if (bPlayerPressed)
 				{
 					g_Ped2 = i;
-					g_Ped1 = GET_PLAYER_PED(g_Ped2); // Store ped
-					g_PlayerName = GET_PLAYER_NAME(g_Ped2); // Store name
+					g_Ped1 = GET_PLAYER_PED(g_Ped2);
+					g_PlayerName = name;
 					Menu::NewSetMenu(SUB::PLAYERSSUBAMENU);
 				}
 			}

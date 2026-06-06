@@ -221,7 +221,7 @@ inline void MenyooMain()
 		TickMenyooConfig();
 		if (firstTick)
 			addlog(ige::LogType::LOG_TRACE, "First Tick - Neonanims");
-		if (loop_neon_rgb)         TickRainbowFader();
+		if (loop_neon_rgb || carColorChange) TickRainbowFader();
 		if (loop_neon_fade == 1)   TickNeonFadeAnim();
 		if (loop_neon_fade == 2)   TickNeonHeartbeatAnim();
 		if (loop_neon_fade == 3)   TickNeonShiftAnim();
