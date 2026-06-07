@@ -425,6 +425,10 @@ void GTAentity::SetScale(Vector3 value)
 	UINT64 ptr = GTAmemory::_entityAddressFunc(mHandle);
 	if (!ptr) return;
 
+	value.x = max(0.01f, value.x);
+	value.y = max(0.01f, value.y);
+	value.z = max(0.01f, value.z);
+
 	if (IsVehicle())
 	{
 		UINT64 drawPtr = *(UINT64*)(ptr + 0x30);

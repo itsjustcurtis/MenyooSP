@@ -19,6 +19,7 @@
 #include "..\..\Scripting\GTAentity.h"
 #include "..\..\Util\GTAmath.h"
 #include "..\..\Natives\natives.h"
+#include "Submenus.h"
 
 namespace sub::Spooner::ImGuiSpooner
 {
@@ -315,29 +316,30 @@ namespace sub::Spooner::ImGuiSpooner
 		else if (op == ImGuizmo::SCALE)
 		{
 			static float s_DragMatrix[16];
-			static Vector3 s_LastScale{1.0f, 1.0f, 1.0f};
 
 			if (!ImGuizmo::IsUsing())
-			{
 				BuildTransformMatrix(s.position, s.rotation, s.scale, s_DragMatrix);
-				s_LastScale = s.scale;
-			}
 
-			ImGuizmo::Manipulate(viewMat, projMat, ImGuizmo::SCALE, ImGuizmo::LOCAL, s_DragMatrix, nullptr, nullptr);
+			float deltaMatrix[16] = {0};
+			ImGuizmo::Manipulate(viewMat, projMat, ImGuizmo::SCALE, ImGuizmo::LOCAL, s_DragMatrix, deltaMatrix, nullptr);
 
 			if (ImGuizmo::IsUsing())
 			{
-				Vector3 newPos, newRot, newScale;
-				DecomposeTransformMatrix(s_DragMatrix, newPos, newRot, newScale);
+				Vector3 deltaPos, deltaRot, deltaScale;
+				DecomposeTransformMatrix(deltaMatrix, deltaPos, deltaRot, deltaScale);
 
-				if (fabsf(newScale.x - s_LastScale.x) > FLT_EPSILON ||
-					fabsf(newScale.y - s_LastScale.y) > FLT_EPSILON ||
-					fabsf(newScale.z - s_LastScale.z) > FLT_EPSILON)
+				Vector3 newScale;
+				newScale.x = s.scale.x * deltaScale.x;
+				newScale.y = s.scale.y * deltaScale.y;
+				newScale.z = s.scale.z * deltaScale.z;
+
+				if (fabsf(newScale.x - s.scale.x) > FLT_EPSILON ||
+					fabsf(newScale.y - s.scale.y) > FLT_EPSILON ||
+					fabsf(newScale.z - s.scale.z) > FLT_EPSILON)
 				{
 					s.pending.scaleDirty = true;
 					s.pending.scaleVal = newScale;
 				}
-				s_LastScale = newScale;
 			}
 		}
 
@@ -462,8 +464,19 @@ namespace sub::Spooner::ImGuiSpooner
 				}
 			}
 			if (s.pending.scaleDirty) {
-				s.pending.scaleVal = {s.pending.scaleVal.y, s.pending.scaleVal.x, s.pending.scaleVal.z}; // scaling axes are weird
 				sel.handle.SetScale(s.pending.scaleVal);
+				// syncing scale so that it doesn't reset every time we grab the gizmo
+				Entity entHandle = sel.handle.GetHandle();
+				Submenus::EntityScaleState& state = [&]() -> Submenus::EntityScaleState& {
+					switch (static_cast<EntityType>(sel.handle.Type()))
+					{
+					case EntityType::VEHICLE: return Submenus::_vehScale;
+					case EntityType::PED:    return Submenus::_pedScale;
+					default:                 return Submenus::_objScale;
+					}
+				}();
+				state.handle = entHandle;
+				state.scale = s.pending.scaleVal;
 			}
 		}
 		s.pending = PendingWrites{};

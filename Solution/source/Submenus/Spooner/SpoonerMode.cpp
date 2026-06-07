@@ -963,66 +963,15 @@ namespace sub::Spooner
 			if (!Databases::MarkerDb.empty())
 				MarkerManagement::DrawAll();
 
-			if (Submenus::_vehScaleEntity != 0)
+			auto applyScaleTick = [](const Submenus::EntityScaleState& s)
 			{
-				float sx = Submenus::_vehScaleX, sy = Submenus::_vehScaleY, sz = Submenus::_vehScaleZ;
-				UINT64 ptr = GTAmemory::_entityAddressFunc(Submenus::_vehScaleEntity);
-				if (ptr)
-				{
-					UINT64 drawMatrixPtr = *(UINT64*)(ptr + 0x30);
-					if (drawMatrixPtr)
-					{
-						auto applyScale = [](UINT64 matrix, float sx, float sy, float sz)
-						{
-							Vector3 r = GTAmemory::ReadVector3(matrix + 0x00);
-							Vector3 f = GTAmemory::ReadVector3(matrix + 0x10);
-							Vector3 u = GTAmemory::ReadVector3(matrix + 0x20);
-							float lr = r.Length(), lf = f.Length(), lu = u.Length();
-							if (lr > 0.0001f) GTAmemory::WriteVector3(matrix + 0x00, r * (sx / lr));
-							if (lf > 0.0001f) GTAmemory::WriteVector3(matrix + 0x10, f * (sy / lf));
-							if (lu > 0.0001f) GTAmemory::WriteVector3(matrix + 0x20, u * (sz / lu));
-						};
-						applyScale(ptr + 0x60,          sx, sy, sz);
-						applyScale(drawMatrixPtr + 0x20, sx, sy, sz);
-						GTAmemory::WriteFloat(ptr + 0x60, sx);
-						GTAmemory::WriteFloat(ptr + 0x74, sy);
-						GTAmemory::WriteFloat(ptr + 0x88, sz);
-					}
-				}
-			}
-
-			if (Submenus::_pedScaleEntity != 0)
-			{
-				float sx = Submenus::_pedScaleX, sy = Submenus::_pedScaleY, sz = Submenus::_pedScaleZ;
-				UINT64 ptr = GTAmemory::_entityAddressFunc(Submenus::_pedScaleEntity);
-				if (ptr)
-				{
-					auto applyScale = [](UINT64 matrix, float sx, float sy, float sz)
-					{
-						Vector3 r = GTAmemory::ReadVector3(matrix + 0x00);
-						Vector3 f = GTAmemory::ReadVector3(matrix + 0x10);
-						Vector3 u = GTAmemory::ReadVector3(matrix + 0x20);
-						float lr = r.Length(), lf = f.Length(), lu = u.Length();
-						if (lr > 0.0001f) GTAmemory::WriteVector3(matrix + 0x00, r * (sx / lr));
-						if (lf > 0.0001f) GTAmemory::WriteVector3(matrix + 0x10, f * (sy / lf));
-						if (lu > 0.0001f) GTAmemory::WriteVector3(matrix + 0x20, u * (sz / lu));
-					};
-
-					applyScale(ptr + 0x60, sx, sy, sz);
-				}
-			}
-
-			if (Submenus::_objScaleEntity != 0)
-			{
-				float sx = Submenus::_objScaleX, sy = Submenus::_objScaleY, sz = Submenus::_objScaleZ;
-				UINT64 ptr = GTAmemory::_entityAddressFunc(Submenus::_objScaleEntity);
-				if (ptr)
-				{
-					GTAmemory::WriteFloat(ptr + 0x60, sy);
-					GTAmemory::WriteFloat(ptr + 0x74, sx);
-					GTAmemory::WriteFloat(ptr + 0x88, sz);
-				}
-			}
+				if (s.handle == 0) return;
+				GTAentity ent(s.handle);
+				ent.SetScale(s.scale);
+			};
+			applyScaleTick(Submenus::_vehScale);
+			applyScaleTick(Submenus::_pedScale);
+			applyScaleTick(Submenus::_objScale);
 		}
 
 		void TurnOn()
