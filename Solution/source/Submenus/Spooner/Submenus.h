@@ -34,7 +34,7 @@ namespace sub
 		extern float _pedScaleX, _pedScaleY, _pedScaleZ;
 		extern int _objScaleEntity;
 		extern float _objScaleX, _objScaleY, _objScaleZ;
-
+		
 		void HandleKeyboardPlacementInput(Vector3& position, Vector3& rotation);
 
 		void SetEnt241();

@@ -26,6 +26,7 @@ namespace sub::Spooner::ImGuiSpooner
 	{
 		bool positionDirty = false;  Vector3 positionVal{};
 		bool rotationDirty = false;  Vector3 rotationVal{};
+		bool scaleDirty = false;     Vector3 scaleVal{1.0f, 1.0f, 1.0f};
 	};
 
 	struct SharedState
@@ -33,13 +34,14 @@ namespace sub::Spooner::ImGuiSpooner
 		bool entityValid = false;
 		Vector3 position{};
 		Vector3 rotation{};
+		Vector3 scale{1.0f, 1.0f, 1.0f};
 
 		// Active rendering camera
 		Vector3 camCoord{};
 		Vector3 camRot{};
 		float   camFov = 50.0f;
 
-		bool rotationMode = false;            // SpoonerMode::bEntityEditRotationMode
+		SpoonerMode::eGizmoMode gizmoMode = SpoonerMode::eGizmoMode::Translate; // SpoonerMode::gizmoMode
 		bool gizmoEditModeActive = false;     // entityEditMode == eEntityEditMode::Gizmo
 		bool cameraLocked = false;            // SpoonerMode::bGizmoCameraLocked
 		bool localSpace = false;              // SpoonerMode::bGizmoLocalSpace
@@ -232,7 +234,13 @@ namespace sub::Spooner::ImGuiSpooner
 		ImGuizmo::BeginFrame();
 		ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
-		ImGuizmo::OPERATION op = s.rotationMode ? ImGuizmo::ROTATE : ImGuizmo::TRANSLATE;
+		ImGuizmo::OPERATION op;
+		switch (s.gizmoMode)
+		{
+			case SpoonerMode::eGizmoMode::Rotate: op = ImGuizmo::ROTATE; break;
+			case SpoonerMode::eGizmoMode::Scale:  op = ImGuizmo::SCALE;  break;
+			default:                              op = ImGuizmo::TRANSLATE; break;
+		}
 		ImGuizmo::MODE gizmoMode = s.localSpace ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
 
 		if (op == ImGuizmo::TRANSLATE)
@@ -302,6 +310,34 @@ namespace sub::Spooner::ImGuiSpooner
 				s_LastEuler[0] = newRot.x;
 				s_LastEuler[1] = newRot.y;
 				s_LastEuler[2] = newRot.z;
+			}
+		}
+		else if (op == ImGuizmo::SCALE)
+		{
+			static float s_DragMatrix[16];
+			static Vector3 s_LastScale{1.0f, 1.0f, 1.0f};
+
+			if (!ImGuizmo::IsUsing())
+			{
+				BuildTransformMatrix(s.position, s.rotation, s.scale, s_DragMatrix);
+				s_LastScale = s.scale;
+			}
+
+			ImGuizmo::Manipulate(viewMat, projMat, ImGuizmo::SCALE, ImGuizmo::LOCAL, s_DragMatrix, nullptr, nullptr);
+
+			if (ImGuizmo::IsUsing())
+			{
+				Vector3 newPos, newRot, newScale;
+				DecomposeTransformMatrix(s_DragMatrix, newPos, newRot, newScale);
+
+				if (fabsf(newScale.x - s_LastScale.x) > FLT_EPSILON ||
+					fabsf(newScale.y - s_LastScale.y) > FLT_EPSILON ||
+					fabsf(newScale.z - s_LastScale.z) > FLT_EPSILON)
+				{
+					s.pending.scaleDirty = true;
+					s.pending.scaleVal = newScale;
+				}
+				s_LastScale = newScale;
 			}
 		}
 
@@ -425,6 +461,10 @@ namespace sub::Spooner::ImGuiSpooner
 					sel.handle.AttachTo(parentEntity, sel.attachmentArgs.boneIndex, sel.handle.GetIsCollisionEnabled(), sel.attachmentArgs.offset, sel.attachmentArgs.rotation);
 				}
 			}
+			if (s.pending.scaleDirty) {
+				s.pending.scaleVal = {s.pending.scaleVal.y, s.pending.scaleVal.x, s.pending.scaleVal.z}; // scaling axes are weird
+				sel.handle.SetScale(s.pending.scaleVal);
+			}
 		}
 		s.pending = PendingWrites{};
 	}
@@ -445,7 +485,7 @@ namespace sub::Spooner::ImGuiSpooner
 			s.camFov   = CAM::GET_GAMEPLAY_CAM_FOV();
 		}
 
-		s.rotationMode = SpoonerMode::bEntityEditRotationMode;
+		s.gizmoMode = SpoonerMode::gizmoMode;
 
 		const bool inGizmoNow = SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo;
 		static bool s_wasInGizmo = false;
@@ -463,11 +503,13 @@ namespace sub::Spooner::ImGuiSpooner
 		{
 			s.position = Vector3{};
 			s.rotation = Vector3{};
+			s.scale = Vector3{1.0f, 1.0f, 1.0f};
 			return;
 		}
 
 		s.position = sel.handle.GetPosition();
 		s.rotation = sel.handle.Rotation_get();
+		s.scale = sel.handle.GetScale();
 	}
 
 	void Tick()

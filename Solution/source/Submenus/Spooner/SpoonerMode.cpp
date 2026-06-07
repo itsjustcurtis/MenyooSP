@@ -57,7 +57,7 @@ namespace sub::Spooner
 		bool bIsSomethingHeld = false;
 		bool bHeldEntityHasCollision = true;
 		eEntityEditMode entityEditMode = eEntityEditMode::Disabled;
-		bool bEntityEditRotationMode = false;
+		eGizmoMode gizmoMode = eGizmoMode::Translate;
 		bool bGizmoCameraLocked = false;
 		bool bGizmoLocalSpace = false;
 		Camera spoonerModeCamera;
@@ -103,6 +103,17 @@ namespace sub::Spooner
 				pos.z = round(pos.z / g) * g;
 			}
 			return pos;
+		}
+		Vector3 SnapRotation(Vector3 rot)
+		{
+			if (Settings::bGridSnapEnabled && Settings::rotationSnapDegrees > 0.0f)
+			{
+				float r = Settings::rotationSnapDegrees;
+				rot.x = round(rot.x / r) * r;
+				rot.y = round(rot.y / r) * r;
+				rot.z = round(rot.z / r) * r;
+			}
+			return rot;
 		}
 
 		ModelPreviewInfoStructure modelPreviewInfo = { EntityType::ALL, 0, 0, 0,{} };

@@ -398,6 +398,72 @@ void GTAentity::SetRotation(Vector3 value)
 	SET_ENTITY_ROTATION(this->mHandle, value.x, value.y, value.z, 2, 1);
 }
 
+Vector3 GTAentity::GetScale() const
+{
+	UINT64 ptr = GTAmemory::_entityAddressFunc(mHandle);
+	if (!ptr) return { 1.0f, 1.0f, 1.0f };
+
+	if (IsVehicle() || IsPed())
+	{
+		Vector3 r = GTAmemory::ReadVector3(ptr + 0x60);
+		Vector3 f = GTAmemory::ReadVector3(ptr + 0x70);
+		Vector3 u = GTAmemory::ReadVector3(ptr + 0x80);
+		return { r.Length(), f.Length(), u.Length() };
+	}
+	else
+	{
+		return {
+			GTAmemory::ReadFloat(ptr + 0x74),
+			GTAmemory::ReadFloat(ptr + 0x60),
+			GTAmemory::ReadFloat(ptr + 0x88)
+		};
+	}
+}
+
+void GTAentity::SetScale(Vector3 value)
+{
+	UINT64 ptr = GTAmemory::_entityAddressFunc(mHandle);
+	if (!ptr) return;
+
+	if (IsVehicle())
+	{
+		UINT64 drawPtr = *(UINT64*)(ptr + 0x30);
+		auto apply = [](UINT64 m, float sx, float sy, float sz) {
+			Vector3 r = GTAmemory::ReadVector3(m);
+			Vector3 f = GTAmemory::ReadVector3(m + 0x10);
+			Vector3 u = GTAmemory::ReadVector3(m + 0x20);
+			float lr = r.Length(), lf = f.Length(), lu = u.Length();
+			if (lr > 0.0001f) GTAmemory::WriteVector3(m, r * (sx / lr));
+			if (lf > 0.0001f) GTAmemory::WriteVector3(m + 0x10, f * (sy / lf));
+			if (lu > 0.0001f) GTAmemory::WriteVector3(m + 0x20, u * (sz / lu));
+		};
+		apply(ptr + 0x60, value.x, value.y, value.z);
+		if (drawPtr) apply(drawPtr + 0x20, value.x, value.y, value.z);
+		GTAmemory::WriteFloat(ptr + 0x60, value.x);
+		GTAmemory::WriteFloat(ptr + 0x74, value.y);
+		GTAmemory::WriteFloat(ptr + 0x88, value.z);
+	}
+	else if (IsPed())
+	{
+		auto apply = [](UINT64 m, float sx, float sy, float sz) {
+			Vector3 r = GTAmemory::ReadVector3(m);
+			Vector3 f = GTAmemory::ReadVector3(m + 0x10);
+			Vector3 u = GTAmemory::ReadVector3(m + 0x20);
+			float lr = r.Length(), lf = f.Length(), lu = u.Length();
+			if (lr > 0.0001f) GTAmemory::WriteVector3(m, r * (sx / lr));
+			if (lf > 0.0001f) GTAmemory::WriteVector3(m + 0x10, f * (sy / lf));
+			if (lu > 0.0001f) GTAmemory::WriteVector3(m + 0x20, u * (sz / lu));
+		};
+		apply(ptr + 0x60, value.x, value.y, value.z);
+	}
+	else
+	{
+		GTAmemory::WriteFloat(ptr + 0x60, value.y);
+		GTAmemory::WriteFloat(ptr + 0x74, value.x);
+		GTAmemory::WriteFloat(ptr + 0x88, value.z);
+	}
+}
+
 Vector3 GTAentity::GetDirection() const
 {
 	return Vector3::RotationToDirection(GET_ENTITY_ROTATION(this->mHandle, 2));

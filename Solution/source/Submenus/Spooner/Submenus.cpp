@@ -98,7 +98,7 @@ namespace sub
 				hudY += HUD_LINE_HEIGHT;
 			};
 
-			if (SpoonerMode::bEntityEditRotationMode)
+			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
 			{
 				drawText("~y~Rotation Mode:");
 				drawText("~b~W/S: ~w~Pitch+ / Pitch-");
@@ -132,13 +132,27 @@ namespace sub
 				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
 			}
 
-			auto& target = SpoonerMode::bEntityEditRotationMode ? rotation : position;
-			if (IsKeyDown(VirtualKey::W)) target.x += _manualPlacementPrecision;
-			if (IsKeyDown(VirtualKey::S)) target.x -= _manualPlacementPrecision;
-			if (IsKeyDown(VirtualKey::A)) target.y += _manualPlacementPrecision;
-			if (IsKeyDown(VirtualKey::D)) target.y -= _manualPlacementPrecision;
-			if (IsKeyDown(VirtualKey::E)) target.z += _manualPlacementPrecision;
-			if (IsKeyDown(VirtualKey::Q)) target.z -= _manualPlacementPrecision;
+			float step = _manualPlacementPrecision;
+			if (Settings::bGridSnapEnabled)
+			{
+				float snapAmount = SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate
+					? Settings::rotationSnapDegrees
+					: Settings::gridSnapSize;
+				if (snapAmount > 0.0f) step = snapAmount;
+			}
+
+			auto& target = SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate ? rotation : position;
+			if (IsKeyDown(VirtualKey::W)) target.x += step;
+			if (IsKeyDown(VirtualKey::S)) target.x -= step;
+			if (IsKeyDown(VirtualKey::A)) target.y += step;
+			if (IsKeyDown(VirtualKey::D)) target.y -= step;
+			if (IsKeyDown(VirtualKey::E)) target.z += step;
+			if (IsKeyDown(VirtualKey::Q)) target.z -= step;
+
+			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
+				rotation = SpoonerMode::SnapRotation(rotation);
+			else
+				position = SpoonerMode::SnapPos(position);
 		}
 
 		void DrawGizmoHUD()
@@ -155,9 +169,16 @@ namespace sub
 				hudY += HUD_LINE_HEIGHT;
 			};
 
-			drawText(SpoonerMode::bEntityEditRotationMode ? "~y~Gizmo Mode ~s~(Rotation Mode):" : "~y~Gizmo Mode ~s~(Position Mode):");
+			std::string modeName;
+			switch (SpoonerMode::gizmoMode)
+			{
+				case SpoonerMode::eGizmoMode::Rotate: modeName = "Rotation"; break;
+				case SpoonerMode::eGizmoMode::Scale:  modeName = "Scale";    break;
+				default:                              modeName = "Position"; break;
+			}
+			drawText("~y~Gizmo Mode ~s~(" + modeName + " Mode):");
 			drawText("~b~Left Click:~w~ Grab axis handle");
-			drawText(SpoonerMode::bEntityEditRotationMode ? "~b~R:~w~ Edit position" : "~b~R:~w~ Edit rotation");
+			drawText("~b~R:~w~ Cycle mode");
 			drawText(SpoonerMode::bGizmoCameraLocked ? "~b~C:~w~ Unlock camera" : "~b~C:~w~ Lock camera");
 			drawText(SpoonerMode::bGizmoLocalSpace ? "~b~L:~w~ Edit in world space" : "~b~L:~w~ Edit in local space");
 			drawText("~b~B:~w~ Disable gizmo mode");
@@ -193,7 +214,12 @@ namespace sub
 			bool currentRToggle = IsKeyJustUp(VirtualKey::R);
 			if (currentRToggle && !lastRToggle)
 			{
-				SpoonerMode::bEntityEditRotationMode = !SpoonerMode::bEntityEditRotationMode;
+				switch (SpoonerMode::gizmoMode)
+				{
+					case SpoonerMode::eGizmoMode::Translate: SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Rotate; break;
+					case SpoonerMode::eGizmoMode::Rotate:    SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Scale;  break;
+					case SpoonerMode::eGizmoMode::Scale:     SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Translate; break;
+				}
 			}
 			lastRToggle = currentRToggle;
 
@@ -230,6 +256,9 @@ namespace sub
 
 			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Keyboard)
 			{
+				// keyboard edit mode doesn't support scaling, so we are switching to translate
+				if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Scale)
+					SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Translate;
 				HandleKeyboardManipulation(position, rotation);
 			}
 			else if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo)
@@ -1591,8 +1620,8 @@ namespace sub
 				bool z_plus = 0, z_minus = 0;
 				bool pitch_plus = 0, pitch_minus = 0;
 				bool roll_plus = 0, roll_minus = 0;
-				bool yaw_plus = 0, yaw_minus = 0,
-				bResetRot = 0;
+				bool yaw_plus = 0, yaw_minus = 0;
+				bool bResetRot = 0;
 
 				int nextBoneIndex = selectedEntity.attachmentArgs.boneIndex;
 				Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
