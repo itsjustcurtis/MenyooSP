@@ -2062,8 +2062,15 @@ namespace sub
 			if (z_minus) state.scale.z = max(0.01f, state.scale.z - _manualPlacementPrecision);
 
 			if (bResetScale) state.scale = Vector3(1.0f, 1.0f, 1.0f);
-			
-			selectedEntity.handle.SetScale(state.scale);
+
+			bool bScaleChanged = x_plus || x_minus || y_plus || y_minus || z_plus || z_minus || bResetScale;
+			if (bScaleChanged && !IS_ENTITY_A_VEHICLE(handle) && !IS_ENTITY_A_PED(handle))
+			{
+				selectedEntity.handle.SetIsCollisionEnabled(false);
+				selectedEntity.handle.FreezePosition(true);
+				selectedEntity.handle.SetScale(state.scale);
+			}
+
 		}
 
 		void Sub_QuickManualPlacement()
