@@ -413,8 +413,8 @@ Vector3 GTAentity::GetScale() const
 	else
 	{
 		return {
-			GTAmemory::ReadFloat(ptr + 0x74),
 			GTAmemory::ReadFloat(ptr + 0x60),
+			GTAmemory::ReadFloat(ptr + 0x74),
 			GTAmemory::ReadFloat(ptr + 0x88)
 		};
 	}
@@ -462,8 +462,8 @@ void GTAentity::SetScale(Vector3 value)
 	}
 	else
 	{
-		GTAmemory::WriteFloat(ptr + 0x60, value.y);
-		GTAmemory::WriteFloat(ptr + 0x74, value.x);
+		GTAmemory::WriteFloat(ptr + 0x60, value.x);
+		GTAmemory::WriteFloat(ptr + 0x74, value.y);
 		GTAmemory::WriteFloat(ptr + 0x88, value.z);
 	}
 }

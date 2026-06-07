@@ -2049,8 +2049,8 @@ namespace sub
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
-			AddNumber("Scale X (Width)",  state.scale.x, 4, null, x_plus, x_minus);
-			AddNumber("Scale Y (Length)", state.scale.y, 4, null, y_plus, y_minus);
+			AddNumber("Scale X (Length)", state.scale.x, 4, null, x_plus, x_minus);
+			AddNumber("Scale Y (Width)",  state.scale.y, 4, null, y_plus, y_minus);
 			AddNumber("Scale Z (Height)", state.scale.z, 4, null, z_plus, z_minus);
 			AddOption("Reset scale", bResetScale);
 
