@@ -15,6 +15,7 @@
 
 #include "SpoonerEntity.h"
 #include "SpoonerMode.h"
+#include "SpoonerSettings.h"
 #include "..\..\Scripting\GTAentity.h"
 #include "..\..\Util\GTAmath.h"
 #include "..\..\Natives\natives.h"
@@ -240,7 +241,10 @@ namespace sub::Spooner::ImGuiSpooner
 			BuildTransformMatrix(s.position, s.rotation, Vector3(1.0f, 1.0f, 1.0f), matrix);
 
 			float deltaMatrix[16]{};
-			ImGuizmo::Manipulate(viewMat, projMat, op, gizmoMode, matrix, deltaMatrix, nullptr);
+			float snapMatrix[3] = { Settings::gridSnapSize, Settings::gridSnapSize, Settings::gridSnapSize };
+
+			ImGuizmo::Manipulate(viewMat, projMat, op, gizmoMode, matrix, deltaMatrix,
+				(Settings::bGridSnapEnabled && Settings::gridSnapSize > 0.0f) ? snapMatrix : nullptr);
 
 			if (ImGuizmo::IsUsing())
 			{
@@ -273,8 +277,10 @@ namespace sub::Spooner::ImGuiSpooner
 			}
 
 			float oldRot[3] = { s_LastEuler[0], s_LastEuler[1], s_LastEuler[2] };
-
-			ImGuizmo::Manipulate(viewMat, projMat, op, gizmoMode, s_DragMatrix, nullptr, nullptr);
+			float snapMatrix[3] = { Settings::rotationSnapDegrees, Settings::rotationSnapDegrees, Settings::rotationSnapDegrees };
+			
+			ImGuizmo::Manipulate(viewMat, projMat, op, gizmoMode, s_DragMatrix, nullptr,
+				(Settings::bGridSnapEnabled && Settings::rotationSnapDegrees > 0.0f) ? snapMatrix : nullptr);
 
 			if (ImGuizmo::IsUsing())
 			{

@@ -105,7 +105,7 @@ namespace sub
 				drawText("~b~A/D: ~w~Yaw+ / Yaw-");
 				drawText("~b~E/Q: ~w~Roll+ / Roll-");
 				drawText("~b~=/-: ~w~+/- Sensitivity");
-				drawText("~b~R: ~w~Toggle position");
+				drawText("~b~R: ~w~Edit position");
 			}
 			else
 			{
@@ -114,7 +114,7 @@ namespace sub
 				drawText("~b~A/D: ~w~Y+ / Y-");
 				drawText("~b~E/Q: ~w~Z+ / Z-");
 				drawText("~b~=/-: ~w~+/- Sensitivity");
-				drawText("~b~R: ~w~Toggle rotation");
+				drawText("~b~R: ~w~Edit rotation");
 			}
 			drawText("~b~B: ~w~Switch to gizmo / disable controls.");
 
@@ -123,11 +123,13 @@ namespace sub
 			{
 				if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
 				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
 			}
 			if (IsKeyJustUp(VirtualKey::OEMMinus) && GetTickCount() - lastSensitivityChange > 200)
 			{
 				if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10;
 				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
 			}
 
 			auto& target = SpoonerMode::bEntityEditRotationMode ? rotation : position;
@@ -155,10 +157,10 @@ namespace sub
 
 			drawText(SpoonerMode::bEntityEditRotationMode ? "~y~Gizmo Mode ~s~(Rotation Mode):" : "~y~Gizmo Mode ~s~(Position Mode):");
 			drawText("~b~Left Click:~w~ Grab axis handle");
-			drawText("~b~R:~w~ Toggle position/rotation");
-			drawText("~b~B:~w~ Disable gizmo mode");
+			drawText(SpoonerMode::bEntityEditRotationMode ? "~b~R:~w~ Edit position" : "~b~R:~w~ Edit rotation");
 			drawText(SpoonerMode::bGizmoCameraLocked ? "~b~C:~w~ Unlock camera" : "~b~C:~w~ Lock camera");
 			drawText(SpoonerMode::bGizmoLocalSpace ? "~b~L:~w~ Edit in world space" : "~b~L:~w~ Edit in local space");
+			drawText("~b~B:~w~ Disable gizmo mode");
 		}
 
 		void HandleEntityEditingLogic(Vector3& position, Vector3& rotation, GTAentity* parentEntity)
@@ -239,6 +241,7 @@ namespace sub
 	void Sub_SpoonerMain()
 		{
 			SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
+			SpoonerMode::bGizmoCameraLocked = false;
 			selectedEntity.handle = 0;
 			_searchStr.clear(); // Sub_SaveFiles _searchStr
 			dict3.clear(); // Sub_SaveFiles _dir
@@ -1254,6 +1257,7 @@ namespace sub
 		void Sub_SelectedEntityOps()
 		{
 			SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
+			SpoonerMode::bGizmoCameraLocked = false;
 			if (!selectedEntity.handle.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -1587,7 +1591,8 @@ namespace sub
 				bool z_plus = 0, z_minus = 0;
 				bool pitch_plus = 0, pitch_minus = 0;
 				bool roll_plus = 0, roll_minus = 0;
-				bool yaw_plus = 0, yaw_minus = 0;
+				bool yaw_plus = 0, yaw_minus = 0,
+				bResetRot = 0;
 
 				int nextBoneIndex = selectedEntity.attachmentArgs.boneIndex;
 				Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
@@ -1713,6 +1718,7 @@ namespace sub
 				AddNumber("Pitch", nextRot.x, 4, null, pitch_plus, pitch_minus);
 				AddNumber("Roll", nextRot.y, 4, null, roll_plus, roll_minus);
 				AddNumber("Yaw", nextRot.z, 4, null, yaw_plus, yaw_minus);
+				AddOption("Reset rotation", bResetRot);
 
 				if (x_plus) nextOffset.x += _manualPlacementPrecision;
 				if (x_minus) nextOffset.x -= _manualPlacementPrecision;
@@ -1727,6 +1733,9 @@ namespace sub
 				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
 				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
 				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+				if (bResetRot) nextRot = Vector3();
+
 
 				WrapAngle(nextRot.x);
 				WrapAngle(nextRot.y);
@@ -1927,7 +1936,8 @@ namespace sub
 				z_plus = 0, z_minus = 0,
 				pitch_plus = 0, pitch_minus = 0,
 				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0;
+				yaw_plus = 0, yaw_minus = 0,
+				bResetRot = 0;
 
 			AddTitle("Manual Placement");
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
@@ -1937,6 +1947,7 @@ namespace sub
 			AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 			AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 			AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
+			AddOption("Reset rotation", bResetRot);
 
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
@@ -1956,6 +1967,8 @@ namespace sub
 			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
 			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
 			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+		
+			if (bResetRot) nextRot = Vector3();
 
 			WrapAngle(nextRot.x);
 			WrapAngle(nextRot.y);
@@ -2205,7 +2218,8 @@ namespace sub
 				z_plus = 0, z_minus = 0,
 				pitch_plus = 0, pitch_minus = 0,
 				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0;
+				yaw_plus = 0, yaw_minus = 0,
+				bResetRot = 0;
 
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
 			AddNumber("X", currPos.x, 4, null, x_plus, x_minus);
@@ -2214,6 +2228,7 @@ namespace sub
 			AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 			AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 			AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
+			AddOption("Reset rotation", bResetRot);
 			AddOption("Other Properites", null, nullFunc, SUB::SPOONER_SELECTEDENTITYOPS);
 
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
@@ -2234,6 +2249,8 @@ namespace sub
 			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
 			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
 			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+			if (bResetRot) nextRot = Vector3();
 
 			WrapAngle(nextRot.x);
 			WrapAngle(nextRot.y);
@@ -2266,7 +2283,8 @@ namespace sub
 				z_plus = 0, z_minus = 0,
 				pitch_plus = 0, pitch_minus = 0,
 				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0;
+				yaw_plus = 0, yaw_minus = 0,
+				bResetRot = 0;
 
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
@@ -2295,13 +2313,16 @@ namespace sub
 				AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 				AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 				AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
-				
+				AddOption("Reset rotation", bResetRot);
+
 				if (pitch_plus) nextRot.x += _manualPlacementPrecision;
 				if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
 				if (roll_plus) nextRot.y += _manualPlacementPrecision;
 				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
 				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
 				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+				if (bResetRot) { *std::get<2>(SpoonerVector3ManualPlacementPtrs) = Vector3(); }
 
 				WrapAngle(nextRot.x);
 				WrapAngle(nextRot.y);
