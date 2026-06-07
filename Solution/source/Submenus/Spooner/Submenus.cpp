@@ -111,8 +111,9 @@ namespace sub
 				drawText("~b~=/-: ~w~+/- Sensitivity");
 				drawText("~b~R: ~w~Edit rotation");
 			}
+			drawText("~b~ALT: ~w~Copy entity");
 			drawText("~b~B: ~w~Switch to gizmo / disable controls.");
-
+ 
 			static DWORD lastSensitivityChange = 0;
 			if (IsKeyJustUp(VirtualKey::OEMPlus) && GetTickCount() - lastSensitivityChange > 200)
 			{
@@ -176,6 +177,7 @@ namespace sub
 			drawText("~b~R:~w~ Cycle mode");
 			drawText(SpoonerMode::bGizmoCameraLocked ? "~b~C:~w~ Unlock camera" : "~b~C:~w~ Lock camera");
 			drawText(SpoonerMode::bGizmoLocalSpace ? "~b~L:~w~ Edit in world space" : "~b~L:~w~ Edit in local space");
+			drawText("~b~ALT:~w~ Copy entity");
 			drawText("~b~B:~w~ Disable gizmo mode");
 		}
 
@@ -228,6 +230,17 @@ namespace sub
 			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::L))
 			{
 				SpoonerMode::bGizmoLocalSpace = !SpoonerMode::bGizmoLocalSpace;
+			}
+
+			// make a quick copy of an entity by clicking ALT in editing modes
+			if (SpoonerMode::entityEditMode != SpoonerMode::eEntityEditMode::Disabled && IsKeyJustUp(VirtualKey::Menu))
+			{
+				if (selectedEntity.handle.Exists())
+				{
+					const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, EntityManagement::GetEntityIndexInDb(selectedEntity) >= 0, true, _copyEntTexterValue);
+					selectedEntity = copiedEntity;
+					Game::Print::PrintBottomCentre("Entity copied.", 2500);
+				}
 			}
 
 			constexpr float HUD_LINE_HEIGHT = 0.025f;
