@@ -35,7 +35,8 @@ namespace sub::Spooner
 
 		enum class eEntityEditMode : UINT8 { Disabled, Keyboard, Gizmo };
 		extern eEntityEditMode entityEditMode;
-		extern bool bEntityEditRotationMode;
+		enum class eGizmoMode : UINT8 { Translate, Rotate, Scale };
+		extern eGizmoMode gizmoMode;
 		extern bool bGizmoCameraLocked;
 		extern bool bGizmoLocalSpace; // false = world-aligned, true = entity-local axes
 		extern Camera spoonerModeCamera;
@@ -67,6 +68,8 @@ namespace sub::Spooner
 		bool GetEntityPtr(GTAentity& inEntity, SpoonerEntity*& outEntity);
 		SpoonerEntity GetEntityPtrValue(GTAentity& entity);
 		inline void SetAsSelectedEntity(GTAentity& entity);
+		Vector3 SnapPos(Vector3 pos);
+		Vector3 SnapRotation(Vector3 rot);
 
 		inline void CamTick();
 		void Tick();

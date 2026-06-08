@@ -75,12 +75,7 @@ namespace sub
 		float _fSaveRangeRadius = 5.0f;
 		UINT8 _copyEntTexterValue = 0;
 		UINT8 _entTypeToShowTexterValue = 0;
-		Entity _vehScaleEntity = 0;
-		float _vehScaleX = 1.0f, _vehScaleY = 1.0f, _vehScaleZ = 1.0f;
-		Entity _pedScaleEntity = 0;
-		float _pedScaleX = 1.0f, _pedScaleY = 1.0f, _pedScaleZ = 1.0f;
-		Entity _objScaleEntity = 0;
-		float _objScaleX = 1.0f, _objScaleY = 1.0f, _objScaleZ = 1.0f;
+		EntityScaleState _vehScale, _pedScale, _objScale;
 		void SetEnt241() { g_Ped1 = selectedEntity.handle.Handle(); }
 		void SetEnt12() { g_Ped4 = selectedEntity.handle.Handle(); }
 
@@ -98,14 +93,14 @@ namespace sub
 				hudY += HUD_LINE_HEIGHT;
 			};
 
-			if (SpoonerMode::bEntityEditRotationMode)
+			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
 			{
 				drawText("~y~Rotation Mode:");
 				drawText("~b~W/S: ~w~Pitch+ / Pitch-");
 				drawText("~b~A/D: ~w~Yaw+ / Yaw-");
 				drawText("~b~E/Q: ~w~Roll+ / Roll-");
 				drawText("~b~=/-: ~w~+/- Sensitivity");
-				drawText("~b~R: ~w~Toggle position");
+				drawText("~b~R: ~w~Edit position");
 			}
 			else
 			{
@@ -114,29 +109,46 @@ namespace sub
 				drawText("~b~A/D: ~w~Y+ / Y-");
 				drawText("~b~E/Q: ~w~Z+ / Z-");
 				drawText("~b~=/-: ~w~+/- Sensitivity");
-				drawText("~b~R: ~w~Toggle rotation");
+				drawText("~b~R: ~w~Edit rotation");
 			}
+			drawText("~b~ALT: ~w~Copy entity");
 			drawText("~b~B: ~w~Switch to gizmo / disable controls.");
-
+ 
 			static DWORD lastSensitivityChange = 0;
 			if (IsKeyJustUp(VirtualKey::OEMPlus) && GetTickCount() - lastSensitivityChange > 200)
 			{
 				if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
 				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
 			}
 			if (IsKeyJustUp(VirtualKey::OEMMinus) && GetTickCount() - lastSensitivityChange > 200)
 			{
 				if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10;
 				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
 			}
 
-			auto& target = SpoonerMode::bEntityEditRotationMode ? rotation : position;
-			if (IsKeyDown(VirtualKey::W)) target.x += _manualPlacementPrecision;
-			if (IsKeyDown(VirtualKey::S)) target.x -= _manualPlacementPrecision;
-			if (IsKeyDown(VirtualKey::A)) target.y += _manualPlacementPrecision;
-			if (IsKeyDown(VirtualKey::D)) target.y -= _manualPlacementPrecision;
-			if (IsKeyDown(VirtualKey::E)) target.z += _manualPlacementPrecision;
-			if (IsKeyDown(VirtualKey::Q)) target.z -= _manualPlacementPrecision;
+			float step = _manualPlacementPrecision;
+			if (Settings::bGridSnapEnabled)
+			{
+				float snapAmount = SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate
+					? Settings::rotationSnapDegrees
+					: Settings::gridSnapSize;
+				if (snapAmount > 0.0f) step = snapAmount;
+			}
+
+			auto& target = SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate ? rotation : position;
+			if (IsKeyDown(VirtualKey::W)) target.x += step;
+			if (IsKeyDown(VirtualKey::S)) target.x -= step;
+			if (IsKeyDown(VirtualKey::A)) target.y += step;
+			if (IsKeyDown(VirtualKey::D)) target.y -= step;
+			if (IsKeyDown(VirtualKey::E)) target.z += step;
+			if (IsKeyDown(VirtualKey::Q)) target.z -= step;
+
+			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
+				rotation = SpoonerMode::SnapRotation(rotation);
+			else
+				position = SpoonerMode::SnapPos(position);
 		}
 
 		void DrawGizmoHUD()
@@ -153,12 +165,20 @@ namespace sub
 				hudY += HUD_LINE_HEIGHT;
 			};
 
-			drawText(SpoonerMode::bEntityEditRotationMode ? "~y~Gizmo Mode ~s~(Rotation Mode):" : "~y~Gizmo Mode ~s~(Position Mode):");
+			std::string modeName;
+			switch (SpoonerMode::gizmoMode)
+			{
+				case SpoonerMode::eGizmoMode::Rotate: modeName = "Rotation"; break;
+				case SpoonerMode::eGizmoMode::Scale:  modeName = "Scale";    break;
+				default:                              modeName = "Position"; break;
+			}
+			drawText("~y~Gizmo Mode ~s~(" + modeName + " Mode):");
 			drawText("~b~Left Click:~w~ Grab axis handle");
-			drawText("~b~R:~w~ Toggle position/rotation");
-			drawText("~b~B:~w~ Disable gizmo mode");
+			drawText("~b~R:~w~ Cycle mode");
 			drawText(SpoonerMode::bGizmoCameraLocked ? "~b~C:~w~ Unlock camera" : "~b~C:~w~ Lock camera");
 			drawText(SpoonerMode::bGizmoLocalSpace ? "~b~L:~w~ Edit in world space" : "~b~L:~w~ Edit in local space");
+			drawText("~b~ALT:~w~ Copy entity");
+			drawText("~b~B:~w~ Disable gizmo mode");
 		}
 
 		void HandleEntityEditingLogic(Vector3& position, Vector3& rotation, GTAentity* parentEntity)
@@ -191,7 +211,12 @@ namespace sub
 			bool currentRToggle = IsKeyJustUp(VirtualKey::R);
 			if (currentRToggle && !lastRToggle)
 			{
-				SpoonerMode::bEntityEditRotationMode = !SpoonerMode::bEntityEditRotationMode;
+				switch (SpoonerMode::gizmoMode)
+				{
+					case SpoonerMode::eGizmoMode::Translate: SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Rotate; break;
+					case SpoonerMode::eGizmoMode::Rotate:    SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Scale;  break;
+					case SpoonerMode::eGizmoMode::Scale:     SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Translate; break;
+				}
 			}
 			lastRToggle = currentRToggle;
 
@@ -205,6 +230,17 @@ namespace sub
 			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::L))
 			{
 				SpoonerMode::bGizmoLocalSpace = !SpoonerMode::bGizmoLocalSpace;
+			}
+
+			// make a quick copy of an entity by clicking ALT in editing modes
+			if (SpoonerMode::entityEditMode != SpoonerMode::eEntityEditMode::Disabled && IsKeyJustUp(VirtualKey::Menu))
+			{
+				if (selectedEntity.handle.Exists())
+				{
+					const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, EntityManagement::GetEntityIndexInDb(selectedEntity) >= 0, true, _copyEntTexterValue);
+					selectedEntity = copiedEntity;
+					Game::Print::PrintBottomCentre("Entity copied.", 2500);
+				}
 			}
 
 			constexpr float HUD_LINE_HEIGHT = 0.025f;
@@ -228,6 +264,9 @@ namespace sub
 
 			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Keyboard)
 			{
+				// keyboard edit mode doesn't support scaling, so we are switching to translate
+				if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Scale)
+					SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Translate;
 				HandleKeyboardManipulation(position, rotation);
 			}
 			else if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo)
@@ -239,6 +278,7 @@ namespace sub
 	void Sub_SpoonerMain()
 		{
 			SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
+			SpoonerMode::bGizmoCameraLocked = false;
 			selectedEntity.handle = 0;
 			_searchStr.clear(); // Sub_SaveFiles _searchStr
 			dict3.clear(); // Sub_SaveFiles _dir
@@ -1254,6 +1294,7 @@ namespace sub
 		void Sub_SelectedEntityOps()
 		{
 			SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
+			SpoonerMode::bGizmoCameraLocked = false;
 			if (!selectedEntity.handle.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -1588,6 +1629,7 @@ namespace sub
 				bool pitch_plus = 0, pitch_minus = 0;
 				bool roll_plus = 0, roll_minus = 0;
 				bool yaw_plus = 0, yaw_minus = 0;
+				bool bResetRot = 0;
 
 				int nextBoneIndex = selectedEntity.attachmentArgs.boneIndex;
 				Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
@@ -1713,6 +1755,7 @@ namespace sub
 				AddNumber("Pitch", nextRot.x, 4, null, pitch_plus, pitch_minus);
 				AddNumber("Roll", nextRot.y, 4, null, roll_plus, roll_minus);
 				AddNumber("Yaw", nextRot.z, 4, null, yaw_plus, yaw_minus);
+				AddOption("Reset rotation", bResetRot);
 
 				if (x_plus) nextOffset.x += _manualPlacementPrecision;
 				if (x_minus) nextOffset.x -= _manualPlacementPrecision;
@@ -1727,6 +1770,9 @@ namespace sub
 				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
 				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
 				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+				if (bResetRot) nextRot = Vector3();
+
 
 				WrapAngle(nextRot.x);
 				WrapAngle(nextRot.y);
@@ -1927,7 +1973,8 @@ namespace sub
 				z_plus = 0, z_minus = 0,
 				pitch_plus = 0, pitch_minus = 0,
 				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0;
+				yaw_plus = 0, yaw_minus = 0,
+				bResetRot = 0;
 
 			AddTitle("Manual Placement");
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
@@ -1937,6 +1984,7 @@ namespace sub
 			AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 			AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 			AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
+			AddOption("Reset rotation", bResetRot);
 
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
@@ -1956,6 +2004,8 @@ namespace sub
 			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
 			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
 			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+		
+			if (bResetRot) nextRot = Vector3();
 
 			WrapAngle(nextRot.x);
 			WrapAngle(nextRot.y);
@@ -1990,135 +2040,50 @@ namespace sub
 
 			AddTitle("Size Manipulation");
 
-			UINT64 ptr = GTAmemory::_entityAddressFunc(selectedEntity.handle.Handle());
-			if (!ptr) return;
-
 			Entity handle = selectedEntity.handle.Handle();
+
+			auto& state = IS_ENTITY_A_VEHICLE(handle) ? _vehScale
+			            : IS_ENTITY_A_PED(handle) ? _pedScale
+			            : _objScale;
+
+			if (state.handle != handle)
+			{
+				state.handle = handle;
+				state.scale = selectedEntity.handle.GetScale();
+			}
 
 			bool prec_plus = false, prec_minus = false;
 			bool x_plus = false, x_minus = false;
 			bool y_plus = false, y_minus = false;
 			bool z_plus = false, z_minus = false;
+			bool bResetScale = false;
 
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
-
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
-			if (IS_ENTITY_A_VEHICLE(handle))
+			AddNumber("Scale X (Length)", state.scale.x, 4, null, x_plus, x_minus);
+			AddNumber("Scale Y (Width)",  state.scale.y, 4, null, y_plus, y_minus);
+			AddNumber("Scale Z (Height)", state.scale.z, 4, null, z_plus, z_minus);
+			AddOption("Reset scale", bResetScale);
+
+			if (x_plus)  state.scale.x = max(0.01f, state.scale.x + _manualPlacementPrecision);
+			if (x_minus) state.scale.x = max(0.01f, state.scale.x - _manualPlacementPrecision);
+			if (y_plus)  state.scale.y = max(0.01f, state.scale.y + _manualPlacementPrecision);
+			if (y_minus) state.scale.y = max(0.01f, state.scale.y - _manualPlacementPrecision);
+			if (z_plus)  state.scale.z = max(0.01f, state.scale.z + _manualPlacementPrecision);
+			if (z_minus) state.scale.z = max(0.01f, state.scale.z - _manualPlacementPrecision);
+
+			if (bResetScale) state.scale = Vector3(1.0f, 1.0f, 1.0f);
+
+			bool bScaleChanged = x_plus || x_minus || y_plus || y_minus || z_plus || z_minus || bResetScale;
+			if (bScaleChanged && !IS_ENTITY_A_VEHICLE(handle) && !IS_ENTITY_A_PED(handle))
 			{
-				UINT64 physicsMatrix = ptr + 0x60;
-				UINT64 drawMatrixPtr = *(UINT64*)(ptr + 0x30);
-				if (!drawMatrixPtr) return;
-				UINT64 vehicleMatrix = drawMatrixPtr + 0x20;
-
-				// Reset stored scale when entity changes
-				if (_vehScaleEntity != handle)
-				{
-					_vehScaleEntity = handle;
-					Vector3 row = GTAmemory::ReadVector3(physicsMatrix + 0x00);
-					_vehScaleX = row.Length();
-					row = GTAmemory::ReadVector3(physicsMatrix + 0x10);
-					_vehScaleY = row.Length();
-					row = GTAmemory::ReadVector3(physicsMatrix + 0x20);
-					_vehScaleZ = row.Length();
-				}
-
-				AddNumber("Scale X (Width)",  _vehScaleX, 4, null, x_plus, x_minus);
-				AddNumber("Scale Y (Length)", _vehScaleY, 4, null, y_plus, y_minus);
-				AddNumber("Scale Z (Height)", _vehScaleZ, 4, null, z_plus, z_minus);
-
-				if (x_plus)  _vehScaleX = max(0.001f, _vehScaleX + _manualPlacementPrecision);
-				if (x_minus) _vehScaleX = max(0.001f, _vehScaleX - _manualPlacementPrecision);
-				if (y_plus)  _vehScaleY = max(0.001f, _vehScaleY + _manualPlacementPrecision);
-				if (y_minus) _vehScaleY = max(0.001f, _vehScaleY - _manualPlacementPrecision);
-				if (z_plus)  _vehScaleZ = max(0.001f, _vehScaleZ + _manualPlacementPrecision);
-				if (z_minus) _vehScaleZ = max(0.001f, _vehScaleZ - _manualPlacementPrecision);
-
-				auto applyScale = [](UINT64 matrix, float sx, float sy, float sz)
-				{
-					Vector3 r = GTAmemory::ReadVector3(matrix + 0x00);
-					Vector3 f = GTAmemory::ReadVector3(matrix + 0x10);
-					Vector3 u = GTAmemory::ReadVector3(matrix + 0x20);
-					float lr = r.Length(), lf = f.Length(), lu = u.Length();
-					if (lr > 0.0001f) GTAmemory::WriteVector3(matrix + 0x00, r * (sx / lr));
-					if (lf > 0.0001f) GTAmemory::WriteVector3(matrix + 0x10, f * (sy / lf));
-					if (lu > 0.0001f) GTAmemory::WriteVector3(matrix + 0x20, u * (sz / lu));
-				};
-
-				applyScale(physicsMatrix, _vehScaleX, _vehScaleY, _vehScaleZ);
-				applyScale(vehicleMatrix,   _vehScaleX, _vehScaleY, _vehScaleZ);
+				selectedEntity.handle.SetIsCollisionEnabled(false);
+				selectedEntity.handle.FreezePosition(true);
+				selectedEntity.handle.SetScale(state.scale);
 			}
-			else if (IS_ENTITY_A_PED(handle))
-			{
-				if (_pedScaleEntity != handle)
-				{
-					_pedScaleEntity = handle;
-					_pedScaleX = GTAmemory::ReadVector3(ptr + 0x60).Length();
-					_pedScaleY = GTAmemory::ReadVector3(ptr + 0x70).Length();
-					_pedScaleZ = GTAmemory::ReadVector3(ptr + 0x80).Length();
-				}
 
-				AddNumber("Scale X (Width)",  _pedScaleX, 4, null, x_plus, x_minus);
-				AddNumber("Scale Y (Length)", _pedScaleY, 4, null, y_plus, y_minus);
-				AddNumber("Scale Z (Height)", _pedScaleZ, 4, null, z_plus, z_minus);
-
-				if (x_plus)  _pedScaleX = max(0.001f, _pedScaleX + _manualPlacementPrecision);
-				if (x_minus) _pedScaleX = max(0.001f, _pedScaleX - _manualPlacementPrecision);
-				if (y_plus)  _pedScaleY = max(0.001f, _pedScaleY + _manualPlacementPrecision);
-				if (y_minus) _pedScaleY = max(0.001f, _pedScaleY - _manualPlacementPrecision);
-				if (z_plus)  _pedScaleZ = max(0.001f, _pedScaleZ + _manualPlacementPrecision);
-				if (z_minus) _pedScaleZ = max(0.001f, _pedScaleZ - _manualPlacementPrecision);
-
-				auto applyScale = [](UINT64 matrix, float sx, float sy, float sz)
-				{
-					Vector3 r = GTAmemory::ReadVector3(matrix + 0x00);
-					Vector3 f = GTAmemory::ReadVector3(matrix + 0x10);
-					Vector3 u = GTAmemory::ReadVector3(matrix + 0x20);
-					float lr = r.Length(), lf = f.Length(), lu = u.Length();
-					if (lr > 0.0001f) GTAmemory::WriteVector3(matrix + 0x00, r * (sx / lr));
-					if (lf > 0.0001f) GTAmemory::WriteVector3(matrix + 0x10, f * (sy / lf));
-					if (lu > 0.0001f) GTAmemory::WriteVector3(matrix + 0x20, u * (sz / lu));
-				};
-
-				applyScale(ptr + 0x60, _pedScaleX, _pedScaleY, _pedScaleZ);
-			}
-			else // IS_ENTITY_AN_OBJECT
-			{
-				// Reset stored scale when entity changes
-				if (_objScaleEntity != handle)
-				{
-					_objScaleEntity = handle;
-					_objScaleY = GTAmemory::ReadFloat(ptr + 0x60); // length
-					_objScaleX = GTAmemory::ReadFloat(ptr + 0x74); // width
-					_objScaleZ = GTAmemory::ReadFloat(ptr + 0x88); // height
-				}
-
-				AddNumber("Length (Y)", _objScaleY, 4, null, y_plus, y_minus);
-				AddNumber("Width (X)",  _objScaleX, 4, null, x_plus, x_minus);
-				AddNumber("Height (Z)", _objScaleZ, 4, null, z_plus, z_minus);
-
-				if (y_plus)  _objScaleY += (_manualPlacementPrecision * 25.0f);
-				if (y_minus) _objScaleY -= (_manualPlacementPrecision * 25.0f);
-				if (x_plus)  _objScaleX += (_manualPlacementPrecision * 25.0f);
-				if (x_minus) _objScaleX -= (_manualPlacementPrecision * 25.0f);
-				if (z_plus)  _objScaleZ += (_manualPlacementPrecision * 25.0f);
-				if (z_minus) _objScaleZ -= (_manualPlacementPrecision * 25.0f);
-
-				if (y_plus || y_minus || x_plus || x_minus || z_plus || z_minus)
-				{
-					selectedEntity.handle.SetIsCollisionEnabled(false);
-					selectedEntity.handle.FreezePosition(true);
-				}
-
-				if (_objScaleY < 0.01f) _objScaleY = 0.01f;
-				if (_objScaleX < 0.01f) _objScaleX = 0.01f;
-				if (_objScaleZ < 0.01f) _objScaleZ = 0.01f;
-
-				GTAmemory::WriteFloat(ptr + 0x60, _objScaleY);
-				GTAmemory::WriteFloat(ptr + 0x74, _objScaleX);
-				GTAmemory::WriteFloat(ptr + 0x88, _objScaleZ);
-			}
 		}
 
 		void Sub_QuickManualPlacement()
@@ -2205,7 +2170,8 @@ namespace sub
 				z_plus = 0, z_minus = 0,
 				pitch_plus = 0, pitch_minus = 0,
 				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0;
+				yaw_plus = 0, yaw_minus = 0,
+				bResetRot = 0;
 
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
 			AddNumber("X", currPos.x, 4, null, x_plus, x_minus);
@@ -2214,6 +2180,7 @@ namespace sub
 			AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 			AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 			AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
+			AddOption("Reset rotation", bResetRot);
 			AddOption("Other Properites", null, nullFunc, SUB::SPOONER_SELECTEDENTITYOPS);
 
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
@@ -2234,6 +2201,8 @@ namespace sub
 			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
 			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
 			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+			if (bResetRot) nextRot = Vector3();
 
 			WrapAngle(nextRot.x);
 			WrapAngle(nextRot.y);
@@ -2266,7 +2235,8 @@ namespace sub
 				z_plus = 0, z_minus = 0,
 				pitch_plus = 0, pitch_minus = 0,
 				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0;
+				yaw_plus = 0, yaw_minus = 0,
+				bResetRot = 0;
 
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
@@ -2295,13 +2265,16 @@ namespace sub
 				AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 				AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 				AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
-				
+				AddOption("Reset rotation", bResetRot);
+
 				if (pitch_plus) nextRot.x += _manualPlacementPrecision;
 				if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
 				if (roll_plus) nextRot.y += _manualPlacementPrecision;
 				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
 				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
 				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+				if (bResetRot) { *std::get<2>(SpoonerVector3ManualPlacementPtrs) = Vector3(); }
 
 				WrapAngle(nextRot.x);
 				WrapAngle(nextRot.y);
