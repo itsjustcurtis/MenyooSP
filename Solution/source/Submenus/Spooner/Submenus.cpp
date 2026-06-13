@@ -98,7 +98,6 @@ namespace sub
 			AddOption("Manage Entity Database", null, nullFunc, SUB::SPOONER_MANAGEDB);
 			AddOption("Manage Markers", null, nullFunc, SUB::SPOONER_MANAGEMARKERS);
 			AddOption("Manage Saved Files", null, nullFunc, SUB::SPOONER_SAVEFILES);
-			AddOption("Quick Manual Placement (Legacy)", null, nullFunc, SUB::SPOONER_QUICKMANUALPLACEMENT);
 			AddOption("Edit Multiple Entities Simultaneously", null, nullFunc, SUB::SPOONER_GROUPSPOON);
 			AddOption("Settings", null, nullFunc, SUB::SPOONER_SETTINGS);
 		}
@@ -1816,131 +1815,6 @@ namespace sub
 					selectedEntity.handle.FreezePosition(true);				
 				}
 			}
-		}
-		void Sub_QuickManualPlacement()
-		{
-			if (SpoonerMode::bIsSomethingHeld)
-			{
-				Menu::SetPreviousMenu();
-				Game::Print::PrintBottomCentre("~r~Error:~s~ There is an entity held in Spooner Mode.");
-				return;
-			}
-
-			auto currIndexInDb = EntityManagement::GetEntityIndexInDb(selectedEntity);
-			if (currIndexInDb < 0 || !selectedEntity.handle.Exists())
-			{
-				bool bFoundExistingEntity = false;
-				for (UINT i = 0; i < Databases::EntityDb.size(); i++)
-				{
-					if (Databases::EntityDb[i].handle.Exists())
-					{
-						currIndexInDb = i;
-						selectedEntity = Databases::EntityDb[currIndexInDb];
-						bFoundExistingEntity = true;
-						break;
-					}
-				}
-				if (!bFoundExistingEntity)
-				{
-					Menu::SetPreviousMenu();
-					Game::Print::PrintBottomCentre("~r~Error:~s~ No valid entities found in the database.");
-					return;
-				}
-			}
-
-
-			AddTitle("Manual Placement");
-
-			bool bPropertiesSubPressed = false, bEnt_plus = false, bEnt_minus = false;
-			AddTexter(selectedEntity.hashName, currIndexInDb, std::vector<std::string>{}, bPropertiesSubPressed, bEnt_plus, bEnt_minus);
-			if (bPropertiesSubPressed)
-			{
-				Menu::SetSub_delayed = SUB::SPOONER_SELECTEDENTITYOPS;
-			}
-			else if (bEnt_plus)
-			{
-				auto newIndexInDb = currIndexInDb + 1;
-				while (newIndexInDb < Databases::EntityDb.size())
-				{
-					if (Databases::EntityDb[newIndexInDb].handle.Exists())
-					{
-						currIndexInDb = newIndexInDb;
-						selectedEntity = Databases::EntityDb[currIndexInDb];
-						break;
-					}
-					newIndexInDb++;
-				}
-			}
-			else if (bEnt_minus)
-			{
-				auto newIndexInDb = currIndexInDb - 1;
-				while (newIndexInDb >= 0)
-				{
-					if (Databases::EntityDb[newIndexInDb].handle.Exists())
-					{
-						currIndexInDb = newIndexInDb;
-						selectedEntity = Databases::EntityDb[currIndexInDb];
-						break;
-					}
-					newIndexInDb--;
-				}
-			}
-
-			// It's the normal ManualPlacement stuff from here on
-
-			selectedEntity.handle.RequestControlOnce();
-
-			Vector3 currPos = selectedEntity.handle.GetPosition();
-			Vector3 currRot = selectedEntity.handle.Rotation_get();
-			Vector3 nextPos = currPos;
-			Vector3 nextRot = currRot;
-
-			bool prec_plus = 0, prec_minus = 0,
-				x_plus = 0, x_minus = 0,
-				y_plus = 0, y_minus = 0,
-				z_plus = 0, z_minus = 0,
-				pitch_plus = 0, pitch_minus = 0,
-				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0,
-				bResetRot = 0;
-
-			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
-			AddNumber("X", currPos.x, 4, null, x_plus, x_minus);
-			AddNumber("Y", currPos.y, 4, null, y_plus, y_minus);
-			AddNumber("Z", currPos.z, 4, null, z_plus, z_minus);
-			AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
-			AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
-			AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
-			AddOption("Reset rotation", bResetRot);
-			AddOption("Other Properites", null, nullFunc, SUB::SPOONER_SELECTEDENTITYOPS);
-
-			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
-			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
-
-			SpoonerMode::UpdateEntityEditingState(nextPos, nextRot);
-
-			if (x_plus) nextPos.x += _manualPlacementPrecision;
-			if (x_minus) nextPos.x -= _manualPlacementPrecision;
-			if (y_plus) nextPos.y += _manualPlacementPrecision;
-			if (y_minus) nextPos.y -= _manualPlacementPrecision;
-			if (z_plus) nextPos.z += _manualPlacementPrecision;
-			if (z_minus) nextPos.z -= _manualPlacementPrecision;
-
-			if (pitch_plus) nextRot.x += _manualPlacementPrecision;
-			if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
-			if (roll_plus) nextRot.y += _manualPlacementPrecision;
-			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
-			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
-			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
-
-			if (bResetRot) nextRot = Vector3();
-
-			WrapAngle(nextRot.x);
-			WrapAngle(nextRot.y);
-			WrapAngle(nextRot.z);
-
-			if (nextPos != currPos) selectedEntity.handle.SetPosition(nextPos);
-			if (nextRot != currRot) selectedEntity.handle.SetRotation(nextRot);
 		}
 		void Sub_Vector3_ManualPlacement()
 		{
@@ -4267,7 +4141,6 @@ REGISTER_SUBMENU(SPOONER_SAVEFILES,                                   	sub::Spoo
 REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD,                              	sub::Spooner::Submenus::Sub_SaveFiles_Load)
 REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD_LEGACYSP00N,                  	sub::Spooner::Submenus::Sub_SaveFiles_Load_LegacySP00N)
 REGISTER_SUBMENU(SPOONER_VECTOR3_MANUALPLACEMENT,                     	sub::Spooner::Submenus::Sub_Vector3_ManualPlacement)
-REGISTER_SUBMENU(SPOONER_QUICKMANUALPLACEMENT,                        	sub::Spooner::Submenus::Sub_QuickManualPlacement)
 REGISTER_SUBMENU(SPOONER_GROUPSPOON,                                  	sub::Spooner::Submenus::Sub_GroupSpoon)
 REGISTER_SUBMENU(SPOONER_GROUPSPOON_SELECTENTITIES,                   	sub::Spooner::Submenus::Sub_GroupSpoon_SelectEntities)
 REGISTER_SUBMENU(SPOONER_GROUPSPOON_ATTACHTO,                         	sub::Spooner::Submenus::Sub_GroupSpoon_AttachTo)
