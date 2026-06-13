@@ -56,10 +56,7 @@ namespace sub::Spooner
 		bool bEnabled = false;
 		bool bIsSomethingHeld = false;
 		bool bHeldEntityHasCollision = true;
-		eEntityEditMode entityEditMode = eEntityEditMode::Disabled;
-		eGizmoMode gizmoMode = eGizmoMode::Translate;
-		bool bGizmoCameraLocked = false;
-		bool bGizmoLocalSpace = false;
+		EditingState editingState;
 		Camera spoonerModeCamera;
 		float spoonerModeCameraCamDistance = 5.0f;
 		eSpoonerModeMode& spoonerModeMode = Settings::spoonerModeMode;
@@ -100,11 +97,18 @@ namespace sub::Spooner
 				float g = Settings::gridSnapSize;
 				pos.x = round(pos.x / g) * g;
 				pos.y = round(pos.y / g) * g;
-				pos.z = round(pos.z / g) * g;
+				if (!Settings::bSnapToGround)
+					pos.z = round(pos.z / g) * g;
+			}
+			if (Settings::bSnapToGround)
+			{
+				float groundZ;
+				if (GET_GROUND_Z_FOR_3D_COORD(pos.x, pos.y, pos.z + 0.1f, &groundZ, false, false))
+					pos.z = groundZ;
 			}
 			return pos;
 		}
-		Vector3 SnapRotation(Vector3 rot)
+		Vector3 SnapRot(Vector3 rot)
 		{
 			if (Settings::bGridSnapEnabled && Settings::rotationSnapDegrees > 0.0f)
 			{
@@ -640,7 +644,7 @@ namespace sub::Spooner
 					if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
 						movementSensitivity = 4.0f * movementSensitivity;
 					
-					if (entityEditMode != eEntityEditMode::Keyboard && !(entityEditMode == eEntityEditMode::Gizmo && bGizmoCameraLocked))
+					if (editingState.mode != eEditMode::Keyboard && !(editingState.mode == eEditMode::Gizmo && editingState.cameraLocked))
 					{
 						nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
 						nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
@@ -648,7 +652,7 @@ namespace sub::Spooner
 					}
 
 					// blocks camera rotation while we are using the gizmo to edit entity pos / rot
-					if (!bGizmoCameraLocked || entityEditMode != eEntityEditMode::Gizmo)
+					if (!editingState.cameraLocked || editingState.mode != eEditMode::Gizmo)
 					{
 						float rotationSensitivity = Settings::cameraRotationSensitivityMouse;
 						nextRot.z = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR) * rotationSensitivity;
@@ -721,7 +725,7 @@ namespace sub::Spooner
 					}
 
 					// does not draw the cursor when inside gizmo entity editing mode.
-					if (entityEditMode != eEntityEditMode::Gizmo && (entityInFrontOfCam.Exists() || bIsSomethingHeld))
+					if (editingState.mode != eEditMode::Gizmo && (entityInFrontOfCam.Exists() || bIsSomethingHeld))
 					{
 						DRAW_RECT(0.5f, 0.5f, 0.02f, 0.002f, 0, 255, 0, 255, false);
 						DRAW_RECT(0.5f, 0.5f, 0.001f, 0.03f, 0, 255, 0, 255, false);
@@ -918,7 +922,7 @@ namespace sub::Spooner
 						}
 					}
 					// does not draw the cursor when inside gizmo entity editing mode.
-					else if (entityEditMode != eEntityEditMode::Gizmo)
+					else if (editingState.mode != eEditMode::Gizmo)
 					{
 						DRAW_RECT(0.5f, 0.5f, 0.02f, 0.002f, 255, 255, 255, 255, false);
 						DRAW_RECT(0.5f, 0.5f, 0.001f, 0.03f, 255, 255, 255, 255, false);
@@ -1008,6 +1012,195 @@ namespace sub::Spooner
 				SpoonerMode::SpawnModelPreview();
 			}
 		}
+		void ProcessKeyboardManipulation(Vector3& position, Vector3& rotation)
+		{
+			if (!bEnabled) return;
+
+			float& precision = editingState.transformMode == eTransformMode::Position ? editingState.precisionPos
+			                 : editingState.transformMode == eTransformMode::Rotation ? editingState.precisionRot
+			                 : editingState.precisionScale;
+
+			static DWORD lastSensitivityChange = 0;
+			if (IsKeyJustUp(VirtualKey::OEMPlus) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (precision < 10.0f) precision *= 10;
+				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(precision), 3000);
+			}
+			if (IsKeyJustUp(VirtualKey::OEMMinus) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (precision > 0.0001f) precision /= 10;
+				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(precision), 3000);
+			}
+
+			float step = precision;
+			// if grid snap is enabled, override precision with the snap amount for the current transform mode
+			if (Settings::bGridSnapEnabled)
+			{
+				float snapAmount = editingState.transformMode == eTransformMode::Rotation
+					? Settings::rotationSnapDegrees
+					: Settings::gridSnapSize;
+				if (snapAmount > 0.0f) step = snapAmount;
+			}
+
+			auto& target = editingState.transformMode == eTransformMode::Rotation ? rotation : position;
+			if (IsKeyDown(VirtualKey::W)) target.x += step;
+			if (IsKeyDown(VirtualKey::S)) target.x -= step;
+			if (IsKeyDown(VirtualKey::A)) target.y += step;
+			if (IsKeyDown(VirtualKey::D)) target.y -= step;
+			if (IsKeyDown(VirtualKey::E)) target.z += step;
+			if (IsKeyDown(VirtualKey::Q)) target.z -= step;
+
+			if (editingState.transformMode == eTransformMode::Rotation)
+				rotation = SnapRot(rotation);
+			else
+				position = SnapPos(position);
+		}
+
+		void DrawEditingHUD()
+		{
+			constexpr float HUD_LINE_HEIGHT = 0.025f;
+			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
+			constexpr float hudX = 0.02f;
+			float hudY = 0.8f;
+
+			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
+			{
+				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
+				Game::Print::drawstring(text, hudX, hudY);
+				hudY += HUD_LINE_HEIGHT;
+			};
+
+			if (!bEnabled)
+			{
+				drawText("~r~Entity manipulation requires the Spooner Camera.");
+				drawText("~b~Press F9:~w~ Enable Spooner Mode.");
+				return;
+			}
+
+			if (editingState.mode == eEditMode::Disabled)
+			{
+				drawText("~r~Entity manipulation DISABLED.");
+				drawText("~b~Press B:~w~ Enable keyboard controls or gizmo editing mode.");
+			}
+			else if (editingState.mode == eEditMode::Keyboard)
+			{
+				if (editingState.transformMode == eTransformMode::Rotation)
+				{
+					drawText("~y~Rotation Mode:");
+					drawText("~b~W/S: ~w~Pitch+ / Pitch-");
+					drawText("~b~A/D: ~w~Yaw+ / Yaw-");
+					drawText("~b~E/Q: ~w~Roll+ / Roll-");
+					drawText("~b~=/-: ~w~+/- Sensitivity");
+					drawText("~b~R: ~w~Edit position");
+				}
+				else
+				{
+					drawText("~y~Position Mode:");
+					drawText("~b~W/S: ~w~X+ / X-");
+					drawText("~b~A/D: ~w~Y+ / Y-");
+					drawText("~b~E/Q: ~w~Z+ / Z-");
+					drawText("~b~=/-: ~w~+/- Sensitivity");
+					drawText("~b~R: ~w~Edit rotation");
+				}
+				drawText("~b~ALT: ~w~Copy entity");
+				drawText("~b~B: ~w~Switch to gizmo / disable controls.");
+			}
+			else if (editingState.mode == eEditMode::Gizmo)
+			{
+				std::string modeName;
+				switch (editingState.transformMode)
+				{
+					case eTransformMode::Rotation: modeName = "Rotation"; break;
+					case eTransformMode::Scale:    modeName = "Scale";    break;
+					default:                             modeName = "Position"; break;
+				}
+				drawText("~y~Gizmo Mode ~s~(" + modeName + " Mode):");
+				drawText("~b~Left Click:~w~ Grab axis handle");
+				drawText("~b~R:~w~ Cycle mode");
+				drawText(editingState.cameraLocked ? "~b~C:~w~ Unlock camera" : "~b~C:~w~ Lock camera");
+				drawText(editingState.localSpace ? "~b~L:~w~ Edit in world space" : "~b~L:~w~ Edit in local space");
+				drawText("~b~ALT:~w~ Copy entity");
+				drawText("~b~B:~w~ Disable gizmo mode");
+			}
+		}
+
+		void UpdateEntityEditingState(Vector3& position, Vector3& rotation)
+		{
+			// toggling between Disabled / Keyboard / Gizmo modes
+			static bool lastBToggle = false;
+			bool currentBToggle = IsKeyJustUp(VirtualKey::B);
+			if (currentBToggle && !lastBToggle)
+			{
+				switch (editingState.mode)
+				{
+					case eEditMode::Disabled:
+						editingState.mode = eEditMode::Keyboard;
+						break;
+					case eEditMode::Keyboard:
+						editingState.mode = eEditMode::Gizmo;
+						break;
+					case eEditMode::Gizmo:
+						editingState.mode = eEditMode::Disabled;
+						break;
+					}
+				editingState.cameraLocked = false;
+			}
+			lastBToggle = currentBToggle;
+
+			// toggling between transform modes
+			static bool lastRToggle = false;
+			bool currentRToggle = IsKeyJustUp(VirtualKey::R);
+			if (currentRToggle && !lastRToggle)
+			{
+				if (editingState.mode != eEditMode::Disabled)
+				{
+					// In keyboard mode, R just toggles between position and rotation editing (scale is not supported in keyboard mode)
+					static const eTransformMode table[2][3] = {
+						// Position, Rotation, Scale
+						{ eTransformMode::Rotation, eTransformMode::Position, eTransformMode::Position }, // Keyboard editing mode (scale is not supported, it just redirects to position)
+						{ eTransformMode::Rotation, eTransformMode::Scale,    eTransformMode::Position }  // Gizmo editing mode
+					};
+					editingState.transformMode = table[(int)editingState.mode - 1][(int)editingState.transformMode];
+				}
+			}
+			lastRToggle = currentRToggle;
+
+			// toggling camera lock
+			if (editingState.mode != eEditMode::Disabled && IsKeyJustUp(VirtualKey::C))
+			{
+				editingState.cameraLocked = !editingState.cameraLocked;
+			}
+
+			// toggling world / local space editing
+			if (editingState.mode != eEditMode::Disabled && IsKeyJustUp(VirtualKey::L))
+			{
+				editingState.localSpace = !editingState.localSpace;
+			}
+
+			// make a quick copy of an entity by clicking ALT in editing modes
+			if (editingState.mode != eEditMode::Disabled && IsKeyJustUp(VirtualKey::Menu))
+			{
+				if (selectedEntity.handle.Exists())
+				{
+					const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, EntityManagement::GetEntityIndexInDb(selectedEntity) >= 0, true, Submenus::_copyEntTexterValue);
+					selectedEntity = copiedEntity;
+					Game::Print::PrintBottomCentre("Entity copied.", 2500);
+				}
+			}
+
+			if (editingState.mode == eEditMode::Keyboard)
+			{
+				// keyboard edit mode doesn't support scaling
+				if (editingState.transformMode == eTransformMode::Scale)
+					editingState.transformMode = eTransformMode::Position;
+				ProcessKeyboardManipulation(position, rotation);
+			}
+
+			DrawEditingHUD();
+		}
+
 		void Toggle()
 		{
 			SpoonerMode::bEnabled ? SpoonerMode::TurnOff() : SpoonerMode::TurnOn();

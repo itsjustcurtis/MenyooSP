@@ -47,6 +47,7 @@ namespace sub::Spooner
 		extern bool bGridSnapEnabled;
 		extern float gridSnapSize;
 		extern float rotationSnapDegrees;
+		extern bool bSnapToGround;
 	}
 
 }

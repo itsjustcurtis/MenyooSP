@@ -33,12 +33,23 @@ namespace sub::Spooner
 		extern bool bIsSomethingHeld;
 		extern bool bHeldEntityHasCollision;
 
-		enum class eEntityEditMode : UINT8 { Disabled, Keyboard, Gizmo };
-		extern eEntityEditMode entityEditMode;
-		enum class eGizmoMode : UINT8 { Translate, Rotate, Scale };
-		extern eGizmoMode gizmoMode;
-		extern bool bGizmoCameraLocked;
-		extern bool bGizmoLocalSpace; // false = world-aligned, true = entity-local axes
+		enum class eEditMode : UINT8 { Disabled, Keyboard, Gizmo };
+		enum class eTransformMode : UINT8 { Position, Rotation, Scale };
+
+		struct EditingState {
+			eEditMode mode = eEditMode::Disabled;
+			eTransformMode transformMode = eTransformMode::Position;
+			bool localSpace = false;
+			bool cameraLocked = false;
+			float precisionPos = 0.1f;
+			float precisionRot = 1.0f;
+			float precisionScale = 0.1f;
+		};
+		extern EditingState editingState;
+
+		void ProcessKeyboardManipulation(Vector3& position, Vector3& rotation);
+		void DrawEditingHUD();
+		void UpdateEntityEditingState(Vector3& position, Vector3& rotation);
 		extern Camera spoonerModeCamera;
 		extern float spoonerModeCameraCamDistance;
 
@@ -69,7 +80,7 @@ namespace sub::Spooner
 		SpoonerEntity GetEntityPtrValue(GTAentity& entity);
 		inline void SetAsSelectedEntity(GTAentity& entity);
 		Vector3 SnapPos(Vector3 pos);
-		Vector3 SnapRotation(Vector3 rot);
+		Vector3 SnapRot(Vector3 rot);
 
 		inline void CamTick();
 		void Tick();

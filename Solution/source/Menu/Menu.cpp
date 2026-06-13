@@ -1423,6 +1423,56 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 	}
 
 }
+template<typename T>
+void AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min, std::optional<double> max, bool gxt)
+{
+	bool enterPressed = false, right = false, left = false;
+	AddNumber(text, (double)value, decimal_places, enterPressed, right, left, gxt);
+	if (right) value = (T)((double)value + step_size);
+	if (left)  value = (T)((double)value - step_size);
+	if (enterPressed)
+	{
+		std::string inputStr = Game::InputBox("", 5U, "", std::to_string(value));
+		if (inputStr.length() > 0)
+		{
+			try
+			{
+				value = (T)std::stod(inputStr);
+			}
+			catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
+		}
+	}
+	if (min.has_value() && value < (T)min.value()) value = (T)min.value();
+	if (max.has_value() && value > (T)max.value()) value = (T)max.value();
+}
+template void AddNumberStepper<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool);
+template void AddNumberStepper<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool);
+template void AddNumberStepper<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool);
+template<typename T>
+void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min, std::optional<double> max, bool gxt)
+{
+	bool enterPressed = false, right = false, left = false;
+	AddNumber(text, (double)value, decimal_places, enterPressed, right, left, gxt);
+	if (right) value = (T)((double)value * multiplier);
+	if (left)  value = (T)((double)value / multiplier);
+	if (enterPressed)
+	{
+		std::string inputStr = Game::InputBox("", 5U, "", std::to_string(value));
+		if (inputStr.length() > 0)
+		{
+			try
+			{
+				value = (T)std::stod(inputStr);
+			}
+			catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
+		}
+	}
+	if (min.has_value() && value < (T)min.value()) value = (T)min.value();
+	if (max.has_value() && value > (T)max.value()) value = (T)max.value();
+}
+template void AddNumberMultiplier<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool);
+template void AddNumberMultiplier<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool);
+template void AddNumberMultiplier<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool);
 void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& normal, const std::string& selected, const RGBA& colour)
 {
 	if (!HAS_STREAMED_TEXTURE_DICT_LOADED(textureDict.c_str())) REQUEST_STREAMED_TEXTURE_DICT(textureDict.c_str(), 0);
@@ -1620,6 +1670,14 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 
 	}
 
+}
+int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts)
+{
+	bool input = false, right = false, left = false;
+	AddTexter(label, currentIdx, opts, input, right, left);
+	if (right && currentIdx < (int)opts.size() - 1) currentIdx++;
+	if (left && currentIdx > 0) currentIdx--;
+	return currentIdx;
 }
 void AddTexter(const std::string& text, int selectedindex, const std::vector<std::string>& textarray, bool& A_PRESS, bool& RIGHT_PRESS, bool& LEFT_PRESS, bool gxt)
 {

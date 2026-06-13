@@ -71,214 +71,22 @@ namespace sub
 	{
 		std::string& _searchStr = dict2;
 		std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualPlacementPtrs = { 0, nullptr, nullptr };
-		float _manualPlacementPrecision = 0.01f;
+		float _manualPlacementPrecision = 0.01f; // Legacy - used by QuickManualPlacement, Vector3_ManualPlacement, GroupSpoon, TaskSequence
 		float _fSaveRangeRadius = 5.0f;
 		UINT8 _copyEntTexterValue = 0;
 		UINT8 _entTypeToShowTexterValue = 0;
 		EntityScaleState _vehScale, _pedScale, _objScale;
+
+
 		void SetEnt241() { g_Ped1 = selectedEntity.handle.Handle(); }
 		void SetEnt12() { g_Ped4 = selectedEntity.handle.Handle(); }
 
-		void HandleKeyboardManipulation(Vector3& position, Vector3& rotation)
-		{
-			constexpr float HUD_LINE_HEIGHT = 0.025f;
-			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
-			const float hudX = 0.02f;
-			float hudY = 0.8f;
 
-			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
-			{
-				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
-				Game::Print::drawstring(text, hudX, hudY);
-				hudY += HUD_LINE_HEIGHT;
-			};
-
-			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
-			{
-				drawText("~y~Rotation Mode:");
-				drawText("~b~W/S: ~w~Pitch+ / Pitch-");
-				drawText("~b~A/D: ~w~Yaw+ / Yaw-");
-				drawText("~b~E/Q: ~w~Roll+ / Roll-");
-				drawText("~b~=/-: ~w~+/- Sensitivity");
-				drawText("~b~R: ~w~Edit position");
-			}
-			else
-			{
-				drawText("~y~Position Mode:");
-				drawText("~b~W/S: ~w~X+ / X-");
-				drawText("~b~A/D: ~w~Y+ / Y-");
-				drawText("~b~E/Q: ~w~Z+ / Z-");
-				drawText("~b~=/-: ~w~+/- Sensitivity");
-				drawText("~b~R: ~w~Edit rotation");
-			}
-			drawText("~b~ALT: ~w~Copy entity");
-			drawText("~b~B: ~w~Switch to gizmo / disable controls.");
- 
-			static DWORD lastSensitivityChange = 0;
-			if (IsKeyJustUp(VirtualKey::OEMPlus) && GetTickCount() - lastSensitivityChange > 200)
-			{
-				if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
-				lastSensitivityChange = GetTickCount();
-				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
-			}
-			if (IsKeyJustUp(VirtualKey::OEMMinus) && GetTickCount() - lastSensitivityChange > 200)
-			{
-				if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10;
-				lastSensitivityChange = GetTickCount();
-				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
-			}
-
-			float step = _manualPlacementPrecision;
-			if (Settings::bGridSnapEnabled)
-			{
-				float snapAmount = SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate
-					? Settings::rotationSnapDegrees
-					: Settings::gridSnapSize;
-				if (snapAmount > 0.0f) step = snapAmount;
-			}
-
-			auto& target = SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate ? rotation : position;
-			if (IsKeyDown(VirtualKey::W)) target.x += step;
-			if (IsKeyDown(VirtualKey::S)) target.x -= step;
-			if (IsKeyDown(VirtualKey::A)) target.y += step;
-			if (IsKeyDown(VirtualKey::D)) target.y -= step;
-			if (IsKeyDown(VirtualKey::E)) target.z += step;
-			if (IsKeyDown(VirtualKey::Q)) target.z -= step;
-
-			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
-				rotation = SpoonerMode::SnapRotation(rotation);
-			else
-				position = SpoonerMode::SnapPos(position);
-		}
-
-		void DrawGizmoHUD()
-		{
-			constexpr float HUD_LINE_HEIGHT = 0.025f;
-			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
-			const float hudX = 0.02f;
-			float hudY = 0.8f;
-
-			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
-			{
-				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
-				Game::Print::drawstring(text, hudX, hudY);
-				hudY += HUD_LINE_HEIGHT;
-			};
-
-			std::string modeName;
-			switch (SpoonerMode::gizmoMode)
-			{
-				case SpoonerMode::eGizmoMode::Rotate: modeName = "Rotation"; break;
-				case SpoonerMode::eGizmoMode::Scale:  modeName = "Scale";    break;
-				default:                              modeName = "Position"; break;
-			}
-			drawText("~y~Gizmo Mode ~s~(" + modeName + " Mode):");
-			drawText("~b~Left Click:~w~ Grab axis handle");
-			drawText("~b~R:~w~ Cycle mode");
-			drawText(SpoonerMode::bGizmoCameraLocked ? "~b~C:~w~ Unlock camera" : "~b~C:~w~ Lock camera");
-			drawText(SpoonerMode::bGizmoLocalSpace ? "~b~L:~w~ Edit in world space" : "~b~L:~w~ Edit in local space");
-			drawText("~b~ALT:~w~ Copy entity");
-			drawText("~b~B:~w~ Disable gizmo mode");
-		}
-
-		void HandleEntityEditingLogic(Vector3& position, Vector3& rotation, GTAentity* parentEntity)
-		{
-			// toggling between Disabled / Keyboard / Gizmo modes
-			static bool lastBToggle = false;
-			bool currentBToggle = IsKeyJustUp(VirtualKey::B);
-			if (currentBToggle && !lastBToggle)
-			{
-				switch (SpoonerMode::entityEditMode)
-				{
-				case SpoonerMode::eEntityEditMode::Disabled:
-					SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Keyboard;
-					SpoonerMode::bGizmoCameraLocked = false;
-					break;
-				case SpoonerMode::eEntityEditMode::Keyboard:
-					SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Gizmo;
-					SpoonerMode::bGizmoCameraLocked = false;
-					break;
-				case SpoonerMode::eEntityEditMode::Gizmo:
-					SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
-					SpoonerMode::bGizmoCameraLocked = false;
-					break;
-				}
-			}
-			lastBToggle = currentBToggle;
-
-			// toggling between the rotation / position modes
-			static bool lastRToggle = false;
-			bool currentRToggle = IsKeyJustUp(VirtualKey::R);
-			if (currentRToggle && !lastRToggle)
-			{
-				switch (SpoonerMode::gizmoMode)
-				{
-					case SpoonerMode::eGizmoMode::Translate: SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Rotate; break;
-					case SpoonerMode::eGizmoMode::Rotate:    SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Scale;  break;
-					case SpoonerMode::eGizmoMode::Scale:     SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Translate; break;
-				}
-			}
-			lastRToggle = currentRToggle;
-
-			// toggling camera lock in gizmo mode
-			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::C))
-			{
-				SpoonerMode::bGizmoCameraLocked = !SpoonerMode::bGizmoCameraLocked;
-			}
-
-			// toggling world / local gizmo orientation in gizmo mode
-			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::L))
-			{
-				SpoonerMode::bGizmoLocalSpace = !SpoonerMode::bGizmoLocalSpace;
-			}
-
-			// make a quick copy of an entity by clicking ALT in editing modes
-			if (SpoonerMode::entityEditMode != SpoonerMode::eEntityEditMode::Disabled && IsKeyJustUp(VirtualKey::Menu))
-			{
-				if (selectedEntity.handle.Exists())
-				{
-					const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, EntityManagement::GetEntityIndexInDb(selectedEntity) >= 0, true, _copyEntTexterValue);
-					selectedEntity = copiedEntity;
-					Game::Print::PrintBottomCentre("Entity copied.", 2500);
-				}
-			}
-
-			constexpr float HUD_LINE_HEIGHT = 0.025f;
-			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
-			const float hudX = 0.02f;
-			float hudY = 0.8f;
-
-			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
-			{
-				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
-				Game::Print::drawstring(text, hudX, hudY);
-				hudY += HUD_LINE_HEIGHT;
-			};
-
-			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Disabled)
-			{
-				drawText("~r~Entity manipulation DISABLED.");
-				drawText("~b~Press B:~w~ Enable keyboard controls or gizmo editing mode.");
-				return;
-			}
-
-			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Keyboard)
-			{
-				// keyboard edit mode doesn't support scaling, so we are switching to translate
-				if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Scale)
-					SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Translate;
-				HandleKeyboardManipulation(position, rotation);
-			}
-			else if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo)
-			{
-				DrawGizmoHUD();
-			}
-		}
 
 	void Sub_SpoonerMain()
 		{
-			SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
-			SpoonerMode::bGizmoCameraLocked = false;
+			SpoonerMode::editingState.mode = SpoonerMode::eEditMode::Disabled;
+			SpoonerMode::editingState.cameraLocked = false;
 			selectedEntity.handle = 0;
 			_searchStr.clear(); // Sub_SaveFiles _searchStr
 			dict3.clear(); // Sub_SaveFiles _dir
@@ -329,30 +137,7 @@ namespace sub
 
 			AddOption("Reload Model List Files", null, PopulateGlobalEntityModelsArrays);
 
-			AddBreak("---Grid Snap---");
-			AddToggle("Grid Snap", Settings::bGridSnapEnabled);
-
-			bool gridSize_input = false, gridSize_plus = false, gridSize_minus = false;
-			AddNumber("Grid Size (m)", Settings::gridSnapSize, 2, gridSize_input, gridSize_plus, gridSize_minus);
-			if (gridSize_plus && Settings::gridSnapSize < 100.0f) Settings::gridSnapSize += 0.25f;
-			if (gridSize_minus && Settings::gridSnapSize > 0.25f) Settings::gridSnapSize -= 0.25f;
-			if (gridSize_input)
-			{
-				std::string inputStr = Game::InputBox("", 10U, "Grid size in meters:", std::to_string(Settings::gridSnapSize).substr(0, 8));
-				if (inputStr.length() > 0) { try { Settings::gridSnapSize = stof(inputStr); } catch (...) {} }
-				if (Settings::gridSnapSize < 0.01f) Settings::gridSnapSize = 0.25f;
-			}
-
-			bool rotSnap_input = false, rotSnap_plus = false, rotSnap_minus = false;
-			AddNumber("Rotation Snap (deg)", Settings::rotationSnapDegrees, 1, rotSnap_input, rotSnap_plus, rotSnap_minus);
-			if (rotSnap_plus && Settings::rotationSnapDegrees < 90.0f) Settings::rotationSnapDegrees += 5.0f;
-			if (rotSnap_minus && Settings::rotationSnapDegrees > 0.0f) Settings::rotationSnapDegrees -= 5.0f;
-			if (rotSnap_input)
-			{
-				std::string inputStr = Game::InputBox("", 10U, "Rotation snap degrees (0=off):", std::to_string(Settings::rotationSnapDegrees).substr(0, 6));
-				if (inputStr.length() > 0) { try { Settings::rotationSnapDegrees = stof(inputStr); } catch (...) {} }
-				if (Settings::rotationSnapDegrees < 0.0f) Settings::rotationSnapDegrees = 0.0f;
-			}
+			AddOption("Grid Snap Settings", null, nullFunc, SUB::SPOONER_MANUALEDITING_SNAP);
 
 			if (bSmm_plus) { if ((UINT8)Settings::spoonerModeMode < spoonerModeModeNames.size() - 1) Settings::spoonerModeMode = eSpoonerModeMode((UINT8)Settings::spoonerModeMode + 1); }
 			if (bSmm_minus) { if ((UINT8)Settings::spoonerModeMode > 0) Settings::spoonerModeMode = eSpoonerModeMode((UINT8)Settings::spoonerModeMode - 1); }
@@ -1293,8 +1078,8 @@ namespace sub
 		}*/
 		void Sub_SelectedEntityOps()
 		{
-			SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
-			SpoonerMode::bGizmoCameraLocked = false;
+			SpoonerMode::editingState.mode = SpoonerMode::eEditMode::Disabled;
+			SpoonerMode::editingState.cameraLocked = false;
 			if (!selectedEntity.handle.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -1576,10 +1361,10 @@ namespace sub
 			}
 
 			AddOption("Attachment Options", null, nullFunc, SUB::SPOONER_ATTACHMENTOPS);
-			AddOption("Manual Placement", null, nullFunc, SUB::SPOONER_MANUALPLACEMENT);
-			AddOption("Manual Resize", null, nullFunc, SUB::SPOONER_SIZEMANIPULATION);
+			AddOption("Manual Editing", null, nullFunc, SUB::SPOONER_MANUALEDITING);
 
 		}
+
 		void Sub_AttachmentOps()
 		{
 			if (!selectedEntity.handle.Exists())
@@ -1600,8 +1385,6 @@ namespace sub
 			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, parentEntity);
 			EntityType parentEntityType = (EntityType)parentEntity.Type();
 
-			bool prec_plus = 0, prec_minus = 0;
-
 			AddTitle("Attachment");
 
 			if (!seIsAttached)
@@ -1617,30 +1400,18 @@ namespace sub
 				}
 			}
 
-			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
-			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
-			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
-
 			if (seIsAttached)
 			{
-				bool x_plus = 0, x_minus = 0;
-				bool y_plus = 0, y_minus = 0;
-				bool z_plus = 0, z_minus = 0;
-				bool pitch_plus = 0, pitch_minus = 0;
-				bool roll_plus = 0, roll_minus = 0;
-				bool yaw_plus = 0, yaw_minus = 0;
-				bool bResetRot = 0;
-
 				int nextBoneIndex = selectedEntity.attachmentArgs.boneIndex;
 				Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
 				Vector3 nextRot = selectedEntity.attachmentArgs.rotation;
 
-				HandleEntityEditingLogic(nextOffset, nextRot, &parentEntity);
+				SpoonerMode::editingState.transformMode = static_cast<SpoonerMode::eTransformMode>(AddTexterCycler("Editing", (int)SpoonerMode::editingState.transformMode > 1 ? 0 : (int)SpoonerMode::editingState.transformMode, {"Position", "Rotation"}));
 
-				// Bone text scroller if type is PED or VEHICLE. Reattach and reset args on bone change.
+				// Bone text scroller if type is PED or VEHICLE
 				if (parentEntityType == EntityType::PED)
 				{
-					int obj_currentPedBoneArrayIndex = 17; // SKEL_ROOT is at index 17 idk
+					int obj_currentPedBoneArrayIndex = 17;
 					for (int i = 0; i < Bone::vBoneNames.size(); i++)
 					{
 						if (nextBoneIndex == GTAped(parentEntity).GetBoneIndex(Bone::vBoneNames[i].boneid))
@@ -1659,8 +1430,6 @@ namespace sub
 						{
 							obj_currentPedBoneArrayIndex++;
 							nextBoneIndex = GTAped(parentEntity).GetBoneIndex(Bone::vBoneNames[obj_currentPedBoneArrayIndex].boneid);
-							//nextOffset = Vector3::Zero();
-							//nextRot = Vector3::Zero();
 						}
 					}
 					if (pbone_minus)
@@ -1669,33 +1438,16 @@ namespace sub
 						{
 							obj_currentPedBoneArrayIndex--;
 							nextBoneIndex = GTAped(parentEntity).GetBoneIndex(Bone::vBoneNames[obj_currentPedBoneArrayIndex].boneid);
-							//nextOffset = Vector3::Zero();
-							//nextRot = Vector3::Zero();
 						}
 					}
 					if (pbone_input)
 					{
-						//std::string srch = Game::InputBox("", 28U, "Enter bone name:");
-						//bool found = false;
-						//for (auto& pb : Bone::vBoneNames)
-						//{
-						//	if (pb.name.find(srch) != std::string::npos)
-						//	{
-						//		bool found = true;
-						//		nextBoneIndex = GTAped(parentEntity).GetBoneIndex(pb.boneid);
-						//		//obj_currentPedBoneArrayIndex = index; // Not needed
-						//		nextOffset = Vector3::Zero();
-						//		nextRot = Vector3::Zero();
-						//		break;
-						//	}
-						//}
-						//if (!found) Game::Print::PrintError_InvalidInput(inputStr);
 						Menu::SetSub_delayed = SUB::SPOONER_ATTACHMENTOPS_SELECTBONE;
 					}
 				}
 				else if (parentEntityType == EntityType::VEHICLE)
 				{
-					int obj_currentVehBoneArrayIndex = 10; // 10 is bodyshell idk
+					int obj_currentVehBoneArrayIndex = 10;
 					for (int i = 0; i < VBone::vNames.size(); i++)
 					{
 						if (nextBoneIndex == GTAvehicle(parentEntity).GetBoneIndex(VBone::vNames[i]))
@@ -1714,8 +1466,6 @@ namespace sub
 						{
 							obj_currentVehBoneArrayIndex++;
 							nextBoneIndex = GTAvehicle(parentEntity).GetBoneIndex(VBone::vNames[obj_currentVehBoneArrayIndex]);
-							//nextOffset = Vector3::Zero();
-							//nextRot = Vector3::Zero();
 						}
 					}
 					if (vbone_minus)
@@ -1724,55 +1474,42 @@ namespace sub
 						{
 							obj_currentVehBoneArrayIndex--;
 							nextBoneIndex = GTAvehicle(parentEntity).GetBoneIndex(VBone::vNames[obj_currentVehBoneArrayIndex]);
-							//nextOffset = Vector3::Zero();
-							//nextRot = Vector3::Zero();
 						}
 					}
 					if (vbone_input)
 					{
-						//std::string srch = Game::InputBox("", 28U, "Enter bone name:");
-						//bool found = false;
-						//for (auto& vbn : VBone::vNames)
-						//{
-						//	if (vbn.find(srch) != std::string::npos)
-						//	{
-						//		bool found = true;
-						//		nextBoneIndex = GTAvehicle(parentEntity).GetBoneIndex(vbn);
-						//		//obj_currentVehBoneArrayIndex = index; // Not needed
-						//		nextOffset = Vector3::Zero();
-						//		nextRot = Vector3::Zero();
-						//		break;
-						//	}
-						//}
-						//if (!found) Game::Print::PrintError_InvalidInput(inputStr);
 						Menu::SetSub_delayed = SUB::SPOONER_ATTACHMENTOPS_SELECTBONE;
 					}
 				}
 
-				AddNumber("X", nextOffset.x, 4, null, x_plus, x_minus);
-				AddNumber("Y", nextOffset.y, 4, null, y_plus, y_minus);
-				AddNumber("Z", nextOffset.z, 4, null, z_plus, z_minus);
-				AddNumber("Pitch", nextRot.x, 4, null, pitch_plus, pitch_minus);
-				AddNumber("Roll", nextRot.y, 4, null, roll_plus, roll_minus);
-				AddNumber("Yaw", nextRot.z, 4, null, yaw_plus, yaw_minus);
-				AddOption("Reset rotation", bResetRot);
+				AddBreak("---Values---");
 
-				if (x_plus) nextOffset.x += _manualPlacementPrecision;
-				if (x_minus) nextOffset.x -= _manualPlacementPrecision;
-				if (y_plus) nextOffset.y += _manualPlacementPrecision;
-				if (y_minus) nextOffset.y -= _manualPlacementPrecision;
-				if (z_plus) nextOffset.z += _manualPlacementPrecision;
-				if (z_minus) nextOffset.z -= _manualPlacementPrecision;
+				auto& precision = SpoonerMode::editingState.transformMode == SpoonerMode::eTransformMode::Position ? SpoonerMode::editingState.precisionPos : SpoonerMode::editingState.precisionRot;
 
-				if (pitch_plus) nextRot.x += _manualPlacementPrecision;
-				if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
-				if (roll_plus) nextRot.y += _manualPlacementPrecision;
-				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
-				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
-				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+				AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0);
 
-				if (bResetRot) nextRot = Vector3();
+				switch (SpoonerMode::editingState.transformMode)
+				{
+				case SpoonerMode::eTransformMode::Position:
+				{
+					AddNumberStepper("X", nextOffset.x, 4, (double)precision);
+					AddNumberStepper("Y", nextOffset.y, 4, (double)precision);
+					AddNumberStepper("Z", nextOffset.z, 4, (double)precision);
+					break;
+				}
+				case SpoonerMode::eTransformMode::Rotation:
+				{
+					bool bResetRot = false;
+					AddNumberStepper("Pitch", nextRot.x, 4, (double)precision);
+					AddNumberStepper("Roll", nextRot.y, 4, (double)precision);
+					AddNumberStepper("Yaw", nextRot.z, 4, (double)precision);
+					AddOption("Reset rotation", bResetRot);
+					if (bResetRot) nextRot = Vector3();
+					break;
+				}
+				}
 
+				SpoonerMode::UpdateEntityEditingState(nextOffset, nextRot);
 
 				WrapAngle(nextRot.x);
 				WrapAngle(nextRot.y);
@@ -1782,6 +1519,13 @@ namespace sub
 				{
 					EntityManagement::AttachEntity(selectedEntity, parentEntity, nextBoneIndex, nextOffset, nextRot);
 				}
+
+				AddBreak("---Options---");
+				AddOption("Snapping", null, nullFunc, SUB::SPOONER_MANUALEDITING_SNAP);
+
+				SpoonerMode::editingState.mode = static_cast<SpoonerMode::eEditMode>(AddTexterCycler("Entity manipulation mode", (int)SpoonerMode::editingState.mode, {"None", "Keyboard", "Gizmo"}));
+				if (SpoonerMode::editingState.mode != SpoonerMode::eEditMode::Disabled && SpoonerMode::editingState.transformMode != SpoonerMode::eTransformMode::Scale)
+					AddToggle("Local Space", SpoonerMode::editingState.localSpace);
 			}
 
 		}
@@ -1952,7 +1696,16 @@ namespace sub
 			}
 
 		}
-		void Sub_ManualPlacement()
+		void Sub_Snapping()
+		{
+			AddTitle("Snapping Options");
+
+			AddToggle("Grid Snap", Settings::bGridSnapEnabled);
+			AddNumberStepper("Grid Size (m)", Settings::gridSnapSize, 2, 0.25, 0.01);
+			AddNumberStepper("Rotation Snap (deg)", Settings::rotationSnapDegrees, 1, 5.0, 0.0);
+			AddToggle("Snap to Ground", Settings::bSnapToGround);
+		}
+		void Sub_ManualEditing()
 		{
 			if (!selectedEntity.handle.Exists())
 			{
@@ -1961,131 +1714,109 @@ namespace sub
 			}
 			selectedEntity.handle.RequestControlOnce();
 
-			GTAped thisPed = selectedEntity.handle;
+			AddTitle("Manual Editing");
+
 			Vector3 currPos = selectedEntity.handle.GetPosition();
 			Vector3 currRot = selectedEntity.handle.Rotation_get();
+
+			Entity handle = selectedEntity.handle.Handle();
+			auto& scaleState = IS_ENTITY_A_VEHICLE(handle) ? _vehScale
+			                : IS_ENTITY_A_PED(handle) ? _pedScale
+			                : _objScale;
+
 			Vector3 nextPos = currPos;
 			Vector3 nextRot = currRot;
+			Vector3 nextScale = scaleState.scale;
 
-			bool prec_plus = 0, prec_minus = 0,
-				x_plus = 0, x_minus = 0,
-				y_plus = 0, y_minus = 0,
-				z_plus = 0, z_minus = 0,
-				pitch_plus = 0, pitch_minus = 0,
-				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0,
-				bResetRot = 0;
+			// Mode selector
+			SpoonerMode::editingState.transformMode = static_cast<SpoonerMode::eTransformMode>(AddTexterCycler("Editing", static_cast<int>(SpoonerMode::editingState.transformMode), {"Position", "Rotation", "Scale"}));
 
-			AddTitle("Manual Placement");
-			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
-			AddNumber("X", currPos.x, 4, null, x_plus, x_minus);
-			AddNumber("Y", currPos.y, 4, null, y_plus, y_minus);
-			AddNumber("Z", currPos.z, 4, null, z_plus, z_minus);
-			AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
-			AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
-			AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
-			AddOption("Reset rotation", bResetRot);
+			AddBreak("---Values---");
 
-			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
-			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
+			float& precision = SpoonerMode::editingState.transformMode == SpoonerMode::eTransformMode::Position ? SpoonerMode::editingState.precisionPos
+			                 : SpoonerMode::editingState.transformMode == SpoonerMode::eTransformMode::Rotation ? SpoonerMode::editingState.precisionRot
+			                 : SpoonerMode::editingState.precisionScale;
 
-			HandleEntityEditingLogic(nextPos, nextRot, nullptr);
+			AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0);
 
-			if (x_plus) nextPos.x += _manualPlacementPrecision;
-			if (x_minus) nextPos.x -= _manualPlacementPrecision;
-			if (y_plus) nextPos.y += _manualPlacementPrecision;
-			if (y_minus) nextPos.y -= _manualPlacementPrecision;
-			if (z_plus) nextPos.z += _manualPlacementPrecision;
-			if (z_minus) nextPos.z -= _manualPlacementPrecision;
+			switch (SpoonerMode::editingState.transformMode)
+			{
+				case SpoonerMode::eTransformMode::Position:
+				{
+					AddNumberStepper("X", nextPos.x, 4, (double)precision);
+					AddNumberStepper("Y", nextPos.y, 4, (double)precision);
+					AddNumberStepper("Z", nextPos.z, 4, (double)precision);
+					break;
+				}
+				case SpoonerMode::eTransformMode::Rotation:
+				{
+					bool bResetRot = false;
+					AddNumberStepper("Pitch", nextRot.x, 4, (double)precision);
+					AddNumberStepper("Roll", nextRot.y, 4, (double)precision);
+					AddNumberStepper("Yaw", nextRot.z, 4, (double)precision);
+					AddOption("Reset rotation", bResetRot);
+					if (bResetRot) nextRot = Vector3();
+					break;
+				}
+				case SpoonerMode::eTransformMode::Scale:
+				{
+					bool bResetScale = false;
+					AddNumberStepper("Width (X)", nextScale.x, 4, (double)precision, 0.01);
+					AddNumberStepper("Length (Y)", nextScale.y, 4, (double)precision, 0.01);
+					AddNumberStepper("Height (Z)", nextScale.z, 4, (double)precision, 0.01);
+					AddOption("Reset scale", bResetScale);
+					if (bResetScale) nextScale = Vector3(1.0f, 1.0f, 1.0f);
+					break;
+				}
+			}
 
-			if (pitch_plus) nextRot.x += _manualPlacementPrecision;
-			if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
-			if (roll_plus) nextRot.y += _manualPlacementPrecision;
-			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
-			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
-			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
-		
-			if (bResetRot) nextRot = Vector3();
+			AddBreak("---Options---");
+			AddOption("Snapping", null, nullFunc, SUB::SPOONER_MANUALEDITING_SNAP);
+			
 
-			WrapAngle(nextRot.x);
-			WrapAngle(nextRot.y);
-			WrapAngle(nextRot.z);
+			SpoonerMode::editingState.mode = static_cast<SpoonerMode::eEditMode>(AddTexterCycler("Entity manipulation mode", (int)SpoonerMode::editingState.mode, { "None", "Keyboard", "Gizmo" }));
 
+			// don't show if not in editing mode or if in scale mode (because scaling is always local-space)
+			if (SpoonerMode::editingState.mode != SpoonerMode::eEditMode::Disabled && SpoonerMode::editingState.transformMode != SpoonerMode::eTransformMode::Scale)
+				AddToggle("Local Space", SpoonerMode::editingState.localSpace);
+
+			SpoonerMode::UpdateEntityEditingState(nextPos, nextRot);
+
+			// Apply position changes
 			if (nextPos != currPos)
 			{
-				selectedEntity.handle.SetPosition(nextPos);
+				selectedEntity.handle.SetPosition(SpoonerMode::SnapPos(nextPos));
 				currPos = selectedEntity.handle.GetPosition();
 				GTAentity attBase;
 				if (EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, attBase))
-					World::DrawLine(attBase.GetPosition(), currPos, RGBA::AllWhite()); // Just pointing out that it's attached
+					World::DrawLine(attBase.GetPosition(), currPos, RGBA::AllWhite());
 			}
+			// Apply rotation changes
 			if (nextRot != currRot)
 			{
-				selectedEntity.handle.SetRotation(nextRot);
+				WrapAngle(nextRot.x);
+				WrapAngle(nextRot.y);
+				WrapAngle(nextRot.z);
+				selectedEntity.handle.SetRotation(SpoonerMode::SnapRot(nextRot));
 				currRot = selectedEntity.handle.Rotation_get();
 				GTAentity attBase;
 				if (EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, attBase))
-					World::DrawLine(attBase.GetPosition(), currPos, RGBA::AllWhite()); // Just pointing out that it's attached
+					World::DrawLine(attBase.GetPosition(), currPos, RGBA::AllWhite());
+			}
+			// Apply scale changes
+			if (nextScale != scaleState.scale)
+			{
+				if (scaleState.handle != handle)
+					scaleState.handle = handle;
+				scaleState.scale = nextScale;
+				selectedEntity.handle.SetScale(nextScale);
+				if (!IS_ENTITY_A_VEHICLE(handle) && !IS_ENTITY_A_PED(handle))
+				{
+					selectedEntity.handle.SetIsCollisionEnabled(false);
+					selectedEntity.handle.FreezePosition(true);				
+				}
 			}
 		}
-
-		void Sub_SizeManipulation()
-		{
-			if (!selectedEntity.handle.Exists())
-			{
-				Menu::SetPreviousMenu();
-				return;
-			}
-			selectedEntity.handle.RequestControlOnce();
-
-			AddTitle("Size Manipulation");
-
-			Entity handle = selectedEntity.handle.Handle();
-
-			auto& state = IS_ENTITY_A_VEHICLE(handle) ? _vehScale
-			            : IS_ENTITY_A_PED(handle) ? _pedScale
-			            : _objScale;
-
-			if (state.handle != handle)
-			{
-				state.handle = handle;
-				state.scale = selectedEntity.handle.GetScale();
-			}
-
-			bool prec_plus = false, prec_minus = false;
-			bool x_plus = false, x_minus = false;
-			bool y_plus = false, y_minus = false;
-			bool z_plus = false, z_minus = false;
-			bool bResetScale = false;
-
-			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
-			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
-			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
-
-			AddNumber("Scale X (Length)", state.scale.x, 4, null, x_plus, x_minus);
-			AddNumber("Scale Y (Width)",  state.scale.y, 4, null, y_plus, y_minus);
-			AddNumber("Scale Z (Height)", state.scale.z, 4, null, z_plus, z_minus);
-			AddOption("Reset scale", bResetScale);
-
-			if (x_plus)  state.scale.x = max(0.01f, state.scale.x + _manualPlacementPrecision);
-			if (x_minus) state.scale.x = max(0.01f, state.scale.x - _manualPlacementPrecision);
-			if (y_plus)  state.scale.y = max(0.01f, state.scale.y + _manualPlacementPrecision);
-			if (y_minus) state.scale.y = max(0.01f, state.scale.y - _manualPlacementPrecision);
-			if (z_plus)  state.scale.z = max(0.01f, state.scale.z + _manualPlacementPrecision);
-			if (z_minus) state.scale.z = max(0.01f, state.scale.z - _manualPlacementPrecision);
-
-			if (bResetScale) state.scale = Vector3(1.0f, 1.0f, 1.0f);
-
-			bool bScaleChanged = x_plus || x_minus || y_plus || y_minus || z_plus || z_minus || bResetScale;
-			if (bScaleChanged && !IS_ENTITY_A_VEHICLE(handle) && !IS_ENTITY_A_PED(handle))
-			{
-				selectedEntity.handle.SetIsCollisionEnabled(false);
-				selectedEntity.handle.FreezePosition(true);
-				selectedEntity.handle.SetScale(state.scale);
-			}
-
-		}
-
 		void Sub_QuickManualPlacement()
 		{
 			if (SpoonerMode::bIsSomethingHeld)
@@ -2186,7 +1917,7 @@ namespace sub
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
-			HandleEntityEditingLogic(nextPos, nextRot, nullptr);
+			SpoonerMode::UpdateEntityEditingState(nextPos, nextRot);
 
 			if (x_plus) nextPos.x += _manualPlacementPrecision;
 			if (x_minus) nextPos.x -= _manualPlacementPrecision;
@@ -4548,6 +4279,7 @@ REGISTER_SUBMENU(SPOONER_PEDOPS_WEAPON_INCATEGORY,                   	sub::Spoon
 REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS,                               	sub::Spooner::Submenus::Sub_AttachmentOps)
 REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_ATTACHTO,                      	sub::Spooner::Submenus::Sub_AttachmentOps_AttachTo)
 REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_SELECTBONE,                    	sub::Spooner::Submenus::Sub_AttachmentOps_SelectBone)
-REGISTER_SUBMENU(SPOONER_MANUALPLACEMENT,                             	sub::Spooner::Submenus::Sub_ManualPlacement)
-REGISTER_SUBMENU(SPOONER_SIZEMANIPULATION,                            	sub::Spooner::Submenus::Sub_SizeManipulation)
+REGISTER_SUBMENU(SPOONER_MANUALEDITING,                               	sub::Spooner::Submenus::Sub_ManualEditing)
+REGISTER_SUBMENU(SPOONER_MANUALEDITING_SNAP,                          	sub::Spooner::Submenus::Sub_Snapping)
+
 REGISTER_SUBMENU(OBJECTSPAWNER_SEARCH,                                	sub::Spooner::Submenus::ObjectSpawnerSearchMenu)
