@@ -25,8 +25,7 @@ namespace sub
 	namespace Spooner::Submenus
 	{
 		extern std::string& _searchStr;
-		extern std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualPlacementPtrs;
-		extern float _manualPlacementPrecision; // Legacy - used by QuickManualPlacement, GroupSpoon, TaskSequence
+		extern std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualEditingPtrs;
 		extern UINT8 _copyEntTexterValue;
 		struct EntityScaleState {
 			int handle = 0;
@@ -53,7 +52,7 @@ namespace sub
 		void Sub_AttachmentOps_SelectBone();
 		void Sub_ManualEditing();
 		void Sub_Snapping();
-		void Sub_Vector3_ManualPlacement();
+		void Sub_Vector3_ManualEditing();
 		void Sub_GroupSpoon();
 		void Sub_GroupSpoon_SelectEntities();
 		void Sub_GroupSpoon_AttachTo();

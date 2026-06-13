@@ -70,8 +70,7 @@ namespace sub
 	namespace Spooner::Submenus
 	{
 		std::string& _searchStr = dict2;
-		std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualPlacementPtrs = { 0, nullptr, nullptr };
-		float _manualPlacementPrecision = 0.01f; // Legacy - used by QuickManualPlacement, Vector3_ManualPlacement, GroupSpoon, TaskSequence
+		std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualEditingPtrs = { 0, nullptr, nullptr };
 		float _fSaveRangeRadius = 5.0f;
 		UINT8 _copyEntTexterValue = 0;
 		UINT8 _entTypeToShowTexterValue = 0;
@@ -1816,76 +1815,78 @@ namespace sub
 				}
 			}
 		}
-		void Sub_Vector3_ManualPlacement()
+		void Sub_Vector3_ManualEditing()
 		{
-			if (std::get<1>(SpoonerVector3ManualPlacementPtrs) == nullptr && std::get<2>(SpoonerVector3ManualPlacementPtrs) == nullptr)
+			auto& ptrs = SpoonerVector3ManualEditingPtrs;
+			bool hasPos = std::get<1>(ptrs) != nullptr;
+			bool hasRot = std::get<2>(ptrs) != nullptr;
+
+			if (!hasPos && !hasRot)
 			{
 				Menu::SetPreviousMenu();
 				return;
 			}
 
-			Vector3 markerPos = *std::get<1>(SpoonerVector3ManualPlacementPtrs);
-			if (std::get<0>(SpoonerVector3ManualPlacementPtrs).Exists())
+			// Draw debug marker at position
+			if (hasPos)
 			{
-				markerPos = std::get<0>(SpoonerVector3ManualPlacementPtrs).GetOffsetInWorldCoords(markerPos);
+				Vector3 markerPos = *std::get<1>(ptrs);
+				if (std::get<0>(ptrs).Exists())
+				{
+					markerPos = std::get<0>(ptrs).GetOffsetInWorldCoords(markerPos);
+				}
+				World::DrawLightWithRange(markerPos, g_fadedRGB, 2.3f, 1.5f);
+				World::DrawMarker(MarkerType::DebugSphere, markerPos, Vector3(), Vector3(), Vector3(0.1f, 0.1f, 0.1f), g_fadedRGB.ToRGBA(190));
 			}
-			World::DrawLightWithRange(markerPos, g_fadedRGB, 2.3f, 1.5f);
-			World::DrawMarker(MarkerType::DebugSphere, markerPos, Vector3(), Vector3(), Vector3(0.1f, 0.1f, 0.1f), g_fadedRGB.ToRGBA(190));
 
-			AddTitle("Manual Placement");
+			AddTitle("Vector3 Manual Editing");
 
-			bool prec_plus = 0, prec_minus = 0,
-				x_plus = 0, x_minus = 0,
-				y_plus = 0, y_minus = 0,
-				z_plus = 0, z_minus = 0,
-				pitch_plus = 0, pitch_minus = 0,
-				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0,
-				bResetRot = 0;
-
-			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
-			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
-			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
-
-			if (std::get<1>(SpoonerVector3ManualPlacementPtrs) != nullptr)
+			// Clamp editing mode to available ptrs
+			auto& editMode = SpoonerMode::editingState.transformMode;
+			if ((!hasPos && editMode == SpoonerMode::eTransformMode::Position) ||
+				(!hasRot && editMode == SpoonerMode::eTransformMode::Rotation))
 			{
-				Vector3& nextPos = *std::get<1>(SpoonerVector3ManualPlacementPtrs);
-				const Vector3& currPos = nextPos;
-
-				AddNumber("X", currPos.x, 4, null, x_plus, x_minus);
-				AddNumber("Y", currPos.y, 4, null, y_plus, y_minus);
-				AddNumber("Z", currPos.z, 4, null, z_plus, z_minus);
-				if (x_plus) nextPos.x += _manualPlacementPrecision;
-				if (x_minus) nextPos.x -= _manualPlacementPrecision;
-				if (y_plus) nextPos.y += _manualPlacementPrecision;
-				if (y_minus) nextPos.y -= _manualPlacementPrecision;
-				if (z_plus) nextPos.z += _manualPlacementPrecision;
-				if (z_minus) nextPos.z -= _manualPlacementPrecision;
+				editMode = hasPos ? SpoonerMode::eTransformMode::Position : SpoonerMode::eTransformMode::Rotation;
 			}
-			if (std::get<2>(SpoonerVector3ManualPlacementPtrs) != nullptr)
-			{
-				Vector3& nextRot = *std::get<2>(SpoonerVector3ManualPlacementPtrs);
-				const Vector3& currRot = nextRot;
 
-				AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
-				AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
-				AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
+			// Transform mode cycler (Position / Rotation only)
+			{
+				std::vector<std::string> modeNames;
+				if (hasPos) modeNames.push_back("Position");
+				if (hasRot) modeNames.push_back("Rotation");
+				if (modeNames.size() > 1)
+					editMode = static_cast<SpoonerMode::eTransformMode>(AddTexterCycler("Editing", static_cast<int>(editMode), modeNames));
+			}
+
+			AddBreak("---Values---");
+
+			float& precision = editMode == SpoonerMode::eTransformMode::Position
+				? SpoonerMode::editingState.precisionPos
+				: SpoonerMode::editingState.precisionRot;
+
+			AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0);
+
+			if (editMode == SpoonerMode::eTransformMode::Position)
+			{
+				Vector3& pos = *std::get<1>(ptrs);
+				AddNumberStepper("X", pos.x, 4, (double)precision);
+				AddNumberStepper("Y", pos.y, 4, (double)precision);
+				AddNumberStepper("Z", pos.z, 4, (double)precision);
+			}
+			else
+			{
+				Vector3& rot = *std::get<2>(ptrs);
+				bool bResetRot = false;
+				AddNumberStepper("Pitch", rot.x, 4, (double)precision);
+				AddNumberStepper("Roll", rot.y, 4, (double)precision);
+				AddNumberStepper("Yaw", rot.z, 4, (double)precision);
 				AddOption("Reset rotation", bResetRot);
+				if (bResetRot) rot = Vector3();
 
-				if (pitch_plus) nextRot.x += _manualPlacementPrecision;
-				if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
-				if (roll_plus) nextRot.y += _manualPlacementPrecision;
-				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
-				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
-				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
-
-				if (bResetRot) { *std::get<2>(SpoonerVector3ManualPlacementPtrs) = Vector3(); }
-
-				WrapAngle(nextRot.x);
-				WrapAngle(nextRot.y);
-				WrapAngle(nextRot.z);
+				WrapAngle(rot.x);
+				WrapAngle(rot.y);
+				WrapAngle(rot.z);
 			}
-
 		}
 		void Sub_GroupSpoon()
 		{
@@ -1933,7 +1934,7 @@ namespace sub
 					roll_plus = 0, roll_minus = 0,
 					yaw_plus = 0, yaw_minus = 0;
 
-				AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
+				AddNumber("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 4, null, prec_minus, prec_plus);
 				AddNumber("X", refPos.x, 4, null, x_plus, x_minus);
 				AddNumber("Y", refPos.y, 4, null, y_plus, y_minus);
 				AddNumber("Z", refPos.z, 4, null, z_plus, z_minus);
@@ -1941,24 +1942,24 @@ namespace sub
 				AddNumber("Roll", refRot.y, 4, null, roll_plus, roll_minus);
 				AddNumber("Yaw", refRot.z, 4, null, yaw_plus, yaw_minus);
 
-				if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
-				if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
+				if (prec_plus) { if (SpoonerMode::editingState.precisionPos < 10.0f) SpoonerMode::editingState.precisionPos *= 10; }
+				if (prec_minus) { if (SpoonerMode::editingState.precisionPos > 0.0001f) SpoonerMode::editingState.precisionPos /= 10; }
 
 				// HandleEntityEditingLogic(nextPosOffset, nextRotOffset, nullptr); // doesn't really work as expected, just applies the delta to all objects instead of calculating a centroid and making changes based on it. 
 
-				if (x_plus) nextPosOffset.x += _manualPlacementPrecision;
-				if (x_minus) nextPosOffset.x -= _manualPlacementPrecision;
-				if (y_plus) nextPosOffset.y += _manualPlacementPrecision;
-				if (y_minus) nextPosOffset.y -= _manualPlacementPrecision;
-				if (z_plus) nextPosOffset.z += _manualPlacementPrecision;
-				if (z_minus) nextPosOffset.z -= _manualPlacementPrecision;
+				if (x_plus) nextPosOffset.x += SpoonerMode::editingState.precisionPos;
+				if (x_minus) nextPosOffset.x -= SpoonerMode::editingState.precisionPos;
+				if (y_plus) nextPosOffset.y += SpoonerMode::editingState.precisionPos;
+				if (y_minus) nextPosOffset.y -= SpoonerMode::editingState.precisionPos;
+				if (z_plus) nextPosOffset.z += SpoonerMode::editingState.precisionPos;
+				if (z_minus) nextPosOffset.z -= SpoonerMode::editingState.precisionPos;
 
-				if (pitch_plus) nextRotOffset.x += _manualPlacementPrecision;
-				if (pitch_minus) nextRotOffset.x -= _manualPlacementPrecision;
-				if (roll_plus) nextRotOffset.y += _manualPlacementPrecision;
-				if (roll_minus) nextRotOffset.y -= _manualPlacementPrecision;
-				if (yaw_plus) nextRotOffset.z += _manualPlacementPrecision;
-				if (yaw_minus) nextRotOffset.z -= _manualPlacementPrecision;
+				if (pitch_plus) nextRotOffset.x += SpoonerMode::editingState.precisionPos;
+				if (pitch_minus) nextRotOffset.x -= SpoonerMode::editingState.precisionPos;
+				if (roll_plus) nextRotOffset.y += SpoonerMode::editingState.precisionPos;
+				if (roll_minus) nextRotOffset.y -= SpoonerMode::editingState.precisionPos;
+				if (yaw_plus) nextRotOffset.z += SpoonerMode::editingState.precisionPos;
+				if (yaw_minus) nextRotOffset.z -= SpoonerMode::editingState.precisionPos;
 
 				WrapAngle(nextRotOffset.x);
 				WrapAngle(nextRotOffset.y);
@@ -2668,17 +2669,17 @@ namespace sub
 				if (SelectedMarker->m_attachmentArgs.attachedTo.Exists())
 				{
 					bool bAdjustAttachmentForPosPressed = false;
-					AddOption("Adjust Attachment", bAdjustAttachmentForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT); if (bAdjustAttachmentForPosPressed)
+					AddOption("Adjust Attachment", bAdjustAttachmentForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bAdjustAttachmentForPosPressed)
 					{
-						SpoonerVector3ManualPlacementPtrs = std::make_tuple<GTAentity, Vector3*, Vector3*>(0, &SelectedMarker->m_attachmentArgs.offset, &SelectedMarker->m_attachmentArgs.rotation);
+						SpoonerVector3ManualEditingPtrs = std::make_tuple<GTAentity, Vector3*, Vector3*>(0, &SelectedMarker->m_attachmentArgs.offset, &SelectedMarker->m_attachmentArgs.rotation);
 					}
 				}
 				else
 				{
-					bool bManualPlacementForPosPressed = false;
-					AddOption("Manual Placement", bManualPlacementForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT); if (bManualPlacementForPosPressed)
+					bool bManualEditingForPosPressed = false;
+					AddOption("Manual Editing", bManualEditingForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bManualEditingForPosPressed)
 					{
-						SpoonerVector3ManualPlacementPtrs = std::make_tuple<GTAentity, Vector3*, Vector3*>(0, &SelectedMarker->m_position, &SelectedMarker->m_rotation);
+						SpoonerVector3ManualEditingPtrs = std::make_tuple<GTAentity, Vector3*, Vector3*>(0, &SelectedMarker->m_position, &SelectedMarker->m_rotation);
 					}
 				}
 			}
@@ -2741,17 +2742,17 @@ namespace sub
 					if (SelectedMarker->m_destinationVal.m_attachmentArgs.attachedTo.Exists())
 					{
 						bool bAdjustAttachmentForPosPressed = false;
-						AddOption("Adjust Attachment", bAdjustAttachmentForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT); if (bAdjustAttachmentForPosPressed)
+						AddOption("Adjust Attachment", bAdjustAttachmentForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bAdjustAttachmentForPosPressed)
 						{
-							SpoonerVector3ManualPlacementPtrs = std::make_tuple<GTAentity, Vector3*, Vector3*>(0, &SelectedMarker->m_destinationVal.m_attachmentArgs.offset, nullptr);
+							SpoonerVector3ManualEditingPtrs = std::make_tuple<GTAentity, Vector3*, Vector3*>(0, &SelectedMarker->m_destinationVal.m_attachmentArgs.offset, nullptr);
 						}
 					}
 					else
 					{
-						bool bManualPlacementForPosPressed = false;
-						AddOption("Manual Placement", bManualPlacementForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT); if (bManualPlacementForPosPressed)
+						bool bManualEditingForPosPressed = false;
+						AddOption("Manual Editing", bManualEditingForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bManualEditingForPosPressed)
 						{
-							SpoonerVector3ManualPlacementPtrs = std::make_tuple<GTAentity, Vector3*, Vector3*>(0, &SelectedMarker->m_destinationVal.m_position, nullptr);
+							SpoonerVector3ManualEditingPtrs = std::make_tuple<GTAentity, Vector3*, Vector3*>(0, &SelectedMarker->m_destinationVal.m_position, nullptr);
 						}
 					}
 				}
@@ -4140,7 +4141,7 @@ REGISTER_SUBMENU(SPOONER_MANAGEDB_REMOVAL,                            	sub::Spoo
 REGISTER_SUBMENU(SPOONER_SAVEFILES,                                   	sub::Spooner::Submenus::Sub_SaveFiles)
 REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD,                              	sub::Spooner::Submenus::Sub_SaveFiles_Load)
 REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD_LEGACYSP00N,                  	sub::Spooner::Submenus::Sub_SaveFiles_Load_LegacySP00N)
-REGISTER_SUBMENU(SPOONER_VECTOR3_MANUALPLACEMENT,                     	sub::Spooner::Submenus::Sub_Vector3_ManualPlacement)
+REGISTER_SUBMENU(SPOONER_VECTOR3_MANUALEDITING,                     	sub::Spooner::Submenus::Sub_Vector3_ManualEditing)
 REGISTER_SUBMENU(SPOONER_GROUPSPOON,                                  	sub::Spooner::Submenus::Sub_GroupSpoon)
 REGISTER_SUBMENU(SPOONER_GROUPSPOON_SELECTENTITIES,                   	sub::Spooner::Submenus::Sub_GroupSpoon_SelectEntities)
 REGISTER_SUBMENU(SPOONER_GROUPSPOON_ATTACHTO,                         	sub::Spooner::Submenus::Sub_GroupSpoon_AttachTo)
