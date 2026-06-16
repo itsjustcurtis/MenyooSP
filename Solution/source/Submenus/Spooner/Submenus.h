@@ -11,8 +11,10 @@
 
 #include <tuple>
 #include <string>
+#include <vector>
 
 #include "..\..\Util\GTAmath.h"
+#include "SpoonerEntity.h"
 
 typedef unsigned char UINT8, BYTE;
 typedef unsigned int UINT;
@@ -32,7 +34,19 @@ namespace sub
 			Vector3 scale{ 1.0f, 1.0f, 1.0f };
 		};
 		extern EntityScaleState _vehScale, _pedScale, _objScale;
-		
+
+		namespace MultiSelect
+		{
+			extern std::vector<SpoonerEntity> g_selectedEntities;
+			void Add(const SpoonerEntity& entity);
+			void Remove(int index);
+			void Remove(GTAentity handle);
+			bool IsSelected(GTAentity handle);
+			void Clear();
+			void DestroyPivot();
+			void CreatePivot();
+		}
+
 		void HandleKeyboardPlacementInput(Vector3& position, Vector3& rotation);
 
 		void SetEnt241();
@@ -53,9 +67,7 @@ namespace sub
 		void Sub_ManualEditing();
 		void Sub_Snapping();
 		void Sub_Vector3_ManualEditing();
-		void Sub_GroupSpoon();
-		void Sub_GroupSpoon_SelectEntities();
-		void Sub_GroupSpoon_AttachTo();
+		void Sub_MultiSelect();
 
 		void Sub_PedOps();
 		void Sub_PedOps_Weapon();

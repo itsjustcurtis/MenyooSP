@@ -19,6 +19,7 @@
 #include "..\..\Scripting\GTAprop.h"
 #include "..\..\Scripting\GTAvehicle.h"
 #include "..\..\Scripting\GTAped.h"
+#include "..\..\Scripting\Model.h"
 #include "..\..\Util\GTAmath.h"
 #include "..\..\Scripting\ModelNames.h"
 #include "..\..\Scripting\Game.h"
@@ -56,6 +57,7 @@
 #include "..\..\Util\FileLogger.h"
 #include "..\..\Util\ObjectCategories.h"
 
+
 #include <Shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
 #include <string>
@@ -64,7 +66,6 @@
 #include <array>
 #include <pugixml/src/pugixml.hpp>
 #include <dirent\include\dirent.h>
-
 namespace sub
 {
 	namespace Spooner::Submenus
@@ -76,6 +77,102 @@ namespace sub
 		UINT8 _entTypeToShowTexterValue = 0;
 		EntityScaleState _vehScale, _pedScale, _objScale;
 
+		bool g_multiSelectEditActive = false;
+		SpoonerEntity g_multiSelectPrevSelected;
+		GTAentity g_multiSelectPivot;
+		namespace MultiSelect
+		{
+			std::vector<SpoonerEntity> MultiSelect::g_selectedEntities;
+
+			void Add(const SpoonerEntity& entity)
+			{
+				if (!entity.handle.Exists())
+					return;
+				if (IsSelected(entity.handle))
+					return;
+				MultiSelect::g_selectedEntities.push_back(entity);
+			}
+
+			void Remove(int index)
+			{
+				if (index < 0 || index >= static_cast<int>(MultiSelect::g_selectedEntities.size()))
+					return;
+				MultiSelect::g_selectedEntities.erase(MultiSelect::g_selectedEntities.begin() + index);
+			}
+
+			void Remove(GTAentity handle)
+			{
+				for (size_t i = 0; i < MultiSelect::g_selectedEntities.size(); i++)
+				{
+					if (MultiSelect::g_selectedEntities[i].handle == handle)
+					{
+						MultiSelect::g_selectedEntities.erase(MultiSelect::g_selectedEntities.begin() + i);
+						return;
+					}
+				}
+			}
+
+			bool IsSelected(GTAentity handle)
+			{
+				for (auto& e : MultiSelect::g_selectedEntities)
+				{
+					if (e.handle == handle)
+						return true;
+				}
+				return false;
+			}
+
+			void Clear()
+			{
+				MultiSelect::g_selectedEntities.clear();
+			}
+
+			void DestroyPivot()
+			{
+				if (g_multiSelectPivot.Exists())
+				{
+					for (auto& e : MultiSelect::g_selectedEntities)
+						if (e.handle.Exists())
+							e.handle.Detach();
+					g_multiSelectPivot.Delete();
+				}
+			}
+
+			void CreatePivot()
+			{
+				Vector3 centroid;
+				int count = 0;
+				for (auto& e : MultiSelect::g_selectedEntities)
+				{
+					if (e.handle.Exists())
+					{
+						centroid = centroid + e.handle.GetPosition();
+						count++;
+					}
+				}
+				if (count == 0)
+					return;
+
+				centroid /= static_cast<float>(count);
+				GTAprop prop = World::CreateProp(GTAmodel::Model(0x3A49EBD1), centroid, Vector3(), false, false);
+				g_multiSelectPivot = GTAentity(prop.Handle());
+				g_multiSelectPivot.SetAlpha(0);
+				SET_ENTITY_COLLISION(g_multiSelectPivot.Handle(), false, false);
+				g_multiSelectPivot.FreezePosition(true);
+
+				Vector3 pivotPos = g_multiSelectPivot.GetPosition();
+				Vector3 pivotRot = g_multiSelectPivot.Rotation_get();
+				for (auto& e : MultiSelect::g_selectedEntities)
+				{
+					if (e.handle.Exists())
+					{
+						Vector3 relPos = e.handle.GetPosition() - pivotPos;
+						Vector3 relRot = e.handle.Rotation_get() - pivotRot;
+						e.handle.AttachTo(g_multiSelectPivot, -1, false, relPos, relRot);
+					}
+				}
+			}
+		}
 
 		void SetEnt241() { g_Ped1 = selectedEntity.handle.Handle(); }
 		void SetEnt12() { g_Ped4 = selectedEntity.handle.Handle(); }
@@ -95,9 +192,10 @@ namespace sub
 			AddLocal("Spooner Mode", SpoonerMode::bEnabled, SpoonerMode::Toggle, SpoonerMode::Toggle);
 			AddOption("Spawn Entity Into World", null, nullFunc, SUB::SPOONER_SPAWN_CATEGORIES);
 			AddOption("Manage Entity Database", null, nullFunc, SUB::SPOONER_MANAGEDB);
+			AddOption("Manage Multiple Entities", null, nullFunc, SUB::SPOONER_MULTISELECT);
 			AddOption("Manage Markers", null, nullFunc, SUB::SPOONER_MANAGEMARKERS);
+			//todo: Manage Light Sources
 			AddOption("Manage Saved Files", null, nullFunc, SUB::SPOONER_SAVEFILES);
-			AddOption("Edit Multiple Entities Simultaneously", null, nullFunc, SUB::SPOONER_GROUPSPOON);
 			AddOption("Settings", null, nullFunc, SUB::SPOONER_SETTINGS);
 		}
 		void Sub_Settings()
@@ -1888,110 +1986,144 @@ namespace sub
 				WrapAngle(rot.z);
 			}
 		}
-		void Sub_GroupSpoon()
+		void Sub_MultiSelect()
 		{
-			auto& vGroup = selectedSpoonGroup;
-			SpoonerEntity refEnt;
-			bool bEntitiesExist = false;
-			for (auto it = vGroup.begin(); it != vGroup.end();)
+			if (!g_multiSelectEditActive)
 			{
-				if (!it->handle.Exists())
-				{
-					it = vGroup.erase(it);
-				}
-				else
-				{
-					if (!bEntitiesExist)
+				g_multiSelectPrevSelected = selectedEntity;
+				g_multiSelectEditActive = true;
+			}
+
+			// Create pivot at centroid if entities are selected but no pivot exists yet
+			if (!g_multiSelectPivot.Exists() && !MultiSelect::g_selectedEntities.empty())
+				MultiSelect::CreatePivot();
+
+			// Point gizmo at pivot
+			if (g_multiSelectPivot.Exists())
+			{
+				selectedEntity.handle = g_multiSelectPivot;
+				selectedEntity.attachmentArgs.isAttached = false;
+			}
+
+			// Restore state on sub-back
+			if (Menu::OnSubBack == nullptr)
+			{
+				Menu::OnSubBack = []() {
+					if (g_multiSelectEditActive)
 					{
-						bEntitiesExist = true;
-						refEnt = *it;
+						selectedEntity = g_multiSelectPrevSelected;
+						g_multiSelectEditActive = false;
 					}
-					++it;
+					MultiSelect::DestroyPivot();
+				};
+			}
+
+			AddTitle("Multi-Select");
+
+			bool bClearAll = false;
+			AddOption("Clear Selection (" + std::to_string(MultiSelect::g_selectedEntities.size()) + ")", bClearAll); if (bClearAll)
+			{
+				MultiSelect::DestroyPivot();
+				MultiSelect::Clear();
+				if (g_multiSelectEditActive)
+				{
+					selectedEntity = g_multiSelectPrevSelected;
+					g_multiSelectEditActive = false;
+				}
+				*Menu::currentopATM = 1;
+				return;
+			}
+			if (!Databases::EntityDb.empty())
+			{
+				AddBreak("---Entities---");
+
+				for (auto& e : Databases::EntityDb)
+				{
+					if (!e.handle.Exists())
+					{
+						AddOption(e.hashName + " (Invalid)", null);
+						continue;
+					}
+
+					bool bInMultiSelect = MultiSelect::IsSelected(e.handle);
+					bool bEntityPressed = false;
+					AddTickol(e.hashName, bInMultiSelect, bEntityPressed, bEntityPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					if (*Menu::currentopATM == Menu::printingop)
+						EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(127, 0, 255, 200));
+
+					if (bEntityPressed)
+					{
+						MultiSelect::DestroyPivot();
+						if (bInMultiSelect)
+							MultiSelect::Remove(e.handle);
+						else
+							MultiSelect::Add(e);
+					}
 				}
 			}
 
-			AddTitle("Multiple Entities");
 
-			AddOption("Select Entities", null, nullFunc, SUB::SPOONER_GROUPSPOON_SELECTENTITIES);
-
-			if (bEntitiesExist)
+			// Display pivot position and rotation and allow editing of all selected entities
+			if (!MultiSelect::g_selectedEntities.empty() && g_multiSelectPivot.Exists())
 			{
-				//=================================================================================
-
-				AddBreak("---Place---");
-
 				bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
-				Vector3 refPos = refEnt.handle.GetPosition();
-				Vector3 refRot = refEnt.handle.Rotation_get();
-				Vector3 nextPosOffset;
-				Vector3 nextRotOffset;
 
-				bool prec_plus = 0, prec_minus = 0,
-					x_plus = 0, x_minus = 0,
-					y_plus = 0, y_minus = 0,
-					z_plus = 0, z_minus = 0,
-					pitch_plus = 0, pitch_minus = 0,
-					roll_plus = 0, roll_minus = 0,
-					yaw_plus = 0, yaw_minus = 0;
+				Vector3 pivotPos = g_multiSelectPivot.GetPosition();
+				Vector3 pivotRot = g_multiSelectPivot.Rotation_get();
+				Vector3 basePos = pivotPos;
+				Vector3 baseRot = pivotRot;
 
-				AddNumber("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 4, null, prec_minus, prec_plus);
-				AddNumber("X", refPos.x, 4, null, x_plus, x_minus);
-				AddNumber("Y", refPos.y, 4, null, y_plus, y_minus);
-				AddNumber("Z", refPos.z, 4, null, z_plus, z_minus);
-				AddNumber("Pitch", refRot.x, 4, null, pitch_plus, pitch_minus);
-				AddNumber("Roll", refRot.y, 4, null, roll_plus, roll_minus);
-				AddNumber("Yaw", refRot.z, 4, null, yaw_plus, yaw_minus);
+				float& precisionPos = SpoonerMode::editingState.precisionPos;
+				float& precisionRot = SpoonerMode::editingState.precisionRot;
+				float opacityDelta = 0.0f;
 
-				if (prec_plus) { if (SpoonerMode::editingState.precisionPos < 10.0f) SpoonerMode::editingState.precisionPos *= 10; }
-				if (prec_minus) { if (SpoonerMode::editingState.precisionPos > 0.0001f) SpoonerMode::editingState.precisionPos /= 10; }
+				SpoonerMode::UpdateEntityEditingState(pivotPos, pivotRot);
 
-				// HandleEntityEditingLogic(nextPosOffset, nextRotOffset, nullptr); // doesn't really work as expected, just applies the delta to all objects instead of calculating a centroid and making changes based on it. 
+				AddBreak("---Bulk Edit---");
 
-				if (x_plus) nextPosOffset.x += SpoonerMode::editingState.precisionPos;
-				if (x_minus) nextPosOffset.x -= SpoonerMode::editingState.precisionPos;
-				if (y_plus) nextPosOffset.y += SpoonerMode::editingState.precisionPos;
-				if (y_minus) nextPosOffset.y -= SpoonerMode::editingState.precisionPos;
-				if (z_plus) nextPosOffset.z += SpoonerMode::editingState.precisionPos;
-				if (z_minus) nextPosOffset.z -= SpoonerMode::editingState.precisionPos;
+				AddNumberMultiplier("Scroll Sensitivity (Position)", precisionPos, 4, 10.0, 0.0001, 10.0);
+				AddNumberMultiplier("Scroll Sensitivity (Rotation)", precisionRot, 4, 10.0, 0.0001, 10.0);
 
-				if (pitch_plus) nextRotOffset.x += SpoonerMode::editingState.precisionPos;
-				if (pitch_minus) nextRotOffset.x -= SpoonerMode::editingState.precisionPos;
-				if (roll_plus) nextRotOffset.y += SpoonerMode::editingState.precisionPos;
-				if (roll_minus) nextRotOffset.y -= SpoonerMode::editingState.precisionPos;
-				if (yaw_plus) nextRotOffset.z += SpoonerMode::editingState.precisionPos;
-				if (yaw_minus) nextRotOffset.z -= SpoonerMode::editingState.precisionPos;
+				AddNumberStepper("Pos X", pivotPos.x, 4, (double)precisionPos);
+				AddNumberStepper("Pos Y", pivotPos.y, 4, (double)precisionPos);
+				AddNumberStepper("Pos Z", pivotPos.z, 4, (double)precisionPos);
+				AddNumberStepper("Pitch", pivotRot.x, 4, (double)precisionRot);
+				AddNumberStepper("Roll", pivotRot.y, 4, (double)precisionRot);
+				AddNumberStepper("Yaw", pivotRot.z, 4, (double)precisionRot);
+				AddNumberStepper("Opacity (Local)", opacityDelta, 0, 1.0);
 
-				WrapAngle(nextRotOffset.x);
-				WrapAngle(nextRotOffset.y);
-				WrapAngle(nextRotOffset.z);
-
-				if (!nextPosOffset.IsZero())
+				// Apply pivot pos/rot to pivot itself
+				if (pivotPos.x != basePos.x || pivotPos.y != basePos.y || pivotPos.z != basePos.z)
 				{
-					for (auto& e : vGroup)
-					{
-						if (isOnTheLine)
-							e.handle.RequestControl(100);
-						e.handle.SetPosition(e.handle.GetPosition() + nextPosOffset);
-					}
+					if (isOnTheLine) g_multiSelectPivot.RequestControl();
+					g_multiSelectPivot.SetPosition(SpoonerMode::SnapPos(pivotPos));
 				}
-				if (!nextRotOffset.IsZero())
+				if (pivotRot.x != baseRot.x || pivotRot.y != baseRot.y || pivotRot.z != baseRot.z)
 				{
-					for (auto& e : vGroup)
-					{
-						if (isOnTheLine)
-							e.handle.RequestControl(100);
-						e.handle.SetRotation(e.handle.Rotation_get() + nextRotOffset);
-					}
+					WrapAngle(pivotRot.x); WrapAngle(pivotRot.y); WrapAngle(pivotRot.z);
+					if (isOnTheLine) g_multiSelectPivot.RequestControl();
+					g_multiSelectPivot.SetRotation(SpoonerMode::SnapRot(pivotRot));
 				}
 
-				//=================================================================================
+				// Apply opacity delta to all selected entities
+				if (opacityDelta != 0.0f)
+				{
+					for (auto& e : MultiSelect::g_selectedEntities)
+					{
+						if (!e.handle.Exists())
+							continue;
+						if (isOnTheLine) e.handle.RequestControl();
+						int alpha = e.handle.GetAlpha() + static_cast<int>(opacityDelta);
+						e.handle.SetAlpha(alpha);
+					}
+				}
 
 				AddBreak("---Task Sequences---");
 
 				bool bStartTaskSequences = false;
 				AddOption("Start Task Sequences", bStartTaskSequences); if (bStartTaskSequences)
 				{
-					for (auto& e : vGroup)
+					for (auto& e : MultiSelect::g_selectedEntities)
 					{
 						auto eiidb = EntityManagement::GetEntityIndexInDb(e);
 						if (eiidb >= 0)
@@ -2006,7 +2138,7 @@ namespace sub
 				bool bStopTaskSequences = false;
 				AddOption("Stop Task Sequences", bStopTaskSequences); if (bStopTaskSequences)
 				{
-					for (auto& e : vGroup)
+					for (auto& e : MultiSelect::g_selectedEntities)
 					{
 						auto eiidb = EntityManagement::GetEntityIndexInDb(e);
 						if (eiidb >= 0)
@@ -2023,182 +2155,20 @@ namespace sub
 					}
 				}
 
-				AddBreak("---Edit---");
-
-				int opacityLevel = refEnt.handle.GetAlpha();
-				bool bOpacity_plus = false, bOpacity_minus = false;
-				AddNumber("Opacity (Local)", opacityLevel, 0, null, bOpacity_plus, bOpacity_minus);
-				if (bOpacity_plus) { if (opacityLevel < 255) opacityLevel++; else opacityLevel = 0; for (auto& e : vGroup) { if (isOnTheLine) e.handle.RequestControl(); e.handle.SetAlpha(opacityLevel); } }
-				if (bOpacity_minus) { if (opacityLevel > 0) opacityLevel--; else opacityLevel = 255; for (auto& e : vGroup) { if (isOnTheLine) e.handle.RequestControl(); e.handle.SetAlpha(opacityLevel); } }
-
-				AddOption("Attach To Something", null, nullFunc, SUB::SPOONER_GROUPSPOON_ATTACHTO);
-				bool bDetachPressed = false;
-				AddOption("Detach", bDetachPressed); if (bDetachPressed)
-				{
-					for (auto& e : vGroup)
-					{
-						if (isOnTheLine)
-							e.handle.RequestControl(400);
-						EntityManagement::DetachEntity(e);
-					}
-				}
-
 				bool bCopyPressed = false, bCopy_plus = false, bCopy_minus = false;
 				AddTexter("Copy", _copyEntTexterValue, std::vector<std::string>{ "Selected Only", "Copy With Attachments" }, bCopyPressed, bCopy_plus, bCopy_minus);
 				if (bCopy_plus) { if (_copyEntTexterValue < 1U) _copyEntTexterValue++; }
 				if (bCopy_minus) { if (_copyEntTexterValue > 0) _copyEntTexterValue--; }
 				if (bCopyPressed)
 				{
-					for (auto& e : vGroup)
+					for (auto& e : MultiSelect::g_selectedEntities)
 					{
-						const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(e, true, true, _copyEntTexterValue);
-						//EntityManagement::AddEntityToDb(copiedEntity);
-						//e = copiedEntity;
-					}
-				}
-				bool bDeletePressed = false;
-				AddOption("Delete", bDeletePressed); if (bDeletePressed)
-				{
-					for (auto& e : vGroup)
-					{
-						if (isOnTheLine)
-							e.handle.RequestControl(400);
-						EntityManagement::DeleteEntity(e);
-					}
-					vGroup.clear();
-					*Menu::currentopATM = 1;
-				}
-
-			}
-		}
-		void Sub_GroupSpoon_SelectEntities()
-		{
-			auto& vGroup = selectedSpoonGroup;
-
-			AddTitle("Select Entities");
-
-			bool bClearGroupPressed = false;
-			AddTickol("CLEAR SELECTION", true, bClearGroupPressed, bClearGroupPressed, TICKOL::CROSS, TICKOL::CROSS); if (bClearGroupPressed)
-			{
-				vGroup.clear();
-			}
-			bool bSelectAllPressed = false;
-			AddTickol("SELECT ALL", vGroup == Databases::EntityDb, bSelectAllPressed, bSelectAllPressed, TICKOL::TICK2, TICKOL::NONE); if (bSelectAllPressed)
-			{
-				if (vGroup != Databases::EntityDb)
-					vGroup = Databases::EntityDb;
-				else
-					vGroup.clear();
-			}
-
-			for (auto& e : Databases::EntityDb)
-			{
-				auto grpIt = std::find(vGroup.begin(), vGroup.end(), e);
-				bool bEntityIsInGroup = grpIt != vGroup.end();
-				bool bEntityPressed = false;
-				AddTickol(e.hashName + (e.handle.Exists() ? "" : " (Invalid)"), bEntityIsInGroup, bEntityPressed, bEntityPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
-				if (*Menu::currentopATM == Menu::printingop) EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(127, 0, 255, 200));
-				if (bEntityPressed)
-				{
-					if (bEntityIsInGroup)
-					{
-						vGroup.erase(grpIt);
-					}
-					else
-					{
-						vGroup.push_back(e);
+						EntityManagement::CopyEntity(e, true, true, _copyEntTexterValue);
 					}
 				}
 			}
-		}
-		void Sub_GroupSpoon_AttachTo()
-		{
-			auto& vGroup = selectedSpoonGroup;
-			GTAped myPed = PLAYER_PED_ID();
-			GTAvehicle myVehicle = g_myVeh;
-			bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
 
-			AddTitle("Attach To Something");
-
-			bool bToggleKeepPosWhenAttaching = false;
-			AddTickol("Keep World Position When Attaching", Settings::bKeepPositionWhenAttaching, bToggleKeepPosWhenAttaching, bToggleKeepPosWhenAttaching, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleKeepPosWhenAttaching)
-				Settings::bKeepPositionWhenAttaching = !Settings::bKeepPositionWhenAttaching;
-
-			AddBreak("---Available Entities---");
-
-			bool bSelf = false;
-			AddOption("Self", bSelf); if (bSelf)
-			{
-				for (auto& e : vGroup)
-				{
-					if (e.handle.Exists())
-					{
-						if (isOnTheLine)
-							e.handle.RequestControl(400);
-						EntityManagement::AttachEntityInit(e, myPed, Settings::bKeepPositionWhenAttaching);
-					}
-				}
-				Menu::SetPreviousMenu();
-				return;
-			}
-
-			if (myVehicle.Exists())
-			{
-				bool bSelfVeh = false;
-				AddOption(std::string(myPed.IsInVehicle() ? "Current" : "Last Seated") + " Vehicle", bSelfVeh); if (bSelfVeh)
-				{
-					for (auto& e : vGroup)
-					{
-						if (e.handle.Exists())
-						{
-							if (isOnTheLine)
-								e.handle.RequestControl(400);
-							EntityManagement::AttachEntityInit(e, myVehicle, Settings::bKeepPositionWhenAttaching);
-						}
-					}
-					Menu::SetPreviousMenu();
-					return;
-				}
-			}
-
-			if (!Databases::EntityDb.empty())
-			{
-				if (Databases::EntityDb.size() > 1 || std::find(vGroup.begin(), vGroup.end(), Databases::EntityDb.front()) == vGroup.end())
-				{
-					AddBreak("---Database---");
-					for (auto& e : Databases::EntityDb)
-					{
-						if (std::find(vGroup.begin(), vGroup.end(), e) == vGroup.end())
-						{
-							if (e.handle.Exists())
-							{
-								bool bEntityPressed = false;
-								AddOption(e.hashName, bEntityPressed); if (bEntityPressed)
-								{
-									for (auto& eig : vGroup)
-									{
-										if (eig.handle.Exists())
-										{
-											if (isOnTheLine)
-												eig.handle.RequestControl(400);
-											EntityManagement::AttachEntityInit(eig, e.handle, Settings::bKeepPositionWhenAttaching);
-										}
-									}
-									Menu::SetPreviousMenu();
-									return;
-								}
-
-								if (*Menu::currentopATM == Menu::printingop)
-									EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
-							}
-							else
-							{
-								AddOption(e.hashName + " (Invalid)", null);
-							}
-						}
-					}
-				}
-			}
+			// Always show DB entity list with checkboxes
 		}
 
 		void Sub_PedOps()
@@ -4142,9 +4112,7 @@ REGISTER_SUBMENU(SPOONER_SAVEFILES,                                   	sub::Spoo
 REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD,                              	sub::Spooner::Submenus::Sub_SaveFiles_Load)
 REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD_LEGACYSP00N,                  	sub::Spooner::Submenus::Sub_SaveFiles_Load_LegacySP00N)
 REGISTER_SUBMENU(SPOONER_VECTOR3_MANUALEDITING,                     	sub::Spooner::Submenus::Sub_Vector3_ManualEditing)
-REGISTER_SUBMENU(SPOONER_GROUPSPOON,                                  	sub::Spooner::Submenus::Sub_GroupSpoon)
-REGISTER_SUBMENU(SPOONER_GROUPSPOON_SELECTENTITIES,                   	sub::Spooner::Submenus::Sub_GroupSpoon_SelectEntities)
-REGISTER_SUBMENU(SPOONER_GROUPSPOON_ATTACHTO,                         	sub::Spooner::Submenus::Sub_GroupSpoon_AttachTo)
+REGISTER_SUBMENU(SPOONER_MULTISELECT,                                  	sub::Spooner::Submenus::Sub_MultiSelect)
 REGISTER_SUBMENU(SPOONER_SETTINGS,                                    	sub::Spooner::Submenus::Sub_Settings)
 REGISTER_SUBMENU(SPOONER_SELECTEDENTITYOPS,                           	sub::Spooner::Submenus::Sub_SelectedEntityOps)
 REGISTER_SUBMENU(SPOONER_PEDOPS,                                      	sub::Spooner::Submenus::Sub_PedOps)
