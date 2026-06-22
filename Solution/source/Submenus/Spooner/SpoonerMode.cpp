@@ -38,6 +38,7 @@
 #include "Databases.h"
 #include "SpoonerMarker.h"
 #include "MarkerManagement.h"
+#include "SpoonerLight.h"
 #include "Submenus.h"
 #include "..\\..\\Memory\\GTAmemory.h"
 
@@ -966,6 +967,9 @@ namespace sub::Spooner
 
 			if (!Databases::MarkerDb.empty())
 				MarkerManagement::DrawAll();
+
+			if (!Databases::LightDb.empty())
+				LightManagement::DrawAll();
 
 			auto applyScaleTick = [](const Submenus::EntityScaleState& s)
 			{

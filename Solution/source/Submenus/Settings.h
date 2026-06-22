@@ -41,6 +41,8 @@ namespace sub
 	void SettingsColours();
 	void SettingsColours2();
 
+	bool HexToRGBA(const std::string& hex, RGBA& colour);
+
 	void AddsettingsfonOption(const std::string& text, int font_index, INT8& feature);
 	void SettingsFonts();
 	void SettingsFonts2();

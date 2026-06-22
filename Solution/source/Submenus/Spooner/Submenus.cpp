@@ -46,6 +46,7 @@
 #include "FavouritesManagement.h"
 #include "MenuOptions.h"
 #include "SpoonerMarker.h"
+#include "SpoonerLight.h"
 #include "..\..\Submenus\PedComponentChanger.h"
 #include "..\..\Submenus\Settings.h"
 #include "..\..\Submenus\PedModelChanger.h"
@@ -194,7 +195,7 @@ namespace sub
 			AddOption("Manage Entity Database", null, nullFunc, SUB::SPOONER_MANAGEDB);
 			AddOption("Manage Multiple Entities", null, nullFunc, SUB::SPOONER_MULTISELECT);
 			AddOption("Manage Markers", null, nullFunc, SUB::SPOONER_MANAGEMARKERS);
-			//todo: Manage Light Sources
+			AddOption("Manage Light Sources", null, nullFunc, SUB::SPOONER_MANAGELIGHTS);
 			AddOption("Manage Saved Files", null, nullFunc, SUB::SPOONER_SAVEFILES);
 			AddOption("Settings", null, nullFunc, SUB::SPOONER_SETTINGS);
 		}
@@ -302,7 +303,7 @@ namespace sub
 			AddTitle("Manage Saved Files");
 
 			bool bSaveDb = false;
-			AddOption("Save Database To File (" + std::to_string(Databases::EntityDb.size()) + ")", bSaveDb); if (bSaveDb)
+			AddOption("Save Database To File (" + std::to_string(Databases::EntityDb.size() + Databases::MarkerDb.size() + Databases::LightDb.size()) + ")", bSaveDb); if (bSaveDb)
 			{
 				std::string inputStr = Game::InputBox("", 28U, "Enter file name:");
 				if (inputStr.length() > 0)
@@ -1125,6 +1126,7 @@ namespace sub
 
 			AddBreak("---Database---");
 			AddOption("Delete All Markers (" + std::to_string(Databases::MarkerDb.size()) + ")", null, MarkerManagement::RemoveAllMarkers);
+			AddOption("Delete All Lights (" + std::to_string(Databases::LightDb.size()) + ")", null, LightManagement::RemoveAll);
 			AddOption("Delete All Entities In Database (" + std::to_string(Databases::EntityDb.size()) + ")", null, EntityManagement::DeleteAllEntitiesInDb);
 			AddOption("Delete All Objects In Database", null, EntityManagement::DeleteAllPropsInDb);
 			AddOption("Delete All Peds In Database", null, EntityManagement::DeleteAllPedsInDb);
@@ -2869,6 +2871,426 @@ namespace sub
 
 		}
 
+		void Sub_ManageLights()
+		{
+			int lightIndexInDbToDelete = -1;
+
+			LightManagement::DrawPreviewMarkers();
+
+			AddTitle("Light Sources");
+
+			AddOption("Removal", null, nullFunc, SUB::SPOONER_MANAGELIGHTS_REMOVAL);
+			AddOption("Manage Presets", null, nullFunc, SUB::SPOONER_MANAGELIGHTS_PRESETS);
+
+			AddBreak("---Database---");
+			for (UINT i = 0; i < Databases::LightDb.size(); i++)
+			{
+				auto& l = Databases::LightDb[i];
+				bool bLightPressed = false;
+
+				AddOption(l.m_name, bLightPressed); if (bLightPressed)
+				{
+					SelectedLight = &l;
+					Menu::SetSub_delayed = SUB::SPOONER_MANAGELIGHTS_INLIGHT;
+				}
+
+				if (*Menu::currentopATM == Menu::printingop)
+				{
+					l.m_selectedInSub = true;
+
+					bool bShortcutDeletePressed;
+					if (Menu::bitController)
+					{
+						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Light");
+						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
+					}
+					else
+					{
+						Menu::add_IB(VirtualKey::B, "Delete Light");
+						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
+					}
+
+					if (bShortcutDeletePressed)
+					{
+						lightIndexInDbToDelete = i;
+					}
+				}
+			}
+
+			bool bAddNewLightPressed = false;
+			AddTickol("ADD NEW LIGHT", true, bAddNewLightPressed, bAddNewLightPressed, TICKOL::SMALLNEWSTAR); if (bAddNewLightPressed)
+			{
+				auto& spoonerCam = SpoonerMode::spoonerModeCamera;
+				if (!spoonerCam.IsActive())
+				{
+					GTAentity myPed = PLAYER_PED_ID();
+					Vector3 pos = myPed.GetPosition() + myPed.ForwardVector() * 3.0f;
+					pos.z += 1.0f;
+					Vector3 dir = myPed.ForwardVector();
+					SelectedLight = LightManagement::Add(SpoonerLight(pos, dir));
+				}
+				else
+				{
+					Vector3 pos = spoonerCam.GetPosition();
+					Vector3 target = spoonerCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+					Vector3 dir = Vector3::Normalize(target - pos);
+					SelectedLight = LightManagement::Add(SpoonerLight(pos, dir));
+				}
+				Menu::SetSub_delayed = SUB::SPOONER_MANAGELIGHTS_INLIGHT;
+			}
+
+			if (!LightManagement::PresetDb.empty())
+			{
+				AddBreak("---Presets---");
+				for (auto& p : LightManagement::PresetDb)
+				{
+					bool bPresetPressed = false;
+					std::string presetLabel = (p.m_lightType == SpoonerLight::LightType::Omni ? "[Omni] " : "[Spot] ") + p.m_name;
+					AddOption(presetLabel, bPresetPressed); if (bPresetPressed)
+					{
+						SpoonerLight copy = p;
+						auto& spoonerCam = SpoonerMode::spoonerModeCamera;
+						if (spoonerCam.IsActive())
+						{
+							copy.m_position = spoonerCam.GetPosition();
+							Vector3 target = spoonerCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+							copy.m_direction = Vector3::Normalize(target - copy.m_position);
+						}
+						else
+						{
+							GTAped myPed = PLAYER_PED_ID();
+							copy.m_position = myPed.GetPosition() + myPed.ForwardVector() * 3.0f;
+							copy.m_direction = myPed.ForwardVector();
+						}
+						SelectedLight = LightManagement::Add(copy);
+						Menu::SetSub_delayed = SUB::SPOONER_MANAGELIGHTS_INLIGHT;
+					}
+				}
+			}
+
+			if (lightIndexInDbToDelete != -1)
+			{
+				LightManagement::Remove(lightIndexInDbToDelete);
+			}
+
+			if (*Menu::currentopATM > Menu::printingop)
+				Menu::Up();
+		}
+
+		void Sub_ManageLights_Removal()
+		{
+			LightManagement::DrawPreviewMarkers();
+
+			auto& fLightRemovalRadius = _fSaveRangeRadius;
+			GTAentity myPed = PLAYER_PED_ID();
+			const Vector3& myPos = myPed.GetPosition();
+
+			AddTitle("Removal");
+
+			bool bInRange_plus = false, bInRange_minus = false, bInRange_execute = false;
+			AddNumber("Delete Lights In Range", fLightRemovalRadius, 0, bInRange_execute, bInRange_plus, bInRange_minus);
+			if (*Menu::currentopATM == Menu::printingop)
+				EntityManagement::DrawRadiusDisplayingMarker(myPos, fLightRemovalRadius);
+			if (bInRange_plus) { if (fLightRemovalRadius < FLT_MAX) fLightRemovalRadius += 1.0f; }
+			if (bInRange_minus) { if (fLightRemovalRadius > 0.0f) fLightRemovalRadius -= 1.0f; }
+			if (bInRange_execute)
+			{
+				for (int i = static_cast<int>(Databases::LightDb.size()) - 1; i >= 0; i--)
+				{
+					if (myPos.DistanceTo(Databases::LightDb[i].m_position) <= fLightRemovalRadius)
+						LightManagement::Remove(i);
+				}
+			}
+
+			AddOption("Delete All Lights (" + std::to_string(Databases::LightDb.size()) + ")", null, LightManagement::RemoveAll);
+		}
+
+		void Sub_ManageLights_InLight()
+		{
+			if (SelectedLight == nullptr)
+			{
+				Menu::SetPreviousMenu();
+				return;
+			}
+
+			LightManagement::DrawPreviewMarkers();
+
+			auto& spoonerCam = SpoonerMode::spoonerModeCamera;
+
+			AddTitle(SelectedLight->m_name);
+
+			bool bEditNamePressed = false;
+			AddTexter("Name", 0, std::vector<std::string>{SelectedLight->m_name}, bEditNamePressed); if (bEditNamePressed)
+			{
+				SelectedLight->m_name = Game::InputBox(SelectedLight->m_name, 26U, "Enter light name:", SelectedLight->m_name);
+			}
+
+			SelectedLight->m_lightType = static_cast<SpoonerLight::LightType>(AddTexterCycler("Type", static_cast<int>(SelectedLight->m_lightType), {"Omnidirectional Light", "Spot Light"}));
+
+			bool bActiveToggle = false;
+			AddTickol("Active", SelectedLight->m_active, bActiveToggle, bActiveToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bActiveToggle) SelectedLight->m_active = !SelectedLight->m_active;
+
+			AddBreak("---Colour---");
+			{
+				bool bColourPressed = false;
+				AddOption("Colour", bColourPressed, nullFunc, SUB::SPOONER_MANAGELIGHTS_COLOUR);
+			}
+
+			if (SelectedLight->m_lightType == SpoonerLight::LightType::Omni)
+			{
+				AddBreak("---Omni Properties---");
+
+				AddNumberStepper("Range", SelectedLight->m_range, 1, 0.5, 0.0, 1000.0);
+				AddNumberStepper("Intensity", SelectedLight->m_intensity, 2, 0.1, 0.0, 100.0);
+			}
+			else
+			{
+				AddBreak("---Spot Properties---");
+
+				AddNumberStepper("Distance", SelectedLight->m_spotDistance, 1, 0.5, 0.0, 1000.0);
+				AddNumberStepper("Brightness", SelectedLight->m_spotBrightness, 2, 0.1, 0.0, 100.0);
+				AddNumberStepper("Roundness", SelectedLight->m_spotRoundness, 2, 0.1, 0.0, 10.0);
+				AddNumberStepper("Radius", SelectedLight->m_spotRadius, 2, 0.1, 0.0, 100.0);
+				AddNumberStepper("Falloff", SelectedLight->m_spotFalloff, 2, 0.1, 0.0, 100.0);
+
+				bool bShadowToggle = false;
+				AddTickol("Light Draws Shadows", SelectedLight->m_useShadow, bShadowToggle, bShadowToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bShadowToggle) SelectedLight->m_useShadow = !SelectedLight->m_useShadow;
+			}
+
+			AddBreak("---Position---");
+			{
+				AddOption("~italic~" + SelectedLight->m_position.ToString(), null);
+
+				if (!spoonerCam.IsActive())
+				{
+					bool bSetPosToMe = false;
+					AddOption("Set To Player Position", bSetPosToMe); if (bSetPosToMe)
+					{
+						SelectedLight->m_position = GTAentity(PLAYER_PED_ID()).GetPosition();
+					}
+				}
+				else
+				{
+					bool bSetPosToHitCoords = false;
+					AddOption("Set To Camera Target", bSetPosToHitCoords); if (bSetPosToHitCoords)
+					{
+						Vector3 hitCoords = spoonerCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
+						SelectedLight->m_position = hitCoords;
+					}
+				}
+				{
+				bool bSetPosToCam = false;
+				AddOption("Set To Camera Position", bSetPosToCam); if (bSetPosToCam)
+				{
+					SelectedLight->m_position = spoonerCam.IsActive() ? spoonerCam.GetPosition() : World::GetRenderingCamera().GetPosition();
+				}
+			}
+
+			if (IS_WAYPOINT_ACTIVE())
+				{
+					bool bSetPosToWp = false;
+					AddOption("Set To Waypoint", bSetPosToWp); if (bSetPosToWp)
+					{
+						GTAblip wpBlip = GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint);
+						Vector3 wpCoords = wpBlip.GetPosition();
+						wpCoords.z = World::GetGroundHeight(wpCoords);
+						SelectedLight->m_position = wpCoords;
+					}
+				}
+
+				bool bManualEditingForPosPressed = false;
+				AddOption("Manual Editing", bManualEditingForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bManualEditingForPosPressed)
+				{
+					SpoonerVector3ManualEditingPtrs = std::make_tuple<GTAentity, Vector3*, Vector3*>(0, &SelectedLight->m_position, nullptr);
+				}
+			}
+
+			if (SelectedLight->m_lightType == SpoonerLight::LightType::Spot)
+			{
+				AddBreak("---Direction---");
+				{
+					AddOption("~italic~" + SelectedLight->m_direction.ToString(), null);
+
+					if (spoonerCam.IsActive())
+					{
+						bool bPointAtCursor = false;
+						AddOption("Point At Cursor", bPointAtCursor); if (bPointAtCursor)
+						{
+							Vector3 target = spoonerCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
+							Vector3 dir = Vector3::Normalize(target - SelectedLight->m_position);
+							SelectedLight->m_direction = dir;
+						}
+					}
+
+					bool bManualEditingForDirPressed = false;
+					AddOption("Manual Editing", bManualEditingForDirPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bManualEditingForDirPressed)
+					{
+						SpoonerVector3ManualEditingPtrs = std::make_tuple<GTAentity, Vector3*, Vector3*>(0, &SelectedLight->m_direction, nullptr);
+					}
+				}
+			}
+
+			AddBreak("---Other---");
+
+			bool bCopyLightPressed = false;
+			AddOption("Copy Light", bCopyLightPressed); if (bCopyLightPressed)
+			{
+				SelectedLight = LightManagement::Copy(*SelectedLight);
+				Menu::currentop_ar[Menu::currentArrayIndex]++;
+			}
+
+			bool bSavePresetPressed = false;
+			AddOption("Save As Preset", bSavePresetPressed); if (bSavePresetPressed)
+			{
+				std::string presetName = Game::InputBox(SelectedLight->m_name, 26U, "Enter preset name:", SelectedLight->m_name);
+				if (presetName.length() > 0)
+				{
+					SpoonerLight copy = *SelectedLight;
+					copy.m_name = presetName;
+					LightManagement::SavePresetToFile(copy);
+				}
+			}
+		}
+
+		void Sub_ManageLights_Presets()
+		{
+			AddTitle("Presets");
+
+			if (SelectedLight != nullptr)
+			{
+				bool bSaveCurrentPressed = false;
+				AddOption("Save Current Light As Preset", bSaveCurrentPressed); if (bSaveCurrentPressed)
+				{
+					std::string presetName = Game::InputBox(SelectedLight->m_name, 26U, "Enter preset name:", SelectedLight->m_name);
+					if (presetName.length() > 0)
+					{
+						SpoonerLight copy = *SelectedLight;
+						copy.m_name = presetName;
+						LightManagement::SavePresetToFile(copy);
+						LightManagement::LoadPresetsFromFile(GetPathffA(Pathff::RootDir, true) + "FavouriteLights.xml");
+					}
+				}
+			}
+
+			// Load presets from file
+			LightManagement::LoadPresetsFromFile(GetPathffA(Pathff::RootDir, true) + "FavouriteLights.xml");
+
+			if (!LightManagement::PresetDb.empty())
+			{
+				AddBreak("---Saved Presets---");
+				for (size_t i = 0; i < LightManagement::PresetDb.size(); i++)
+				{
+					auto& p = LightManagement::PresetDb[i];
+					bool bPresetPressed = false;
+					std::string presetLabel = (p.m_lightType == SpoonerLight::LightType::Omni ? "[Omni] " : "[Spot] ") + p.m_name;
+					AddOption(presetLabel, bPresetPressed); if (bPresetPressed)
+					{
+						SpoonerLight copy = p;
+						auto& spoonerCam = SpoonerMode::spoonerModeCamera;
+						if (spoonerCam.IsActive())
+						{
+							copy.m_position = spoonerCam.GetPosition();
+							Vector3 target = spoonerCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+							copy.m_direction = Vector3::Normalize(target - copy.m_position);
+						}
+						else
+						{
+							GTAped myPed = PLAYER_PED_ID();
+							copy.m_position = myPed.GetPosition() + myPed.ForwardVector() * 3.0f;
+							copy.m_direction = myPed.ForwardVector();
+						}
+						LightManagement::Add(copy);
+						Game::Print::PrintBottomCentre("Light added from preset");
+					}
+
+					if (*Menu::currentopATM == Menu::printingop)
+					{
+						bool bDeletePressed;
+						if (Menu::bitController)
+						{
+							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Preset");
+							bDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
+						}
+						else
+						{
+							Menu::add_IB(VirtualKey::B, "Delete Preset");
+							bDeletePressed = IsKeyJustUp(VirtualKey::B);
+						}
+						if (bDeletePressed)
+						{
+							LightManagement::PresetDb.erase(LightManagement::PresetDb.begin() + i);
+							LightManagement::SaveAllPresetsToFile();
+							Menu::currentop_ar[Menu::currentArrayIndex]--;
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				AddOption("No presets found", null);
+			}
+		}
+
+		void Sub_ManageLights_Colour()
+		{
+			LightManagement::DrawPreviewMarkers();
+
+			bool settingsRInput = false, settingsRPlus = false, settingsRMinus = false;
+
+			RGBA* colour = &SelectedLight->m_colour;
+			INT* colourChannel = nullptr;
+
+			AddTitle("Light Colour");
+			AddNumber("Red", colour->R, 0, settingsRInput, settingsRPlus, settingsRMinus);
+
+			switch (*Menu::currentopATM)
+			{
+			case 1:
+			case 2:
+			case 3:
+				AddPresetColourOptionsPreviews(colour->R, colour->G, colour->B);
+				break;
+			}
+
+			AddNumber("Green", colour->G, 0, settingsRInput, settingsRPlus, settingsRMinus);
+			AddNumber("Blue", colour->B, 0, settingsRInput, settingsRPlus, settingsRMinus);
+
+			{
+				bool bHexInputPressed = false;
+				AddOption("Input Hex Colour", bHexInputPressed); if (bHexInputPressed)
+				{
+					std::string input = Game::InputBox("", 10U, "Enter hex colour (RRGGBB or RRGGBBAA):", "#");
+					if (!HexToRGBA(input, *colour))
+						Game::Print::PrintBottomCentre("~r~Invalid hex colour.");
+				}
+			}
+
+			AddBreak("---Presets---");
+			AddPresetColourOptions(colour->R, colour->G, colour->B);
+
+			switch (*Menu::currentopATM)
+			{
+			case 1: colourChannel = &colour->R; break;
+			case 2: colourChannel = &colour->G; break;
+			case 3: colourChannel = &colour->B; break;
+			}
+
+			if (settingsRInput)
+			{
+				int tempHash = *colourChannel;
+				try { tempHash = abs(std::stoi(Game::InputBox(std::to_string(*colourChannel), 4U, "", std::to_string(*colourChannel)))); }
+				catch (...) { Game::Print::PrintErrorInvalidInput(std::to_string(tempHash)); }
+				if (!(tempHash >= 0 && tempHash <= 255))
+					Game::Print::PrintErrorInvalidInput(std::to_string(tempHash));
+				else
+					*colourChannel = tempHash;
+				return;
+			}
+			if (settingsRPlus) { if (*colourChannel < 255) (*colourChannel)++; else *colourChannel = 0; return; }
+			if (settingsRMinus) { if (*colourChannel > 0) (*colourChannel)--; else *colourChannel = 255; return; }
+		}
+
 		void Sub_SpawnCategories()
 		{
 			_searchStr.clear();
@@ -4106,6 +4528,11 @@ REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_REMOVAL,                       	sub::Spoo
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER,                      	sub::Spooner::Submenus::Sub_ManageMarkers_InMarker)
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER_DEST2MARKER,          	sub::Spooner::Submenus::Sub_ManageMarkers_InMarker_Dest2Marker)
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER_ATTACH,               	sub::Spooner::Submenus::Sub_ManageMarkers_InMarker_Attach)
+REGISTER_SUBMENU(SPOONER_MANAGELIGHTS,                                 	sub::Spooner::Submenus::Sub_ManageLights)
+REGISTER_SUBMENU(SPOONER_MANAGELIGHTS_REMOVAL,                         	sub::Spooner::Submenus::Sub_ManageLights_Removal)
+REGISTER_SUBMENU(SPOONER_MANAGELIGHTS_INLIGHT,                         	sub::Spooner::Submenus::Sub_ManageLights_InLight)
+REGISTER_SUBMENU(SPOONER_MANAGELIGHTS_PRESETS,                         	sub::Spooner::Submenus::Sub_ManageLights_Presets)
+REGISTER_SUBMENU(SPOONER_MANAGELIGHTS_COLOUR,                          	sub::Spooner::Submenus::Sub_ManageLights_Colour)
 REGISTER_SUBMENU(SPOONER_MANAGEDB,                                    	sub::Spooner::Submenus::Sub_ManageEntities)
 REGISTER_SUBMENU(SPOONER_MANAGEDB_REMOVAL,                            	sub::Spooner::Submenus::Sub_ManageEntities_Removal)
 REGISTER_SUBMENU(SPOONER_SAVEFILES,                                   	sub::Spooner::Submenus::Sub_SaveFiles)

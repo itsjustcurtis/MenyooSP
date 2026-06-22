@@ -34,6 +34,7 @@
 
 #include "SpoonerEntity.h"
 #include "SpoonerMarker.h"
+#include "SpoonerLight.h"
 #include "RelationshipManagement.h"
 #include "EntityManagement.h"
 #include "SpoonerMode.h"
@@ -1188,6 +1189,86 @@ namespace sub::Spooner
 			return mi;
 		}
 
+		void AddLightToXmlNode(SpoonerLight& l, pugi::xml_node& nodeLight)
+		{
+			nodeLight.append_child("Name").text() = l.m_name.c_str();
+			nodeLight.append_child("Type").text() = static_cast<UINT>(l.m_lightType);
+			nodeLight.append_child("Active").text() = l.m_active;
+
+			auto nodeColour = nodeLight.append_child("Colour");
+			nodeColour.append_attribute("R") = l.m_colour.R;
+			nodeColour.append_attribute("G") = l.m_colour.G;
+			nodeColour.append_attribute("B") = l.m_colour.B;
+			nodeColour.append_attribute("A") = l.m_colour.A;
+
+			auto nodePos = nodeLight.append_child("Position");
+			nodePos.append_attribute("X") = l.m_position.x;
+			nodePos.append_attribute("Y") = l.m_position.y;
+			nodePos.append_attribute("Z") = l.m_position.z;
+
+			nodeLight.append_child("Range").text() = l.m_range;
+			nodeLight.append_child("Intensity").text() = l.m_intensity;
+
+			auto nodeDir = nodeLight.append_child("Direction");
+			nodeDir.append_attribute("X") = l.m_direction.x;
+			nodeDir.append_attribute("Y") = l.m_direction.y;
+			nodeDir.append_attribute("Z") = l.m_direction.z;
+
+			nodeLight.append_child("SpotDistance").text() = l.m_spotDistance;
+			nodeLight.append_child("SpotBrightness").text() = l.m_spotBrightness;
+			nodeLight.append_child("SpotRoundness").text() = l.m_spotRoundness;
+			nodeLight.append_child("SpotRadius").text() = l.m_spotRadius;
+			nodeLight.append_child("SpotFalloff").text() = l.m_spotFalloff;
+			nodeLight.append_child("UseShadow").text() = l.m_useShadow;
+			nodeLight.append_child("ShadowId").text() = l.m_shadowId;
+		}
+
+		void SpawnLightFromXmlNode(pugi::xml_node& nodeLight)
+		{
+			SpoonerLight light;
+			light.m_name = nodeLight.child("Name").text().as_string();
+			light.m_lightType = static_cast<SpoonerLight::LightType>(nodeLight.child("Type").text().as_uint());
+			light.m_active = nodeLight.child("Active").text().as_bool(true);
+
+			auto nodeColour = nodeLight.child("Colour");
+			if (nodeColour)
+			{
+				light.m_colour.R = nodeColour.attribute("R").as_int(255);
+				light.m_colour.G = nodeColour.attribute("G").as_int(255);
+				light.m_colour.B = nodeColour.attribute("B").as_int(255);
+				light.m_colour.A = nodeColour.attribute("A").as_int(255);
+			}
+
+			auto nodePos = nodeLight.child("Position");
+			if (nodePos)
+			{
+				light.m_position.x = nodePos.attribute("X").as_float();
+				light.m_position.y = nodePos.attribute("Y").as_float();
+				light.m_position.z = nodePos.attribute("Z").as_float();
+			}
+
+			light.m_range = nodeLight.child("Range").text().as_float(10.0f);
+			light.m_intensity = nodeLight.child("Intensity").text().as_float(1.0f);
+
+			auto nodeDir = nodeLight.child("Direction");
+			if (nodeDir)
+			{
+				light.m_direction.x = nodeDir.attribute("X").as_float(0);
+				light.m_direction.y = nodeDir.attribute("Y").as_float(0);
+				light.m_direction.z = nodeDir.attribute("Z").as_float(-1);
+			}
+
+			light.m_spotDistance = nodeLight.child("SpotDistance").text().as_float(20.0f);
+			light.m_spotBrightness = nodeLight.child("SpotBrightness").text().as_float(1.0f);
+			light.m_spotRoundness = nodeLight.child("SpotRoundness").text().as_float(0.0f);
+			light.m_spotRadius = nodeLight.child("SpotRadius").text().as_float(1.0f);
+			light.m_spotFalloff = nodeLight.child("SpotFalloff").text().as_float(0.0f);
+			light.m_useShadow = nodeLight.child("UseShadow").text().as_bool(false);
+			light.m_shadowId = nodeLight.child("ShadowId").text().as_int(0);
+
+			Databases::LightDb.push_back(light);
+		}
+
 		bool SaveDbToFile(const std::string& filePath, bool bForceReferenceCoords)
 		{
 			addlog(ige::LogType::LOG_INFO,  "Saving Spooner database to xml file " + filePath);
@@ -1439,6 +1520,12 @@ namespace sub::Spooner
 			{
 				auto nodeMarker = nodeRoot.append_child("Marker");
 				AddMarkerToXmlNode(m, nodeMarker);
+			}
+
+			for (auto& l : Databases::LightDb)
+			{
+				auto nodeLight = nodeRoot.append_child("Light");
+				AddLightToXmlNode(l, nodeLight);
 			}
 
 			//====================================================================================================================
@@ -1708,6 +1795,12 @@ namespace sub::Spooner
 				AddMarkerToXmlNode(m, nodeMarker);
 			}
 
+			for (auto& l : Databases::LightDb)
+			{
+				auto nodeLight = nodeRoot.append_child("Light");
+				AddLightToXmlNode(l, nodeLight);
+			}
+
 			//=================================================================
 
 			return doc.save_file((const char*)filePath.c_str());
@@ -1962,6 +2055,11 @@ namespace sub::Spooner
 				}
 			}
 			markerDbToNewDbOffset = Databases::MarkerDb.size() - newMarkerDb.size();
+
+			for (auto nodeLight = nodeRoot.child("Light"); nodeLight; nodeLight = nodeLight.next_sibling("Light"))
+			{
+				SpawnLightFromXmlNode(nodeLight);
+			}
 
 			WAIT(1000);
 

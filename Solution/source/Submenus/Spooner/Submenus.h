@@ -79,6 +79,12 @@ namespace sub
 		void Sub_ManageMarkers_InMarker_Dest2Marker();
 		void Sub_ManageMarkers_InMarker_Attach();
 
+		void Sub_ManageLights();
+		void Sub_ManageLights_Removal();
+		void Sub_ManageLights_InLight();
+		void Sub_ManageLights_Presets();
+		void Sub_ManageLights_Colour();
+
 		void Sub_SpawnCategories();
 		void Sub_SpawnProp();
 		void Sub_SpawnProp_Favourites();
