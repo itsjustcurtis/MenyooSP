@@ -15,7 +15,10 @@
 #include "..\..\Util\GTAmath.h"
 
 #include "Databases.h"
+#include "SpoonerEntity.h"
+#include "STSTasks.h"
 #include "..\..\Scripting\World.h"
+#include "..\..\Scripting\Game.h"
 #include "..\..\Scripting\enums.h"
 
 #include <pugixml/src/pugixml.hpp>
@@ -93,6 +96,37 @@ namespace sub::Spooner
 			}
 		}
 
+		void RemoveOrphanedLightTasks(UINT lightId, const std::string& lightName)
+		{
+			for (auto& entity : Databases::EntityDb)
+			{
+				auto& tasks = entity.taskSequence.AllTasks();
+				for (int i = static_cast<int>(tasks.size()) - 1; i >= 0; i--)
+				{
+					STSTask* task = tasks[i];
+					UINT taskLightId = 0;
+					std::string taskName;
+
+					if (task->type == STSTaskType::LightMoveWithEntity)
+					{
+						taskLightId = task->GetTypeTask<STSTasks::LightMoveWithEntity>()->lightId;
+						taskName = "Light Move With Entity";
+					}
+					else if (task->type == STSTaskType::LightPointAtEntity)
+					{
+						taskLightId = task->GetTypeTask<STSTasks::LightPointAtEntity>()->lightId;
+						taskName = "Light Point At Entity";
+					}
+
+					if (taskLightId == lightId)
+					{
+						Game::Print::PrintBottomLeft("Light '~y~" + lightName + "~s~' deleted — removed '~b~" + taskName + "~s~' task");
+						entity.taskSequence.RemoveTask(static_cast<UINT16>(i));
+					}
+				}
+			}
+		}
+
 		SpoonerLight* Add(const SpoonerLight& light)
 		{
 			Databases::LightDb.push_back(light);
@@ -102,16 +136,24 @@ namespace sub::Spooner
 		void Remove(int indexInDb)
 		{
 			if (indexInDb >= 0 && indexInDb < static_cast<int>(Databases::LightDb.size()))
+			{
+				auto& light = Databases::LightDb[indexInDb];
+				RemoveOrphanedLightTasks(light.m_id, light.m_name);
 				Databases::LightDb.erase(Databases::LightDb.begin() + indexInDb);
+			}
 		}
 
 		void RemoveAll()
 		{
+			for (auto& light : Databases::LightDb)
+				RemoveOrphanedLightTasks(light.m_id, light.m_name);
 			Databases::LightDb.clear();
 		}
 
 		void Clear()
 		{
+			for (auto& light : Databases::LightDb)
+				RemoveOrphanedLightTasks(light.m_id, light.m_name);
 			Databases::LightDb.clear();
 			SpoonerLight::iLightIdIter = 0;
 		}

@@ -3078,11 +3078,12 @@ namespace sub
 						SelectedLight->m_position = hitCoords;
 					}
 				}
-				{
+				if (spoonerCam.IsActive())
+			{
 				bool bSetPosToCam = false;
 				AddOption("Set To Camera Position", bSetPosToCam); if (bSetPosToCam)
 				{
-					SelectedLight->m_position = spoonerCam.IsActive() ? spoonerCam.GetPosition() : World::GetRenderingCamera().GetPosition();
+					SelectedLight->m_position = spoonerCam.GetPosition();
 				}
 			}
 

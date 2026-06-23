@@ -29,6 +29,8 @@
 
 #include "SpoonerEntity.h"
 #include "EntityManagement.h"
+#include "Databases.h"
+#include "SpoonerLight.h"
 #include "Submenus_TaskSequence.h"
 
 #include <pugixml\src\pugixml.hpp>
@@ -2127,6 +2129,117 @@ namespace sub::Spooner
 		void TriggerFx::EndP(GTAped& ep)
 		{
 			timer = 0U;
+		}
+
+		LightMoveWithEntity::LightMoveWithEntity()
+		{
+			this->type = STSTaskType::LightMoveWithEntity;
+			this->submenu = Submenus::Sub_TaskSequence::LightMoveWithEntitySub;
+			this->duration = -2;
+			this->durationAfterLife = -2;
+			this->isLoopedTask = true;
+			this->lightId = 0;
+			this->offsetInitialized = false;
+		}
+		void LightMoveWithEntity::Run(void* ve)
+		{
+			SpoonerEntity* entity = reinterpret_cast<SpoonerEntity*>(ve);
+			if (!entity->handle.Exists()) return;
+
+			for (auto& light : Databases::LightDb)
+			{
+				if (light.m_id == this->lightId)
+				{
+					if (!this->offsetInitialized)
+					{
+						this->offset = light.m_position - entity->handle.GetPosition();
+						this->offsetInitialized = true;
+					}
+					light.m_position = entity->handle.GetPosition() + this->offset;
+					break;
+				}
+			}
+		}
+		void LightMoveWithEntity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
+		{
+			nodeTask.append_child("LightId").text() = this->lightId;
+			nodeTask.append_child("OffsetInitialized").text() = this->offsetInitialized;
+			if (this->offsetInitialized)
+			{
+				auto nodeOff = nodeTask.append_child("Offset");
+				nodeOff.append_attribute("X") = this->offset.x;
+				nodeOff.append_attribute("Y") = this->offset.y;
+				nodeOff.append_attribute("Z") = this->offset.z;
+			}
+		}
+		void LightMoveWithEntity::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
+		{
+			this->lightId = nodeTask.child("LightId").text().as_uint(0);
+			this->offsetInitialized = nodeTask.child("OffsetInitialized").text().as_bool(false);
+			if (this->offsetInitialized)
+			{
+				auto nodeOff = nodeTask.child("Offset");
+				this->offset.x = nodeOff.attribute("X").as_float();
+				this->offset.y = nodeOff.attribute("Y").as_float();
+				this->offset.z = nodeOff.attribute("Z").as_float();
+			}
+		}
+		void LightMoveWithEntity::ImportTaskDataSpecific(STSTask* otherTsk)
+		{
+			auto other = otherTsk->GetTypeTask<LightMoveWithEntity>();
+			this->lightId = other->lightId;
+			this->offset = other->offset;
+			this->offsetInitialized = other->offsetInitialized;
+		}
+
+		LightPointAtEntity::LightPointAtEntity()
+		{
+			this->type = STSTaskType::LightPointAtEntity;
+			this->submenu = Submenus::Sub_TaskSequence::LightPointAtEntitySub;
+			this->duration = -2;
+			this->durationAfterLife = -2;
+			this->isLoopedTask = true;
+			this->lightId = 0;
+			this->m_boneId = -1;
+		}
+		void LightPointAtEntity::Run(void* ve)
+		{
+			SpoonerEntity* entity = reinterpret_cast<SpoonerEntity*>(ve);
+			if (!entity->handle.Exists()) return;
+
+			Vector3 targetPos;
+			if (m_boneId >= 0 && entity->handle.IsPed())
+				targetPos = GTAped(entity->handle).GetBoneCoord(m_boneId);
+			else
+				targetPos = entity->handle.GetPosition();
+
+			for (auto& light : Databases::LightDb)
+			{
+				if (light.m_id == this->lightId)
+				{
+					Vector3 dir = targetPos - light.m_position;
+					float len = dir.Length();
+					if (len > 0.001f)
+						light.m_direction = dir / len;
+					break;
+				}
+			}
+		}
+		void LightPointAtEntity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
+		{
+			nodeTask.append_child("LightId").text() = this->lightId;
+			nodeTask.append_child("BoneId").text() = this->m_boneId;
+		}
+		void LightPointAtEntity::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
+		{
+			this->lightId = nodeTask.child("LightId").text().as_uint(0);
+			this->m_boneId = nodeTask.child("BoneId").text().as_int(-1);
+		}
+		void LightPointAtEntity::ImportTaskDataSpecific(STSTask* otherTsk)
+		{
+			auto other = otherTsk->GetTypeTask<LightPointAtEntity>();
+			this->lightId = other->lightId;
+			this->m_boneId = other->m_boneId;
 		}
 
 		EndSequence::EndSequence()

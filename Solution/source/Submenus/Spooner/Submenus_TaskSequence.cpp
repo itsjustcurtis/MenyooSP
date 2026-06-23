@@ -35,6 +35,7 @@
 #include "SpoonerEntity.h"
 #include "SpoonerMode.h"
 #include "Databases.h"
+#include "SpoonerLight.h"
 #include "EntityManagement.h"
 #include "Submenus.h"
 #include "..\..\Submenus\PedComponentChanger.h"
@@ -1567,6 +1568,63 @@ namespace sub::Spooner
 						tskPtr->fx = PTFX::NonLoopedPTFX(ef.asset, ef.fx);
 						tskPtr->fx.EasyStart(thisEntity, tskPtr->scale, tskPtr->posOffset, tskPtr->rotOffset, tskPtr->colour);
 					}
+				}
+			}
+
+			void LightMoveWithEntitySub()
+			{
+				auto tskPtr = _selectedSTST;
+
+				AddTitle("Select Light");
+
+				for (auto& light : Databases::LightDb)
+				{
+					bool bLightPressed = false;
+					std::string label = (light.m_lightType == SpoonerLight::LightType::Omni ? "[Omni] " : "[Spot] ") + light.m_name;
+					AddOption(label, bLightPressed); if (bLightPressed)
+					{
+						if (tskPtr->type == STSTaskType::LightMoveWithEntity)
+							tskPtr->GetTypeTask<STSTasks::LightMoveWithEntity>()->lightId = light.m_id;
+						else if (tskPtr->type == STSTaskType::LightPointAtEntity)
+							tskPtr->GetTypeTask<STSTasks::LightPointAtEntity>()->lightId = light.m_id;
+						Menu::SetPreviousMenu();
+					}
+				}
+			}
+
+			void LightPointAtEntitySub()
+			{
+				auto tskPtr = _selectedSTST;
+				auto task = tskPtr->GetTypeTask<STSTasks::LightPointAtEntity>();
+
+				AddTitle("Make a Light Point At This Entity");
+
+				AddBreak("---Target Light---");
+				for (auto& light : Databases::LightDb)
+				{
+					bool bLightPressed = false;
+					std::string label = (light.m_lightType == SpoonerLight::LightType::Omni ? "[Omni] " : "[Spot] ") + light.m_name;
+					bool bSelected = (light.m_id == task->lightId);
+					AddTickol(label, bSelected, bLightPressed, null);
+					if (bLightPressed)
+					{
+						task->lightId = light.m_id;
+					}
+				}
+
+				AddBreak("---Target Bone---");
+				{
+					bool bNonePressed = false;
+					AddTickol("None (Root Position)", task->m_boneId < 0, bNonePressed, null);
+					if (bNonePressed)
+						task->m_boneId = -1;
+				}
+				for (auto& b : Bone::vBoneNames)
+				{
+					bool bBonePressed = false;
+					AddTickol(b.name, task->m_boneId == b.boneid, bBonePressed, null);
+					if (bBonePressed)
+						task->m_boneId = b.boneid;
 				}
 			}
 		}

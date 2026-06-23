@@ -90,6 +90,9 @@ namespace sub::Spooner
 
 		{ STSTaskType::SnapTasks,{ "Refresh (Snap & Stand)", EntityType::PED } },
 		{ STSTaskType::EndSequence,{ "End Sequence", EntityType::ALL } },
+
+		{ STSTaskType::LightMoveWithEntity,{ "Make a Light Move With This Entity", EntityType::ALL } },
+		{ STSTaskType::LightPointAtEntity,{ "Make a Light Point At This Entity", EntityType::ALL } },
 	};
 
 	// STSTask

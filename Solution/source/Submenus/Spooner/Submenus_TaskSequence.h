@@ -81,6 +81,8 @@ namespace sub::Spooner
 			void SetRotation();
 			void ChangeOpacity();
 			void TriggerFx();
+			void LightMoveWithEntitySub();
+			void LightPointAtEntitySub();
 		}
 		void Sub_TaskSequence_TaskList();
 		void Sub_TaskSequence_AddTask();

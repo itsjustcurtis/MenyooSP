@@ -73,6 +73,7 @@ namespace sub::Spooner
 		bool SavePresetToFile(const SpoonerLight& light);
 		bool SaveAllPresetsToFile();
 		void DrawPreviewMarkers();
+		void RemoveOrphanedLightTasks(UINT lightId, const std::string& lightName);
 		extern std::vector<SpoonerLight> PresetDb;
 	}
 
