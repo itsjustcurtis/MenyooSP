@@ -121,6 +121,35 @@ namespace sub::Spooner
 			return rot;
 		}
 
+		void DrawSnappingGrid()
+		{
+			float gridSize = Settings::gridSnapSize;
+
+			Vector3 origin = selectedEntity.handle.GetPosition();
+			origin.x = round(origin.x / gridSize) * gridSize;
+			origin.y = round(origin.y / gridSize) * gridSize;
+
+			float z = round(origin.z / gridSize) * gridSize;
+			const int cells = 10; // number of cells to draw in each direction (i.e setting this to 10 will draw a 20x20 grid)
+			const RGBA color(255, 255, 255, 110);
+
+			for (int i = -cells; i <= cells; i++)
+			{
+				float x = origin.x + i * gridSize;
+				Vector3 start(x, origin.y - cells * gridSize, z);
+				Vector3 end(x, origin.y + cells * gridSize, z);
+				World::DrawLine(start, end, color);
+			}
+
+			for (int i = -cells; i <= cells; i++)
+			{
+				float y = origin.y + i * gridSize;
+				Vector3 start(origin.x - cells * gridSize, y, z);
+				Vector3 end(origin.x + cells * gridSize, y, z);
+				World::DrawLine(start, end, color);
+			}
+		}
+
 		ModelPreviewInfoStructure modelPreviewInfo = { EntityType::ALL, 0, 0, 0,{} };
 		float previewYawOffset = 0.0f;
 
@@ -946,6 +975,7 @@ namespace sub::Spooner
 				}
 			}
 		}
+
 		void Tick()
 		{
 			if (SpoonerMode::IsHotkeyPressed())
@@ -958,6 +988,10 @@ namespace sub::Spooner
 
 			if (Settings::bShowBoxAroundSelectedEntity)
 				EntityManagement::ShowBoxAroundEntity(selectedEntity.handle);
+
+			// Snapping grid; visible only when using Spooner Camera
+			if (Settings::bDrawGrid && Settings::bGridSnapEnabled && SpoonerMode::bEnabled && selectedEntity.handle.Exists())
+				DrawSnappingGrid();
 
 			for (auto& ent : Databases::EntityDb)
 			{

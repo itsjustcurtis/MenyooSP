@@ -1802,6 +1802,7 @@ namespace sub
 			AddNumberStepper("Grid Size (m)", Settings::gridSnapSize, 2, 0.25, 0.01);
 			AddNumberStepper("Rotation Snap (deg)", Settings::rotationSnapDegrees, 1, 5.0, 0.0);
 			AddToggle("Snap to Ground", Settings::bSnapToGround);
+			AddToggle("Draw Grid On Screen", Settings::bDrawGrid);
 		}
 		void Sub_ManualEditing()
 		{

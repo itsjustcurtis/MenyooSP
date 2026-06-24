@@ -53,6 +53,7 @@ namespace sub::Spooner
 		float gridSnapSize = 1.0f;
 		float rotationSnapDegrees = 0.0f;
 		bool bSnapToGround = false; // use SnapPos to get the snapped position Vector3
+		bool bDrawGrid = false;
 	}
 
 }

@@ -81,6 +81,7 @@ namespace sub::Spooner
 		inline void SetAsSelectedEntity(GTAentity& entity);
 		Vector3 SnapPos(Vector3 pos);
 		Vector3 SnapRot(Vector3 rot);
+		void DrawSnappingGrid();
 
 		inline void CamTick();
 		void Tick();
