@@ -29,6 +29,8 @@
 #include "..\Util\FileLogger.h"
 #include "..\Menu\Menu.h"
 
+#include <algorithm>
+
 #include <Windows.h>
 #include <Psapi.h>
 
@@ -3070,6 +3072,149 @@ CPedVariationInfoCollection* GetPedVariationInfoCollection(int pedHandle)
 }
 
 // Implementation Functions
+
+GTAmemory::DrawableCollectionData GTAmemory::BuildDrawableCollectionData(int pedHandle, int componentId)
+{
+	DrawableCollectionData result;
+	result.currentCollectionIdx = -1;
+	result.currentLocalIdx = -1;
+
+	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromDrawableIdx ||
+	    !g_GetDlcDrawableIdx || !g_GetCollectionName)
+		return result;
+
+	auto collection = GetPedVariationInfoCollection(pedHandle);
+	if (!collection) return result;
+
+	int maxGlobal = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(pedHandle, componentId);
+	int currentGlobal = GET_PED_DRAWABLE_VARIATION(pedHandle, componentId);
+
+	struct RawColl
+	{
+		std::string name;
+		int firstGlobalIdx;
+		std::vector<std::pair<int, int>> entries;
+	};
+	std::vector<RawColl> raw;
+
+	for (int g = 0; g < maxGlobal; g++)
+	{
+		auto vi = g_GetVariationInfoFromDrawableIdx(collection, componentId, g);
+		const char* name = vi ? GetCollectionNameHelper(vi) : nullptr;
+		std::string nameStr = (name && name[0]) ? name : "basegame";
+		int local = g_GetDlcDrawableIdx(collection, componentId, g);
+
+		auto it = std::find_if(raw.begin(), raw.end(),
+			[&](const RawColl& rc) { return rc.name == nameStr; });
+		if (it == raw.end())
+		{
+			raw.push_back({nameStr, g, {{local, g}}});
+		}
+		else
+		{
+			it->entries.push_back({local, g});
+		}
+	}
+
+	std::sort(raw.begin(), raw.end(),
+		[](const RawColl& a, const RawColl& b) { return a.firstGlobalIdx < b.firstGlobalIdx; });
+
+	for (int idx = 0; idx < (int)raw.size(); idx++)
+	{
+		auto& [name, firstIdx, entries] = raw[idx];
+		std::sort(entries.begin(), entries.end());
+
+		CollectionEntry ce;
+		ce.name = name;
+		ce.maxLocalId = entries.back().first;
+
+		for (auto& [local, global] : entries)
+		{
+			ce.localToGlobal.push_back(global);
+			if (global == currentGlobal)
+			{
+				result.currentCollectionIdx = idx;
+				result.currentLocalIdx = local;
+			}
+		}
+
+		result.collections.push_back(std::move(ce));
+	}
+
+	return result;
+}
+
+GTAmemory::DrawableCollectionData GTAmemory::BuildPropCollectionData(int pedHandle, int anchorPoint)
+{
+	DrawableCollectionData result;
+	result.currentCollectionIdx = -1;
+	result.currentLocalIdx = -1;
+
+	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromPropIdx ||
+	    !g_GetDlcPropIdx || !g_GetCollectionName)
+		return result;
+
+	auto collection = GetPedVariationInfoCollection(pedHandle);
+	if (!collection) return result;
+
+	int maxGlobal = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(pedHandle, anchorPoint);
+	int currentGlobal = GET_PED_PROP_INDEX(pedHandle, anchorPoint, 0);
+
+	struct RawColl
+	{
+		std::string name;
+		int firstGlobalIdx;
+		std::vector<std::pair<int, int>> entries;
+	};
+	std::vector<RawColl> raw;
+
+	for (int g = 0; g < maxGlobal; g++)
+	{
+		auto vi = g_GetVariationInfoFromPropIdx(collection, anchorPoint, g);
+		const char* name = vi ? g_GetCollectionName(reinterpret_cast<CPedVariationInfo*>(vi)) : nullptr;
+		std::string nameStr = (name && name[0]) ? name : "basegame";
+		int local = g_GetDlcPropIdx(collection, anchorPoint, g);
+
+		auto it = std::find_if(raw.begin(), raw.end(),
+			[&](const RawColl& rc) { return rc.name == nameStr; });
+		if (it == raw.end())
+		{
+			raw.push_back({nameStr, g, {{local, g}}});
+		}
+		else
+		{
+			it->entries.push_back({local, g});
+		}
+	}
+
+	std::sort(raw.begin(), raw.end(),
+		[](const RawColl& a, const RawColl& b) { return a.firstGlobalIdx < b.firstGlobalIdx; });
+
+	for (int idx = 0; idx < (int)raw.size(); idx++)
+	{
+		auto& [name, firstIdx, entries] = raw[idx];
+		std::sort(entries.begin(), entries.end());
+
+		CollectionEntry ce;
+		ce.name = name;
+		ce.maxLocalId = entries.back().first;
+
+		for (auto& [local, global] : entries)
+		{
+			ce.localToGlobal.push_back(global);
+			if (global == currentGlobal)
+			{
+				result.currentCollectionIdx = idx;
+				result.currentLocalIdx = local;
+			}
+		}
+
+		result.collections.push_back(std::move(ce));
+	}
+
+	return result;
+}
+
 std::string GTAmemory::GetPedDrawableCollectionString(int pedHandle, int componentId)
 {
 	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromDrawableIdx ||

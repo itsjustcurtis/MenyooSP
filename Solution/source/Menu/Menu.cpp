@@ -1424,7 +1424,7 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 
 }
 template<typename T>
-void AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min, std::optional<double> max, bool gxt)
+void AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min, std::optional<double> max, bool gxt, bool wrap)
 {
 	bool enterPressed = false, right = false, left = false;
 	AddNumber(text, (double)value, decimal_places, enterPressed, right, left, gxt);
@@ -1442,12 +1442,20 @@ void AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, 
 			catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 		}
 	}
-	if (min.has_value() && value < (T)min.value()) value = (T)min.value();
-	if (max.has_value() && value > (T)max.value()) value = (T)max.value();
+	if (wrap && min.has_value() && max.has_value())
+	{
+		if (value > (T)max.value()) value = (T)min.value();
+		else if (value < (T)min.value()) value = (T)max.value();
+	}
+	else
+	{
+		if (min.has_value() && value < (T)min.value()) value = (T)min.value();
+		if (max.has_value() && value > (T)max.value()) value = (T)max.value();
+	}
 }
-template void AddNumberStepper<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool);
-template void AddNumberStepper<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool);
-template void AddNumberStepper<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool);
+template void AddNumberStepper<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template void AddNumberStepper<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template void AddNumberStepper<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
 template<typename T>
 void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min, std::optional<double> max, bool gxt)
 {

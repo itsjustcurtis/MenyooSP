@@ -85,7 +85,7 @@ namespace sub
 	void AddPedPropOption(const std::string& text, int index)
 	{
 		bool pressed = false;
-		AddOption(text, pressed, nullFunc, SUB::COMPONENTSPROPS2); if (pressed)
+		AddOption(text, pressed, nullFunc, SUB::COMPONENTSPROPS2, true, true); if (pressed)
 		{
 			g_Ped4 = index;
 		}
@@ -121,18 +121,18 @@ namespace sub
 
 		const std::vector<std::string> components
 		{
-			"Head",
-			"Beard/Mask",
-			"Hair",
-			"Torso",
-			"Legs",
-			"Hands/Back",
-			"Shoes",
-			"Teeth/Scarf/Necklace/Bracelets",
-			"Accessory/Tops",
-			"Task/Armour",
-			"Emblem",
-			"Tops2 (Outer)"
+			"Head ~c~[head]",
+			"Beard/Mask ~c~[berd]",
+			"Hair ~c~[hair]",
+			"Torso ~c~[uppr]",
+			"Legs ~c~[lowr]",
+			"Hands/Back ~c~[hand]",
+			"Shoes ~c~[feet]",
+			"Teeth/Scarf/Necklace/Bracelets ~c~[teef]",
+			"Accessory/Tops ~c~[accs]",
+			"Task/Armour ~c~[task]",
+			"Emblem ~c~[decl]",
+			"Tops2 (Outer) ~c~[jbib]"
 		};
 
 		AddBreak("---Components---");
@@ -293,140 +293,118 @@ namespace sub
 			return;
 		}
 	}
-	void DrawPedVariationInfo(const std::string& info)
-	{
-		FLOAT x_coord = 0.066f + menuPos.x;
-		FLOAT y_coord = OptionY + menuPos.y + 0.035f;
-
-		Game::Print::SetupDraw(font_selection, Vector2(0.0f, (font_options == 0 ? 0.33f : 0.4f)), false, false, false, selectedtext);
-		Game::Print::drawstring(info, x_coord, y_coord);
-	}
 	void ComponentChanger2()
 	{
-		bool increment = false, decrement = false, inputPressed = false;
+		int globalDrawableId = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4);
+		int textureId = GET_PED_TEXTURE_VARIATION(g_Ped1, g_Ped4);
+		int prevGlobalDrawableId = globalDrawableId;
+		int prevTextureId = textureId;
 
-		int drawableCurrent = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4),
-			textureCurrent = GET_PED_TEXTURE_VARIATION(g_Ped1, g_Ped4),
-			paletteCurrent = GET_PED_PALETTE_VARIATION(g_Ped1, g_Ped4);
-
-		int drawableOld = drawableCurrent;
-		int textureOld = textureCurrent;
-		int paletteOld = paletteCurrent;
-
-		int maxDrawable = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-		int maxTexture = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent);
+		int maxGlobalDrawableId = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+		int maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, globalDrawableId);
 
 		AddTitle("Set Variation");
 
-		if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", drawableCurrent, 0, inputPressed, increment, decrement);
-		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent)) AddNumber("Texture", textureCurrent, 0, inputPressed, increment, decrement);
-		//AddNumber("Palette", paletteCurrent, 0, null, increment, decrement);
+		if (maxGlobalDrawableId >= 0)
+			AddNumberStepper("Type", globalDrawableId, 0, 1.0, 0, maxGlobalDrawableId, false, true);
 
-		// Displaying collection info (collection:local_id), doesn't support enhanced yet.
-		if (!g_isEnhanced) {
-			DrawPedVariationInfo(GTAmemory::GetPedDrawableCollectionString(g_Ped1, g_Ped4));
-		}
-
-		switch (*Menu::currentopATM)
+		if (globalDrawableId != prevGlobalDrawableId)
 		{
-		case 1:
-			if (inputPressed)
-			{
-				std::string inputStr = Game::InputBox("", 5U, "", std::to_string(drawableOld));
-				if (inputStr.length() > 0)
-				{
-					try
-					{
-						drawableCurrent = stoi(inputStr);
-						if (drawableCurrent > maxDrawable)
-						{
-							drawableCurrent = drawableOld;
-							Game::Print::PrintErrorInvalidInput(inputStr);
-						}
-					}
-					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
-				}
-			}
-			else if (increment || decrement)
-			{
-				drawableCurrent = cycleInt(drawableCurrent, increment, 0, maxDrawable);
-				textureCurrent = 0;
-			}
-			break;
-		case 2:
-			if (inputPressed)
-			{
-				std::string inputStr = Game::InputBox("", 5U, "", std::to_string(textureOld));
-				if (inputStr.length() > 0)
-				{
-					try
-					{
-						textureCurrent = stoi(inputStr);
-						if (textureCurrent > maxTexture)
-						{
-							textureCurrent = textureOld;
-							Game::Print::PrintErrorInvalidInput(inputStr);
-						}
-					}
-					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
-				}
-			}
-			else if (increment || decrement)
-			{
-				textureCurrent = cycleInt(textureCurrent, increment, 0, maxTexture);
-			}
-			break;
-		case 3:
-			if (increment || decrement)
-			{
-				paletteCurrent = cycleInt(paletteCurrent, increment, 0, 10);
-			}
-			break;
+			textureId = 0;
+			maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, globalDrawableId);
 		}
 
-        if (drawableOld != drawableCurrent
-            || textureOld != textureCurrent
-            || paletteOld != paletteCurrent)
-        {
-			if (g_Ped4 == PV_COMP_ACCS && !GET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true)) //checks if accessory category & DisableTakeOffScubaGear is false
+		if (maxTextureId > 0)
+			AddNumberStepper("Texture", textureId, 0, 1.0, 0, maxTextureId - 1, false, true);
+
+		// Collection data section (legacy only)
+		if (!g_isEnhanced && maxGlobalDrawableId >= 0)
+		{
+			static GTAmemory::DrawableCollectionData s_cache[PV_COMP_MAX];
+			static Hash s_cachedModel[PV_COMP_MAX] = {};
+			Hash modelHash = GET_ENTITY_MODEL(g_Ped1);
+
+			if (s_cachedModel[g_Ped4] != modelHash)
+			{
+				s_cache[g_Ped4] = GTAmemory::BuildDrawableCollectionData(g_Ped1, g_Ped4);
+				s_cachedModel[g_Ped4] = modelHash;
+			}
+
+			auto& data = s_cache[g_Ped4];
+
+			if (!data.collections.empty())
+			{
+				AddBreak("---Collection Data---");
+
+				std::vector<std::string> names;
+				for (auto& c : data.collections)
+					names.push_back(c.name);
+
+				int prevCollectionIdx = data.currentCollectionIdx;
+				data.currentCollectionIdx = AddTexterCycler("Collection", data.currentCollectionIdx, names);
+				bool collectionChanged = (data.currentCollectionIdx != prevCollectionIdx);
+
+				if (collectionChanged)
+					data.currentLocalIdx = 0;
+
+				auto& col = data.collections[data.currentCollectionIdx];
+				int prevLocalDrawableId = data.currentLocalIdx;
+
+				AddNumberStepper("Local ID", data.currentLocalIdx, 0, 1.0, 0, col.maxLocalId, false, true);
+				bool localDrawableIdChanged = collectionChanged || (data.currentLocalIdx != prevLocalDrawableId);
+
+				if (localDrawableIdChanged)
+				{
+					globalDrawableId = col.localToGlobal[data.currentLocalIdx];
+					textureId = 0;
+					maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, globalDrawableId);
+				}
+				else if (globalDrawableId != prevGlobalDrawableId)
+				{
+					bool synced = false;
+					for (int c = 0; c < (int)data.collections.size() && !synced; c++)
+					{
+						for (int l = 0; l < (int)data.collections[c].localToGlobal.size() && !synced; l++)
+						{
+							if (data.collections[c].localToGlobal[l] == globalDrawableId)
+							{
+								data.currentCollectionIdx = c;
+								data.currentLocalIdx = l;
+								synced = true;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (globalDrawableId != prevGlobalDrawableId || textureId != prevTextureId)
+		{
+			if (g_Ped4 == PV_COMP_ACCS && !GET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true))
 			{
 				SET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true);
 			}
-        	//if (IS_PED_COMPONENT_VARIATION_VALID(g_Ped1, g_Ped4, drawableCurrent, textureCurrent))
-        	SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, drawableCurrent, textureCurrent, paletteCurrent);
-            while (!HasPedSpecificDrawable(drawableCurrent))
-            {
-                if (increment)
-                {
-                    if (drawableCurrent < GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
-                    {
-                        drawableCurrent++;
-                        textureCurrent = 0;
-                    }
-                    else
-                    {
-                        drawableCurrent = 0;
-                        textureCurrent = 0;
-                    }
-                }
-                else if (decrement)
-                {
-                    if (drawableCurrent > -1)
-                    {
-                        drawableCurrent--;
-                        textureCurrent = 0;
-                        //Game::Print::PrintBottomLeft(oss_ << "drawableCurrent prev " << drawableCurrent << ".");
-                    }
-                    else
-                    {
-                        drawableCurrent = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-                        textureCurrent = 0;
-                    }
-                }
-                SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, drawableCurrent, textureCurrent, paletteCurrent);
-            }
-        }
-    }
+
+			SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, globalDrawableId, textureId, 0);
+
+			bool goingForward = (globalDrawableId > prevGlobalDrawableId);
+			while (!HasPedSpecificDrawable(globalDrawableId))
+			{
+				if (goingForward)
+				{
+					if (globalDrawableId < maxGlobalDrawableId) globalDrawableId++;
+					else globalDrawableId = 0;
+				}
+				else
+				{
+					if (globalDrawableId > 0) globalDrawableId--;
+					else globalDrawableId = maxGlobalDrawableId;
+				}
+				textureId = 0;
+				SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, globalDrawableId, textureId, 0);
+			}
+		}
+	}
 
     bool HasPedSpecificDrawable(int compon_drawable_new)
     {
@@ -451,14 +429,14 @@ namespace sub
 		bool randomProps = false, clearAllProps = false;
 		const std::vector<std::string> propNames
 		{
-			"Hats",
-			"Glasses",
-			"Ear Pieces",
+			"Hats ~c~[p_head]",
+			"Glasses ~c~[p_eyes]",
+			"Ear Pieces ~c~[p_ears]",
 			"Unknown 3",
 			"Unknown 4",
 			"Unknown 5",
-			"Watches",
-			"Bangles",
+			"Watches ~c~[p_lwrist]",
+			"Bangles ~c~[p_rwrist]",
 			"Unknown 8",
 			"Unknown 9"
 		};
@@ -495,72 +473,99 @@ namespace sub
 		GTAentity ped = g_Ped1;
 		auto& propId = g_Ped4;
 
-		bool increment = false, decrement = false;
-
 		int propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0),
 			propTextureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
 		int propTypeOld = propTypeCurrent,
 			propTextureOld = propTextureCurrent;
 
+		int maxProp = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+
 		AddTitle("Set Variation");
 
-		if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", propTypeCurrent, 0, null, increment, decrement);
-		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) > 0) AddNumber("Texture", propTextureCurrent, 0, null, increment, decrement);
-
-		// Displaying collection info (collection:local_id), doesn't support enhanced yet.
-		if (!g_isEnhanced) {
-			DrawPedVariationInfo(GTAmemory::GetPedPropCollectionString(g_Ped1, g_Ped4));
-		}
-
-		switch (Menu::currentop)
+		if (maxProp >= 0)
 		{
-		case 1:
-			if (increment)
-			{
-				if (propTypeCurrent < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
-				{
-					propTypeCurrent++;
-					propTextureCurrent = 0;
-				}
-				else
-				{
-					propTypeCurrent = -1;
-					propTextureCurrent = 0;
-				}
-			}
-			else if (decrement)
-			{
-				if (propTypeCurrent > -1)
-				{
-					propTypeCurrent--;
-					propTextureCurrent = 0;
-				}
-				else
-				{
-					propTypeCurrent = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-					propTextureCurrent = 0;
-				}
-			}
-			break;
-		case 2:
-			if (increment)
-			{
-				if (propTextureCurrent < GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1)
-				{
-					propTextureCurrent++;
-				}
-				else propTextureCurrent = 0;
-			}
-			else if (decrement)
-			{
-				if (propTextureCurrent > 0)
-				{
-					propTextureCurrent--;
-				}
-				else propTextureCurrent = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1;
-			}
-			break;
+			AddNumberStepper("Type", propTypeCurrent, 0, 1.0, -1, maxProp, false, true);
 		}
+
+		int maxTextureId = 0;
+		if (propTypeCurrent >= 0)
+		{
+			maxTextureId = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent);
+		}
+		if (maxTextureId > 0)
+		{
+			AddNumberStepper("Texture", propTextureCurrent, 0, 1.0, 0, maxTextureId - 1, false, true);
+		}
+
+		// Collection data section (legacy only)
+		if (!g_isEnhanced && maxProp >= 0)
+		{
+			static GTAmemory::DrawableCollectionData s_propCache;
+			static Hash s_cachedPropModel = 0;
+			static int s_cachedPropSlot = -1;
+			Hash modelHash = GET_ENTITY_MODEL(g_Ped1);
+
+			if (s_cachedPropModel != modelHash || s_cachedPropSlot != g_Ped4)
+			{
+				s_propCache = GTAmemory::BuildPropCollectionData(g_Ped1, g_Ped4);
+				s_cachedPropModel = modelHash;
+				s_cachedPropSlot = g_Ped4;
+			}
+
+			auto& data = s_propCache;
+
+			if (!data.collections.empty())
+			{
+				AddBreak("---Collection Data---");
+
+				if (data.currentCollectionIdx < 0)
+					data.currentCollectionIdx = 0;
+				if (data.currentCollectionIdx >= (int)data.collections.size())
+					data.currentCollectionIdx = 0;
+
+				auto& col = data.collections[data.currentCollectionIdx];
+				if (data.currentLocalIdx < 0 || data.currentLocalIdx > col.maxLocalId)
+					data.currentLocalIdx = 0;
+
+				std::vector<std::string> names;
+				for (auto& c : data.collections)
+					names.push_back(c.name);
+
+				int prevCollectionIdx = data.currentCollectionIdx;
+				data.currentCollectionIdx = AddTexterCycler("Collection", data.currentCollectionIdx, names);
+				bool collectionChanged = (data.currentCollectionIdx != prevCollectionIdx);
+
+				if (collectionChanged)
+					data.currentLocalIdx = 0;
+
+				int prevLocalPropId = data.currentLocalIdx;
+				AddNumberStepper("Local ID", data.currentLocalIdx, 0, 1.0, 0, col.maxLocalId, false, true);
+				bool localPropIdChanged = collectionChanged || (data.currentLocalIdx != prevLocalPropId);
+
+				if (localPropIdChanged)
+				{
+					propTypeCurrent = col.localToGlobal[data.currentLocalIdx];
+					propTextureCurrent = 0;
+				}
+				else if (propTypeCurrent != propTypeOld && propTypeCurrent >= 0)
+				{
+					bool synced = false;
+					for (int c = 0; c < (int)data.collections.size() && !synced; c++)
+					{
+						for (int l = 0; l < (int)data.collections[c].localToGlobal.size() && !synced; l++)
+						{
+							if (data.collections[c].localToGlobal[l] == propTypeCurrent)
+							{
+								data.currentCollectionIdx = c;
+								data.currentLocalIdx = l;
+								synced = true;
+							}
+						}
+					}
+				}
+			}
+		}
+
 		if (ped.Exists() && (propTypeCurrent != propTypeOld || propTextureCurrent != propTextureOld))
 		{
 			if (propTypeCurrent == -1)
@@ -571,37 +576,21 @@ namespace sub
 			{
 				SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 
-				// Skip prop types that don't actually apply to this ped
+				bool goingForward = (propTypeCurrent > propTypeOld);
 				while (!HasPedSpecificPropType(propTypeCurrent))
 				{
-					if (increment)
+					if (goingForward)
 					{
-
-						if (propTypeCurrent < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
-						{
-							propTypeCurrent++;
-							propTextureCurrent = 0;
-						}
-						else
-						{
-							propTypeCurrent = -1;
-							propTextureCurrent = 0;
-						}
+						if (propTypeCurrent < maxProp) propTypeCurrent++;
+						else propTypeCurrent = -1;
 					}
-					else if (decrement)
+					else
 					{
-						if (propTypeCurrent > -1)
-						{
-							propTypeCurrent--;
-							propTextureCurrent = 0;
-						}
-						else
-						{
-							propTypeCurrent = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-							propTextureCurrent = 0;
-						}
+						if (propTypeCurrent > -1) propTypeCurrent--;
+						else propTypeCurrent = maxProp;
 					}
-					SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);					
+					propTextureCurrent = 0;
+					SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 				}
 			}
 		}
