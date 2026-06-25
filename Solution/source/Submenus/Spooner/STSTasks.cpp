@@ -2200,7 +2200,8 @@ namespace sub::Spooner
 			this->durationAfterLife = -2;
 			this->isLoopedTask = true;
 			this->lightId = 0;
-			this->m_boneId = -1;
+			this->m_pedBoneId = -1; // used only for peds
+			this->m_vehBoneTag = ""; // used only for vehicles
 		}
 		void LightPointAtEntity::Run(void* ve)
 		{
@@ -2208,8 +2209,10 @@ namespace sub::Spooner
 			if (!entity->handle.Exists()) return;
 
 			Vector3 targetPos;
-			if (m_boneId >= 0 && entity->handle.IsPed())
-				targetPos = GTAped(entity->handle).GetBoneCoord(m_boneId);
+			if (m_pedBoneId >= 0 && entity->handle.IsPed())
+				targetPos = GTAped(entity->handle).GetBoneCoord(m_pedBoneId);
+			else if (!m_vehBoneTag.empty() && entity->handle.IsVehicle())
+				targetPos = entity->handle.GetBoneCoords(m_vehBoneTag);
 			else
 				targetPos = entity->handle.GetPosition();
 
@@ -2228,18 +2231,22 @@ namespace sub::Spooner
 		void LightPointAtEntity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
 		{
 			nodeTask.append_child("LightId").text() = this->lightId;
-			nodeTask.append_child("BoneId").text() = this->m_boneId;
+			nodeTask.append_child("PedBoneId").text() = this->m_pedBoneId;
+			nodeTask.append_child("VehBoneTag").text() = this->m_vehBoneTag.c_str();
 		}
 		void LightPointAtEntity::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
 		{
 			this->lightId = nodeTask.child("LightId").text().as_uint(0);
-			this->m_boneId = nodeTask.child("BoneId").text().as_int(-1);
+			this->m_pedBoneId = nodeTask.child("PedBoneId").text().as_int(-1);
+			auto vehNode = nodeTask.child("VehBoneTag");
+			this->m_vehBoneTag = vehNode ? vehNode.text().as_string() : "";
 		}
 		void LightPointAtEntity::ImportTaskDataSpecific(STSTask* otherTsk)
 		{
 			auto other = otherTsk->GetTypeTask<LightPointAtEntity>();
 			this->lightId = other->lightId;
-			this->m_boneId = other->m_boneId;
+			this->m_pedBoneId = other->m_pedBoneId;
+			this->m_vehBoneTag = other->m_vehBoneTag;
 		}
 
 		EndSequence::EndSequence()

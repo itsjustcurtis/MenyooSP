@@ -1583,10 +1583,7 @@ namespace sub::Spooner
 					std::string label = (light.m_lightType == SpoonerLight::LightType::Omni ? "[Omni] " : "[Spot] ") + light.m_name;
 					AddOption(label, bLightPressed); if (bLightPressed)
 					{
-						if (tskPtr->type == STSTaskType::LightMoveWithEntity)
-							tskPtr->GetTypeTask<STSTasks::LightMoveWithEntity>()->lightId = light.m_id;
-						else if (tskPtr->type == STSTaskType::LightPointAtEntity)
-							tskPtr->GetTypeTask<STSTasks::LightPointAtEntity>()->lightId = light.m_id;
+						tskPtr->GetTypeTask<STSTasks::LightMoveWithEntity>()->lightId = light.m_id;
 						Menu::SetPreviousMenu();
 					}
 				}
@@ -1613,18 +1610,51 @@ namespace sub::Spooner
 				}
 
 				AddBreak("---Target Bone---");
+				if (selectedEntity.handle.IsPed())
 				{
-					bool bNonePressed = false;
-					AddTickol("None (Root Position)", task->m_boneId < 0, bNonePressed, null);
-					if (bNonePressed)
-						task->m_boneId = -1;
+					{
+						bool bNonePressed = false;
+						AddTickol("None (Root Position)", task->m_pedBoneId < 0, bNonePressed, null);
+						if (bNonePressed)
+						{
+							task->m_pedBoneId = -1;
+							task->m_vehBoneTag.clear();
+						}
+					}
+					for (auto& b : Bone::vBoneNames)
+					{
+						bool bBonePressed = false;
+						AddTickol(b.name, task->m_pedBoneId == b.boneid, bBonePressed, null);
+						if (bBonePressed)
+						{
+							task->m_pedBoneId = b.boneid;
+							task->m_vehBoneTag.clear();
+						}
+					}
 				}
-				for (auto& b : Bone::vBoneNames)
+				else if (selectedEntity.handle.IsVehicle())
 				{
-					bool bBonePressed = false;
-					AddTickol(b.name, task->m_boneId == b.boneid, bBonePressed, null);
-					if (bBonePressed)
-						task->m_boneId = b.boneid;
+					{
+						bool bNonePressed = false;
+						AddTickol("None (Root Position)", task->m_vehBoneTag.empty(), bNonePressed, null);
+						if (bNonePressed)
+						{
+							task->m_vehBoneTag.clear();
+							task->m_pedBoneId = -1;
+						}
+					}
+					for (auto& boneTag : VBone::vNames)
+					{
+						if (!selectedEntity.handle.HasBone(boneTag))
+							continue;
+						bool bBonePressed = false;
+						AddTickol(boneTag, task->m_vehBoneTag == boneTag, bBonePressed, null);
+						if (bBonePressed)
+						{
+							task->m_vehBoneTag = boneTag;
+							task->m_pedBoneId = -1;
+						}
+					}
 				}
 			}
 		}

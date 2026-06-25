@@ -735,7 +735,8 @@ namespace sub::Spooner
 			void ImportTaskDataSpecific(STSTask* otherTsk) override;
 		public:
 			UINT lightId;
-			int m_boneId;
+			int m_pedBoneId;
+			std::string m_vehBoneTag;
 			LightPointAtEntity();
 			void Run(void* ve) override;
 		};
