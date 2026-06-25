@@ -3080,15 +3080,15 @@ namespace sub
 					}
 				}
 				if (spoonerCam.IsActive())
-			{
-				bool bSetPosToCam = false;
-				AddOption("Set To Camera Position", bSetPosToCam); if (bSetPosToCam)
 				{
-					SelectedLight->m_position = spoonerCam.GetPosition();
+					bool bSetPosToCam = false;
+					AddOption("Set To Camera Position", bSetPosToCam); if (bSetPosToCam)
+					{
+						SelectedLight->m_position = spoonerCam.GetPosition();
+					}
 				}
-			}
 
-			if (IS_WAYPOINT_ACTIVE())
+				if (IS_WAYPOINT_ACTIVE())
 				{
 					bool bSetPosToWp = false;
 					AddOption("Set To Waypoint", bSetPosToWp); if (bSetPosToWp)
@@ -3174,7 +3174,6 @@ namespace sub
 				}
 			}
 
-			// Load presets from file
 			LightManagement::LoadPresetsFromFile(GetPathffA(Pathff::RootDir, true) + "FavouriteLights.xml");
 
 			if (!LightManagement::PresetDb.empty())
@@ -3236,15 +3235,16 @@ namespace sub
 
 		void Sub_ManageLights_Colour()
 		{
+			if (SelectedLight == nullptr) { Menu::SetPreviousMenu(); return; }
+
 			LightManagement::DrawPreviewMarkers();
 
-			bool settingsRInput = false, settingsRPlus = false, settingsRMinus = false;
-
 			RGBA* colour = &SelectedLight->m_colour;
-			INT* colourChannel = nullptr;
 
 			AddTitle("Light Colour");
-			AddNumber("Red", colour->R, 0, settingsRInput, settingsRPlus, settingsRMinus);
+			AddNumberStepper("Red", colour->R, 0, 1.0, 0, 255);
+			AddNumberStepper("Green", colour->G, 0, 1.0, 0, 255);
+			AddNumberStepper("Blue", colour->B, 0, 1.0, 0, 255);
 
 			switch (*Menu::currentopATM)
 			{
@@ -3254,9 +3254,6 @@ namespace sub
 				AddPresetColourOptionsPreviews(colour->R, colour->G, colour->B);
 				break;
 			}
-
-			AddNumber("Green", colour->G, 0, settingsRInput, settingsRPlus, settingsRMinus);
-			AddNumber("Blue", colour->B, 0, settingsRInput, settingsRPlus, settingsRMinus);
 
 			{
 				bool bHexInputPressed = false;
@@ -3270,27 +3267,6 @@ namespace sub
 
 			AddBreak("---Presets---");
 			AddPresetColourOptions(colour->R, colour->G, colour->B);
-
-			switch (*Menu::currentopATM)
-			{
-			case 1: colourChannel = &colour->R; break;
-			case 2: colourChannel = &colour->G; break;
-			case 3: colourChannel = &colour->B; break;
-			}
-
-			if (settingsRInput)
-			{
-				int tempHash = *colourChannel;
-				try { tempHash = abs(std::stoi(Game::InputBox(std::to_string(*colourChannel), 4U, "", std::to_string(*colourChannel)))); }
-				catch (...) { Game::Print::PrintErrorInvalidInput(std::to_string(tempHash)); }
-				if (!(tempHash >= 0 && tempHash <= 255))
-					Game::Print::PrintErrorInvalidInput(std::to_string(tempHash));
-				else
-					*colourChannel = tempHash;
-				return;
-			}
-			if (settingsRPlus) { if (*colourChannel < 255) (*colourChannel)++; else *colourChannel = 0; return; }
-			if (settingsRMinus) { if (*colourChannel > 0) (*colourChannel)--; else *colourChannel = 255; return; }
 		}
 
 		void Sub_SpawnCategories()

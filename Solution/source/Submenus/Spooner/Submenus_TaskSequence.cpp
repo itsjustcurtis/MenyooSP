@@ -1575,13 +1575,12 @@ namespace sub::Spooner
 			{
 				auto tskPtr = _selectedSTST;
 
-				AddTitle("Select Light");
-
 				for (auto& light : Databases::LightDb)
 				{
+					bool bInUse = LightManagement::IsLightAssignedToAnyTask(light.m_id, tskPtr);
 					bool bLightPressed = false;
-					std::string label = (light.m_lightType == SpoonerLight::LightType::Omni ? "[Omni] " : "[Spot] ") + light.m_name;
-					AddOption(label, bLightPressed); if (bLightPressed)
+					std::string label = std::string(bInUse ? "~c~[In Use] ~s~" : "") + (light.m_lightType == SpoonerLight::LightType::Omni ? "[Omni] " : "[Spot] ") + light.m_name;
+					AddOption(label, bLightPressed); if (bLightPressed && !bInUse)
 					{
 						tskPtr->GetTypeTask<STSTasks::LightMoveWithEntity>()->lightId = light.m_id;
 						Menu::SetPreviousMenu();
@@ -1594,16 +1593,19 @@ namespace sub::Spooner
 				auto tskPtr = _selectedSTST;
 				auto task = tskPtr->GetTypeTask<STSTasks::LightPointAtEntity>();
 
-				AddTitle("Make a Light Point At This Entity");
-
 				AddBreak("---Target Light---");
 				for (auto& light : Databases::LightDb)
 				{
+					if (light.m_lightType == SpoonerLight::LightType::Omni)
+						continue;
+
+					bool bInUse = LightManagement::IsLightAssignedToAnyTask(light.m_id, tskPtr);
 					bool bLightPressed = false;
-					std::string label = (light.m_lightType == SpoonerLight::LightType::Omni ? "[Omni] " : "[Spot] ") + light.m_name;
+					std::string label = std::string(bInUse ? "~c~[In Use] ~s~" : "") + "[Spot] " + light.m_name;
+
 					bool bSelected = (light.m_id == task->lightId);
 					AddTickol(label, bSelected, bLightPressed, null);
-					if (bLightPressed)
+					if (bLightPressed && !bInUse)
 					{
 						task->lightId = light.m_id;
 					}

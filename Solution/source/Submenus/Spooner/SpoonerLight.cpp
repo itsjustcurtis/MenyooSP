@@ -127,6 +127,28 @@ namespace sub::Spooner
 			}
 		}
 
+		bool IsLightAssignedToAnyTask(UINT lightId, STSTask* excludeTask)
+		{
+			for (auto& entity : Databases::EntityDb)
+			{
+				for (auto& task : entity.taskSequence.AllTasks())
+				{
+					if (task == excludeTask)
+						continue;
+
+					UINT taskLightId = 0;
+					if (task->type == STSTaskType::LightMoveWithEntity)
+						taskLightId = task->GetTypeTask<STSTasks::LightMoveWithEntity>()->lightId;
+					else if (task->type == STSTaskType::LightPointAtEntity)
+						taskLightId = task->GetTypeTask<STSTasks::LightPointAtEntity>()->lightId;
+
+					if (taskLightId == lightId)
+						return true;
+				}
+			}
+			return false;
+		}
+
 		SpoonerLight* Add(const SpoonerLight& light)
 		{
 			Databases::LightDb.push_back(light);

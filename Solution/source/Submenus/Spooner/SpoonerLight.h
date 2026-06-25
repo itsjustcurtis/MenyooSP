@@ -22,6 +22,8 @@ namespace pugi {
 	class xml_node;
 }
 
+class STSTask;
+
 namespace sub::Spooner
 {
 	class SpoonerLight
@@ -74,6 +76,7 @@ namespace sub::Spooner
 		bool SaveAllPresetsToFile();
 		void DrawPreviewMarkers();
 		void RemoveOrphanedLightTasks(UINT lightId, const std::string& lightName);
+		bool IsLightAssignedToAnyTask(UINT lightId, STSTask* excludeTask = nullptr);
 		extern std::vector<SpoonerLight> PresetDb;
 	}
 
