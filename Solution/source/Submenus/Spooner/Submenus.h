@@ -28,13 +28,12 @@ namespace sub
 		extern std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualPlacementPtrs;
 		extern float _manualPlacementPrecision;
 		extern UINT8 _copyEntTexterValue;
-		extern int _vehScaleEntity;
-		extern float _vehScaleX, _vehScaleY, _vehScaleZ;
-		extern int _pedScaleEntity;
-		extern float _pedScaleX, _pedScaleY, _pedScaleZ;
-		extern int _objScaleEntity;
-		extern float _objScaleX, _objScaleY, _objScaleZ;
-
+		struct EntityScaleState {
+			int handle = 0;
+			Vector3 scale{ 1.0f, 1.0f, 1.0f };
+		};
+		extern EntityScaleState _vehScale, _pedScale, _objScale;
+		
 		void HandleKeyboardPlacementInput(Vector3& position, Vector3& rotation);
 
 		void SetEnt241();
