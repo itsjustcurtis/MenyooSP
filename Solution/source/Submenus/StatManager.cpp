@@ -207,6 +207,7 @@ namespace sub
 		void StatSetInt(const std::string& name, int value)
 		{
 			addlog(ige::LogType::LOG_TRACE, "Setting Stat " + name + " to " + std::to_string(value));
+			TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME("stats_controller");
 			STAT_SET_INT(GET_HASH_KEY(name), value, 1);
 
 			for (auto& ch : charNames)
