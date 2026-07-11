@@ -546,7 +546,6 @@ namespace sub
 		}
 		if (ped.Exists() && (propTypeCurrent != propTypeOld || propTextureCurrent != propTextureOld))
 		{
-			Game::Print::PrintBottomCentre("propTypeCurrent: " + std::to_string(propTypeCurrent));
 			if (propTypeCurrent == -1)
 			{
 				CLEAR_PED_PROP(ped.Handle(), propId, 0);
