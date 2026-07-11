@@ -165,6 +165,7 @@ namespace sub
 
 		void SetAbilitySourceStats(const std::string& prefix, const std::string& statName, int value)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Setting Ability Source Stats for " + prefix + statName + " to " + std::to_string(value));
 			if (statName == "STAMINA")
 			{
 				STAT_SET_FLOAT(GET_HASH_KEY(prefix + "DIST_RUNNING"), value * 175.0f, true);
@@ -200,8 +201,8 @@ namespace sub
 		{
 			return statName == "STAMINA" || statName == "STRENGTH" || statName == "LUNG_CAPACITY" ||
 				statName == "WHEELIE_ABILITY" || statName == "FLYING_ABILITY" ||
-				statName == "SHOOTING_ABILITY" || statName == "STEALTH_ABILITY" ||
-				statName == "SPECIAL_ABILITY_UNLOCKED";
+				statName == "SHOOTING_ABILITY" || statName == "STEALTH_ABILITY" || 
+				statName == "SPECIAL_ABILITY" || statName == "SPECIAL_ABILITY_UNLOCKED";
 		}
 
 		void StatSetInt(const std::string& name, int value)
@@ -253,7 +254,7 @@ namespace sub
 
 		void AddOptionStats(const CharStat_t& stat)
 		{
-			bool bStatValue_plus = false, bStatValue_minus = false, bStatValue_input = false;
+			bool bStatValue_plus = false, bStatValue_minus = false, bStatValue_input = false, bFillPressed = false, bEmptyPressed = false;;
 
 			const std::string& statName = selectedCharName->first + stat.name;
 
@@ -272,6 +273,23 @@ namespace sub
 			}
 			case StatDataType_t::INT:
 			{
+				if (stat.name == "SPECIAL_ABILITY")
+				{
+					int liveValue = StatGetInt(statName);
+
+					AddNumber("Special Ability", liveValue*3.3333, 0, null, bFillPressed, bEmptyPressed);
+					if (bFillPressed)
+					{
+						SPECIAL_ABILITY_FILL_METER(PLAYER_ID(), false,null);
+						addlog(ige::LogType::LOG_DEBUG, "Special ability meter filled");
+					}
+					if (bEmptyPressed)
+					{
+						SPECIAL_ABILITY_DEPLETE_METER(PLAYER_ID(), false,null);
+						addlog(ige::LogType::LOG_DEBUG, "Special ability meter depleted");
+					}
+					break;
+				}
 				int statValue = StatGetInt(statName);
 				AddNumber(stat.caption, statValue, 0, bStatValue_input, bStatValue_plus, bStatValue_minus); 
 				if (bStatValue_input)
