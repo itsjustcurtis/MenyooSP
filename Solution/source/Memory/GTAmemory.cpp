@@ -1716,8 +1716,13 @@ void GTAmemory::InitEnhancedPools() {
 		// using bit operations. The problem is that menyoo is loaded a bit too early for the initialization to have happened, and so we can't retrieve those values
 		// during GTAmemory init. For that reason, we leave that to the very end, and we keep waiting until the game has started (GameState == 0 (PLAYING)).
 		// This was not a problem with SHVDNE, since NativeMemroy init is only done after the game has started.
-
-		UINT64 address = MemryScan::PatternScanner::FindPattern("83 f9 ? 74 ? 41 89 c8");
+		UINT64 address;
+		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1013_33) {
+			address = MemryScan::PatternScanner::FindPattern("c9 41 89 c8 49 c1 e8");
+		}
+		else {
+			address = MemryScan::PatternScanner::FindPattern("83 f9 ? 74 ? 41 89 c8");
+		}
 		if (address)
 		{
 			bool isInitialized = (*(byte*)(*(int*)(address + 11) + address + 15) & 1) != 0;
@@ -1772,7 +1777,12 @@ void GTAmemory::InitEnhancedPools() {
 			}
 		}
 
-		address = MemryScan::PatternScanner::FindPattern("48 83 ec ? 83 3d ? ? ? ? ? 0f 84 ? ? ? ? 0f b6 05");
+		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1013_33) {
+			address = MemryScan::PatternScanner::FindPattern("8b 05 ? ? ? ? 85 c0 0f 8e ? ? ? ? c1 e8 ? 0f b6 0d");
+		}
+		else {
+			address = MemryScan::PatternScanner::FindPattern("48 83 ec ? 83 3d ? ? ? ? ? 0f 84 ? ? ? ? 0f b6 05");
+		}
 		if (address) {
 			bool isInitialized = (*(byte*)(*(int*)(address + 20) + address + 24) & 1) != 0;
 			UINT64 firstValue = *(UINT64*)(*(int*)(address + 38) + address + 42);
@@ -1825,57 +1835,43 @@ void GTAmemory::InitEnhancedPools() {
 			}
 		}
 
-		address = MemryScan::PatternScanner::FindPattern("48 89 cb 48 8b 41 ? 8b 10 f2 0f 10 3d");
+		address = MemryScan::PatternScanner::FindPattern("48 89 c1 45 31 c0 e8 ? ? ? ? 90 48 83 c4 20 5b 5f 5e");
 		if (address)
 		{
-			// The pattern is inside a function, which calls a function, which accesses the pool.
-			address = (*reinterpret_cast<int*>(address + 34) + address + 38);
-			if (address)
+			address -= 81;
+			bool isInitialized = (*reinterpret_cast<byte*>(*reinterpret_cast<int*>(address + 3) + address + 7) & 1) != 0;
+			UINT64 firstValue = *reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 21) + address + 25);
+			UINT64 secondValue = *reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 10) + address + 14);
+			auto firstRol = *reinterpret_cast<byte*>(address + 17); // 0x1b
+			auto secondRol = *reinterpret_cast<byte*>(address + 31); // 0x20
+			auto andValue = *reinterpret_cast<byte*>(address + 34); // 0x1f
+			auto addValue = *reinterpret_cast<byte*>(address + 37); // 0x1
+			auto xorValue = *reinterpret_cast<byte*>(address + 46); // 0x3f
+			GTAmemory::_cameraPoolAddress = (UINT64*)0UL;
+			if (isInitialized)
 			{
-				bool isInitialized = (*reinterpret_cast<byte*>(*reinterpret_cast<int*>(address + 3) + address + 7) & 1) != 0;
-				UINT64 firstValue = *reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 21) + address + 25);
-				UINT64 secondValue = *reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 10) + address + 14);
-				auto firstRol = *reinterpret_cast<byte*>(address + 17); // 0x1b
-				auto secondRol = *reinterpret_cast<byte*>(address + 31); // 0x20
-				auto andValue = *reinterpret_cast<byte*>(address + 33); // 0x1f
-				auto addValue = *reinterpret_cast<byte*>(address + 36); // 0x1
-				auto xorValue = *reinterpret_cast<byte*>(address + 44); // 0x3f
-				GTAmemory::_cameraPoolAddress = (UINT64*)0UL;
-				if (isInitialized)
-				{
-					auto rax = secondValue;
-					rax = Rol(rax, firstRol);
-					auto rsi = firstValue;
-					rsi = rsi ^ rax;
-					rsi = Rol(rsi, secondRol);
-					auto al = (byte)(rax & 0xFF);
-					al = (byte)(al & andValue);
-					rax = (rax & 0xFFFFFFFFFFFFFF00UL) | (UINT64)al;
-					auto ecx = (int)((rax + (UINT64)addValue) & 0xFFFFFFFF);
-					auto rdi = rsi;
-					auto cl = (byte)(ecx & 0xFF);
-					rdi = rdi << cl;
-					al = (byte)(al ^ xorValue);
-					rax = (rax & 0xFFFFFFFFFFFFFF00UL) | (UINT64)al;
-					auto eax = (int)(rax & 0xFFFFFFFF);
-					ecx = eax;
-					cl = (byte)(ecx & 0xFF);
-					rsi = rsi >> cl;
-					rsi = rsi | rdi;
-					rsi = ~rsi;
-					GTAmemory::_cameraPoolAddress = (UINT64*)rsi;
-				}
+				auto rax = secondValue;
+				rax = Rol(rax, firstRol);
+				auto rsi = firstValue;
+				rsi = rsi ^ rax;
+				rsi = Rol(rsi, secondRol);
+				auto al = (byte)(rax & 0xFF);
+				al = (byte)(al & andValue);
+				rax = (rax & 0xFFFFFFFFFFFFFF00UL) | (UINT64)al;
+				auto ecx = (int)((rax + (UINT64)addValue) & 0xFFFFFFFF);
+				auto rdi = rsi;
+				auto cl = (byte)(ecx & 0xFF);
+				rdi = rdi << cl;
+				al = (byte)(al ^ xorValue);
+				rax = (rax & 0xFFFFFFFFFFFFFF00UL) | (UINT64)al;
+				auto eax = (int)(rax & 0xFFFFFFFF);
+				ecx = eax;
+				cl = (byte)(ecx & 0xFF);
+				rsi = rsi >> cl;
+				rsi = rsi | rdi;
+				rsi = ~rsi;
+				GTAmemory::_cameraPoolAddress = (UINT64*)rsi;
 			}
-		}
-		if (address)
-		{
-			address = address - 0x2C;
-			addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + std::to_string(address));
-			GetModelInfo = (GetModelInfo_t)(address);
-		}
-		else
-		{
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo pattern");
 		}
 
 		g_spSnow = SpSnow();

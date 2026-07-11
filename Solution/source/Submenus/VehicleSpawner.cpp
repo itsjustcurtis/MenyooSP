@@ -1143,25 +1143,25 @@ namespace sub
 			if (menuPos.x > 0.45f)
 				panelX = menuPos.x - 0.003f;
 
-			float panelY = OptionY + 0.104f + menuPos.y;
-			float panelW = 0.103f;
-			float barH = 0.008f;
+			float panelY = OptionY + 0.094f + menuPos.y;
+			float panelW = 0.100f;
+			float barH = 0.018f;
 			float barSpacing = 0.0195f;
 			float padding = 0.004f;
 			float lineH = 0.0155f;
 
 			int infoLineCount = 2 + 1 + (c.hasPrice ? 1 : 0);
 			float totalBarsH = 4 * barSpacing;
-			float infoH = infoLineCount * lineH + 0.008f;
+			float infoH = infoLineCount * lineH + 0.015f;
 			float panelH = totalBarsH + infoH + padding * 2;
 
 			DRAW_RECT(panelX, panelY + panelH / 2.0f - padding, panelW + 0.003f, panelH, 0, 0, 0, 200, false);
 
 			RGBA barFillColor(93, 182, 229, 255);
-			RGBA barBgColor(50, 50, 50, 200);
+			RGBA barBgColor(0, 0, 0, 212);
 
 			float barW = panelW - 0.006f;
-			float barStartY = panelY;
+			float barStartY = panelY + 0.012f;
 
 			std::string speedStr = std::to_string((int)c.speedMph) + " mph";
 			DrawStatBar(panelX, barStartY, barW, barH, c.speedRatio, "Speed", speedStr, barFillColor, barBgColor);
