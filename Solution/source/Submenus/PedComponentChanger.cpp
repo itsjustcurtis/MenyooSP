@@ -158,7 +158,7 @@ namespace sub
 		AddOption("Random Components", randomize);
 		AddOption("Default Components", setDefault);
 
-		switch (thisPedModel.hash)
+		/*switch (thisPedModel.hash)
 		{
 		case PedHash::FreemodeMale01:
 		case PedHash::FreemodeFemale01:
@@ -176,7 +176,7 @@ namespace sub
 		if (thisPedModel.hash == PedHash::Michael)
 			AddOption("Police (Michael)", ComponentChanger_offline_police_michael);
 		if (thisPedModel.hash == PedHash::Michael)
-			AddOption("Firefighter (Michael)", ComponentChanger_offline_firefighter_michael);
+			AddOption("Firefighter (Michael)", ComponentChanger_offline_firefighter_michael);*/ //Get rid of this, default outfits makes this redundant.
 
 
 		if (randomize) {
@@ -191,7 +191,7 @@ namespace sub
 			return;
 		}
 
-		if (ComponentChanger_online_police_m) {
+		/*if (ComponentChanger_online_police_m) {
 			SET_PED_PROP_INDEX(g_Ped1, 0, 47, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 			SET_PED_PROP_INDEX(g_Ped1, 1, 10, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 			SET_PED_PROP_INDEX(g_Ped1, 2, 3, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
@@ -263,7 +263,7 @@ namespace sub
 			SET_PED_COMPONENT_VARIATION(g_Ped1, 10, 0, 0, 0);
 			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 57, 0, 0);
 			return;
-		}
+		} */
 
 		if (frontView) {
 			if (g_cam_componentChanger.Exists())
@@ -2083,7 +2083,7 @@ namespace sub
 		}
 
 		bool refreshPressed = false;
-		AddOption("Refresh Cache", refreshPressed);
+		//AddOption("Refresh Cache", refreshPressed); //I don't think this is really needed, cache refreshes on launch anyway
 		if (refreshPressed)
 		{
 			g_defaultOutfitCache.clear();
