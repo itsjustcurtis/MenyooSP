@@ -49,6 +49,8 @@ namespace sub::Spooner
 		extern float rotationSnapDegrees;
 		extern bool bSnapToGround;
 		extern bool bDrawGrid;
+
+		extern bool bAutoSaveDb;
 	}
 
 }

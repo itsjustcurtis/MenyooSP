@@ -322,9 +322,9 @@ namespace sub
 						addlog(ige::LogType::LOG_ERROR, "Attempt to save Database file " + inputStr + ".xml failed");
 					}
 				}
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerSaveDbToFile, std::string(), 28U, "Enter file name:");
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_dir);
-			}
+			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerSaveDbToFile, std::string(), 28U, "Enter file name:");
+			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_dir);
+		}
 
 			bool bSaveWorld = false;
 			AddOption("Save World To File (" + std::to_string(worldEntities.size()) + ")", bSaveWorld); if (bSaveWorld)
@@ -382,7 +382,7 @@ namespace sub
 					}
 				}
 			}
-
+			AddToggle("Auto Save Database (every 3 min)", sub::Spooner::Settings::bAutoSaveDb);
 			/*bool bLoadFromFile = false;
 			AddOption("Load From File", bLoadFromFile); if (bLoadFromFile)
 			{

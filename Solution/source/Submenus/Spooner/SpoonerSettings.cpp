@@ -54,6 +54,7 @@ namespace sub::Spooner
 		float rotationSnapDegrees = 0.0f;
 		bool bSnapToGround = false; // use SnapPos to get the snapped position Vector3
 		bool bDrawGrid = false;
+		bool bAutoSaveDb = false;
 	}
 
 }

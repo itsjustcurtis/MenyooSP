@@ -47,6 +47,7 @@ namespace PTFX
 void ThreadMenyooMain();
 void ThreadMenuLoops2();
 void TickMenyooConfig();
+void TickSpoonerAutoSave();
 void TickRainbowFader();
 void TickNeonFlashAnim();
 void TickNeonFadeAnim();

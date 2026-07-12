@@ -74,6 +74,9 @@
 #include "..\Submenus\PtfxSubs.h"
 #include "..\Submenus\Spooner\SpoonerEntity.h"
 #include "..\Submenus\Spooner\EntityManagement.h"
+#include "..\Submenus\Spooner\Databases.h"
+#include "..\Submenus\Spooner\FileManagement.h"
+#include "..\Submenus\Spooner\SpoonerSettings.h"
 #include "..\Submenus\CutscenePlayer.h"
 
 #include <Windows.h>
@@ -219,6 +222,7 @@ inline void MenyooMain()
 		if (firstTick)
 			addlog(ige::LogType::LOG_TRACE, "First Tick - Load MenyooConfig");
 		TickMenyooConfig();
+		TickSpoonerAutoSave();
 		if (firstTick)
 			addlog(ige::LogType::LOG_TRACE, "First Tick - Neonanims");
 		if (loop_neon_rgb || carColorChange) TickRainbowFader();
@@ -268,6 +272,55 @@ void TickMenyooConfig()
 		g_MenyooConfigTick = GetTickCount();
 	}
 	firstTick = false;
+}
+
+void TickSpoonerAutoSave()
+{
+	static DWORD lastSave = 0;
+
+	if (GetTickCount() <= lastSave + 180000U)
+		return;
+
+	lastSave = GetTickCount();
+
+	if (!sub::Spooner::Settings::bAutoSaveDb)
+		return;
+
+	if (sub::Spooner::Databases::EntityDb.empty()
+		&& sub::Spooner::Databases::MarkerDb.empty()
+		&& sub::Spooner::Databases::LightDb.empty())
+		return;
+
+	std::string autoSaveDir = GetPathffA(Pathff::Spooner, false) + "\\AutoSave";
+	CreateDirectoryA(autoSaveDir.c_str(), NULL);
+
+	SYSTEMTIME t;
+	GetLocalTime(&t);
+	char filename[64];
+	snprintf(filename, sizeof(filename), "%04d-%02d-%02dT%02d-%02d-%02d.xml",
+		t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
+
+	sub::Spooner::FileManagement::SaveDbToFile(autoSaveDir + "\\" + filename, false);
+
+	WIN32_FIND_DATAA ffd;
+	HANDLE hFind = FindFirstFileA((autoSaveDir + "\\*.xml").c_str(), &ffd);
+	if (hFind != INVALID_HANDLE_VALUE)
+	{
+		std::vector<std::pair<std::string, FILETIME>> files;
+		do {
+			files.emplace_back(ffd.cFileName, ffd.ftLastWriteTime);
+		} while (FindNextFileA(hFind, &ffd));
+		FindClose(hFind);
+
+		if (files.size() > 10)
+		{
+			std::sort(files.begin(), files.end(),
+				[](auto& a, auto& b) { return CompareFileTime(&a.second, &b.second) < 0; });
+
+			for (size_t i = 0; i < files.size() - 10; i++)
+				remove((autoSaveDir + "\\" + files[i].first).c_str());
+		}
+	}
 }
 
 void TickRainbowFader()
