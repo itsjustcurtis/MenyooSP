@@ -16,6 +16,9 @@
 typedef int ScrHandle, Entity, Ped, Vehicle;
 typedef unsigned long DWORD, Hash;
 
+class GTAped;
+namespace GTAmodel { class Model; }
+
 namespace pugi {
 	class xml_node;
 }
@@ -38,6 +41,13 @@ namespace sub::Spooner
 
 		void AddEntityToXmlNode(SpoonerEntity& e, pugi::xml_node& nodeEntity);
 		SpoonerEntityWithInitHandle SpawnEntityFromXmlNode(pugi::xml_node& nodeEntity, std::unordered_set<Hash>& vModelHashes);
+
+		// Shared ped sub-loaders (backward-compatible with old _N and new named format)
+		void LoadPedCompsFromXml(GTAped ep, const pugi::xml_node& nodePedComps);
+		void LoadPedPropsFromXml(GTAped ep, const pugi::xml_node& nodePedProps, bool bNetworkIsGameInProgress);
+		void LoadPedHeadFeaturesFromXml(GTAped ep, const pugi::xml_node& nodePedHeadFeatures, const GTAmodel::Model& eModel);
+		void LoadPedDecalsFromXml(GTAped ep, const pugi::xml_node& nodePedDecals);
+		void LoadPedDamagePacksFromXml(GTAped ep, const pugi::xml_node& nodePedDamagePacks);
 
 		void AddMarkerToXmlNode(SpoonerMarker& m, pugi::xml_node& nodeMarker);
 		SpoonerMarkerWithInitHandle SpawnMarkerFromXmlNode(pugi::xml_node& nodeMarker);

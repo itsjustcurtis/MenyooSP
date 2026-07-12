@@ -1496,63 +1496,7 @@ namespace sub
 
 				if (nodePedStuff.child("HasShortHeight").text().as_bool()) SET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, 1);
 
-				auto nodePedHeadFeatures = nodePedStuff.child("HeadFeatures");
-				if (sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel) && nodePedHeadFeatures)
-				{
-					auto nodePedHeadBlend = nodePedHeadFeatures.child("ShapeAndSkinTone");
-					PED::SET_PED_HEAD_BLEND_DATA(ep.Handle(), 0, 0, 0, 1, 1, 1, 0.0f, 0.0f, 0.0f, false);
-					PedHeadBlendData headBlend;
-					headBlend.shapeFirstID = nodePedHeadBlend.child("ShapeFatherId").text().as_int();
-					headBlend.shapeSecondID = nodePedHeadBlend.child("ShapeMotherId").text().as_int();
-					headBlend.shapeThirdID = nodePedHeadBlend.child("ShapeOverrideId").text().as_int();
-					headBlend.skinFirstID = nodePedHeadBlend.child("ToneFatherId").text().as_int();
-					headBlend.skinSecondID = nodePedHeadBlend.child("ToneMotherId").text().as_int();
-					headBlend.skinThirdID = nodePedHeadBlend.child("ToneOverrideId").text().as_int();
-					headBlend.shapeMix = nodePedHeadBlend.child("ShapeVal").text().as_float();
-					headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
-					headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
-					headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
-					if (!g_unlockMaxIDs && (headBlend.shapeFirstID > 45 || headBlend.shapeSecondID > 45 || headBlend.shapeThirdID > 45))
-					{
-						Game::Print::PrintBottomCentre("~r~Warning:~s~ Parent Head Index outside normal range. Ensure Addon Heads are installed and Max Head IDs are unlocked");
-						addlog(ige::LogType::LOG_WARNING, "Ped Head Index " + std::to_string(max(headBlend.shapeFirstID, max(headBlend.shapeSecondID, headBlend.shapeThirdID))) + " outside normal range of 0-45. Ensure Matching Addon Heads are installed from XML Source and Max Head IDs are unlocked.");
-					}
-					ep.SetHeadBlendData(headBlend);
-
-					if (nodePedHeadFeatures.attribute("WasInArray").as_bool())
-					{
-						sub::PedHeadFeatures_catind::sPedHeadFeatures pedHead;
-						pedHead.hairColour = nodePedHeadFeatures.child("HairColour").text().as_int();
-						pedHead.hairColourStreaks = nodePedHeadFeatures.child("HairColourStreaks").text().as_int();
-						pedHead.eyeColour = nodePedHeadFeatures.child("EyeColour").text().as_int();
-
-						SET_PED_HAIR_TINT(ep.Handle(), pedHead.hairColour, pedHead.hairColourStreaks);
-						SET_HEAD_BLEND_EYE_COLOR(ep.Handle(), SYSTEM::ROUND((float)pedHead.eyeColour)); // Sjaak says so
-
-						auto nodePedFacialFeatures = nodePedHeadFeatures.child("FacialFeatures");
-						int ii = 0;
-						for (auto nodePedFacialFeature = nodePedFacialFeatures.first_child(); nodePedFacialFeature; nodePedFacialFeature = nodePedFacialFeature.next_sibling())
-						{
-							ii = stoi(std::string(nodePedFacialFeature.name()).substr(1));
-							pedHead.facialFeatureData[ii] = nodePedFacialFeature.text().as_float();
-							SET_PED_MICRO_MORPH(ep.Handle(), ii, pedHead.facialFeatureData[ii]);
-						}
-
-						auto nodePedHeadOverlays = nodePedHeadFeatures.child("Overlays");
-						ii = 0;
-						for (auto nodePedHeadOverlay = nodePedHeadOverlays.first_child(); nodePedHeadOverlay; nodePedHeadOverlay = nodePedHeadOverlay.next_sibling())
-						{
-							ii = stoi(std::string(nodePedHeadOverlay.name()).substr(1));
-							auto overlayData_index = nodePedHeadOverlay.attribute("index").as_int();
-							pedHead.overlayData[ii].colour = nodePedHeadOverlay.attribute("colour").as_int();
-							pedHead.overlayData[ii].colourSecondary = nodePedHeadOverlay.attribute("colourSecondary").as_int();
-							pedHead.overlayData[ii].opacity = nodePedHeadOverlay.attribute("opacity").as_float();
-							SET_PED_HEAD_OVERLAY(ep.Handle(), ii, overlayData_index, pedHead.overlayData[ii].opacity);
-							SET_PED_HEAD_OVERLAY_TINT(ep.Handle(), ii, sub::PedHeadFeatures_catind::GetPedHeadOverlayColourType((PedHeadOverlay)ii), pedHead.overlayData[ii].colour, pedHead.overlayData[ii].colourSecondary);
-						}
-						sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = pedHead;
-					}
-				}
+				sub::Spooner::FileManagement::LoadPedHeadFeaturesFromXml(ep, nodePedStuff.child("HeadFeatures"), eModel);
 
 				auto nodeFacialMood = nodePedStuff.child("FacialMood");
 				if (nodeFacialMood)
@@ -1576,68 +1520,27 @@ namespace sub
 			decalsApplied.clear();
 			if (applyDecals)
 			{
-				auto nodePedTattooLogoDecals = nodePedStuff.child("TattooLogoDecals");
-				if (nodePedTattooLogoDecals)
-				{
-					for (auto nodeDecal = nodePedTattooLogoDecals.first_child(); nodeDecal; nodeDecal = nodeDecal.next_sibling())
-					{
-						sub::PedDecals::PedDecalValue decal(nodeDecal.attribute("collection").as_uint(), nodeDecal.attribute("value").as_uint());
-						decalsApplied.push_back(decal);
-						ADD_PED_DECORATION_FROM_HASHES(ep.Handle(), decal.collection, decal.value);
-					}
-				}
+				sub::Spooner::FileManagement::LoadPedDecalsFromXml(ep, nodePedStuff.child("TattooLogoDecals"));
 			}
 
 			if (applyComps)
 			{
-				auto nodePedComps = nodePedStuff.child("PedComps");
-				for (auto nodePedCompsObject = nodePedComps.first_child(); nodePedCompsObject; nodePedCompsObject = nodePedCompsObject.next_sibling())
-				{
-					int pedCompId = stoi(std::string(nodePedCompsObject.name()).substr(1));
-					std::string pedCompIdValueStr = nodePedCompsObject.text().as_string();
-					int pedCompIdValueDrawable = stoi(pedCompIdValueStr.substr(0, pedCompIdValueStr.find(",")));
-					int pedCompIdValueTexture = stoi(pedCompIdValueStr.substr(pedCompIdValueStr.find(",") + 1));
-
-					if (GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(ep.Handle(), pedCompId) >= pedCompIdValueDrawable && GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(ep.Handle(), pedCompId, pedCompIdValueDrawable) >= pedCompIdValueTexture)
-					{
-						SET_PED_COMPONENT_VARIATION(ep.Handle(), pedCompId, pedCompIdValueDrawable, pedCompIdValueTexture, 0);
-						addlog(ige::LogType::LOG_DEBUG, "Applied ped component " + std::to_string(pedCompId) + " with drawable " + std::to_string(pedCompIdValueDrawable) + " and texture " + std::to_string(pedCompIdValueTexture));
-					}
-					else
-					{
-						addlog(ige::LogType::LOG_WARNING, "Ped comp " + std::to_string(pedCompId) + " out of range - Drawable " + std::to_string(pedCompIdValueDrawable) + " and texture " + std::to_string(pedCompIdValueTexture));
-					}
-				}
+				sub::Spooner::FileManagement::LoadPedCompsFromXml(ep, nodePedStuff.child("PedComps"));
 			}
 
 			if (applyProps)
 			{
 				CLEAR_ALL_PED_PROPS(ep.Handle(), 0);
-				auto nodePedProps = nodePedStuff.child("PedProps");
-				for (auto nodePedPropsObject = nodePedProps.first_child(); nodePedPropsObject; nodePedPropsObject = nodePedPropsObject.next_sibling())
-				{
-					int pedPropId = stoi(std::string(nodePedPropsObject.name()).substr(1));
-					std::string pedPropIdValueStr = nodePedPropsObject.text().as_string();
-					SET_PED_PROP_INDEX(ep.Handle(), pedPropId, stoi(pedPropIdValueStr.substr(0, pedPropIdValueStr.find(","))), stoi(pedPropIdValueStr.substr(pedPropIdValueStr.find(",") + 1)), bNetworkIsGameInProgress, 0);
-				}
+				sub::Spooner::FileManagement::LoadPedPropsFromXml(ep, nodePedStuff.child("PedProps"), bNetworkIsGameInProgress != 0);
 			}
 
 			sub::PedDamageTextures::ClearAllBloodDamage(ep);
 			sub::PedDamageTextures::ClearAllVisibleDamage(ep);
 			if (applyDamageTextures)
 			{
-				auto nodePedDamagePacks = nodePedStuff.child("DamagePacks");
-				if (nodePedDamagePacks)
-				{
-					auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
-					dmgPacksApplied.clear();
-					for (auto nodePedDamagePack = nodePedDamagePacks.first_child(); nodePedDamagePack; nodePedDamagePack = nodePedDamagePack.next_sibling())
-					{
-						const std::string dpnta = nodePedDamagePack.text().as_string();
-						ep.ApplyDamagePack(dpnta, 1.0f, 1.0f);
-						dmgPacksApplied.push_back(dpnta);
-					}
-				}
+				auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
+				dmgPacksApplied.clear();
+				sub::Spooner::FileManagement::LoadPedDamagePacksFromXml(ep, nodePedStuff.child("DamagePacks"));
 			}
 
 			if (applyAttachedEntities)

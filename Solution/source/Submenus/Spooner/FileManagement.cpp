@@ -489,6 +489,123 @@ namespace sub::Spooner
 				nodeEntityAttachment.append_child("Yaw").text() = e.attachmentArgs.rotation.z;
 			}
 		}
+		void LoadPedCompsFromXml(GTAped ep, const pugi::xml_node& nodePedComps)
+		{
+			int slot = 0;
+			for (auto node = nodePedComps.first_child(); node; node = node.next_sibling(), slot++)
+			{
+				std::string v = node.text().as_string();
+				int drawable = stoi(v.substr(0, v.find(",")));
+				int texture = stoi(v.substr(v.find(",") + 1));
+				if (drawable < 0) drawable = 0; // 0 is an empty slot for components
+				if (texture < 0) texture = 0;
+				if (GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(ep.Handle(), slot) > drawable && GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(ep.Handle(), slot, drawable) > texture)
+				{
+					SET_PED_COMPONENT_VARIATION(ep.Handle(), slot, drawable, texture, 0);
+				}
+			}
+		}
+		void LoadPedPropsFromXml(GTAped ep, const pugi::xml_node& nodePedProps, bool bNetworkIsGameInProgress)
+		{
+			int slot = 0;
+			for (auto node = nodePedProps.first_child(); node; node = node.next_sibling(), slot++)
+			{
+				if (slot > 9) break;
+				std::string v = node.text().as_string();
+				int drawable = stoi(v.substr(0, v.find(",")));
+				int texture = stoi(v.substr(v.find(",") + 1));
+				if (drawable < -1) drawable = 0; // -1 is an empty slot for props
+				if (texture < 0) texture = 0;
+				SET_PED_PROP_INDEX(ep.Handle(), slot, drawable, texture, bNetworkIsGameInProgress, 0);
+			}
+		}
+		void LoadPedHeadFeaturesFromXml(GTAped ep, const pugi::xml_node& nodePedHeadFeatures, const GTAmodel::Model& eModel)
+		{
+			if (!sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel) || !nodePedHeadFeatures)
+				return;
+
+			auto nodePedHeadBlend = nodePedHeadFeatures.child("ShapeAndSkinTone");
+			PED::SET_PED_HEAD_BLEND_DATA(ep.Handle(), 0, 0, 0, 1, 1, 1, 0.0f, 0.0f, 0.0f, false);
+			PedHeadBlendData headBlend;
+			headBlend.shapeFirstID = nodePedHeadBlend.child("ShapeFatherId").text().as_int();
+			headBlend.shapeSecondID = nodePedHeadBlend.child("ShapeMotherId").text().as_int();
+			headBlend.shapeThirdID = nodePedHeadBlend.child("ShapeOverrideId").text().as_int();
+			headBlend.skinFirstID = nodePedHeadBlend.child("ToneFatherId").text().as_int();
+			headBlend.skinSecondID = nodePedHeadBlend.child("ToneMotherId").text().as_int();
+			headBlend.skinThirdID = nodePedHeadBlend.child("ToneOverrideId").text().as_int();
+			headBlend.shapeMix = nodePedHeadBlend.child("ShapeVal").text().as_float();
+			headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
+			headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
+			headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
+			if (!g_unlockMaxIDs && (headBlend.shapeFirstID > 45 || headBlend.shapeSecondID > 45 || headBlend.shapeThirdID > 45))
+			{
+				Game::Print::PrintBottomCentre("~r~Warning:~s~ Parent Head Index outside normal range. Ensure Addon Heads are installed and Max Head IDs are unlocked");
+				addlog(ige::LogType::LOG_WARNING, "Ped Head Index " + std::to_string(max(headBlend.shapeFirstID, max(headBlend.shapeSecondID, headBlend.shapeThirdID))) + " outside normal range of 0-45. Ensure Matching Addon Heads are installed from XML Source and Max Head IDs are unlocked.");
+			}
+			ep.SetHeadBlendData(headBlend);
+
+			if (!nodePedHeadFeatures.attribute("WasInArray").as_bool())
+				return;
+
+			sub::PedHeadFeatures_catind::sPedHeadFeatures pedHead;
+			pedHead.hairColour = nodePedHeadFeatures.child("HairColour").text().as_int();
+			pedHead.hairColourStreaks = nodePedHeadFeatures.child("HairColourStreaks").text().as_int();
+			pedHead.eyeColour = nodePedHeadFeatures.child("EyeColour").text().as_int();
+
+			SET_PED_HAIR_TINT(ep.Handle(), pedHead.hairColour, pedHead.hairColourStreaks);
+			SET_HEAD_BLEND_EYE_COLOR(ep.Handle(), SYSTEM::ROUND((float)pedHead.eyeColour));
+
+			auto nodePedFacialFeatures = nodePedHeadFeatures.child("FacialFeatures");
+			int facialFeatureSlot = 0;
+			for (auto node = nodePedFacialFeatures.first_child(); node; node = node.next_sibling(), facialFeatureSlot++)
+			{
+				pedHead.facialFeatureData[facialFeatureSlot] = node.text().as_float();
+				SET_PED_MICRO_MORPH(ep.Handle(), facialFeatureSlot, pedHead.facialFeatureData[facialFeatureSlot]);
+			}
+
+			auto nodePedHeadOverlays = nodePedHeadFeatures.child("Overlays");
+			for (auto node = nodePedHeadOverlays.first_child(); node; node = node.next_sibling())
+			{
+				int ii = stoi(std::string(node.name()).substr(1));
+				auto overlayData_index = node.attribute("index").as_int();
+				pedHead.overlayData[ii].colour = node.attribute("colour").as_int();
+				pedHead.overlayData[ii].colourSecondary = node.attribute("colourSecondary").as_int();
+				pedHead.overlayData[ii].opacity = node.attribute("opacity").as_float();
+				SET_PED_HEAD_OVERLAY(ep.Handle(), ii, overlayData_index, pedHead.overlayData[ii].opacity);
+				SET_PED_HEAD_OVERLAY_TINT(ep.Handle(), ii, sub::PedHeadFeatures_catind::GetPedHeadOverlayColourType((PedHeadOverlay)ii), pedHead.overlayData[ii].colour, pedHead.overlayData[ii].colourSecondary);
+			}
+			sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = pedHead;
+		}
+		void LoadPedDecalsFromXml(GTAped ep, const pugi::xml_node& nodePedDecals)
+		{
+			if (!nodePedDecals)
+				return;
+
+			auto& decalsApplied = sub::PedDecals::vPedsAndDecals[ep.Handle()];
+			for (auto node = nodePedDecals.first_child(); node; node = node.next_sibling())
+			{
+				sub::PedDecals::PedDecalValue decal(
+					node.attribute("collection").as_uint(),
+					node.attribute("value").as_uint()
+				);
+				decalsApplied.push_back(decal);
+				ADD_PED_DECORATION_FROM_HASHES(ep.Handle(), decal.collection, decal.value);
+			}
+		}
+		void LoadPedDamagePacksFromXml(GTAped ep, const pugi::xml_node& nodePedDamagePacks)
+		{
+			if (!nodePedDamagePacks)
+				return;
+
+			auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
+			for (auto node = nodePedDamagePacks.first_child(); node; node = node.next_sibling())
+			{
+				const std::string dpnta = node.text().as_string();
+				ep.ApplyDamagePack(dpnta, 1.0f, 1.0f);
+				dmgPacksApplied.push_back(dpnta);
+			}
+		}
+
 		SpoonerEntityWithInitHandle SpawnEntityFromXmlNode(pugi::xml_node& nodeEntity, std::unordered_set<Hash>& vModelHashes)
 		{
 			bool isPtfxLopAdded = false;
@@ -566,113 +683,18 @@ namespace sub::Spooner
 				SET_PED_CAN_PLAY_VISEME_ANIMS(ep.Handle(), true, TRUE);
 				SET_PED_IS_IGNORED_BY_AUTO_OPEN_DOORS(ep.Handle(), true);
 
-				auto nodePedProps = nodePedStuff.child("PedProps");
-				auto nodePedComps = nodePedStuff.child("PedComps");
-				int pedCompSlot = 0;
-				for (auto node = nodePedComps.first_child(); node; node = node.next_sibling(), pedCompSlot++)
+				LoadPedCompsFromXml(ep, nodePedStuff.child("PedComps"));
+				LoadPedPropsFromXml(ep, nodePedStuff.child("PedProps"), bNetworkIsGameInProgress != 0);
+
+				auto nodePedConfigFlags = nodePedStuff.child("PedConfigFlags");
+				for (auto node = nodePedConfigFlags.first_child(); node; node = node.next_sibling())
 				{
-					std::string v = node.text().as_string();
-					int drawable = stoi(v.substr(0, v.find(",")));
-					int texture = stoi(v.substr(v.find(",") + 1));
-					if (drawable < 0) drawable = 0;
-					if (texture < 0) texture = 0;
-					SET_PED_COMPONENT_VARIATION(ep.Handle(), pedCompSlot, drawable, texture, 0);
-				}
-				int pedPropSlot = 0;
-				for (auto node = nodePedProps.first_child(); node; node = node.next_sibling(), pedPropSlot++)
-				{
-					std::string v = node.text().as_string();
-					int drawable = stoi(v.substr(0, v.find(",")));
-					int texture = stoi(v.substr(v.find(",") + 1));
-					if (drawable < -1) drawable = 0;
-					if (texture < 0) texture = 0;
-					SET_PED_PROP_INDEX(ep.Handle(), pedPropSlot, drawable, texture, bNetworkIsGameInProgress, 0);
+					SET_PED_CONFIG_FLAG(ep.Handle(), stoi(std::string(node.name()).substr(1)), node.text().as_bool());
 				}
 
-				auto nodePedConfigFlags = nodePedStuff.child("PedConfigFlags"); // Only if the node exists
-				for (auto nodePedConfigFlagsObject = nodePedConfigFlags.first_child(); nodePedConfigFlagsObject; nodePedConfigFlagsObject = nodePedConfigFlagsObject.next_sibling())
-				{
-					SET_PED_CONFIG_FLAG(ep.Handle(), stoi(std::string(nodePedConfigFlagsObject.name()).substr(1)), nodePedConfigFlagsObject.text().as_bool());
-				}
-
-				auto nodePedHeadFeatures = nodePedStuff.child("HeadFeatures");
-				if (sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel) && nodePedHeadFeatures)
-				{
-					auto nodePedHeadBlend = nodePedHeadFeatures.child("ShapeAndSkinTone");
-					PED::SET_PED_HEAD_BLEND_DATA(ep.Handle(), 0, 0, 0, 1, 1, 1, 0.0f, 0.0f, 0.0f, false);
-					PedHeadBlendData headBlend;
-					headBlend.shapeFirstID = nodePedHeadBlend.child("ShapeFatherId").text().as_int();
-					headBlend.shapeSecondID = nodePedHeadBlend.child("ShapeMotherId").text().as_int();
-					headBlend.shapeThirdID = nodePedHeadBlend.child("ShapeOverrideId").text().as_int();
-					headBlend.skinFirstID = nodePedHeadBlend.child("ToneFatherId").text().as_int();
-					headBlend.skinSecondID = nodePedHeadBlend.child("ToneMotherId").text().as_int();
-					headBlend.skinThirdID = nodePedHeadBlend.child("ToneOverrideId").text().as_int();
-					headBlend.shapeMix = nodePedHeadBlend.child("ShapeVal").text().as_float();
-					headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
-					headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
-					headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
-					ep.SetHeadBlendData(headBlend);
-
-					if (nodePedHeadFeatures.attribute("WasInArray").as_bool())
-					{
-						sub::PedHeadFeatures_catind::sPedHeadFeatures pedHead;
-						pedHead.hairColour = nodePedHeadFeatures.child("HairColour").text().as_int();
-						pedHead.hairColourStreaks = nodePedHeadFeatures.child("HairColourStreaks").text().as_int();
-						pedHead.eyeColour = nodePedHeadFeatures.child("EyeColour").text().as_int();
-
-						SET_PED_HAIR_TINT(ep.Handle(), pedHead.hairColour, pedHead.hairColourStreaks);
-						SET_HEAD_BLEND_EYE_COLOR(ep.Handle(), SYSTEM::ROUND((float)pedHead.eyeColour)); // Sjaak says so
-
-						auto nodePedFacialFeatures = nodePedHeadFeatures.child("FacialFeatures");
-						int facialFeatureSlot = 0;
-						for (auto node = nodePedFacialFeatures.first_child(); node; node = node.next_sibling(), facialFeatureSlot++)
-						{
-							pedHead.facialFeatureData[facialFeatureSlot] = node.text().as_float();
-							SET_PED_MICRO_MORPH(ep.Handle(), facialFeatureSlot, pedHead.facialFeatureData[facialFeatureSlot]);
-						}
-
-						auto nodePedHeadOverlays = nodePedHeadFeatures.child("Overlays");
-						int ii = 0;
-						for (auto nodePedHeadOverlay = nodePedHeadOverlays.first_child(); nodePedHeadOverlay; nodePedHeadOverlay = nodePedHeadOverlay.next_sibling())
-						{
-							ii = stoi(std::string(nodePedHeadOverlay.name()).substr(1));
-							auto overlayData_index = nodePedHeadOverlay.attribute("index").as_int();
-							pedHead.overlayData[ii].colour = nodePedHeadOverlay.attribute("colour").as_int();
-							pedHead.overlayData[ii].colourSecondary = nodePedHeadOverlay.attribute("colourSecondary").as_int();
-							pedHead.overlayData[ii].opacity = nodePedHeadOverlay.attribute("opacity").as_float();
-							SET_PED_HEAD_OVERLAY(ep.Handle(), ii, overlayData_index, pedHead.overlayData[ii].opacity);
-							SET_PED_HEAD_OVERLAY_TINT(ep.Handle(), ii, sub::PedHeadFeatures_catind::GetPedHeadOverlayColourType((PedHeadOverlay)ii), pedHead.overlayData[ii].colour, pedHead.overlayData[ii].colourSecondary);
-						}
-						sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = pedHead;
-					}
-				}
-
-				auto nodePedTattooLogoDecals = nodePedStuff.child("TattooLogoDecals");
-				if (nodePedTattooLogoDecals)
-				{
-					auto& decalsApplied = sub::PedDecals::vPedsAndDecals[ep.Handle()];
-					for (auto nodeDecal = nodePedTattooLogoDecals.first_child(); nodeDecal; nodeDecal = nodeDecal.next_sibling())
-					{
-						sub::PedDecals::PedDecalValue decal(
-							nodeDecal.attribute("collection").as_uint(),
-							nodeDecal.attribute("value").as_uint()
-						);
-						decalsApplied.push_back(decal);
-						ADD_PED_DECORATION_FROM_HASHES(ep.Handle(), decal.collection, decal.value);
-					}
-				}
-
-				auto nodePedDamagePacks = nodePedStuff.child("DamagePacks");
-				if (nodePedDamagePacks)
-				{
-					auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
-					for (auto nodePedDamagePack = nodePedDamagePacks.first_child(); nodePedDamagePack; nodePedDamagePack = nodePedDamagePack.next_sibling())
-					{
-						const std::string dpnta = nodePedDamagePack.text().as_string();
-						ep.ApplyDamagePack(dpnta, 1.0f, 1.0f);
-						dmgPacksApplied.push_back(dpnta);
-					}
-				}
+				LoadPedHeadFeaturesFromXml(ep, nodePedStuff.child("HeadFeatures"), eModel);
+				LoadPedDecalsFromXml(ep, nodePedStuff.child("TattooLogoDecals"));
+				LoadPedDamagePacksFromXml(ep, nodePedStuff.child("DamagePacks"));
 
 				bool bRelationshipGroupAltered = nodePedStuff.child("RelationshipGroupAltered").text().as_bool();
 				Hash relationshipGroupHash = nodePedStuff.child("RelationshipGroup").text().as_uint();
