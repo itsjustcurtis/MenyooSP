@@ -57,6 +57,22 @@ namespace sub::Spooner
 	namespace FileManagement
 	{
 		std::string _oldAudioAlias;
+		const std::vector<std::string> drawableComponentSlotNames = {
+			"head", "berd", "hair", "uppr", "lowr", "hand", "feet", "teef", "accs", "task", "decl", "jbib"
+		};
+		const std::vector<std::string> drawablePropSlotNames = {
+			"p_head", "p_eyes", "p_ears", "p_mouth", "p_lhand", "p_rhand", "p_lwrist", "p_rwrist", "p_hip", "p_lfoot", "p_rfoot", "p_unk1", "p_unk2"
+		};
+		const std::vector<std::string> facialFeatureSlotNames = {
+			"NoseWidth", "NoseHeight", "NoseLength", "NoseBridge", "NoseTip", "NoseBridgeShaft",
+			"BrowHeight", "BrowWidth",
+			"CheekboneHeight", "CheekboneWidth", "CheekWidth", "Eyelids",
+			"Lips",
+			"JawWidth", "JawHeight",
+			"ChinLength", "ChinPosition", "ChinWidth", "ChinShape",
+			"NeckWidth"
+		};
+
 
 		/*bool Exists(const std::string& fileName, std::string extension = ".xml")
 		{
@@ -140,13 +156,15 @@ namespace sub::Spooner
 
 				auto nodePedProps = nodePedStuff.append_child("PedProps");
 				auto nodePedComps = nodePedStuff.append_child("PedComps");
-				for (UINT8 i = 0; i <= 9; i++)
+				for (UINT8 i = 0; i <= drawablePropSlotNames.size() - 1; i++)
 				{
-					nodePedProps.append_child(("_" + std::to_string(i)).c_str()).text() = (std::to_string(GET_PED_PROP_INDEX(ep.Handle(), i, 0)) + "," + std::to_string(GET_PED_PROP_TEXTURE_INDEX(ep.Handle(), i))).c_str();
+					const std::string propSlotName = drawablePropSlotNames[i];
+					nodePedProps.append_child(propSlotName.c_str()).text() = (std::to_string(GET_PED_PROP_INDEX(ep.Handle(), i, 0)) + "," + std::to_string(GET_PED_PROP_TEXTURE_INDEX(ep.Handle(), i))).c_str();
 				}
-				for (UINT8 i = 0; i <= 11; i++)
+				for (UINT8 i = 0; i <= drawableComponentSlotNames.size() - 1; i++)
 				{
-					nodePedComps.append_child(("_" + std::to_string(i)).c_str()).text() = (std::to_string(GET_PED_DRAWABLE_VARIATION(ep.Handle(), i)) + "," + std::to_string(GET_PED_TEXTURE_VARIATION(ep.Handle(), i))).c_str();
+					const std::string compSlotName = drawableComponentSlotNames[i];
+					nodePedComps.append_child(compSlotName.c_str()).text() = (std::to_string(GET_PED_DRAWABLE_VARIATION(ep.Handle(), i)) + "," + std::to_string(GET_PED_TEXTURE_VARIATION(ep.Handle(), i))).c_str();
 				}
 
 				if (sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel))
@@ -177,8 +195,9 @@ namespace sub::Spooner
 						auto nodePedFacialFeatures = nodePedHeadFeatures.append_child("FacialFeatures"); //currently returning 0 to xml file for all values
 						for (int i = 0; i < pedHead.facialFeatureData.size(); i++)
 						{
-							addlog(ige::LogType::LOG_DEBUG, "Saving Facial feature " + std::to_string(i) + " as value " + std::to_string(pedHead.facialFeatureData[i]));
-							nodePedFacialFeatures.append_child(("_" + std::to_string(i)).c_str()).text() = std::to_string(pedHead.facialFeatureData[i]).c_str();
+							std::string facialFeatureName = facialFeatureSlotNames[i];
+							addlog(ige::LogType::LOG_DEBUG, "Saving Facial feature " + facialFeatureName + " (index " + std::to_string(i) + ") as value " + std::to_string(pedHead.facialFeatureData[i]));
+							nodePedFacialFeatures.append_child(facialFeatureName.c_str()).text() = std::to_string(pedHead.facialFeatureData[i]).c_str();
 						}
 
 						auto nodePedHeadOverlays = nodePedHeadFeatures.append_child("Overlays");
@@ -549,19 +568,25 @@ namespace sub::Spooner
 
 				auto nodePedProps = nodePedStuff.child("PedProps");
 				auto nodePedComps = nodePedStuff.child("PedComps");
-				for (auto nodePedCompsObject = nodePedComps.first_child(); nodePedCompsObject; nodePedCompsObject = nodePedCompsObject.next_sibling())
+				int pedCompSlot = 0;
+				for (auto node = nodePedComps.first_child(); node; node = node.next_sibling(), pedCompSlot++)
 				{
-					int pedCompId = stoi(std::string(nodePedCompsObject.name()).substr(1));
-					std::string pedCompIdValueStr = nodePedCompsObject.text().as_string();
-
-					SET_PED_COMPONENT_VARIATION(ep.Handle(), pedCompId, stoi(pedCompIdValueStr.substr(0, pedCompIdValueStr.find(","))), stoi(pedCompIdValueStr.substr(pedCompIdValueStr.find(",") + 1)), 0);
+					std::string v = node.text().as_string();
+					int drawable = stoi(v.substr(0, v.find(",")));
+					int texture = stoi(v.substr(v.find(",") + 1));
+					if (drawable < 0) drawable = 0;
+					if (texture < 0) texture = 0;
+					SET_PED_COMPONENT_VARIATION(ep.Handle(), pedCompSlot, drawable, texture, 0);
 				}
-				for (auto nodePedPropsObject = nodePedProps.first_child(); nodePedPropsObject; nodePedPropsObject = nodePedPropsObject.next_sibling())
+				int pedPropSlot = 0;
+				for (auto node = nodePedProps.first_child(); node; node = node.next_sibling(), pedPropSlot++)
 				{
-					int pedPropId = stoi(std::string(nodePedPropsObject.name()).substr(1));
-					std::string pedPropIdValueStr = nodePedPropsObject.text().as_string();
-
-					SET_PED_PROP_INDEX(ep.Handle(), pedPropId, stoi(pedPropIdValueStr.substr(0, pedPropIdValueStr.find(","))), stoi(pedPropIdValueStr.substr(pedPropIdValueStr.find(",") + 1)), bNetworkIsGameInProgress, 0);
+					std::string v = node.text().as_string();
+					int drawable = stoi(v.substr(0, v.find(",")));
+					int texture = stoi(v.substr(v.find(",") + 1));
+					if (drawable < -1) drawable = 0;
+					if (texture < 0) texture = 0;
+					SET_PED_PROP_INDEX(ep.Handle(), pedPropSlot, drawable, texture, bNetworkIsGameInProgress, 0);
 				}
 
 				auto nodePedConfigFlags = nodePedStuff.child("PedConfigFlags"); // Only if the node exists
@@ -599,16 +624,15 @@ namespace sub::Spooner
 						SET_HEAD_BLEND_EYE_COLOR(ep.Handle(), SYSTEM::ROUND((float)pedHead.eyeColour)); // Sjaak says so
 
 						auto nodePedFacialFeatures = nodePedHeadFeatures.child("FacialFeatures");
-						int ii = 0;
-						for (auto nodePedFacialFeature = nodePedFacialFeatures.first_child(); nodePedFacialFeature; nodePedFacialFeature = nodePedFacialFeature.next_sibling())
+						int facialFeatureSlot = 0;
+						for (auto node = nodePedFacialFeatures.first_child(); node; node = node.next_sibling(), facialFeatureSlot++)
 						{
-							ii = stoi(std::string(nodePedFacialFeature.name()).substr(1));
-							pedHead.facialFeatureData[ii] = nodePedFacialFeature.text().as_float();
-							SET_PED_MICRO_MORPH(ep.Handle(), ii, pedHead.facialFeatureData[ii]);
+							pedHead.facialFeatureData[facialFeatureSlot] = node.text().as_float();
+							SET_PED_MICRO_MORPH(ep.Handle(), facialFeatureSlot, pedHead.facialFeatureData[facialFeatureSlot]);
 						}
 
 						auto nodePedHeadOverlays = nodePedHeadFeatures.child("Overlays");
-						ii = 0;
+						int ii = 0;
 						for (auto nodePedHeadOverlay = nodePedHeadOverlays.first_child(); nodePedHeadOverlay; nodePedHeadOverlay = nodePedHeadOverlay.next_sibling())
 						{
 							ii = stoi(std::string(nodePedHeadOverlay.name()).substr(1));
