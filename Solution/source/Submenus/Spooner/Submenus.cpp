@@ -29,6 +29,7 @@
 #include "..\..\Util\StringManip.h"
 #include "..\..\Menu\FolderPreviewBmps.h"
 #include "..\..\Menu\MenuCategory.h"
+#include "..\..\Scripting\DxHookIMG.h"
 #include "..\..\Scripting\GTAblip.h"
 #include "..\..\Scripting\TimecycleModification.h"
 #include "..\..\Scripting\Camera.h"
@@ -64,6 +65,7 @@
 #include <Shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
 #include <string>
+#include <fstream>
 #include <tuple>
 #include <vector>
 #include <set>
@@ -220,6 +222,9 @@ namespace sub
 			AddOption("Manage Markers", null, nullFunc, SUB::SPOONER_MANAGEMARKERS);
 			AddOption("Manage Light Sources", null, nullFunc, SUB::SPOONER_MANAGELIGHTS);
 			AddOption("Manage Saved Files", null, nullFunc, SUB::SPOONER_SAVEFILES);
+			AddOption("Job Importer", null, nullFunc, SUB::SPOONER_JOBIMPORTER);
+			AddOption("Quick Manual Placement (Legacy)", null, nullFunc, SUB::SPOONER_QUICKMANUALPLACEMENT);
+			AddOption("Edit Multiple Entities Simultaneously", null, nullFunc, SUB::SPOONER_GROUPSPOON);
 			AddOption("Settings", null, nullFunc, SUB::SPOONER_SETTINGS);
 		}
 		void Sub_Settings()
@@ -542,6 +547,30 @@ namespace sub
 								Menu::pendingSubmenu = SUB::SPOONER_SAVEFILES_LOAD_LEGACYSP00N;
 							}
 						}
+
+						if (isXml && Menu::printingop == *Menu::currentopATM && !bFilePressed)
+						{
+							static std::string lastHoveredXml = "";
+							static DxHookIMG::DxTexture hoveredXmlTexture;
+							std::string baseName = filname.substr(0, filname.rfind('.'));
+							std::string hoverImgPath = _dir + "\\" + baseName + ".jpg";
+							if (lastHoveredXml != hoverImgPath)
+							{
+								lastHoveredXml = hoverImgPath;
+								hoveredXmlTexture = DxHookIMG::DxTexture();
+								std::ifstream f(hoverImgPath);
+								if (f.good()) hoveredXmlTexture.Load(hoverImgPath);
+							}
+							if (hoveredXmlTexture.Exists())
+							{
+								Vector2 res = { 0.1f, 0.0889f };
+								FLOAT x_coord = 0.324f + menuPos.x;
+								FLOAT y_coord = OptionY + 0.044f + menuPos.y;
+								if (menuPos.x > 0.45f) x_coord = menuPos.x - 0.003f;
+								DRAW_RECT(x_coord, y_coord, res.x + 0.003f, res.y + 0.003f, 0, 0, 0, 212, false);
+								hoveredXmlTexture.Draw(0, Vector2(x_coord, y_coord), Vector2(res.x, res.y / 2 + 0.005f), 0.0f, RGBA::AllWhite());
+							}
+						}
 					}
 				}
 			}
@@ -615,6 +644,29 @@ namespace sub
 			AddOption("Teleport To Reference", bTeleToRef); if (bTeleToRef)
 			{
 				FileManagement::TeleportToReference(filePath);
+			}
+
+			static std::string lastLoadedImg = "";
+			static DxHookIMG::DxTexture mapPreviewTexture;
+			std::string imgPath = _dir + "\\" + _name + ".jpg";
+			if (lastLoadedImg != imgPath)
+			{
+				lastLoadedImg = imgPath;
+				mapPreviewTexture = DxHookIMG::DxTexture(); // reset
+				std::ifstream f(imgPath);
+				if (f.good())
+				{
+					mapPreviewTexture.Load(imgPath);
+				}
+			}
+			if (mapPreviewTexture.Exists())
+			{
+				Vector2 res = { 0.1f, 0.0889f };
+				FLOAT x_coord = 0.324f + menuPos.x;
+				FLOAT y_coord = OptionY + 0.044f + menuPos.y;
+				if (menuPos.x > 0.45f) x_coord = menuPos.x - 0.003f;
+				DRAW_RECT(x_coord, y_coord, res.x + 0.003f, res.y + 0.003f, 0, 0, 0, 212, false);
+				mapPreviewTexture.Draw(0, Vector2(x_coord, y_coord), Vector2(res.x, res.y / 2 + 0.005f), 0.0f, RGBA::AllWhite());
 			}
 
 			bool bLoadPlacements = false;
@@ -4714,6 +4766,19 @@ REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD_LEGACYSP00N,                  	sub::Spoo
 REGISTER_SUBMENU(SPOONER_AUTOSAVE,                                    	sub::Spooner::Submenus::Sub_AutoSave)
 REGISTER_SUBMENU(SPOONER_VECTOR3_MANUALEDITING,                     	sub::Spooner::Submenus::Sub_Vector3_ManualEditing)
 REGISTER_SUBMENU(SPOONER_MULTISELECT,                                  	sub::Spooner::Submenus::Sub_MultiSelect)
+REGISTER_SUBMENU(SPOONER_JOBIMPORTER,                                    	sub::Spooner::Submenus::Sub_JobImporter)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER,                                     	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_MYCONTENT,                                	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_FRIENDCONTENT,                            	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_MOSTRECENT,                               	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_TOPRATED,                                 	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_CREWCONTENT,                              	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_INFO,                                	sub::Spooner::Submenus::Sub_JobBrowser_Info)
+REGISTER_SUBMENU(SPOONER_VECTOR3_MANUALPLACEMENT,                     	sub::Spooner::Submenus::Sub_Vector3_ManualPlacement)
+REGISTER_SUBMENU(SPOONER_QUICKMANUALPLACEMENT,                        	sub::Spooner::Submenus::Sub_QuickManualPlacement)
+REGISTER_SUBMENU(SPOONER_GROUPSPOON,                                  	sub::Spooner::Submenus::Sub_GroupSpoon)
+REGISTER_SUBMENU(SPOONER_GROUPSPOON_SELECTENTITIES,                   	sub::Spooner::Submenus::Sub_GroupSpoon_SelectEntities)
+REGISTER_SUBMENU(SPOONER_GROUPSPOON_ATTACHTO,                         	sub::Spooner::Submenus::Sub_GroupSpoon_AttachTo)
 REGISTER_SUBMENU(SPOONER_SETTINGS,                                    	sub::Spooner::Submenus::Sub_Settings)
 REGISTER_SUBMENU(SPOONER_SELECTEDENTITYOPS,                           	sub::Spooner::Submenus::Sub_SelectedEntityOps)
 REGISTER_SUBMENU(SPOONER_PEDOPS,                                      	sub::Spooner::Submenus::Sub_PedOps)
