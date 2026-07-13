@@ -28,6 +28,7 @@
 #include "..\Scripting\Camera.h"
 #include "..\Scripting\GameplayCamera.h"
 #include "..\Scripting\World.h"
+#include "Spooner\SpoonerMode.h"
 #include "..\Scripting\Game.h"
 #include "..\Util\ExePath.h"
 #include "..\Util\FileLogger.h"
@@ -285,7 +286,10 @@ namespace sub
 			{
 				g_cam_componentChanger.SetActive(false);
 				g_cam_componentChanger.Destroy();
-				World::SetRenderingCamera(0);
+				if (sub::Spooner::SpoonerMode::bEnabled && sub::Spooner::SpoonerMode::spoonerModeCamera.Exists())
+					World::SetRenderingCamera(sub::Spooner::SpoonerMode::spoonerModeCamera);
+				else
+					World::SetRenderingCamera(0);
 			}
 			else
 			{
