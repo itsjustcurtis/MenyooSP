@@ -44,9 +44,6 @@ namespace sub
 		void Sub_SaveFiles();
 		void Sub_SaveFiles_Load();
 		void Sub_SaveFiles_Load_LegacySP00N();
-		void Sub_JobImporter();
-		void Sub_JobBrowser();
-		void Sub_JobBrowser_Info();
 		void Sub_ManageEntities();
 		void Sub_ManageEntities_Removal();
 		//void Sub_ManageEntities_Removal_FromDb();
