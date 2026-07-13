@@ -91,6 +91,21 @@ namespace sub
 		}
 	}
 
+	void SyncCollectionToGlobalId(GTAmemory::DrawableCollectionData& data, int globalId)
+	{
+		for (int c = 0; c < (int)data.collections.size(); c++)
+		{
+			for (int l = 0; l < (int)data.collections[c].localToGlobal.size(); l++)
+			{
+				if (data.collections[c].localToGlobal[l] == globalId)
+				{
+					data.currentCollectionIdx = c;
+					data.currentLocalIdx = l;
+					return;
+				}
+			}
+		}
+	}
 	void ComponentChanger()
 	{
 		dict2.clear();
@@ -318,6 +333,7 @@ namespace sub
 			AddNumberStepper("Texture", textureId, 0, 1.0, 0, maxTextureId - 1, false, true);
 
 		// Collection data section (legacy only)
+		bool collectionModified = false;
 		if (!g_isEnhanced && maxGlobalDrawableId >= 0)
 		{
 			static GTAmemory::DrawableCollectionData s_cache[PV_COMP_MAX];
@@ -336,6 +352,11 @@ namespace sub
 			{
 				AddBreak("---Collection Data---");
 
+				if (data.currentCollectionIdx < 0)
+					data.currentCollectionIdx = 0;
+				if (data.currentCollectionIdx >= (int)data.collections.size())
+					data.currentCollectionIdx = 0;
+
 				std::vector<std::string> names;
 				for (auto& c : data.collections)
 					names.push_back(c.name);
@@ -348,6 +369,9 @@ namespace sub
 					data.currentLocalIdx = 0;
 
 				auto& col = data.collections[data.currentCollectionIdx];
+				if (data.currentLocalIdx < 0 || data.currentLocalIdx > col.maxLocalId)
+					data.currentLocalIdx = 0;
+
 				int prevLocalDrawableId = data.currentLocalIdx;
 
 				AddNumberStepper("Local ID", data.currentLocalIdx, 0, 1.0, 0, col.maxLocalId, false, true);
@@ -358,27 +382,17 @@ namespace sub
 					globalDrawableId = col.localToGlobal[data.currentLocalIdx];
 					textureId = 0;
 					maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, globalDrawableId);
+					collectionModified = true;
 				}
 				else if (globalDrawableId != prevGlobalDrawableId)
 				{
-					bool synced = false;
-					for (int c = 0; c < (int)data.collections.size() && !synced; c++)
-					{
-						for (int l = 0; l < (int)data.collections[c].localToGlobal.size() && !synced; l++)
-						{
-							if (data.collections[c].localToGlobal[l] == globalDrawableId)
-							{
-								data.currentCollectionIdx = c;
-								data.currentLocalIdx = l;
-								synced = true;
-							}
-						}
-					}
+					SyncCollectionToGlobalId(data, globalDrawableId);
+					collectionModified = true;
 				}
 			}
 		}
 
-		if (globalDrawableId != prevGlobalDrawableId || textureId != prevTextureId)
+		if (collectionModified || globalDrawableId != prevGlobalDrawableId || textureId != prevTextureId)
 		{
 			if (g_Ped4 == PV_COMP_ACCS && !GET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true))
 			{
@@ -470,27 +484,25 @@ namespace sub
 
 	void ComponentChangerProps2()
 	{
-		GTAentity ped = g_Ped1;
-		auto& propId = g_Ped4;
+		int propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0);
+		int propTextureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
+		int propTypeOld = propTypeCurrent;
+		int propTextureOld = propTextureCurrent;
 
-		int propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0),
-			propTextureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
-		int propTypeOld = propTypeCurrent,
-			propTextureOld = propTextureCurrent;
-
-		int maxProp = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+		int maxGlobalPropId = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
+		int maxTextureId = propTypeCurrent >= 0 ? GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) : 0;
 
 		AddTitle("Set Variation");
 
-		if (maxProp >= 0)
+		if (maxGlobalPropId >= 0)
 		{
-			AddNumberStepper("Type", propTypeCurrent, 0, 1.0, -1, maxProp, false, true);
+			AddNumberStepper("Type", propTypeCurrent, 0, 1.0, -1, maxGlobalPropId, false, true);
 		}
 
-		int maxTextureId = 0;
-		if (propTypeCurrent >= 0)
+		if (propTypeCurrent != propTypeOld)
 		{
-			maxTextureId = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent);
+			propTextureCurrent = 0;
+			maxTextureId = propTypeCurrent >= 0 ? GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) : 0;
 		}
 		if (maxTextureId > 0)
 		{
@@ -498,21 +510,20 @@ namespace sub
 		}
 
 		// Collection data section (legacy only)
-		if (!g_isEnhanced && maxProp >= 0)
+		bool collectionModified = false;
+		if (!g_isEnhanced && maxGlobalPropId >= 0)
 		{
-			static GTAmemory::DrawableCollectionData s_propCache;
-			static Hash s_cachedPropModel = 0;
-			static int s_cachedPropSlot = -1;
+			static GTAmemory::DrawableCollectionData s_cache[PV_COMP_MAX];
+			static Hash s_cachedModel[PV_COMP_MAX] = {};
 			Hash modelHash = GET_ENTITY_MODEL(g_Ped1);
 
-			if (s_cachedPropModel != modelHash || s_cachedPropSlot != g_Ped4)
+			if (s_cachedModel[g_Ped4] != modelHash)
 			{
-				s_propCache = GTAmemory::BuildPropCollectionData(g_Ped1, g_Ped4);
-				s_cachedPropModel = modelHash;
-				s_cachedPropSlot = g_Ped4;
+				s_cache[g_Ped4] = GTAmemory::BuildPropCollectionData(g_Ped1, g_Ped4);
+				s_cachedModel[g_Ped4] = modelHash;
 			}
 
-			auto& data = s_propCache;
+			auto& data = s_cache[g_Ped4];
 
 			if (!data.collections.empty())
 			{
@@ -522,10 +533,6 @@ namespace sub
 					data.currentCollectionIdx = 0;
 				if (data.currentCollectionIdx >= (int)data.collections.size())
 					data.currentCollectionIdx = 0;
-
-				auto& col = data.collections[data.currentCollectionIdx];
-				if (data.currentLocalIdx < 0 || data.currentLocalIdx > col.maxLocalId)
-					data.currentLocalIdx = 0;
 
 				std::vector<std::string> names;
 				for (auto& c : data.collections)
@@ -538,6 +545,10 @@ namespace sub
 				if (collectionChanged)
 					data.currentLocalIdx = 0;
 
+				auto& col = data.collections[data.currentCollectionIdx];
+				if (data.currentLocalIdx < 0 || data.currentLocalIdx > col.maxLocalId)
+					data.currentLocalIdx = 0;
+
 				int prevLocalPropId = data.currentLocalIdx;
 				AddNumberStepper("Local ID", data.currentLocalIdx, 0, 1.0, 0, col.maxLocalId, false, true);
 				bool localPropIdChanged = collectionChanged || (data.currentLocalIdx != prevLocalPropId);
@@ -546,51 +557,42 @@ namespace sub
 				{
 					propTypeCurrent = col.localToGlobal[data.currentLocalIdx];
 					propTextureCurrent = 0;
+					maxTextureId = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent);
+					collectionModified = true;
 				}
 				else if (propTypeCurrent != propTypeOld && propTypeCurrent >= 0)
 				{
-					bool synced = false;
-					for (int c = 0; c < (int)data.collections.size() && !synced; c++)
-					{
-						for (int l = 0; l < (int)data.collections[c].localToGlobal.size() && !synced; l++)
-						{
-							if (data.collections[c].localToGlobal[l] == propTypeCurrent)
-							{
-								data.currentCollectionIdx = c;
-								data.currentLocalIdx = l;
-								synced = true;
-							}
-						}
-					}
+					SyncCollectionToGlobalId(data, propTypeCurrent);
+					collectionModified = true;
 				}
 			}
 		}
 
-		if (ped.Exists() && (propTypeCurrent != propTypeOld || propTextureCurrent != propTextureOld))
+		if (collectionModified || propTypeCurrent != propTypeOld || propTextureCurrent != propTextureOld)
 		{
 			if (propTypeCurrent == -1)
 			{
-				CLEAR_PED_PROP(ped.Handle(), propId, 0);
+				CLEAR_PED_PROP(g_Ped1, g_Ped4, 0);
 			}
 			else
 			{
-				SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+				SET_PED_PROP_INDEX(g_Ped1, g_Ped4, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 
 				bool goingForward = (propTypeCurrent > propTypeOld);
 				while (!HasPedSpecificPropType(propTypeCurrent))
 				{
 					if (goingForward)
 					{
-						if (propTypeCurrent < maxProp) propTypeCurrent++;
+						if (propTypeCurrent < maxGlobalPropId) propTypeCurrent++;
 						else propTypeCurrent = -1;
 					}
 					else
 					{
 						if (propTypeCurrent > -1) propTypeCurrent--;
-						else propTypeCurrent = maxProp;
+						else propTypeCurrent = maxGlobalPropId;
 					}
 					propTextureCurrent = 0;
-					SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+					SET_PED_PROP_INDEX(g_Ped1, g_Ped4, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 				}
 			}
 		}
