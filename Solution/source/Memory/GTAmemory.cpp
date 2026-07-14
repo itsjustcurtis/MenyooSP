@@ -1260,7 +1260,7 @@ void GTAmemory::Init()
 		address = *(int*)(address + 14) + address + 18;
 		s_pedEntityInVehicleCheckOffset = *(int*)(address + 3);
 
-		address = MemryScan::PatternScanner::FindPattern("0f 28 8f ? ? ? ? f3 0f 10 b7 ? ? ? ? f3 0f 16 c1 e9");
+		address = MemryScan::PatternScanner::FindPattern("0f 28 8f ? ? ? ? f3 0f 10 b7 ? ? ? ? f3 0f 16 c1");
 		s_entityPosFloatsOffset = *(int*)(address + 3);
 
 		address = MemryScan::PatternScanner::FindPattern("48 89 d6 0f b6 42 ? 04 ? 3c ? 0f 87 ? ? ? ? e9");
