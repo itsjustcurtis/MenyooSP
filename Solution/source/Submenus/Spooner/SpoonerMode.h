@@ -52,6 +52,7 @@ namespace sub::Spooner
 		void UpdateEntityEditingState(Vector3& position, Vector3& rotation);
 		extern Camera spoonerModeCamera;
 		extern float spoonerModeCameraCamDistance;
+		extern float spoonerModeCameraSpeed;
 
 		struct SpoonerStats {
 			int totalNumEntities;

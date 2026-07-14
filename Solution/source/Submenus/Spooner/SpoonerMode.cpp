@@ -60,6 +60,9 @@ namespace sub::Spooner
 		EditingState editingState;
 		Camera spoonerModeCamera;
 		float spoonerModeCameraCamDistance = 5.0f;
+		float spoonerModeCameraSpeed = 1.0f;
+		DWORD lastSpoonerSpeedDisplayTime = 0;
+		float lastSpoonerSpeedValue = 1.0f;
 		eSpoonerModeMode& spoonerModeMode = Settings::spoonerModeMode;
 
 		SpoonerStats GetSpoonerStats()
@@ -395,6 +398,8 @@ namespace sub::Spooner
 				{
 					float movementSensitivity = Settings::cameraMovementSensitivityGamepad;
 					//if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS)) movementSensitivity += 1.36f * movementSensitivity;
+					if (!bIsSomethingHeld)
+						movementSensitivity *= spoonerModeCameraSpeed;
 
 					nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
 					nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
@@ -407,21 +412,42 @@ namespace sub::Spooner
 					if (!bIsSomethingHeld || spoonerModeMode == eSpoonerModeMode::GroundEase)
 					{
 						if (!bIsSomethingHeld)
+						{
 							nextRot.y = -freeCam.GetRotation().y; // Roll should be 0 when no entity is held
+
+							// Mouse wheel to adjust speed
+							if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
+							{
+								spoonerModeCameraSpeed = min(spoonerModeCameraSpeed + 0.1f, 10.0f);
+								lastSpoonerSpeedValue = spoonerModeCameraSpeed;
+								lastSpoonerSpeedDisplayTime = GetTickCount();
+							}
+							if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))
+							{
+								spoonerModeCameraSpeed = max(spoonerModeCameraSpeed - 0.1f, 0.1f);
+								lastSpoonerSpeedValue = spoonerModeCameraSpeed;
+								lastSpoonerSpeedDisplayTime = GetTickCount();
+							}
+						}
 						if (nextOffset.x || nextOffset.y)
 							freeCam.SetPosition(freeCam.GetOffsetInWorldCoords(nextOffset.x, nextOffset.y, 0));
 
 						if (!bIsSomethingHeld && Settings::bShowModelPreviews)
 							SpoonerMode::SpawnModelPreview();
 					}
+					if (!bIsSomethingHeld && GetTickCount() - lastSpoonerSpeedDisplayTime < 1000)
+					{
+						Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+						Game::Print::DrawString(oss_ << "Spooner Camera Speed: " << lastSpoonerSpeedValue, 0.5f, 0.95f);
+					}
 					if (!nextRot.IsZero())
 					{
 						Vector3 nextRotFinal = freeCam.GetRotation() + nextRot;
 						//float fcrXfinal = fmod(nextRotFinal.x, 360.0f); // What if -10/350/710?
-						//if (fcrXfinal > -10.0f && fcrXfinal < 0.0f)
-						//	nextRotFinal.x = -10.0f;
-						//else if (fcrXfinal >= 0.0f && fcrXfinal < 10.0f)
-						//	nextRotFinal.x = 10.0f;
+//if (fcrXfinal > -10.0f && fcrXfinal < 0.0f)
+//	nextRotFinal.x = -10.0f;
+//else if (fcrXfinal >= 0.0f && fcrXfinal < 10.0f)
+//	nextRotFinal.x = 10.0f;
 						switch (spoonerModeMode)
 						{
 						case eSpoonerModeMode::GroundEase:
@@ -673,7 +699,9 @@ namespace sub::Spooner
 					float movementSensitivity = Settings::cameraMovementSensitivityKeyboard;
 					if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
 						movementSensitivity = 4.0f * movementSensitivity;
-					
+					if (!bIsSomethingHeld)
+						movementSensitivity *= spoonerModeCameraSpeed;
+
 					if (editingState.mode != eEditMode::Keyboard && !(editingState.mode == eEditMode::Gizmo && editingState.cameraLocked))
 					{
 						nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
@@ -693,21 +721,42 @@ namespace sub::Spooner
 					if (!bIsSomethingHeld || spoonerModeMode == eSpoonerModeMode::GroundEase)
 					{
 						if (!bIsSomethingHeld)
+						{
 							nextRot.y = -freeCam.GetRotation().y; // Roll should be 0 when no entity is held
+
+							// Mouse wheel to adjust speed
+							if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
+							{
+								spoonerModeCameraSpeed = min(spoonerModeCameraSpeed + 0.1f, 10.0f);
+								lastSpoonerSpeedValue = spoonerModeCameraSpeed;
+								lastSpoonerSpeedDisplayTime = GetTickCount();
+							}
+							if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))
+							{
+								spoonerModeCameraSpeed = max(spoonerModeCameraSpeed - 0.1f, 0.1f);
+								lastSpoonerSpeedValue = spoonerModeCameraSpeed;
+								lastSpoonerSpeedDisplayTime = GetTickCount();
+							}
+						}
 						if (!nextOffset.IsZero())
 							freeCam.SetPosition(freeCam.GetOffsetInWorldCoords(nextOffset));
 
 						if (!bIsSomethingHeld && Settings::bShowModelPreviews)
 							SpoonerMode::SpawnModelPreview();
 					}
+					if (!bIsSomethingHeld && GetTickCount() - lastSpoonerSpeedDisplayTime < 1000)
+					{
+						Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+						Game::Print::DrawString(oss_ << "Spooner Camera Speed: " << lastSpoonerSpeedValue, 0.5f, 0.95f);
+					}
 					if (!nextRot.IsZero())
 					{
 						Vector3 nextRotFinal = freeCam.GetRotation() + nextRot;
 						//float fcrXfinal = fmod(nextRotFinal.x, 360.0f); // What if -10/350/710?
-						//if (fcrXfinal > -10.0f && fcrXfinal < 0.0f)
-						//	nextRotFinal.x = -10.0f;
-						//else if (fcrXfinal >= 0.0f && fcrXfinal < 10.0f)
-						//	nextRotFinal.x = 10.0f;
+//if (fcrXfinal > -10.0f && fcrXfinal < 0.0f)
+//	nextRotFinal.x = -10.0f;
+//else if (fcrXfinal >= 0.0f && fcrXfinal < 10.0f)
+//	nextRotFinal.x = 10.0f;
 						switch (spoonerModeMode)
 						{
 						case eSpoonerModeMode::GroundEase:
@@ -956,6 +1005,17 @@ namespace sub::Spooner
 					{
 						DRAW_RECT(0.5f, 0.5f, 0.02f, 0.002f, 255, 255, 255, 255, false);
 						DRAW_RECT(0.5f, 0.5f, 0.001f, 0.03f, 255, 255, 255, 255, false);
+					}
+				}
+				if (!bIsSomethingHeld && myPed.Exists() && freeCam.Exists())
+				{
+					float distToPlayer = myPed.GetPosition().DistanceTo(freeCam.GetPosition());
+					if (distToPlayer > 350.0f)
+					{
+						Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.35f, 0.35f), true, false, true, RGBA(255, 200, 0, 255));
+						Game::Print::DrawString(oss_ << "WARNING: Your camera is too far from the player. You might experience texture loss or the environment might look low quality.", 0.5f, 0.72f);
+						Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.35f, 0.35f), true, false, true, RGBA(255, 200, 0, 255));
+						Game::Print::DrawString(oss_ << "This is expected - use the Freecam (available in \"Misc Options\" menu) to move around the map freely.", 0.5f, 0.75f);
 					}
 				}
 			}
