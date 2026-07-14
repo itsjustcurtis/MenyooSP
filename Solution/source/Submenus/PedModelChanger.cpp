@@ -360,6 +360,7 @@ namespace sub
 	void ModelChangerMenu()
 	{
 		bool modelChangerRandomPedVariation = false;
+		bool modelChangerInput = false;
 		rngped = { "", "" };
 		dict3.clear();
 
@@ -388,6 +389,7 @@ namespace sub
 		AddOption("Story Scenario Females", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOFEMALES);
 		AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
 		AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
+		AddOption("~b~Input~s~ Model", modelChangerInput);
 
 		if (modelChangerRandomPedVariation)
 		{
@@ -395,6 +397,24 @@ namespace sub
 			SET_PED_RANDOM_COMPONENT_VARIATION(g_Ped1, 0);
 			SET_PED_RANDOM_PROPS(g_Ped1);
 			return;
+		}
+
+		if (modelChangerInput)
+		{
+			std::string inputStr = Game::InputBox("", 64U, "Enter ped model name (e.g. IG_BENNY):");
+			if (inputStr.length() > 0)
+			{
+				Model model = (inputStr);
+				if (model.IsInCdImage())
+				{
+					ChangeModel(model);
+				}
+				else
+				{
+					Game::Print::PrintErrorInvalidModel(inputStr);
+				}
+				return;
+			}
 		}
 	}
 

@@ -686,17 +686,19 @@ void Menu::glare_test()
 	scaleform_menuGlare.PushFunction("SET_DATA_SLOT");
 	scaleform_menuGlare.PushFloat(0.0f); // glare_test_camstuff(_0x5B4E4C817FCC2DFB(2).z, 0.0f, 360.0f)
 	scaleform_menuGlare.PopFunction();
-
+	static float offsetx = 0.034f;
+	static float offsety = 0.033f;
 	/*SET_SCRIPT_GFX_ALIGN(0, 0);
 	SET_SCRIPT_GFX_ALIGN_PARAMS(0.0f, 0.0f, 0.0f, 0.0f);
 	RESET_SCRIPT_GFX_ALIGN();*/
 
-	Vector2 pos = { 0.4800f + menuPos.x, 0.4850f + menuPos.y };
-	Vector2 size = { 0.9800f, 0.9100f };
+	Vector2 enhancedPos = { offsetx + 0.4800f + menuPos.x, offsety + 0.4850f + menuPos.y };
+	Vector2 legacyPos = { 0.4800f + menuPos.x, 0.4850f + menuPos.y };
+	static Vector2 size = { 0.9800f, 0.9100f };
 	//Vector2 pos = { _global_glare_pos.x + menuPos.x, _global_glare_pos.y + menuPos.y };
 	//Vector2& size = _global_glare_size;
-
-	scaleform_menuGlare.Render2DScreenSpace(pos, size, { titletext.R, titletext.G, titletext.A, titlebox.A });
+	
+	scaleform_menuGlare.Render2DScreenSpace(g_isEnhanced? enhancedPos : legacyPos, size, { titletext.R, titletext.G, titletext.A, titlebox.A });
 }
 
 void Menu::set_opened_IB()
