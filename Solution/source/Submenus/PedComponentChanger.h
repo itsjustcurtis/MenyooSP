@@ -162,7 +162,8 @@ namespace sub
 	namespace ComponentChangerOutfit
 	{
 		extern UINT8 persistentAttachmentsTexterIndex;
-		bool Create(GTAentity ped, std::string filePath);
+		extern bool legacyXMLFormat;
+		bool Create(GTAentity ped, std::string filePath, bool legacyXMLFormat = false);
 		bool Apply(GTAped ep, const std::string& filePath, bool applyModelAndHead, bool applyProps, bool applyComps, bool applyDecals, bool applyDamageTextures, bool applyAttachedEntities);
 
 	}

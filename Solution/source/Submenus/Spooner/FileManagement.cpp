@@ -96,7 +96,7 @@ namespace sub::Spooner
 			return false;
 		}*/
 
-		void AddEntityToXmlNode(SpoonerEntity& e, pugi::xml_node& nodeEntity)
+		void AddEntityToXmlNode(SpoonerEntity& e, pugi::xml_node& nodeEntity, bool legacyXMLFormat)
 		{
 			//addlog(ige::LogType::LOG_INFO,  "Adding entity " + e.hashName + " of type " + (int)e.type + " to xml node.");
 
@@ -158,13 +158,13 @@ namespace sub::Spooner
 				auto nodePedComps = nodePedStuff.append_child("PedComps");
 				for (UINT8 i = 0; i <= drawablePropSlotNames.size() - 1; i++)
 				{
-					const std::string propSlotName = drawablePropSlotNames[i];
-					nodePedProps.append_child(propSlotName.c_str()).text() = (std::to_string(GET_PED_PROP_INDEX(ep.Handle(), i, 0)) + "," + std::to_string(GET_PED_PROP_TEXTURE_INDEX(ep.Handle(), i))).c_str();
+					const std::string slotName = legacyXMLFormat ? ("_" + std::to_string(i)) : drawablePropSlotNames[i];
+					nodePedProps.append_child(slotName.c_str()).text() = (std::to_string(GET_PED_PROP_INDEX(ep.Handle(), i, 0)) + "," + std::to_string(GET_PED_PROP_TEXTURE_INDEX(ep.Handle(), i))).c_str();
 				}
 				for (UINT8 i = 0; i <= drawableComponentSlotNames.size() - 1; i++)
 				{
-					const std::string compSlotName = drawableComponentSlotNames[i];
-					nodePedComps.append_child(compSlotName.c_str()).text() = (std::to_string(GET_PED_DRAWABLE_VARIATION(ep.Handle(), i)) + "," + std::to_string(GET_PED_TEXTURE_VARIATION(ep.Handle(), i))).c_str();
+					const std::string slotName = legacyXMLFormat ? ("_" + std::to_string(i)) : drawableComponentSlotNames[i];
+					nodePedComps.append_child(slotName.c_str()).text() = (std::to_string(GET_PED_DRAWABLE_VARIATION(ep.Handle(), i)) + "," + std::to_string(GET_PED_TEXTURE_VARIATION(ep.Handle(), i))).c_str();
 				}
 
 				if (sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel))
@@ -195,7 +195,7 @@ namespace sub::Spooner
 						auto nodePedFacialFeatures = nodePedHeadFeatures.append_child("FacialFeatures"); //currently returning 0 to xml file for all values
 						for (int i = 0; i < pedHead.facialFeatureData.size(); i++)
 						{
-							std::string facialFeatureName = facialFeatureSlotNames[i];
+							std::string facialFeatureName = legacyXMLFormat ? ("_" + std::to_string(i)) : facialFeatureSlotNames[i];
 							addlog(ige::LogType::LOG_DEBUG, "Saving Facial feature " + facialFeatureName + " (index " + std::to_string(i) + ") as value " + std::to_string(pedHead.facialFeatureData[i]));
 							nodePedFacialFeatures.append_child(facialFeatureName.c_str()).text() = std::to_string(pedHead.facialFeatureData[i]).c_str();
 						}

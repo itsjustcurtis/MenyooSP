@@ -1421,8 +1421,9 @@ namespace sub
 	namespace ComponentChangerOutfit
 	{
 		UINT8 persistentAttachmentsTexterIndex = 0;
+		bool legacyXMLFormat = false;
 
-		bool Create(GTAentity ped, std::string filePath)
+		bool Create(GTAentity ped, std::string filePath, bool legacyXMLFormat)
 		{
 			sub::Spooner::SpoonerEntity eped;
 			eped.handle = ped;
@@ -1450,7 +1451,7 @@ namespace sub
 
 			auto nodeEntity = doc.append_child("OutfitPedData"); // Root
 			nodeEntity.append_child("ClearDecalOverlays").text() = bClearDecalOverlays;
-			sub::Spooner::FileManagement::AddEntityToXmlNode(eped, nodeEntity);
+			sub::Spooner::FileManagement::AddEntityToXmlNode(eped, nodeEntity, legacyXMLFormat);
 
 			// Attachments
 			auto nodeAttachments = nodeEntity.append_child("SpoonerAttachments");
@@ -1466,7 +1467,7 @@ namespace sub
 						if (att.Handle() == ped.Handle())
 						{
 							auto nodeAttachment = nodeAttachments.append_child("Attachment");
-							sub::Spooner::FileManagement::AddEntityToXmlNode(e, nodeAttachment);
+							sub::Spooner::FileManagement::AddEntityToXmlNode(e, nodeAttachment, legacyXMLFormat);
 						}
 					}
 				}
@@ -1615,6 +1616,8 @@ namespace sub
 		if (attachmentsPlus) { if (persistentAttachmentsTexterIndex < 2) persistentAttachmentsTexterIndex++; }
 		if (attachmentsMinus) { if (persistentAttachmentsTexterIndex > 0) persistentAttachmentsTexterIndex--; }
 
+		ComponentChangerOutfit::legacyXMLFormat = AddTexterCycler("XML Format", ComponentChangerOutfit::legacyXMLFormat, { "New XML format", "Legacy XML format" }) == 1;
+
 		AddOption("Save Outfit To File", savePressed);
 
 		AddOption("Create New Folder", createFolderPressed);
@@ -1707,7 +1710,7 @@ namespace sub
 				}
 				else
 				{
-					ComponentChangerOutfit::Create(g_Ped1, dir + "\\" + inputStr + ".xml");
+					ComponentChangerOutfit::Create(g_Ped1, dir + "\\" + inputStr + ".xml", ComponentChangerOutfit::legacyXMLFormat);
 					Game::Print::PrintBottomLeft("File ~b~created~s~.");
 				}
 			}
@@ -1753,6 +1756,7 @@ namespace sub
 		AddOption("Apply Clothing & Attachments", outfits2_applyAllFeatures);
 		AddOption((std::string)"Apply " + (g_Ped1 == PLAYER_PED_ID() ? "Ped Model" : "Head Features"), outfits2_applyModel);
 		AddOption("Apply and Set as Default", outfits2_applySetDefault);
+		ComponentChangerOutfit::legacyXMLFormat = AddTexterCycler("XML Format", ComponentChangerOutfit::legacyXMLFormat, { "New XML format", "Legacy XML format" }) == 1;
 		AddOption("Rename File", outfits2_rename);
 		AddOption("Overwrite File", outfits2_overwrite);
 		AddOption("Delete File", outfits2_delete);
@@ -1779,7 +1783,7 @@ namespace sub
 		{
 			ComponentChangerOutfit::Apply(PLAYER_PED_ID(), filePath, true, false, false, false, false, false);
 			ComponentChangerOutfit::Apply(PLAYER_PED_ID(), filePath, false, true, true, true, true, true);
-			if (ComponentChangerOutfit::Create(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml"))
+			if (ComponentChangerOutfit::Create(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", ComponentChangerOutfit::legacyXMLFormat))
 			{
 				Game::Print::PrintBottomLeft("Set as ~b~Default~s~, Outfit will be auto loaded on next game launch.");
 			}
@@ -1792,7 +1796,7 @@ namespace sub
 
 		if (outfits2_overwrite)
 		{
-			if (ComponentChangerOutfit::Create(g_Ped1, filePath))
+			if (ComponentChangerOutfit::Create(g_Ped1, filePath, ComponentChangerOutfit::legacyXMLFormat))
 				Game::Print::PrintBottomLeft("File ~b~overwritten~s~.");
 			else
 			{
