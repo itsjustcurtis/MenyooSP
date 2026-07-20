@@ -222,9 +222,12 @@ namespace sub::Spooner
 					auto& decalsApplied = sub::PedDecals::vPedsAndDecals[ep.Handle()];
 					for (auto& decal : decalsApplied)
 					{
-						auto nodeDecal = nodePedTattooLogoDecals.append_child();
-						nodeDecal.append_attribute("collection") = IntToHexString(decal.collection, true).c_str();
-						nodeDecal.append_attribute("value") = IntToHexString(decal.value, true).c_str();
+					auto nodeDecal = nodePedTattooLogoDecals.append_child("Decal");
+					nodeDecal.append_attribute("collection") = IntToHexString(decal.collection, true).c_str();
+					nodeDecal.append_attribute("value") = IntToHexString(decal.value, true).c_str();
+					auto caption = sub::PedDecals::GetDecalCaption(decal.collection, decal.value);
+					if (!caption.empty())
+						nodeDecal.append_attribute("name") = caption.c_str();
 					}
 				}
 

@@ -724,6 +724,17 @@ namespace sub
 			}
 		}
 
+		std::string GetDecalCaption(Hash collection, Hash value)
+		{
+			for (auto& [pedHash, dictType] : vAllDecals)
+				for (auto& [type, dictZone] : dictType)
+					for (auto& [zone, listDecals] : dictZone)
+						for (auto& decal : listDecals)
+							if (decal.collection == collection && decal.value == value)
+								return decal.caption;
+			return {};
+		}
+
 		std::pair<std::string, std::map<std::string, std::vector<NamedPedDecal>>>* selectedType;
 		std::pair<std::string, std::vector<NamedPedDecal>>* selectedZone;
 

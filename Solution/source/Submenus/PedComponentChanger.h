@@ -71,6 +71,7 @@ namespace sub
 
 		extern std::map<Hash, std::map<std::string, std::map<std::string, std::vector<NamedPedDecal>>>> vAllDecals; // PedHash[Type][Zone]
 		void PopulateDecalsDict();
+		std::string GetDecalCaption(Hash collection, Hash value);
 
 		extern std::pair<std::string, std::map<std::string, std::vector<NamedPedDecal>>>* selectedType;
 		extern std::pair<std::string, std::vector<NamedPedDecal>>* selectedZone;
