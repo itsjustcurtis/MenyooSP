@@ -125,13 +125,9 @@ namespace sub
 		dict2.clear();
 		dict3.clear();
 
-		bool bRandomComponents = 0, frontView = 0, bDefaultComponents = 0,
-			ComponentChanger_online_police_m = 0, ComponentChanger_online_robber_m = 0,
-			ComponentChanger_online_garbage_m = 0, ComponentChanger_online_police_f = 0,
-			ComponentChanger_offline_police_michael = 0, ComponentChanger_offline_firefighter_michael = 0;
+		bool bRandomComponents = 0, frontView = 0, bDefaultComponents = 0;
 
 		GTAped thisPed = g_Ped1;
-		const Model& thisPedModel = thisPed.Model();
 
 		if (g_cam_componentChanger.Exists())
 		{
@@ -171,18 +167,6 @@ namespace sub
 			if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, i) > 0) AddPedComponentOption(components[i], i);
 		}
 
-		/*AddpedcomponentOption_("Head", PV_COMP_HEAD);
-		AddpedcomponentOption_("Beard/Mask", PV_COMP_BERD); // Beard // FACE_BRD
-		AddpedcomponentOption_("Hair", PV_COMP_HAIR); // Hair // FACE_HAIR
-		AddpedcomponentOption_("Torso", PV_COMP_UPPR);
-		AddpedcomponentOption_("Legs", PV_COMP_LOWR);
-		AddpedcomponentOption_("Hands/Back", PV_COMP_HAND);
-		AddpedcomponentOption_("Shoes", PV_COMP_FEET); // Shoes // CSHOP_ITEM39
-		AddpedcomponentOption_("Teeth/Scarf/Necklace/Bracelets", PV_COMP_TEEF);
-		AddpedcomponentOption_("Accessory/Tops", PV_COMP_ACCS); // Accessory // PIM_TACCE
-		AddpedcomponentOption_("Task/Armour", PV_COMP_TASK);
-		AddpedcomponentOption_("Emblem", PV_COMP_DECL);
-		AddpedcomponentOption_("Tops2 (Outer)", PV_COMP_JBIB);*/
 		AddBreak("---Utilities---");
 		AddOption("Random Components", bRandomComponents);
 		AddOption("Default Components", bDefaultComponents);
@@ -208,98 +192,6 @@ namespace sub
 			}
 			return;
 		}
-		/*switch (thisPedModel.hash)
-		{
-		case PedHash::FreemodeMale01:
-		case PedHash::FreemodeFemale01:
-		case PedHash::Michael:
-			AddBreak("---Premade Outfits---"); break;
-		}
-		if (thisPedModel.hash == PedHash::FreemodeMale01)
-			AddOption("Police (Freemode Male)", ComponentChanger_online_police_m);
-		if (thisPedModel.hash == PedHash::FreemodeFemale01)
-			AddOption("Police (Freemode Female)", ComponentChanger_online_police_f);
-		if (thisPedModel.hash == PedHash::FreemodeMale01)
-			AddOption("Robber (Freemode Male)", ComponentChanger_online_robber_m);
-		if (thisPedModel.hash == PedHash::FreemodeMale01)
-			AddOption("Garbage Man (Freemode Male)", ComponentChanger_online_garbage_m);
-		if (thisPedModel.hash == PedHash::Michael)
-			AddOption("Police (Michael)", ComponentChanger_offline_police_michael);
-		if (thisPedModel.hash == PedHash::Michael)
-			AddOption("Firefighter (Michael)", ComponentChanger_offline_firefighter_michael);*/ //Get rid of this, default outfits makes this redundant.
-		/*if (ComponentChanger_online_police_m) {
-			SET_PED_PROP_INDEX(g_Ped1, 0, 47, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_PROP_INDEX(g_Ped1, 1, 10, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_PROP_INDEX(g_Ped1, 2, 3, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 0, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 1, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 35, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 25, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 7, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 58, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 9, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 10, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 55, 0, 0);
-			return;
-		}
-
-		if (ComponentChanger_online_police_f) {
-			SET_PED_PROP_INDEX(g_Ped1, 0, 45, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 100, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 34, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 48, 0, 0);
-			return;
-		}
-
-		if (ComponentChanger_offline_police_michael) {
-			SET_PED_PROP_INDEX(g_Ped1, 0, 10, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 6, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 6, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 6, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 8, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 0, 0, 0);
-			return;
-		}
-
-		if (ComponentChanger_offline_firefighter_michael) {
-			SET_PED_PROP_INDEX(g_Ped1, 0, 0, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 1, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 1, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 1, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 1, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 1, 0, 0);
-			return;
-		}
-
-		if (ComponentChanger_online_robber_m) {
-			SET_PED_PROP_INDEX(g_Ped1, 0, 48, 1, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 29, 1, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 34, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 45, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 24, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 7, 40, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 25, 1, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 0, 16, 0);
-			return;
-		}
-
-		if (ComponentChanger_online_garbage_m) {
-			SET_PED_PROP_INDEX(g_Ped1, 1, 4, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 0, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 1, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 64, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 36, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 23, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 7, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 59, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 9, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 10, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 57, 0, 0);
-			return;
-		} */
 
 		if (frontView) {
 			if (g_cam_componentChanger.Exists())
@@ -491,10 +383,10 @@ namespace sub
 		AddOption("Random Accessories", bRandomProps);
 		AddTickol("Default Accessories", true, bDefaultProps, bDefaultProps, TICKOL::CROSS);
 
-		static int confirmRandomProps = 0, confirmClearAllProps = 0;
+		static int confirmRandomProps = 0, confirmDefaultProps = 0;
 		static UINT16 lastPropsSub = 0;
 		if (lastPropsSub != Menu::currentsub)
-			confirmRandomProps = 0, confirmClearAllProps = 0;
+			confirmRandomProps = 0, confirmDefaultProps = 0;
 		lastPropsSub = Menu::currentsub;
 
 		if (bRandomProps)
@@ -508,7 +400,7 @@ namespace sub
 
 		if (bDefaultProps)
 		{
-			if (PromptConfirm(confirmClearAllProps, "~r~Clear ~w~all accessories? Press again to confirm.")) {
+			if (PromptConfirm(confirmDefaultProps, "~r~Clear ~w~all accessories? Press again to confirm.")) {
 				thisPed.RequestControlOnce();
 				CLEAR_ALL_PED_PROPS(thisPed.Handle(), 0);
 			}
