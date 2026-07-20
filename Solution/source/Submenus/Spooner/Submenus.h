@@ -55,6 +55,7 @@ namespace sub
 		void Sub_SpoonerMain();
 		void Sub_Settings();
 		void Sub_SaveFiles();
+		void Sub_AutoSave();
 		void Sub_SaveFiles_Load();
 		void Sub_SaveFiles_Load_LegacySP00N();
 		void Sub_ManageEntities();

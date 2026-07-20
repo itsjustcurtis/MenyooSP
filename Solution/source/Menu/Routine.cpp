@@ -278,7 +278,7 @@ void TickSpoonerAutoSave()
 {
 	static DWORD lastSave = 0;
 
-	if (GetTickCount() <= lastSave + 180000U)
+	if (GetTickCount() <= lastSave + sub::Spooner::Settings::autoSaveIntervalMs)
 		return;
 
 	lastSave = GetTickCount();
@@ -312,12 +312,13 @@ void TickSpoonerAutoSave()
 		} while (FindNextFileA(hFind, &ffd));
 		FindClose(hFind);
 
-		if (files.size() > 10)
+		const size_t maxFiles = static_cast<size_t>(sub::Spooner::Settings::autoSaveMaxFiles);
+		if (files.size() > maxFiles)
 		{
 			std::sort(files.begin(), files.end(),
 				[](auto& a, auto& b) { return CompareFileTime(&a.second, &b.second) < 0; });
 
-			for (size_t i = 0; i < files.size() - 10; i++)
+			for (size_t i = 0; i < files.size() - maxFiles; i++)
 				remove((autoSaveDir + "\\" + files[i].first).c_str());
 		}
 	}

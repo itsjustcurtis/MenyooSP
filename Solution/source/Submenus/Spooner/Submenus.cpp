@@ -382,7 +382,7 @@ namespace sub
 					}
 				}
 			}
-			AddToggle("Auto Save Database (every 3 min)", sub::Spooner::Settings::bAutoSaveDb);
+			AddOption("Auto Save Settings", null, nullFunc, SUB::SPOONER_AUTOSAVE);
 			/*bool bLoadFromFile = false;
 			AddOption("Load From File", bLoadFromFile); if (bLoadFromFile)
 			{
@@ -555,6 +555,31 @@ namespace sub
 			}*/
 
 		}
+
+		void Sub_AutoSave()
+		{
+			static const std::vector<std::string> intervalNames = { "1 min", "3 min", "5 min", "10 min" };
+			static const DWORD intervalValues[] = { 60000, 180000, 300000, 600000 };
+			static const std::vector<std::string> maxFileNames = { "5", "10", "25", "50" };
+			static const int maxFileValues[] = { 5, 10, 25, 50 };
+
+			AddTitle("Auto Save");
+
+			AddToggle("Enable Auto Save", Settings::bAutoSaveDb);
+
+			int intervalIdx = 0;
+			for (int i = 0; i < 4; i++) { if (Settings::autoSaveIntervalMs == intervalValues[i]) { intervalIdx = i; break; } }
+			intervalIdx = AddTexterCycler("Save Interval", intervalIdx, intervalNames);
+			if (intervalIdx >= 0 && intervalIdx < 4)
+				Settings::autoSaveIntervalMs = intervalValues[intervalIdx];
+
+			int maxIdx = 0;
+			for (int i = 0; i < 4; i++) { if (Settings::autoSaveMaxFiles == maxFileValues[i]) { maxIdx = i; break; } }
+			maxIdx = AddTexterCycler("Max Files to Keep", maxIdx, maxFileNames);
+			if (maxIdx >= 0 && maxIdx < 4)
+				Settings::autoSaveMaxFiles = maxFileValues[maxIdx];
+		}
+
 		void Sub_SaveFiles_Load()
 		{
 			std::string& _name = dict;
@@ -4516,6 +4541,7 @@ REGISTER_SUBMENU(SPOONER_MANAGEDB_REMOVAL,                            	sub::Spoo
 REGISTER_SUBMENU(SPOONER_SAVEFILES,                                   	sub::Spooner::Submenus::Sub_SaveFiles)
 REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD,                              	sub::Spooner::Submenus::Sub_SaveFiles_Load)
 REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD_LEGACYSP00N,                  	sub::Spooner::Submenus::Sub_SaveFiles_Load_LegacySP00N)
+REGISTER_SUBMENU(SPOONER_AUTOSAVE,                                    	sub::Spooner::Submenus::Sub_AutoSave)
 REGISTER_SUBMENU(SPOONER_VECTOR3_MANUALEDITING,                     	sub::Spooner::Submenus::Sub_Vector3_ManualEditing)
 REGISTER_SUBMENU(SPOONER_MULTISELECT,                                  	sub::Spooner::Submenus::Sub_MultiSelect)
 REGISTER_SUBMENU(SPOONER_SETTINGS,                                    	sub::Spooner::Submenus::Sub_Settings)

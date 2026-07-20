@@ -11,6 +11,7 @@
 
 #include <string>
 #include <vector>
+#include <Windows.h>
 
 typedef unsigned char UINT8;
 
@@ -51,6 +52,8 @@ namespace sub::Spooner
 		extern bool bDrawGrid;
 
 		extern bool bAutoSaveDb;
+		extern DWORD autoSaveIntervalMs;
+		extern int autoSaveMaxFiles;
 	}
 
 }
