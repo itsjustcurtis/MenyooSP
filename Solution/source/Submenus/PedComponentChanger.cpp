@@ -107,12 +107,25 @@ namespace sub
 			}
 		}
 	}
+
+	// Returns false when option is not confirmed, true when confirmed.
+	static bool PromptConfirm(int& state, const std::string& message)
+	{
+		if (state == 0) {
+			Game::Print::PrintBottomCentre(message);
+			state = 1;
+			return false;
+		}
+		state = 0;
+		return true;
+	}
+
 	void ComponentChanger()
 	{
 		dict2.clear();
 		dict3.clear();
 
-		bool randomize = 0, frontView = 0, setDefault = 0,
+		bool bRandomComponents = 0, frontView = 0, bDefaultComponents = 0,
 			ComponentChanger_online_police_m = 0, ComponentChanger_online_robber_m = 0,
 			ComponentChanger_online_garbage_m = 0, ComponentChanger_online_police_f = 0,
 			ComponentChanger_offline_police_michael = 0, ComponentChanger_offline_firefighter_michael = 0;
@@ -170,10 +183,31 @@ namespace sub
 		AddpedcomponentOption_("Task/Armour", PV_COMP_TASK);
 		AddpedcomponentOption_("Emblem", PV_COMP_DECL);
 		AddpedcomponentOption_("Tops2 (Outer)", PV_COMP_JBIB);*/
+		AddBreak("---Utilities---");
+		AddOption("Random Components", bRandomComponents);
+		AddOption("Default Components", bDefaultComponents);
 
-		AddOption("Random Components", randomize);
-		AddOption("Default Components", setDefault);
+		static int confirmRandom = 0, confirmDefault = 0;
+		static UINT16 lastSub = 0;
+		if (lastSub != Menu::currentsub)
+			confirmRandom = 0, confirmDefault = 0;
+		lastSub = Menu::currentsub;
 
+		if (bRandomComponents) {
+			if (PromptConfirm(confirmRandom, "~r~Randomize ~w~all components? Press again to confirm.")) {
+				thisPed.RequestControlOnce();
+				SET_PED_RANDOM_COMPONENT_VARIATION(thisPed.GetHandle(), 0);
+			}
+			return;
+		}
+
+		if (bDefaultComponents) {
+			if (PromptConfirm(confirmDefault, "~r~Clear ~w~all components? Press again to confirm.")) {
+				thisPed.RequestControlOnce();
+				SET_PED_DEFAULT_COMPONENT_VARIATION(thisPed.GetHandle());
+			}
+			return;
+		}
 		/*switch (thisPedModel.hash)
 		{
 		case PedHash::FreemodeMale01:
@@ -193,20 +227,6 @@ namespace sub
 			AddOption("Police (Michael)", ComponentChanger_offline_police_michael);
 		if (thisPedModel.hash == PedHash::Michael)
 			AddOption("Firefighter (Michael)", ComponentChanger_offline_firefighter_michael);*/ //Get rid of this, default outfits makes this redundant.
-
-
-		if (randomize) {
-			thisPed.RequestControlOnce();
-			SET_PED_RANDOM_COMPONENT_VARIATION(thisPed.GetHandle(), 0);
-			return;
-		}		
-		
-		if (setDefault) {
-			thisPed.RequestControlOnce();
-			SET_PED_DEFAULT_COMPONENT_VARIATION(thisPed.GetHandle());
-			return;
-		}
-
 		/*if (ComponentChanger_online_police_m) {
 			SET_PED_PROP_INDEX(g_Ped1, 0, 47, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 			SET_PED_PROP_INDEX(g_Ped1, 1, 10, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
@@ -444,7 +464,7 @@ namespace sub
 			g_cam_componentChanger.PointAt(thisPed, Bone::Head);
 		}
 
-		bool randomProps = false, clearAllProps = false;
+		bool bRandomProps = false, bDefaultProps = false;
 		const std::vector<std::string> propNames
 		{
 			"Hats ~c~[p_head]",
@@ -468,20 +488,30 @@ namespace sub
 		}
 
 		AddBreak("---Utilities---");
-		AddOption("Random Accessories", randomProps);
-		AddTickol("Clear Accessories", true, clearAllProps, clearAllProps, TICKOL::CROSS);
+		AddOption("Random Accessories", bRandomProps);
+		AddTickol("Default Accessories", true, bDefaultProps, bDefaultProps, TICKOL::CROSS);
 
-		if (randomProps)
+		static int confirmRandomProps = 0, confirmClearAllProps = 0;
+		static UINT16 lastPropsSub = 0;
+		if (lastPropsSub != Menu::currentsub)
+			confirmRandomProps = 0, confirmClearAllProps = 0;
+		lastPropsSub = Menu::currentsub;
+
+		if (bRandomProps)
 		{
-			thisPed.RequestControlOnce();
-			SET_PED_RANDOM_PROPS(thisPed.Handle());
+			if (PromptConfirm(confirmRandomProps, "~r~Randomize ~w~all accessories? Press again to confirm.")) {
+				thisPed.RequestControlOnce();
+				SET_PED_RANDOM_PROPS(thisPed.Handle());
+			}
 			return;
 		}
 
-		if (clearAllProps)
+		if (bDefaultProps)
 		{
-			thisPed.RequestControlOnce();
-			CLEAR_ALL_PED_PROPS(thisPed.Handle(), 0);
+			if (PromptConfirm(confirmClearAllProps, "~r~Clear ~w~all accessories? Press again to confirm.")) {
+				thisPed.RequestControlOnce();
+				CLEAR_ALL_PED_PROPS(thisPed.Handle(), 0);
+			}
 			return;
 		}
 	}
