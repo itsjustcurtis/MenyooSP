@@ -72,6 +72,10 @@ namespace sub::Spooner
 			"ChinLength", "ChinPosition", "ChinWidth", "ChinShape",
 			"NeckWidth"
 		};
+		const std::vector<std::string> overlaySlotNames = {
+			"SkinRash", "Beard", "Eyebrows", "Wrinkles", "Makeup", "Blush",
+			"Pigment1", "Pigment2", "Lipstick", "Spots", "ChestHair", "Chest1", "Chest2"
+		};
 
 
 		/*bool Exists(const std::string& fileName, std::string extension = ".xml")
@@ -200,15 +204,16 @@ namespace sub::Spooner
 							nodePedFacialFeatures.append_child(facialFeatureName.c_str()).text() = std::to_string(pedHead.facialFeatureData[i]).c_str();
 						}
 
-						auto nodePedHeadOverlays = nodePedHeadFeatures.append_child("Overlays");
-						for (int i = 0; i < pedHead.overlayData.size(); i++)
-						{
-							auto nodePedHeadOverlay = nodePedHeadOverlays.append_child(("_" + std::to_string(i)).c_str());
-							nodePedHeadOverlay.append_attribute("index") = GET_PED_HEAD_OVERLAY(ep.Handle(), i);
-							nodePedHeadOverlay.append_attribute("colour") = pedHead.overlayData[i].colour;
-							nodePedHeadOverlay.append_attribute("colourSecondary") = pedHead.overlayData[i].colourSecondary;
-							nodePedHeadOverlay.append_attribute("opacity") = pedHead.overlayData[i].opacity;
-						}
+					auto nodePedHeadOverlays = nodePedHeadFeatures.append_child("Overlays");
+					for (int i = 0; i < pedHead.overlayData.size(); i++)
+					{
+						std::string overlayName = legacyXMLFormat ? ("_" + std::to_string(i)) : overlaySlotNames[i];
+						auto nodePedHeadOverlay = nodePedHeadOverlays.append_child(overlayName.c_str());
+						nodePedHeadOverlay.append_attribute("index") = GET_PED_HEAD_OVERLAY(ep.Handle(), i);
+						nodePedHeadOverlay.append_attribute("colour") = pedHead.overlayData[i].colour;
+						nodePedHeadOverlay.append_attribute("colourSecondary") = pedHead.overlayData[i].colourSecondary;
+						nodePedHeadOverlay.append_attribute("opacity") = pedHead.overlayData[i].opacity;
+					}
 					}
 					else
 					{
@@ -567,15 +572,15 @@ namespace sub::Spooner
 			}
 
 			auto nodePedHeadOverlays = nodePedHeadFeatures.child("Overlays");
-			for (auto node = nodePedHeadOverlays.first_child(); node; node = node.next_sibling())
+			int overlayIndex = 0;
+			for (auto node = nodePedHeadOverlays.first_child(); node; node = node.next_sibling(), overlayIndex++)
 			{
-				int ii = stoi(std::string(node.name()).substr(1));
 				auto overlayData_index = node.attribute("index").as_int();
-				pedHead.overlayData[ii].colour = node.attribute("colour").as_int();
-				pedHead.overlayData[ii].colourSecondary = node.attribute("colourSecondary").as_int();
-				pedHead.overlayData[ii].opacity = node.attribute("opacity").as_float();
-				SET_PED_HEAD_OVERLAY(ep.Handle(), ii, overlayData_index, pedHead.overlayData[ii].opacity);
-				SET_PED_HEAD_OVERLAY_TINT(ep.Handle(), ii, sub::PedHeadFeatures_catind::GetPedHeadOverlayColourType((PedHeadOverlay)ii), pedHead.overlayData[ii].colour, pedHead.overlayData[ii].colourSecondary);
+				pedHead.overlayData[overlayIndex].colour = node.attribute("colour").as_int();
+				pedHead.overlayData[overlayIndex].colourSecondary = node.attribute("colourSecondary").as_int();
+				pedHead.overlayData[overlayIndex].opacity = node.attribute("opacity").as_float();
+				SET_PED_HEAD_OVERLAY(ep.Handle(), overlayIndex, overlayData_index, pedHead.overlayData[overlayIndex].opacity);
+				SET_PED_HEAD_OVERLAY_TINT(ep.Handle(), overlayIndex, sub::PedHeadFeatures_catind::GetPedHeadOverlayColourType((PedHeadOverlay)overlayIndex), pedHead.overlayData[overlayIndex].colour, pedHead.overlayData[overlayIndex].colourSecondary);
 			}
 			sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = pedHead;
 		}
