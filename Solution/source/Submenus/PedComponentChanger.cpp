@@ -319,7 +319,7 @@ namespace sub
 		AddTitle("Set Variation");
 
 		if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", drawableCurrent, 0, inputPressed, increment, decrement);
-		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent)) AddNumber("Texture", textureCurrent, 0, null, increment, decrement);
+		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent)) AddNumber("Texture", textureCurrent, 0, inputPressed, increment, decrement);
 		//AddNumber("Palette", paletteCurrent, 0, null, increment, decrement);
 
 		// Displaying collection info (collection:local_id), doesn't support enhanced yet.
@@ -354,7 +354,24 @@ namespace sub
 			}
 			break;
 		case 2:
-			if (increment || decrement)
+			if (inputPressed)
+			{
+				std::string inputStr = Game::InputBox("", 5U, "", std::to_string(textureOld));
+				if (inputStr.length() > 0)
+				{
+					try
+					{
+						textureCurrent = stoi(inputStr);
+						if (textureCurrent > maxTexture)
+						{
+							textureCurrent = textureOld;
+							Game::Print::PrintErrorInvalidInput(inputStr);
+						}
+					}
+					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
+				}
+			}
+			else if (increment || decrement)
 			{
 				textureCurrent = cycleInt(textureCurrent, increment, 0, maxTexture);
 			}
