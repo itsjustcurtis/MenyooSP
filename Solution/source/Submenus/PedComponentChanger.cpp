@@ -1382,7 +1382,7 @@ namespace sub
 			std::vector<std::string> skinOpts = { "Any", "White", "Black", "Hispanic", "Asian", "Arab", "Pakistani" };
 
 			bool bRandFace = false, bRandShapes = false, bRandSkins = false, 
-				bRandAllFeatures = false, bResetAllFeatures = false;
+				bRandAllFeatures = false, bResetAllFeatures = false, bRandEverything = false;
 
 			// set parent gender filter based on current ped model
 			if (PedFaceGen::settings.lastPedModel != ped.Model().hash)
@@ -1443,8 +1443,9 @@ namespace sub
 			AddOption("Randomize Face", bRandFace);
 			AddOption("Randomize Face Shapes", bRandShapes);
 			AddOption("Randomize Face Textures", bRandSkins);
+			AddOption("Randomize Everything", bRandEverything);
 
-			if (bRandFace || bRandShapes || bRandSkins)
+			if (bRandFace || bRandShapes || bRandSkins || bRandEverything)
 			{
 				auto candidates = buildCandidateList();
 				int maxId = showNonRockstar ? PedFaceGen::settings.nonRockstarMax : 45;
@@ -1457,7 +1458,7 @@ namespace sub
 				PedHeadBlendData bd;
 				GET_PED_HEAD_BLEND_DATA(ped.Handle(), (Any*)&bd);
 
-				if (bRandFace)
+				if (bRandFace || bRandEverything)
 				{
 					bd.shapeFirstID = pickRandomId(candidates);
 					bd.shapeSecondID = pickRandomId(candidates);
@@ -1465,40 +1466,46 @@ namespace sub
 					bd.skinSecondID = pickRandomId(candidates);
 					bd.shapeMix = randomizeMix();
 					bd.skinMix = randomizeMix();
-				if (PedFaceGen::settings.useThirdParent)
+					if (PedFaceGen::settings.useThirdParent)
+					{
+						bd.shapeThirdID = pickRandomId(candidates);
+						bd.skinThirdID = pickRandomId(candidates);
+						bd.thirdMix = randomizeMix();
+					}
+				}
+				else if (bRandShapes)
 				{
-					bd.shapeThirdID = pickRandomId(candidates);
-					bd.skinThirdID = pickRandomId(candidates);
-					bd.thirdMix = randomizeMix();
+					bd.shapeFirstID = pickRandomId(candidates);
+					bd.shapeSecondID = pickRandomId(candidates);
+					bd.shapeMix = randomizeMix();
+					if (PedFaceGen::settings.useThirdParent)
+					{
+						bd.shapeThirdID = pickRandomId(candidates);
+						bd.thirdMix = randomizeMix();
+					}
+				}
+				else if (bRandSkins)
+				{
+					bd.skinFirstID = pickRandomId(candidates);
+					bd.skinSecondID = pickRandomId(candidates);
+					bd.skinMix = randomizeMix();
+					if (PedFaceGen::settings.useThirdParent)
+					{
+						bd.skinThirdID = pickRandomId(candidates);
+					}
 				}
 				UpdatePedHeadBlendData(ped, bd, false);
-				return;
-			}
-			if (bRandShapes)
-			{
-				bd.shapeFirstID = pickRandomId(candidates);
-				bd.shapeSecondID = pickRandomId(candidates);
-				bd.shapeMix = randomizeMix();
-				if (PedFaceGen::settings.useThirdParent)
+
+				if (bRandEverything)
 				{
-					bd.shapeThirdID = pickRandomId(candidates);
-					bd.thirdMix = randomizeMix();
+					for (int i = 0; i < 20; i++)
+					{
+						float val = GET_RANDOM_FLOAT_IN_RANGE(-1.0f, 1.0f);
+						pedHead->facialFeatureData[i] = val;
+						SET_PED_MICRO_MORPH(ped.Handle(), i, val);
+					}
 				}
-				UpdatePedHeadBlendData(ped, bd, false);
 				return;
-			}
-			if (bRandSkins)
-			{
-				bd.skinFirstID = pickRandomId(candidates);
-				bd.skinSecondID = pickRandomId(candidates);
-				bd.skinMix = randomizeMix();
-				if (PedFaceGen::settings.useThirdParent)
-				{
-					bd.skinThirdID = pickRandomId(candidates);
-				}
-				UpdatePedHeadBlendData(ped, bd, false);
-				return;
-				}
 			}
 
 			// --- Facial Features ---
