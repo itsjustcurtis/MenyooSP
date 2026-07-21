@@ -1448,11 +1448,9 @@ namespace sub
 			if (bRandFace || bRandShapes || bRandSkins || bRandEverything)
 			{
 				auto candidates = buildCandidateList();
-				int maxId = showNonRockstar ? PedFaceGen::settings.nonRockstarMax : 45;
-				std::vector<int> trimmed;
-				for (int id : candidates)
-					if (id <= maxId) trimmed.push_back(id);
-				candidates = trimmed;
+				if (showNonRockstar)
+					for (int id = 46; id <= PedFaceGen::settings.nonRockstarMax; id++)
+						candidates.push_back(id);
 				if (candidates.empty()) candidates.push_back(0);
 
 				PedHeadBlendData bd;
