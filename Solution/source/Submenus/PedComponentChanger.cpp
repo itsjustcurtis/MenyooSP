@@ -980,6 +980,31 @@ namespace sub
 		};
 #pragma endregion
 
+		namespace PedFaceGen
+		{
+			// [gender][skin]: [0=Male/1=Female][0=White,1=Black,2=Hispanic,3=Asian,4=Arab,5=Pakistani]
+			const std::vector<int> parentIdsByGenderSkin[2][6] = {
+				{ // Male
+					{0, 1, 12, 13, 42, 43, 44, 45},		// White
+					{2, 3, 14, 15},						// Black
+					{4, 5, 16},                         // Hispanic
+					{6, 7, 17, 18},						// Asian
+					{10, 11, 20},                       // Arab
+					{8, 9, 19}                          // Pakistani
+				},
+				{ // Female
+					{21, 22, 33, 34},					// White
+					{23, 24, 35, 36},					// Black
+					{25, 26, 37},                       // Hispanic
+					{27, 28, 38, 39},					// Asian
+					{31, 32, 41},                       // Arab
+					{29, 30, 40}                        // Pakistani
+				}
+			};
+
+			sFaceGenData settings;
+		}
+
 		inline int getMaxShapeAndSkinIds()
 		{
 			return g_unlockMaxIDs ? 255 : 46;
@@ -1070,6 +1095,7 @@ namespace sub
 			AddOption("Overlays", null, nullFunc, SUB::PED_HEADFEATURES_HEADOVERLAYS);
 			AddOption("Facial Features", null, nullFunc, SUB::PED_HEADFEATURES_FACEFEATURES);
 			AddOption("Shape & Skin Tone", null, nullFunc, SUB::PED_HEADFEATURES_SKINTONE);
+			AddOption("Face Generator", null, nullFunc, SUB::PED_HEADFEATURES_FACEGENERATOR);
 
 			AddBreak("---Hair---");
 			AddNumber("Hair Colour", pedHead->hairColour, 0, null, hairColourPlus, hairColourMinus);
@@ -1346,6 +1372,201 @@ namespace sub
 			addMixSlider("Shape", blendData.shapeMix);
 			addMixSlider("Tone", blendData.skinMix);
 			addMixSlider("Ancestor (Shape & Tone)", blendData.thirdMix);
+		}
+
+		void Sub_FaceGenerator()
+		{
+			GTAped ped = g_Ped1;
+
+			std::vector<std::string> genderOpts = { "Any", "Male", "Female" };
+			std::vector<std::string> skinOpts = { "Any", "White", "Black", "Hispanic", "Asian", "Arab", "Pakistani" };
+
+			bool bRandFace = false, bRandShapes = false, bRandSkins = false, 
+				bRandAllFeatures = false, bResetAllFeatures = false;
+
+			// set parent gender filter based on current ped model
+			if (PedFaceGen::settings.lastPedModel != ped.Model().hash)
+			{
+				PedFaceGen::settings.lastPedModel = ped.Model().hash;
+				PedFaceGen::settings.parentGenderFilter = (ped.Model().hash == PedHash::FreemodeMale01) ? 1 : (ped.Model().hash == PedHash::FreemodeFemale01) ? 2 : 0;
+			}
+
+			auto buildCandidateList = [&]() -> std::vector<int>
+			{
+				std::vector<int> candidates;
+				int skinIdx = PedFaceGen::settings.skinColorFilter - 1; // -1 = Any (all columns)
+				int genderStart = (PedFaceGen::settings.parentGenderFilter == 0) ? 0 : PedFaceGen::settings.parentGenderFilter - 1;
+				int genderEnd   = (PedFaceGen::settings.parentGenderFilter == 0) ? 1 : PedFaceGen::settings.parentGenderFilter - 1;
+
+				for (int g = genderStart; g <= genderEnd; g++)
+				{
+					if (skinIdx < 0)
+					{
+						for (int s = 0; s < 6; s++)
+							candidates.insert(candidates.end(), PedFaceGen::parentIdsByGenderSkin[g][s].begin(), PedFaceGen::parentIdsByGenderSkin[g][s].end());
+					}
+					else
+					{
+						candidates.insert(candidates.end(), PedFaceGen::parentIdsByGenderSkin[g][skinIdx].begin(), PedFaceGen::parentIdsByGenderSkin[g][skinIdx].end());
+					}
+				}
+				return candidates;
+			};
+
+			// randomly picks a parent ID from candidate list
+			auto pickRandomId = [](const std::vector<int>& candidates) -> int
+			{
+				if (candidates.empty()) return 0;
+				return candidates[GET_RANDOM_INT_IN_RANGE(0, static_cast<int>(candidates.size()))];
+			};
+
+			auto randomizeMix = []() -> float
+			{
+				return GET_RANDOM_FLOAT_IN_RANGE(0.0f, 1.0f);
+			};
+
+			// --- UI ---
+			AddTitle("Face Generator");
+
+			// --- Parents ---
+			AddTickol("Use Third Parent", PedFaceGen::settings.useThirdParent, PedFaceGen::settings.useThirdParent, PedFaceGen::settings.useThirdParent, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			PedFaceGen::settings.parentGenderFilter = AddTexterCycler("Parent Filter", PedFaceGen::settings.parentGenderFilter, genderOpts);
+			PedFaceGen::settings.skinColorFilter = AddTexterCycler("Skin Colour", PedFaceGen::settings.skinColorFilter, skinOpts);
+			
+			// Show non-rockstar parents only if parent / skin color filter is set to "Any" (we don't know the genders/races of modded-parents)
+			bool showNonRockstar = (PedFaceGen::settings.parentGenderFilter == 0) && (PedFaceGen::settings.skinColorFilter == 0);
+			if (showNonRockstar)
+				AddNumberStepper("Non-Rockstar Parent Max ID", PedFaceGen::settings.nonRockstarMax, 0, 1.0, 46.0, 255.0);
+
+			// --- Randomize ---
+			AddBreak("---Randomize---");
+			AddOption("Randomize Face", bRandFace);
+			AddOption("Randomize Face Shapes", bRandShapes);
+			AddOption("Randomize Face Textures", bRandSkins);
+
+			if (bRandFace || bRandShapes || bRandSkins)
+			{
+				auto candidates = buildCandidateList();
+				int maxId = showNonRockstar ? PedFaceGen::settings.nonRockstarMax : 45;
+				std::vector<int> trimmed;
+				for (int id : candidates)
+					if (id <= maxId) trimmed.push_back(id);
+				candidates = trimmed;
+				if (candidates.empty()) candidates.push_back(0);
+
+				PedHeadBlendData bd;
+				GET_PED_HEAD_BLEND_DATA(ped.Handle(), (Any*)&bd);
+
+				if (bRandFace)
+				{
+					bd.shapeFirstID = pickRandomId(candidates);
+					bd.shapeSecondID = pickRandomId(candidates);
+					bd.skinFirstID = pickRandomId(candidates);
+					bd.skinSecondID = pickRandomId(candidates);
+					bd.shapeMix = randomizeMix();
+					bd.skinMix = randomizeMix();
+				if (PedFaceGen::settings.useThirdParent)
+				{
+					bd.shapeThirdID = pickRandomId(candidates);
+					bd.skinThirdID = pickRandomId(candidates);
+					bd.thirdMix = randomizeMix();
+				}
+				UpdatePedHeadBlendData(ped, bd, false);
+				return;
+			}
+			if (bRandShapes)
+			{
+				bd.shapeFirstID = pickRandomId(candidates);
+				bd.shapeSecondID = pickRandomId(candidates);
+				bd.shapeMix = randomizeMix();
+				if (PedFaceGen::settings.useThirdParent)
+				{
+					bd.shapeThirdID = pickRandomId(candidates);
+					bd.thirdMix = randomizeMix();
+				}
+				UpdatePedHeadBlendData(ped, bd, false);
+				return;
+			}
+			if (bRandSkins)
+			{
+				bd.skinFirstID = pickRandomId(candidates);
+				bd.skinSecondID = pickRandomId(candidates);
+				bd.skinMix = randomizeMix();
+				if (PedFaceGen::settings.useThirdParent)
+				{
+					bd.skinThirdID = pickRandomId(candidates);
+				}
+				UpdatePedHeadBlendData(ped, bd, false);
+				return;
+				}
+			}
+
+			// --- Facial Features ---
+			AddBreak("---Facial Features---");
+			AddOption("Randomize Facial Features", bRandAllFeatures);
+			if (bRandAllFeatures)
+			{
+				for (int i = 0; i < 20; i++)
+				{
+					float val = GET_RANDOM_FLOAT_IN_RANGE(-1.0f, 1.0f);
+					pedHead->facialFeatureData[i] = val;
+					SET_PED_MICRO_MORPH(ped.Handle(), i, val);
+				}
+				return;
+			}
+
+			struct FeatureGroup { const char* label; int start; int end; };
+			const FeatureGroup groups[] =
+			{
+				{ "Nose",           0,  5 },
+				{ "Brows",          6,  7 },
+				{ "Cheeks & Eyes",  8,  11 },
+				{ "Lips",           12, 12 },
+				{ "Jaw",            13, 14 },
+				{ "Chin",           15, 18 },
+				{ "Neck",           19, 19 },
+			};
+
+			for (const auto& grp : groups)
+			{
+				bool bPressed = false;
+				AddOption(std::string("Randomize ") + grp.label, bPressed);
+				if (bPressed)
+				{
+					for (int i = grp.start; i <= grp.end; i++)
+					{
+						float val = GET_RANDOM_FLOAT_IN_RANGE(-1.0f, 1.0f);
+						pedHead->facialFeatureData[i] = val;
+						SET_PED_MICRO_MORPH(ped.Handle(), i, val);
+					}
+					return;
+				}
+			}
+			AddBreak("---Reset---");
+			AddOption("Reset All Facial Features", bResetAllFeatures);
+			if (bResetAllFeatures)
+			{
+				for (int i = 0; i < 20; i++)
+				{
+					pedHead->facialFeatureData[i] = 0.0f;
+					SET_PED_MICRO_MORPH(ped.Handle(), i, 0.0f);
+				}
+				return;
+			}
+			for (const auto& grp : groups)
+			{
+				bool bPressed = false;
+				AddOption(std::string("Reset ") + grp.label, bPressed);
+				if (bPressed)
+				{
+					for (int i = grp.start; i <= grp.end; i++)
+					{
+						pedHead->facialFeatureData[i] = 0.0f;
+						SET_PED_MICRO_MORPH(ped.Handle(), i, 0.0f);
+					}
+					return;
+				}
+			}
 		}
 	}
 
@@ -2034,3 +2255,4 @@ REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS, sub::PedHeadFeatures_catind::Sub
 REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS_INITEM, sub::PedHeadFeatures_catind::Sub_HeadOverlays_InItem)
 REGISTER_SUBMENU(PED_HEADFEATURES_FACEFEATURES, sub::PedHeadFeatures_catind::Sub_FaceFeatures)
 REGISTER_SUBMENU(PED_HEADFEATURES_SKINTONE, sub::PedHeadFeatures_catind::Sub_SkinTone)
+REGISTER_SUBMENU(PED_HEADFEATURES_FACEGENERATOR, sub::PedHeadFeatures_catind::Sub_FaceGenerator)

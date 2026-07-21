@@ -156,6 +156,24 @@ namespace sub
 		void Sub_FaceFeatures();
 		void Sub_SkinTone();
 
+		namespace PedFaceGen
+		{
+			struct sFaceGenData
+			{
+				bool useThirdParent = false;
+				bool useNonRockstarParents = false;
+				int parentGenderFilter = 0; // 0=Any, 1=Male, 2=Female
+				int skinColorFilter = 0; // 0=Any, 1=White, 2=Black, 3=Hispanic, 4=Asian, 5=Arab, 6=Pakistani
+				int nonRockstarMax = 46;
+				Hash lastPedModel = 0;
+			};
+
+			extern const std::vector<int> parentIdsByGenderSkin[2][6];
+			extern sFaceGenData settings;
+		}
+
+		void Sub_FaceGenerator();
+
 	}
 
 	// Outfits (saver)
