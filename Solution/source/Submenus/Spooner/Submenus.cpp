@@ -3001,7 +3001,7 @@ namespace sub
 		}
 		void Sub_Blip_Management()
 		{
-		int blipIndexInDbToDelete = -1;
+			int blipIndexInDbToDelete = -1;
 			AddTitle("Blip Management");
 
 			AddOption("Add Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_SELECT);
@@ -3016,7 +3016,6 @@ namespace sub
 					sub::Spooner::SelectedBlip = &m;
 					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
 				}
-
 
 				if (*Menu::currentopATM == Menu::printingop)
 				{
@@ -3038,7 +3037,6 @@ namespace sub
 					{
 						blipIndexInDbToDelete = i;
 					}
-					
 				}
 			}
 			if (blipIndexInDbToDelete != -1)
@@ -3049,7 +3047,7 @@ namespace sub
 			if (*Menu::currentopATM > Menu::printingop)
 				Menu::Up();
 		}
-		//sub::Spooner::SpoonerBlip* SelectedBlip = nullptr;
+
 		void Sub_Blip_Select()
 		{
 			AddTitle("Select Blip Type");
@@ -3081,6 +3079,7 @@ namespace sub
 			AddOption("Attach Blip to Entity", null, nullFunc, SUB::SPOONER_BLIPS_ADD_ENTITY);
 			AddOption("Create Coord Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_COORD);
 		}
+
 		void Sub_Blip_Radial()
 		{
 			AddTitle("Radial Blip");
@@ -3092,6 +3091,7 @@ namespace sub
 				sub::Spooner::BlipCustoms::RemoveBlip(*sub::Spooner::SelectedBlip);
 				sub::Spooner::SelectedBlip = nullptr;
 				Menu::SetSub_previous();
+				return;
 			}
 		}
 
@@ -3107,7 +3107,7 @@ namespace sub
 
 		void Sub_Blip_RadialInBlip()
 		{
-			if (sub::Spooner::SelectedBlip == 0)
+			if (sub::Spooner::SelectedBlip == nullptr)
 			{
 				Menu::SetSub_previous();
 				return;
@@ -3234,10 +3234,9 @@ namespace sub
 				Menu::SetSub_previous();
 				return;
 			}
+
 			AddBreak("---Position---");
 			{
-				auto blip = sub::Spooner::SelectedBlip;
-
 				AddOption("~italic~" + Vector3(blip->X, blip->Y, blip->Z).ToString(), null);
 
 				bool bSetToPlayer = false;
@@ -3268,6 +3267,7 @@ namespace sub
 						blip->Z = wpCoords.z;
 						blip->EntityHandle = 0;
 						blip->bAttached = false;
+						BlipCustoms::RefreshBlip(*blip);
 					}
 				}
 
@@ -3301,10 +3301,63 @@ namespace sub
 				}
 			}
 		}
+
 		void Sub_Blip_Attach()
 		{
-			AddTitle("Attach To Entity");
-			AddBreak("---WIP---");
+			if (sub::Spooner::SelectedBlip == nullptr)
+			{
+				Menu::SetSub_previous();
+				return;
+			}
+
+			auto blip = sub::Spooner::SelectedBlip;
+
+			AddTitle("Attachment");
+
+			bool bDetachPressed = false;
+			AddTickol("Detach", !blip->bAttached, bDetachPressed, bDetachPressed, TICKOL::TICK2);
+			if (bDetachPressed)
+			{
+				if (blip->bAttached)
+				{
+					Vector3 worldPos = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(blip->EntityHandle, blip->Offset.x, blip->Offset.y, blip->Offset.z);
+					blip->X = worldPos.x;
+					blip->Y = worldPos.y;
+					blip->Z = worldPos.z;
+				}
+				blip->EntityHandle = 0;
+				blip->bAttached = false;
+				blip->Offset.clear();
+				BlipCustoms::RefreshBlip(*blip);
+			}
+
+			if (!Databases::EntityDb.empty())
+			{
+				AddBreak("---Database---");
+				for (auto& e : Databases::EntityDb)
+				{
+					if (e.Handle.Exists())
+					{
+						bool bEntityPressed = false;
+						AddTickol(e.HashName, blip->EntityHandle == e.Handle.GetHandle(), bEntityPressed, bEntityPressed, TICKOL::TICK2);
+						if (bEntityPressed)
+						{
+							blip->EntityHandle = e.Handle.GetHandle();
+							blip->Offset.clear();
+							blip->bAttached = true;
+							BlipCustoms::RefreshBlip(*blip);
+							Menu::SetSub_previous();
+							return;
+						}
+
+						if (*Menu::currentopATM == Menu::printingop) EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(0, 255, 0, 200));
+					}
+					else
+					{
+						AddOption(e.HashName + " (Invalid)", null);
+					}
+				}
+			}
 		}
 
 		void Sub_SpawnCategories()

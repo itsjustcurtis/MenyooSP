@@ -30,6 +30,7 @@
 #include "..\..\Util\StringManip.h"
 #include "..\..\Scripting\enums.h"
 #include "..\..\Scripting\Game.h"
+#include "BlipCustoms.h"
 
 #include "SpoonerSettings.h"
 #include "EntityManagement.h"
@@ -884,7 +885,7 @@ namespace sub::Spooner
 		void Tick()
 		{
 			if (SpoonerMode::IsHotkeyPressed())
-				SpoonerMode::Toggle(); // Hotkey (when mayo closed)
+				SpoonerMode::Toggle();
 
 			CamTick();
 
@@ -894,11 +895,14 @@ namespace sub::Spooner
 			for (auto& ent : Databases::EntityDb)
 			{
 				if (ent.Handle.Exists())
-					ent.TaskSequence.Tick(reinterpret_cast<void*>(&ent)); //ent.TaskSequence.Tick((GTAped)ent.Handle);
+					ent.TaskSequence.Tick(reinterpret_cast<void*>(&ent));
 			}
 
 			if (!Databases::MarkerDb.empty())
 				MarkerManagement::DrawAll();
+
+			if (!Databases::BlipDb.empty())
+				BlipCustoms::UpdateAttachedBlips();
 		}
 
 		void TurnOn()
