@@ -31,6 +31,7 @@
 #include "..\..\Util\StringManip.h"
 #include "..\..\Scripting\enums.h"
 #include "..\..\Scripting\Game.h"
+#include "BlipCustoms.h"
 
 #include "SpoonerSettings.h"
 #include "EntityManagement.h"
@@ -1075,6 +1076,9 @@ namespace sub::Spooner
 			applyScaleTick(Submenus::_vehScale);
 			applyScaleTick(Submenus::_pedScale);
 			applyScaleTick(Submenus::_objScale);
+
+			if (!Databases::BlipDb.empty())
+				BlipCustoms::UpdateAttachedBlips();
 		}
 
 		void TurnOn()
