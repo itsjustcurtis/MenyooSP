@@ -248,9 +248,9 @@ void AddLocal(const std::string& text, BOOL condition, void(&callback_ON)(), voi
 void AddBreak(std::string text);
 void AddNumber(const std::string& text, double value, __int8 decimal_places, bool &A_PRESS = null, bool &RIGHT_PRESS = null, bool &LEFT_PRESS = null, bool gxt = 0);
 void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& normal, const std::string& selected, const RGBA& colour);
-inline void draw_tickol_tick(TICKOL tickType);
-void AddTickol(const std::string& text, BOOL condition, bool &option_code_ON, bool &option_code_OFF, TICKOL tickTrue = TICKOL::TICK, TICKOL tickFalse = TICKOL::NONE, bool gxt = false);
-void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), void(&callback_OFF)(), TICKOL tickTrue = TICKOL::TICK, TICKOL tickFalse = TICKOL::NONE, bool gxt = false);
+inline void draw_tickol_tick(TICKOL tickType, float rotation = 0.0f);
+void AddTickol(const std::string& text, BOOL condition, bool &option_code_ON, bool &option_code_OFF, TICKOL tickTrue = TICKOL::TICK, TICKOL tickFalse = TICKOL::NONE, bool gxt = false, float rotationTrue = 0.0f, float rotationFalse = 0.0f);
+void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), void(&callback_OFF)(), TICKOL tickTrue = TICKOL::TICK, TICKOL tickFalse = TICKOL::NONE, bool gxt = false, float rotationTrue = 0.0f, float rotationFalse = 0.0f);
 void AddTexter(const std::string& text, int selectedindex, const std::vector<std::string>& textarray, bool &A_PRESS = null, bool &RIGHT_PRESS = null, bool &LEFT_PRESS = null, bool gxt = 0);
 
 int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts);

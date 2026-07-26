@@ -1494,7 +1494,7 @@ void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& nor
 	DRAW_SPRITE(textureDict.c_str(), textureName.c_str(), get_xcoord_at_menu_rightEdge(texture_res.x, 0.0f, true), OptionY + 0.016f + menuPos.y, texture_res.x, texture_res.y, 0.0f, 255, 255, 255, colour.A, false, 0);
 
 }
-inline void draw_tickol_tick(TICKOL tickType)
+inline void draw_tickol_tick(TICKOL tickType, float rotation)
 {
 	RGBA* colour = &optiontext;
 	if (Menu::printingop == *Menu::currentopATM) colour = &selectedtext;
@@ -1565,10 +1565,10 @@ inline void draw_tickol_tick(TICKOL tickType)
 	texture_res.x /= (Game::defaultScreenRes.first * 2);
 	texture_res.y /= (Game::defaultScreenRes.second * 2);
 
-	DRAW_SPRITE(textureDict.c_str(), textureName.c_str(), get_xcoord_at_menu_rightEdge(texture_res.x, 0.0f, true), OptionY + 0.016f + menuPos.y, texture_res.x, texture_res.y, 0.0f, colour->R, colour->G, colour->B, colour->A, false, 0);
+	DRAW_SPRITE(textureDict.c_str(), textureName.c_str(), get_xcoord_at_menu_rightEdge(texture_res.x, 0.0f, true), OptionY + 0.016f + menuPos.y, texture_res.x, texture_res.y, rotation, colour->R, colour->G, colour->B, colour->A, false, 0);
 
 }
-void AddTickol(const std::string& text, BOOL condition, bool& option_code_ON, bool& option_code_OFF, TICKOL tickTrue, TICKOL tickFalse, bool gxt)
+void AddTickol(const std::string& text, BOOL condition, bool& option_code_ON, bool& option_code_OFF, TICKOL tickTrue, TICKOL tickFalse, bool gxt, float rotationTrue, float rotationFalse)
 {
 	null = 0;
 	AddOption(text, null, nullFunc, -1, false, gxt);
@@ -1577,11 +1577,11 @@ void AddTickol(const std::string& text, BOOL condition, bool& option_code_ON, bo
 	{
 		if (condition)
 		{
-			if (tickTrue != TICKOL::NONE) draw_tickol_tick(tickTrue);
+			if (tickTrue != TICKOL::NONE) draw_tickol_tick(tickTrue, rotationTrue);
 		}
 		else
 		{
-			if (tickFalse != TICKOL::NONE) draw_tickol_tick(tickFalse);
+			if (tickFalse != TICKOL::NONE) draw_tickol_tick(tickFalse, rotationFalse);
 		}
 	}
 
@@ -1591,7 +1591,7 @@ void AddTickol(const std::string& text, BOOL condition, bool& option_code_ON, bo
 		else option_code_OFF = true;
 	}
 }
-void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), void(&callback_OFF)(), TICKOL tickTrue, TICKOL tickFalse, bool gxt)
+void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), void(&callback_OFF)(), TICKOL tickTrue, TICKOL tickFalse, bool gxt, float rotationTrue, float rotationFalse)
 {
 	null = 0;
 	AddOption(text, null, nullFunc, -1, false, gxt);
@@ -1600,11 +1600,11 @@ void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), vo
 	{
 		if (condition)
 		{
-			if (tickTrue != TICKOL::NONE) draw_tickol_tick(tickTrue);
+			if (tickTrue != TICKOL::NONE) draw_tickol_tick(tickTrue, rotationTrue);
 		}
 		else
 		{
-			if (tickFalse != TICKOL::NONE) draw_tickol_tick(tickFalse);
+			if (tickFalse != TICKOL::NONE) draw_tickol_tick(tickFalse, rotationFalse);
 		}
 	}
 
