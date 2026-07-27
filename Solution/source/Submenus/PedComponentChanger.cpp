@@ -698,6 +698,11 @@ namespace sub
 		{
 			AddTitle(selectedType->first);
 
+			bool bSearchPressed = false;
+			AddOption("~b~Search~s~", bSearchPressed, nullFunc, SUB::PEDDECALS_ZONES_SEARCH, true);
+
+			AddBreak("---Categories---");
+
 			for (auto& zone : selectedType->second)
 			{
 				bool bZonePressed = false;
@@ -705,6 +710,121 @@ namespace sub
 				if (bZonePressed)
 				{
 					selectedZone = (std::pair<std::string, std::vector<NamedPedDecal>>*)&zone;
+				}
+			}
+		}
+
+		namespace DecalSearch
+		{
+			struct SearchResult {
+				std::string zoneName;
+				const NamedPedDecal* decal;
+			};
+			static std::vector<SearchResult> results;
+			static bool dirty = true;
+			static std::string lastSearch;
+			static const void* lastTypePtr = nullptr;
+
+			void RebuildResults(const std::string& searchStr)
+			{
+				results.clear();
+				std::string searchUpper = boost::to_upper_copy(searchStr);
+
+				for (auto& zone : selectedType->second)
+				{
+					for (auto& decal : zone.second)
+					{
+						if (!searchUpper.empty())
+						{
+							std::string nameUpper = boost::to_upper_copy(decal.caption);
+							if (nameUpper.find(searchUpper) == std::string::npos)
+								continue;
+						}
+						results.push_back({ zone.first, &decal });
+					}
+				}
+			}
+		}
+
+		void Sub_Decals_Zones_Search()
+		{
+			using namespace DecalSearch;
+			GTAentity ped = g_Ped1;
+			auto& searchStr = dict;
+
+			bool bShortcutDecalPreviewPressed = false;
+
+			if (Menu::OnSubBack == nullptr)
+			{
+				Menu::OnSubBack = []
+				{
+					ClearPreviewTattoo();
+				};
+			}
+
+			AddTitle("Search");
+
+			bool bSearchPressed = false;
+			AddOption(searchStr.empty() ? "~b~SEARCH~s~" : ("~b~" + searchStr + "~s~"), bSearchPressed, nullFunc, -1, true);
+			if (bSearchPressed)
+			{
+				searchStr = Game::InputBox(searchStr, 64U, "Search decals:", boost::to_lower_copy(searchStr));
+				boost::to_upper(searchStr);
+			}
+
+			if (dirty || searchStr != lastSearch || lastTypePtr != selectedType)
+			{
+				RebuildResults(searchStr);
+				lastSearch = searchStr;
+				lastTypePtr = selectedType;
+				dirty = false;
+			}
+
+			AddBreak("---Results: " + std::to_string(results.size()) + "---");
+
+			for (auto& result : results)
+			{
+				bool isHovered = (*Menu::currentopATM == Menu::printingop + 1);
+				bool bDecalPressedApply = false, bDecalPressedRemove = false;
+				bool bIsOnPed = result.decal->IsOnPed(ped);
+
+				AddTickol("~c~" + result.zoneName + " / ~s~" + result.decal->caption, bIsOnPed, bDecalPressedApply, bDecalPressedRemove, TICKOL::TATTOOTHING);
+
+				if (g_tattooPreviewMode && isHovered)
+				{
+					if (g_previewTattoo != result.decal)
+					{
+						ClearPreviewTattoo();
+						if (!bIsOnPed) {
+							result.decal->Apply(ped);
+							g_previewTattoo = result.decal;
+						}
+					}
+				}
+
+				if (bDecalPressedApply)
+				{
+					result.decal->Apply(ped);
+				}
+				else if (bDecalPressedRemove && g_previewTattoo == result.decal)
+				{
+					ClearPreviewTattoo();
+					result.decal->Apply(ped);
+				}
+				else if (bDecalPressedRemove)
+				{
+					result.decal->Remove(ped);
+				}
+			}
+
+			Menu::add_IB(VirtualKey::B, g_tattooPreviewMode ? "Preview: ON " : "Preview: OFF ");
+			bShortcutDecalPreviewPressed = IsKeyJustUp(VirtualKey::B);
+			if (bShortcutDecalPreviewPressed)
+			{
+				g_tattooPreviewMode = !g_tattooPreviewMode;
+				if (!g_tattooPreviewMode)
+				{
+					ClearPreviewTattoo();
 				}
 			}
 		}
@@ -2250,6 +2370,7 @@ REGISTER_SUBMENU(COMPONENTS_OUTFITS_DEFAULT, sub::ComponentChanger_DefaultOutfit
 REGISTER_SUBMENU(PEDDECALS_TYPES, sub::PedDecals::Sub_Decals_Types)
 REGISTER_SUBMENU(PEDDECALS_ZONES, sub::PedDecals::Sub_Decals_Zones)
 REGISTER_SUBMENU(PEDDECALS_INZONE, sub::PedDecals::Sub_Decals_InZone)
+REGISTER_SUBMENU(PEDDECALS_ZONES_SEARCH, sub::PedDecals::Sub_Decals_Zones_Search)
 REGISTER_SUBMENU(PEDDAMAGET_CATEGORYLIST, sub::PedDamageTextures::Sub_CategoryList)
 REGISTER_SUBMENU(PEDDAMAGET_BONESELECTION, sub::PedDamageTextures::Sub_BoneSelection)
 REGISTER_SUBMENU(PEDDAMAGET_BLOOD, sub::PedDamageTextures::Sub_Blood)
