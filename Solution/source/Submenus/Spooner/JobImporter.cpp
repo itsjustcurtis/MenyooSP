@@ -230,7 +230,7 @@ namespace sub::Spooner::JobBrowser
             
             if (!r.cid.empty())
             {
-                r.cdnBase = "https://prod.cloud.rockstargames.com/ugc/gta5mission/" + std::to_string(r.fileVersion) + "/" + r.cid;
+                r.cdnBase = "https://prod.cloud.rockstargames.com/ugc/gta5mission/" + r.cid;
             }
             
             results.push_back(r);
@@ -264,17 +264,12 @@ namespace sub::Spooner::JobBrowser
                         continue;
                     }
                 }
-                std::vector<int> versions = { 7695, 6285, 5131, 5828, 5483, 3816 };
-                for (int ver : versions)
+                std::string directBase = "https://prod.cloud.rockstargames.com/ugc/gta5mission/" + r.cid;
+                bool ok = false;
+                std::string data = HttpGet(directBase + "/2_0.jpg", ok);
+                if (ok && data.size() > 100)
                 {
-                    std::string base = "https://prod.cloud.rockstargames.com/ugc/gta5mission/" + std::to_string(ver) + "/" + r.cid;
-                    bool ok = false;
-                    std::string data = HttpGet(base + "/2_0.jpg", ok);
-                    if (ok && data.size() > 100)
-                    {
-                        WriteFileBinary(thumbPath, data);
-                        break;
-                    }
+                    WriteFileBinary(thumbPath, data);
                 }
             }
         }).detach();
@@ -286,69 +281,50 @@ namespace sub::Spooner::JobBrowser
         std::string jobMapsFolder = GetPathffA(Pathff::Spooner, false) + "\\!Imported Jobs";
         CreateDirectoryA(jobMapsFolder.c_str(), NULL);
 
-        std::vector<std::string> versionNumbers;
-        
-        if (!result.cdnBase.empty())
-        {
-            versionNumbers.push_back(result.cdnBase);
-        }
-        std::vector<int> commonVersions = { 7695, 6285, 5131, 5828, 5483, 3816, 0, 1, 2, 3, 4, 5 }; // there might a be a way to find the right job type with UGC_GET_CONTENT_CATEGORY or UGC_REQUEST_CONTENT_DATA_FROM_PARAMS
-        for (int ver : commonVersions)
-        {
-            std::string fallbackBase = "https://prod.cloud.rockstargames.com/ugc/gta5mission/" + std::to_string(ver) + "/" + result.cid;
-            if (std::find(versionNumbers.begin(), versionNumbers.end(), fallbackBase) == versionNumbers.end())
-            {
-                versionNumbers.push_back(fallbackBase);
-            }
-        }
+        std::string basePath = result.cdnBase.empty() ? ("https://prod.cloud.rockstargames.com/ugc/gta5mission/" + result.cid) : result.cdnBase;
 
         bool found = false;
         std::vector<std::pair<int, int>> commonPatterns = { {0,0}, {0,1}, {1,0}, {2,0} };
 
-        for (const auto& basePath : versionNumbers)
+        for (const auto& pattern : commonPatterns)
         {
             if (found) break;
 
-            for (const auto& pattern : commonPatterns)
+            for (const auto& lang : langs)
             {
                 if (found) break;
 
-                for (const auto& lang : langs)
+                std::string tryUrl = basePath + "/" + std::to_string(pattern.first) + "_" + std::to_string(pattern.second) + "_" + lang + ".json";
+                downloadStatus = "Fetching...";
+
+                bool success = false;
+                std::string body = HttpGet(tryUrl, success);
+                if (success && !body.empty() && body.front() == '{')
                 {
-                    if (found) break;
+                    std::string safeName = SanitizeFilename(result.name);
+                    std::string savePath = jobMapsFolder + "\\" + safeName + ".xml";
+                    std::string outRaceName = "";
+                    JobConverter::ConvertJsonToXml(body, savePath, result.name, outRaceName);
 
-                    std::string tryUrl = basePath + "/" + std::to_string(pattern.first) + "_" + std::to_string(pattern.second) + "_" + lang + ".json";
-                    downloadStatus = "Fetching..."; // could be more descriptive or removed but only takes a second there already is a downloading break, it just searches for the job type now.
-
-                    bool success = false;
-                    std::string body = HttpGet(tryUrl, success);
-                    if (success && !body.empty() && body.front() == '{')
+                    std::string imgUrl = basePath + "/2_0.jpg";
+                    bool imgSuccess = false;
+                    std::string imgData = HttpGet(imgUrl, imgSuccess);
+                    if (imgSuccess && imgData.size() > 100)
                     {
-                        std::string safeName = SanitizeFilename(result.name);
-                        std::string savePath = jobMapsFolder + "\\" + safeName + ".xml";
-                        std::string outRaceName = "";
-                        JobConverter::ConvertJsonToXml(body, savePath, result.name, outRaceName);
-
-                        std::string imgUrl = basePath + "/2_0.jpg";// You might be able to get the image using natives maybe UGC_REQUEST_CONTENT_DATA_FROM_PARAMS, but I guess it needs to save the image for xmls anyway.
-                        bool imgSuccess = false;
-                        std::string imgData = HttpGet(imgUrl, imgSuccess);
-                        if (imgSuccess && imgData.size() > 100)
+                        std::string thumbFolder = GetPathffA(Pathff::Main, false) + "\\Job Thumbnails";
+                        CreateDirectoryA(thumbFolder.c_str(), NULL);
+                        WriteFileBinary(thumbFolder + "\\" + result.cid + ".jpg", imgData);
+                        if (sub::Spooner::JobImporter::savePreviewImage)
                         {
-                            std::string thumbFolder = GetPathffA(Pathff::Main, false) + "\\Job Thumbnails";
-                            CreateDirectoryA(thumbFolder.c_str(), NULL);
-                            WriteFileBinary(thumbFolder + "\\" + result.cid + ".jpg", imgData);
-                            if (sub::Spooner::JobImporter::savePreviewImage)
-                            {
-                                WriteFileBinary(jobMapsFolder + "\\" + safeName + ".jpg", imgData);
-                            }
+                            WriteFileBinary(jobMapsFolder + "\\" + safeName + ".jpg", imgData);
                         }
-
-                        pendingSavedNotification = true;
-                        downloadStatus = "";
-                        found = true;
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+                    pendingSavedNotification = true;
+                    downloadStatus = "";
+                    found = true;
                 }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
         }
 
@@ -941,101 +917,75 @@ namespace sub::Spooner::JobImporter
             return;
         }
 
-        std::vector<std::string> versionNumbers;
-        if (!cdnBase.empty())
-        {
-            versionNumbers.push_back(cdnBase);
-        }
-        else
-        {
-            if (resolvedFileVersion > 0)
-            {
-                versionNumbers.push_back("https://prod.cloud.rockstargames.com/ugc/gta5mission/" + std::to_string(resolvedFileVersion) + "/" + contentId);
-            }
-            std::vector<int> commonVersions = { 7695, 6285, 5131, 5828, 5483, 3816, 0, 1, 2, 3, 4, 5 };
-            for (int ver : commonVersions)
-            {
-                if (ver != resolvedFileVersion)
-                {
-                    versionNumbers.push_back("https://prod.cloud.rockstargames.com/ugc/gta5mission/" + std::to_string(ver) + "/" + contentId);
-                }
-            }
-        }
+        std::string basePath = cdnBase.empty() ? ("https://prod.cloud.rockstargames.com/ugc/gta5mission/" + contentId) : cdnBase;
 
-        std::stringstream ss;
-        ss << "Searching... (trying " << versionNumbers.size() << " paths)";
-        status = ss.str();
+        status = "Searching for job data...";
         statusColorCode = "~b~";
 
         bool found = false;
         std::vector<std::pair<int, int>> commonPatterns = { {0,0}, {0,1}, {1,0}, {2,0} };
 
-        for (const auto& basePath : versionNumbers)
+        for (const auto& pattern : commonPatterns)
         {
             if (found) break;
 
-            for (const auto& pattern : commonPatterns)
+            for (const auto& lang : langs)
             {
                 if (found) break;
 
-                for (const auto& lang : langs)
+                std::string tryUrl = basePath + "/" + std::to_string(pattern.first) + "_" + std::to_string(pattern.second) + "_" + lang + ".json";
+                status = "Trying: " + lang + " (" + std::to_string(pattern.first) + "_" + std::to_string(pattern.second) + ")...";
+                
+                bool success = false;
+                std::string body = HttpGet(tryUrl, success);
+                if (success && !body.empty() && body.front() == '{')
                 {
-                    if (found) break;
-
-                    std::string tryUrl = basePath + "/" + std::to_string(pattern.first) + "_" + std::to_string(pattern.second) + "_" + lang + ".json";
-                    status = "Trying: " + lang + " (" + std::to_string(pattern.first) + "_" + std::to_string(pattern.second) + ")...";
-                    
-                    bool success = false;
-                    std::string body = HttpGet(tryUrl, success);
-                    if (success && !body.empty() && body.front() == '{')
+                    try
                     {
-                        try
+                        json jsonData = json::parse(body);
+                        std::string raceName = "";
+                        if (jsonData.contains("mission") && jsonData["mission"].is_object() && 
+                            jsonData["mission"].contains("gen") && jsonData["mission"]["gen"].is_object() && 
+                            jsonData["mission"]["gen"].contains("nm") && jsonData["mission"]["gen"]["nm"].is_string())
                         {
-                            json jsonData = json::parse(body);
-                            std::string raceName = "";
-                            if (jsonData.contains("mission") && jsonData["mission"].is_object() && 
-                                jsonData["mission"].contains("gen") && jsonData["mission"]["gen"].is_object() && 
-                                jsonData["mission"]["gen"].contains("nm") && jsonData["mission"]["gen"]["nm"].is_string())
-                            {
-                                raceName = jsonData["mission"]["gen"]["nm"].get<std::string>();
-                            }
-                            if (raceName.empty())
-                            {
-                                raceName = FindRaceName(jsonData, 0);
-                            }
-                            if (raceName.empty())
-                            {
-                                raceName = "unnamed_job";
-                            }
-
-                            std::string safeName = SanitizeFilename(raceName);
-                            std::string savePath = jobMapsFolder + "\\" + safeName + ".xml";
-                            std::string outRaceName = "";
-                            JobConverter::ConvertJsonToXml(body, savePath, raceName, outRaceName);
-
-                            if (saveImg)
-                            {
-                                status = "Downloading preview image...";
-                                std::string imgUrl = basePath + "/2_0.jpg";
-                                bool imgSuccess = false;
-                                std::string imgData = HttpGet(imgUrl, imgSuccess);
-                                if (imgSuccess && imgData.size() > 100)
-                                {
-                                    std::string thumbFolder = GetPathffA(Pathff::Main, false) + "\\Job Thumbnails";
-                                    CreateDirectoryA(thumbFolder.c_str(), NULL);
-                                    WriteFileBinary(thumbFolder + "\\" + contentId + ".jpg", imgData);
-                                    WriteFileBinary(jobMapsFolder + "\\" + safeName + ".jpg", imgData);
-                                }
-                            }
-
-                            status = "Imported: " + raceName;
-                            statusColorCode = "~g~";
-                            found = true;
+                            raceName = jsonData["mission"]["gen"]["nm"].get<std::string>();
                         }
-                        catch (...) {}
+                        if (raceName.empty())
+                        {
+                            raceName = FindRaceName(jsonData, 0);
+                        }
+                        if (raceName.empty())
+                        {
+                            raceName = "unnamed_job";
+                        }
+
+                        std::string safeName = SanitizeFilename(raceName);
+                        std::string savePath = jobMapsFolder + "\\" + safeName + ".xml";
+                        std::string outRaceName = "";
+                        JobConverter::ConvertJsonToXml(body, savePath, raceName, outRaceName);
+
+                        if (saveImg)
+                        {
+                            status = "Downloading preview image...";
+                            std::string imgUrl = basePath + "/2_0.jpg";
+                            bool imgSuccess = false;
+                            std::string imgData = HttpGet(imgUrl, imgSuccess);
+                            if (imgSuccess && imgData.size() > 100)
+                            {
+                                std::string thumbFolder = GetPathffA(Pathff::Main, false) + "\\Job Thumbnails";
+                                CreateDirectoryA(thumbFolder.c_str(), NULL);
+                                WriteFileBinary(thumbFolder + "\\" + contentId + ".jpg", imgData);
+                                WriteFileBinary(jobMapsFolder + "\\" + safeName + ".jpg", imgData);
+                            }
+                        }
+
+                        status = "Imported: " + raceName;
+                        statusColorCode = "~g~";
+                        found = true;
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    catch (...) {}
                 }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
         }
 
