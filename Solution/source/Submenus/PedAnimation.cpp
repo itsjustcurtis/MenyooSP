@@ -12,6 +12,8 @@
 #include "..\macros.h"
 
 #include "..\Menu\Menu.h"
+#include "..\Menu\MenuCategory.h"
+#include "..\Menu\submenu_enum.h"
 #include "..\Menu\Routine.h"
 
 #include "..\Natives\natives2.h"
@@ -31,12 +33,158 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
+#include <algorithm>
 #include <fstream>
 #include <pugixml\src\pugixml.hpp>
 
 namespace sub
 {
-	void AddAnimOption(const std::string& text, const std::string& animDict, std::string animName = "", bool &extraOptionCode = null);
+	FavMenuCache s_favCache;
+
+	bool RebuildFavCache(const std::string& searchStr)
+	{
+		pugi::xml_document doc;
+		if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml").c_str()).status != pugi::status_ok)
+			return false;
+
+		auto nodeAnims = doc.child("PedAnims");
+		s_favCache.animationsByCategory.clear();
+		s_favCache.sortedCategoryNames.clear();
+
+		for (auto node = nodeAnims.first_child(); node; node = node.next_sibling())
+		{
+			FavouriteAnimation fav;
+			fav.dict = node.attribute("dict").as_string();
+			fav.name = node.attribute("name").as_string();
+			fav.category = node.attribute("category").as_string("");
+
+			if (!searchStr.empty())
+			{
+				std::string dictLower = fav.dict, nameLower = fav.name;
+				boost::to_lower(dictLower);
+				boost::to_lower(nameLower);
+				if (dictLower.find(searchStr) == std::string::npos && nameLower.find(searchStr) == std::string::npos)
+					continue;
+			}
+
+			s_favCache.animationsByCategory[fav.category].push_back(fav);
+		}
+
+		for (auto& kv : s_favCache.animationsByCategory)
+			s_favCache.sortedCategoryNames.push_back(kv.first);
+		std::sort(s_favCache.sortedCategoryNames.begin(), s_favCache.sortedCategoryNames.end(), [](const std::string& a, const std::string& b)
+		{
+			if (a.empty()) return false;
+			if (b.empty()) return true;
+			return a < b;
+		});
+
+		s_favCache.needsRebuild = false;
+		return true;
+	}
+	// state for returning to the last menu option after changing a favourite anim category
+	static struct {
+		std::string animDict;
+		std::string animName;
+		INT returnCursor = 1;
+	} s_recatState;
+
+	struct PedSpoonerContext {
+		GTAped ped;
+		GTAentity attachedTo;
+		int dbIndex;
+	};
+
+	PedSpoonerContext GetPedSpoonerContext(const GTAped& ped)
+	{
+		PedSpoonerContext ctx;
+		ctx.ped = ped;
+		ctx.dbIndex = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
+		if (ctx.dbIndex >= 0)
+		{
+			auto& spoonerEntity = sub::Spooner::Databases::EntityDb[ctx.dbIndex];
+			Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spoonerEntity.handle, ctx.attachedTo);
+		}
+		return ctx;
+	}
+
+	void StopPedAnimation(const GTAped& ped, bool clearScenario = false)
+	{
+		auto ctx = GetPedSpoonerContext(ped);
+
+		GTAvehicle veh = ctx.ped.CurrentVehicle();
+		bool isInVehicle = veh.Exists();
+		VehicleSeat vehSeat;
+		if (isInVehicle)
+			vehSeat = ctx.ped.GetCurrentVehicleSeat();
+		ctx.ped.Task().ClearAllImmediately();
+		if (isInVehicle)
+			ctx.ped.SetIntoVehicle(veh, vehSeat);
+
+		if (ctx.dbIndex >= 0)
+		{
+			auto& spoonerEntity = sub::Spooner::Databases::EntityDb[ctx.dbIndex];
+			spoonerEntity.ClearLastAnimations();
+			if (clearScenario) spoonerEntity.currentScenario.clear();
+			if (ctx.attachedTo.Exists() && spoonerEntity.attachmentArgs.isAttached)
+			{
+				spoonerEntity.handle.AttachTo(ctx.attachedTo, spoonerEntity.attachmentArgs.boneIndex,
+					spoonerEntity.handle.GetIsCollisionEnabled(),
+					spoonerEntity.attachmentArgs.offset, spoonerEntity.attachmentArgs.rotation);
+			}
+			spoonerEntity.taskSequence.Reset();
+			if (sub::Spooner::selectedEntity.handle.Equals(spoonerEntity.handle))
+			{
+				sub::Spooner::selectedEntity.lastAnimations = spoonerEntity.lastAnimations;
+				if (clearScenario) sub::Spooner::selectedEntity.currentScenario = spoonerEntity.currentScenario;
+				sub::Spooner::selectedEntity.taskSequence = spoonerEntity.taskSequence;
+			}
+		}
+	}
+
+	AnimationSettings g_customAnimSettings;
+
+	void PlayPedAnimation(const GTAped& ped, const std::string& animDict, const std::string& animName)
+	{
+		auto ctx = GetPedSpoonerContext(ped);
+
+		ctx.ped.RequestControl();
+		ctx.ped.Task().PlayAnimation(animDict, animName,
+			g_customAnimSettings.speed, g_customAnimSettings.speedMult, g_customAnimSettings.duration,
+			g_customAnimSettings.flag, g_customAnimSettings.playbackRate, g_customAnimSettings.lockPos);
+
+		if (ctx.dbIndex >= 0)
+		{
+			auto& spoonerEntity = sub::Spooner::Databases::EntityDb[ctx.dbIndex];
+			sub::Spooner::SpoonerEntity::Animation animData;
+			animData.dict = animDict;
+			animData.name = animName;
+			animData.speed = g_customAnimSettings.speed;
+			animData.speedMultiplier = g_customAnimSettings.speedMult;
+			animData.playbackRate = g_customAnimSettings.playbackRate;
+			animData.duration = g_customAnimSettings.duration;
+			animData.flag = g_customAnimSettings.flag;
+			animData.lockPos = g_customAnimSettings.lockPos;
+			spoonerEntity.AddOrUpdateLastAnimation(animData);
+
+			if (ctx.attachedTo.Exists() && spoonerEntity.attachmentArgs.isAttached)
+			{
+				spoonerEntity.handle.AttachTo(ctx.attachedTo, spoonerEntity.attachmentArgs.boneIndex,
+					spoonerEntity.handle.GetIsCollisionEnabled(),
+					spoonerEntity.attachmentArgs.offset, spoonerEntity.attachmentArgs.rotation);
+			}
+			spoonerEntity.taskSequence.Reset();
+			if (sub::Spooner::selectedEntity.handle.Equals(spoonerEntity.handle))
+			{
+				sub::Spooner::selectedEntity.lastAnimations = spoonerEntity.lastAnimations;
+				sub::Spooner::selectedEntity.taskSequence = spoonerEntity.taskSequence;
+			}
+		}
+	}
+
+	void AddAnimOption(const std::string& text, const std::string& animDict, std::string animName = "", bool &extraOptionCode = null, const std::string& category = "");
+
 	namespace AnimationMenu
 	{
 		std::string  searchStr = std::string();
@@ -222,16 +370,7 @@ namespace sub
 		}
 	}
 
-	std::string g_customAnimDict = "Enter Dictionary";
-	std::string g_customAnimName = "Enter Name";
-	float g_customAnimSpeed = 4;
-	float g_customAnimSpeedMult = -4; 
-	float g_CustomAnimRate = 0;
-	int g_customAnimDuration = -1;
-	int g_customAnimFlag = AnimFlag::Loop;
-	bool g_customAnimLockPos = false;
-
-	void GetFavouriteAnimations(std::vector<std::pair<std::string, std::string>>& result)
+	void GetFavouriteAnimations(std::vector<FavouriteAnimation>& result)
 	{
 		result.clear();
 		pugi::xml_document doc;
@@ -242,7 +381,8 @@ namespace sub
 			{
 				std::string dict = nodeAnim.attribute("dict").as_string();
 				std::string name = nodeAnim.attribute("name").as_string();
-				result.push_back(std::make_pair(dict, name));
+				std::string category = nodeAnim.attribute("category").as_string("");
+				result.push_back({ dict, name, category });
 			}
 		}
 	}
@@ -268,7 +408,7 @@ namespace sub
 		return false;
 	}
 
-	void AddAnimationToFavourites(const std::string animDict, const std::string& animName)
+	void AddAnimationToFavourites(const std::string animDict, const std::string& animName, const std::string& category)
 	{
 		pugi::xml_document doc;
 		std::string filePath = GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml";
@@ -285,8 +425,11 @@ namespace sub
 		auto nodeAnim = nodeAnims.append_child("Anim");
 		nodeAnim.append_attribute("dict") = animDict.c_str();
 		nodeAnim.append_attribute("name") = animName.c_str();
+		if (!category.empty())
+			nodeAnim.append_attribute("category") = category.c_str();
 
 		doc.save_file((const char*)filePath.c_str());
+		s_favCache.needsRebuild = true;
 	}
 
 	void RemoveAnimationFromFavourites(const std::string animDict, const std::string& animName)
@@ -309,9 +452,35 @@ namespace sub
 		}
 
 		doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml").c_str());
+		s_favCache.needsRebuild = true;
 	}
 
-	void AddAnimOption(const std::string& text, const std::string& animDict, std::string animName, bool &extraOptionCode)
+	void SetAnimationCategory(const std::string& animDict, const std::string& animName, const std::string& category)
+	{
+		pugi::xml_document doc;
+		std::string filePath = GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml";
+		if (doc.load_file((const char*)filePath.c_str()).status != pugi::status_ok)
+			return;
+
+		auto nodeAnims = doc.child("PedAnims");
+		for (auto nodeAnim = nodeAnims.first_child(); nodeAnim; nodeAnim = nodeAnim.next_sibling())
+		{
+			std::string dict = nodeAnim.attribute("dict").as_string();
+			std::string name = nodeAnim.attribute("name").as_string();
+			if (animDict == dict && animName == name)
+			{
+				nodeAnim.remove_attribute("category");
+				if (!category.empty())
+					nodeAnim.append_attribute("category") = category.c_str();
+				break;
+			}
+		}
+
+		doc.save_file((const char*)filePath.c_str());
+		s_favCache.needsRebuild = true;
+	}
+
+	void AddAnimOption(const std::string& text, const std::string& animDict, std::string animName, bool &extraOptionCode, const std::string& category)
 	{
 		if (animName.length() == 0)
 		{
@@ -321,43 +490,7 @@ namespace sub
 		AddTickol(text, IS_ENTITY_PLAYING_ANIM(g_Ped1, animDict.c_str(), animName.c_str(), 3), pressed, pressed, TICKOL::MANWON); 
 		if (pressed)
 		{
-			GTAped ped = g_Ped1;
-			GTAentity att;
-			auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.handle, att);
-			}
-
-			ped.RequestControl();
-			ped.Task().PlayAnimation(animDict, animName, g_customAnimSpeed, g_customAnimSpeedMult, g_customAnimDuration, g_customAnimFlag, g_CustomAnimRate, g_customAnimLockPos);
-
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				sub::Spooner::SpoonerEntity::Animation animData;
-				animData.dict = animDict;
-				animData.name = animName;
-				animData.speed = g_customAnimSpeed;
-				animData.speedMultiplier = g_customAnimSpeedMult;
-				animData.playbackRate = g_CustomAnimRate;
-				animData.duration = g_customAnimDuration;
-				animData.flag = g_customAnimFlag;
-				animData.lockPos = g_customAnimLockPos;
-				spe.AddOrUpdateLastAnimation(animData);
-
-				if (att.Exists() && spe.attachmentArgs.isAttached)
-				{
-					spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
-				}
-				spe.taskSequence.Reset();
-				if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
-				{
-					sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
-					sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
-				}
-			}
+			PlayPedAnimation(g_Ped1, animDict, animName);
 			extraOptionCode = true;
 		}
 
@@ -371,6 +504,18 @@ namespace sub
 				{
 					!isAFavourite ? AddAnimationToFavourites(animDict, animName) : RemoveAnimationFromFavourites(animDict, animName);
 				}
+
+				if (isAFavourite)
+				{
+				Menu::add_IB(INPUT_SCRIPT_RRIGHT, "Change category");
+				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RRIGHT))
+				{
+					s_recatState.returnCursor = *Menu::currentopATM;
+					s_recatState.animDict = animDict;
+					s_recatState.animName = animName;
+					Menu::SetSub_delayed = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
+					}
+				}
 			}
 			else
 			{
@@ -379,49 +524,25 @@ namespace sub
 				{
 					!isAFavourite ? AddAnimationToFavourites(animDict, animName) : RemoveAnimationFromFavourites(animDict, animName);
 				}
+
+				if (isAFavourite)
+				{
+				Menu::add_IB(VirtualKey::C, "Change category");
+				if (IsKeyJustUp(VirtualKey::C))
+				{
+					s_recatState.returnCursor = *Menu::currentopATM;
+					s_recatState.animDict = animDict;
+					s_recatState.animName = animName;
+					Menu::SetSub_delayed = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
+				}
+				}
 			}
 		}
 	}
 
 	void AnimationStopAnimationCallback()
 	{
-		GTAped ped = g_Ped1;
-		GTAentity att;
-		auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
-		if (spi >= 0)
-		{
-			auto& spe = sub::Spooner::Databases::EntityDb[spi];
-			Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.handle, att);
-		}
-
-		GTAvehicle veh = ped.CurrentVehicle();
-		bool isInVehicle = veh.Exists();
-		VehicleSeat vehSeat;
-		if (isInVehicle)
-		{
-			vehSeat = ped.GetCurrentVehicleSeat();
-		}
-		ped.Task().ClearAllImmediately();
-		if (isInVehicle)
-		{
-			ped.SetIntoVehicle(veh, vehSeat);
-		}
-
-		if (spi >= 0)
-		{
-			auto& spe = sub::Spooner::Databases::EntityDb[spi];
-			spe.ClearLastAnimations();
-			if (att.Exists() && spe.attachmentArgs.isAttached)
-			{
-				spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
-			}
-			spe.taskSequence.Reset();
-			if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
-			{
-				sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
-				sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
-			}
-		}
+		StopPedAnimation(g_Ped1);
 	}
 
 	void PedAnimationMenu()
@@ -549,75 +670,75 @@ namespace sub
 		bool toggleLockPosition = false;
 
 		AddTitle("Settings");
-		AddNumber("Blend-In Speed", g_customAnimSpeed, 2, null, speedPlus, speedMinus);
-		AddNumber("Blend-Out Speed", g_customAnimSpeedMult, 2, null, speedMultPlus, speedMultMinus);
-		AddNumber("Duration (ms)", g_customAnimDuration, 0, null, durationPlus, durationMinus);
-		AddTexter("Flag", 0, std::vector<std::string>{ AnimFlag::vFlagNames[g_customAnimFlag] }, null, flagPlus, flagMinus);
-		AddNumber("Playback Rate", g_CustomAnimRate, 2, null, ratePlus, rateMinus);
-		AddTickol("Lock Position", g_customAnimLockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+		AddNumber("Blend-In Speed", g_customAnimSettings.speed, 2, null, speedPlus, speedMinus);
+		AddNumber("Blend-Out Speed", g_customAnimSettings.speedMult, 2, null, speedMultPlus, speedMultMinus);
+		AddNumber("Duration (ms)", g_customAnimSettings.duration, 0, null, durationPlus, durationMinus);
+		AddTexter("Flag", 0, std::vector<std::string>{ AnimFlag::vFlagNames[g_customAnimSettings.flag] }, null, flagPlus, flagMinus);
+		AddNumber("Playback Rate", g_customAnimSettings.playbackRate, 2, null, ratePlus, rateMinus);
+		AddTickol("Lock Position", g_customAnimSettings.lockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
 		if (toggleLockPosition)
 		{
-			g_customAnimLockPos = !g_customAnimLockPos;
+			g_customAnimSettings.lockPos = !g_customAnimSettings.lockPos;
 		}
 
 
 		if (speedPlus) 
 		{ 
-			if (g_customAnimSpeed < FLT_MAX) 
+			if (g_customAnimSettings.speed < FLT_MAX) 
 			{
-				g_customAnimSpeed += 0.1f;
+				g_customAnimSettings.speed += 0.1f;
 				return;
 			}
 		}
 		if (speedMinus) 
 		{ 
-			if (g_customAnimSpeed > 0) 
+			if (g_customAnimSettings.speed > 0) 
 			{
-				g_customAnimSpeed -= 0.1f; 
+				g_customAnimSettings.speed -= 0.1f; 
 				return; 
 			}
 		}
 		if (speedMultPlus) 
 		{ 
-			if (g_customAnimSpeedMult < FLT_MAX) 
+			if (g_customAnimSettings.speedMult < FLT_MAX) 
 			{
-				g_customAnimSpeedMult += 0.1f;
+				g_customAnimSettings.speedMult += 0.1f;
 				return;
 			}
 		}
 		if (speedMultMinus) 
 		{ 
-			if (g_customAnimSpeedMult > 0 - FLT_MAX) 
+			if (g_customAnimSettings.speedMult > 0 - FLT_MAX) 
 			{
-				g_customAnimSpeedMult -= 0.1f;
+				g_customAnimSettings.speedMult -= 0.1f;
 				return;
 			}
 		}
 		if (durationPlus) 
 		{ 
-			if (g_customAnimDuration < INT_MAX) 
+			if (g_customAnimSettings.duration < INT_MAX) 
 			{
-				g_customAnimDuration += 100;
+				g_customAnimSettings.duration += 100;
 				return;
 			}
 		}
 		if (durationMinus) 
 		{ 
-			if (g_customAnimDuration > -1) 
+			if (g_customAnimSettings.duration > -1) 
 			{
-				g_customAnimDuration -= 100;
+				g_customAnimSettings.duration -= 100;
 				return;
 			}
 		}
 		if (flagPlus) {
 			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
 			{
-				if (it->first == g_customAnimFlag)
+				if (it->first == g_customAnimSettings.flag)
 				{
 					++it;
 					if (it != AnimFlag::vFlagNames.end())
 					{
-						g_customAnimFlag = it->first;
+						g_customAnimSettings.flag = it->first;
 					}
 					break;
 				}
@@ -628,12 +749,12 @@ namespace sub
 		{
 			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
 			{
-				if (it->first == g_customAnimFlag)
+				if (it->first == g_customAnimSettings.flag)
 				{
 					++it;
 					if (it != AnimFlag::vFlagNames.end())
 					{
-						g_customAnimFlag = it->first;
+						g_customAnimSettings.flag = it->first;
 					}
 					break;
 				}
@@ -644,12 +765,12 @@ namespace sub
 		{
 			for (auto it = AnimFlag::vFlagNames.rbegin(); it != AnimFlag::vFlagNames.rend(); ++it)
 			{
-				if (it->first == g_customAnimFlag)
+				if (it->first == g_customAnimSettings.flag)
 				{
 					++it;
 					if (it != AnimFlag::vFlagNames.rend())
 					{
-						g_customAnimFlag = it->first;
+						g_customAnimSettings.flag = it->first;
 					}
 					break;
 				}
@@ -658,17 +779,17 @@ namespace sub
 		};
 		if (ratePlus) 
 		{ 
-			if (g_CustomAnimRate < FLT_MAX) 
+			if (g_customAnimSettings.playbackRate < FLT_MAX) 
 			{
-				g_CustomAnimRate += 0.1f;
+				g_customAnimSettings.playbackRate += 0.1f;
 				return;
 			}
 		}
 		if (rateMinus) 
 		{ 
-			if (g_CustomAnimRate > 0) 
+			if (g_customAnimSettings.playbackRate > 0) 
 			{
-				g_CustomAnimRate -= 0.1f;
+				g_customAnimSettings.playbackRate -= 0.1f;
 				return;
 			}
 		}
@@ -676,49 +797,137 @@ namespace sub
 	}
 	void AnimationFavouritesMenu()
 	{
-		pugi::xml_document doc;
-		if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml").c_str()).status != pugi::status_ok)
-		{
-			Game::Print::PrintBottomCentre("~r~Error~s~: No favourites found. Go to ~b~Custom Input~s~ and add an animation to the favourites.");
-			Menu::SetPreviousMenu();
-			return;
-		}
-		auto nodeAnims = doc.child("PedAnims");
-
-		Menu::OnSubBack = AnimationMenu::ClearSearchStr;
 		auto& searchStr = AnimationMenu::searchStr;
+		bool searchActive = !searchStr.empty();
+
+		Menu::OnSubBack = []()
+		{
+			AnimationMenu::ClearSearchStr();
+			*Menu::currentopATM = s_recatState.returnCursor;
+			s_favCache.needsRebuild = true;
+		};
+
+		if (s_favCache.needsRebuild)
+		{
+			if (!RebuildFavCache(searchStr))
+			{
+				Game::Print::PrintBottomCentre("~r~Error~s~: No favourites found. Go to ~b~Custom Input~s~ and add an animation to the favourites.");
+				Menu::SetPreviousMenu();
+				return;
+			}
+		}
+
+		// handle search auto-expand / restore
+		if (searchActive && MenuCategory::GetCategoryLabels().size() > 1)
+			MenuCategory::ExpandAll();
+		else if (!searchActive)
+			MenuCategory::RestoreExpandedState();
 
 		AddTitle("Favourites");
 
 		bool searchPressed = false;
-		AddOption(searchStr.empty() ? "SEARCH" : boost::to_upper_copy(searchStr), searchPressed, nullFunc, -1, true); 
+		AddOption(searchStr.empty() ? "SEARCH" : boost::to_upper_copy(searchStr), searchPressed, nullFunc, -1, true);
 		if (searchPressed)
 		{
-			searchStr = Game::InputBox(searchStr, 126U, "SEARCH", searchStr);
-			boost::to_lower(searchStr);
+			std::string newSearch = Game::InputBox(searchStr, 126U, "SEARCH", searchStr);
+			boost::to_lower(newSearch);
+			if (newSearch != searchStr)
+			{
+				searchStr = newSearch;
+				s_favCache.needsRebuild = true;
+			}
 		}
 
-		for (auto nodeAnim = nodeAnims.first_child(); nodeAnim; nodeAnim = nodeAnim.next_sibling())
+		AddBreak("---");
+
+		MenuCategory::ResetCategoryState();
+		for (auto& cat : s_favCache.sortedCategoryNames)
 		{
-			std::string dict = nodeAnim.attribute("dict").as_string();
-			std::string name = nodeAnim.attribute("name").as_string();
+			auto it = s_favCache.animationsByCategory.find(cat);
+			if (it == s_favCache.animationsByCategory.end())
+				continue;
 
-			if (!searchStr.empty())
+			auto& anims = it->second;
+			std::string catName = cat.empty() ? "UNORDERED" : cat;
+			std::string catLabel = "— ~b~" + catName + "~s~ ~c~(" + std::to_string(anims.size()) + " anims)~s~";
+
+			if (MenuCategory::AddCategory(catLabel))
 			{
-				if (dict.find(searchStr) == std::string::npos && name.find(searchStr) == std::string::npos)
-				{
-					continue;
-				}
+				for (auto& fav : anims)
+					AddAnimOption(fav.dict + ", " + fav.name, fav.dict, fav.name, null, fav.category);
 			}
+		}
+	}
 
-			AddAnimOption(dict + ", " + name, dict, name);
+	void AnimationFavouritesMenu_CategorySelect()
+	{
+		if (s_recatState.animDict.empty())
+		{
+			Menu::SetPreviousMenu();
+			return;
+		}
+
+		std::string currentCategory;
+		std::set<std::string> allCategories;
+		{
+			std::vector<FavouriteAnimation> favs;
+			GetFavouriteAnimations(favs);
+			for (auto& f : favs)
+			{
+				if (f.dict == s_recatState.animDict && f.name == s_recatState.animName)
+					currentCategory = f.category;
+				if (!f.category.empty())
+					allCategories.insert(f.category);
+			}
+		}
+
+		AddTitle("Select Category");
+
+		for (auto& cat : allCategories)
+		{
+			bool isSelected = (cat == currentCategory);
+			bool pressed = false;
+			AddTickol(cat, isSelected, pressed, pressed, TICKOL::TICK, TICKOL::NONE);
+			if (pressed)
+			{
+				SetAnimationCategory(s_recatState.animDict, s_recatState.animName, cat);
+				Menu::SetPreviousMenu();
+				return;
+			}
+		}
+
+		if (!allCategories.empty())
+			AddBreak("---");
+
+		bool newCatPressed = false;
+		AddOption("New Category", newCatPressed);
+		if (newCatPressed)
+		{
+			std::string newCat = Game::InputBox("", 64U, "NEW CATEGORY", "");
+			if (!newCat.empty())
+			{
+				SetAnimationCategory(s_recatState.animDict, s_recatState.animName, newCat);
+				Menu::SetPreviousMenu();
+			}
+		}
+
+		// option to remove from category (set to Unordered)
+		if (!currentCategory.empty())
+		{
+			bool removeCatPressed = false;
+			AddOption("Remove from Category", removeCatPressed);
+			if (removeCatPressed)
+			{
+				SetAnimationCategory(s_recatState.animDict, s_recatState.animName, "");
+				Menu::SetPreviousMenu();
+			}
 		}
 	}
 
 	void AnimationSub_Custom()
 	{
-		auto& sub_animDict = g_customAnimDict;
-		auto& sub_animName = g_customAnimName;
+		auto& sub_animDict = g_customAnimSettings.dict;
+		auto& sub_animName = g_customAnimSettings.name;
 		bool inputDict = false;
 		bool inputName = false;
 		bool apply = false;
@@ -745,64 +954,64 @@ namespace sub
 		AddOption("Stop", stop);
 		AddTickol("Favourite", bIsAFavourite, addToFavourites, removeFromFavourites, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 		AddBreak("---Settings---");
-		AddNumber("Blend-In Speed", g_customAnimSpeed, 2, null, speedPlus, speedMinus);
-		AddNumber("Blend-Out Speed", g_customAnimSpeedMult, 2, null, speedMultiplierPlus, speedMultiplierMinus);
-		AddNumber("Duration (ms)", g_customAnimDuration, 0, null, durationPlus, durationMinus);
-		AddTexter("Flag", 0, std::vector<std::string>{ AnimFlag::vFlagNames[g_customAnimFlag] }, null, flagPlus, flagMinus);
-		AddNumber("Playback Rate", g_CustomAnimRate, 2, null, ratePlus, rateMinus);
-		AddTickol("Lock Position", g_customAnimLockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+		AddNumber("Blend-In Speed", g_customAnimSettings.speed, 2, null, speedPlus, speedMinus);
+		AddNumber("Blend-Out Speed", g_customAnimSettings.speedMult, 2, null, speedMultiplierPlus, speedMultiplierMinus);
+		AddNumber("Duration (ms)", g_customAnimSettings.duration, 0, null, durationPlus, durationMinus);
+		AddTexter("Flag", 0, std::vector<std::string>{ AnimFlag::vFlagNames[g_customAnimSettings.flag] }, null, flagPlus, flagMinus);
+		AddNumber("Playback Rate", g_customAnimSettings.playbackRate, 2, null, ratePlus, rateMinus);
+		AddTickol("Lock Position", g_customAnimSettings.lockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
 		if (toggleLockPosition)
 		{
-			g_customAnimLockPos = !g_customAnimLockPos;
+			g_customAnimSettings.lockPos = !g_customAnimSettings.lockPos;
 		}
 
 
 
 		if (speedPlus) 
 		{ 
-			if (g_customAnimSpeed < FLT_MAX) 
+			if (g_customAnimSettings.speed < FLT_MAX) 
 			{
-				g_customAnimSpeed += 0.1f; 
+				g_customAnimSettings.speed += 0.1f; 
 			}
 			return; 
 		};
 		if (speedMinus) 
 		{ 
-			if (g_customAnimSpeed > 0) 
+			if (g_customAnimSettings.speed > 0) 
 			{
-				g_customAnimSpeed -= 0.1f; 
+				g_customAnimSettings.speed -= 0.1f; 
 			}
 			return; 
 		}
 		if (speedMultiplierPlus) 
 		{ 
-			if (g_customAnimSpeedMult < FLT_MAX) 
+			if (g_customAnimSettings.speedMult < FLT_MAX) 
 			{
-				g_customAnimSpeedMult += 0.1f; 
+				g_customAnimSettings.speedMult += 0.1f; 
 			}
 			return; 
 		};
 		if (speedMultiplierMinus) 
 		{ 
-			if (g_customAnimSpeedMult > 0 - FLT_MAX) 
+			if (g_customAnimSettings.speedMult > 0 - FLT_MAX) 
 			{
-				g_customAnimSpeedMult -= 0.1f; 
+				g_customAnimSettings.speedMult -= 0.1f; 
 			}
 			return; 
 		}
 		if (durationPlus) 
 		{ 
-			if (g_customAnimDuration < INT_MAX) 
+			if (g_customAnimSettings.duration < INT_MAX) 
 			{
-				g_customAnimDuration += 100; 
+				g_customAnimSettings.duration += 100; 
 			}
 			return; 
 		};
 		if (durationMinus) 
 		{ 
-			if (g_customAnimDuration > -1) 
+			if (g_customAnimSettings.duration > -1) 
 			{
-				g_customAnimDuration -= 100; 
+				g_customAnimSettings.duration -= 100; 
 			}
 			return; 
 		}
@@ -810,12 +1019,12 @@ namespace sub
 		{
 			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
 			{
-				if (it->first == g_customAnimFlag)
+				if (it->first == g_customAnimSettings.flag)
 				{
 					++it;
 					if (it != AnimFlag::vFlagNames.end())
 					{
-						g_customAnimFlag = it->first;
+						g_customAnimSettings.flag = it->first;
 					}
 					break;
 				}
@@ -826,12 +1035,12 @@ namespace sub
 		{
 			for (auto it = AnimFlag::vFlagNames.rbegin(); it != AnimFlag::vFlagNames.rend(); ++it)
 			{
-				if (it->first == g_customAnimFlag)
+				if (it->first == g_customAnimSettings.flag)
 				{
 					++it;
 					if (it != AnimFlag::vFlagNames.rend())
 					{
-						g_customAnimFlag = it->first;
+						g_customAnimSettings.flag = it->first;
 					}
 					break;
 				}
@@ -840,17 +1049,17 @@ namespace sub
 		};
 		if (ratePlus) 
 		{ 
-			if (g_CustomAnimRate < FLT_MAX) 
+			if (g_customAnimSettings.playbackRate < FLT_MAX) 
 			{
-				g_CustomAnimRate += 0.1f; 
+				g_customAnimSettings.playbackRate += 0.1f; 
 			}
 			return; 
 		};
 		if (rateMinus) 
 		{ 
-			if (g_CustomAnimRate > 0) 
+			if (g_customAnimSettings.playbackRate > 0) 
 			{
-				g_CustomAnimRate -= 0.1f; 
+				g_customAnimSettings.playbackRate -= 0.1f; 
 			}
 			return; 
 		}
@@ -867,93 +1076,22 @@ namespace sub
 
 		if (apply)
 		{
-			GTAped ped = g_Ped1;
-			GTAentity att;
-			auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.handle, att);
-			}
-
-			ped.RequestControl();
-			ped.Task().PlayAnimation(sub_animDict, sub_animName, g_customAnimSpeed, g_customAnimSpeedMult, g_customAnimDuration, g_customAnimFlag, g_CustomAnimRate, g_customAnimLockPos);
-
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				sub::Spooner::SpoonerEntity::Animation animData;
-				animData.dict = sub_animDict;
-				animData.name = sub_animName;
-				animData.speed = g_customAnimSpeed;
-				animData.speedMultiplier = g_customAnimSpeedMult;
-				animData.playbackRate = g_CustomAnimRate;
-				animData.duration = g_customAnimDuration;
-				animData.flag = g_customAnimFlag;
-				animData.lockPos = g_customAnimLockPos;
-				spe.AddOrUpdateLastAnimation(animData);
-				if (att.Exists() && spe.attachmentArgs.isAttached)
-				{
-					spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
-				}
-				spe.taskSequence.Reset();
-				if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
-				{
-					sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
-					sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
-				}
-			}
+			PlayPedAnimation(g_Ped1, sub_animDict, sub_animName);
 			return;
 		}
 
 		if (stop)
 		{
-			GTAped ped = g_Ped1;
-			GTAentity att;
-			auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.handle, att);
-			}
-
-			GTAvehicle veh = ped.CurrentVehicle();
-			bool isInVehicle = veh.Exists();
-			VehicleSeat vehSeat;
-			if (isInVehicle)
-			{
-				vehSeat = ped.GetCurrentVehicleSeat();
-			}
-			ped.Task().ClearAllImmediately();
-			if (isInVehicle)
-			{
-				ped.SetIntoVehicle(veh, vehSeat);
-			}
-
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				spe.ClearLastAnimations();
-				if (att.Exists() && spe.attachmentArgs.isAttached)
-				{
-					spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
-				}
-				spe.taskSequence.Reset();
-				if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
-				{
-					sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
-					sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
-				}
-			}
+			StopPedAnimation(g_Ped1);
 			return;
 		}
 
 		if (inputDict)
 		{
-			std::string inputStr = Game::InputBox(g_customAnimDict, 126U, "Enter dict:", g_customAnimDict);
+			std::string inputStr = Game::InputBox(g_customAnimSettings.dict, 126U, "Enter dict:", g_customAnimSettings.dict);
 			if (inputStr.length() > 0)
 			{
-				g_customAnimDict = inputStr;
+				g_customAnimSettings.dict = inputStr;
 			}
 			else 
 			{
@@ -964,10 +1102,10 @@ namespace sub
 
 		if (inputName)
 		{
-			std::string inputStr = Game::InputBox(g_customAnimName, 126U, "Enter name:", g_customAnimName);
+			std::string inputStr = Game::InputBox(g_customAnimSettings.name, 126U, "Enter name:", g_customAnimSettings.name);
 			if (inputStr.length() > 0)
 			{
-				g_customAnimName = inputStr;
+				g_customAnimSettings.name = inputStr;
 			}
 			else 
 			{
@@ -1317,45 +1455,7 @@ namespace sub
 
 		void stopScenarioPls()
 		{
-			GTAped ped = g_Ped1;
-			GTAentity att;
-			auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.handle, att);
-			}
-
-			GTAvehicle veh = ped.CurrentVehicle();
-			bool isInVehicle = veh.Exists();
-			VehicleSeat vehSeat;
-			if (isInVehicle)
-			{
-				vehSeat = ped.GetCurrentVehicleSeat();
-			}
-			ped.Task().ClearAllImmediately();
-			if (isInVehicle)
-			{
-				ped.SetIntoVehicle(veh, vehSeat);
-			}
-
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				spe.ClearLastAnimations();
-				spe.currentScenario.clear();
-				if (att.Exists() && spe.attachmentArgs.isAttached)
-				{
-					spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
-				}
-				spe.taskSequence.Reset();
-				if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
-				{
-					sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
-					sub::Spooner::selectedEntity.currentScenario = spe.currentScenario;
-					sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
-				}
-			}
+			StopPedAnimation(g_Ped1, true);
 		}
 
 		void AnimationTaskScenarios1()
@@ -1696,6 +1796,7 @@ namespace sub
 REGISTER_SUBMENU(ANIMATIONSUB,                     sub::PedAnimationMenu)
 REGISTER_SUBMENU(ANIMATIONSUB_SETTINGS,            sub::AnimationSub_Settings)
 REGISTER_SUBMENU(ANIMATIONSUB_FAVOURITES,          sub::AnimationFavouritesMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_FAVOURITES_CATSELECT, sub::AnimationFavouritesMenu_CategorySelect)
 REGISTER_SUBMENU(ANIMATIONSUB_CUSTOM,              sub::AnimationSub_Custom)
 REGISTER_SUBMENU(ANIMATIONSUB_DEER,                sub::DeerAnimationMenu)
 REGISTER_SUBMENU(ANIMATIONSUB_SHARK,               sub::SharkAnimationMenu)

@@ -17,6 +17,31 @@ class GTAentity;
 
 namespace sub
 {
+	struct FavouriteAnimation { std::string dict, name, category; };
+
+	struct FavMenuCache
+	{
+		std::map<std::string, std::vector<FavouriteAnimation>> animationsByCategory;
+		std::vector<std::string> sortedCategoryNames;
+		bool needsRebuild = true;
+	};
+
+	extern FavMenuCache s_favCache;
+	bool RebuildFavCache(const std::string& searchStr = "");
+
+	struct AnimationSettings
+	{
+		std::string dict = "Enter Dictionary";
+		std::string name = "Enter Name";
+		float speed = 4;
+		float speedMult = -4;
+		float playbackRate = 0;
+		int duration = -1;
+		int flag = 1; // AnimFlag::Loop
+		bool lockPos = false;
+	};
+	extern AnimationSettings g_customAnimSettings;
+
 	namespace AnimationMenu
 	{
 		struct NamedAnimation { std::string caption; std::string animDict, animName; };
@@ -29,14 +54,16 @@ namespace sub
 		void Sub_AllPedAnims_InDict();
 	}
 
-	void GetFavouriteAnimations(std::vector<std::pair<std::string, std::string>>& result);
+	void GetFavouriteAnimations(std::vector<FavouriteAnimation>& result);
 	bool IsAnimationAFavourite(const std::string animDict, const std::string& animName);
-	void AddAnimationToFavourites(const std::string animDict, const std::string& animName);
+	void AddAnimationToFavourites(const std::string animDict, const std::string& animName, const std::string& category = "");
 	void RemoveAnimationFromFavourites(const std::string animDict, const std::string& animName);
+	void SetAnimationCategory(const std::string& animDict, const std::string& animName, const std::string& category);
 	void AnimationStopAnimationCallback();
 	void PedAnimationMenu();
 	void AnimationSub_Settings();
 	void AnimationFavouritesMenu();
+	void AnimationFavouritesMenu_CategorySelect();
 	void AnimationSub_Custom();
 	void DeerAnimationMenu();
 	void SharkAnimationMenu();

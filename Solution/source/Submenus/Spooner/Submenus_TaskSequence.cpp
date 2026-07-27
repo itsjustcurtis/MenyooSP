@@ -12,6 +12,7 @@
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\MenuCategory.h"
 #include "..\..\Menu\Routine.h"
 
 #include "..\..\Natives\natives2.h"
@@ -588,19 +589,49 @@ namespace sub::Spooner
 						}
 					}
 				}
-
-				std::vector<std::pair<std::string, std::string>> vFavAnims;
-				GetFavouriteAnimations(vFavAnims);
-				if (!vFavAnims.empty())
+				AddBreak("---Favourites---");
+				
+				static std::string favSearchStr;
+				bool searchPressed = false;
+				AddOption(favSearchStr.empty() ? "SEARCH FAVOURITES" : boost::to_upper_copy(favSearchStr), searchPressed, nullFunc, -1, true);
+				if (searchPressed)
 				{
-					AddBreak("---Favourites---");
-					for (auto& animFav : vFavAnims)
+					std::string newSearch = Game::InputBox(favSearchStr, 126U, "SEARCH FAVOURITES", favSearchStr);
+					boost::to_lower(newSearch);
+					if (newSearch != favSearchStr)
 					{
-						bool bAnimFavPressed = false;
-						AddTickol(animFav.first + ", " + animFav.second, (animFav.first == tskPtr->animDict && animFav.second == tskPtr->animName), bAnimFavPressed, bAnimFavPressed); if (bAnimFavPressed)
+						favSearchStr = newSearch;
+						sub::s_favCache.needsRebuild = true;
+					}
+				}
+				if (sub::s_favCache.needsRebuild)
+					sub::RebuildFavCache(favSearchStr);
+
+				if (!sub::s_favCache.sortedCategoryNames.empty())
+				{
+					MenuCategory::ResetCategoryState();
+					for (auto& cat : sub::s_favCache.sortedCategoryNames)
+					{
+						auto it = sub::s_favCache.animationsByCategory.find(cat);
+						if (it == sub::s_favCache.animationsByCategory.end())
+							continue;
+
+						auto& anims = it->second;
+						std::string catDisplay = cat.empty() ? "UNORDERED" : cat;
+						std::string catLabel = "— ~b~" + catDisplay + "~s~ ~c~(" + std::to_string(anims.size()) + " anims)~s~";
+
+						if (MenuCategory::AddCategory(catLabel))
 						{
-							tskPtr->animDict = animFav.first;
-							tskPtr->animName = animFav.second;
+							for (auto& fav : anims)
+							{
+								bool bAnimFavPressed = false;
+								AddTickol(fav.dict + ", " + fav.name, (fav.dict == tskPtr->animDict && fav.name == tskPtr->animName), bAnimFavPressed, bAnimFavPressed);
+								if (bAnimFavPressed)
+								{
+									tskPtr->animDict = fav.dict;
+									tskPtr->animName = fav.name;
+								}
+							}
 						}
 					}
 				}
