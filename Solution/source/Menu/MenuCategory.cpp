@@ -10,25 +10,24 @@
 This file contains code for handling collapsible menu categories in the menu system. 
 It was designed to be as easy to use as possible and can be easily integrated into any menu. It also takes inspiration from how ImGui handles context menus and collapsible headers.
 
-* Main functions that you should be using are:
+Every submenu that has at least two categories will automatically show a "Navigate Categories" IB (G on keyboard, X on controller) that will open a submenu that allows you to jump to any category in the current menu.
 
-
-- AddCategory(label): Adds a category header to the menu. Clicking the header (ENTER) will expand or collapse the category.
+* Basically the only thing that you need to use is "AddCategory"; below is explanation on how to use it:
+   AddCategory(label, defaultExpanded) adds a category header to the menu. Clicking the header (ENTER) will expand or collapse the category.
 	Should be used like
 		if (AddCategory(label))
 		{
-			// Add options for this category here}
+			// Add options for this category here. You can use AddOption, AddTickol, etc. as normal.
 		}
+	defaultExpanded is optional and defaults to true. If you want a category to be collapsed by default, pass false.
 
+This file also exposes a few other functions that can be used to get information about the current categories in the menu, such as GetCategoryLabels and GetCategoryPositions.
+These can be used to implement custom category navigation if desired. Take a look at sub::CategoryNavigate for an example of how to use these functions.
 
-- AddCategoryOption(text, pressed): Adds an option under a category. If the user presses left/right while this option is selected, it will jump to the previous/next category.
-	YOU DO NOT NEED TO NECESARILY USE THIS FUNCTION for category members. 
-	You can use AddOption(), AddTexter, AddNumber or whatever - but if you want to have the left/right jump to next category behavior, use this function or create a custom one (take a look at AddAnimOption).
-
-
-- JumpToAdjacentCategory(currentCategory): Jumps to the previous/next category header. You can use this in your own custom option functions if you want to have the left/right jump behavior.
 */
 
+#include "submenu_switch.h"
+#include "submenu_enum.h"
 #include "MenuCategory.h"
 #include "Menu.h"
 #include "..\Util\keyboard.h"
@@ -39,8 +38,14 @@ It was designed to be as easy to use as possible and can be easily integrated in
 
 // Per-frame state
 static std::vector<int> s_headerPositions;
-static std::map<std::string, size_t> s_categoryIndexMap;
-static std::string s_currentCategory;
+static std::vector<std::string> s_headerLabels;
+
+// Persistent navigation target, set by CategoryNavigate SUB
+static int s_jumpTarget = -1;
+
+// Frame tracking for auto-clearing per-frame state
+static DWORD s_lastFrameTick = 0;
+static bool s_navigateIBAdded = false;
 
 // Persistent expanded state, keyed on "currentsub:label"
 static std::map<std::string, bool> s_expandedState;
@@ -56,43 +61,64 @@ namespace MenuCategory
 	void ResetCategoryState()
 	{
 		s_headerPositions.clear();
-		s_categoryIndexMap.clear();
-		s_currentCategory.clear();
+		s_headerLabels.clear();
+
+		if (s_jumpTarget != -1)
+		{
+			*Menu::currentopATM = s_jumpTarget;
+			s_jumpTarget = -1;
+		}
 	}
 
 	bool AddCategory(const std::string& label, bool defaultExpanded)
 	{
-		s_currentCategory = label;
+		DWORD now = GetTickCount();
+		if (now != s_lastFrameTick)
+		{
+			s_headerPositions.clear();
+			s_headerLabels.clear();
+			s_navigateIBAdded = false;
+			s_lastFrameTick = now;
+
+			if (s_jumpTarget != -1)
+			{
+				*Menu::currentopATM = s_jumpTarget;
+				s_jumpTarget = -1;
+			}
+		}
 
 		std::string key = MakeKey(label);
 		if (s_expandedState.find(key) == s_expandedState.end())
 			s_expandedState[key] = defaultExpanded;
 		bool& expanded = s_expandedState[key];
 
-		size_t idx = s_headerPositions.size();
-		s_categoryIndexMap[label] = idx;
-
 		bool catPressed = false;
 		AddTickol(label, expanded, catPressed, catPressed, TICKOL::ARROWRIGHT, TICKOL::ARROWRIGHT, false, 270.0f, 90.0f);
 		if (catPressed)
 			expanded = !expanded;
 		s_headerPositions.push_back(Menu::printingop);
+		s_headerLabels.push_back(label);
 
-		if (Menu::printingop == *Menu::currentopATM && s_headerPositions.size() > 1)
+		if (s_headerPositions.size() > 1)
 		{
+			if (!s_navigateIBAdded)
+			{
+				if (Menu::bitController)
+					Menu::add_IB(INPUT_FRONTEND_X, "Navigate categories");
+				else
+					Menu::add_IB(VirtualKey::G, "Navigate categories");
+				s_navigateIBAdded = true;
+			}
+
 			if (Menu::bitController)
 			{
-				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LEFT))
-					*Menu::currentopATM = (idx > 0) ? s_headerPositions[idx - 1] : s_headerPositions.back();
-				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_RIGHT))
-					*Menu::currentopATM = (idx < s_headerPositions.size() - 1) ? s_headerPositions[idx + 1] : s_headerPositions.front();
+				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_X))
+					Menu::SetSub_delayed = SUB::CATEGORYNAVIGATOR;
 			}
 			else
 			{
-				if (IsKeyJustUp(VirtualKey::Left))
-					*Menu::currentopATM = (idx > 0) ? s_headerPositions[idx - 1] : s_headerPositions.back();
-				if (IsKeyJustUp(VirtualKey::Right))
-					*Menu::currentopATM = (idx < s_headerPositions.size() - 1) ? s_headerPositions[idx + 1] : s_headerPositions.front();
+				if (IsKeyJustUp(VirtualKey::G))
+					Menu::SetSub_delayed = SUB::CATEGORYNAVIGATOR;
 			}
 		}
 
@@ -127,41 +153,49 @@ namespace MenuCategory
 		s_expandedBackup.clear();
 	}
 
-	bool AddCategoryOption(const std::string& text, bool& pressed)
+	const std::vector<std::string>& GetCategoryLabels()
 	{
-		AddOption(text, pressed);
-		JumpToAdjacentCategory(s_currentCategory);
-		return pressed;
+		return s_headerLabels;
 	}
 
-	void JumpToAdjacentCategory(const std::string& currentCategory)
+	const std::vector<int>& GetCategoryPositions()
 	{
-		if (s_headerPositions.empty())
-			return;
-
-		auto it = s_categoryIndexMap.find(currentCategory);
-		if (it == s_categoryIndexMap.end())
-			return;
-
-		size_t idx = it->second;
-		if (Menu::bitController)
-		{
-			if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LEFT))
-				*Menu::currentopATM = (idx > 0) ? s_headerPositions[idx - 1] : s_headerPositions.back();
-			if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_RIGHT))
-				*Menu::currentopATM = (idx < s_headerPositions.size() - 1) ? s_headerPositions[idx + 1] : s_headerPositions.front();
-		}
-		else
-		{
-			if (IsKeyJustUp(VirtualKey::Left))
-				*Menu::currentopATM = (idx > 0) ? s_headerPositions[idx - 1] : s_headerPositions.back();
-			if (IsKeyJustUp(VirtualKey::Right))
-				*Menu::currentopATM = (idx < s_headerPositions.size() - 1) ? s_headerPositions[idx + 1] : s_headerPositions.front();
-		}
+		return s_headerPositions;
 	}
 
-	bool HasMultipleCategories()
+	void JumpToCategory(size_t index)
 	{
-		return s_headerPositions.size() > 1;
+		if (index < s_headerPositions.size())
+			s_jumpTarget = s_headerPositions[index];
 	}
 }
+
+namespace sub
+{
+	void CategoryNavigate()
+	{
+		auto& labels = MenuCategory::GetCategoryLabels();
+		auto& positions = MenuCategory::GetCategoryPositions();
+
+		if (labels.empty())
+		{
+			Menu::SetPreviousMenu();
+			return;
+		}
+
+		AddTitle("Jump to Category");
+
+		for (size_t i = 0; i < labels.size(); i++)
+		{
+			bool pressed = false;
+			AddOption(labels[i], pressed);
+			if (pressed)
+			{
+				MenuCategory::JumpToCategory(i);
+				Menu::SetPreviousMenu();
+				return;
+			}
+		}
+	}
+}
+REGISTER_SUBMENU(CATEGORYNAVIGATOR, sub::CategoryNavigate)
