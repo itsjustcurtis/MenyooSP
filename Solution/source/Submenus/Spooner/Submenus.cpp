@@ -3664,6 +3664,9 @@ namespace sub
 		{
 			AddTitle("Favourites");
 
+			bool bSearchPressed = false;
+			AddOption("~b~Search~s~", bSearchPressed, nullFunc, SUB::SPOONER_SPAWN_PROP_FAVOURITES_SEARCH, true);
+
 			using FavouritesManagement::xmlFavouriteProps;
 			pugi::xml_document doc;
 			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()).status != pugi::status_ok)
@@ -3696,7 +3699,7 @@ namespace sub
 
 			if (nodeRoot.first_child())
 			{
-				AddBreak("---Added Object Models---");
+				AddBreak("---Favourites---");
 
 				for (auto nodeLocToLoad = nodeRoot.first_child(); nodeLocToLoad; nodeLocToLoad = nodeLocToLoad.next_sibling())
 				{
@@ -3738,6 +3741,100 @@ namespace sub
 				}
 			}
 
+		}
+
+		namespace FavouritePropSearch
+		{
+			static std::vector<std::pair<std::string, Model>> results;
+			static bool dirty = true;
+			static std::string lastSearch;
+
+			void RebuildResults(const std::string& searchStr)
+			{
+				results.clear();
+				std::string searchUpper = boost::to_upper_copy(searchStr);
+
+				using FavouritesManagement::xmlFavouriteProps;
+				pugi::xml_document doc;
+				if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()).status != pugi::status_ok)
+					return;
+				pugi::xml_node nodeRoot = doc.child("FavouriteProps");
+				if (!nodeRoot)
+					return;
+
+				for (auto node = nodeRoot.first_child(); node; node = node.next_sibling())
+				{
+					std::string modelName = node.attribute("modelName").as_string();
+					if (!searchUpper.empty())
+					{
+						std::string nameUpper = boost::to_upper_copy(modelName);
+						if (nameUpper.find(searchUpper) == std::string::npos)
+							continue;
+					}
+					Model model = node.attribute("modelHash").as_uint(0);
+					if (model.hash == 0)
+						model = GET_HASH_KEY(modelName);
+					results.push_back({ modelName, model });
+				}
+			}
+		}
+
+		void Sub_SpawnProp_Favourites_Search()
+		{
+			using namespace FavouritePropSearch;
+			auto& searchStr = dict3;
+
+			AddTitle("Search Favourites");
+
+			bool bSearchPressed = false;
+			AddOption(searchStr.empty() ? "~b~SEARCH~s~" : ("~b~" + searchStr + "~s~"), bSearchPressed, nullFunc, -1, true);
+			if (bSearchPressed)
+			{
+				searchStr = Game::InputBox(searchStr, 64U, "Search favourites:", boost::to_lower_copy(searchStr));
+				boost::to_upper(searchStr);
+			}
+
+			if (dirty || searchStr != lastSearch)
+			{
+				RebuildResults(searchStr);
+				lastSearch = searchStr;
+				dirty = false;
+			}
+
+			AddBreak("---Results: " + std::to_string(results.size()) + "---");
+
+			for (auto& result : results)
+			{
+				MenuOptions::AddOption_AddProp(result.first, result.second);
+
+				if (Menu::printingop == *Menu::currentopATM)
+				{
+					if (Menu::bitController)
+					{
+						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
+						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
+						{
+							FavouritesManagement::RemovePropFromFavourites(result.first, result.second.hash);
+							dirty = true;
+							if (*Menu::currentopATM >= Menu::totalop)
+								Menu::Up();
+							return;
+						}
+					}
+					else
+					{
+						Menu::add_IB(VirtualKey::B, "Remove");
+						if (IsKeyJustUp(VirtualKey::B))
+						{
+							FavouritesManagement::RemovePropFromFavourites(result.first, result.second.hash);
+							dirty = true;
+							if (*Menu::currentopATM >= Menu::totalop)
+								Menu::Up();
+							return;
+						}
+					}
+				}
+			}
 		}
 		void Sub_SpawnPed()
 		{
@@ -4524,6 +4621,7 @@ REGISTER_SUBMENU(SPOONER_MAIN,                                        	sub::Spoo
 REGISTER_SUBMENU(SPOONER_SPAWN_CATEGORIES,                            	sub::Spooner::Submenus::Sub_SpawnCategories)
 REGISTER_SUBMENU(SPOONER_SPAWN_PROP,                                  	sub::Spooner::Submenus::Sub_SpawnProp)
 REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES,                       	sub::Spooner::Submenus::Sub_SpawnProp_Favourites)
+REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES_SEARCH,                	sub::Spooner::Submenus::Sub_SpawnProp_Favourites_Search)
 REGISTER_SUBMENU(SPOONER_SPAWN_PED,                                   	sub::Spooner::Submenus::Sub_SpawnPed)
 REGISTER_SUBMENU(SPOONER_SPAWN_VEHICLE,                               	sub::Spooner::Submenus::Sub_SpawnVehicle)
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS,                               	sub::Spooner::Submenus::Sub_ManageMarkers)

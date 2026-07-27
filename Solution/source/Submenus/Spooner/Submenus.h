@@ -89,6 +89,7 @@ namespace sub
 		void Sub_SpawnCategories();
 		void Sub_SpawnProp();
 		void Sub_SpawnProp_Favourites();
+		void Sub_SpawnProp_Favourites_Search();
 		void Sub_SpawnPed();
 		void Sub_SpawnVehicle();
 	}
