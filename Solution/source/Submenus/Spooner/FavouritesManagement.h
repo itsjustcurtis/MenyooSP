@@ -22,8 +22,9 @@ namespace sub::Spooner
 	{
 		extern std::string xmlFavouriteProps;
 		bool IsPropAFavourite(const std::string& modelName, Hash modelHash);
-		bool AddPropToFavourites(const std::string& modelName, Hash modelHash);
+		bool AddPropToFavourites(const std::string& modelName, Hash modelHash, const std::string& category = "");
 		bool RemovePropFromFavourites(const std::string& modelName, Hash modelHash);
+		bool SetPropCategory(const std::string& modelName, const std::string& category);
 
 		extern bool(*IsVehicleAFavourite)(GTAmodel::Model vehModel);
 		extern bool(*AddVehicleToFavourites)(GTAmodel::Model vehModel, const std::string& customName);

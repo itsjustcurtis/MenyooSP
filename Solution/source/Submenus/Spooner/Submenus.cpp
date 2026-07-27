@@ -28,6 +28,7 @@
 #include "..\..\Util\ExePath.h"
 #include "..\..\Util\StringManip.h"
 #include "..\..\Menu\FolderPreviewBmps.h"
+#include "..\..\Menu\MenuCategory.h"
 #include "..\..\Scripting\GTAblip.h"
 #include "..\..\Scripting\TimecycleModification.h"
 #include "..\..\Scripting\Camera.h"
@@ -64,6 +65,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <set>
 #include <array>
 #include <pugixml/src/pugixml.hpp>
 #include <dirent\include\dirent.h>
@@ -77,6 +79,19 @@ namespace sub
 		UINT8 _copyEntTexterValue = 0;
 		UINT8 _entTypeToShowTexterValue = 0;
 		EntityScaleState _vehScale, _pedScale, _objScale;
+
+		struct FavouriteProp {
+			std::string modelName;
+			Model model;
+			std::string category;
+		};
+		struct FavPropCache {
+			std::map<std::string, std::vector<FavouriteProp>> byCategory;
+			std::vector<std::string> sortedCategories;
+			bool needsRebuild = true;
+		};
+		static FavPropCache s_favPropCache;
+		static std::string s_favPropSearchStr;
 
 		bool g_multiSelectEditActive = false;
 		SpoonerEntity g_multiSelectPrevSelected;
@@ -3660,26 +3675,77 @@ namespace sub
 			}
 
 		}
-		void Sub_SpawnProp_Favourites()
-		{
-			AddTitle("Favourites");
 
-			bool bSearchPressed = false;
-			AddOption("~b~Search~s~", bSearchPressed, nullFunc, SUB::SPOONER_SPAWN_PROP_FAVOURITES_SEARCH, true);
+		void RebuildFavPropCache(const std::string& searchStr)
+		{
+			s_favPropCache.byCategory.clear();
+			s_favPropCache.sortedCategories.clear();
 
 			using FavouritesManagement::xmlFavouriteProps;
 			pugi::xml_document doc;
 			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()).status != pugi::status_ok)
-			{
-				doc.reset();
-				auto nodeDecleration = doc.append_child(pugi::node_declaration);
-				nodeDecleration.append_attribute("version") = "1.0";
-				nodeDecleration.append_attribute("encoding") = "ISO-8859-1";
-				auto nodeRoot = doc.append_child("FavouriteProps");
-				doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str());
 				return;
-			}
 			pugi::xml_node nodeRoot = doc.child("FavouriteProps");
+			if (!nodeRoot)
+				return;
+
+			std::string searchUpper = boost::to_upper_copy(searchStr);
+
+			for (auto node = nodeRoot.first_child(); node; node = node.next_sibling())
+			{
+				std::string modelName = node.attribute("modelName").as_string();
+				if (!searchUpper.empty())
+				{
+					std::string nameUpper = boost::to_upper_copy(modelName);
+					if (nameUpper.find(searchUpper) == std::string::npos)
+						continue;
+				}
+				Model model = node.attribute("modelHash").as_uint(0);
+				if (model.hash == 0)
+					model = GET_HASH_KEY(modelName);
+				std::string category = node.attribute("category").as_string("");
+				s_favPropCache.byCategory[category].push_back({ modelName, model, category });
+			}
+
+			for (auto& kv : s_favPropCache.byCategory)
+				s_favPropCache.sortedCategories.push_back(kv.first);
+			std::sort(s_favPropCache.sortedCategories.begin(), s_favPropCache.sortedCategories.end(),
+				[](const std::string& a, const std::string& b) {
+					if (a.empty()) return false;
+					if (b.empty()) return true;
+					return a < b;
+				});
+
+			s_favPropCache.needsRebuild = false;
+		}
+
+		void Sub_SpawnProp_Favourites()
+		{
+			AddTitle("Favourites");
+
+			Menu::OnSubBack = []()
+			{
+				s_favPropCache.needsRebuild = true;
+			};
+
+			bool searchActive = !s_favPropSearchStr.empty();
+
+			bool bSearchPressed = false;
+			AddOption(s_favPropSearchStr.empty() ? "~b~SEARCH~s~" : ("~b~" + s_favPropSearchStr + "~s~"), bSearchPressed, nullFunc, -1, true);
+			if (bSearchPressed)
+			{
+				s_favPropSearchStr = Game::InputBox(s_favPropSearchStr, 64U, "Search favourites:", boost::to_lower_copy(s_favPropSearchStr));
+				boost::to_upper(s_favPropSearchStr);
+				s_favPropCache.needsRebuild = true;
+			}
+
+			if (s_favPropCache.needsRebuild)
+				RebuildFavPropCache(s_favPropSearchStr);
+
+			if (searchActive)
+				MenuCategory::ExpandAll();
+			else
+				MenuCategory::RestoreExpandedState();
 
 			bool bInputAdd = false;
 			AddOption("Add New Object Model", bInputAdd); if (bInputAdd)
@@ -3690,149 +3756,142 @@ namespace sub
 					if (FavouritesManagement::AddPropToFavourites(inputStr, GET_HASH_KEY(inputStr)))
 					{
 						Game::Print::PrintBottomLeft("Model ~b~added~s~.");
+						s_favPropCache.needsRebuild = true;
 					}
 					else
 						Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add model.");
 				}
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouritePropModelEntryName, std::string(), 40U, "Enter model name:");
 			}
 
-			if (nodeRoot.first_child())
+			AddBreak("---");
+
+			MenuCategory::ResetCategoryState();
+			for (auto& cat : s_favPropCache.sortedCategories)
 			{
-				AddBreak("---Favourites---");
+				auto it = s_favPropCache.byCategory.find(cat);
+				if (it == s_favPropCache.byCategory.end())
+					continue;
 
-				for (auto nodeLocToLoad = nodeRoot.first_child(); nodeLocToLoad; nodeLocToLoad = nodeLocToLoad.next_sibling())
+				auto& props = it->second;
+				std::string catName = cat.empty() ? "UNORDERED" : cat;
+				std::string catLabel = "— ~b~" + catName + "~s~ ~c~(" + std::to_string(props.size()) + ")~s~";
+
+				if (MenuCategory::AddCategory(catLabel))
 				{
-					const std::string& modelName = nodeLocToLoad.attribute("modelName").as_string();
-					Model model = nodeLocToLoad.attribute("modelHash").as_uint(0);
-					if (model.hash == 0)
-						model = GET_HASH_KEY(modelName);
-					MenuOptions::AddOption_AddProp(modelName, model);
-
-					if (Menu::printingop == *Menu::currentopATM)
+					for (auto& prop : props)
 					{
-						if (Menu::bitController)
-						{
-							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
+						MenuOptions::AddOption_AddProp(prop.modelName, prop.model);
 
-							if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
+						if (Menu::printingop == *Menu::currentopATM)
+						{
+							if (Menu::bitController)
 							{
-								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
-								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str());
-								if (*Menu::currentopATM >= Menu::totalop)
-									Menu::Up();
-								return; // Yeah
+								Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
+								if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
+								{
+									FavouritesManagement::RemovePropFromFavourites(prop.modelName, prop.model.hash);
+									s_favPropCache.needsRebuild = true;
+									if (*Menu::currentopATM >= Menu::totalop)
+										Menu::Up();
+									return;
+								}
+								Menu::add_IB(INPUT_SCRIPT_RRIGHT, "Change category");
+								if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RRIGHT))
+								{
+									dict = prop.modelName;
+									Menu::SetSub_delayed = SUB::SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT;
+								}
 							}
-						}
-						else
-						{
-							Menu::add_IB(VirtualKey::B, "Remove");
-
-							if (IsKeyJustUp(VirtualKey::B))
+							else
 							{
-								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
-								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str());
-								if (*Menu::currentopATM >= Menu::totalop)
-									Menu::Up();
-								return; // Yeah
+								Menu::add_IB(VirtualKey::B, "Remove");
+								if (IsKeyJustUp(VirtualKey::B))
+								{
+									FavouritesManagement::RemovePropFromFavourites(prop.modelName, prop.model.hash);
+									s_favPropCache.needsRebuild = true;
+									if (*Menu::currentopATM >= Menu::totalop)
+										Menu::Up();
+									return;
+								}
+								Menu::add_IB(VirtualKey::C, "Change category");
+								if (IsKeyJustUp(VirtualKey::C))
+								{
+									dict = prop.modelName;
+									Menu::SetSub_delayed = SUB::SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT;
+								}
 							}
 						}
 					}
 				}
 			}
-
 		}
 
-		namespace FavouritePropSearch
+		void Sub_SpawnProp_Favourites_CatSelect()
 		{
-			static std::vector<std::pair<std::string, Model>> results;
-			static bool dirty = true;
-			static std::string lastSearch;
-
-			void RebuildResults(const std::string& searchStr)
+			std::string modelName = dict;
+			if (modelName.empty())
 			{
-				results.clear();
-				std::string searchUpper = boost::to_upper_copy(searchStr);
+				Menu::SetPreviousMenu();
+				return;
+			}
 
-				using FavouritesManagement::xmlFavouriteProps;
-				pugi::xml_document doc;
-				if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()).status != pugi::status_ok)
-					return;
-				pugi::xml_node nodeRoot = doc.child("FavouriteProps");
-				if (!nodeRoot)
-					return;
-
-				for (auto node = nodeRoot.first_child(); node; node = node.next_sibling())
+			std::string currentCategory;
+			std::set<std::string> allCategories;
+			{
+				for (auto& kv : s_favPropCache.byCategory)
 				{
-					std::string modelName = node.attribute("modelName").as_string();
-					if (!searchUpper.empty())
+					if (kv.first.empty())
+						continue;
+					allCategories.insert(kv.first);
+					for (auto& prop : kv.second)
 					{
-						std::string nameUpper = boost::to_upper_copy(modelName);
-						if (nameUpper.find(searchUpper) == std::string::npos)
-							continue;
+						if (prop.modelName == modelName)
+							currentCategory = kv.first;
 					}
-					Model model = node.attribute("modelHash").as_uint(0);
-					if (model.hash == 0)
-						model = GET_HASH_KEY(modelName);
-					results.push_back({ modelName, model });
 				}
 			}
-		}
 
-		void Sub_SpawnProp_Favourites_Search()
-		{
-			using namespace FavouritePropSearch;
-			auto& searchStr = dict3;
+			AddTitle("Select Category");
 
-			AddTitle("Search Favourites");
-
-			bool bSearchPressed = false;
-			AddOption(searchStr.empty() ? "~b~SEARCH~s~" : ("~b~" + searchStr + "~s~"), bSearchPressed, nullFunc, -1, true);
-			if (bSearchPressed)
+			for (auto& cat : allCategories)
 			{
-				searchStr = Game::InputBox(searchStr, 64U, "Search favourites:", boost::to_lower_copy(searchStr));
-				boost::to_upper(searchStr);
-			}
-
-			if (dirty || searchStr != lastSearch)
-			{
-				RebuildResults(searchStr);
-				lastSearch = searchStr;
-				dirty = false;
-			}
-
-			AddBreak("---Results: " + std::to_string(results.size()) + "---");
-
-			for (auto& result : results)
-			{
-				MenuOptions::AddOption_AddProp(result.first, result.second);
-
-				if (Menu::printingop == *Menu::currentopATM)
+				bool isSelected = (cat == currentCategory);
+				bool pressed = false;
+				AddTickol(cat, isSelected, pressed, pressed, TICKOL::TICK, TICKOL::NONE);
+				if (pressed)
 				{
-					if (Menu::bitController)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
-						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-						{
-							FavouritesManagement::RemovePropFromFavourites(result.first, result.second.hash);
-							dirty = true;
-							if (*Menu::currentopATM >= Menu::totalop)
-								Menu::Up();
-							return;
-						}
-					}
-					else
-					{
-						Menu::add_IB(VirtualKey::B, "Remove");
-						if (IsKeyJustUp(VirtualKey::B))
-						{
-							FavouritesManagement::RemovePropFromFavourites(result.first, result.second.hash);
-							dirty = true;
-							if (*Menu::currentopATM >= Menu::totalop)
-								Menu::Up();
-							return;
-						}
-					}
+					FavouritesManagement::SetPropCategory(modelName, cat);
+					s_favPropCache.needsRebuild = true;
+					Menu::SetPreviousMenu();
+					return;
+				}
+			}
+
+			if (!allCategories.empty())
+				AddBreak("---");
+
+			bool newCatPressed = false;
+			AddOption("New Category", newCatPressed);
+			if (newCatPressed)
+			{
+				std::string newCat = Game::InputBox("", 64U, "NEW CATEGORY", "");
+				if (!newCat.empty())
+				{
+					FavouritesManagement::SetPropCategory(modelName, newCat);
+					s_favPropCache.needsRebuild = true;
+					Menu::SetPreviousMenu();
+				}
+			}
+
+			if (!currentCategory.empty())
+			{
+				bool removeCatPressed = false;
+				AddOption("Remove from Category", removeCatPressed);
+				if (removeCatPressed)
+				{
+					FavouritesManagement::SetPropCategory(modelName, "");
+					s_favPropCache.needsRebuild = true;
+					Menu::SetPreviousMenu();
 				}
 			}
 		}
@@ -4621,7 +4680,7 @@ REGISTER_SUBMENU(SPOONER_MAIN,                                        	sub::Spoo
 REGISTER_SUBMENU(SPOONER_SPAWN_CATEGORIES,                            	sub::Spooner::Submenus::Sub_SpawnCategories)
 REGISTER_SUBMENU(SPOONER_SPAWN_PROP,                                  	sub::Spooner::Submenus::Sub_SpawnProp)
 REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES,                       	sub::Spooner::Submenus::Sub_SpawnProp_Favourites)
-REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES_SEARCH,                	sub::Spooner::Submenus::Sub_SpawnProp_Favourites_Search)
+REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT,             	sub::Spooner::Submenus::Sub_SpawnProp_Favourites_CatSelect)
 REGISTER_SUBMENU(SPOONER_SPAWN_PED,                                   	sub::Spooner::Submenus::Sub_SpawnPed)
 REGISTER_SUBMENU(SPOONER_SPAWN_VEHICLE,                               	sub::Spooner::Submenus::Sub_SpawnVehicle)
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS,                               	sub::Spooner::Submenus::Sub_ManageMarkers)
