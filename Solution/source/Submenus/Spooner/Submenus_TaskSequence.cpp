@@ -15,6 +15,8 @@
 #include "..\..\Menu\MenuCategory.h"
 #include "..\..\Menu\Routine.h"
 
+#include <iterator>
+
 #include "..\..\Natives\natives2.h"
 #include "..\..\Scripting\enums.h"
 #include "..\..\Scripting\GTAentity.h"
@@ -661,75 +663,35 @@ namespace sub::Spooner
 
 				AddTitle("Settings");
 
-				bool bSpeed_plus = false, bSpeed_minus = false, bSpeed_input = false;
-				AddNumber("Blend-In Speed", tskPtr->speed, 1, bSpeed_input, bSpeed_plus, bSpeed_minus);
-				if (bSpeed_plus) { if (tskPtr->speed < FLT_MAX) tskPtr->speed += 0.1f; }
-				if (bSpeed_minus) { if (tskPtr->speed > -FLT_MAX) tskPtr->speed -= 0.1f; }
-				if (bSpeed_input)
+				AddNumberStepper("Blend-In Speed", tskPtr->speed, 1, 0.1);
+				AddNumberStepper("Blend-Out Speed", tskPtr->speedMultiplier, 1, 0.1);
+
+				const int numPresets = static_cast<int>(std::size(AnimFlag::kFlagPresets));
+				int currentPresetIdx = numPresets;
+				for (int i = 0; i < numPresets; i++)
 				{
-					std::string inputStr = Game::InputBox("", 6U, "", std::to_string(tskPtr->speed).substr(0, 5));
-					if (inputStr.length() > 0)
+					if (AnimFlag::kFlagPresets[i].value == tskPtr->flag)
 					{
-						try { tskPtr->speed = stof(inputStr); }
-						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
+						currentPresetIdx = i;
+						break;
 					}
-					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speed).substr(0, 5));
-					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speed);
 				}
 
-				bool bSpeedMultiplier_plus = false, bSpeedMultiplier_minus = false, bSpeedMultiplier_input = false;
-				AddNumber("Blend-Out Speed", tskPtr->speedMultiplier, 1, bSpeedMultiplier_input, bSpeedMultiplier_plus, bSpeedMultiplier_minus);
-				if (bSpeedMultiplier_plus) { if (tskPtr->speedMultiplier < FLT_MAX) tskPtr->speedMultiplier += 0.1f; }
-				if (bSpeedMultiplier_minus) { if (tskPtr->speedMultiplier > -FLT_MAX) tskPtr->speedMultiplier -= 0.1f; }
-				if (bSpeedMultiplier_input)
-				{
-					std::string inputStr = Game::InputBox("", 6U, "", std::to_string(tskPtr->speedMultiplier).substr(0, 5));
-					if (inputStr.length() > 0)
-					{
-						try { tskPtr->speedMultiplier = stof(inputStr); }
-						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
-					}
-					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedMultiplier).substr(0, 5));
-					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedMultiplier);
-				}
+				std::vector<std::string> presetLabels;
+				presetLabels.reserve(numPresets + 1);
+				for (int i = 0; i < numPresets; i++)
+					presetLabels.push_back(AnimFlag::kFlagPresets[i].name);
+				presetLabels.push_back("Custom");
 
-				bool flag_plus = false, flag_minus = false;
-				AddTexter("Flag", 0, std::vector<std::string>{ AnimFlag::vFlagNames[tskPtr->flag] }, null, flag_plus, flag_minus);
-				if (flag_plus)
-				{
-					for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
-					{
-						if (it->first == tskPtr->flag)
-						{
-							++it;
-							if (it != AnimFlag::vFlagNames.end())
-								tskPtr->flag = it->first;
-							break;
-						}
-					}
-				};
-				if (flag_minus)
-				{
-					for (auto it = AnimFlag::vFlagNames.rbegin(); it != AnimFlag::vFlagNames.rend(); ++it)
-					{
-						if (it->first == tskPtr->flag)
-						{
-							++it;
-							if (it != AnimFlag::vFlagNames.rend())
-								tskPtr->flag = it->first;
-							break;
-						}
-					}
-				};
-
+				int newPresetIdx = AddTexterCycler("Flag Preset", currentPresetIdx, presetLabels);
+				if (newPresetIdx != currentPresetIdx && newPresetIdx < numPresets)
+					tskPtr->flag = AnimFlag::kFlagPresets[newPresetIdx].value;
 				bool bToggleLockPos = false;
-				AddTickol("Lock Position", tskPtr->lockPos, bToggleLockPos, bToggleLockPos, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleLockPos)
+				AddTickol("Lock Position", tskPtr->lockPos, bToggleLockPos, bToggleLockPos, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+				if (bToggleLockPos)
 					tskPtr->lockPos = !tskPtr->lockPos;
-
-				//bool bToggleDurationToAnimDuration = false;
-				//AddTickol("Task Duration To Anim Duration", tskPtr->durationToAnimDuration, bToggleDurationToAnimDuration, bToggleDurationToAnimDuration, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleDurationToAnimDuration) tskPtr->durationToAnimDuration = !tskPtr->durationToAnimDuration;
-
 			}
+
 			void PlayAnimation_allPedAnims()
 			{
 				if (_selectedSTST == nullptr)

@@ -16,6 +16,8 @@
 #include "..\Menu\submenu_enum.h"
 #include "..\Menu\Routine.h"
 
+#include <iterator>
+
 #include "..\Natives\natives2.h"
 #include "..\Scripting\enums.h"
 #include "..\Util\ExePath.h"
@@ -41,6 +43,7 @@
 namespace sub
 {
 	FavMenuCache s_favCache;
+	AnimationSettings g_customAnimSettings;
 
 	bool RebuildFavCache(const std::string& searchStr)
 	{
@@ -142,8 +145,6 @@ namespace sub
 			}
 		}
 	}
-
-	AnimationSettings g_customAnimSettings;
 
 	void PlayPedAnimation(const GTAped& ped, const std::string& animDict, const std::string& animName)
 	{
@@ -657,144 +658,57 @@ namespace sub
 	}
 	void AnimationSub_Settings()
 	{
-		bool speedPlus = false;
-		bool speedMinus = false;
-		bool speedMultPlus = false; 
-		bool speedMultMinus = false; 
-		bool durationPlus = false;
-		bool durationMinus = false; 
-		bool ratePlus = false;
-		bool rateMinus = false;
-		bool flagPlus = false; 
-		bool flagMinus = false;
-		bool toggleLockPosition = false;
-
 		AddTitle("Settings");
-		AddNumber("Blend-In Speed", g_customAnimSettings.speed, 2, null, speedPlus, speedMinus);
-		AddNumber("Blend-Out Speed", g_customAnimSettings.speedMult, 2, null, speedMultPlus, speedMultMinus);
-		AddNumber("Duration (ms)", g_customAnimSettings.duration, 0, null, durationPlus, durationMinus);
-		AddTexter("Flag", 0, std::vector<std::string>{ AnimFlag::vFlagNames[g_customAnimSettings.flag] }, null, flagPlus, flagMinus);
-		AddNumber("Playback Rate", g_customAnimSettings.playbackRate, 2, null, ratePlus, rateMinus);
-		AddTickol("Lock Position", g_customAnimSettings.lockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+		AddNumberStepper("Blend-In Speed", g_customAnimSettings.speed, 2, 0.1, 0.0);
+		AddNumberStepper("Blend-Out Speed", g_customAnimSettings.speedMult, 2, 0.1);
+		AddNumberStepper("Duration (ms)", g_customAnimSettings.duration, 0, 100.0, -1.0);
+		AddOption("Flag Options", null, nullFunc, SUB::ANIMATIONSUB_FLAGS);
+		AddNumberStepper("Playback Rate", g_customAnimSettings.playbackRate, 2, 0.1, 0.0);
+		bool toggleLockPosition = false;
+		AddTickol("Lock Position", g_customAnimSettings.lockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 		if (toggleLockPosition)
-		{
 			g_customAnimSettings.lockPos = !g_customAnimSettings.lockPos;
-		}
-
-
-		if (speedPlus) 
-		{ 
-			if (g_customAnimSettings.speed < FLT_MAX) 
-			{
-				g_customAnimSettings.speed += 0.1f;
-				return;
-			}
-		}
-		if (speedMinus) 
-		{ 
-			if (g_customAnimSettings.speed > 0) 
-			{
-				g_customAnimSettings.speed -= 0.1f; 
-				return; 
-			}
-		}
-		if (speedMultPlus) 
-		{ 
-			if (g_customAnimSettings.speedMult < FLT_MAX) 
-			{
-				g_customAnimSettings.speedMult += 0.1f;
-				return;
-			}
-		}
-		if (speedMultMinus) 
-		{ 
-			if (g_customAnimSettings.speedMult > 0 - FLT_MAX) 
-			{
-				g_customAnimSettings.speedMult -= 0.1f;
-				return;
-			}
-		}
-		if (durationPlus) 
-		{ 
-			if (g_customAnimSettings.duration < INT_MAX) 
-			{
-				g_customAnimSettings.duration += 100;
-				return;
-			}
-		}
-		if (durationMinus) 
-		{ 
-			if (g_customAnimSettings.duration > -1) 
-			{
-				g_customAnimSettings.duration -= 100;
-				return;
-			}
-		}
-		if (flagPlus) {
-			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
-			{
-				if (it->first == g_customAnimSettings.flag)
-				{
-					++it;
-					if (it != AnimFlag::vFlagNames.end())
-					{
-						g_customAnimSettings.flag = it->first;
-					}
-					break;
-				}
-			}
-			return;
-		};
-		if (flagPlus)
-		{
-			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
-			{
-				if (it->first == g_customAnimSettings.flag)
-				{
-					++it;
-					if (it != AnimFlag::vFlagNames.end())
-					{
-						g_customAnimSettings.flag = it->first;
-					}
-					break;
-				}
-			}
-			return;
-		};
-		if (flagMinus)
-		{
-			for (auto it = AnimFlag::vFlagNames.rbegin(); it != AnimFlag::vFlagNames.rend(); ++it)
-			{
-				if (it->first == g_customAnimSettings.flag)
-				{
-					++it;
-					if (it != AnimFlag::vFlagNames.rend())
-					{
-						g_customAnimSettings.flag = it->first;
-					}
-					break;
-				}
-			}
-			return;
-		};
-		if (ratePlus) 
-		{ 
-			if (g_customAnimSettings.playbackRate < FLT_MAX) 
-			{
-				g_customAnimSettings.playbackRate += 0.1f;
-				return;
-			}
-		}
-		if (rateMinus) 
-		{ 
-			if (g_customAnimSettings.playbackRate > 0) 
-			{
-				g_customAnimSettings.playbackRate -= 0.1f;
-				return;
-			}
-		}
-
 	}
+
+	void AnimationSub_Flags()
+	{
+		AddTitle("Animation Flags");
+
+		// Find current preset index (or "Custom")
+		const int numPresets = static_cast<int>(std::size(AnimFlag::kFlagPresets));
+		int currentPresetIdx = numPresets; // default to "Custom"
+		for (int i = 0; i < numPresets; i++)
+		{
+			if (AnimFlag::kFlagPresets[i].value == g_customAnimSettings.flag)
+			{
+				currentPresetIdx = i;
+				break;
+			}
+		}
+		
+		std::vector<std::string> presetLabels;
+		presetLabels.reserve(numPresets + 1);
+		for (int i = 0; i < numPresets; i++)
+			presetLabels.push_back(AnimFlag::kFlagPresets[i].name);
+		presetLabels.push_back("Custom");
+
+		int newPresetIdx = AddTexterCycler("Preset", currentPresetIdx, presetLabels);
+		if (newPresetIdx != currentPresetIdx && newPresetIdx < numPresets)
+			g_customAnimSettings.flag = AnimFlag::kFlagPresets[newPresetIdx].value;
+
+		AddBreak("--- Animation Flags ---");
+
+		// Individual flag checkboxes
+		for (auto& f : AnimFlag::kAnimFlags)
+		{
+			bool isSet = (g_customAnimSettings.flag & f.value) != 0;
+			bool pressed = false;
+			AddTickol(f.name, isSet, pressed, pressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			if (pressed)
+				g_customAnimSettings.flag ^= f.value;
+		}
+	}
+
 	void AnimationFavouritesMenu()
 	{
 		auto& searchStr = AnimationMenu::searchStr;
@@ -934,16 +848,6 @@ namespace sub
 		bool stop = false;
 		bool addToFavourites = false;
 		bool removeFromFavourites = false;
-		bool flagPlus = false;
-		bool flagMinus = false;
-		bool speedPlus = false;
-		bool speedMinus = false; 
-		bool speedMultiplierPlus = false; 
-		bool speedMultiplierMinus = false;
-		bool durationPlus = false;
-		bool durationMinus = false; 
-		bool ratePlus = false;
-		bool rateMinus = false;
 		bool toggleLockPosition = false;
 		bool bIsAFavourite = IsAnimationAFavourite(sub_animDict, sub_animName);
 
@@ -954,116 +858,14 @@ namespace sub
 		AddOption("Stop", stop);
 		AddTickol("Favourite", bIsAFavourite, addToFavourites, removeFromFavourites, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 		AddBreak("---Settings---");
-		AddNumber("Blend-In Speed", g_customAnimSettings.speed, 2, null, speedPlus, speedMinus);
-		AddNumber("Blend-Out Speed", g_customAnimSettings.speedMult, 2, null, speedMultiplierPlus, speedMultiplierMinus);
-		AddNumber("Duration (ms)", g_customAnimSettings.duration, 0, null, durationPlus, durationMinus);
-		AddTexter("Flag", 0, std::vector<std::string>{ AnimFlag::vFlagNames[g_customAnimSettings.flag] }, null, flagPlus, flagMinus);
-		AddNumber("Playback Rate", g_customAnimSettings.playbackRate, 2, null, ratePlus, rateMinus);
-		AddTickol("Lock Position", g_customAnimSettings.lockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+		AddNumberStepper("Blend-In Speed", g_customAnimSettings.speed, 2, 0.1, 0.0);
+		AddNumberStepper("Blend-Out Speed", g_customAnimSettings.speedMult, 2, 0.1);
+		AddNumberStepper("Duration (ms)", g_customAnimSettings.duration, 0, 100.0, -1.0);
+		AddOption("Flag Options", null, nullFunc, SUB::ANIMATIONSUB_FLAGS);
+		AddNumberStepper("Playback Rate", g_customAnimSettings.playbackRate, 2, 0.1, 0.0);
+		AddTickol("Lock Position", g_customAnimSettings.lockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 		if (toggleLockPosition)
-		{
 			g_customAnimSettings.lockPos = !g_customAnimSettings.lockPos;
-		}
-
-
-
-		if (speedPlus) 
-		{ 
-			if (g_customAnimSettings.speed < FLT_MAX) 
-			{
-				g_customAnimSettings.speed += 0.1f; 
-			}
-			return; 
-		};
-		if (speedMinus) 
-		{ 
-			if (g_customAnimSettings.speed > 0) 
-			{
-				g_customAnimSettings.speed -= 0.1f; 
-			}
-			return; 
-		}
-		if (speedMultiplierPlus) 
-		{ 
-			if (g_customAnimSettings.speedMult < FLT_MAX) 
-			{
-				g_customAnimSettings.speedMult += 0.1f; 
-			}
-			return; 
-		};
-		if (speedMultiplierMinus) 
-		{ 
-			if (g_customAnimSettings.speedMult > 0 - FLT_MAX) 
-			{
-				g_customAnimSettings.speedMult -= 0.1f; 
-			}
-			return; 
-		}
-		if (durationPlus) 
-		{ 
-			if (g_customAnimSettings.duration < INT_MAX) 
-			{
-				g_customAnimSettings.duration += 100; 
-			}
-			return; 
-		};
-		if (durationMinus) 
-		{ 
-			if (g_customAnimSettings.duration > -1) 
-			{
-				g_customAnimSettings.duration -= 100; 
-			}
-			return; 
-		}
-		if (flagPlus)
-		{
-			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
-			{
-				if (it->first == g_customAnimSettings.flag)
-				{
-					++it;
-					if (it != AnimFlag::vFlagNames.end())
-					{
-						g_customAnimSettings.flag = it->first;
-					}
-					break;
-				}
-			}
-			return;
-		};
-		if (flagMinus)
-		{
-			for (auto it = AnimFlag::vFlagNames.rbegin(); it != AnimFlag::vFlagNames.rend(); ++it)
-			{
-				if (it->first == g_customAnimSettings.flag)
-				{
-					++it;
-					if (it != AnimFlag::vFlagNames.rend())
-					{
-						g_customAnimSettings.flag = it->first;
-					}
-					break;
-				}
-			}
-			return;
-		};
-		if (ratePlus) 
-		{ 
-			if (g_customAnimSettings.playbackRate < FLT_MAX) 
-			{
-				g_customAnimSettings.playbackRate += 0.1f; 
-			}
-			return; 
-		};
-		if (rateMinus) 
-		{ 
-			if (g_customAnimSettings.playbackRate > 0) 
-			{
-				g_customAnimSettings.playbackRate -= 0.1f; 
-			}
-			return; 
-		}
-
 
 		if (addToFavourites)
 		{
@@ -1797,6 +1599,7 @@ REGISTER_SUBMENU(ANIMATIONSUB,                     sub::PedAnimationMenu)
 REGISTER_SUBMENU(ANIMATIONSUB_SETTINGS,            sub::AnimationSub_Settings)
 REGISTER_SUBMENU(ANIMATIONSUB_FAVOURITES,          sub::AnimationFavouritesMenu)
 REGISTER_SUBMENU(ANIMATIONSUB_FAVOURITES_CATSELECT, sub::AnimationFavouritesMenu_CategorySelect)
+REGISTER_SUBMENU(ANIMATIONSUB_FLAGS,               sub::AnimationSub_Flags)
 REGISTER_SUBMENU(ANIMATIONSUB_CUSTOM,              sub::AnimationSub_Custom)
 REGISTER_SUBMENU(ANIMATIONSUB_DEER,                sub::DeerAnimationMenu)
 REGISTER_SUBMENU(ANIMATIONSUB_SHARK,               sub::SharkAnimationMenu)

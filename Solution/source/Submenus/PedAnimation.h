@@ -64,6 +64,7 @@ namespace sub
 	void AnimationSub_Settings();
 	void AnimationFavouritesMenu();
 	void AnimationFavouritesMenu_CategorySelect();
+	void AnimationSub_Flags();
 	void AnimationSub_Custom();
 	void DeerAnimationMenu();
 	void SharkAnimationMenu();
