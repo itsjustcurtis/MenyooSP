@@ -93,17 +93,20 @@ namespace sub
 		INT returnCursor = 1;
 	} s_recatState;
 
-	struct PedSpoonerContext {
-		GTAped ped;
+	struct EntityAnimContext {
+		GTAentity entity;
 		GTAentity attachedTo;
 		int dbIndex;
 	};
 
-	PedSpoonerContext GetPedSpoonerContext(const GTAped& ped)
+	static std::string g_lastAnimDict;
+	static std::string g_lastAnimName;
+
+	EntityAnimContext GetAnimContext(GTAentity entity)
 	{
-		PedSpoonerContext ctx;
-		ctx.ped = ped;
-		ctx.dbIndex = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
+		EntityAnimContext ctx;
+		ctx.entity = entity;
+		ctx.dbIndex = sub::Spooner::EntityManagement::GetEntityIndexInDb(entity);
 		if (ctx.dbIndex >= 0)
 		{
 			auto& spoonerEntity = sub::Spooner::Databases::EntityDb[ctx.dbIndex];
@@ -112,31 +115,45 @@ namespace sub
 		return ctx;
 	}
 
-	void StopPedAnimation(const GTAped& ped, bool clearScenario = false)
+	void StopAnimation(GTAentity entity, bool clearScenario = false)
 	{
-		auto ctx = GetPedSpoonerContext(ped);
+		auto ctx = GetAnimContext(entity);
 
-		GTAvehicle veh = ctx.ped.CurrentVehicle();
-		bool isInVehicle = veh.Exists();
-		VehicleSeat vehSeat;
-		if (isInVehicle)
-			vehSeat = ctx.ped.GetCurrentVehicleSeat();
-		ctx.ped.Task().ClearAllImmediately();
-		if (isInVehicle)
-			ctx.ped.SetIntoVehicle(veh, vehSeat);
+		if (entity.IsPed())
+		{
+			GTAped ped(entity);
+			GTAvehicle veh = ped.CurrentVehicle();
+			bool isInVehicle = veh.Exists();
+			VehicleSeat vehSeat;
+			if (isInVehicle)
+				vehSeat = ped.GetCurrentVehicleSeat();
+			// being in a vehicle is a "task", so we need to put the ped back in the vehicle after clearing tasks
+			Tasks(entity).ClearAllImmediately();
+			if (isInVehicle)
+				ped.SetIntoVehicle(veh, vehSeat);
+		}
+		else
+		{
+			Tasks(entity).ClearAllImmediately();
+			STOP_ENTITY_ANIM(entity.Handle(), g_lastAnimName.c_str(), g_lastAnimDict.c_str(), 0.0f);
+		}
 
 		if (ctx.dbIndex >= 0)
 		{
 			auto& spoonerEntity = sub::Spooner::Databases::EntityDb[ctx.dbIndex];
 			spoonerEntity.ClearLastAnimations();
+
 			if (clearScenario) spoonerEntity.currentScenario.clear();
+
 			if (ctx.attachedTo.Exists() && spoonerEntity.attachmentArgs.isAttached)
 			{
 				spoonerEntity.handle.AttachTo(ctx.attachedTo, spoonerEntity.attachmentArgs.boneIndex,
 					spoonerEntity.handle.GetIsCollisionEnabled(),
 					spoonerEntity.attachmentArgs.offset, spoonerEntity.attachmentArgs.rotation);
 			}
+
 			spoonerEntity.taskSequence.Reset();
+
 			if (sub::Spooner::selectedEntity.handle.Equals(spoonerEntity.handle))
 			{
 				sub::Spooner::selectedEntity.lastAnimations = spoonerEntity.lastAnimations;
@@ -146,14 +163,34 @@ namespace sub
 		}
 	}
 
-	void PlayPedAnimation(const GTAped& ped, const std::string& animDict, const std::string& animName)
+	void PlayAnimation(GTAentity entity, const std::string& animDict, const std::string& animName)
 	{
-		auto ctx = GetPedSpoonerContext(ped);
+		auto ctx = GetAnimContext(entity);
 
-		ctx.ped.RequestControl();
-		ctx.ped.Task().PlayAnimation(animDict, animName,
-			g_customAnimSettings.speed, g_customAnimSettings.speedMult, g_customAnimSettings.duration,
-			g_customAnimSettings.flag, g_customAnimSettings.playbackRate, g_customAnimSettings.lockPos);
+		g_lastAnimDict = animDict;
+		g_lastAnimName = animName;
+
+		entity.RequestControl();
+
+		REQUEST_ANIM_DICT(animDict.c_str());
+		for (DWORD timeOut = GetTickCount() + 1750; GetTickCount() < timeOut;)
+		{
+			if (HAS_ANIM_DICT_LOADED(animDict.c_str())) break;
+			WAIT(0);
+		}
+
+		if (entity.IsPed())
+		{
+			TASK_PLAY_ANIM(entity.Handle(), animDict.c_str(), animName.c_str(),
+				g_customAnimSettings.speed, g_customAnimSettings.speedMult, g_customAnimSettings.duration,
+				g_customAnimSettings.flag, g_customAnimSettings.playbackRate,
+				g_customAnimSettings.lockPos, g_customAnimSettings.lockPos, g_customAnimSettings.lockPos);
+		}
+		else
+		{
+			PLAY_ENTITY_ANIM(entity.Handle(), animName.c_str(), animDict.c_str(),
+				8.0f, static_cast<BOOL>(g_customAnimSettings.flag & 1), static_cast<BOOL>(g_customAnimSettings.flag & 2), 0, 0.0f, 0);
+		}
 
 		if (ctx.dbIndex >= 0)
 		{
@@ -491,7 +528,7 @@ namespace sub
 		AddTickol(text, IS_ENTITY_PLAYING_ANIM(g_Ped1, animDict.c_str(), animName.c_str(), 3), pressed, pressed, TICKOL::MANWON); 
 		if (pressed)
 		{
-			PlayPedAnimation(g_Ped1, animDict, animName);
+			PlayAnimation(g_Ped1, animDict, animName);
 			extraOptionCode = true;
 		}
 
@@ -543,7 +580,7 @@ namespace sub
 
 	void AnimationStopAnimationCallback()
 	{
-		StopPedAnimation(g_Ped1);
+		StopAnimation(g_Ped1);
 	}
 
 	void PedAnimationMenu()
@@ -560,11 +597,14 @@ namespace sub
 		bool dictSetMissionRappel = false;
 		bool dictSetGesturesSitting = false;
 
-		SET_PED_CAN_PLAY_AMBIENT_ANIMS(g_Ped1, TRUE);
-		SET_PED_CAN_PLAY_AMBIENT_BASE_ANIMS(g_Ped1, TRUE);
-		SET_PED_CAN_PLAY_GESTURE_ANIMS(g_Ped1, TRUE);
-		SET_PED_CAN_PLAY_VISEME_ANIMS(g_Ped1, TRUE, TRUE);
-		SET_PED_IS_IGNORED_BY_AUTO_OPEN_DOORS(g_Ped1, TRUE);
+		if (IS_ENTITY_A_PED(g_Ped1))
+		{
+			SET_PED_CAN_PLAY_AMBIENT_ANIMS(g_Ped1, TRUE);
+			SET_PED_CAN_PLAY_AMBIENT_BASE_ANIMS(g_Ped1, TRUE);
+			SET_PED_CAN_PLAY_GESTURE_ANIMS(g_Ped1, TRUE);
+			SET_PED_CAN_PLAY_VISEME_ANIMS(g_Ped1, TRUE, TRUE);
+			SET_PED_IS_IGNORED_BY_AUTO_OPEN_DOORS(g_Ped1, TRUE);
+		}
 
 		AddTitle("Animations");
 		AddTickol("Stop Animation", true, AnimationStopAnimationCallback, AnimationStopAnimationCallback, TICKOL::CROSS);
@@ -878,13 +918,13 @@ namespace sub
 
 		if (apply)
 		{
-			PlayPedAnimation(g_Ped1, sub_animDict, sub_animName);
+			PlayAnimation(g_Ped1, sub_animDict, sub_animName);
 			return;
 		}
 
 		if (stop)
 		{
-			StopPedAnimation(g_Ped1);
+			StopAnimation(g_Ped1);
 			return;
 		}
 
@@ -1255,9 +1295,9 @@ namespace sub
 			}
 		}
 
-		void stopScenarioPls()
+		void StopScenario()
 		{
-			StopPedAnimation(g_Ped1, true);
+			StopAnimation(g_Ped1, true);
 		}
 
 		void AnimationTaskScenarios1()
@@ -1272,7 +1312,7 @@ namespace sub
 				searchStr.clear();
 			}
 
-			AddTickol("End Scenarios", true, stopScenarioPls, stopScenarioPls, TICKOL::CROSS);
+			AddTickol("End Scenarios", true, StopScenario, StopScenario, TICKOL::CROSS);
 
 			for (auto& scen : vNamedScenarios)
 			{
@@ -1292,7 +1332,7 @@ namespace sub
 				boost::to_lower(searchStr);
 			}
 
-			AddTickol("End Scenarios", true, stopScenarioPls, stopScenarioPls, TICKOL::CROSS);
+			AddTickol("End Scenarios", true, StopScenario, StopScenario, TICKOL::CROSS);
 
 			for (auto& current : vValues_TaskScenarios)
 			{

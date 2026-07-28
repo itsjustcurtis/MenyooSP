@@ -1488,6 +1488,11 @@ namespace sub
 			{
 				Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_TASKLIST;
 			}
+			
+			// peds can access anims from ped options menu
+			if (selectedEntity.handle.IsVehicle() || selectedEntity.handle.IsProp()) {
+				AddOption("Animations", null, SetEnt241, SUB::ANIMATIONSUB);
+			}
 
 			if (selectedEntity.type == EntityType::PED)
 			{
