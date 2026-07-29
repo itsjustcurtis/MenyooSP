@@ -104,7 +104,7 @@ namespace MenuCategory
 			if (!s_navigateIBAdded)
 			{
 				if (Menu::bitController)
-					Menu::add_IB(INPUT_FRONTEND_X, "Navigate categories");
+					Menu::add_IB(INPUT_SPECIAL_ABILITY, "Navigate categories"); // XBOX "l3" (left stick click)
 				else
 					Menu::add_IB(VirtualKey::G, "Navigate categories");
 				s_navigateIBAdded = true;
@@ -112,7 +112,7 @@ namespace MenuCategory
 
 			if (Menu::bitController)
 			{
-				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_X))
+				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SPECIAL_ABILITY)) // XBOX "l3" (left stick click)
 					Menu::SetSub_delayed = SUB::CATEGORYNAVIGATOR;
 			}
 			else

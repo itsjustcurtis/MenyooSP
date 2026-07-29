@@ -545,13 +545,13 @@ namespace sub
 
 				if (isAFavourite)
 				{
-				Menu::add_IB(INPUT_SCRIPT_RRIGHT, "Change category");
-				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RRIGHT))
-				{
-					s_recatState.returnCursor = *Menu::currentopATM;
-					s_recatState.animDict = animDict;
-					s_recatState.animName = animName;
-					Menu::SetSub_delayed = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
+					Menu::add_IB(INPUT_SCRIPT_RUP, "Change category");
+					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RUP))
+					{
+						s_recatState.returnCursor = *Menu::currentopATM;
+						s_recatState.animDict = animDict;
+						s_recatState.animName = animName;
+						Menu::SetSub_delayed = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
 					}
 				}
 			}
@@ -565,14 +565,14 @@ namespace sub
 
 				if (isAFavourite)
 				{
-				Menu::add_IB(VirtualKey::C, "Change category");
-				if (IsKeyJustUp(VirtualKey::C))
-				{
-					s_recatState.returnCursor = *Menu::currentopATM;
-					s_recatState.animDict = animDict;
-					s_recatState.animName = animName;
-					Menu::SetSub_delayed = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
-				}
+					Menu::add_IB(VirtualKey::C, "Change category");
+					if (IsKeyJustUp(VirtualKey::C))
+					{
+						s_recatState.returnCursor = *Menu::currentopATM;
+						s_recatState.animDict = animDict;
+						s_recatState.animName = animName;
+						Menu::SetSub_delayed = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
+					}
 				}
 			}
 		}
