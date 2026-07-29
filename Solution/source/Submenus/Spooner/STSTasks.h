@@ -359,7 +359,7 @@ namespace sub::Spooner
 			int flag;
 			bool lockPos, durationToAnimDuration;
 			PlayAnimation();
-			void RunP(GTAped& ep) override;
+			void Run(void* ve) override;
 			void LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle) override;
 		};
 

@@ -56,7 +56,7 @@ namespace sub::Spooner
 		{ STSTaskType::FleeFromCoord,{ "Flee From Position", EntityType::PED } },
 		{ STSTaskType::NearestAppropriateAction,{ "Closest Appropriate Action", EntityType::PED } },
 		{ STSTaskType::ScenarioAction,{ "Perform Scenario Action", EntityType::PED } },
-		{ STSTaskType::PlayAnimation,{ "Play Animation", EntityType::PED } },
+		{ STSTaskType::PlayAnimation,{ "Play Animation", EntityType::ALL } },
 		{ STSTaskType::SetActiveWeapon,{ "Set Active Weapon", EntityType::PED } },
 		{ STSTaskType::AimAtCoord,{ "Aim At Position", EntityType::PED } },
 		{ STSTaskType::AimAtEntity,{ "Aim At Entity", EntityType::PED } },

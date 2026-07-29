@@ -986,13 +986,35 @@ namespace sub::Spooner
 			this->flag = AnimFlag::Loop;
 			this->lockPos = false;
 		}
-		void PlayAnimation::RunP(GTAped& ep)
+		void PlayAnimation::Run(void* ve)
 		{
-			if (this->durationToAnimDuration)
-				this->duration = GET_ENTITY_ANIM_TOTAL_TIME(ep.Handle(), this->animDict.c_str(), this->animName.c_str());
+			GTAentity entity = *reinterpret_cast<GTAentity*>(ve);
 
-			//if (IS_ENTITY_PLAYING_ANIM(ep.handle, animDict.c_str(), animDict.c_str(), 3))
-			ep.Task().PlayAnimation(this->animDict, this->animName, this->speed, this->speedMultiplier, this->durationAfterLife > 0 ? -1 : this->duration, this->flag, 0.0f, this->lockPos);
+			if (this->durationToAnimDuration)
+				this->duration = GET_ENTITY_ANIM_TOTAL_TIME(entity.Handle(), this->animDict.c_str(), this->animName.c_str());
+
+			REQUEST_ANIM_DICT(this->animDict.c_str());
+			for (DWORD timeOut = GetTickCount() + 1750; GetTickCount() < timeOut;)
+			{
+				if (HAS_ANIM_DICT_LOADED(this->animDict.c_str())) break;
+				WAIT(0);
+			}
+
+			if (entity.IsPed())
+			{
+				TASK_PLAY_ANIM(entity.Handle(), this->animDict.c_str(), this->animName.c_str(),
+					this->speed, this->speedMultiplier,
+					this->durationAfterLife > 0 ? -1 : this->duration,
+					this->flag, 0.0f, this->lockPos, this->lockPos, this->lockPos);
+			}
+			else
+			{
+				PLAY_ENTITY_ANIM(entity.Handle(), this->animName.c_str(), this->animDict.c_str(),
+					8.0f,
+					static_cast<BOOL>(this->flag & AnimFlag::Loop),
+					static_cast<BOOL>(this->flag & AnimFlag::StayInLastFrame),
+					0, 0.0f, 0);
+			}
 		}
 		void PlayAnimation::LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle)
 		{
