@@ -382,6 +382,7 @@ namespace sub::TeleportLocations_catind
 			SET_AUDIO_FLAG("DisableFlightMusic", FALSE);
 			SET_AUDIO_FLAG("PlayerOnDLCHeist4Island", FALSE);
 			SET_ISLAND_ENABLED("HeistIsland", FALSE); 
+			SET_USE_ISLAND_MAP(FALSE);
 
 			SET_INSTANCE_PRIORITY_MODE(0);
 		}
