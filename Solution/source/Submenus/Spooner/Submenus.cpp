@@ -3105,6 +3105,11 @@ namespace sub
 			AddTitle("Coord Blip");
 		}
 
+		void Sub_Blip_CoordInBlip()
+		{
+			AddTitle("Coord Blip Options");
+		}
+
 		void Sub_Blip_RadialInBlip()
 		{
 			if (sub::Spooner::SelectedBlip == nullptr)
