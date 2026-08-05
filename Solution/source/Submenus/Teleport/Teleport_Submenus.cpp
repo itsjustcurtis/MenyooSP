@@ -39,6 +39,41 @@ namespace sub::TeleportLocations_catind
 
 	Vector3 _customTeleLoc(Locations::vApartmentInteriors[0].x, Locations::vApartmentInteriors[0].y, Locations::vApartmentInteriors[0].z);
 
+	void LoadIpl()
+	{
+		std::string inputStr = Game::InputBox("", 64U, "Enter IPL name:");
+
+		if (inputStr.length() == 0)
+			return;
+
+		if (IS_IPL_ACTIVE(inputStr.c_str()))
+		{
+			Game::Print::PrintBottomLeft("IPL ~b~already loaded~s~: " + inputStr);
+		}
+		else
+		{
+			REQUEST_IPL(inputStr.c_str());
+			Game::Print::PrintBottomLeft("IPL ~g~loaded~s~: " + inputStr);
+		}
+	}
+	void UnloadIpl()
+	{
+		std::string inputStr = Game::InputBox("", 64U, "Enter IPL name:");
+		
+		if (inputStr.length() == 0)
+			return;
+
+		if (IS_IPL_ACTIVE(inputStr.c_str()))
+		{
+			REMOVE_IPL(inputStr.c_str());
+			Game::Print::PrintBottomLeft("IPL ~r~unloaded~s~: " + inputStr);
+		}
+		else
+		{
+			Game::Print::PrintBottomLeft("IPL ~y~already unloaded~s~: " + inputStr);
+		}
+	}
+
 	namespace Submenus
 	{
 		void Sub_TeleportMain()
@@ -71,6 +106,10 @@ namespace sub::TeleportLocations_catind
 			AddBreak("---Custom---");
 			AddOption("Custom Coordinates", null, nullFunc, SUB::TELEPORTOPS_CUSTOMCOORDS);
 			AddOption("Favourites", null, nullFunc, SUB::TELEPORTOPS_SAVEDLOCATIONS);
+
+			AddBreak("---IPLs---");
+			AddOption("Load IPL", null, LoadIpl);
+			AddOption("Unload IPL", null, UnloadIpl);
 		}
 		void Sub_CustomCoords()
 		{
