@@ -723,6 +723,7 @@ namespace sub
 			static std::vector<SearchResult> results;
 			static bool dirty = true;
 			static std::string lastSearch;
+			static std::string searchStr;
 			static const void* lastTypePtr = nullptr;
 
 			void RebuildResults(const std::string& searchStr)
@@ -750,7 +751,6 @@ namespace sub
 		{
 			using namespace DecalSearch;
 			GTAentity ped = g_Ped1;
-			auto& searchStr = dict;
 
 			bool bShortcutDecalPreviewPressed = false;
 
@@ -759,6 +759,7 @@ namespace sub
 				Menu::OnSubBack = []
 				{
 					ClearPreviewTattoo();
+					searchStr.clear();
 				};
 			}
 
