@@ -636,6 +636,24 @@ public:
 	static std::string GetPedDrawableCollectionString(int pedHandle, int componentId);
 	static std::string GetPedPropCollectionString(int pedHandle, int anchorPoint);
 
+	// Collection enumeration data
+	struct CollectionEntry
+	{
+		std::string name;             // e.g. "mp_f_clothes_01" or "basegame"
+		int maxLocalId;               // highest local index in this collection
+		std::vector<int> localToGlobal; // maps localIdx -> global drawable index
+	};
+	struct DrawableCollectionData
+	{
+		std::vector<CollectionEntry> collections;
+		int currentCollectionIdx;     // index into collections[]
+		int currentLocalIdx;          // local index within that collection
+	};
+
+	// Build collection map for a ped's component slot (model-cached)
+	static DrawableCollectionData BuildDrawableCollectionData(int pedHandle, int componentId);
+	static DrawableCollectionData BuildPropCollectionData(int pedHandle, int anchorPoint);
+
 private:
 	static UINT64 modelHashTable, modelNum2, modelNum3, modelNum4;
 	static int modelNum1;

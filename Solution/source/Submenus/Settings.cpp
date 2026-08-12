@@ -135,6 +135,21 @@ namespace sub
 		AddsettingscolOption("Ped Trackers", _globalPedTrackers_Col);
 		AddToggle("Rainbow", rainbowBoxes);
 	}
+	bool HexToRGBA(const std::string& hex, RGBA& colour)
+	{
+		std::string h = hex;
+		if (h.empty()) return false;
+		if (h[0] == '#') h = h.substr(1);
+		if (h.length() != 6 && h.length() != 8) return false;
+		for (char c : h)
+			if (!isxdigit(c)) return false;
+		colour.R = std::stoi(h.substr(0, 2), nullptr, 16);
+		colour.G = std::stoi(h.substr(2, 2), nullptr, 16);
+		colour.B = std::stoi(h.substr(4, 2), nullptr, 16);
+		colour.A = (h.length() == 8) ? std::stoi(h.substr(6, 2), nullptr, 16) : 255;
+		return true;
+	}
+
 	void SettingsColours2()
 	{
 		bool settingsRInput = false;
@@ -163,6 +178,17 @@ namespace sub
 		AddNumber("Blue", settingsRGBA->B, 0, settingsRInput, settingsRPlus, settingsRMinus);
 		AddNumber("Opacity", settingsRGBA->A, 0, settingsRInput, settingsRPlus, settingsRMinus);
 		AddTexter("HUD Colour", settingsHUDColor, HudColour::vHudColours, settingsHUDColourApply, settingsHUDColourPlus, settingsHUDColourMinus);
+
+		{
+			bool bHexInputPressed = false;
+			AddOption("Input Hex Colour", bHexInputPressed); if (bHexInputPressed)
+			{
+				std::string input = Game::InputBox("", 10U, "Enter hex colour (RRGGBB or RRGGBBAA):", "#");
+				if (!HexToRGBA(input, *settingsRGBA))
+					Game::Print::PrintBottomCentre("~r~Invalid hex colour.");
+			}
+		}
+
 		AddBreak("---Presets---");
 		AddPresetColourOptions(settingsRGBA->R, settingsRGBA->G, settingsRGBA->B);
 

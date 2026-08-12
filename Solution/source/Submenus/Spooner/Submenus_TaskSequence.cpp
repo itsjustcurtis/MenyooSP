@@ -12,7 +12,10 @@
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\MenuCategory.h"
 #include "..\..\Menu\Routine.h"
+
+#include <iterator>
 
 #include "..\..\Natives\natives2.h"
 #include "..\..\Scripting\enums.h"
@@ -35,6 +38,7 @@
 #include "SpoonerEntity.h"
 #include "SpoonerMode.h"
 #include "Databases.h"
+#include "SpoonerLight.h"
 #include "EntityManagement.h"
 #include "Submenus.h"
 #include "..\..\Submenus\PedComponentChanger.h"
@@ -226,10 +230,10 @@ namespace sub::Spooner
 					}
 				}
 
-				bool bManualPlacementForPosPressed = false;
-				AddOption("Adjust Target Manually", bManualPlacementForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT); if (bManualPlacementForPosPressed)
+				bool bManualEditingForPosPressed = false;
+				AddOption("Adjust Target Manually", bManualEditingForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bManualEditingForPosPressed)
 				{
-					SpoonerVector3ManualPlacementPtrs = { 0, &coord, nullptr };
+					SpoonerVector3ManualEditingPtrs = { 0, &coord, nullptr };
 				}
 			}
 			void PAtEntity(GTAentity& targetEntity, EntityType eType = EntityType::ALL)
@@ -587,19 +591,49 @@ namespace sub::Spooner
 						}
 					}
 				}
-
-				std::vector<std::pair<std::string, std::string>> vFavAnims;
-				GetFavouriteAnimations(vFavAnims);
-				if (!vFavAnims.empty())
+				AddBreak("---Favourites---");
+				
+				static std::string favSearchStr;
+				bool searchPressed = false;
+				AddOption(favSearchStr.empty() ? "SEARCH FAVOURITES" : boost::to_upper_copy(favSearchStr), searchPressed, nullFunc, -1, true);
+				if (searchPressed)
 				{
-					AddBreak("---Favourites---");
-					for (auto& animFav : vFavAnims)
+					std::string newSearch = Game::InputBox(favSearchStr, 126U, "SEARCH FAVOURITES", favSearchStr);
+					boost::to_lower(newSearch);
+					if (newSearch != favSearchStr)
 					{
-						bool bAnimFavPressed = false;
-						AddTickol(animFav.first + ", " + animFav.second, (animFav.first == tskPtr->animDict && animFav.second == tskPtr->animName), bAnimFavPressed, bAnimFavPressed); if (bAnimFavPressed)
+						favSearchStr = newSearch;
+						sub::s_favCache.needsRebuild = true;
+					}
+				}
+				if (sub::s_favCache.needsRebuild)
+					sub::RebuildFavCache(favSearchStr);
+
+				if (!sub::s_favCache.sortedCategoryNames.empty())
+				{
+					MenuCategory::ResetCategoryState();
+					for (auto& cat : sub::s_favCache.sortedCategoryNames)
+					{
+						auto it = sub::s_favCache.animationsByCategory.find(cat);
+						if (it == sub::s_favCache.animationsByCategory.end())
+							continue;
+
+						auto& anims = it->second;
+						std::string catDisplay = cat.empty() ? "UNORDERED" : cat;
+						std::string catLabel = "— ~b~" + catDisplay + "~s~ ~c~(" + std::to_string(anims.size()) + " anims)~s~";
+
+						if (MenuCategory::AddCategory(catLabel))
 						{
-							tskPtr->animDict = animFav.first;
-							tskPtr->animName = animFav.second;
+							for (auto& fav : anims)
+							{
+								bool bAnimFavPressed = false;
+								AddTickol(fav.dict + ", " + fav.name, (fav.dict == tskPtr->animDict && fav.name == tskPtr->animName), bAnimFavPressed, bAnimFavPressed);
+								if (bAnimFavPressed)
+								{
+									tskPtr->animDict = fav.dict;
+									tskPtr->animName = fav.name;
+								}
+							}
 						}
 					}
 				}
@@ -629,75 +663,35 @@ namespace sub::Spooner
 
 				AddTitle("Settings");
 
-				bool bSpeed_plus = false, bSpeed_minus = false, bSpeed_input = false;
-				AddNumber("Blend-In Speed", tskPtr->speed, 1, bSpeed_input, bSpeed_plus, bSpeed_minus);
-				if (bSpeed_plus) { if (tskPtr->speed < FLT_MAX) tskPtr->speed += 0.1f; }
-				if (bSpeed_minus) { if (tskPtr->speed > -FLT_MAX) tskPtr->speed -= 0.1f; }
-				if (bSpeed_input)
+				AddNumberStepper("Blend-In Speed", tskPtr->speed, 1, 0.1);
+				AddNumberStepper("Blend-Out Speed", tskPtr->speedMultiplier, 1, 0.1);
+
+				const int numPresets = static_cast<int>(std::size(AnimFlag::kFlagPresets));
+				int currentPresetIdx = numPresets;
+				for (int i = 0; i < numPresets; i++)
 				{
-					std::string inputStr = Game::InputBox("", 6U, "", std::to_string(tskPtr->speed).substr(0, 5));
-					if (inputStr.length() > 0)
+					if (AnimFlag::kFlagPresets[i].value == tskPtr->flag)
 					{
-						try { tskPtr->speed = stof(inputStr); }
-						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
+						currentPresetIdx = i;
+						break;
 					}
-					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speed).substr(0, 5));
-					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speed);
 				}
 
-				bool bSpeedMultiplier_plus = false, bSpeedMultiplier_minus = false, bSpeedMultiplier_input = false;
-				AddNumber("Blend-Out Speed", tskPtr->speedMultiplier, 1, bSpeedMultiplier_input, bSpeedMultiplier_plus, bSpeedMultiplier_minus);
-				if (bSpeedMultiplier_plus) { if (tskPtr->speedMultiplier < FLT_MAX) tskPtr->speedMultiplier += 0.1f; }
-				if (bSpeedMultiplier_minus) { if (tskPtr->speedMultiplier > -FLT_MAX) tskPtr->speedMultiplier -= 0.1f; }
-				if (bSpeedMultiplier_input)
-				{
-					std::string inputStr = Game::InputBox("", 6U, "", std::to_string(tskPtr->speedMultiplier).substr(0, 5));
-					if (inputStr.length() > 0)
-					{
-						try { tskPtr->speedMultiplier = stof(inputStr); }
-						catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
-					}
-					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 5U, std::string(), std::to_string(tskPtr->speedMultiplier).substr(0, 5));
-					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&tskPtr->speedMultiplier);
-				}
+				std::vector<std::string> presetLabels;
+				presetLabels.reserve(numPresets + 1);
+				for (int i = 0; i < numPresets; i++)
+					presetLabels.push_back(AnimFlag::kFlagPresets[i].name);
+				presetLabels.push_back("Custom");
 
-				bool flag_plus = false, flag_minus = false;
-				AddTexter("Flag", 0, std::vector<std::string>{ AnimFlag::vFlagNames[tskPtr->flag] }, null, flag_plus, flag_minus);
-				if (flag_plus)
-				{
-					for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
-					{
-						if (it->first == tskPtr->flag)
-						{
-							++it;
-							if (it != AnimFlag::vFlagNames.end())
-								tskPtr->flag = it->first;
-							break;
-						}
-					}
-				};
-				if (flag_minus)
-				{
-					for (auto it = AnimFlag::vFlagNames.rbegin(); it != AnimFlag::vFlagNames.rend(); ++it)
-					{
-						if (it->first == tskPtr->flag)
-						{
-							++it;
-							if (it != AnimFlag::vFlagNames.rend())
-								tskPtr->flag = it->first;
-							break;
-						}
-					}
-				};
-
+				int newPresetIdx = AddTexterCycler("Flag Preset", currentPresetIdx, presetLabels);
+				if (newPresetIdx != currentPresetIdx && newPresetIdx < numPresets)
+					tskPtr->flag = AnimFlag::kFlagPresets[newPresetIdx].value;
 				bool bToggleLockPos = false;
-				AddTickol("Lock Position", tskPtr->lockPos, bToggleLockPos, bToggleLockPos, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleLockPos)
+				AddTickol("Lock Position", tskPtr->lockPos, bToggleLockPos, bToggleLockPos, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+				if (bToggleLockPos)
 					tskPtr->lockPos = !tskPtr->lockPos;
-
-				//bool bToggleDurationToAnimDuration = false;
-				//AddTickol("Task Duration To Anim Duration", tskPtr->durationToAnimDuration, bToggleDurationToAnimDuration, bToggleDurationToAnimDuration, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleDurationToAnimDuration) tskPtr->durationToAnimDuration = !tskPtr->durationToAnimDuration;
-
 			}
+
 			void PlayAnimation_allPedAnims()
 			{
 				if (_selectedSTST == nullptr)
@@ -1159,10 +1153,10 @@ namespace sub::Spooner
 						}
 					}
 
-					bool bManualPlacementForPosPressed = false;
-					AddOption("Adjust Manually", bManualPlacementForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT); if (bManualPlacementForPosPressed)
+					bool bManualEditingForPosPressed = false;
+					AddOption("Adjust Manually", bManualEditingForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bManualEditingForPosPressed)
 					{
-						SpoonerVector3ManualPlacementPtrs = { 0, nas.second, nullptr };
+						SpoonerVector3ManualEditingPtrs = { 0, nas.second, nullptr };
 					}
 				}
 
@@ -1291,21 +1285,21 @@ namespace sub::Spooner
 					offsetz_plus = 0, offsetz_minus = 0,
 					bResetOffsetVector = 0;
 
-				AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
+				AddNumber("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 4, null, prec_minus, prec_plus);
 				AddNumber("X", tskPtr->offsetVector.x, 4, null, offsetx_plus, offsetx_minus);
 				AddNumber("Y", tskPtr->offsetVector.y, 4, null, offsety_plus, offsety_minus);
 				AddNumber("Z", tskPtr->offsetVector.z, 4, null, offsetz_plus, offsetz_minus);
 				AddOption("RESET", bResetOffsetVector); if (bResetOffsetVector) tskPtr->offsetVector.clear();
 
-				if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
-				if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
+				if (prec_plus) { if (SpoonerMode::editingState.precisionPos < 10.0f) SpoonerMode::editingState.precisionPos *= 10; }
+				if (prec_minus) { if (SpoonerMode::editingState.precisionPos > 0.0001f) SpoonerMode::editingState.precisionPos /= 10; }
 
-				if (offsetx_plus) tskPtr->offsetVector.x += _manualPlacementPrecision;
-				if (offsetx_minus) tskPtr->offsetVector.x -= _manualPlacementPrecision;
-				if (offsety_plus) tskPtr->offsetVector.y += _manualPlacementPrecision;
-				if (offsety_minus) tskPtr->offsetVector.y -= _manualPlacementPrecision;
-				if (offsetz_plus) tskPtr->offsetVector.z += _manualPlacementPrecision;
-				if (offsetz_minus) tskPtr->offsetVector.z -= _manualPlacementPrecision;
+				if (offsetx_plus) tskPtr->offsetVector.x += SpoonerMode::editingState.precisionPos;
+				if (offsetx_minus) tskPtr->offsetVector.x -= SpoonerMode::editingState.precisionPos;
+				if (offsety_plus) tskPtr->offsetVector.y += SpoonerMode::editingState.precisionPos;
+				if (offsety_minus) tskPtr->offsetVector.y -= SpoonerMode::editingState.precisionPos;
+				if (offsetz_plus) tskPtr->offsetVector.z += SpoonerMode::editingState.precisionPos;
+				if (offsetz_minus) tskPtr->offsetVector.z -= SpoonerMode::editingState.precisionPos;
 
 			}
 			void OscillateToPoint()
@@ -1349,21 +1343,21 @@ namespace sub::Spooner
 					offsetz_plus = 0, offsetz_minus = 0,
 					bResetOffsetVector = 0;
 
-				AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
+				AddNumber("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 4, null, prec_minus, prec_plus);
 				AddNumber("X", tskPtr->offsetVector.x, 4, null, offsetx_plus, offsetx_minus);
 				AddNumber("Y", tskPtr->offsetVector.y, 4, null, offsety_plus, offsety_minus);
 				AddNumber("Z", tskPtr->offsetVector.z, 4, null, offsetz_plus, offsetz_minus);
 				AddOption("RESET", bResetOffsetVector); if (bResetOffsetVector) tskPtr->offsetVector.clear();
 
-				if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
-				if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
+				if (prec_plus) { if (SpoonerMode::editingState.precisionPos < 10.0f) SpoonerMode::editingState.precisionPos *= 10; }
+				if (prec_minus) { if (SpoonerMode::editingState.precisionPos > 0.0001f) SpoonerMode::editingState.precisionPos /= 10; }
 
-				if (offsetx_plus) tskPtr->offsetVector.x += _manualPlacementPrecision;
-				if (offsetx_minus) tskPtr->offsetVector.x -= _manualPlacementPrecision;
-				if (offsety_plus) tskPtr->offsetVector.y += _manualPlacementPrecision;
-				if (offsety_minus) tskPtr->offsetVector.y -= _manualPlacementPrecision;
-				if (offsetz_plus) tskPtr->offsetVector.z += _manualPlacementPrecision;
-				if (offsetz_minus) tskPtr->offsetVector.z -= _manualPlacementPrecision;
+				if (offsetx_plus) tskPtr->offsetVector.x += SpoonerMode::editingState.precisionPos;
+				if (offsetx_minus) tskPtr->offsetVector.x -= SpoonerMode::editingState.precisionPos;
+				if (offsety_plus) tskPtr->offsetVector.y += SpoonerMode::editingState.precisionPos;
+				if (offsety_minus) tskPtr->offsetVector.y -= SpoonerMode::editingState.precisionPos;
+				if (offsetz_plus) tskPtr->offsetVector.z += SpoonerMode::editingState.precisionPos;
+				if (offsetz_minus) tskPtr->offsetVector.z -= SpoonerMode::editingState.precisionPos;
 
 				PAtEntity(tskPtr->targetEntity);
 			}
@@ -1419,7 +1413,7 @@ namespace sub::Spooner
 					rotz_plus = 0, rotz_minus = 0,
 					bResetRotVector = 0;
 
-				AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
+				AddNumber("Scroll Sensitivity", SpoonerMode::editingState.precisionRot, 4, null, prec_minus, prec_plus);
 				AddNumber("X", tskPtr->rotationValue.x, 4, null, rotx_plus, rotx_minus);
 				AddNumber("Y", tskPtr->rotationValue.y, 4, null, roty_plus, roty_minus);
 				AddNumber("Z", tskPtr->rotationValue.z, 4, null, rotz_plus, rotz_minus);
@@ -1429,15 +1423,15 @@ namespace sub::Spooner
 					else tskPtr->rotationValue = entityRot;
 				}
 
-				if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
-				if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
+				if (prec_plus) { if (SpoonerMode::editingState.precisionRot < 10.0f) SpoonerMode::editingState.precisionRot *= 10; }
+				if (prec_minus) { if (SpoonerMode::editingState.precisionRot > 0.0001f) SpoonerMode::editingState.precisionRot /= 10; }
 
-				if (rotx_plus && tskPtr->rotationValue.x < 180.0f) tskPtr->rotationValue.x += _manualPlacementPrecision;
-				if (rotx_minus && tskPtr->rotationValue.x > -180.0f) tskPtr->rotationValue.x -= _manualPlacementPrecision;
-				if (roty_plus && tskPtr->rotationValue.y < 180.0f) tskPtr->rotationValue.y += _manualPlacementPrecision;
-				if (roty_minus && tskPtr->rotationValue.y > -180.0f) tskPtr->rotationValue.y -= _manualPlacementPrecision;
-				if (rotz_plus && tskPtr->rotationValue.z < 180.0f) tskPtr->rotationValue.z += _manualPlacementPrecision;
-				if (rotz_minus && tskPtr->rotationValue.z > -180.0f) tskPtr->rotationValue.z -= _manualPlacementPrecision;
+				if (rotx_plus && tskPtr->rotationValue.x < 180.0f) tskPtr->rotationValue.x += SpoonerMode::editingState.precisionRot;
+				if (rotx_minus && tskPtr->rotationValue.x > -180.0f) tskPtr->rotationValue.x -= SpoonerMode::editingState.precisionRot;
+				if (roty_plus && tskPtr->rotationValue.y < 180.0f) tskPtr->rotationValue.y += SpoonerMode::editingState.precisionRot;
+				if (roty_minus && tskPtr->rotationValue.y > -180.0f) tskPtr->rotationValue.y -= SpoonerMode::editingState.precisionRot;
+				if (rotz_plus && tskPtr->rotationValue.z < 180.0f) tskPtr->rotationValue.z += SpoonerMode::editingState.precisionRot;
+				if (rotz_minus && tskPtr->rotationValue.z > -180.0f) tskPtr->rotationValue.z -= SpoonerMode::editingState.precisionRot;
 			}
 			void ChangeOpacity()
 			{
@@ -1551,10 +1545,10 @@ namespace sub::Spooner
 
 				AddsettingscolOption("Colour", tskPtr->colour);
 
-				bool bManualPlacementForPosPressed = false;
-				AddOption("Adjust Relative Position", bManualPlacementForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT); if (bManualPlacementForPosPressed)
+				bool bManualEditingForPosPressed = false;
+				AddOption("Adjust Relative Position", bManualEditingForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bManualEditingForPosPressed)
 				{
-					SpoonerVector3ManualPlacementPtrs = { thisEntity, &tskPtr->posOffset, &tskPtr->rotOffset };
+					SpoonerVector3ManualEditingPtrs = { thisEntity, &tskPtr->posOffset, &tskPtr->rotOffset };
 				}
 
 				AddBreak("---FX---");
@@ -1566,6 +1560,95 @@ namespace sub::Spooner
 					{
 						tskPtr->fx = PTFX::NonLoopedPTFX(ef.asset, ef.fx);
 						tskPtr->fx.EasyStart(thisEntity, tskPtr->scale, tskPtr->posOffset, tskPtr->rotOffset, tskPtr->colour);
+					}
+				}
+			}
+
+			void LightMoveWithEntitySub()
+			{
+				auto tskPtr = _selectedSTST;
+
+				for (auto& light : Databases::LightDb)
+				{
+					bool bInUse = LightManagement::IsLightAssignedToAnyTask(light.m_id, tskPtr);
+					bool bLightPressed = false;
+					std::string label = std::string(bInUse ? "~c~[In Use] ~s~" : "") + (light.m_lightType == SpoonerLight::LightType::Omni ? "[Omni] " : "[Spot] ") + light.m_name;
+					AddOption(label, bLightPressed); if (bLightPressed && !bInUse)
+					{
+						tskPtr->GetTypeTask<STSTasks::LightMoveWithEntity>()->lightId = light.m_id;
+						Menu::SetPreviousMenu();
+					}
+				}
+			}
+
+			void LightPointAtEntitySub()
+			{
+				auto tskPtr = _selectedSTST;
+				auto task = tskPtr->GetTypeTask<STSTasks::LightPointAtEntity>();
+
+				AddBreak("---Target Light---");
+				for (auto& light : Databases::LightDb)
+				{
+					if (light.m_lightType == SpoonerLight::LightType::Omni)
+						continue;
+
+					bool bInUse = LightManagement::IsLightAssignedToAnyTask(light.m_id, tskPtr);
+					bool bLightPressed = false;
+					std::string label = std::string(bInUse ? "~c~[In Use] ~s~" : "") + "[Spot] " + light.m_name;
+
+					bool bSelected = (light.m_id == task->lightId);
+					AddTickol(label, bSelected, bLightPressed, null);
+					if (bLightPressed && !bInUse)
+					{
+						task->lightId = light.m_id;
+					}
+				}
+
+				AddBreak("---Target Bone---");
+				if (selectedEntity.handle.IsPed())
+				{
+					{
+						bool bNonePressed = false;
+						AddTickol("None (Root Position)", task->m_pedBoneId < 0, bNonePressed, null);
+						if (bNonePressed)
+						{
+							task->m_pedBoneId = -1;
+							task->m_vehBoneTag.clear();
+						}
+					}
+					for (auto& b : Bone::vBoneNames)
+					{
+						bool bBonePressed = false;
+						AddTickol(b.name, task->m_pedBoneId == b.boneid, bBonePressed, null);
+						if (bBonePressed)
+						{
+							task->m_pedBoneId = b.boneid;
+							task->m_vehBoneTag.clear();
+						}
+					}
+				}
+				else if (selectedEntity.handle.IsVehicle())
+				{
+					{
+						bool bNonePressed = false;
+						AddTickol("None (Root Position)", task->m_vehBoneTag.empty(), bNonePressed, null);
+						if (bNonePressed)
+						{
+							task->m_vehBoneTag.clear();
+							task->m_pedBoneId = -1;
+						}
+					}
+					for (auto& boneTag : VBone::vNames)
+					{
+						if (!selectedEntity.handle.HasBone(boneTag))
+							continue;
+						bool bBonePressed = false;
+						AddTickol(boneTag, task->m_vehBoneTag == boneTag, bBonePressed, null);
+						if (bBonePressed)
+						{
+							task->m_vehBoneTag = boneTag;
+							task->m_pedBoneId = -1;
+						}
 					}
 				}
 			}
@@ -1758,24 +1841,24 @@ namespace sub::Spooner
 			{
 				bool bDuration_plus = false, bDuration_minus = false, bDuration_input = false, bDurationMult_plus = false, bDurationMult_minus = false, prec_plus = 0, prec_minus = 0;
 				AddNumber("Duration (In Seconds)", (float(thisDuration) / 1000), 3, bDuration_input, bDuration_plus, bDuration_minus);
-				AddNumber("Scroll Sensitivity", (float(_manualPlacementPrecision)), 3, null, prec_minus, prec_plus);
+				AddNumber("Scroll Sensitivity", (float(SpoonerMode::editingState.precisionPos)), 3, null, prec_minus, prec_plus);
 				if (bDuration_plus) { 
-					addlog(ige::LogType::LOG_TRACE, "Increasing duration by " + std::to_string(_manualPlacementPrecision * 1000) + " milliseconds. Target " + std::to_string(thisDuration + _manualPlacementPrecision * 1000));
-					if (thisDuration <= INT_MAX-_manualPlacementPrecision*1000) thisDuration += static_cast<int>(_manualPlacementPrecision*1000);
+					addlog(ige::LogType::LOG_TRACE, "Increasing duration by " + std::to_string(SpoonerMode::editingState.precisionPos * 1000) + " milliseconds. Target " + std::to_string(thisDuration + SpoonerMode::editingState.precisionPos * 1000));
+					if (thisDuration <= INT_MAX-SpoonerMode::editingState.precisionPos*1000) thisDuration += static_cast<int>(SpoonerMode::editingState.precisionPos*1000);
 					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.");
 				}
 				if (bDuration_minus) {
-					addlog(ige::LogType::LOG_TRACE, "Decreasinc duration by " + std::to_string(_manualPlacementPrecision * 1000) + " milliseconds. Target " + std::to_string(thisDuration - _manualPlacementPrecision * 1000));
-					if (thisDuration > _manualPlacementPrecision*1000) thisDuration -= static_cast<int>(_manualPlacementPrecision*1000);
+					addlog(ige::LogType::LOG_TRACE, "Decreasinc duration by " + std::to_string(SpoonerMode::editingState.precisionPos * 1000) + " milliseconds. Target " + std::to_string(thisDuration - SpoonerMode::editingState.precisionPos * 1000));
+					if (thisDuration > SpoonerMode::editingState.precisionPos*1000) thisDuration -= static_cast<int>(SpoonerMode::editingState.precisionPos*1000);
 					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.");
 				}						
 				if (prec_plus) {
-					addlog(ige::LogType::LOG_TRACE, "Increasing duration scroll sensitivity to " + std::to_string(_manualPlacementPrecision * 10) + " seconds.");
-					if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
+					addlog(ige::LogType::LOG_TRACE, "Increasing duration scroll sensitivity to " + std::to_string(SpoonerMode::editingState.precisionPos * 10) + " seconds.");
+					if (SpoonerMode::editingState.precisionPos < 10.0f) SpoonerMode::editingState.precisionPos *= 10;
 				}
 				if (prec_minus) {
-					addlog(ige::LogType::LOG_TRACE, "Decreasing duration scroll sensitivity to " + std::to_string(_manualPlacementPrecision / 10) + " seconds.");
-					if (_manualPlacementPrecision > 0.001f) _manualPlacementPrecision /= 10;
+					addlog(ige::LogType::LOG_TRACE, "Decreasing duration scroll sensitivity to " + std::to_string(SpoonerMode::editingState.precisionPos / 10) + " seconds.");
+					if (SpoonerMode::editingState.precisionPos > 0.001f) SpoonerMode::editingState.precisionPos /= 10;
 				}
 				if (bDuration_input)
 				{

@@ -1088,6 +1088,7 @@ namespace sub
 
 		void DrawVehicleStats(const GTAmodel::Model& vehModel)
 		{
+			if (!vehModel.IsValid()) return;
 			Hash hash = vehModel.hash;
 
 			if (statsCache.hash != hash)

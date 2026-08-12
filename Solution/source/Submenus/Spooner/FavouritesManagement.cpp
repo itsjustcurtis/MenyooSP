@@ -37,7 +37,7 @@ namespace sub::Spooner
 			pugi::xml_node nodeRoot = doc.child("FavouriteProps");
 			return nodeRoot.find_child_by_attribute("modelName", modelName.c_str()) || nodeRoot.find_child_by_attribute("modelHash", IntToHexString(modelHash == 0 ? GET_HASH_KEY(modelName) : modelHash, true).c_str());
 		}
-		bool AddPropToFavourites(const std::string& modelName, Hash modelHash)
+		bool AddPropToFavourites(const std::string& modelName, Hash modelHash, const std::string& category)
 		{
 			pugi::xml_document doc;
 			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()).status != pugi::status_ok)
@@ -63,7 +63,23 @@ namespace sub::Spooner
 			auto nodeNewLoc = nodeRoot.append_child("PropModel");
 			nodeNewLoc.append_attribute("modelName") = modelName.c_str();
 			nodeNewLoc.append_attribute("modelHash") = IntToHexString(modelHash == 0 ? GET_HASH_KEY(modelName) : modelHash, true).c_str();
+			if (!category.empty())
+				nodeNewLoc.append_attribute("category") = category.c_str();
 			return (doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()));
+		}
+		bool SetPropCategory(const std::string& modelName, const std::string& category)
+		{
+			pugi::xml_document doc;
+			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()).status != pugi::status_ok)
+				return false;
+			pugi::xml_node nodeRoot = doc.child("FavouriteProps");
+			auto node = nodeRoot.find_child_by_attribute("modelName", modelName.c_str());
+			if (!node)
+				return false;
+			node.remove_attribute("category");
+			if (!category.empty())
+				node.append_attribute("category") = category.c_str();
+			return doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str());
 		}
 		bool RemovePropFromFavourites(const std::string& modelName, Hash modelHash)
 		{

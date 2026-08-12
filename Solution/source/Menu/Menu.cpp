@@ -1423,6 +1423,64 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 	}
 
 }
+template<typename T>
+void AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min, std::optional<double> max, bool gxt, bool wrap)
+{
+	bool enterPressed = false, right = false, left = false;
+	AddNumber(text, (double)value, decimal_places, enterPressed, right, left, gxt);
+	if (right) value = (T)((double)value + step_size);
+	if (left)  value = (T)((double)value - step_size);
+	if (enterPressed)
+	{
+		std::string inputStr = Game::InputBox("", 5U, "", std::to_string(value));
+		if (inputStr.length() > 0)
+		{
+			try
+			{
+				value = (T)std::stod(inputStr);
+			}
+			catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
+		}
+	}
+	if (wrap && min.has_value() && max.has_value())
+	{
+		if (value > (T)max.value()) value = (T)min.value();
+		else if (value < (T)min.value()) value = (T)max.value();
+	}
+	else
+	{
+		if (min.has_value() && value < (T)min.value()) value = (T)min.value();
+		if (max.has_value() && value > (T)max.value()) value = (T)max.value();
+	}
+}
+template void AddNumberStepper<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template void AddNumberStepper<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template void AddNumberStepper<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template<typename T>
+void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min, std::optional<double> max, bool gxt)
+{
+	bool enterPressed = false, right = false, left = false;
+	AddNumber(text, (double)value, decimal_places, enterPressed, right, left, gxt);
+	if (right) value = (T)((double)value * multiplier);
+	if (left)  value = (T)((double)value / multiplier);
+	if (enterPressed)
+	{
+		std::string inputStr = Game::InputBox("", 5U, "", std::to_string(value));
+		if (inputStr.length() > 0)
+		{
+			try
+			{
+				value = (T)std::stod(inputStr);
+			}
+			catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
+		}
+	}
+	if (min.has_value() && value < (T)min.value()) value = (T)min.value();
+	if (max.has_value() && value > (T)max.value()) value = (T)max.value();
+}
+template void AddNumberMultiplier<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool);
+template void AddNumberMultiplier<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool);
+template void AddNumberMultiplier<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool);
 void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& normal, const std::string& selected, const RGBA& colour)
 {
 	if (!HAS_STREAMED_TEXTURE_DICT_LOADED(textureDict.c_str())) REQUEST_STREAMED_TEXTURE_DICT(textureDict.c_str(), 0);
@@ -1436,7 +1494,7 @@ void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& nor
 	DRAW_SPRITE(textureDict.c_str(), textureName.c_str(), get_xcoord_at_menu_rightEdge(texture_res.x, 0.0f, true), OptionY + 0.016f + menuPos.y, texture_res.x, texture_res.y, 0.0f, 255, 255, 255, colour.A, false, 0);
 
 }
-inline void draw_tickol_tick(TICKOL tickType)
+inline void draw_tickol_tick(TICKOL tickType, float rotation)
 {
 	RGBA* colour = &optiontext;
 	if (Menu::printingop == *Menu::currentopATM) colour = &selectedtext;
@@ -1507,10 +1565,10 @@ inline void draw_tickol_tick(TICKOL tickType)
 	texture_res.x /= (Game::defaultScreenRes.first * 2);
 	texture_res.y /= (Game::defaultScreenRes.second * 2);
 
-	DRAW_SPRITE(textureDict.c_str(), textureName.c_str(), get_xcoord_at_menu_rightEdge(texture_res.x, 0.0f, true), OptionY + 0.016f + menuPos.y, texture_res.x, texture_res.y, 0.0f, colour->R, colour->G, colour->B, colour->A, false, 0);
+	DRAW_SPRITE(textureDict.c_str(), textureName.c_str(), get_xcoord_at_menu_rightEdge(texture_res.x, 0.0f, true), OptionY + 0.016f + menuPos.y, texture_res.x, texture_res.y, rotation, colour->R, colour->G, colour->B, colour->A, false, 0);
 
 }
-void AddTickol(const std::string& text, BOOL condition, bool& option_code_ON, bool& option_code_OFF, TICKOL tickTrue, TICKOL tickFalse, bool gxt)
+void AddTickol(const std::string& text, BOOL condition, bool& option_code_ON, bool& option_code_OFF, TICKOL tickTrue, TICKOL tickFalse, bool gxt, float rotationTrue, float rotationFalse)
 {
 	null = 0;
 	AddOption(text, null, nullFunc, -1, false, gxt);
@@ -1519,11 +1577,11 @@ void AddTickol(const std::string& text, BOOL condition, bool& option_code_ON, bo
 	{
 		if (condition)
 		{
-			if (tickTrue != TICKOL::NONE) draw_tickol_tick(tickTrue);
+			if (tickTrue != TICKOL::NONE) draw_tickol_tick(tickTrue, rotationTrue);
 		}
 		else
 		{
-			if (tickFalse != TICKOL::NONE) draw_tickol_tick(tickFalse);
+			if (tickFalse != TICKOL::NONE) draw_tickol_tick(tickFalse, rotationFalse);
 		}
 	}
 
@@ -1533,7 +1591,7 @@ void AddTickol(const std::string& text, BOOL condition, bool& option_code_ON, bo
 		else option_code_OFF = true;
 	}
 }
-void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), void(&callback_OFF)(), TICKOL tickTrue, TICKOL tickFalse, bool gxt)
+void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), void(&callback_OFF)(), TICKOL tickTrue, TICKOL tickFalse, bool gxt, float rotationTrue, float rotationFalse)
 {
 	null = 0;
 	AddOption(text, null, nullFunc, -1, false, gxt);
@@ -1542,11 +1600,11 @@ void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), vo
 	{
 		if (condition)
 		{
-			if (tickTrue != TICKOL::NONE) draw_tickol_tick(tickTrue);
+			if (tickTrue != TICKOL::NONE) draw_tickol_tick(tickTrue, rotationTrue);
 		}
 		else
 		{
-			if (tickFalse != TICKOL::NONE) draw_tickol_tick(tickFalse);
+			if (tickFalse != TICKOL::NONE) draw_tickol_tick(tickFalse, rotationFalse);
 		}
 	}
 
@@ -1620,6 +1678,14 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 
 	}
 
+}
+int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts)
+{
+	bool input = false, right = false, left = false;
+	AddTexter(label, currentIdx, opts, input, right, left);
+	if (right && currentIdx < (int)opts.size() - 1) currentIdx++;
+	if (left && currentIdx > 0) currentIdx--;
+	return currentIdx;
 }
 void AddTexter(const std::string& text, int selectedindex, const std::vector<std::string>& textarray, bool& A_PRESS, bool& RIGHT_PRESS, bool& LEFT_PRESS, bool gxt)
 {

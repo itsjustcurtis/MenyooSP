@@ -191,7 +191,9 @@ void MenuConfig::ConfigRead()
 	sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile = ini.GetBoolValue(section_spooner.c_str(), "TeleportToReferenceWhenLoadingFile", sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile);
 	sub::Spooner::Settings::bKeepPositionWhenAttaching = ini.GetBoolValue(section_spooner.c_str(), "KeepPositionWhenAttaching", sub::Spooner::Settings::bKeepPositionWhenAttaching);
 	sub::Spooner::Settings::spoonerModeMode = (sub::Spooner::eSpoonerModeMode)ini.GetLongValue(section_spooner.c_str(), "SpoonerModeMethod", (UINT8)sub::Spooner::Settings::spoonerModeMode);
-
+	sub::Spooner::Settings::bAutoSaveDb = ini.GetBoolValue(section_spooner.c_str(), "AutoSaveDb", sub::Spooner::Settings::bAutoSaveDb);
+	sub::Spooner::Settings::autoSaveIntervalMs = (DWORD)ini.GetLongValue(section_spooner.c_str(), "AutoSaveIntervalMs", sub::Spooner::Settings::autoSaveIntervalMs);
+	sub::Spooner::Settings::autoSaveMaxFiles = (int)ini.GetLongValue(section_spooner.c_str(), "AutoSaveMaxFiles", sub::Spooner::Settings::autoSaveMaxFiles);
 
 	std::string section_haxValues = "hax-values";/////////
 
@@ -453,7 +455,9 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_spooner.c_str(), "TeleportToReferenceWhenLoadingFile", sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile);
 	ini.SetBoolValue(section_spooner.c_str(), "KeepPositionWhenAttaching", sub::Spooner::Settings::bKeepPositionWhenAttaching);
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeMethod", (UINT8)sub::Spooner::Settings::spoonerModeMode);
-
+	ini.SetBoolValue(section_spooner.c_str(), "AutoSaveDb", sub::Spooner::Settings::bAutoSaveDb);
+	ini.SetLongValue(section_spooner.c_str(), "AutoSaveIntervalMs", sub::Spooner::Settings::autoSaveIntervalMs);
+	ini.SetLongValue(section_spooner.c_str(), "AutoSaveMaxFiles", sub::Spooner::Settings::autoSaveMaxFiles);
 
 	std::string section_haxValues = "hax-values";/////////
 

@@ -29,6 +29,8 @@
 
 #include "SpoonerEntity.h"
 #include "EntityManagement.h"
+#include "Databases.h"
+#include "SpoonerLight.h"
 #include "Submenus_TaskSequence.h"
 
 #include <pugixml\src\pugixml.hpp>
@@ -984,13 +986,35 @@ namespace sub::Spooner
 			this->flag = AnimFlag::Loop;
 			this->lockPos = false;
 		}
-		void PlayAnimation::RunP(GTAped& ep)
+		void PlayAnimation::Run(void* ve)
 		{
-			if (this->durationToAnimDuration)
-				this->duration = GET_ENTITY_ANIM_TOTAL_TIME(ep.Handle(), this->animDict.c_str(), this->animName.c_str());
+			GTAentity entity = *reinterpret_cast<GTAentity*>(ve);
 
-			//if (IS_ENTITY_PLAYING_ANIM(ep.handle, animDict.c_str(), animDict.c_str(), 3))
-			ep.Task().PlayAnimation(this->animDict, this->animName, this->speed, this->speedMultiplier, this->durationAfterLife > 0 ? -1 : this->duration, this->flag, 0.0f, this->lockPos);
+			if (this->durationToAnimDuration)
+				this->duration = GET_ENTITY_ANIM_TOTAL_TIME(entity.Handle(), this->animDict.c_str(), this->animName.c_str());
+
+			REQUEST_ANIM_DICT(this->animDict.c_str());
+			for (DWORD timeOut = GetTickCount() + 1750; GetTickCount() < timeOut;)
+			{
+				if (HAS_ANIM_DICT_LOADED(this->animDict.c_str())) break;
+				WAIT(0);
+			}
+
+			if (entity.IsPed())
+			{
+				TASK_PLAY_ANIM(entity.Handle(), this->animDict.c_str(), this->animName.c_str(),
+					this->speed, this->speedMultiplier,
+					this->durationAfterLife > 0 ? -1 : this->duration,
+					this->flag, 0.0f, this->lockPos, this->lockPos, this->lockPos);
+			}
+			else
+			{
+				PLAY_ENTITY_ANIM(entity.Handle(), this->animName.c_str(), this->animDict.c_str(),
+					8.0f,
+					static_cast<BOOL>(this->flag & AnimFlag::Loop),
+					static_cast<BOOL>(this->flag & AnimFlag::StayInLastFrame),
+					0, 0.0f, 0);
+			}
 		}
 		void PlayAnimation::LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle)
 		{
@@ -2127,6 +2151,124 @@ namespace sub::Spooner
 		void TriggerFx::EndP(GTAped& ep)
 		{
 			timer = 0U;
+		}
+
+		LightMoveWithEntity::LightMoveWithEntity()
+		{
+			this->type = STSTaskType::LightMoveWithEntity;
+			this->submenu = Submenus::Sub_TaskSequence::LightMoveWithEntitySub;
+			this->duration = -2;
+			this->durationAfterLife = -2;
+			this->isLoopedTask = true;
+			this->lightId = 0;
+			this->offsetInitialized = false;
+		}
+		void LightMoveWithEntity::Run(void* ve)
+		{
+			SpoonerEntity* entity = reinterpret_cast<SpoonerEntity*>(ve);
+			if (!entity->handle.Exists()) return;
+
+			for (auto& light : Databases::LightDb)
+			{
+				if (light.m_id == this->lightId)
+				{
+					if (!this->offsetInitialized)
+					{
+						this->offset = light.m_position - entity->handle.GetPosition();
+						this->offsetInitialized = true;
+					}
+					light.m_position = entity->handle.GetPosition() + this->offset;
+					break;
+				}
+			}
+		}
+		void LightMoveWithEntity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
+		{
+			nodeTask.append_child("LightId").text() = this->lightId;
+			nodeTask.append_child("OffsetInitialized").text() = this->offsetInitialized;
+			if (this->offsetInitialized)
+			{
+				auto nodeOff = nodeTask.append_child("Offset");
+				nodeOff.append_attribute("X") = this->offset.x;
+				nodeOff.append_attribute("Y") = this->offset.y;
+				nodeOff.append_attribute("Z") = this->offset.z;
+			}
+		}
+		void LightMoveWithEntity::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
+		{
+			this->lightId = nodeTask.child("LightId").text().as_uint(0);
+			this->offsetInitialized = nodeTask.child("OffsetInitialized").text().as_bool(false);
+			if (this->offsetInitialized)
+			{
+				auto nodeOff = nodeTask.child("Offset");
+				this->offset.x = nodeOff.attribute("X").as_float();
+				this->offset.y = nodeOff.attribute("Y").as_float();
+				this->offset.z = nodeOff.attribute("Z").as_float();
+			}
+		}
+		void LightMoveWithEntity::ImportTaskDataSpecific(STSTask* otherTsk)
+		{
+			auto other = otherTsk->GetTypeTask<LightMoveWithEntity>();
+			this->lightId = other->lightId;
+			this->offset = other->offset;
+			this->offsetInitialized = other->offsetInitialized;
+		}
+
+		LightPointAtEntity::LightPointAtEntity()
+		{
+			this->type = STSTaskType::LightPointAtEntity;
+			this->submenu = Submenus::Sub_TaskSequence::LightPointAtEntitySub;
+			this->duration = -2;
+			this->durationAfterLife = -2;
+			this->isLoopedTask = true;
+			this->lightId = 0;
+			this->m_pedBoneId = -1; // used only for peds
+			this->m_vehBoneTag = ""; // used only for vehicles
+		}
+		void LightPointAtEntity::Run(void* ve)
+		{
+			SpoonerEntity* entity = reinterpret_cast<SpoonerEntity*>(ve);
+			if (!entity->handle.Exists()) return;
+
+			Vector3 targetPos;
+			if (m_pedBoneId >= 0 && entity->handle.IsPed())
+				targetPos = GTAped(entity->handle).GetBoneCoord(m_pedBoneId);
+			else if (!m_vehBoneTag.empty() && entity->handle.IsVehicle())
+				targetPos = entity->handle.GetBoneCoords(m_vehBoneTag);
+			else
+				targetPos = entity->handle.GetPosition();
+
+			for (auto& light : Databases::LightDb)
+			{
+				if (light.m_id == this->lightId)
+				{
+					Vector3 dir = targetPos - light.m_position;
+					float len = dir.Length();
+					if (len > 0.001f)
+						light.m_direction = dir / len;
+					break;
+				}
+			}
+		}
+		void LightPointAtEntity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
+		{
+			nodeTask.append_child("LightId").text() = this->lightId;
+			nodeTask.append_child("PedBoneId").text() = this->m_pedBoneId;
+			nodeTask.append_child("VehBoneTag").text() = this->m_vehBoneTag.c_str();
+		}
+		void LightPointAtEntity::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
+		{
+			this->lightId = nodeTask.child("LightId").text().as_uint(0);
+			this->m_pedBoneId = nodeTask.child("PedBoneId").text().as_int(-1);
+			auto vehNode = nodeTask.child("VehBoneTag");
+			this->m_vehBoneTag = vehNode ? vehNode.text().as_string() : "";
+		}
+		void LightPointAtEntity::ImportTaskDataSpecific(STSTask* otherTsk)
+		{
+			auto other = otherTsk->GetTypeTask<LightPointAtEntity>();
+			this->lightId = other->lightId;
+			this->m_pedBoneId = other->m_pedBoneId;
+			this->m_vehBoneTag = other->m_vehBoneTag;
 		}
 
 		EndSequence::EndSequence()

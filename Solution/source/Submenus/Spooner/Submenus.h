@@ -11,8 +11,10 @@
 
 #include <tuple>
 #include <string>
+#include <vector>
 
 #include "..\..\Util\GTAmath.h"
+#include "SpoonerEntity.h"
 
 typedef unsigned char UINT8, BYTE;
 typedef unsigned int UINT;
@@ -25,15 +27,26 @@ namespace sub
 	namespace Spooner::Submenus
 	{
 		extern std::string& _searchStr;
-		extern std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualPlacementPtrs;
-		extern float _manualPlacementPrecision;
+		extern std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualEditingPtrs;
 		extern UINT8 _copyEntTexterValue;
 		struct EntityScaleState {
 			int handle = 0;
 			Vector3 scale{ 1.0f, 1.0f, 1.0f };
 		};
 		extern EntityScaleState _vehScale, _pedScale, _objScale;
-		
+
+		namespace MultiSelect
+		{
+			extern std::vector<SpoonerEntity> g_selectedEntities;
+			void Add(const SpoonerEntity& entity);
+			void Remove(int index);
+			void Remove(GTAentity handle);
+			bool IsSelected(GTAentity handle);
+			void Clear();
+			void DestroyPivot();
+			void CreatePivot();
+		}
+
 		void HandleKeyboardPlacementInput(Vector3& position, Vector3& rotation);
 
 		void SetEnt241();
@@ -42,6 +55,7 @@ namespace sub
 		void Sub_SpoonerMain();
 		void Sub_Settings();
 		void Sub_SaveFiles();
+		void Sub_AutoSave();
 		void Sub_SaveFiles_Load();
 		void Sub_SaveFiles_Load_LegacySP00N();
 		void Sub_ManageEntities();
@@ -51,13 +65,10 @@ namespace sub
 		void Sub_AttachmentOps();
 		void Sub_AttachmentOps_AttachTo();
 		void Sub_AttachmentOps_SelectBone();
-		void Sub_ManualPlacement();
-		void Sub_SizeManipulation();
-		void Sub_QuickManualPlacement();
-		void Sub_Vector3_ManualPlacement();
-		void Sub_GroupSpoon();
-		void Sub_GroupSpoon_SelectEntities();
-		void Sub_GroupSpoon_AttachTo();
+		void Sub_ManualEditing();
+		void Sub_Snapping();
+		void Sub_Vector3_ManualEditing();
+		void Sub_MultiSelect();
 
 		void Sub_PedOps();
 		void Sub_PedOps_Weapon();
@@ -69,9 +80,16 @@ namespace sub
 		void Sub_ManageMarkers_InMarker_Dest2Marker();
 		void Sub_ManageMarkers_InMarker_Attach();
 
+		void Sub_ManageLights();
+		void Sub_ManageLights_Removal();
+		void Sub_ManageLights_InLight();
+		void Sub_ManageLights_Presets();
+		void Sub_ManageLights_Colour();
+
 		void Sub_SpawnCategories();
 		void Sub_SpawnProp();
 		void Sub_SpawnProp_Favourites();
+		void Sub_SpawnProp_Favourites_CatSelect();
 		void Sub_SpawnPed();
 		void Sub_SpawnVehicle();
 	}

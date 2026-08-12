@@ -34,6 +34,7 @@
 
 #include "SpoonerEntity.h"
 #include "SpoonerMarker.h"
+#include "SpoonerLight.h"
 #include "RelationshipManagement.h"
 #include "EntityManagement.h"
 #include "SpoonerMode.h"
@@ -56,6 +57,26 @@ namespace sub::Spooner
 	namespace FileManagement
 	{
 		std::string _oldAudioAlias;
+		const std::vector<std::string> drawableComponentSlotNames = {
+			"head", "berd", "hair", "uppr", "lowr", "hand", "feet", "teef", "accs", "task", "decl", "jbib"
+		};
+		const std::vector<std::string> drawablePropSlotNames = {
+			"p_head", "p_eyes", "p_ears", "p_mouth", "p_lhand", "p_rhand", "p_lwrist", "p_rwrist", "p_hip", "p_lfoot", "p_rfoot", "p_unk1", "p_unk2"
+		};
+		const std::vector<std::string> facialFeatureSlotNames = {
+			"NoseWidth", "NoseHeight", "NoseLength", "NoseBridge", "NoseTip", "NoseBridgeShaft",
+			"BrowHeight", "BrowWidth",
+			"CheekboneHeight", "CheekboneWidth", "CheekWidth", "Eyelids",
+			"Lips",
+			"JawWidth", "JawHeight",
+			"ChinLength", "ChinPosition", "ChinWidth", "ChinShape",
+			"NeckWidth"
+		};
+		const std::vector<std::string> overlaySlotNames = {
+			"SkinRash", "Beard", "Eyebrows", "Wrinkles", "Makeup", "Blush",
+			"Pigment1", "Pigment2", "Lipstick", "Spots", "ChestHair", "Chest1", "Chest2"
+		};
+
 
 		/*bool Exists(const std::string& fileName, std::string extension = ".xml")
 		{
@@ -79,7 +100,7 @@ namespace sub::Spooner
 			return false;
 		}*/
 
-		void AddEntityToXmlNode(SpoonerEntity& e, pugi::xml_node& nodeEntity)
+		void AddEntityToXmlNode(SpoonerEntity& e, pugi::xml_node& nodeEntity, bool legacyXMLFormat)
 		{
 			//addlog(ige::LogType::LOG_INFO,  "Adding entity " + e.hashName + " of type " + (int)e.type + " to xml node.");
 
@@ -139,13 +160,15 @@ namespace sub::Spooner
 
 				auto nodePedProps = nodePedStuff.append_child("PedProps");
 				auto nodePedComps = nodePedStuff.append_child("PedComps");
-				for (UINT8 i = 0; i <= 9; i++)
+				for (UINT8 i = 0; i <= drawablePropSlotNames.size() - 1; i++)
 				{
-					nodePedProps.append_child(("_" + std::to_string(i)).c_str()).text() = (std::to_string(GET_PED_PROP_INDEX(ep.Handle(), i, 0)) + "," + std::to_string(GET_PED_PROP_TEXTURE_INDEX(ep.Handle(), i))).c_str();
+					const std::string slotName = legacyXMLFormat ? ("_" + std::to_string(i)) : drawablePropSlotNames[i];
+					nodePedProps.append_child(slotName.c_str()).text() = (std::to_string(GET_PED_PROP_INDEX(ep.Handle(), i, 0)) + "," + std::to_string(GET_PED_PROP_TEXTURE_INDEX(ep.Handle(), i))).c_str();
 				}
-				for (UINT8 i = 0; i <= 11; i++)
+				for (UINT8 i = 0; i <= drawableComponentSlotNames.size() - 1; i++)
 				{
-					nodePedComps.append_child(("_" + std::to_string(i)).c_str()).text() = (std::to_string(GET_PED_DRAWABLE_VARIATION(ep.Handle(), i)) + "," + std::to_string(GET_PED_TEXTURE_VARIATION(ep.Handle(), i))).c_str();
+					const std::string slotName = legacyXMLFormat ? ("_" + std::to_string(i)) : drawableComponentSlotNames[i];
+					nodePedComps.append_child(slotName.c_str()).text() = (std::to_string(GET_PED_DRAWABLE_VARIATION(ep.Handle(), i)) + "," + std::to_string(GET_PED_TEXTURE_VARIATION(ep.Handle(), i))).c_str();
 				}
 
 				if (sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel))
@@ -176,19 +199,21 @@ namespace sub::Spooner
 						auto nodePedFacialFeatures = nodePedHeadFeatures.append_child("FacialFeatures"); //currently returning 0 to xml file for all values
 						for (int i = 0; i < pedHead.facialFeatureData.size(); i++)
 						{
-							addlog(ige::LogType::LOG_DEBUG, "Saving Facial feature " + std::to_string(i) + " as value " + std::to_string(pedHead.facialFeatureData[i]));
-							nodePedFacialFeatures.append_child(("_" + std::to_string(i)).c_str()).text() = std::to_string(pedHead.facialFeatureData[i]).c_str();
+							std::string facialFeatureName = legacyXMLFormat ? ("_" + std::to_string(i)) : facialFeatureSlotNames[i];
+							addlog(ige::LogType::LOG_DEBUG, "Saving Facial feature " + facialFeatureName + " (index " + std::to_string(i) + ") as value " + std::to_string(pedHead.facialFeatureData[i]));
+							nodePedFacialFeatures.append_child(facialFeatureName.c_str()).text() = std::to_string(pedHead.facialFeatureData[i]).c_str();
 						}
 
-						auto nodePedHeadOverlays = nodePedHeadFeatures.append_child("Overlays");
-						for (int i = 0; i < pedHead.overlayData.size(); i++)
-						{
-							auto nodePedHeadOverlay = nodePedHeadOverlays.append_child(("_" + std::to_string(i)).c_str());
-							nodePedHeadOverlay.append_attribute("index") = GET_PED_HEAD_OVERLAY(ep.Handle(), i);
-							nodePedHeadOverlay.append_attribute("colour") = pedHead.overlayData[i].colour;
-							nodePedHeadOverlay.append_attribute("colourSecondary") = pedHead.overlayData[i].colourSecondary;
-							nodePedHeadOverlay.append_attribute("opacity") = pedHead.overlayData[i].opacity;
-						}
+					auto nodePedHeadOverlays = nodePedHeadFeatures.append_child("Overlays");
+					for (int i = 0; i < pedHead.overlayData.size(); i++)
+					{
+						std::string overlayName = legacyXMLFormat ? ("_" + std::to_string(i)) : overlaySlotNames[i];
+						auto nodePedHeadOverlay = nodePedHeadOverlays.append_child(overlayName.c_str());
+						nodePedHeadOverlay.append_attribute("index") = GET_PED_HEAD_OVERLAY(ep.Handle(), i);
+						nodePedHeadOverlay.append_attribute("colour") = pedHead.overlayData[i].colour;
+						nodePedHeadOverlay.append_attribute("colourSecondary") = pedHead.overlayData[i].colourSecondary;
+						nodePedHeadOverlay.append_attribute("opacity") = pedHead.overlayData[i].opacity;
+					}
 					}
 					else
 					{
@@ -202,9 +227,12 @@ namespace sub::Spooner
 					auto& decalsApplied = sub::PedDecals::vPedsAndDecals[ep.Handle()];
 					for (auto& decal : decalsApplied)
 					{
-						auto nodeDecal = nodePedTattooLogoDecals.append_child();
-						nodeDecal.append_attribute("collection") = IntToHexString(decal.collection, true).c_str();
-						nodeDecal.append_attribute("value") = IntToHexString(decal.value, true).c_str();
+					auto nodeDecal = nodePedTattooLogoDecals.append_child("Decal");
+					nodeDecal.append_attribute("collection") = IntToHexString(decal.collection, true).c_str();
+					nodeDecal.append_attribute("value") = IntToHexString(decal.value, true).c_str();
+					auto caption = sub::PedDecals::GetDecalCaption(decal.collection, decal.value);
+					if (!caption.empty())
+						nodeDecal.append_attribute("name") = caption.c_str();
 					}
 				}
 
@@ -469,6 +497,123 @@ namespace sub::Spooner
 				nodeEntityAttachment.append_child("Yaw").text() = e.attachmentArgs.rotation.z;
 			}
 		}
+		void LoadPedCompsFromXml(GTAped ep, const pugi::xml_node& nodePedComps)
+		{
+			int slot = 0;
+			for (auto node = nodePedComps.first_child(); node; node = node.next_sibling(), slot++)
+			{
+				std::string v = node.text().as_string();
+				int drawable = stoi(v.substr(0, v.find(",")));
+				int texture = stoi(v.substr(v.find(",") + 1));
+				if (drawable < 0) drawable = 0; // 0 is an empty slot for components
+				if (texture < 0) texture = 0;
+				if (GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(ep.Handle(), slot) > drawable && GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(ep.Handle(), slot, drawable) > texture)
+				{
+					SET_PED_COMPONENT_VARIATION(ep.Handle(), slot, drawable, texture, 0);
+				}
+			}
+		}
+		void LoadPedPropsFromXml(GTAped ep, const pugi::xml_node& nodePedProps, bool bNetworkIsGameInProgress)
+		{
+			int slot = 0;
+			for (auto node = nodePedProps.first_child(); node; node = node.next_sibling(), slot++)
+			{
+				if (slot > 9) break;
+				std::string v = node.text().as_string();
+				int drawable = stoi(v.substr(0, v.find(",")));
+				int texture = stoi(v.substr(v.find(",") + 1));
+				if (drawable < -1) drawable = 0; // -1 is an empty slot for props
+				if (texture < 0) texture = 0;
+				SET_PED_PROP_INDEX(ep.Handle(), slot, drawable, texture, bNetworkIsGameInProgress, 0);
+			}
+		}
+		void LoadPedHeadFeaturesFromXml(GTAped ep, const pugi::xml_node& nodePedHeadFeatures, const GTAmodel::Model& eModel)
+		{
+			if (!sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel) || !nodePedHeadFeatures)
+				return;
+
+			auto nodePedHeadBlend = nodePedHeadFeatures.child("ShapeAndSkinTone");
+			PED::SET_PED_HEAD_BLEND_DATA(ep.Handle(), 0, 0, 0, 1, 1, 1, 0.0f, 0.0f, 0.0f, false);
+			PedHeadBlendData headBlend;
+			headBlend.shapeFirstID = nodePedHeadBlend.child("ShapeFatherId").text().as_int();
+			headBlend.shapeSecondID = nodePedHeadBlend.child("ShapeMotherId").text().as_int();
+			headBlend.shapeThirdID = nodePedHeadBlend.child("ShapeOverrideId").text().as_int();
+			headBlend.skinFirstID = nodePedHeadBlend.child("ToneFatherId").text().as_int();
+			headBlend.skinSecondID = nodePedHeadBlend.child("ToneMotherId").text().as_int();
+			headBlend.skinThirdID = nodePedHeadBlend.child("ToneOverrideId").text().as_int();
+			headBlend.shapeMix = nodePedHeadBlend.child("ShapeVal").text().as_float();
+			headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
+			headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
+			headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
+			if (!g_unlockMaxIDs && (headBlend.shapeFirstID > 45 || headBlend.shapeSecondID > 45 || headBlend.shapeThirdID > 45))
+			{
+				Game::Print::PrintBottomCentre("~r~Warning:~s~ Parent Head Index outside normal range. Ensure Addon Heads are installed and Max Head IDs are unlocked");
+				addlog(ige::LogType::LOG_WARNING, "Ped Head Index " + std::to_string(max(headBlend.shapeFirstID, max(headBlend.shapeSecondID, headBlend.shapeThirdID))) + " outside normal range of 0-45. Ensure Matching Addon Heads are installed from XML Source and Max Head IDs are unlocked.");
+			}
+			ep.SetHeadBlendData(headBlend);
+
+			if (!nodePedHeadFeatures.attribute("WasInArray").as_bool())
+				return;
+
+			sub::PedHeadFeatures_catind::sPedHeadFeatures pedHead;
+			pedHead.hairColour = nodePedHeadFeatures.child("HairColour").text().as_int();
+			pedHead.hairColourStreaks = nodePedHeadFeatures.child("HairColourStreaks").text().as_int();
+			pedHead.eyeColour = nodePedHeadFeatures.child("EyeColour").text().as_int();
+
+			SET_PED_HAIR_TINT(ep.Handle(), pedHead.hairColour, pedHead.hairColourStreaks);
+			SET_HEAD_BLEND_EYE_COLOR(ep.Handle(), SYSTEM::ROUND((float)pedHead.eyeColour));
+
+			auto nodePedFacialFeatures = nodePedHeadFeatures.child("FacialFeatures");
+			int facialFeatureSlot = 0;
+			for (auto node = nodePedFacialFeatures.first_child(); node; node = node.next_sibling(), facialFeatureSlot++)
+			{
+				pedHead.facialFeatureData[facialFeatureSlot] = node.text().as_float();
+				SET_PED_MICRO_MORPH(ep.Handle(), facialFeatureSlot, pedHead.facialFeatureData[facialFeatureSlot]);
+			}
+
+			auto nodePedHeadOverlays = nodePedHeadFeatures.child("Overlays");
+			int overlayIndex = 0;
+			for (auto node = nodePedHeadOverlays.first_child(); node; node = node.next_sibling(), overlayIndex++)
+			{
+				auto overlayData_index = node.attribute("index").as_int();
+				pedHead.overlayData[overlayIndex].colour = node.attribute("colour").as_int();
+				pedHead.overlayData[overlayIndex].colourSecondary = node.attribute("colourSecondary").as_int();
+				pedHead.overlayData[overlayIndex].opacity = node.attribute("opacity").as_float();
+				SET_PED_HEAD_OVERLAY(ep.Handle(), overlayIndex, overlayData_index, pedHead.overlayData[overlayIndex].opacity);
+				SET_PED_HEAD_OVERLAY_TINT(ep.Handle(), overlayIndex, sub::PedHeadFeatures_catind::GetPedHeadOverlayColourType((PedHeadOverlay)overlayIndex), pedHead.overlayData[overlayIndex].colour, pedHead.overlayData[overlayIndex].colourSecondary);
+			}
+			sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = pedHead;
+		}
+		void LoadPedDecalsFromXml(GTAped ep, const pugi::xml_node& nodePedDecals)
+		{
+			if (!nodePedDecals)
+				return;
+
+			auto& decalsApplied = sub::PedDecals::vPedsAndDecals[ep.Handle()];
+			for (auto node = nodePedDecals.first_child(); node; node = node.next_sibling())
+			{
+				sub::PedDecals::PedDecalValue decal(
+					node.attribute("collection").as_uint(),
+					node.attribute("value").as_uint()
+				);
+				decalsApplied.push_back(decal);
+				ADD_PED_DECORATION_FROM_HASHES(ep.Handle(), decal.collection, decal.value);
+			}
+		}
+		void LoadPedDamagePacksFromXml(GTAped ep, const pugi::xml_node& nodePedDamagePacks)
+		{
+			if (!nodePedDamagePacks)
+				return;
+
+			auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
+			for (auto node = nodePedDamagePacks.first_child(); node; node = node.next_sibling())
+			{
+				const std::string dpnta = node.text().as_string();
+				ep.ApplyDamagePack(dpnta, 1.0f, 1.0f);
+				dmgPacksApplied.push_back(dpnta);
+			}
+		}
+
 		SpoonerEntityWithInitHandle SpawnEntityFromXmlNode(pugi::xml_node& nodeEntity, std::unordered_set<Hash>& vModelHashes)
 		{
 			bool isPtfxLopAdded = false;
@@ -546,108 +691,18 @@ namespace sub::Spooner
 				SET_PED_CAN_PLAY_VISEME_ANIMS(ep.Handle(), true, TRUE);
 				SET_PED_IS_IGNORED_BY_AUTO_OPEN_DOORS(ep.Handle(), true);
 
-				auto nodePedProps = nodePedStuff.child("PedProps");
-				auto nodePedComps = nodePedStuff.child("PedComps");
-				for (auto nodePedCompsObject = nodePedComps.first_child(); nodePedCompsObject; nodePedCompsObject = nodePedCompsObject.next_sibling())
-				{
-					int pedCompId = stoi(std::string(nodePedCompsObject.name()).substr(1));
-					std::string pedCompIdValueStr = nodePedCompsObject.text().as_string();
+				LoadPedCompsFromXml(ep, nodePedStuff.child("PedComps"));
+				LoadPedPropsFromXml(ep, nodePedStuff.child("PedProps"), bNetworkIsGameInProgress != 0);
 
-					SET_PED_COMPONENT_VARIATION(ep.Handle(), pedCompId, stoi(pedCompIdValueStr.substr(0, pedCompIdValueStr.find(","))), stoi(pedCompIdValueStr.substr(pedCompIdValueStr.find(",") + 1)), 0);
-				}
-				for (auto nodePedPropsObject = nodePedProps.first_child(); nodePedPropsObject; nodePedPropsObject = nodePedPropsObject.next_sibling())
+				auto nodePedConfigFlags = nodePedStuff.child("PedConfigFlags");
+				for (auto node = nodePedConfigFlags.first_child(); node; node = node.next_sibling())
 				{
-					int pedPropId = stoi(std::string(nodePedPropsObject.name()).substr(1));
-					std::string pedPropIdValueStr = nodePedPropsObject.text().as_string();
-
-					SET_PED_PROP_INDEX(ep.Handle(), pedPropId, stoi(pedPropIdValueStr.substr(0, pedPropIdValueStr.find(","))), stoi(pedPropIdValueStr.substr(pedPropIdValueStr.find(",") + 1)), bNetworkIsGameInProgress, 0);
+					SET_PED_CONFIG_FLAG(ep.Handle(), stoi(std::string(node.name()).substr(1)), node.text().as_bool());
 				}
 
-				auto nodePedConfigFlags = nodePedStuff.child("PedConfigFlags"); // Only if the node exists
-				for (auto nodePedConfigFlagsObject = nodePedConfigFlags.first_child(); nodePedConfigFlagsObject; nodePedConfigFlagsObject = nodePedConfigFlagsObject.next_sibling())
-				{
-					SET_PED_CONFIG_FLAG(ep.Handle(), stoi(std::string(nodePedConfigFlagsObject.name()).substr(1)), nodePedConfigFlagsObject.text().as_bool());
-				}
-
-				auto nodePedHeadFeatures = nodePedStuff.child("HeadFeatures");
-				if (sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel) && nodePedHeadFeatures)
-				{
-					auto nodePedHeadBlend = nodePedHeadFeatures.child("ShapeAndSkinTone");
-					PED::SET_PED_HEAD_BLEND_DATA(ep.Handle(), 0, 0, 0, 1, 1, 1, 0.0f, 0.0f, 0.0f, false);
-					PedHeadBlendData headBlend;
-					headBlend.shapeFirstID = nodePedHeadBlend.child("ShapeFatherId").text().as_int();
-					headBlend.shapeSecondID = nodePedHeadBlend.child("ShapeMotherId").text().as_int();
-					headBlend.shapeThirdID = nodePedHeadBlend.child("ShapeOverrideId").text().as_int();
-					headBlend.skinFirstID = nodePedHeadBlend.child("ToneFatherId").text().as_int();
-					headBlend.skinSecondID = nodePedHeadBlend.child("ToneMotherId").text().as_int();
-					headBlend.skinThirdID = nodePedHeadBlend.child("ToneOverrideId").text().as_int();
-					headBlend.shapeMix = nodePedHeadBlend.child("ShapeVal").text().as_float();
-					headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
-					headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
-					headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
-					ep.SetHeadBlendData(headBlend);
-
-					if (nodePedHeadFeatures.attribute("WasInArray").as_bool())
-					{
-						sub::PedHeadFeatures_catind::sPedHeadFeatures pedHead;
-						pedHead.hairColour = nodePedHeadFeatures.child("HairColour").text().as_int();
-						pedHead.hairColourStreaks = nodePedHeadFeatures.child("HairColourStreaks").text().as_int();
-						pedHead.eyeColour = nodePedHeadFeatures.child("EyeColour").text().as_int();
-
-						SET_PED_HAIR_TINT(ep.Handle(), pedHead.hairColour, pedHead.hairColourStreaks);
-						SET_HEAD_BLEND_EYE_COLOR(ep.Handle(), SYSTEM::ROUND((float)pedHead.eyeColour)); // Sjaak says so
-
-						auto nodePedFacialFeatures = nodePedHeadFeatures.child("FacialFeatures");
-						int ii = 0;
-						for (auto nodePedFacialFeature = nodePedFacialFeatures.first_child(); nodePedFacialFeature; nodePedFacialFeature = nodePedFacialFeature.next_sibling())
-						{
-							ii = stoi(std::string(nodePedFacialFeature.name()).substr(1));
-							pedHead.facialFeatureData[ii] = nodePedFacialFeature.text().as_float();
-							SET_PED_MICRO_MORPH(ep.Handle(), ii, pedHead.facialFeatureData[ii]);
-						}
-
-						auto nodePedHeadOverlays = nodePedHeadFeatures.child("Overlays");
-						ii = 0;
-						for (auto nodePedHeadOverlay = nodePedHeadOverlays.first_child(); nodePedHeadOverlay; nodePedHeadOverlay = nodePedHeadOverlay.next_sibling())
-						{
-							ii = stoi(std::string(nodePedHeadOverlay.name()).substr(1));
-							auto overlayData_index = nodePedHeadOverlay.attribute("index").as_int();
-							pedHead.overlayData[ii].colour = nodePedHeadOverlay.attribute("colour").as_int();
-							pedHead.overlayData[ii].colourSecondary = nodePedHeadOverlay.attribute("colourSecondary").as_int();
-							pedHead.overlayData[ii].opacity = nodePedHeadOverlay.attribute("opacity").as_float();
-							SET_PED_HEAD_OVERLAY(ep.Handle(), ii, overlayData_index, pedHead.overlayData[ii].opacity);
-							SET_PED_HEAD_OVERLAY_TINT(ep.Handle(), ii, sub::PedHeadFeatures_catind::GetPedHeadOverlayColourType((PedHeadOverlay)ii), pedHead.overlayData[ii].colour, pedHead.overlayData[ii].colourSecondary);
-						}
-						sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = pedHead;
-					}
-				}
-
-				auto nodePedTattooLogoDecals = nodePedStuff.child("TattooLogoDecals");
-				if (nodePedTattooLogoDecals)
-				{
-					auto& decalsApplied = sub::PedDecals::vPedsAndDecals[ep.Handle()];
-					for (auto nodeDecal = nodePedTattooLogoDecals.first_child(); nodeDecal; nodeDecal = nodeDecal.next_sibling())
-					{
-						sub::PedDecals::PedDecalValue decal(
-							nodeDecal.attribute("collection").as_uint(),
-							nodeDecal.attribute("value").as_uint()
-						);
-						decalsApplied.push_back(decal);
-						ADD_PED_DECORATION_FROM_HASHES(ep.Handle(), decal.collection, decal.value);
-					}
-				}
-
-				auto nodePedDamagePacks = nodePedStuff.child("DamagePacks");
-				if (nodePedDamagePacks)
-				{
-					auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
-					for (auto nodePedDamagePack = nodePedDamagePacks.first_child(); nodePedDamagePack; nodePedDamagePack = nodePedDamagePack.next_sibling())
-					{
-						const std::string dpnta = nodePedDamagePack.text().as_string();
-						ep.ApplyDamagePack(dpnta, 1.0f, 1.0f);
-						dmgPacksApplied.push_back(dpnta);
-					}
-				}
+				LoadPedHeadFeaturesFromXml(ep, nodePedStuff.child("HeadFeatures"), eModel);
+				LoadPedDecalsFromXml(ep, nodePedStuff.child("TattooLogoDecals"));
+				LoadPedDamagePacksFromXml(ep, nodePedStuff.child("DamagePacks"));
 
 				bool bRelationshipGroupAltered = nodePedStuff.child("RelationshipGroupAltered").text().as_bool();
 				Hash relationshipGroupHash = nodePedStuff.child("RelationshipGroup").text().as_uint();
@@ -1188,6 +1243,86 @@ namespace sub::Spooner
 			return mi;
 		}
 
+		void AddLightToXmlNode(SpoonerLight& l, pugi::xml_node& nodeLight)
+		{
+			nodeLight.append_child("Name").text() = l.m_name.c_str();
+			nodeLight.append_child("Type").text() = static_cast<UINT>(l.m_lightType);
+			nodeLight.append_child("Active").text() = l.m_active;
+
+			auto nodeColour = nodeLight.append_child("Colour");
+			nodeColour.append_attribute("R") = l.m_colour.R;
+			nodeColour.append_attribute("G") = l.m_colour.G;
+			nodeColour.append_attribute("B") = l.m_colour.B;
+			nodeColour.append_attribute("A") = l.m_colour.A;
+
+			auto nodePos = nodeLight.append_child("Position");
+			nodePos.append_attribute("X") = l.m_position.x;
+			nodePos.append_attribute("Y") = l.m_position.y;
+			nodePos.append_attribute("Z") = l.m_position.z;
+
+			nodeLight.append_child("Range").text() = l.m_range;
+			nodeLight.append_child("Intensity").text() = l.m_intensity;
+
+			auto nodeDir = nodeLight.append_child("Direction");
+			nodeDir.append_attribute("X") = l.m_direction.x;
+			nodeDir.append_attribute("Y") = l.m_direction.y;
+			nodeDir.append_attribute("Z") = l.m_direction.z;
+
+			nodeLight.append_child("SpotDistance").text() = l.m_spotDistance;
+			nodeLight.append_child("SpotBrightness").text() = l.m_spotBrightness;
+			nodeLight.append_child("SpotRoundness").text() = l.m_spotRoundness;
+			nodeLight.append_child("SpotRadius").text() = l.m_spotRadius;
+			nodeLight.append_child("SpotFalloff").text() = l.m_spotFalloff;
+			nodeLight.append_child("UseShadow").text() = l.m_useShadow;
+			nodeLight.append_child("ShadowId").text() = l.m_shadowId;
+		}
+
+		void SpawnLightFromXmlNode(pugi::xml_node& nodeLight)
+		{
+			SpoonerLight light;
+			light.m_name = nodeLight.child("Name").text().as_string();
+			light.m_lightType = static_cast<SpoonerLight::LightType>(nodeLight.child("Type").text().as_uint());
+			light.m_active = nodeLight.child("Active").text().as_bool(true);
+
+			auto nodeColour = nodeLight.child("Colour");
+			if (nodeColour)
+			{
+				light.m_colour.R = nodeColour.attribute("R").as_int(255);
+				light.m_colour.G = nodeColour.attribute("G").as_int(255);
+				light.m_colour.B = nodeColour.attribute("B").as_int(255);
+				light.m_colour.A = nodeColour.attribute("A").as_int(255);
+			}
+
+			auto nodePos = nodeLight.child("Position");
+			if (nodePos)
+			{
+				light.m_position.x = nodePos.attribute("X").as_float();
+				light.m_position.y = nodePos.attribute("Y").as_float();
+				light.m_position.z = nodePos.attribute("Z").as_float();
+			}
+
+			light.m_range = nodeLight.child("Range").text().as_float(10.0f);
+			light.m_intensity = nodeLight.child("Intensity").text().as_float(1.0f);
+
+			auto nodeDir = nodeLight.child("Direction");
+			if (nodeDir)
+			{
+				light.m_direction.x = nodeDir.attribute("X").as_float(0);
+				light.m_direction.y = nodeDir.attribute("Y").as_float(0);
+				light.m_direction.z = nodeDir.attribute("Z").as_float(-1);
+			}
+
+			light.m_spotDistance = nodeLight.child("SpotDistance").text().as_float(20.0f);
+			light.m_spotBrightness = nodeLight.child("SpotBrightness").text().as_float(1.0f);
+			light.m_spotRoundness = nodeLight.child("SpotRoundness").text().as_float(0.0f);
+			light.m_spotRadius = nodeLight.child("SpotRadius").text().as_float(1.0f);
+			light.m_spotFalloff = nodeLight.child("SpotFalloff").text().as_float(0.0f);
+			light.m_useShadow = nodeLight.child("UseShadow").text().as_bool(false);
+			light.m_shadowId = nodeLight.child("ShadowId").text().as_int(0);
+
+			Databases::LightDb.push_back(light);
+		}
+
 		bool SaveDbToFile(const std::string& filePath, bool bForceReferenceCoords)
 		{
 			addlog(ige::LogType::LOG_INFO,  "Saving Spooner database to xml file " + filePath);
@@ -1439,6 +1574,12 @@ namespace sub::Spooner
 			{
 				auto nodeMarker = nodeRoot.append_child("Marker");
 				AddMarkerToXmlNode(m, nodeMarker);
+			}
+
+			for (auto& l : Databases::LightDb)
+			{
+				auto nodeLight = nodeRoot.append_child("Light");
+				AddLightToXmlNode(l, nodeLight);
 			}
 
 			//====================================================================================================================
@@ -1708,6 +1849,12 @@ namespace sub::Spooner
 				AddMarkerToXmlNode(m, nodeMarker);
 			}
 
+			for (auto& l : Databases::LightDb)
+			{
+				auto nodeLight = nodeRoot.append_child("Light");
+				AddLightToXmlNode(l, nodeLight);
+			}
+
 			//=================================================================
 
 			return doc.save_file((const char*)filePath.c_str());
@@ -1962,6 +2109,11 @@ namespace sub::Spooner
 				}
 			}
 			markerDbToNewDbOffset = Databases::MarkerDb.size() - newMarkerDb.size();
+
+			for (auto nodeLight = nodeRoot.child("Light"); nodeLight; nodeLight = nodeLight.next_sibling("Light"))
+			{
+				SpawnLightFromXmlNode(nodeLight);
+			}
 
 			WAIT(1000);
 
