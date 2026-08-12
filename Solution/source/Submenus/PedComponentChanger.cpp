@@ -1960,7 +1960,7 @@ namespace sub
 						Menu::selectedOptionIndex = 5;
 					}
 
-					if (Menu::currentOptionCount == *Menu::activeOptionIndex && !bFilePressed)
+					if (Menu::IsLastDrawnOptionSelected() && !bFilePressed)
 					{
 						if (FolderPreviewBmps_catind::bFolderBmpsEnabled)
 						{

@@ -375,7 +375,7 @@ namespace sub
 			GTAmemory::GetEntityHandles(vSaveRangeEntities, myPos, fSaveRangeRadius);
 			bool bSaveRange_plus = false, bSaveRange_minus = false, bSaveRange_save = false;
 			AddNumber("Save Range To File (" + std::to_string(vSaveRangeEntities.size()) + ")", fSaveRangeRadius, 0, bSaveRange_save, bSaveRange_plus, bSaveRange_minus);
-			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+			if (Menu::IsLastDrawnOptionSelected())
 				EntityManagement::DrawRadiusDisplayingMarker(myPos, fSaveRangeRadius);
 			if (bSaveRange_plus) { if (fSaveRangeRadius < FLT_MAX) fSaveRangeRadius += 1.0f; }
 			if (bSaveRange_minus) { if (fSaveRangeRadius > 0.0f) fSaveRangeRadius -= 1.0f; }
@@ -521,7 +521,7 @@ namespace sub
 							Menu::selectedOptionIndex = 6;
 						}
 
-						if (Menu::currentOptionCount == *Menu::activeOptionIndex && !bFilePressed)
+						if (Menu::IsLastDrawnOptionSelected() && !bFilePressed)
 						{
 							if (FolderPreviewBmps_catind::bFolderBmpsEnabled)
 								FolderPreviewBmps_catind::DrawBmp(_dir + "\\" + filname);
@@ -797,7 +797,7 @@ namespace sub
 					float clearWorldRadius = nodeClearWorld.text().as_float();
 					bool clearWorld_plus = false, clearWorld_minus = false;
 					AddNumber("Delete World Entities (Within Radius)", clearWorldRadius, 0, null, clearWorld_plus, clearWorld_minus);
-					if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+					if (Menu::IsLastDrawnOptionSelected())
 						EntityManagement::DrawRadiusDisplayingMarker(refCoords, clearWorldRadius, RGBA(255, 0, 0, 130));
 					if (clearWorld_plus) { if (clearWorldRadius < FLT_MAX) { clearWorldRadius += 1.0f; nodeClearWorld.text() = abs(clearWorldRadius); doc.save_file((const char*)filePath.c_str()); } }
 					if (clearWorld_minus) { if (clearWorldRadius > 0.0f) { clearWorldRadius -= 1.0f; nodeClearWorld.text() = abs(clearWorldRadius); doc.save_file((const char*)filePath.c_str()); } }
@@ -1121,7 +1121,7 @@ namespace sub
 					}
 
 
-					if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+					if (Menu::IsLastDrawnOptionSelected())
 					{
 						EntityManagement::ShowArrowAboveEntity(e.handle);
 
@@ -1162,7 +1162,7 @@ namespace sub
 				}
 			}
 
-			if (*Menu::activeOptionIndex > Menu::currentOptionCount)
+			if (Menu::IsSelectionPastDrawnOptions())
 				Menu::Up(); // Go up if you're too far down due to removing an entity from DB from the properties menu and coming back here again.
 
 		}
@@ -1205,7 +1205,7 @@ namespace sub
 				bool bEntityExists = e.handle.Exists();
 				bool bEntityPressed = false;
 				AddOption(e.hashName + (bEntityExists ? "" : " (Invalid)"), bEntityPressed);
-				if (*Menu::activeOptionIndex == Menu::currentOptionCount) EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(255, 0, 0, 200));
+					if (Menu::IsLastDrawnOptionSelected()) EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(255, 0, 0, 200));
 				if (bEntityPressed)
 				{
 					if (bEntityExists)
@@ -1737,13 +1737,13 @@ namespace sub
 										Menu::SetPreviousMenu();
 										return;
 									}
-							if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+							if (Menu::IsLastDrawnOptionSelected())
 										EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 								}
 								else
 								{
 									AddOption(e.hashName + " (already attached)", null);
-							if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+							if (Menu::IsLastDrawnOptionSelected())
 										EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(255, 0, 0, 200));
 								}
 								
@@ -2104,7 +2104,7 @@ namespace sub
 					bool bInMultiSelect = MultiSelect::IsSelected(e.handle);
 					bool bEntityPressed = false;
 					AddTickol(e.hashName, bInMultiSelect, bEntityPressed, bEntityPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
-					if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+					if (Menu::IsLastDrawnOptionSelected())
 						EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(127, 0, 255, 200));
 
 					if (bEntityPressed)
@@ -2500,7 +2500,7 @@ namespace sub
 				}
 
 
-				if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+				if (Menu::IsLastDrawnOptionSelected())
 				{
 					m.m_selectedInSub = true;
 
@@ -2548,7 +2548,7 @@ namespace sub
 				MarkerManagement::RemoveMarker(markerIndexInDbToDelete);
 			}
 
-			if (*Menu::activeOptionIndex > Menu::currentOptionCount)
+			if (Menu::IsSelectionPastDrawnOptions())
 				Menu::Up(); // Go up if you're too far down due to removing a marker from DB from the properties menu and coming back here again.
 
 		}
@@ -2562,7 +2562,7 @@ namespace sub
 
 			bool bInRange_plus = false, bInRange_minus = false, bInRange_execute = false;
 			AddNumber("Delete Markers In Range", fMarkerRemovalRadius, 0, bInRange_execute, bInRange_plus, bInRange_minus);
-			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+			if (Menu::IsLastDrawnOptionSelected())
 				EntityManagement::DrawRadiusDisplayingMarker(myPos, fMarkerRemovalRadius);
 			if (bInRange_plus) { if (fMarkerRemovalRadius < FLT_MAX) fMarkerRemovalRadius += 1.0f; }
 			if (bInRange_minus) { if (fMarkerRemovalRadius > 0.0f) fMarkerRemovalRadius -= 1.0f; }
@@ -2825,7 +2825,7 @@ namespace sub
 						return;
 					}
 
-					if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+					if (Menu::IsLastDrawnOptionSelected())
 					{
 						m.m_selectedInSub = true;
 
@@ -2914,7 +2914,7 @@ namespace sub
 							return;
 						}
 
-						if (*Menu::activeOptionIndex == Menu::currentOptionCount) EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
+						if (Menu::IsLastDrawnOptionSelected()) EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 					else
 					{
@@ -2948,7 +2948,7 @@ namespace sub
 					Menu::SetSub_delayed = SUB::SPOONER_MANAGELIGHTS_INLIGHT;
 				}
 
-				if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+				if (Menu::IsLastDrawnOptionSelected())
 				{
 					l.m_selectedInSub = true;
 
@@ -3027,7 +3027,7 @@ namespace sub
 				LightManagement::Remove(lightIndexInDbToDelete);
 			}
 
-			if (*Menu::activeOptionIndex > Menu::currentOptionCount)
+			if (Menu::IsSelectionPastDrawnOptions())
 				Menu::Up();
 		}
 
@@ -3043,7 +3043,7 @@ namespace sub
 
 			bool bInRange_plus = false, bInRange_minus = false, bInRange_execute = false;
 			AddNumber("Delete Lights In Range", fLightRemovalRadius, 0, bInRange_execute, bInRange_plus, bInRange_minus);
-			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+			if (Menu::IsLastDrawnOptionSelected())
 				EntityManagement::DrawRadiusDisplayingMarker(myPos, fLightRemovalRadius);
 			if (bInRange_plus) { if (fLightRemovalRadius < FLT_MAX) fLightRemovalRadius += 1.0f; }
 			if (bInRange_minus) { if (fLightRemovalRadius > 0.0f) fLightRemovalRadius -= 1.0f; }
@@ -3257,7 +3257,7 @@ namespace sub
 						Game::Print::PrintBottomCentre("Light added from preset");
 					}
 
-					if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+				if (Menu::IsLastDrawnOptionSelected())
 					{
 						bool bDeletePressed;
 						if (Menu::bitController)
@@ -3604,7 +3604,7 @@ namespace sub
 
 				MenuOptions::AddOption_AddProp(modelName, currentModel.hash);
 
-				if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsAFav = FavouritesManagement::IsPropAFavourite(modelName, currentModel.hash);
 					if (Menu::bitController)
@@ -3657,7 +3657,7 @@ namespace sub
 
 				MenuOptions::AddOption_AddProp(current, currentModel.hash);
 
-				if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsAFav = FavouritesManagement::IsPropAFavourite(current, currentModel.hash);
 					if (Menu::bitController)
@@ -3795,7 +3795,7 @@ namespace sub
 					{
 						MenuOptions::AddOption_AddProp(prop.modelName, prop.model);
 
-						if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+						if (Menu::IsLastDrawnOptionSelected())
 						{
 							if (Menu::bitController)
 							{
@@ -3804,7 +3804,7 @@ namespace sub
 								{
 									FavouritesManagement::RemovePropFromFavourites(prop.modelName, prop.model.hash);
 									s_favPropCache.needsRebuild = true;
-									if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
+									if (Menu::IsSelectionAtBottom())
 										Menu::Up();
 									return;
 								}
@@ -3822,7 +3822,7 @@ namespace sub
 								{
 									FavouritesManagement::RemovePropFromFavourites(prop.modelName, prop.model.hash);
 									s_favPropCache.needsRebuild = true;
-									if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
+									if (Menu::IsSelectionAtBottom())
 										Menu::Up();
 									return;
 								}

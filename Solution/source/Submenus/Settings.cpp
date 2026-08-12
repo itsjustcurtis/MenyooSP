@@ -110,7 +110,7 @@ namespace sub
 		bool pressed = false;
 		AddOption(text, pressed, nullFunc, SUB::SETTINGS_COLOURS2);
 
-		if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+		if (Menu::IsLastDrawnOptionSelected())
 		{
 			AddPresetColourOptionsPreviews(feature);
 		}

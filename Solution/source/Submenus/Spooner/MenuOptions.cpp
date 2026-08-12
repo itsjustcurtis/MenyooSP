@@ -33,7 +33,7 @@ namespace sub::Spooner
 			bool pressed = false;
 			AddOption(text, pressed);
 
-			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				SpoonerMode::modelPreviewInfo.entityType = EntityType::PROP;
 				SpoonerMode::modelPreviewInfo.model = model;
@@ -49,7 +49,7 @@ namespace sub::Spooner
 			bool pressed = false;
 			AddOption(text, pressed);
 
-			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				SpoonerMode::modelPreviewInfo.entityType = EntityType::PED;
 				SpoonerMode::modelPreviewInfo.model = model;
@@ -65,7 +65,7 @@ namespace sub::Spooner
 			bool pressed = false;
 			AddOption(text, pressed);
 
-			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				SpoonerMode::modelPreviewInfo.entityType = EntityType::VEHICLE;
 				SpoonerMode::modelPreviewInfo.model = model;
@@ -131,7 +131,7 @@ namespace sub::Spooner
 			bool pressed = false;
 			AddOption(text, pressed);
 
-			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				SpoonerMode::modelPreviewInfo.entityType = EntityType::PED;
 				SpoonerMode::modelPreviewInfo.model = model;

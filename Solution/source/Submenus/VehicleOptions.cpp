@@ -1229,7 +1229,7 @@ namespace sub
 		AddToggle("Rainbow Mode", multiPlatNeonsRainbow);
 
 		AddOption("Set Colour", setRGBIndexTo3, nullFunc, SUB::MSPAINTS_RGB);
-		if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+		if (Menu::IsLastDrawnOptionSelected())
 		{
 			AddPresetColourOptionsPreview(g_multiPlatNeonsColor);
 		}

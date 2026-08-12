@@ -532,7 +532,7 @@ namespace sub
 			extraOptionCode = true;
 		}
 
-		if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+		if (Menu::IsLastDrawnOptionSelected())
 		{
 			bool isAFavourite = IsAnimationAFavourite(animDict, animName);
 			if (Menu::bitController)

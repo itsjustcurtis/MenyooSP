@@ -348,7 +348,7 @@ namespace sub
 				break;
 			}
 
-			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				PedFavourites::ShowInstructionalButton(model);
 			}

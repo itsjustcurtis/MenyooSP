@@ -1009,7 +1009,7 @@ namespace sub
 						}
 					}
 
-					if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+					if (Menu::IsLastDrawnOptionSelected())
 					{
 						if (Menu::bitController)
 						{
@@ -1019,7 +1019,7 @@ namespace sub
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteWeapons).c_str());
-								if (*Menu::activeOptionIndex >= Menu::totalOptionCount) Menu::Up();
+								if (Menu::IsSelectionAtBottom()) Menu::Up();
 								return; // Yeah
 							}
 						}
@@ -1031,7 +1031,7 @@ namespace sub
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteWeapons).c_str());
-								if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
+								if (Menu::IsSelectionAtBottom())
 									Menu::Up();
 								return; // Yeah
 							}
@@ -1128,7 +1128,7 @@ namespace sub
 					Menu::SetSub_delayed = SUB::WEAPONOPS_INDIVS_ITEM;
 				}
 
-				if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsAFav = WeaponFavourites_catind::IsWeaponAFavourite(thisWeaponInfo.weaponHash);
 					if (Menu::bitController)
@@ -1403,7 +1403,7 @@ namespace sub
 
 			bool goRgbSmokeMenu = 0;
 			AddOption("Set Smoke Colour", goRgbSmokeMenu, nullFunc, SUB::MSPAINTS_RGB);
-			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+			if (Menu::IsLastDrawnOptionSelected())
 				AddPresetColourOptionsPreviews(paraSmokeCol);
 			if (goRgbSmokeMenu)
 			{
@@ -1567,7 +1567,7 @@ namespace sub
 							Menu::selectedOptionIndex = 4;
 						}
 
-						if (Menu::currentOptionCount == *Menu::activeOptionIndex && !bFilePressed)
+						if (Menu::IsLastDrawnOptionSelected() && !bFilePressed)
 						{
 							if (FolderPreviewBmps_catind::bFolderBmpsEnabled)
 								FolderPreviewBmps_catind::DrawBmp(_dir + "\\" + filname);

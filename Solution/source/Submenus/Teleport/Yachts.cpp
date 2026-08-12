@@ -552,7 +552,7 @@ namespace sub::TeleportLocations_catind
 
 			bool bYachtType_plus = false, bYachtType_minus = false;
 			AddTexter("Yacht", 0, std::vector<std::string>{ currentYachtInfo.option->second.title }, null, bYachtType_plus, bYachtType_minus);
-			if (*Menu::activeOptionIndex == Menu::currentOptionCount) DrawYachtBmpPreview(currentYachtInfo.option->first);
+			if (Menu::IsLastDrawnOptionSelected()) DrawYachtBmpPreview(currentYachtInfo.option->first);
 			if (bYachtType_plus) { if (vOptionNames.rbegin()->first != currentYachtInfo.option->first) { currentYachtInfo.option = &*(++vOptionNames.find(currentYachtInfo.option->first)); } }
 			if (bYachtType_minus) { if (vOptionNames.begin()->first != currentYachtInfo.option->first) { currentYachtInfo.option = &*(--vOptionNames.find(currentYachtInfo.option->first)); } }
 

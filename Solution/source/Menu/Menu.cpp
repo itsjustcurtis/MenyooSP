@@ -613,6 +613,22 @@ void Menu::Top(bool playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
 	activeBreakScrollDirection = 2;
 }
+bool Menu::IsLastDrawnOptionSelected()
+{
+	return currentOptionCount == *activeOptionIndex;
+}
+bool Menu::IsSelectionAtBottom()
+{
+	return *activeOptionIndex >= totalOptionCount;
+}
+bool Menu::IsSelectionAtTop()
+{
+	return *activeOptionIndex <= 1;
+}
+bool Menu::IsSelectionPastDrawnOptions()
+{
+	return *activeOptionIndex > currentOptionCount;
+}
 void Menu::SetPreviousMenu()
 {
 	if (OnSubBack != nullptr)
@@ -1381,7 +1397,7 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 	{
 		FLOAT newXpos;
 		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
-		if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+		if (Menu::IsLastDrawnOptionSelected())
 		{
 			if (&RIGHT_PRESS != &null && &LEFT_PRESS != &null)
 			{
@@ -1412,7 +1428,7 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 		Game::Print::drawfloat(value, decimal_places, newXpos, OptionY + 0.0056 + menuPos.y);
 	}
 
-	if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+	if (Menu::IsLastDrawnOptionSelected())
 	{
 		bit_frontend_addnumber_selected = true;
 		if (&A_PRESS != &null) Menu::add_IB(INPUT_CELLPHONE_SELECT, "Input");
@@ -1485,7 +1501,7 @@ void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& nor
 {
 	if (!HAS_STREAMED_TEXTURE_DICT_LOADED(textureDict.c_str())) REQUEST_STREAMED_TEXTURE_DICT(textureDict.c_str(), 0);
 	std::string textureName;
-	if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+	if (Menu::IsLastDrawnOptionSelected())
 		textureName = selected;
 	else textureName = normal;
 	Vector3 texture_res = GET_TEXTURE_RESOLUTION(textureDict.c_str(), textureName.c_str());
@@ -1497,7 +1513,7 @@ void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& nor
 inline void draw_tickol_tick(TICKOL tickType, float rotation)
 {
 	RGBA* colour = &optiontext;
-	if (Menu::currentOptionCount == *Menu::activeOptionIndex) colour = &selectedtext;
+	if (Menu::IsLastDrawnOptionSelected()) colour = &selectedtext;
 	std::string textureDict, textureName;
 	Vector3 texture_res;
 
@@ -1636,7 +1652,7 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 		FLOAT newXpos;
 		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
 
-		if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+		if (Menu::IsLastDrawnOptionSelected())
 		{
 			if (&RIGHT_PRESS != &null && &LEFT_PRESS != &null)
 			{
@@ -1667,7 +1683,7 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 		Game::Print::drawstring(chartickStr, newXpos, OptionY + 0.0056 + menuPos.y);
 	}
 
-	if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+	if (Menu::IsLastDrawnOptionSelected())
 	{
 		bit_frontend_addnumber_selected = true;
 		if (&A_PRESS != &null) Menu::add_IB(INPUT_CELLPHONE_SELECT, "Input");
@@ -1728,7 +1744,7 @@ bool AddPresetColourOptions(INT& r, INT& g, INT& b)
 			bPressed = true;
 		}
 
-		if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+	if (Menu::IsLastDrawnOptionSelected())
 			AddPresetColourOptionsPreviews(colol.rgb.R, colol.rgb.G, colol.rgb.B);
 	}
 	return bPressed;

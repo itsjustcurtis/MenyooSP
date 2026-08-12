@@ -188,6 +188,10 @@ public:
 	static void Down(bool playSound = true);
 	static void Bottom(bool playSound = true);
 	static void Top(bool playSound = true);
+	static bool IsLastDrawnOptionSelected();
+	static bool IsSelectionAtBottom();
+	static bool IsSelectionAtTop();
+	static bool IsSelectionPastDrawnOptions();
 	static void SetPreviousMenu();
 	static void NewSetMenu(INT sub_index);
 	static void SetSub_closed();

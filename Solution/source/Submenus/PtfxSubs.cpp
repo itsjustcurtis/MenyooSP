@@ -3412,7 +3412,7 @@ namespace sub
                 }
 
                 // Handle favorite toggling
-                if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+                 if (Menu::IsLastDrawnOptionSelected())
                 {
                     if (favouritesLoaded) 
                     {

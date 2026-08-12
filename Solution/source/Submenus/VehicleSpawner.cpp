@@ -1543,7 +1543,7 @@ namespace sub
 			else
 				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_activePedHandle);
 
-			if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				if (g_spawnVehicleDrawBMPs)
 				{
@@ -1602,7 +1602,7 @@ namespace sub
 		AddBreak("---Neons---");
 		AddToggle("Toggle", g_spawnVehicleNeonToggle);
 		AddOption("RGB Colour", setRGBCarcolIndex9, nullFunc, SUB::MSPAINTS_RGB); 
-		if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+		if (Menu::IsLastDrawnOptionSelected())
 		{
 			AddPresetColourOptionsPreview(g_spawnVehicleNeonColor);
 		}
@@ -1968,7 +1968,7 @@ namespace sub
 				break;
 			}
 
-			if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				if (g_spawnVehicleDrawBMPs)
 				{
@@ -2180,7 +2180,7 @@ namespace sub
 					}
 				}
 
-				if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+				if (Menu::IsLastDrawnOptionSelected())
 				{
 					if (g_spawnVehicleDrawBMPs)
 					{
@@ -2198,7 +2198,7 @@ namespace sub
 						{
 							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
-						if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
+						if (Menu::IsSelectionAtBottom())
 							{
 								Menu::Up();
 							}
@@ -2213,7 +2213,7 @@ namespace sub
 						{
 							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
-						if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
+						if (Menu::IsSelectionAtBottom())
 							{
 								Menu::Up();
 							}
@@ -2654,12 +2654,12 @@ namespace sub
 		{
 			AddOption(selectedCategory.captions[i], spawnVehicle);
 
-			if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				vehDlcIdToSpawn = static_cast<int>(i);
 			}
 
-			if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 
 				if (g_spawnVehicleDrawBMPs)
@@ -2724,7 +2724,7 @@ namespace sub
 		{
 			AddOption(VehicleDlcCategories[i].name, null, nullFunc, SUB::SPAWNVEHICLEDLC);
 
-			if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				vehDLCCategoryID = static_cast<int>(i);
 			}
@@ -3612,7 +3612,7 @@ namespace sub
 							Menu::selectedOptionIndex = 6;
 						}
 
-						if (Menu::currentOptionCount == *Menu::activeOptionIndex && !bFilePressed)
+						if (Menu::IsLastDrawnOptionSelected() && !bFilePressed)
 						{
 							if (FolderPreviewBmps_catind::bFolderBmpsEnabled)
 							{

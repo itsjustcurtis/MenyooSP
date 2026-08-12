@@ -342,7 +342,7 @@ namespace sub::TeleportLocations_catind
 						TeleMethods::ToCoordinates241(locPos);
 					}
 
-					if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+					if (Menu::IsLastDrawnOptionSelected())
 					{
 						if (Menu::bitController)
 						{
@@ -352,7 +352,7 @@ namespace sub::TeleportLocations_catind
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
+								if (Menu::IsSelectionAtBottom())
 									Menu::Up();
 								return; // Yeah
 							}
@@ -365,7 +365,7 @@ namespace sub::TeleportLocations_catind
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
+								if (Menu::IsSelectionAtBottom())
 									Menu::Up();
 								return; // Yeah
 							}
