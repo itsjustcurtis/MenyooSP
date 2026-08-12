@@ -532,7 +532,7 @@ namespace sub
 			extraOptionCode = true;
 		}
 
-		if (Menu::printingop == *Menu::currentopATM)
+		if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 		{
 			bool isAFavourite = IsAnimationAFavourite(animDict, animName);
 			if (Menu::bitController)
@@ -548,7 +548,7 @@ namespace sub
 					Menu::add_IB(INPUT_SCRIPT_RUP, "Change category");
 					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RUP))
 					{
-						s_recatState.returnCursor = *Menu::currentopATM;
+						s_recatState.returnCursor = *Menu::activeOptionIndex;
 						s_recatState.animDict = animDict;
 						s_recatState.animName = animName;
 						Menu::SetSub_delayed = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
@@ -568,7 +568,7 @@ namespace sub
 					Menu::add_IB(VirtualKey::C, "Change category");
 					if (IsKeyJustUp(VirtualKey::C))
 					{
-						s_recatState.returnCursor = *Menu::currentopATM;
+						s_recatState.returnCursor = *Menu::activeOptionIndex;
 						s_recatState.animDict = animDict;
 						s_recatState.animName = animName;
 						Menu::SetSub_delayed = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
@@ -757,7 +757,7 @@ namespace sub
 		Menu::OnSubBack = []()
 		{
 			AnimationMenu::ClearSearchStr();
-			*Menu::currentopATM = s_recatState.returnCursor;
+			*Menu::activeOptionIndex = s_recatState.returnCursor;
 			s_favCache.needsRebuild = true;
 		};
 

@@ -394,7 +394,7 @@ namespace sub
 		AddTitle("Clear Area");
 
 		AddNumber("Range To Clear", g_clearAreaRadius, 2, clearAreaRadiusInput, clearAreaRadiusPlus, clearAreaRadiusMinus);
-		if (*Menu::currentopATM == Menu::printingop)
+		if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 		{
 			sub::Spooner::EntityManagement::DrawRadiusDisplayingMarker(GET_ENTITY_COORDS(g_activePedHandle, 1), g_clearAreaRadius);
 		}
@@ -550,7 +550,7 @@ namespace sub
 						SET_VEH_RADIO_STATION(vehicle.Handle(), GET_RADIO_STATION_NAME(i));
 					}
 				}
-				if (Menu::printingop == *Menu::currentopATM)
+				if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 				{
 					bool bIsCurrentlyFrozen = frozenStation == i;
 					if (Menu::bitController)

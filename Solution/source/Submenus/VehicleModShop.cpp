@@ -570,7 +570,7 @@ namespace sub
 			}
 			AddTickol(text, lastpaint == colour_index, pressed, pressed,
 				IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING);
-			if (*Menu::currentopATM == Menu::printingop && getpaintCarUsing_index(vehicle, s_selectedPaintPart) != colour_index)
+			if (*Menu::activeOptionIndex == Menu::currentOptionCount && getpaintCarUsing_index(vehicle, s_selectedPaintPart) != colour_index)
 				paintCarUsing_index(vehicle, s_selectedPaintPart, colour_index, pearl_index_ifPrimary);
 			if (pressed)
 			{
@@ -797,7 +797,7 @@ namespace sub
 		case 4: default: AddTitle(Game::GetGXTEntry("CMOD_MOD_WHEM", "Wheels")); break;
 		}
 
-		switch (Menu::currentArray[Menu::currentArrayIndex])
+		switch (Menu::submenuHistory[Menu::menuHistoryIndex])
 		{
 		case SUB::SPAWNVEHICLE_OPTIONS:
 			INT16* carColSettingPtr = (s_selectedPaintPart == 10 ? &g_spawnVehiclePrimaryColor : &g_spawnVehicleSecondaryColor);
@@ -828,7 +828,7 @@ namespace sub
 		{
 			AddOption("Random RGB", MSPaints_RColour);
 			AddOption("Set RGB", MSPaints_primRGB, nullFunc, SUB::MSPAINTS_RGB);
-			if (*Menu::currentopATM == Menu::printingop)
+			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 				AddPresetColourOptionsPreview(s_selectedPaintPart == 1 ? vehicle.GetCustomPrimaryColour() : s_selectedPaintPart == 2 ? vehicle.GetCustomSecondaryColour() : RgbS(0, 0, 0));
 			s_selectedPaintPart == 1 ? painttypeswitch = "Secondary" : painttypeswitch = "Primary";
 			AddOption("Copy to " + painttypeswitch, copypaint);
@@ -1295,7 +1295,7 @@ namespace sub
 			AddTexter("Paint Finish", ms_paints_finish, PAINTS_FINISH_NAMES, null, ms_paints_finish_plus, ms_paints_finish_minus);
 		AddNumber("Red", ms_paints_rgb_r, 0, ms_paints_rgb_r_custom, ms_paints_rgb_r_plus, ms_paints_rgb_r_minus);
 
-		switch (*Menu::currentopATM)
+		switch (*Menu::activeOptionIndex)
 		{
 		case 2:case 3:case 4:
 			AddPresetColourOptionsPreviews(ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b);
@@ -2149,7 +2149,7 @@ namespace sub
 		if (SubMS_Extra) {
 			for (i = 0; i <= 12; i++)
 				if (DOES_EXTRA_EXIST(s_selectedVehicleHandle, i)) { Menu::NewSetMenu(SUB::MSEXTRA); break; }
-			if (Menu::currentsub != SUB::MSEXTRA)
+			if (Menu::activeSubmenu != SUB::MSEXTRA)
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Vehicle has no extras.");
 			return;
 		}
@@ -2511,7 +2511,7 @@ namespace sub
 				bool pressed = false;
 				AddTickol(GetModTextLabel(vehicle, modType, i, true), lastMod == i, pressed, pressed,
 					IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING, TICKOL::NONE, false);
-				if (*Menu::currentopATM == Menu::printingop && currMod != i)
+				if (*Menu::activeOptionIndex == Menu::currentOptionCount && currMod != i)
 					SET_VEHICLE_MOD(vehicle, modType, i, GET_VEHICLE_MOD_VARIATION(vehicle, modType));
 				if (pressed)
 				{
@@ -2639,8 +2639,8 @@ namespace sub
 						: GET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels) != wheelIndex);
 				addlog(ige::LogType::LOG_TRACE, "allowSettingWheelPreview: " + std::to_string(allowSettingWheelPreview));
 
-				addlog(ige::LogType::LOG_TRACE, "Comparing currrentopATM: " + std::to_string((int)(*Menu::currentopATM)) + " to printingop: " + std::to_string((int)(Menu::printingop)));
-				if (*Menu::currentopATM == Menu::printingop && allowSettingWheelPreview)
+				addlog(ige::LogType::LOG_TRACE, "Comparing active option index to current option count: " + std::to_string((int)(*Menu::activeOptionIndex)) + " / " + std::to_string((int)(Menu::currentOptionCount)));
+				if (*Menu::activeOptionIndex == Menu::currentOptionCount && allowSettingWheelPreview)
 				{
 					addlog(ige::LogType::LOG_TRACE, "Setting wheel preview: type " + std::to_string(wheelType) + ", index " + std::to_string(wheelIndex));
 					GTAvehicle(vehicle).RequestControlOnce();
@@ -2753,7 +2753,7 @@ namespace sub
 		AddOption("Remove Tires", null, nullFunc, SUB::MS_TYRESBURST);
 
 		AddOption(Game::GetGXTEntry("CMOD_MOD_TYR3", "Tire Smoke Colour"), set_msrgb_index_4, nullFunc, SUB::MSPAINTS_RGB);
-		if (*Menu::currentopATM == Menu::printingop)
+		if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 			AddPresetColourOptionsPreview(vehicle.GetTyreSmokeColour());
 
 
@@ -3387,7 +3387,7 @@ namespace sub
 		{
 			bitMSPaintsRGBMode = 2;
 		}
-		if (*Menu::currentopATM == Menu::printingop)
+		if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 			AddPresetColourOptionsPreview(vehicle.GetNeonLightsColour());
 
 

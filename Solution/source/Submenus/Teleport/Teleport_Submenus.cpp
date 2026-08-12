@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -257,7 +257,7 @@ namespace sub::TeleportLocations_catind
 			}
 			}*/
 
-			//if (Menu::currentop > Menu::printingop && !vBlips.empty()) Menu::Up();
+			//if (Menu::selectedOptionIndex > Menu::currentOptionCount && !vBlips.empty()) Menu::Up();
 		}
 		void Sub_SavedLocations()
 		{
@@ -342,7 +342,7 @@ namespace sub::TeleportLocations_catind
 						TeleMethods::ToCoordinates241(locPos);
 					}
 
-					if (Menu::printingop == *Menu::currentopATM)
+					if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 					{
 						if (Menu::bitController)
 						{
@@ -352,7 +352,7 @@ namespace sub::TeleportLocations_catind
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (*Menu::currentopATM >= Menu::totalop)
+								if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
 									Menu::Up();
 								return; // Yeah
 							}
@@ -365,7 +365,7 @@ namespace sub::TeleportLocations_catind
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (*Menu::currentopATM >= Menu::totalop)
+								if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
 									Menu::Up();
 								return; // Yeah
 							}
@@ -374,7 +374,7 @@ namespace sub::TeleportLocations_catind
 
 				}
 			}
-			//if (Menu::currentop > Menu::printingop) Menu::Up();
+			//if (Menu::selectedOptionIndex > Menu::currentOptionCount) Menu::Up();
 		}
 
 	}

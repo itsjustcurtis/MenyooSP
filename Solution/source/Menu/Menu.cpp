@@ -165,17 +165,17 @@ UINT16 menubinds = VirtualKey::F8;
 UINT16 respawnbinds = INPUT_LOOK_BEHIND;
 UINT16 stopanimbinds = VirtualKey::J;
 
-UINT16 Menu::currentsub = 0, Menu::LOOCsub = SUB::MAINMENU;
-INT Menu::currentop = 0, * Menu::currentopATM = &currentop;
-INT Menu::currentop_w_breaks = 0;
-INT Menu::totalop = 0;
-INT Menu::printingop = 0;
-UINT16 Menu::breakcount = 0;
-UINT16 Menu::totalbreaks = 0;
-UINT8 Menu::breakscroll = 0;
-INT16 Menu::currentArrayIndex = 0;
-INT Menu::currentArray[100] = {};
-INT Menu::currentop_ar[100] = {};
+UINT16 Menu::activeSubmenu = 0, Menu::lastOpenedSubmenu = SUB::MAINMENU;
+INT Menu::selectedOptionIndex = 0, * Menu::activeOptionIndex = &selectedOptionIndex;
+INT Menu::selectedOptionWithBreaks = 0;
+INT Menu::totalOptionCount = 0;
+INT Menu::currentOptionCount = 0;
+UINT16 Menu::currentBreakCount = 0;
+UINT16 Menu::totalBreakCount = 0;
+UINT8 Menu::activeBreakScrollDirection = 0;
+INT16 Menu::menuHistoryIndex = 0;
+INT Menu::submenuHistory[100] = {};
+INT Menu::optionSelectionHistory[100] = {};
 INT Menu::SetSub_delayed = 0;
 int Menu::delayedTimer = 0;
 bool Menu::bitController = 0, Menu::bit_mouse = 0;
@@ -307,7 +307,7 @@ void Menu::DisableControls()
 void Menu::base()
 {
 	//GET_ACTUAL_SCREEN_RESOLUTION(&Game::defaultScreenRes.first, &Game::defaultScreenRes.second);
-	if (Menu::currentsub != SUB::CLOSED)
+	if (Menu::activeSubmenu != SUB::CLOSED)
 	{
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("MenyooExtras")) REQUEST_STREAMED_TEXTURE_DICT("MenyooExtras", 0);
 		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu")) REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
@@ -345,7 +345,7 @@ void Menu::titlebox_draw()
 	titletext_ALPHA_DIS_TEMP = true;
 
 	// Oh why oh why did I do it this way
-	switch (currentsub)
+	switch (activeSubmenu)
 	{
 	case SUB::COMPONENTS: case SUB::COMPONENTS2: case SUB::COMPONENTS_OUTFITS: case SUB::COMPONENTS_OUTFITS2:
 		DRAW_SPRITE("shopui_title_highendfashion", "shopui_title_highendfashion", 0.16f + menuPos.x, 0.0989f + menuPos.y, 0.20f, 0.083f, 0.0f, 255, 255, 255, titlebox.A, false, 0); break;
@@ -358,7 +358,7 @@ void Menu::titlebox_draw()
 	case SUB::PED_HEADFEATURES_MAIN: case SUB::PED_HEADFEATURES_HEADOVERLAYS: case SUB::PED_HEADFEATURES_HEADOVERLAYS_INITEM: case SUB::PED_HEADFEATURES_FACEFEATURES: case SUB::PED_HEADFEATURES_SKINTONE:
 		DRAW_SPRITE("shopui_title_highendsalon", "shopui_title_highendsalon", 0.16f + menuPos.x, 0.0989f + menuPos.y, 0.20f, 0.083f, 0.0f, 255, 255, 255, titlebox.A, false, 0); break;
 	case SUB::MODSHOP: case SUB::MSDOORS: case SUB::MSCATALL: case SUB::MSEXTRA: case SUB::MSLIGHTS: case SUB::MSNEONS: case SUB::MSWHEELS: case SUB::MSWHEELS2: case SUB::MSWHEELS3: case SUB::MS_TYRESBURST: case SUB::GETALLPAINTIDS: case SUB::MSPAINTS: case SUB::MSPAINTS2: case SUB::MSPAINTS2_CHROME: case SUB::MSPAINTS2_MATTE: case SUB::MSPAINTS2_METAL: case SUB::MSPAINTS2_CHAMELEON: case SUB::MSPAINTS2_METALLIC: case SUB::MSPAINTS2_NORMAL: case SUB::MSPAINTS2_SHARED: case SUB::MSENGINESOUND: //case SUB::MSPAINTS_RGB:
-		if (Menu::currentArray[currentArrayIndex] != SUB::MS_BENNYS)
+		if (Menu::submenuHistory[menuHistoryIndex] != SUB::MS_BENNYS)
 		{
 			DRAW_SPRITE("shopui_title_carmod", "shopui_title_carmod", 0.16f + menuPos.x, 0.0989f + menuPos.y, 0.20f, 0.083f, 0.0f, 255, 255, 255, titlebox.A, false, 0); break;
 		}
@@ -399,7 +399,7 @@ void Menu::titlebox_draw()
 void Menu::background()
 {
 	float temp;
-	if (totalop > GTA_MAXOP) temp = GTA_MAXOP; else temp = (float)totalop; // Calculate last option number to draw rect
+	if (totalOptionCount > GTA_MAXOP) temp = GTA_MAXOP; else temp = (float)totalOptionCount; // Calculate last option number to draw rect
 
 	// Calculate Y Coord
 	float bg_Y = ((temp * 0.035f) / 2.0f) + 0.159f;
@@ -411,7 +411,7 @@ void Menu::background()
 	else DRAW_RECT(0.16f + menuPos.x, bg_Y + menuPos.y, 0.20f, bg_length, BG.R, BG.G, BG.B, BG.A, false);
 
 	// Draw scroller indicator rect
-	if (totalop > GTA_MAXOP) temp = GTA_MAXOP; else temp = totalop;
+	if (totalOptionCount > GTA_MAXOP) temp = GTA_MAXOP; else temp = totalOptionCount;
 	float scr_rect_Y = ((temp + 1.0f) * 0.035f) + 0.1415f;
 	if (gradients) DRAW_SPRITE("CommonMenu", "Gradient_Nav"/*"interaction_bgd"*/, 0.16f + menuPos.x, scr_rect_Y + menuPos.y, 0.20f, 0.0345f, 0.0f, titlebox.R, titlebox.G, titlebox.B, titlebox.A, false, 0);
 	else DRAW_RECT(0.16f + menuPos.x, scr_rect_Y + menuPos.y, 0.20f, 0.0345f, titlebox.R, titlebox.G, titlebox.B, titlebox.A, false);
@@ -419,12 +419,12 @@ void Menu::background()
 	// Draw thin line over scroller indicator rect
 	if (thinLineOverScrect)
 	{
-		if (totalop < GTA_MAXOP) DRAW_RECT(0.16f + menuPos.x, (totalop * 0.035f + 0.1589f) + menuPos.y, 0.20f, 0.0011f, 255, 255, 255, 255, false);
+		if (totalOptionCount < GTA_MAXOP) DRAW_RECT(0.16f + menuPos.x, (totalOptionCount * 0.035f + 0.1589f) + menuPos.y, 0.20f, 0.0011f, 255, 255, 255, 255, false);
 		else DRAW_RECT(0.16f + menuPos.x, (14.0f * 0.035f + 0.1589f) + menuPos.y, 0.20f, 0.0011f, 255, 255, 255, 255, false);
 	}
 
 	// Draw scroller indicator
-	if ((totalop > GTA_MAXOP)) //&& HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu"))
+	if ((totalOptionCount > GTA_MAXOP)) //&& HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu"))
 	{
 		Vector3 texture_res = GET_TEXTURE_RESOLUTION("CommonMenu", "shop_arrows_upANDdown");
 		texture_res.x /= (Game::defaultScreenRes.first * 2);
@@ -432,8 +432,8 @@ void Menu::background()
 
 		temp = ((GTA_MAXOP + 1.0f) * 0.035f) + 0.1413f; //0.1259f;
 
-		/*if (currentop == 1)	DRAW_SPRITE("CommonMenu", "arrowright", 0.16f + menuPos.x, temp + menuPos.y, texture_res.x, texture_res.y, 90.0f, optioncount.R, optioncount.G, optioncount.B, 255);
-		else if (currentop == totalop) DRAW_SPRITE("CommonMenu", "arrowright", 0.16f + menuPos.x, temp + menuPos.y, texture_res.x, texture_res.y, 270.0f, optioncount.R, optioncount.G, optioncount.B, 255);
+		/*if (selectedOptionIndex == 1)	DRAW_SPRITE("CommonMenu", "arrowright", 0.16f + menuPos.x, temp + menuPos.y, texture_res.x, texture_res.y, 90.0f, optioncount.R, optioncount.G, optioncount.B, 255);
+		else if (selectedOptionIndex == totalOptionCount) DRAW_SPRITE("CommonMenu", "arrowright", 0.16f + menuPos.x, temp + menuPos.y, texture_res.x, texture_res.y, 270.0f, optioncount.R, optioncount.G, optioncount.B, 255);
 		else*/
 		DRAW_SPRITE("CommonMenu", "shop_arrows_upANDdown", 0.16f + menuPos.x, temp + menuPos.y, texture_res.x, texture_res.y, 0.0f, optioncount.R, optioncount.G, optioncount.B, 255, false, 0);
 
@@ -442,7 +442,7 @@ void Menu::background()
 	// Draw option count
 	temp = scr_rect_Y - 0.0124f;
 
-	std::string toPrint = std::to_string(*currentopATM) + " / " + std::to_string(totalop);
+	std::string toPrint = std::to_string(*activeOptionIndex) + " / " + std::to_string(totalOptionCount);
 
 	Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.0f, 0.26f), false, false, false, optioncount);
 	float width = Game::Print::GetTextWidth(toPrint);
@@ -451,21 +451,21 @@ void Menu::background()
 }
 void Menu::optionhi()
 {
-	if (totalop < 1) { if (bit_glare_test && !titletext_ALPHA_DIS_TEMP) glare_test(); return; }
+	if (totalOptionCount < 1) { if (bit_glare_test && !titletext_ALPHA_DIS_TEMP) glare_test(); return; }
 
 	float Y_coord;
-	if (*currentopATM > GTA_SCROLLOP && totalop > GTA_MAXOP)
+	if (*activeOptionIndex > GTA_SCROLLOP && totalOptionCount > GTA_MAXOP)
 	{
 		Y_coord = GTA_SCROLLOP;
 
-		if (*currentopATM > totalop - GTA_BETOP)
+		if (*activeOptionIndex > totalOptionCount - GTA_BETOP)
 		{
 			//for (inull = 0; inull <= GTA_BETOP; inull++)
-			//if (currentop == totalop - GTA_BETOP + inull) break;
-			Y_coord = GTA_SCROLLOP + *currentopATM - totalop + GTA_BETOP;
+			//if (selectedOptionIndex == totalOptionCount - GTA_BETOP + inull) break;
+		Y_coord = GTA_SCROLLOP + *activeOptionIndex - totalOptionCount + GTA_BETOP;
 		}
 	}
-	else Y_coord = *currentopATM;
+	else Y_coord = *activeOptionIndex;
 
 	Y_coord = (Y_coord * 0.035f) + 0.1415f;
 
@@ -497,21 +497,21 @@ void Menu::while_closed()
 
 		Game::Sound::PlayFrontend("FocusIn", "HintCamSounds");
 
-		currentsub = LOOCsub;
-		addlog(ige::LogType::LOG_TRACE, "Setting current submenu to LOOCsub: " + std::to_string(LOOCsub));
-		if (currentsub == SUB::MAINMENU)
+		activeSubmenu = lastOpenedSubmenu;
+		addlog(ige::LogType::LOG_TRACE, "Setting current submenu to lastOpenedSubmenu: " + std::to_string(lastOpenedSubmenu));
+		if (activeSubmenu == SUB::MAINMENU)
 		{
 			addlog(ige::LogType::LOG_TRACE, "Current is MainMenu");
-			currentop = 1;
-			*currentopATM = 1;
+			selectedOptionIndex = 1;
+			*activeOptionIndex = 1;
 		}
 	}
 }
 
 void Menu::while_opened()
 {
-	totalop = printingop; printingop = 0;
-	totalbreaks = breakcount; breakcount = 0; breakscroll = 0;
+	totalOptionCount = currentOptionCount; currentOptionCount = 0;
+	totalBreakCount = currentBreakCount; currentBreakCount = 0; activeBreakScrollDirection = 0;
 
 	if (IS_PAUSE_MENU_ACTIVE()) {
 		addlog(ige::LogType::LOG_TRACE, "Game Paused, closing Menyoo");
@@ -533,12 +533,12 @@ void Menu::while_opened()
 	//set_THEPHONEDOWN();
 	set_opened_IB();
 
-	if (totalop > 0)
+	if (totalOptionCount > 0)
 	{
 		// Scroll up
 		if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Up))
 		{
-			if (*currentopATM <= 1)
+			if (*activeOptionIndex <= 1)
 				Bottom();
 			else
 				Up();
@@ -547,7 +547,7 @@ void Menu::while_opened()
 		// Scroll down
 		if (MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Down))
 		{
-			if (*currentopATM >= totalop)
+			if (*activeOptionIndex >= totalOptionCount)
 				Top();
 			else
 				Down();
@@ -557,14 +557,14 @@ void Menu::while_opened()
 	// B press
 	if (MenuPressTimer::IsButtonTapped(MenuPressTimer::Button::Back))
 	{
-		if (currentsub == SUB::MAINMENU)
+		if (activeSubmenu == SUB::MAINMENU)
 			SetSub_closed();
 		else
 			SetPreviousMenu();
 	}
 
 	// Binds press
-	if (isBinds())//&& currentsub != SUB::MAINMENU)
+	if (isBinds())//&& activeSubmenu != SUB::MAINMENU)
 	{
 		SetSub_closed();
 	}
@@ -583,35 +583,35 @@ void Menu::while_stopanim()
 }
 void Menu::Up(bool playSound)
 {
-	(*currentopATM)--;
-	currentop_w_breaks--;
+	(*activeOptionIndex)--;
+	selectedOptionWithBreaks--;
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
-	breakscroll = 1;
+	activeBreakScrollDirection = 1;
 }
 void Menu::Down(bool playSound)
 {
-	(*currentopATM)++;
-	currentop_w_breaks++;
+	(*activeOptionIndex)++;
+	selectedOptionWithBreaks++;
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
-	breakscroll = 2;
+	activeBreakScrollDirection = 2;
 }
 void Menu::Bottom(bool playSound)
 {
-	*currentopATM = totalop;
-	currentop_w_breaks = totalop;
+	*activeOptionIndex = totalOptionCount;
+	selectedOptionWithBreaks = totalOptionCount;
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
-	breakscroll = 1;
+	activeBreakScrollDirection = 1;
 }
 void Menu::Top(bool playSound)
 {
-	*currentopATM = 1;
-	currentop_w_breaks = 1;
+	*activeOptionIndex = 1;
+	selectedOptionWithBreaks = 1;
 	if (playSound)
 		Game::Sound::PlayFrontend_default("NAV_UP_DOWN");
-	breakscroll = 2;
+	activeBreakScrollDirection = 2;
 }
 void Menu::SetPreviousMenu()
 {
@@ -621,36 +621,36 @@ void Menu::SetPreviousMenu()
 		OnSubBack = nullptr;
 	}
 
-	currentsub = currentArray[currentArrayIndex]; // Get previous submenu from array and set as current submenu
-	currentop = currentop_ar[currentArrayIndex]; // Get last selected option from array and set as current selected option
+	activeSubmenu = submenuHistory[menuHistoryIndex]; // Get previous submenu from history and set as active submenu
+	selectedOptionIndex = optionSelectionHistory[menuHistoryIndex]; // Get last selected option from history and set as current selected option
 
-	currentArray[currentArrayIndex] = -2;
-	currentop_ar[currentArrayIndex] = -2;
+	submenuHistory[menuHistoryIndex] = -2;
+	optionSelectionHistory[menuHistoryIndex] = -2;
 
-	currentArrayIndex--; // Decrement array index by 1
-	printingop = 0; // Reset option print variable
-	totalop = 0; // Reset total option count variable
+	menuHistoryIndex--; // Decrement history index by 1
+	currentOptionCount = 0; // Reset option print variable
+	totalOptionCount = 0; // Reset total option count variable
 	Game::Sound::PlayFrontend_default("BACK"); // Play sound
 
-	*currentopATM = currentop;
+	*activeOptionIndex = selectedOptionIndex;
 
 }
 
 void Menu::NewSetMenu(INT sub_index)
 {
-	if (currentArrayIndex >= 99)
+	if (menuHistoryIndex >= 99)
 		return; // Array bounds safety - max depth reached
-	currentArrayIndex++; //Increment array index
-	currentArray[currentArrayIndex] = currentsub; // Store current submenu index in array
-	currentsub = sub_index; // Set new submenu as current submenu
+	menuHistoryIndex++; //Increment history index
+	submenuHistory[menuHistoryIndex] = activeSubmenu; // Store current submenu index in history
+	activeSubmenu = sub_index; // Set new submenu as current submenu
 
-	currentop_ar[currentArrayIndex] = *currentopATM; // Store currently selected option in array
-	currentop = 1; currentop_w_breaks = 1; // Set new selected option as first option in submenu
+	optionSelectionHistory[menuHistoryIndex] = *activeOptionIndex; // Store currently selected option in history
+	selectedOptionIndex = 1; selectedOptionWithBreaks = 1; // Set new selected option as first option in submenu
 
-	printingop = 0; // Reset currently printing option var
-	totalop = 0; // Reset total number of options var"
+	currentOptionCount = 0; // Reset currently printing option var
+	totalOptionCount = 0; // Reset total number of options var"
 
-	*currentopATM = currentop; //SetSub_new complete
+	*activeOptionIndex = selectedOptionIndex; //SetSub_new complete
 
 }
 
@@ -662,15 +662,15 @@ void Menu::SetSub_closed()
 	ENABLE_ALL_CONTROL_ACTIONS(2);
 	Game::Sound::PlayFrontend_default("BACK");
 
-	LOOCsub = currentsub;
-	currentsub = SUB::CLOSED;
+	lastOpenedSubmenu = activeSubmenu;
+	activeSubmenu = SUB::CLOSED;
 
-	// if the current sub is stored in Menu::LOOCsub, it can be reopened on menuOpen.
+	// if the current sub is stored in Menu::lastOpenedSubmenu, it can be reopened on menuOpen.
 	// This way, the binds can be used in any submenu and that submenu can be reopened instantly
 	// But this isn't possible due to the infobox loop below
 
-	/*for (auto& su : Menu::currentsub_ar) su = SUB::CLOSED;
-	currentsub = SUB::CLOSED;*/
+	/*for (auto& su : Menu::submenuHistory) su = SUB::CLOSED;
+	activeSubmenu = SUB::CLOSED;*/
 }
 
 void Menu::glare_test()
@@ -705,7 +705,7 @@ void Menu::set_opened_IB()
 {
 	if (!bit_frontend_addnumber_selected)
 		add_IB(INPUT_CELLPHONE_SELECT, "ITEM_SELECT");
-	if (currentsub != SUB::MAINMENU)
+	if (activeSubmenu != SUB::MAINMENU)
 		add_IB(INPUT_FRONTEND_RRIGHT, "ITEM_BACK");
 	else
 		add_IB(INPUT_FRONTEND_RRIGHT, "ITEM_EXIT");
@@ -802,7 +802,7 @@ void Menu::sub_handler()
 	{
 		addlog(ige::LogType::LOG_TRACE, "First Run sub_handler");;
 	}
-	if (currentsub == SUB::CLOSED)
+	if (activeSubmenu == SUB::CLOSED)
 	{
 		if (!isClosed)
 		{
@@ -820,12 +820,12 @@ void Menu::sub_handler()
 		}
 		submenu_switch();
 
-		if (Menu::currentop > Menu::printingop) { Menu::currentop = Menu::printingop + 1; Menu::Up(false); }
-		else if (Menu::currentop < 1) { Menu::currentop = 0; Menu::Down(false); }
+		if (Menu::selectedOptionIndex > Menu::currentOptionCount) { Menu::selectedOptionIndex = Menu::currentOptionCount + 1; Menu::Up(false); }
+		else if (Menu::selectedOptionIndex < 1) { Menu::selectedOptionIndex = 0; Menu::Down(false); }
 
 		//// These czechs is kill
-		//if (currentop < 1) currentop = 1;
-		//else if (currentop > totalop) currentop = totalop;
+		//if (selectedOptionIndex < 1) selectedOptionIndex = 1;
+		//else if (selectedOptionIndex > totalOptionCount) selectedOptionIndex = totalOptionCount;
 
 		if (SetSub_delayed != -1)
 		{
@@ -853,7 +853,7 @@ INT MouseSupport::currentopM = -1;
 std::vector<MouseSupport::ItemNumber> MouseSupport::vItems;
 INT MouseSupport::ItemNumberToItemNumberOnScreen(INT itemNumber)
 {
-	/*if (itemNumber >= vItems.size() + Menu::breakcount)
+	/*if (itemNumber >= vItems.size() + Menu::currentBreakCount)
 	{
 	return -1;
 	}*/
@@ -878,35 +878,35 @@ Vector2 MouseSupport::ItemNumberToItemCoords(INT itemNumber)
 
 void MouseSupport::Tick()
 {
-	Menu::currentopATM = Menu::bit_mouse ? &MouseSupport::currentopM : &Menu::currentop;
+	Menu::activeOptionIndex = Menu::bit_mouse ? &MouseSupport::currentopM : &Menu::selectedOptionIndex;
 
 	pressedSelectAfterSelect = false;
 
-	if (Menu::bit_mouse && Menu::currentsub != SUB::CLOSED)
+	if (Menu::bit_mouse && Menu::activeSubmenu != SUB::CLOSED)
 	{
 		// sometimes hover/selected gets set to 0 temp fix 
 		if (currentopM < 1)
-			currentopM = Menu::currentop;
-		if (Menu::totalop > 0 && currentopM > Menu::totalop)
-			currentopM = Menu::currentop;
+			currentopM = Menu::selectedOptionIndex;
+		if (Menu::totalOptionCount > 0 && currentopM > Menu::totalOptionCount)
+			currentopM = Menu::selectedOptionIndex;
 
 		DisableControls();
 
 		if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_AIM))
 		{
-			if (Menu::currentsub == SUB::MAINMENU)
+			if (Menu::activeSubmenu == SUB::MAINMENU)
 				Menu::SetSub_closed();
 			else
 				Menu::SetPreviousMenu();
 		}
 
-		if (Menu::currentsub != SUB::CLOSED)
+		if (Menu::activeSubmenu != SUB::CLOSED)
 		{
 			DoMouseTick();
 		}
 
-		// Keep currentop in sync so the scroll window follows the selection
-		Menu::currentop = currentopM;
+		// Keep selectedOptionIndex in sync so the scroll window follows the selection
+		Menu::selectedOptionIndex = currentopM;
 	}
 }
 
@@ -995,7 +995,7 @@ void MouseSupport::DoMouseTick()
 
 void MouseSupport::DrawOptionHighlight()
 {
-	if (Menu::totalop < 1)
+	if (Menu::totalOptionCount < 1)
 		return;
 
 	Vector2 pos = ItemNumberToItemCoords(MouseSupport::currentopM);
@@ -1054,16 +1054,16 @@ std::pair<int, int> MouseSupport::GetScreenResolutionMantainRatio()
 
 void MouseSupport::DoScrollChecks()
 {
-	if (Menu::totalop > 0)
+	if (Menu::totalOptionCount > 0)
 	{
 		if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_CURSOR_SCROLL_UP))
 		{
-			if (*Menu::currentopATM > 1)
+			if (*Menu::activeOptionIndex > 1)
 				Menu::Up();
 		}
 		else if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_CURSOR_SCROLL_DOWN))
 		{
-			if (*Menu::currentopATM < Menu::totalop)
+			if (*Menu::activeOptionIndex < Menu::totalOptionCount)
 				Menu::Down();
 		}
 	}
@@ -1152,33 +1152,33 @@ void AddOption(std::string text, bool& option_code_bool, void(&callback)(), int 
 {
 	std::string tempChar;
 
-	Menu::printingop++;
+	Menu::currentOptionCount++;
 
 	OptionY = 0;
-	if ((Menu::currentop < GTA_SCROLLOP && Menu::printingop <= GTA_MAXOP) || Menu::totalop <= GTA_MAXOP)
+	if ((Menu::selectedOptionIndex < GTA_SCROLLOP && Menu::currentOptionCount <= GTA_MAXOP) || Menu::totalOptionCount <= GTA_MAXOP)
 	{
-		OptionY = Menu::printingop;
+		OptionY = Menu::currentOptionCount;
 	}
 	else
 	{
-		if (Menu::currentop >= GTA_SCROLLOP)
+		if (Menu::selectedOptionIndex >= GTA_SCROLLOP)
 		{
 
-			if (Menu::currentop > (Menu::totalop - GTA_BETOP))
+			if (Menu::selectedOptionIndex > (Menu::totalOptionCount - GTA_BETOP))
 			{
-				OptionY = GTA_SCROLLOP + (GTA_BETOP - (Menu::totalop - Menu::printingop));
+				OptionY = GTA_SCROLLOP + (GTA_BETOP - (Menu::totalOptionCount - Menu::currentOptionCount));
 			}
 			else
 			{
-				OptionY = GTA_SCROLLOP + (Menu::printingop - Menu::currentop);
+				OptionY = GTA_SCROLLOP + (Menu::currentOptionCount - Menu::selectedOptionIndex);
 			}
 		}
 	}
 	if (OptionY > GTA_MAXOP || OptionY <= 0) return;
 
 	// store on screen item number in array
-	if (Menu::printingop == 1) MouseSupport::vItems.clear();
-	MouseSupport::vItems.push_back({ Menu::printingop, (int)OptionY });
+	if (Menu::currentOptionCount == 1) MouseSupport::vItems.clear();
+	MouseSupport::vItems.push_back({ Menu::currentOptionCount, (int)OptionY });
 
 	OptionY = OptionY * 0.035f + 0.125f;
 
@@ -1187,7 +1187,7 @@ void AddOption(std::string text, bool& option_code_bool, void(&callback)(), int 
 		SET_TEXT_SCALE(0, 0.33f);
 	SET_TEXT_FONT(font_options);
 	SET_TEXT_COLOUR(optiontext.R, optiontext.G, optiontext.B, optiontext.A);
-	if (Menu::bit_mouse ? Menu::printingop == MouseSupport::currentopM : Menu::printingop == Menu::currentop)
+	if (Menu::bit_mouse ? Menu::currentOptionCount == MouseSupport::currentopM : Menu::currentOptionCount == Menu::selectedOptionIndex)
 	{
 		if (font_selection == 2 || font_selection == 7) tempChar = "  ~b~=="; // Font unsafe
 		else tempChar = "  ~b~>"; // Font safe
@@ -1313,25 +1313,25 @@ void AddLocal(const std::string& text, BOOL condition, void(&callback_ON)(), voi
 }
 void AddBreak(std::string text)
 {
-	Menu::printingop++; Menu::breakcount++;
+	Menu::currentOptionCount++; Menu::currentBreakCount++;
 
 	OptionY = 0;
-	if ((Menu::currentop < GTA_SCROLLOP && Menu::printingop <= GTA_MAXOP) || Menu::totalop <= GTA_MAXOP)
+	if ((Menu::selectedOptionIndex < GTA_SCROLLOP && Menu::currentOptionCount <= GTA_MAXOP) || Menu::totalOptionCount <= GTA_MAXOP)
 	{
-		OptionY = Menu::printingop;
+		OptionY = Menu::currentOptionCount;
 	}
 	else
 	{
-		if (Menu::currentop >= GTA_SCROLLOP)
+		if (Menu::selectedOptionIndex >= GTA_SCROLLOP)
 		{
 
-			if (Menu::currentop > (Menu::totalop - GTA_BETOP))
+			if (Menu::selectedOptionIndex > (Menu::totalOptionCount - GTA_BETOP))
 			{
-				OptionY = GTA_SCROLLOP + (GTA_BETOP - (Menu::totalop - Menu::printingop));
+				OptionY = GTA_SCROLLOP + (GTA_BETOP - (Menu::totalOptionCount - Menu::currentOptionCount));
 			}
 			else
 			{
-				OptionY = GTA_SCROLLOP + (Menu::printingop - Menu::currentop);
+				OptionY = GTA_SCROLLOP + (Menu::currentOptionCount - Menu::selectedOptionIndex);
 			}
 		}
 	}
@@ -1343,16 +1343,16 @@ void AddBreak(std::string text)
 	Game::Print::setupdraw(); //SET_TEXT_OUTLINE();
 	SET_TEXT_FONT(font_breaks);
 	SET_TEXT_COLOUR(optionbreaks.R, optionbreaks.G, optionbreaks.B, optionbreaks.A);
-	if (Menu::printingop == Menu::currentop)
+	if (Menu::currentOptionCount == Menu::selectedOptionIndex)
 	{
-		switch (Menu::breakscroll)
+		switch (Menu::activeBreakScrollDirection)
 		{
 		case 1: // Up
-			if (Menu::currentop <= 1) Menu::Bottom();
+			if (Menu::selectedOptionIndex <= 1) Menu::Bottom();
 			else Menu::Up();
 			break;
 		case 2: default: // Down
-			if (Menu::currentop >= Menu::totalop) Menu::Top();
+			if (Menu::selectedOptionIndex >= Menu::totalOptionCount) Menu::Top();
 			else Menu::Down();
 			break;
 		}
@@ -1381,7 +1381,7 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 	{
 		FLOAT newXpos;
 		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
-		if (Menu::printingop == *Menu::currentopATM)
+		if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 		{
 			if (&RIGHT_PRESS != &null && &LEFT_PRESS != &null)
 			{
@@ -1412,7 +1412,7 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 		Game::Print::drawfloat(value, decimal_places, newXpos, OptionY + 0.0056 + menuPos.y);
 	}
 
-	if (Menu::printingop == *Menu::currentopATM)
+	if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 	{
 		bit_frontend_addnumber_selected = true;
 		if (&A_PRESS != &null) Menu::add_IB(INPUT_CELLPHONE_SELECT, "Input");
@@ -1485,7 +1485,7 @@ void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& nor
 {
 	if (!HAS_STREAMED_TEXTURE_DICT_LOADED(textureDict.c_str())) REQUEST_STREAMED_TEXTURE_DICT(textureDict.c_str(), 0);
 	std::string textureName;
-	if (Menu::printingop == *Menu::currentopATM)
+	if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 		textureName = selected;
 	else textureName = normal;
 	Vector3 texture_res = GET_TEXTURE_RESOLUTION(textureDict.c_str(), textureName.c_str());
@@ -1497,7 +1497,7 @@ void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& nor
 inline void draw_tickol_tick(TICKOL tickType, float rotation)
 {
 	RGBA* colour = &optiontext;
-	if (Menu::printingop == *Menu::currentopATM) colour = &selectedtext;
+	if (Menu::currentOptionCount == *Menu::activeOptionIndex) colour = &selectedtext;
 	std::string textureDict, textureName;
 	Vector3 texture_res;
 
@@ -1636,7 +1636,7 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 		FLOAT newXpos;
 		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
 
-		if (Menu::printingop == *Menu::currentopATM)
+		if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 		{
 			if (&RIGHT_PRESS != &null && &LEFT_PRESS != &null)
 			{
@@ -1667,7 +1667,7 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 		Game::Print::drawstring(chartickStr, newXpos, OptionY + 0.0056 + menuPos.y);
 	}
 
-	if (Menu::printingop == *Menu::currentopATM)
+	if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 	{
 		bit_frontend_addnumber_selected = true;
 		if (&A_PRESS != &null) Menu::add_IB(INPUT_CELLPHONE_SELECT, "Input");
@@ -1728,7 +1728,7 @@ bool AddPresetColourOptions(INT& r, INT& g, INT& b)
 			bPressed = true;
 		}
 
-		if (Menu::printingop == *Menu::currentopATM)
+		if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 			AddPresetColourOptionsPreviews(colol.rgb.R, colol.rgb.G, colol.rgb.B);
 	}
 	return bPressed;

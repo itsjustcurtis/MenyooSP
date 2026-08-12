@@ -110,7 +110,7 @@ namespace sub
 		bool pressed = false;
 		AddOption(text, pressed, nullFunc, SUB::SETTINGS_COLOURS2);
 
-		if (*Menu::currentopATM == Menu::printingop)
+		if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 		{
 			AddPresetColourOptionsPreviews(feature);
 		}
@@ -165,7 +165,7 @@ namespace sub
 		AddTitle("Set Colour");
 		AddNumber("Red", settingsRGBA->R, 0, settingsRInput, settingsRPlus, settingsRMinus);
 
-		switch (*Menu::currentopATM)
+		switch (*Menu::activeOptionIndex)
 		{
 		case 1:
 		case 2:
@@ -192,7 +192,7 @@ namespace sub
 		AddBreak("---Presets---");
 		AddPresetColourOptions(settingsRGBA->R, settingsRGBA->G, settingsRGBA->B);
 
-		switch (*Menu::currentopATM)
+		switch (*Menu::activeOptionIndex)
 		{
 			case 1: 
 				settingsRGBA2 = &settingsRGBA->R;

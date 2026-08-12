@@ -263,7 +263,7 @@ namespace sub::Spooner
 						{
 							thisTargetEnt = e.handle;
 						}
-						if (*Menu::currentopATM == Menu::printingop)
+						if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 							EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 				}
@@ -419,7 +419,7 @@ namespace sub::Spooner
 				{
 					AddOption("~italic~" + cit->ToString(), null);
 
-					if (Menu::printingop == *Menu::currentopATM)
+					if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 					{
 						bool bRemoveCoordPressed = false;
 						if (Menu::bitController)
@@ -484,7 +484,7 @@ namespace sub::Spooner
 
 				bool bRadius_plus = false, bRadius_minus = false;
 				AddNumber("Radius", thisRadius, 0, null, bRadius_plus, bRadius_minus);
-				if (*Menu::currentopATM == Menu::printingop)
+				if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisRadius);
 				if (bRadius_plus) { if (thisRadius < FLT_MAX) thisRadius += 1.0f; }
 				if (bRadius_minus) { if (thisRadius > 0.0f) thisRadius -= 1.0f; }
@@ -509,7 +509,7 @@ namespace sub::Spooner
 
 				bool bSearchRadius_plus = false, bSearchRadius_minus = false;
 				AddNumber("Search Radius", thisSearchRadius, 0, null, bSearchRadius_plus, bSearchRadius_minus);
-				if (*Menu::currentopATM == Menu::printingop)
+				if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisSearchRadius);
 				if (bSearchRadius_plus) { if (thisSearchRadius < FLT_MAX) thisSearchRadius += 1.0f; }
 				if (bSearchRadius_minus) { if (thisSearchRadius > 0.0f) thisSearchRadius -= 1.0f; }
@@ -767,7 +767,7 @@ namespace sub::Spooner
 						tskPtr->animName = current;
 					}
 
-					if (Menu::printingop == *Menu::currentopATM)
+					if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 					{
 						bool bIsAFav = IsAnimationAFavourite(selectedDict.first, current);
 						if (Menu::bitController)
@@ -839,7 +839,7 @@ namespace sub::Spooner
 
 				bool bRadius_plus = false, bRadius_minus = false;
 				AddNumber("Radius", thisRadius, 0, null, bRadius_plus, bRadius_minus);
-				if (*Menu::currentopATM == Menu::printingop)
+				if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisRadius);
 				if (bRadius_plus) { if (thisRadius < FLT_MAX) thisRadius += 1.0f; }
 				if (bRadius_minus) { if (thisRadius > 0.0f) thisRadius -= 1.0f; }
@@ -956,7 +956,7 @@ namespace sub::Spooner
 						{
 							thisTargetVehicle = e.handle;
 						}
-						if (*Menu::currentopATM == Menu::printingop)
+						if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 							EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 				}
@@ -983,7 +983,7 @@ namespace sub::Spooner
 						{
 							thisTargetVehicle = e.handle;
 						}
-						if (*Menu::currentopATM == Menu::printingop)
+						if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 							EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 				}
@@ -1719,7 +1719,7 @@ namespace sub::Spooner
 					}
 				}
 
-				if (Menu::printingop == *Menu::currentopATM)
+				if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 				{
 					bool bRemoveTaskPressed = false;
 					char bMoveTaskPressed = 0i8;
@@ -1763,9 +1763,9 @@ namespace sub::Spooner
 
 			}
 
-			if (bMenuUpDown > 0) // Move currentop ahead
+			if (bMenuUpDown > 0) // Move selected option ahead
 			{
-				if (Menu::currentop == Menu::printingop) // Last task selected
+				if (Menu::selectedOptionIndex == Menu::currentOptionCount) // Last task selected
 				{
 					Menu::Top();
 					Menu::Down();
@@ -1774,9 +1774,9 @@ namespace sub::Spooner
 					Menu::Down();
 				//bMenuUpDown = 0;
 			}
-			else if (bMenuUpDown < 0) // Move currentop behind
+			else if (bMenuUpDown < 0) // Move selected option behind
 			{
-				if (Menu::currentop == 2) // First task selected
+				if (Menu::selectedOptionIndex == 2) // First task selected
 				{
 					Menu::Bottom();
 					Menu::Up();

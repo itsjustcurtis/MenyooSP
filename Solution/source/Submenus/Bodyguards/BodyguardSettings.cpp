@@ -43,7 +43,7 @@ namespace sub::BodyguardMenu
                 SelectedBodyguard = &bg;
             }
 
-            if (*Menu::currentopATM == Menu::printingop)
+            if (*Menu::activeOptionIndex == Menu::currentOptionCount)
             {
                 if (bg.Handle.Exists())
                     ENTITY::SET_ENTITY_HAS_GRAVITY(bg.Handle.GetHandle(), true);

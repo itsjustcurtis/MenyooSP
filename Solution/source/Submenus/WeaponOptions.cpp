@@ -1009,7 +1009,7 @@ namespace sub
 						}
 					}
 
-					if (Menu::printingop == *Menu::currentopATM)
+					if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 					{
 						if (Menu::bitController)
 						{
@@ -1019,7 +1019,7 @@ namespace sub
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteWeapons).c_str());
-								if (*Menu::currentopATM >= Menu::totalop) Menu::Up();
+								if (*Menu::activeOptionIndex >= Menu::totalOptionCount) Menu::Up();
 								return; // Yeah
 							}
 						}
@@ -1031,7 +1031,7 @@ namespace sub
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteWeapons).c_str());
-								if (*Menu::currentopATM >= Menu::totalop)
+								if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
 									Menu::Up();
 								return; // Yeah
 							}
@@ -1128,7 +1128,7 @@ namespace sub
 					Menu::SetSub_delayed = SUB::WEAPONOPS_INDIVS_ITEM;
 				}
 
-				if (Menu::printingop == *Menu::currentopATM)
+				if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 				{
 					bool bIsAFav = WeaponFavourites_catind::IsWeaponAFavourite(thisWeaponInfo.weaponHash);
 					if (Menu::bitController)
@@ -1403,7 +1403,7 @@ namespace sub
 
 			bool goRgbSmokeMenu = 0;
 			AddOption("Set Smoke Colour", goRgbSmokeMenu, nullFunc, SUB::MSPAINTS_RGB);
-			if (*Menu::currentopATM == Menu::printingop) 
+			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 				AddPresetColourOptionsPreviews(paraSmokeCol);
 			if (goRgbSmokeMenu)
 			{
@@ -1532,7 +1532,7 @@ namespace sub
 			AddOption("..", bFolderBackPressed); if (bFolderBackPressed)
 			{
 				_dir = _dir.substr(0, _dir.rfind("\\"));
-				Menu::currentop = 4;
+				Menu::selectedOptionIndex = 4;
 			}
 
 			if (!vfilnames.empty())
@@ -1564,10 +1564,10 @@ namespace sub
 						AddTickol(filname + " >>>", true, bFilePressed, bFilePressed, icon, TICKOL::NONE); if (bFilePressed)
 						{
 							_dir = _dir + "\\" + filname;
-							Menu::currentop = 4;
+							Menu::selectedOptionIndex = 4;
 						}
 
-						if (Menu::printingop == *Menu::currentopATM && !bFilePressed)
+						if (Menu::currentOptionCount == *Menu::activeOptionIndex && !bFilePressed)
 						{
 							if (FolderPreviewBmps_catind::bFolderBmpsEnabled)
 								FolderPreviewBmps_catind::DrawBmp(_dir + "\\" + filname);
@@ -1619,7 +1619,7 @@ namespace sub
 						GetLastError() == ERROR_ALREADY_EXISTS)
 					{
 						_dir = _dir + "\\" + inputStr;
-						Menu::currentop = 4;
+						Menu::selectedOptionIndex = 4;
 						Game::Print::PrintBottomLeft("Folder ~b~created~s~.");
 					}
 					else
@@ -1633,8 +1633,8 @@ namespace sub
 				// No OnscreenKeyboard!
 			}
 
-			//if (Menu::currentop > Menu::printingop) Menu::Up();
-			//else if (Menu::currentop <= 0) Menu::Down();
+			//if (Menu::selectedOptionIndex > Menu::currentOptionCount) Menu::Up();
+			//else if (Menu::selectedOptionIndex <= 0) Menu::Down();
 		}
 		void Sub_Loadouts_InItem()
 		{
@@ -1806,7 +1806,7 @@ namespace sub
 		{
 			if (!_searchStr.empty()) { if (current.find(_searchStr) == std::string::npos) continue; }
 
-			switch (Menu::currentArray[Menu::currentArrayIndex])
+			switch (Menu::submenuHistory[Menu::menuHistoryIndex])
 			{
 			case SUB::OBJECTGUN:
 				AddObjectGunOption(current, GET_HASH_KEY(current));

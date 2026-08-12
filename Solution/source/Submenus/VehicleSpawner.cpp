@@ -1529,9 +1529,9 @@ namespace sub
 		for (auto& vehModel : results)
 		{
 			bool bIsSpooner = false;
-			for (int ci = Menu::currentArrayIndex; ci >= 0 && ci >= Menu::currentArrayIndex - 2; ci--)
+			for (int ci = Menu::menuHistoryIndex; ci >= 0 && ci >= Menu::menuHistoryIndex - 2; ci--)
 			{
-				if (Menu::currentArray[ci] == SUB::SPOONER_SPAWN_VEHICLE)
+				if (Menu::submenuHistory[ci] == SUB::SPOONER_SPAWN_VEHICLE)
 				{
 					bIsSpooner = true;
 					break;
@@ -1543,7 +1543,7 @@ namespace sub
 			else
 				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_activePedHandle);
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 			{
 				if (g_spawnVehicleDrawBMPs)
 				{
@@ -1602,7 +1602,7 @@ namespace sub
 		AddBreak("---Neons---");
 		AddToggle("Toggle", g_spawnVehicleNeonToggle);
 		AddOption("RGB Colour", setRGBCarcolIndex9, nullFunc, SUB::MSPAINTS_RGB); 
-		if (*Menu::currentopATM == Menu::printingop) 
+		if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 		{
 			AddPresetColourOptionsPreview(g_spawnVehicleNeonColor);
 		}
@@ -1937,7 +1937,7 @@ namespace sub
 			bool setEngineSoundPressed = false;
 			bool spawnVehicleForAllPlayersPressed = false;
 
-			switch (Menu::currentArray[Menu::currentArrayIndex])
+			switch (Menu::submenuHistory[Menu::menuHistoryIndex])
 			{
 			case SUB::SPOONER_SPAWN_VEHICLE:
 				sub::Spooner::MenuOptions::AddOption_AddVehicle(vehModel.VehicleDisplayName(true), vehModel);
@@ -1948,7 +1948,7 @@ namespace sub
 
 			}
 			/// one submenu back >>>
-			switch (Menu::currentArray[Menu::currentArrayIndex - 1]) /// -1
+			switch (Menu::submenuHistory[Menu::menuHistoryIndex - 1]) /// -1
 			{
 			case SUB::OBJECTGUN:
 				AddObjectGunOption(vehModel.VehicleDisplayName(true), vehModel, nullptr, false);
@@ -1968,7 +1968,7 @@ namespace sub
 				break;
 			}
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 			{
 				if (g_spawnVehicleDrawBMPs)
 				{
@@ -2129,7 +2129,7 @@ namespace sub
 				{
 					bool setEngineSoundPressed = false;
 
-					switch (Menu::currentArray[Menu::currentArrayIndex])
+					switch (Menu::submenuHistory[Menu::menuHistoryIndex])
 					{
 					case SUB::SPOONER_SPAWN_VEHICLE:
 						sub::Spooner::MenuOptions::AddOption_AddVehicle(vehDisplayName, vehModel);
@@ -2160,7 +2160,7 @@ namespace sub
 					}
 					}
 					/// one submenu back >>>
-					switch (Menu::currentArray[Menu::currentArrayIndex - 1]) /// -1
+					switch (Menu::submenuHistory[Menu::menuHistoryIndex - 1]) /// -1
 					{
 					case SUB::OBJECTGUN:
 						AddObjectGunOption(vehDisplayName, vehModel, &null, false);
@@ -2180,7 +2180,7 @@ namespace sub
 					}
 				}
 
-				if (Menu::printingop == *Menu::currentopATM)
+				if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 				{
 					if (g_spawnVehicleDrawBMPs)
 					{
@@ -2198,7 +2198,7 @@ namespace sub
 						{
 							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
-							if (*Menu::currentopATM >= Menu::totalop)
+						if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
 							{
 								Menu::Up();
 							}
@@ -2213,7 +2213,7 @@ namespace sub
 						{
 							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
-							if (*Menu::currentopATM >= Menu::totalop)
+						if (*Menu::activeOptionIndex >= Menu::totalOptionCount)
 							{
 								Menu::Up();
 							}
@@ -2654,12 +2654,12 @@ namespace sub
 		{
 			AddOption(selectedCategory.captions[i], spawnVehicle);
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 			{
 				vehDlcIdToSpawn = static_cast<int>(i);
 			}
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 			{
 
 				if (g_spawnVehicleDrawBMPs)
@@ -2724,7 +2724,7 @@ namespace sub
 		{
 			AddOption(VehicleDlcCategories[i].name, null, nullFunc, SUB::SPAWNVEHICLEDLC);
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 			{
 				vehDLCCategoryID = static_cast<int>(i);
 			}
@@ -3563,7 +3563,7 @@ namespace sub
 			AddOption("..", bFolderBackPressed); if (bFolderBackPressed)
 			{
 				_dir = _dir.substr(0, _dir.rfind("\\"));
-				Menu::currentop = 6;
+				Menu::selectedOptionIndex = 6;
 			}
 
 			if (!vfilnames.empty())
@@ -3609,10 +3609,10 @@ namespace sub
 						if (bFilePressed)
 						{
 							_dir = _dir + "\\" + filname;
-							Menu::currentop = 6;
+							Menu::selectedOptionIndex = 6;
 						}
 
-						if (Menu::printingop == *Menu::currentopATM && !bFilePressed)
+						if (Menu::currentOptionCount == *Menu::activeOptionIndex && !bFilePressed)
 						{
 							if (FolderPreviewBmps_catind::bFolderBmpsEnabled)
 							{
@@ -3682,7 +3682,7 @@ namespace sub
 					else if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
 					{
 						_dir = _dir + "\\" + inputStr;
-						Menu::currentop = 6;
+						Menu::selectedOptionIndex = 6;
 						Game::Print::PrintBottomLeft("Folder ~b~created~s~.");
 					}
 					else

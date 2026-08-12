@@ -571,7 +571,7 @@ namespace sub
 			{
 				myVehicle.Delete(false);
 				Game::Print::PrintBottomCentre("Poof!");
-				*Menu::currentopATM = 1;
+				*Menu::activeOptionIndex = 1;
 			}
 			return;
 		}
@@ -1229,7 +1229,7 @@ namespace sub
 		AddToggle("Rainbow Mode", multiPlatNeonsRainbow);
 
 		AddOption("Set Colour", setRGBIndexTo3, nullFunc, SUB::MSPAINTS_RGB);
-		if (*Menu::currentopATM == Menu::printingop)
+		if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 		{
 			AddPresetColourOptionsPreview(g_multiPlatNeonsColor);
 		}

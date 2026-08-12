@@ -47,13 +47,13 @@ static int s_jumpTarget = -1;
 static DWORD s_lastFrameTick = 0;
 static bool s_navigateIBAdded = false;
 
-// Persistent expanded state, keyed on "currentsub:label"
+// Persistent expanded state, keyed on "activeSubmenu:label"
 static std::map<std::string, bool> s_expandedState;
 static std::map<std::string, bool> s_expandedBackup;
 
 static std::string MakeKey(const std::string& label)
 {
-	return std::to_string(Menu::currentsub) + ":" + label;
+	return std::to_string(Menu::activeSubmenu) + ":" + label;
 }
 
 namespace MenuCategory
@@ -65,7 +65,7 @@ namespace MenuCategory
 
 		if (s_jumpTarget != -1)
 		{
-			*Menu::currentopATM = s_jumpTarget;
+			*Menu::activeOptionIndex = s_jumpTarget;
 			s_jumpTarget = -1;
 		}
 	}
@@ -82,7 +82,7 @@ namespace MenuCategory
 
 			if (s_jumpTarget != -1)
 			{
-				*Menu::currentopATM = s_jumpTarget;
+				*Menu::activeOptionIndex = s_jumpTarget;
 				s_jumpTarget = -1;
 			}
 		}
@@ -96,7 +96,7 @@ namespace MenuCategory
 		AddTickol(label, expanded, catPressed, catPressed, TICKOL::ARROWRIGHT, TICKOL::ARROWRIGHT, false, 270.0f, 90.0f);
 		if (catPressed)
 			expanded = !expanded;
-		s_headerPositions.push_back(Menu::printingop);
+			s_headerPositions.push_back(Menu::currentOptionCount);
 		s_headerLabels.push_back(label);
 
 		if (s_headerPositions.size() > 1)
@@ -127,7 +127,7 @@ namespace MenuCategory
 
 	void ExpandAll()
 	{
-		std::string prefix = std::to_string(Menu::currentsub) + ":";
+		std::string prefix = std::to_string(Menu::activeSubmenu) + ":";
 		bool alreadyBackedUp = !s_expandedBackup.empty();
 		for (auto& [key, val] : s_expandedState)
 		{
@@ -144,7 +144,7 @@ namespace MenuCategory
 	{
 		if (s_expandedBackup.empty())
 			return;
-		std::string prefix = std::to_string(Menu::currentsub) + ":";
+		std::string prefix = std::to_string(Menu::activeSubmenu) + ":";
 		for (auto& [key, val] : s_expandedBackup)
 		{
 			if (key.substr(0, prefix.size()) == prefix)

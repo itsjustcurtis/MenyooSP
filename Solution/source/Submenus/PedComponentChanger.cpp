@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -176,9 +176,9 @@ namespace sub
 
 		static int confirmRandom = 0, confirmDefault = 0;
 		static UINT16 lastSub = 0;
-		if (lastSub != Menu::currentsub)
+		if (lastSub != Menu::activeSubmenu)
 			confirmRandom = 0, confirmDefault = 0;
-		lastSub = Menu::currentsub;
+		lastSub = Menu::activeSubmenu;
 
 		if (bRandomComponents) {
 			if (PromptConfirm(confirmRandom, "~r~Randomize ~w~all components? Press again to confirm.")) {
@@ -388,9 +388,9 @@ namespace sub
 
 		static int confirmRandomProps = 0, confirmDefaultProps = 0;
 		static UINT16 lastPropsSub = 0;
-		if (lastPropsSub != Menu::currentsub)
+		if (lastPropsSub != Menu::activeSubmenu)
 			confirmRandomProps = 0, confirmDefaultProps = 0;
-		lastPropsSub = Menu::currentsub;
+		lastPropsSub = Menu::activeSubmenu;
 
 		if (bRandomProps)
 		{
@@ -788,7 +788,7 @@ namespace sub
 
 			for (auto& result : results)
 			{
-				bool isHovered = (*Menu::currentopATM == Menu::printingop + 1);
+				bool isHovered = (*Menu::activeOptionIndex == Menu::currentOptionCount + 1);
 				bool bDecalPressedApply = false, bDecalPressedRemove = false;
 				bool bIsOnPed = result.decal->IsOnPed(ped);
 
@@ -850,7 +850,7 @@ namespace sub
 
 			for (const auto& decal : selectedZone->second)
 			{
-				bool isHovered = (*Menu::currentopATM == Menu::printingop + 1);
+				bool isHovered = (*Menu::activeOptionIndex == Menu::currentOptionCount + 1);
 				bool bDecalPressedApply = false, bDecalPressedRemove = false;
 				bool bIsOnPed = decal.IsOnPed(ped);
 
@@ -1926,7 +1926,7 @@ namespace sub
 		if (bFolderBackPressed)
 		{
 			dir = dir.substr(0, dir.rfind("\\"));
-			Menu::currentop = 5;
+			Menu::selectedOptionIndex = 5;
 		}
 
 		if (!fileNames.empty())
@@ -1957,10 +1957,10 @@ namespace sub
 					if (bFilePressed)
 					{
 						dir = dir + "\\" + fileName;
-						Menu::currentop = 5;
+						Menu::selectedOptionIndex = 5;
 					}
 
-					if (Menu::printingop == *Menu::currentopATM && !bFilePressed)
+					if (Menu::currentOptionCount == *Menu::activeOptionIndex && !bFilePressed)
 					{
 						if (FolderPreviewBmps_catind::bFolderBmpsEnabled)
 						{
@@ -2013,7 +2013,7 @@ namespace sub
 				else if (CreateDirectoryA((dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
 				{
 					dir = dir + "\\" + inputStr;
-					Menu::currentop = 5;
+					Menu::selectedOptionIndex = 5;
 					Game::Print::PrintBottomLeft("Folder ~b~created~s~.");
 				}
 				else

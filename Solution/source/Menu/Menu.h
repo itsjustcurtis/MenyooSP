@@ -140,18 +140,18 @@ public:
 class Menu final
 {
 public:
-	static UINT16 currentsub, LOOCsub;
-	static INT currentop;
-	static INT* currentopATM;
-	static INT currentop_w_breaks;
-	static INT totalop;
-	static INT printingop;
-	static UINT16 breakcount;
-	static UINT16 totalbreaks;
-	static UINT8 breakscroll;
-	static INT16 currentArrayIndex;
-	static INT currentArray[100];
-	static INT currentop_ar[100];
+	static UINT16 activeSubmenu, lastOpenedSubmenu;
+	static INT selectedOptionIndex;
+	static INT* activeOptionIndex;
+	static INT selectedOptionWithBreaks;
+	static INT totalOptionCount;
+	static INT currentOptionCount;
+	static UINT16 currentBreakCount;
+	static UINT16 totalBreakCount;
+	static UINT8 activeBreakScrollDirection;
+	static INT16 menuHistoryIndex;
+	static INT submenuHistory[100];
+	static INT optionSelectionHistory[100];
 	static INT SetSub_delayed;
 	static int delayedTimer;
 	static bool bitController, bit_mouse, bit_centre_title, bit_centre_options, bit_centre_breaks, gradients, thinLineOverScrect, bit_glare_test;

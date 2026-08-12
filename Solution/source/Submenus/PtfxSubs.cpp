@@ -3371,10 +3371,10 @@ namespace sub
             AddOption("Favourites", detectKeypress, nullFunc, SUB::PTFX_FAVORITES);
             if (detectKeypress)
             {
-                lastSubmenuSource = Menu::currentArray[Menu::currentArrayIndex];
+                lastSubmenuSource = Menu::submenuHistory[Menu::menuHistoryIndex];
             }
             AddToggle("Only Show Favorites", showOnlyFaves);
-            switch (Menu::currentArray[Menu::currentArrayIndex])
+            switch (Menu::submenuHistory[Menu::menuHistoryIndex])
             {
             case SUB::PLAYEROPS: case SUB::SPOONER_SELECTEDENTITYOPS:
                 AddOption("Loop On Entity", null, nullFunc, SUB::PTFXSUB);
@@ -3397,7 +3397,7 @@ namespace sub
             {
                 const auto& current = displayedFx[i];
 
-                switch (Menu::currentArray[Menu::currentArrayIndex])
+                switch (Menu::submenuHistory[Menu::menuHistoryIndex])
                 {
                 case SUB::PLAYEROPS:
                 case SUB::SPOONER_SELECTEDENTITYOPS:
@@ -3412,7 +3412,7 @@ namespace sub
                 }
 
                 // Handle favorite toggling
-                if (*Menu::currentopATM == Menu::printingop)
+                if (*Menu::activeOptionIndex == Menu::currentOptionCount)
                 {
                     if (favouritesLoaded) 
                     {
@@ -3452,7 +3452,7 @@ namespace sub
                 }
             }
             // Block navigation input if on first page
-            if (ptfxPage + 1 != 0 && totalPages != 0 && *Menu::currentopATM != 1)
+            if (ptfxPage + 1 != 0 && totalPages != 0 && *Menu::activeOptionIndex != 1)
             {
                 if (IsOptionLPressed())
                 {

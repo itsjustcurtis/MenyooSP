@@ -325,11 +325,11 @@ namespace sub
 		if (model.IsInCdImage())
 		{
 			int context = 0;
-			for (int ci = Menu::currentArrayIndex; ci >= 0; ci--)
+			for (int ci = Menu::menuHistoryIndex; ci >= 0; ci--)
 			{
-				if (Menu::currentArray[ci] == SUB::SPOONER_SPAWN_PED) { context = 1; break; }
-				if (Menu::currentArray[ci] == SUB::BODYGUARD_SPAWN) { context = 2; break; }
-				if (Menu::currentArray[ci] == SUB::PEDGUN_ALLPEDS) { context = 3; break; }
+				if (Menu::submenuHistory[ci] == SUB::SPOONER_SPAWN_PED) { context = 1; break; }
+				if (Menu::submenuHistory[ci] == SUB::BODYGUARD_SPAWN) { context = 2; break; }
+				if (Menu::submenuHistory[ci] == SUB::PEDGUN_ALLPEDS) { context = 3; break; }
 			}
 
 			switch (context)
@@ -348,7 +348,7 @@ namespace sub
 				break;
 			}
 
-			if (*Menu::currentopATM == Menu::printingop)
+			if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 			{
 				PedFavourites::ShowInstructionalButton(model);
 			}
