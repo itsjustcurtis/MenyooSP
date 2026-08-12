@@ -3310,10 +3310,10 @@ namespace sub
                 switch (lastSubmenuSource)
                 {
                 case SUB::PLAYEROPS: case SUB::SPOONER_SELECTEDENTITYOPS:
-                    AddOptionEntity(favourites[i], g_Ped1);
+                    AddOptionEntity(favourites[i], g_activePedHandle);
                     break;
                 case SUB::PTFXSUB:
-                    AddOptionLoopOnEntity(favourites[i], g_Ped1);
+                    AddOptionLoopOnEntity(favourites[i], g_activePedHandle);
                     break; // Subception
                 case SUB::TRIGGERFXGUN:
                     TriggerFxGun::AddOptionGunFX(favourites[i]);
@@ -3388,7 +3388,7 @@ namespace sub
                     fxLoops.clear();
                 }
                 PtfxS nonefx = { "None", "", "" };
-                AddOptionLoopOnEntity(nonefx, g_Ped1);
+                AddOptionLoopOnEntity(nonefx, g_activePedHandle);
                 break;
             }
             }
@@ -3401,10 +3401,10 @@ namespace sub
                 {
                 case SUB::PLAYEROPS:
                 case SUB::SPOONER_SELECTEDENTITYOPS:
-                    AddOptionEntity(current, g_Ped1);
+                    AddOptionEntity(current, g_activePedHandle);
                     break;
                 case SUB::PTFXSUB:
-                    AddOptionLoopOnEntity(current, g_Ped1);
+                    AddOptionLoopOnEntity(current, g_activePedHandle);
                     break;
                 case SUB::TRIGGERFXGUN:
                     TriggerFxGun::AddOptionGunFX(current);

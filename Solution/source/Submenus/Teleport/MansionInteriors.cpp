@@ -510,7 +510,7 @@ namespace sub::TeleportLocations_catind
 				DO_SCREEN_FADE_IN(200);
 				currentMansionInfo.needsBuild = false;
 			}
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			AddTitle(currentMansionInfo.location->name);
 
 			{

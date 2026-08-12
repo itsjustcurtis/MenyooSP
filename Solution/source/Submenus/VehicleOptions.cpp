@@ -8,6 +8,7 @@
 * (at your option) any later version.
 */
 #include "VehicleOptions.h"
+#include "VehicleModShop.h"
 #include "..\Util\FileLogger.h"
 
 namespace sub
@@ -93,12 +94,12 @@ namespace sub
 		bool slamOn = false;
 		bool heavyMassOff = false;
 
-		g_Ped1 = PLAYER_PED_ID();
-		g_Ped2 = PLAYER_ID();
+		g_activePedHandle = PLAYER_PED_ID();
+		g_activePlayerId = PLAYER_ID();
 
 		bool amIOnline = NETWORK_IS_IN_SESSION() != 0;
-		GTAped myPed = g_Ped1;
-		GTAplayer myPlayer = g_Ped2;
+		GTAped myPed = g_activePedHandle;
+		GTAplayer myPlayer = g_activePlayerId;
 		GTAvehicle myVehicle = g_myVeh;
 		bool myPedIsInVehicle = myPed.IsInVehicle();
 		const Model& myVehicleModel = myVehicle.Model();
@@ -209,7 +210,7 @@ namespace sub
 
 		if (setVehiclePed) 
 		{
-			g_Ped4 = g_myVeh;
+			sub::SetVehicleModShopTarget(g_myVeh);
 		}
 		if (goToSlamItMenu) 
 		{
@@ -220,7 +221,7 @@ namespace sub
 		{
 			if (DOES_ENTITY_EXIST(g_myVeh)) 
 			{ 
-				g_Ped4 = g_myVeh; Menu::NewSetMenu(SUB::MODSHOP); 
+				sub::SetVehicleModShopTarget(g_myVeh); Menu::NewSetMenu(SUB::MODSHOP);
 			}
 			else 
 			{
@@ -232,7 +233,7 @@ namespace sub
 		{
 			if (DOES_ENTITY_EXIST(g_myVeh)) 
 			{ 
-				g_Ped4 = g_myVeh; Menu::NewSetMenu(SUB::ENTITYALPHALEVEL); 
+				sub::SetVehicleModShopTarget(g_myVeh); Menu::NewSetMenu(SUB::ENTITYALPHALEVEL);
 			}
 			else 
 			{
@@ -1041,11 +1042,9 @@ namespace sub
 
 	namespace VehicleSlam
 	{
-		Vehicle& slamVehicle = g_Ped4;
 		float* slamValue;
 		void InitSub(GTAvehicle veh, float* val)
 		{
-			slamVehicle = veh.Handle();
 			slamValue = val;
 		}
 

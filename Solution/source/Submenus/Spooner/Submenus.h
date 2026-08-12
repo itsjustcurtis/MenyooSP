@@ -49,8 +49,9 @@ namespace sub
 
 		void HandleKeyboardPlacementInput(Vector3& position, Vector3& rotation);
 
-		void SetEnt241();
-		void SetEnt12();
+		void SetSelectedEntityAsActivePed();
+		void SetSelectedEntityAsVehicleTarget();
+		void SetPlayerAsEntityAlphaTarget();
 
 		void Sub_SpoonerMain();
 		void Sub_Settings();

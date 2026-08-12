@@ -74,12 +74,11 @@ extern GTAmodel::Model pedGunHash;
 extern GTAmodel::Model objectGunHash;
 extern FLOAT currentTimescale;
 
-extern INT g_Ped1; 
-extern INT g_Ped2;
-extern INT g_Ped3;
-extern INT g_Ped4;
+extern INT g_activePedHandle;
+extern INT g_activePlayerId;
+extern INT g_playerGroupId;
 
-extern const char* g_PlayerName;
+extern const char* g_playerName;
 extern INT bitMSPaintsRGBMode;
 extern bool kaboomGunInvis;
 extern bool kaboomGunRandBit;
@@ -108,7 +107,6 @@ extern bool bitVehicleSlippyTires;
 extern std::array<int, 3> GetHSVFromRGB(int r, int g, int b);
 extern float NormalizeHSV(int h, int s, int v);
 
-extern INT msCurrentPaintIndex;
 
 // String variables used in various submenus for search, storage, etc.
 extern INT16 BindNoClip;

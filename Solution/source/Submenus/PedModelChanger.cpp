@@ -364,7 +364,7 @@ namespace sub
 		rngped = { "", "" };
 		dict3.clear();
 
-		g_Ped1 = PLAYER_PED_ID();
+		g_activePedHandle = PLAYER_PED_ID();
 		AddTitle("Model Changer");
 		AddOption("~b~Search~s~ Peds", null, nullFunc, SUB::MODELCHANGER_SEARCH);
 		AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
@@ -394,8 +394,8 @@ namespace sub
 		if (modelChangerRandomPedVariation)
 		{
 			addlog(ige::LogType::LOG_TRACE, "Random Ped Selected");
-			SET_PED_RANDOM_COMPONENT_VARIATION(g_Ped1, 0);
-			SET_PED_RANDOM_PROPS(g_Ped1);
+			SET_PED_RANDOM_COMPONENT_VARIATION(g_activePedHandle, 0);
+			SET_PED_RANDOM_PROPS(g_activePedHandle);
 			return;
 		}
 

@@ -1347,7 +1347,7 @@ namespace sub
 			if (g_vehHashes.empty()) return;
 
 			Model model = g_vehHashes[GET_RANDOM_INT_IN_RANGE(0, (int)g_vehHashes.size())];
-			Ped ped = g_Ped1;
+			Ped ped = g_activePedHandle;
 
 			if (model.IsInCdImage() && model.IsVehicle())
 			{
@@ -1541,7 +1541,7 @@ namespace sub
 			if (bIsSpooner)
 				sub::Spooner::MenuOptions::AddOption_AddVehicle(vehModel.VehicleDisplayName(true), vehModel);
 			else
-				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_Ped1);
+				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_activePedHandle);
 
 			if (Menu::printingop == *Menu::currentopATM)
 			{
@@ -1624,11 +1624,11 @@ namespace sub
 
 		if (setMSPaintIndex10) 
 		{
-			msCurrentPaintIndex = 10;
+			SelectSpawnPrimaryPaint();
 		}
 		if (setMSPaintIndex11) 
 		{
-			msCurrentPaintIndex = 11;
+			SelectSpawnSecondaryPaint();
 		}
 		if (setRGBCarcolIndex9) 
 		{
@@ -1943,7 +1943,7 @@ namespace sub
 				sub::Spooner::MenuOptions::AddOption_AddVehicle(vehModel.VehicleDisplayName(true), vehModel);
 				break;
 			case SUB::SPAWNVEHICLE:
-				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_Ped1);
+				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_activePedHandle);
 				break;
 
 			}
@@ -1957,10 +1957,11 @@ namespace sub
 				AddKaboomGunOption(vehModel.VehicleDisplayName(true), vehModel.hash, nullptr, false);
 				break;
 			case SUB::MSENGINESOUND:
-				AddTickol(vehModel.VehicleDisplayName(true), GetVehicleEngineSoundName(g_Ped4) == vehModel.VehicleDisplayName(false), setEngineSoundPressed, setEngineSoundPressed); 
+				Vehicle engineSoundVehicleTarget = GetVehicleModShopTarget();
+				AddTickol(vehModel.VehicleDisplayName(true), GetVehicleEngineSoundName(engineSoundVehicleTarget) == vehModel.VehicleDisplayName(false), setEngineSoundPressed, setEngineSoundPressed);
 				if (setEngineSoundPressed)
 				{
-					GTAvehicle veh12 = g_Ped4;
+					GTAvehicle veh12 = engineSoundVehicleTarget;
 					veh12.RequestControl(200);
 					SetVehicleEngineSoundName(veh12, vehModel.VehicleDisplayName(false));
 				}
@@ -2005,7 +2006,7 @@ namespace sub
 		auto& searchStr = dict2;
 		using namespace VehicleSpawner;
 
-		GTAped myPed = g_Ped1;
+		GTAped myPed = g_activePedHandle;
 		GTAvehicle myVehicle = myPed.CurrentVehicle();
 		bool isInVehicle = myVehicle.Exists();
 
@@ -2139,7 +2140,7 @@ namespace sub
 						AddOption(vehDisplayName, bFavPressed);
 						if (bFavPressed)
 						{
-							Vehicle vehicle = SpawnVehicle(vehModel, g_Ped1, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
+							Vehicle vehicle = SpawnVehicle(vehModel, g_activePedHandle, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
 							if (vehicle != 0)
 							{
 								GTAvehicle gv(vehicle);
@@ -2168,9 +2169,10 @@ namespace sub
 						AddKaboomGunOption(vehDisplayName, vehModel.hash, &null, false);
 						break;
 					case SUB::MSENGINESOUND:
-						AddTickol(vehDisplayName, GetVehicleEngineSoundName(g_Ped4) == vehModel.VehicleDisplayName(false), setEngineSoundPressed, setEngineSoundPressed); if (setEngineSoundPressed)
+						Vehicle engineSoundVehicleTarget = GetVehicleModShopTarget();
+						AddTickol(vehDisplayName, GetVehicleEngineSoundName(engineSoundVehicleTarget) == vehModel.VehicleDisplayName(false), setEngineSoundPressed, setEngineSoundPressed); if (setEngineSoundPressed)
 						{
-							GTAvehicle veh12 = g_Ped4;
+							GTAvehicle veh12 = engineSoundVehicleTarget;
 							veh12.RequestControl(200);
 							SetVehicleEngineSoundName(veh12, vehModel.VehicleDisplayName(false));
 						}
@@ -2711,7 +2713,7 @@ namespace sub
 
 		if (spawnVehicle)
 		{
-			SpawnVehicle(selectedCategory.values[vehDlcIdToSpawn], g_Ped1, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
+			SpawnVehicle(selectedCategory.values[vehDlcIdToSpawn], g_activePedHandle, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
 		}
 	}
 
@@ -3368,7 +3370,7 @@ namespace sub
 			std::ofstream outfile;
 			auto& _dir = dict3;
 			int r, g, b;
-			VEHICLE::GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(g_Ped4, &r, &g, &b);
+			VEHICLE::GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(g_myVeh, &r, &g, &b);
 			std::array<int, 3> hsv = GetHSVFromRGB(r, g, b);
 			float normalisedcolour = NormalizeHSV(hsv[0], hsv[1], hsv[2]);
 
@@ -3404,7 +3406,7 @@ namespace sub
 			}
 			int prim, sec;
 			std::string finish;
-			GET_VEHICLE_COLOURS(g_Ped4, &prim, &sec);
+			GET_VEHICLE_COLOURS(g_myVeh, &prim, &sec);
 			switch (prim)
 			{
 			case 0:
@@ -3490,7 +3492,7 @@ namespace sub
 			auto& _name = dict;
 			auto& _dir = dict3;
 
-			auto ped = g_Ped1;
+			auto ped = g_activePedHandle;
 			auto vehicle = GET_VEHICLE_PED_IS_USING(ped);
 			bool isPedInVeh = IS_PED_IN_ANY_VEHICLE(ped, 0) || IS_PED_SITTING_IN_ANY_VEHICLE(ped);
 
@@ -3702,7 +3704,7 @@ namespace sub
 			auto& _dir = dict3;
 			std::string filePath = _dir + "\\" + _name + ".xml";
 
-			auto& ped = g_Ped1;
+			auto& ped = g_activePedHandle;
 			auto vehicle = GET_VEHICLE_PED_IS_USING(ped);
 			bool isPedInVeh = IS_PED_IN_ANY_VEHICLE(ped, 0) || IS_PED_SITTING_IN_ANY_VEHICLE(ped);
 

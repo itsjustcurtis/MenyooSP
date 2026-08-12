@@ -354,7 +354,7 @@ namespace sub
 
 		void VoiceChangerMenu()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			if (!ped.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -395,7 +395,7 @@ namespace sub
 
 		void AmbientSpeechPlayerMenu()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			_currVoiceInfo = nullptr;
 			if (!ped.Exists())
 			{
@@ -428,7 +428,7 @@ namespace sub
 		}
 		void Sub_AmbientSpeechPlayer_InVoice()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			if (_currVoiceInfo == nullptr || !ped.Exists())
 			{
 				Menu::SetPreviousMenu();

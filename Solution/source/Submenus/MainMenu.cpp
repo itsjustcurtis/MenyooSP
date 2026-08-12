@@ -34,10 +34,10 @@ namespace sub
 		AddOption("Settings", null, nullFunc, SUB::SETTINGS);
 		AddOption("The People Behind Menyoo", null, nullFunc, SUB::CREDITSSUB);
 
-		g_Ped2 = PLAYER_ID();
-		g_Ped1 = PLAYER_PED_ID();
-		g_PlayerName = GET_PLAYER_NAME(g_Ped2);
-		g_Ped3 = GET_PLAYER_GROUP(g_Ped2);
+		g_activePlayerId = PLAYER_ID();
+		g_activePedHandle = PLAYER_PED_ID();
+		g_playerName = GET_PLAYER_NAME(g_activePlayerId);
+		g_playerGroupId = GET_PLAYER_GROUP(g_activePlayerId);
 	}
 }
 

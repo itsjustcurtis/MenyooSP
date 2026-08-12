@@ -150,7 +150,7 @@ namespace sub
 
 		int PlaceFunnyVehicle(Hash hash)
 		{
-			return SpawnVehicle(hash, g_Ped1);
+			return SpawnVehicle(hash, g_activePedHandle);
 		}
 
 		void GoKart()

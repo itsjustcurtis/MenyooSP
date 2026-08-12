@@ -113,7 +113,7 @@ namespace sub::TeleportLocations_catind
 		}
 		void Sub_CustomCoords()
 		{
-			GTAentity thisEntity = g_Ped1;
+			GTAentity thisEntity = g_activePedHandle;
 
 			if (!GrabbedCoords)
 			{
@@ -285,7 +285,7 @@ namespace sub::TeleportLocations_catind
 				std::string inputStr = Game::InputBox("", 28U, "Enter name:");
 				if (inputStr.length() > 0)
 				{
-					GTAentity ent = g_Ped1;
+					GTAentity ent = g_activePedHandle;
 					const Vector3& myPos = ent.GetPosition();
 					const Vector3& myRot = ent.Rotation_get();
 					auto nodeOldLoc = nodeRoot.find_child_by_attribute("name", inputStr.c_str());

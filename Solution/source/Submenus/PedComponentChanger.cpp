@@ -74,13 +74,16 @@ namespace sub
 	// Component changer
 
 	Camera g_cam_componentChanger;
+	static int s_selectedComponentIndex = 0;
+	static int s_selectedPropIndex = 0;
+	static int s_selectedOverlayIndex = 0;
 
 	void AddPedComponentOption(const std::string& text, int index)
 	{
 		bool pressed = false;
 		AddOption(text, pressed, nullFunc, SUB::COMPONENTS2, true, true); if (pressed)
 		{
-			g_Ped4 = index;
+			s_selectedComponentIndex = index;
 		}
 	}
 	void AddPedPropOption(const std::string& text, int index)
@@ -88,7 +91,7 @@ namespace sub
 		bool pressed = false;
 		AddOption(text, pressed, nullFunc, SUB::COMPONENTSPROPS2, true, true); if (pressed)
 		{
-			g_Ped4 = index;
+			s_selectedPropIndex = index;
 		}
 	}
 
@@ -127,7 +130,7 @@ namespace sub
 
 		bool bRandomComponents = 0, frontView = 0, bDefaultComponents = 0;
 
-		GTAped thisPed = g_Ped1;
+		GTAped thisPed = g_activePedHandle;
 
 		if (g_cam_componentChanger.Exists())
 		{
@@ -164,7 +167,7 @@ namespace sub
 
 		for ( int i = 0; i < PV_COMP_MAX; i++)
 		{
-			if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, i) > 0) AddPedComponentOption(components[i], i);
+			if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_activePedHandle, i) > 0) AddPedComponentOption(components[i], i);
 		}
 
 		AddBreak("---Utilities---");
@@ -226,13 +229,13 @@ namespace sub
 	}
 	void ComponentChanger2()
 	{
-		int globalDrawableId = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4);
-		int textureId = GET_PED_TEXTURE_VARIATION(g_Ped1, g_Ped4);
+		int globalDrawableId = GET_PED_DRAWABLE_VARIATION(g_activePedHandle, s_selectedComponentIndex);
+		int textureId = GET_PED_TEXTURE_VARIATION(g_activePedHandle, s_selectedComponentIndex);
 		int prevGlobalDrawableId = globalDrawableId;
 		int prevTextureId = textureId;
 
-		int maxGlobalDrawableId = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-		int maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, globalDrawableId);
+		int maxGlobalDrawableId = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_activePedHandle, s_selectedComponentIndex) - 1;
+		int maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedComponentIndex, globalDrawableId);
 
 		AddTitle("Set Variation");
 
@@ -242,7 +245,7 @@ namespace sub
 		if (globalDrawableId != prevGlobalDrawableId)
 		{
 			textureId = 0;
-			maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, globalDrawableId);
+			maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedComponentIndex, globalDrawableId);
 		}
 
 		if (maxTextureId > 0)
@@ -254,15 +257,15 @@ namespace sub
 		{
 			static GTAmemory::DrawableCollectionData s_cache[PV_COMP_MAX];
 			static Hash s_cachedModel[PV_COMP_MAX] = {};
-			Hash modelHash = GET_ENTITY_MODEL(g_Ped1);
+			Hash modelHash = GET_ENTITY_MODEL(g_activePedHandle);
 
-			if (s_cachedModel[g_Ped4] != modelHash)
+			if (s_cachedModel[s_selectedComponentIndex] != modelHash)
 			{
-				s_cache[g_Ped4] = GTAmemory::BuildDrawableCollectionData(g_Ped1, g_Ped4);
-				s_cachedModel[g_Ped4] = modelHash;
+				s_cache[s_selectedComponentIndex] = GTAmemory::BuildDrawableCollectionData(g_activePedHandle, s_selectedComponentIndex);
+				s_cachedModel[s_selectedComponentIndex] = modelHash;
 			}
 
-			auto& data = s_cache[g_Ped4];
+			auto& data = s_cache[s_selectedComponentIndex];
 
 			if (!data.collections.empty())
 			{
@@ -297,7 +300,7 @@ namespace sub
 				{
 					globalDrawableId = col.localToGlobal[data.currentLocalIdx];
 					textureId = 0;
-					maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, globalDrawableId);
+					maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedComponentIndex, globalDrawableId);
 					collectionModified = true;
 				}
 				else if (globalDrawableId != prevGlobalDrawableId)
@@ -310,12 +313,12 @@ namespace sub
 
 		if (collectionModified || globalDrawableId != prevGlobalDrawableId || textureId != prevTextureId)
 		{
-			if (g_Ped4 == PV_COMP_ACCS && !GET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true))
+			if (s_selectedComponentIndex == PV_COMP_ACCS && !GET_PED_CONFIG_FLAG(g_activePedHandle, ePedConfigFlags::DisableTakeOffScubaGear, true))
 			{
-				SET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true);
+				SET_PED_CONFIG_FLAG(g_activePedHandle, ePedConfigFlags::DisableTakeOffScubaGear, true);
 			}
 
-			SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, globalDrawableId, textureId, 0);
+			SET_PED_COMPONENT_VARIATION(g_activePedHandle, s_selectedComponentIndex, globalDrawableId, textureId, 0);
 
 			bool goingForward = (globalDrawableId > prevGlobalDrawableId);
 			while (!HasPedSpecificDrawable(globalDrawableId))
@@ -331,7 +334,7 @@ namespace sub
 					else globalDrawableId = maxGlobalDrawableId;
 				}
 				textureId = 0;
-				SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, globalDrawableId, textureId, 0);
+				SET_PED_COMPONENT_VARIATION(g_activePedHandle, s_selectedComponentIndex, globalDrawableId, textureId, 0);
 			}
 		}
 	}
@@ -339,7 +342,7 @@ namespace sub
     bool HasPedSpecificDrawable(int compon_drawable_new)
     {
         bool compon_drawable_correct = false;
-        int drawableCurrent = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4);
+		int drawableCurrent = GET_PED_DRAWABLE_VARIATION(g_activePedHandle, s_selectedComponentIndex);
         if (compon_drawable_new == drawableCurrent)
         {
             compon_drawable_correct = true;
@@ -348,7 +351,7 @@ namespace sub
     }
     void ComponentChangerProps_()
 	{
-		GTAped thisPed = g_Ped1;
+		GTAped thisPed = g_activePedHandle;
 
 		if (g_cam_componentChanger.Exists())
 		{
@@ -375,7 +378,7 @@ namespace sub
 
 		for (int i = 0; i < static_cast<int>(propNames.size()); ++i)
 		{
-			if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, i) > 0)
+			if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_activePedHandle, i) > 0)
 				AddPedPropOption(propNames[i], i);
 		}
 
@@ -410,13 +413,13 @@ namespace sub
 
 	void ComponentChangerProps2()
 	{
-		int propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0);
-		int propTextureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
+		int propTypeCurrent = GET_PED_PROP_INDEX(g_activePedHandle, s_selectedPropIndex, 0);
+		int propTextureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_activePedHandle, s_selectedPropIndex);
 		int propTypeOld = propTypeCurrent;
 		int propTextureOld = propTextureCurrent;
 
-		int maxGlobalPropId = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-		int maxTextureId = propTypeCurrent >= 0 ? GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) : 0;
+		int maxGlobalPropId = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_activePedHandle, s_selectedPropIndex) - 1;
+		int maxTextureId = propTypeCurrent >= 0 ? GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedPropIndex, propTypeCurrent) : 0;
 
 		AddTitle("Set Variation");
 
@@ -428,7 +431,7 @@ namespace sub
 		if (propTypeCurrent != propTypeOld)
 		{
 			propTextureCurrent = 0;
-			maxTextureId = propTypeCurrent >= 0 ? GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) : 0;
+			maxTextureId = propTypeCurrent >= 0 ? GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedPropIndex, propTypeCurrent) : 0;
 		}
 		if (maxTextureId > 0)
 		{
@@ -441,15 +444,15 @@ namespace sub
 		{
 			static GTAmemory::DrawableCollectionData s_cache[PV_COMP_MAX];
 			static Hash s_cachedModel[PV_COMP_MAX] = {};
-			Hash modelHash = GET_ENTITY_MODEL(g_Ped1);
+			Hash modelHash = GET_ENTITY_MODEL(g_activePedHandle);
 
-			if (s_cachedModel[g_Ped4] != modelHash)
+			if (s_cachedModel[s_selectedPropIndex] != modelHash)
 			{
-				s_cache[g_Ped4] = GTAmemory::BuildPropCollectionData(g_Ped1, g_Ped4);
-				s_cachedModel[g_Ped4] = modelHash;
+				s_cache[s_selectedPropIndex] = GTAmemory::BuildPropCollectionData(g_activePedHandle, s_selectedPropIndex);
+				s_cachedModel[s_selectedPropIndex] = modelHash;
 			}
 
-			auto& data = s_cache[g_Ped4];
+			auto& data = s_cache[s_selectedPropIndex];
 
 			if (!data.collections.empty())
 			{
@@ -483,7 +486,7 @@ namespace sub
 				{
 					propTypeCurrent = col.localToGlobal[data.currentLocalIdx];
 					propTextureCurrent = 0;
-					maxTextureId = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent);
+					maxTextureId = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedPropIndex, propTypeCurrent);
 					collectionModified = true;
 				}
 				else if (propTypeCurrent != propTypeOld && propTypeCurrent >= 0)
@@ -498,11 +501,11 @@ namespace sub
 		{
 			if (propTypeCurrent == -1)
 			{
-				CLEAR_PED_PROP(g_Ped1, g_Ped4, 0);
+				CLEAR_PED_PROP(g_activePedHandle, s_selectedPropIndex, 0);
 			}
 			else
 			{
-				SET_PED_PROP_INDEX(g_Ped1, g_Ped4, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+				SET_PED_PROP_INDEX(g_activePedHandle, s_selectedPropIndex, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 
 				bool goingForward = (propTypeCurrent > propTypeOld);
 				while (!HasPedSpecificPropType(propTypeCurrent))
@@ -518,7 +521,7 @@ namespace sub
 						else propTypeCurrent = maxGlobalPropId;
 					}
 					propTextureCurrent = 0;
-					SET_PED_PROP_INDEX(g_Ped1, g_Ped4, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+					SET_PED_PROP_INDEX(g_activePedHandle, s_selectedPropIndex, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 				}
 			}
 		}
@@ -527,7 +530,7 @@ namespace sub
 	bool HasPedSpecificPropType(int propTypeNew)
 	{
 		bool propTypeCorrect = false;
-		int propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0);
+		int propTypeCurrent = GET_PED_PROP_INDEX(g_activePedHandle, s_selectedPropIndex, 0);
 		if (propTypeNew == propTypeCurrent)
 		{
 			propTypeCorrect = true;
@@ -546,9 +549,9 @@ namespace sub
 
 		void ClearPreviewTattoo()
 		{
-			if (g_previewTattoo && DOES_ENTITY_EXIST(g_Ped1))
+			if (g_previewTattoo && DOES_ENTITY_EXIST(g_activePedHandle))
 			{
-				g_previewTattoo->Remove(g_Ped1);
+				g_previewTattoo->Remove(g_activePedHandle);
 				g_previewTattoo = nullptr;
 			}
 		}
@@ -662,7 +665,7 @@ namespace sub
 
 		void Sub_Decals_Types()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			const auto& pedModel = ped.Model();
 
 			const auto& vPed = vAllDecals.find(pedModel.hash);
@@ -750,7 +753,7 @@ namespace sub
 		void Sub_Decals_Zones_Search()
 		{
 			using namespace DecalSearch;
-			GTAentity ped = g_Ped1;
+			GTAentity ped = g_activePedHandle;
 
 			bool bShortcutDecalPreviewPressed = false;
 
@@ -831,7 +834,7 @@ namespace sub
 		}
 		void Sub_Decals_InZone()
 		{
-			GTAentity ped = g_Ped1;
+			GTAentity ped = g_activePedHandle;
 
 			bool bShortcutDecalPreviewPressed = false;
 
@@ -898,7 +901,7 @@ namespace sub
 		}
 		void OpenSubDecals()
 		{
-			GTAentity ped = g_Ped1;
+			GTAentity ped = g_activePedHandle;
 			bool allowed = vAllDecals.find(ped.Model().hash) != vAllDecals.end();
 
 			if (vAllDecals.find(ped.Model().hash) != vAllDecals.end())
@@ -916,7 +919,7 @@ namespace sub
 
 	namespace PedDamageTextures
 	{
-		auto& selectedPedHandle = g_Ped1;
+		auto& selectedPedHandle = g_activePedHandle;
 		int boneToUse = 0;
 
 		std::map<Ped, std::vector<std::string>> vPedsAndDamagePacks;
@@ -1160,7 +1163,7 @@ namespace sub
 
 		void Sub_Main()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			Model pedModel = ped.Model();
 
 			if (g_cam_componentChanger.Exists())
@@ -1246,7 +1249,7 @@ namespace sub
 		}
 		void Sub_HeadOverlays()
 		{
-			auto& overlayIndex = g_Ped4;
+			auto& overlayIndex = s_selectedOverlayIndex;
 			AddTitle("Overlays");
 
 			for (UINT i = 0; i < vCaptions_headOverlays.size(); i++)
@@ -1275,8 +1278,8 @@ namespace sub
 
 		void Sub_HeadOverlays_InItem()
 		{
-			auto& overlayIndex = g_Ped4;
-			GTAped ped = g_Ped1;
+			auto& overlayIndex = s_selectedOverlayIndex;
+			GTAped ped = g_activePedHandle;
 
 			auto colourType = GetPedHeadOverlayColourType((PedHeadOverlay)overlayIndex);
 			bool bColoursAvailable = (colourType != 0);
@@ -1408,7 +1411,7 @@ namespace sub
 
 		void Sub_FaceFeatures()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 
 			AddTitle("Facial Features");
 
@@ -1440,7 +1443,7 @@ namespace sub
 
 		void Sub_SkinTone() // HEAD_BLEND
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			//auto& blendData = _pedHead->blendData;
 			PedHeadBlendData blendData;
 			GET_PED_HEAD_BLEND_DATA(ped.Handle(), (Any*)&blendData);
@@ -1497,7 +1500,7 @@ namespace sub
 
 		void Sub_FaceGenerator()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 
 			std::vector<std::string> genderOpts = { "Any", "Male", "Female" };
 			std::vector<std::string> skinOpts = { "Any", "White", "Black", "Hispanic", "Asian", "Arab", "Pakistani" };
@@ -1775,10 +1778,10 @@ namespace sub
 			{
 				if (ep.Handle() == PLAYER_PED_ID())
 				{
-					bool bWas241 = (g_Ped1 == ep.Handle());
+					bool bWas241 = (g_activePedHandle == ep.Handle());
 					ChangeModel(eModel);
 					ep = PLAYER_PED_ID();
-					if (bWas241) g_Ped1 = ep.Handle();
+					if (bWas241) g_activePedHandle = ep.Handle();
 				}
 
 				if (nodePedStuff.child("HasShortHeight").text().as_bool()) SET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, 1);
@@ -1990,7 +1993,7 @@ namespace sub
 				}
 				else
 				{
-					ComponentChangerOutfit::Create(g_Ped1, dir + "\\" + inputStr + ".xml", ComponentChangerOutfit::legacyXMLFormat);
+					ComponentChangerOutfit::Create(g_activePedHandle, dir + "\\" + inputStr + ".xml", ComponentChangerOutfit::legacyXMLFormat);
 					Game::Print::PrintBottomLeft("File ~b~created~s~.");
 				}
 			}
@@ -2034,7 +2037,7 @@ namespace sub
 		AddTitle(name);
 		AddOption("Apply", outfits2_apply);
 		AddOption("Apply Clothing & Attachments", outfits2_applyAllFeatures);
-		AddOption((std::string)"Apply " + (g_Ped1 == PLAYER_PED_ID() ? "Ped Model" : "Head Features"), outfits2_applyModel);
+		AddOption((std::string)"Apply " + (g_activePedHandle == PLAYER_PED_ID() ? "Ped Model" : "Head Features"), outfits2_applyModel);
 		AddOption("Apply and Set as Default", outfits2_applySetDefault);
 		ComponentChangerOutfit::legacyXMLFormat = AddTexterCycler("XML Format", ComponentChangerOutfit::legacyXMLFormat, { "New XML format", "Legacy XML format" }) == 1;
 		AddOption("Rename File", outfits2_rename);
@@ -2049,14 +2052,14 @@ namespace sub
 
 		if (outfits2_applyModel)
 		{
-			bool s1isme = g_Ped1 == PLAYER_PED_ID();
-			ComponentChangerOutfit::Apply(g_Ped1, filePath, true, false, false, false, false, false);
-			if (s1isme) g_Ped1 = PLAYER_PED_ID();
+			bool s1isme = g_activePedHandle == PLAYER_PED_ID();
+			ComponentChangerOutfit::Apply(g_activePedHandle, filePath, true, false, false, false, false, false);
+			if (s1isme) g_activePedHandle = PLAYER_PED_ID();
 		}
 
 		if (outfits2_applyAllFeatures)
 		{
-			ComponentChangerOutfit::Apply(g_Ped1, filePath, false, true, true, true, true, true);
+			ComponentChangerOutfit::Apply(g_activePedHandle, filePath, false, true, true, true, true, true);
 		}
 
 		if (outfits2_applySetDefault)
@@ -2076,7 +2079,7 @@ namespace sub
 
 		if (outfits2_overwrite)
 		{
-			if (ComponentChangerOutfit::Create(g_Ped1, filePath, ComponentChangerOutfit::legacyXMLFormat))
+			if (ComponentChangerOutfit::Create(g_activePedHandle, filePath, ComponentChangerOutfit::legacyXMLFormat))
 				Game::Print::PrintBottomLeft("File ~b~overwritten~s~.");
 			else
 			{
@@ -2211,7 +2214,7 @@ namespace sub
 
 	void ComponentChanger_DefaultOutfits()
 	{
-		GTAped ped = g_Ped1;
+		GTAped ped = g_activePedHandle;
 		Hash modelHash = ped.Model().hash;
 		int charType = -1;
 		// Only Freemode Characters seem to work.  It should work for Story Mode Characters but nothing comes up.  They don't have many anyway.

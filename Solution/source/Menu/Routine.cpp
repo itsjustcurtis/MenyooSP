@@ -1,4 +1,4 @@
-﻿/*
+/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -574,11 +574,10 @@ Hash kaboomGunHash = EXPLOSION::DIR_WATER_HYDRANT, bullet_gun_hash = WEAPON_FLAR
 GTAmodel::Model pedGunHash = PedHash::KillerWhale, objectGunHash = VEHICLE_BUS;
 FLOAT currentTimescale = 1.0f;
 
-INT g_Ped1;
-INT g_Ped2;
-INT g_Ped3;
-INT g_Ped4;
-const char* g_PlayerName;
+INT g_activePedHandle;
+INT g_activePlayerId;
+INT g_playerGroupId;
+const char* g_playerName;
 
 INT bitMSPaintsRGBMode;
 
@@ -607,7 +606,6 @@ bool bitVehicleGravity = false;
 bool bitFreezeVehicle = false;
 bool bitVehicleSlippyTires = false;
 
-INT msCurrentPaintIndex = 0;
 
 // String variables used in various submenus for search, storage, etc.
 std::string dict;
@@ -1243,9 +1241,9 @@ void SetSoulSwitchGun()
 			SET_CONTROL_SHAKE(0, 4000, 210);
 			STOP_CONTROL_SHAKE(0);
 
-			if (g_Ped1 == playerPed.Handle())
+			if (g_activePedHandle == playerPed.Handle())
 			{
-				g_Ped1 = PLAYER_PED_ID();
+				g_activePedHandle = PLAYER_PED_ID();
 			}
 
 			soulSwitchEntity.Handle() = 0;
@@ -2699,7 +2697,7 @@ void SetVehicleRainbowMode(GTAvehicle vehicle, bool useFader)
 void set_vehicle_neon_anim(GTAvehicle vehicle)
 {
 	addlog(ige::LogType::LOG_TRACE, "set_vehicle_neon_anim called");
-	if (g_Ped4 != g_myVeh)
+	if (vehicle != g_myVeh)
 	{
 		loop_neon_fade = 0;
 		loop_neon_flash = 0;
