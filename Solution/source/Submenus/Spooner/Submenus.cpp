@@ -244,7 +244,7 @@ namespace sub
 			AddToggle("Teleport To Reference When Loading File", Settings::bTeleportToReferenceWhenLoadingFile);
 			AddTexter("Spooner Mode Method", static_cast<UINT8>(Settings::spoonerModeMode), spoonerModeModeNames, null, bSmm_plus, bSmm_minus);
 
-			if (Menu::bitController)
+			if (Menu::usingControllerInput)
 			{
 				AddNumber("Movement Sensitivity (Gamepad)", Settings::cameraMovementSensitivityGamepad, 4, movsensG_input, movsensG_plus, movsensG_minus);
 				AddNumber("Rotation Sensitivity (Gamepad)", Settings::cameraRotationSensitivityGamepad, 4, rotsensG_input, rotsensG_plus, rotsensG_minus);
@@ -415,7 +415,7 @@ namespace sub
 			if (FileManagement::Exists(_dir + "\\" + inputStr + ".xml"))
 			{
 			_name = inputStr;
-			Menu::SetSub_delayed = SUB::SPOONER_SAVEFILES_LOAD;
+			Menu::pendingSubmenu = SUB::SPOONER_SAVEFILES_LOAD;
 			}
 			else
 			{
@@ -534,12 +534,12 @@ namespace sub
 							if (isXml)
 							{
 								_name = filname.substr(0, filname.rfind('.'));
-								Menu::SetSub_delayed = SUB::SPOONER_SAVEFILES_LOAD;
+								Menu::pendingSubmenu = SUB::SPOONER_SAVEFILES_LOAD;
 							}
 							else if (isSp00n)
 							{
 								_name = filname.substr(0, filname.rfind('.'));
-								Menu::SetSub_delayed = SUB::SPOONER_SAVEFILES_LOAD_LEGACYSP00N;
+								Menu::pendingSubmenu = SUB::SPOONER_SAVEFILES_LOAD_LEGACYSP00N;
 							}
 						}
 					}
@@ -571,7 +571,7 @@ namespace sub
 			if (FileManagement::Exists(filname, ".SP00N"))
 			{
 			_name = filname;
-			Menu::SetSub_delayed = SUB::SPOONER_SAVEFILES_LOAD_LEGACYSP00N;
+			Menu::pendingSubmenu = SUB::SPOONER_SAVEFILES_LOAD_LEGACYSP00N;
 			}
 			}
 			}
@@ -1089,7 +1089,7 @@ namespace sub
 					selectedEntity.isStill = true;
 					selectedEntity.type = EntityType::PED;
 				}
-				Menu::SetSub_delayed = SUB::SPOONER_SELECTEDENTITYOPS;
+				Menu::pendingSubmenu = SUB::SPOONER_SELECTEDENTITYOPS;
 				return;
 			}
 
@@ -1116,7 +1116,7 @@ namespace sub
 						if (bEntityExists)
 						{
 							selectedEntity = e;
-							Menu::SetSub_delayed = SUB::SPOONER_SELECTEDENTITYOPS;
+							Menu::pendingSubmenu = SUB::SPOONER_SELECTEDENTITYOPS;
 						}
 					}
 
@@ -1126,7 +1126,7 @@ namespace sub
 						EntityManagement::ShowArrowAboveEntity(e.handle);
 
 						bool bShortcutDeletePressed;
-						if (Menu::bitController)
+						if (Menu::usingControllerInput)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, bEntityExists ? "Delete Entity" : "Remove Invalid Entity From DB");
 							bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -1494,7 +1494,7 @@ namespace sub
 			bool bGoToTaskSeqMenu = false;
 			AddTexter("Task Sequence", selectedEntity.taskSequence.IsActive() ? 1 : 0, std::vector<std::string>{"Inactive", "Active"}, bGoToTaskSeqMenu); if (bGoToTaskSeqMenu)
 			{
-				Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_TASKLIST;
+				Menu::pendingSubmenu = SUB::SPOONER_TASKSEQUENCE_TASKLIST;
 			}
 			
 			// peds can access anims from ped options menu
@@ -1593,7 +1593,7 @@ namespace sub
 					}
 					if (pbone_input)
 					{
-						Menu::SetSub_delayed = SUB::SPOONER_ATTACHMENTOPS_SELECTBONE;
+						Menu::pendingSubmenu = SUB::SPOONER_ATTACHMENTOPS_SELECTBONE;
 					}
 				}
 				else if (parentEntityType == EntityType::VEHICLE)
@@ -1629,7 +1629,7 @@ namespace sub
 					}
 					if (vbone_input)
 					{
-						Menu::SetSub_delayed = SUB::SPOONER_ATTACHMENTOPS_SELECTBONE;
+						Menu::pendingSubmenu = SUB::SPOONER_ATTACHMENTOPS_SELECTBONE;
 					}
 				}
 
@@ -2496,7 +2496,7 @@ namespace sub
 				AddOption(m.m_name, bMarkerPressed); if (bMarkerPressed)
 				{
 					SelectedMarker = &m;
-					Menu::SetSub_delayed = SUB::SPOONER_MANAGEMARKERS_INMARKER;
+					Menu::pendingSubmenu = SUB::SPOONER_MANAGEMARKERS_INMARKER;
 				}
 
 
@@ -2505,7 +2505,7 @@ namespace sub
 					m.m_selectedInSub = true;
 
 					bool bShortcutDeletePressed;
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Marker");
 						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -2539,7 +2539,7 @@ namespace sub
 					spawnPos.z += SpoonerMarker().m_scale / 2;
 					SelectedMarker = MarkerManagement::AddMarker(spawnPos, Vector3(0, 0, spoocam.GetRotation().z));
 				}
-				Menu::SetSub_delayed = SUB::SPOONER_MANAGEMARKERS_INMARKER;
+				Menu::pendingSubmenu = SUB::SPOONER_MANAGEMARKERS_INMARKER;
 			}
 
 
@@ -2945,7 +2945,7 @@ namespace sub
 				AddOption(l.m_name, bLightPressed); if (bLightPressed)
 				{
 					SelectedLight = &l;
-					Menu::SetSub_delayed = SUB::SPOONER_MANAGELIGHTS_INLIGHT;
+					Menu::pendingSubmenu = SUB::SPOONER_MANAGELIGHTS_INLIGHT;
 				}
 
 				if (Menu::IsLastDrawnOptionSelected())
@@ -2953,7 +2953,7 @@ namespace sub
 					l.m_selectedInSub = true;
 
 					bool bShortcutDeletePressed;
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Light");
 						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -2990,7 +2990,7 @@ namespace sub
 					Vector3 dir = Vector3::Normalize(target - pos);
 					SelectedLight = LightManagement::Add(SpoonerLight(pos, dir));
 				}
-				Menu::SetSub_delayed = SUB::SPOONER_MANAGELIGHTS_INLIGHT;
+				Menu::pendingSubmenu = SUB::SPOONER_MANAGELIGHTS_INLIGHT;
 			}
 
 			if (!LightManagement::PresetDb.empty())
@@ -3017,7 +3017,7 @@ namespace sub
 							copy.m_direction = myPed.ForwardVector();
 						}
 						SelectedLight = LightManagement::Add(copy);
-						Menu::SetSub_delayed = SUB::SPOONER_MANAGELIGHTS_INLIGHT;
+						Menu::pendingSubmenu = SUB::SPOONER_MANAGELIGHTS_INLIGHT;
 					}
 				}
 			}
@@ -3260,7 +3260,7 @@ namespace sub
 				if (Menu::IsLastDrawnOptionSelected())
 					{
 						bool bDeletePressed;
-						if (Menu::bitController)
+						if (Menu::usingControllerInput)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Preset");
 							bDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -3607,7 +3607,7 @@ namespace sub
 				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsAFav = FavouritesManagement::IsPropAFavourite(modelName, currentModel.hash);
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -3660,7 +3660,7 @@ namespace sub
 				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsAFav = FavouritesManagement::IsPropAFavourite(current, currentModel.hash);
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -3797,7 +3797,7 @@ namespace sub
 
 						if (Menu::IsLastDrawnOptionSelected())
 						{
-							if (Menu::bitController)
+							if (Menu::usingControllerInput)
 							{
 								Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 								if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
@@ -3812,7 +3812,7 @@ namespace sub
 								if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RRIGHT))
 								{
 									dict = prop.modelName;
-									Menu::SetSub_delayed = SUB::SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT;
+									Menu::pendingSubmenu = SUB::SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT;
 								}
 							}
 							else
@@ -3830,7 +3830,7 @@ namespace sub
 								if (IsKeyJustUp(VirtualKey::C))
 								{
 									dict = prop.modelName;
-									Menu::SetSub_delayed = SUB::SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT;
+									Menu::pendingSubmenu = SUB::SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT;
 								}
 							}
 						}

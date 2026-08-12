@@ -158,7 +158,7 @@ namespace sub
 		AddToggle("SuprKar Mode", superCarMode, superCarModeOn, superCarModeOff);
 		AddLocal("Fly Mode", VehicleFly::g_vehicleFly.Enabled(), VehicleFly::ToggleOnOff, VehicleFly::ToggleOnOff);
 		AddToggle("Glue to Ground", superGrip);
-		AddTexter("Vehicle Jump", carJump, Menu::bitController ? std::vector<std::string>{"Off", "Tap/Press A/X", "Hold A/X"} : std::vector<std::string>{ "Off", "Tap/Press Space", "Hold Space" }, null, carJumpPlus, carJumpMinus);
+		AddTexter("Vehicle Jump", carJump, Menu::usingControllerInput ? std::vector<std::string>{"Off", "Tap/Press A/X", "Hold A/X"} : std::vector<std::string>{ "Off", "Tap/Press Space", "Hold Space" }, null, carJumpPlus, carJumpMinus);
 		AddToggle("Hydraulics", carHydraulics, hydraulicsOn);
 		AddToggle("Drive On Water", driveOnWater, driveOnWaterOn, driveOnWaterOff);
 		AddToggle("Increased Mass", vehicleHeavyMass, null, heavyMassOff);
@@ -443,7 +443,7 @@ namespace sub
 
 		if (hydraulicsOn) 
 		{
-			Game::Print::PrintBottomLeft(oss_ "Use ~b~" << (Menu::bitController ? "LS/L1 + stick movement" : "LeftShift + WASD") << "~s~ for hydraulics.");
+			Game::Print::PrintBottomLeft(oss_ "Use ~b~" << (Menu::usingControllerInput ? "LS/L1 + stick movement" : "LeftShift + WASD") << "~s~ for hydraulics.");
 			return;
 		}
 

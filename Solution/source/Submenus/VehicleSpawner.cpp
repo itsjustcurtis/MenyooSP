@@ -961,7 +961,7 @@ namespace sub
 			Vector2 res = { 0.1f, 0.0889f };
 
 			FLOAT x_coord = 0.324f + menuPos.x;
-			FLOAT y_coord = OptionY + 0.044f + menuPos.y;
+			FLOAT y_coord = currentOptionY + 0.044f + menuPos.y;
 
 			if (menuPos.x > 0.45f)
 			{
@@ -995,7 +995,7 @@ namespace sub
 		void DrawVehicleModelName(const GTAmodel::Model& vehModel)
 		{
 			FLOAT x_coord = menuPos.x + 0.25f;
-			FLOAT y_coord = OptionY + menuPos.y;
+			FLOAT y_coord = currentOptionY + menuPos.y;
 
 			Game::Print::SetupDraw(font_selection, Vector2(0.0f, (font_options == 0? 0.33f:0.4f)), false, true, false, selectedtext,{0, x_coord});
 			Game::Print::drawstring("ModelName: " + vehModel.VehicleModelName(), 0, y_coord);
@@ -1144,7 +1144,7 @@ namespace sub
 			if (menuPos.x > 0.45f)
 				panelX = menuPos.x - 0.003f;
 
-			float panelY = OptionY + 0.094f + menuPos.y;
+			float panelY = currentOptionY + 0.094f + menuPos.y;
 			float panelW = 0.100f;
 			float barH = 0.018f;
 			float barSpacing = 0.0195f;
@@ -1244,7 +1244,7 @@ namespace sub
 			{
 				spawnVehicleIndex = index;
 				dict = std::string(text);
-				Menu::SetSub_delayed = SUB::SPAWNVEHICLE_ALLCATS;
+				Menu::pendingSubmenu = SUB::SPAWNVEHICLE_ALLCATS;
 
 				if (extra_option_code != nullptr)
 				{
@@ -1554,7 +1554,7 @@ namespace sub
 				DrawVehicleModelName(vehModel);
 
 				bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(vehModel);
-				if (Menu::bitController)
+				if (Menu::usingControllerInput)
 				{
 					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
@@ -1979,7 +1979,7 @@ namespace sub
 				DrawVehicleModelName(vehModel);
 
 				bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(vehModel);
-				if (Menu::bitController)
+				if (Menu::usingControllerInput)
 				{
 					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -2190,7 +2190,7 @@ namespace sub
 
 					DrawVehicleModelName(vehModel);
 
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 
@@ -2670,7 +2670,7 @@ namespace sub
 
 				const bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(selectedCategory.values[vehDlcIdToSpawn]);
 
-				if (Menu::bitController)
+				if (Menu::usingControllerInput)
 				{
 					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + std::string(" favourites"));
 
@@ -3626,7 +3626,7 @@ namespace sub
 						if (bFilePressed)
 						{
 							_name = filname.substr(0, filname.rfind('.'));
-							Menu::SetSub_delayed = SUB::VEHICLE_SAVER_INITEM;
+							Menu::pendingSubmenu = SUB::VEHICLE_SAVER_INITEM;
 							return;
 						}
 					}

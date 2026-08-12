@@ -422,7 +422,7 @@ namespace sub::Spooner
 					if (Menu::IsLastDrawnOptionSelected())
 					{
 						bool bRemoveCoordPressed = false;
-						if (Menu::bitController)
+						if (Menu::usingControllerInput)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove coord");
 							bRemoveCoordPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -739,7 +739,7 @@ namespace sub::Spooner
 						AddOption(current.first, bCurrentPressed); if (bCurrentPressed)
 						{
 							sub::AnimationMenu::selectedAnimDictPtr = &current;
-							Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS_INDICT;
+							Menu::pendingSubmenu = SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS_INDICT;
 						}
 					}
 				}
@@ -770,7 +770,7 @@ namespace sub::Spooner
 					if (Menu::IsLastDrawnOptionSelected())
 					{
 						bool bIsAFav = IsAnimationAFavourite(selectedDict.first, current);
-						if (Menu::bitController)
+						if (Menu::usingControllerInput)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -894,7 +894,7 @@ namespace sub::Spooner
 					AddOption(v.voiceName, bVoicePressed); if (bVoicePressed)
 					{
 						sub::Speech::_currVoiceInfo = &v;
-						Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYSPEECHWITHVOICE_INVOICE;
+						Menu::pendingSubmenu = SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYSPEECHWITHVOICE_INVOICE;
 					}
 				}
 			}
@@ -1715,7 +1715,7 @@ namespace sub::Spooner
 					if (taskList[i]->duration != -1) // Has settings
 					{
 						_selectedSTST = taskList[i];
-						Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_INTASK;
+						Menu::pendingSubmenu = SUB::SPOONER_TASKSEQUENCE_INTASK;
 					}
 				}
 
@@ -1723,7 +1723,7 @@ namespace sub::Spooner
 				{
 					bool bRemoveTaskPressed = false;
 					char bMoveTaskPressed = 0i8;
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 						bRemoveTaskPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;

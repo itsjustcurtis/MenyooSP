@@ -553,7 +553,7 @@ namespace sub
 				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsCurrentlyFrozen = frozenStation == i;
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsCurrentlyFrozen ? "Freeze" : "Unfreeze") + (std::string)" station");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))

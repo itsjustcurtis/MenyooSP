@@ -89,7 +89,7 @@ namespace sub::Spooner
 			{
 				UINT8 index1 = bindsGamepad.first < 50 ? 0 : 2;
 				UINT8 index2 = bindsGamepad.second < 50 ? 0 : 2;
-				return Menu::bitController ? (IS_DISABLED_CONTROL_PRESSED(index1, bindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, bindsGamepad.second)) : IsKeyJustUp(bindsKeyboard);
+				return Menu::usingControllerInput ? (IS_DISABLED_CONTROL_PRESSED(index1, bindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, bindsGamepad.second)) : IsKeyJustUp(bindsKeyboard);
 			}
 			return false;
 		}
@@ -394,7 +394,7 @@ namespace sub::Spooner
 				const Vector3& coordInFrontOfCam = freeCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 				GTAentity entityInFrontOfCam = freeCam.RaycastForEntity(Vector2(0.0f, 0.0f), 0, 160.0f);
 
-				if (Menu::bitController) // If controller
+				if (Menu::usingControllerInput) // If controller
 				{
 					float movementSensitivity = Settings::cameraMovementSensitivityGamepad;
 					//if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS)) movementSensitivity += 1.36f * movementSensitivity;
@@ -1078,7 +1078,7 @@ namespace sub::Spooner
 
 		void TurnOn()
 		{
-			if (!g_menuNotOpenedYet)
+			if (!menuHasNotOpened)
 			{
 				SpoonerMode::bEnabled = true;
 				sub::Spooner::ImGuiSpooner::SetVisible(true);

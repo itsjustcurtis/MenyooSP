@@ -421,7 +421,7 @@ namespace sub
 				AddOption(v.voiceName, bVoicePressed); if (bVoicePressed)
 				{
 					_currVoiceInfo = &v;
-					Menu::SetSub_delayed = SUB::SPEECHPLAYER_INVOICE;
+					Menu::pendingSubmenu = SUB::SPEECHPLAYER_INVOICE;
 				}
 			}
 

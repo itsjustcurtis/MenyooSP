@@ -52,16 +52,16 @@ namespace ManualRespawn
 
 	bool ManualRespawn::IsSkipPressed()
 	{
-		return IS_DISABLED_CONTROL_JUST_PRESSED(0, respawnbinds) != 0;
+		return IS_DISABLED_CONTROL_JUST_PRESSED(0, respawnKey) != 0;
 	}
 
 	inline void ManualRespawn::ShowRespawnHelpText()
 	{
 		std::string bindsname = "button";
-		try { bindsname = ControllerInputs::vNames.at(respawnbinds); }
+		try { bindsname = ControllerInputs::vNames.at(respawnKey); }
 		catch (...) 
 		{
-			addlog(ige::LogType::LOG_ERROR, "Unable to set new bindsname, respawnbinds = " + std::to_string(respawnbinds));
+			addlog(ige::LogType::LOG_ERROR, "Unable to set new binding name, respawnKey = " + std::to_string(respawnKey));
 		}
 
 		Game::Print::SetupDraw(GTAfont::Arial, Vector2(0, 0.4f), false, true, false, RGBA(255, 255, 255, 190));

@@ -3418,7 +3418,7 @@ namespace sub
                     {
                         favouritesLoaded = false;
                     }
-                    if (Menu::bitController)
+                    if (Menu::usingControllerInput)
                     {
                         Menu::add_IB(INPUT_SCRIPT_RLEFT, IsAlreadyFavorite(current) ? "Remove From Favourites" : "Add To Favourites");
                         bShortcutToggleFavesPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;

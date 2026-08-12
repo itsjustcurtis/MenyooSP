@@ -109,7 +109,7 @@ namespace sub
 		void ShowInstructionalButton(GTAmodel::Model model)
 		{
 			bool bIsAFav = IsPedAFavourite(model);
-			if (Menu::bitController)
+			if (Menu::usingControllerInput)
 			{
 				Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))

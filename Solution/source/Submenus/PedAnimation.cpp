@@ -384,7 +384,7 @@ namespace sub
 					AddOption(current.first, currentPressed); if (currentPressed)
 					{
 						selectedAnimDictPtr = &current;
-						Menu::SetSub_delayed = SUB::ANIMATIONSUB_ALLPEDANIMS_INDICT;
+						Menu::pendingSubmenu = SUB::ANIMATIONSUB_ALLPEDANIMS_INDICT;
 					}
 				}
 			}
@@ -535,7 +535,7 @@ namespace sub
 		if (Menu::IsLastDrawnOptionSelected())
 		{
 			bool isAFavourite = IsAnimationAFavourite(animDict, animName);
-			if (Menu::bitController)
+			if (Menu::usingControllerInput)
 			{
 				Menu::add_IB(INPUT_SCRIPT_RLEFT, (!isAFavourite ? "Add to" : "Remove from") + (std::string)" favourites");
 				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
@@ -551,7 +551,7 @@ namespace sub
 						s_recatState.returnCursor = *Menu::activeOptionIndex;
 						s_recatState.animDict = animDict;
 						s_recatState.animName = animName;
-						Menu::SetSub_delayed = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
+						Menu::pendingSubmenu = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
 					}
 				}
 			}
@@ -571,7 +571,7 @@ namespace sub
 						s_recatState.returnCursor = *Menu::activeOptionIndex;
 						s_recatState.animDict = animDict;
 						s_recatState.animName = animName;
-						Menu::SetSub_delayed = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
+						Menu::pendingSubmenu = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
 					}
 				}
 			}

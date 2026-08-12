@@ -50,7 +50,7 @@ namespace sub::BodyguardMenu
                 sub::BodyguardMenu::BodyguardManagement::ShowArrowAboveEntity(bg.Handle);
 
                 bool bDeletePressed = false;
-                if (Menu::bitController)
+                if (Menu::usingControllerInput)
                 {
                     Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Bodyguard");
                     bDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;

@@ -228,7 +228,7 @@ namespace sub
 
 		if (Weaponops_forgeGun_on) {
 			Game::Print::PrintBottomLeft("Use the ~b~pistol~s~ for hax.");
-			if (!Menu::bitController)
+			if (!Menu::usingControllerInput)
 			{
 				Game::Print::PrintBottomLeft("~b~Mouse Scroll~s~ for distance.");
 				Game::Print::PrintBottomLeft(oss_ << "~b~ [ ~s~& ~b~ ] ~s~for pitch." << " \n"
@@ -439,7 +439,7 @@ namespace sub
 
 			if (printInstructions) {
 				Game::Print::PrintBottomLeft("Use the ~b~" + GetWeaponLabel(g_gravityGun.WHASH(), true) + "~s~ for hax.");
-				Game::Print::PrintBottomLeft((std::string)"Use ~b~" + (Menu::bitController ? "RS/LS" : "mouse scroll") + "~s~ to change the hold distance.");
+				Game::Print::PrintBottomLeft((std::string)"Use ~b~" + (Menu::usingControllerInput ? "RS/LS" : "mouse scroll") + "~s~ to change the hold distance.");
 				Game::Print::PrintBottomLeft("Shoot to launch.");
 				return;
 			}
@@ -1003,7 +1003,7 @@ namespace sub
 							{
 								selectedCategoryForInItem = (INT)(WeaponIndivs::vAllWeapons.size() - 1);
 								selectedWeaponForInItem = i;
-								Menu::SetSub_delayed = SUB::WEAPONOPS_INDIVS_ITEM;
+								Menu::pendingSubmenu = SUB::WEAPONOPS_INDIVS_ITEM;
 								break;
 							}
 						}
@@ -1011,7 +1011,7 @@ namespace sub
 
 					if (Menu::IsLastDrawnOptionSelected())
 					{
-						if (Menu::bitController)
+						if (Menu::usingControllerInput)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 
@@ -1086,7 +1086,7 @@ namespace sub
 					break;
 				default:
 					selectedCategory = WEAPONTYPE::WEAPE_CURRENTLYHELD;
-					Menu::SetSub_delayed = (SUB::WEAPONOPS_INDIVS_ITEM);
+					Menu::pendingSubmenu = (SUB::WEAPONOPS_INDIVS_ITEM);
 					break;
 				}
 			}
@@ -1101,7 +1101,7 @@ namespace sub
 				AddOption(vCategoryNames[i], pressed, nullFunc, -1, true); if (pressed)
 				{
 					selectedCategory = i;
-					Menu::SetSub_delayed = (SUB::WEAPONOPS_INDIVS_CATEGORY);
+					Menu::pendingSubmenu = (SUB::WEAPONOPS_INDIVS_CATEGORY);
 				}
 			}
 
@@ -1125,13 +1125,13 @@ namespace sub
 				AddOption(GetWeaponLabel(thisWeaponInfo.weaponHash, true), bWeapPressed); if (bWeapPressed)
 				{
 					selectedWeapon = i;
-					Menu::SetSub_delayed = SUB::WEAPONOPS_INDIVS_ITEM;
+					Menu::pendingSubmenu = SUB::WEAPONOPS_INDIVS_ITEM;
 				}
 
 				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsAFav = WeaponFavourites_catind::IsWeaponAFavourite(thisWeaponInfo.weaponHash);
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -1578,7 +1578,7 @@ namespace sub
 						AddTickol(filname, true, bFilePressed, bFilePressed, icon, TICKOL::NONE); if (bFilePressed)
 						{
 							_name = filname.substr(0, filname.rfind('.'));
-							Menu::SetSub_delayed = SUB::WEAPONOPS_LOADOUTS_INITEM;
+							Menu::pendingSubmenu = SUB::WEAPONOPS_LOADOUTS_INITEM;
 							return;
 						}
 					}

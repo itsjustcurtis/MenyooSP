@@ -315,7 +315,7 @@ namespace sub::TeleportLocations_catind
 					if (bOption_pressed)
 					{
 						selectedOptionArray = &o;
-						Menu::SetSub_delayed = SUB::TELEPORTOPS_HANGARS_INOPTION;
+						Menu::pendingSubmenu = SUB::TELEPORTOPS_HANGARS_INOPTION;
 					}
 				}
 			}

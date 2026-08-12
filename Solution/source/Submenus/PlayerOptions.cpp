@@ -245,7 +245,7 @@ namespace sub
 
 		if (supermanOn) 
 		{
-			if (Menu::bitController) 
+			if (Menu::usingControllerInput)
 			{
 				Game::Print::PrintBottomLeft("RT for Up. LT for Down. RB for Boost. A for Brake.");
 			}
@@ -262,7 +262,7 @@ namespace sub
 			CREATE_AMBIENT_PICKUP(PICKUP_PARACHUTE, Pos.x, Pos.y, Pos.z, 0, 300, 1, 0, 1);
 			TASK_PARACHUTE(g_activePedHandle, true, false);
 			APPLY_FORCE_TO_ENTITY(PLAYER_PED_ID(), 1, 0.0f, 0.0f, 10.0f, 0.0, 0.0, 0.0, 1, 1, 1, 1, 0, 1);
-			if (Menu::bitController) 
+			if (Menu::usingControllerInput)
 			{
 				Game::Print::PrintBottomLeft("Press ~b~A~s~ for temporary brake.");
 			}

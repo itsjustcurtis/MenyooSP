@@ -2611,7 +2611,7 @@ namespace sub
 				if (wheelType == WheelType::BikeWheels)
 				{
 					ms_bit_bike_back = true;
-					Menu::SetSub_delayed = SUB::MSWHEELS2;
+					Menu::pendingSubmenu = SUB::MSWHEELS2;
 				}
 				else
 				{
@@ -2619,7 +2619,7 @@ namespace sub
 					chrtype = 0;
 					SET_VEHICLE_WHEEL_TYPE(s_selectedVehicleHandle, wtype);
 					ms_max_windices = GET_NUM_VEHICLE_MODS(s_selectedVehicleHandle, VehicleMod::FrontWheels);
-					Menu::SetSub_delayed = SUB::MSWHEELS3;
+					Menu::pendingSubmenu = SUB::MSWHEELS3;
 				}
 			}
 		}
@@ -2849,7 +2849,7 @@ namespace sub
 				chrtype = 0;
 				SET_VEHICLE_WHEEL_TYPE(Static_12, wtype);
 				ms_max_windices = GET_NUM_VEHICLE_MODS(Static_12, VehicleMod::FrontWheels);
-				Menu::SetSub_delayed = SUB::MSWHEELS3;
+				Menu::pendingSubmenu = SUB::MSWHEELS3;
 				return;
 			}
 		}*/

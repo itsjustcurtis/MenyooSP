@@ -37,15 +37,15 @@ These can be used to implement custom category navigation if desired. Take a loo
 #include <map>
 
 // Per-frame state
-static std::vector<int> s_headerPositions;
-static std::vector<std::string> s_headerLabels;
+static std::vector<int> categoryHeaderPositions;
+static std::vector<std::string> categoryHeaderLabels;
 
 // Persistent navigation target, set by CategoryNavigate SUB
-static int s_jumpTarget = -1;
+static int pendingCategoryIndex = -1;
 
 // Frame tracking for auto-clearing per-frame state
 static DWORD s_lastFrameTick = 0;
-static bool s_navigateIBAdded = false;
+static bool categoryNavigationHintAdded = false;
 
 // Persistent expanded state, keyed on "activeSubmenu:label"
 static std::map<std::string, bool> s_expandedState;
@@ -60,13 +60,13 @@ namespace MenuCategory
 {
 	void ResetCategoryState()
 	{
-		s_headerPositions.clear();
-		s_headerLabels.clear();
+		categoryHeaderPositions.clear();
+		categoryHeaderLabels.clear();
 
-		if (s_jumpTarget != -1)
+		if (pendingCategoryIndex != -1)
 		{
-			*Menu::activeOptionIndex = s_jumpTarget;
-			s_jumpTarget = -1;
+			*Menu::activeOptionIndex = pendingCategoryIndex;
+			pendingCategoryIndex = -1;
 		}
 	}
 
@@ -75,15 +75,15 @@ namespace MenuCategory
 		DWORD now = GetTickCount();
 		if (now != s_lastFrameTick)
 		{
-			s_headerPositions.clear();
-			s_headerLabels.clear();
-			s_navigateIBAdded = false;
+			categoryHeaderPositions.clear();
+			categoryHeaderLabels.clear();
+			categoryNavigationHintAdded = false;
 			s_lastFrameTick = now;
 
-			if (s_jumpTarget != -1)
+			if (pendingCategoryIndex != -1)
 			{
-				*Menu::activeOptionIndex = s_jumpTarget;
-				s_jumpTarget = -1;
+				*Menu::activeOptionIndex = pendingCategoryIndex;
+				pendingCategoryIndex = -1;
 			}
 		}
 
@@ -96,29 +96,29 @@ namespace MenuCategory
 		AddTickol(label, expanded, catPressed, catPressed, TICKOL::ARROWRIGHT, TICKOL::ARROWRIGHT, false, 270.0f, 90.0f);
 		if (catPressed)
 			expanded = !expanded;
-			s_headerPositions.push_back(Menu::currentOptionCount);
-		s_headerLabels.push_back(label);
+		categoryHeaderPositions.push_back(Menu::currentOptionCount);
+		categoryHeaderLabels.push_back(label);
 
-		if (s_headerPositions.size() > 1)
+		if (categoryHeaderPositions.size() > 1)
 		{
-			if (!s_navigateIBAdded)
+			if (!categoryNavigationHintAdded)
 			{
-				if (Menu::bitController)
+				if (Menu::usingControllerInput)
 					Menu::add_IB(INPUT_SPECIAL_ABILITY, "Navigate categories"); // XBOX "l3" (left stick click)
 				else
 					Menu::add_IB(VirtualKey::G, "Navigate categories");
-				s_navigateIBAdded = true;
+				categoryNavigationHintAdded = true;
 			}
 
-			if (Menu::bitController)
+			if (Menu::usingControllerInput)
 			{
 				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SPECIAL_ABILITY)) // XBOX "l3" (left stick click)
-					Menu::SetSub_delayed = SUB::CATEGORYNAVIGATOR;
+					Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
 			}
 			else
 			{
 				if (IsKeyJustUp(VirtualKey::G))
-					Menu::SetSub_delayed = SUB::CATEGORYNAVIGATOR;
+					Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
 			}
 		}
 
@@ -155,18 +155,18 @@ namespace MenuCategory
 
 	const std::vector<std::string>& GetCategoryLabels()
 	{
-		return s_headerLabels;
+		return categoryHeaderLabels;
 	}
 
 	const std::vector<int>& GetCategoryPositions()
 	{
-		return s_headerPositions;
+		return categoryHeaderPositions;
 	}
 
 	void JumpToCategory(size_t index)
 	{
-		if (index < s_headerPositions.size())
-			s_jumpTarget = s_headerPositions[index];
+		if (index < categoryHeaderPositions.size())
+			pendingCategoryIndex = categoryHeaderPositions[index];
 	}
 }
 

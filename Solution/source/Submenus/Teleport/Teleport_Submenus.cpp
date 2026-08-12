@@ -1,4 +1,4 @@
-﻿/*
+/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -94,11 +94,11 @@ namespace sub::TeleportLocations_catind
 					_selectedCategory = &cat;
 					if (reinterpret_cast<DWORD64>(cat.nextNamedLocListList) < SUB::MAX_SUBS && cat.nextNamedLocListList != nullptr)
 					{
-						Menu::SetSub_delayed = reinterpret_cast<DWORD64>(cat.nextNamedLocListList);
+						Menu::pendingSubmenu = reinterpret_cast<DWORD64>(cat.nextNamedLocListList);
 					}
 					else
 					{
-						Menu::SetSub_delayed = SUB::TELEPORTOPS_SELECTEDCATEGORY;
+						Menu::pendingSubmenu = SUB::TELEPORTOPS_SELECTEDCATEGORY;
 					}
 				}
 			}
@@ -344,7 +344,7 @@ namespace sub::TeleportLocations_catind
 
 					if (Menu::IsLastDrawnOptionSelected())
 					{
-						if (Menu::bitController)
+						if (Menu::usingControllerInput)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 

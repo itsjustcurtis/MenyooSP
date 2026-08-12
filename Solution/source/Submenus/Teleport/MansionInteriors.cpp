@@ -1,4 +1,4 @@
-﻿// Auto-generated from root-cause gist. Do not edit manually.
+// Auto-generated from root-cause gist. Do not edit manually.
 #include "MansionInteriors.h"
 
 #include "..\..\macros.h"
@@ -587,7 +587,7 @@ namespace sub::TeleportLocations_catind
 					if (bOption_pressed)
 					{
 						selectedOptionArray = &o;
-						Menu::SetSub_delayed = SUB::TELEPORTOPS_MANSIONS_INOPTION;
+						Menu::pendingSubmenu = SUB::TELEPORTOPS_MANSIONS_INOPTION;
 					}
 				}
 			}
