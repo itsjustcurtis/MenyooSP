@@ -3194,6 +3194,7 @@ void SetVehicleWheelsInvisible(GTAvehicle vehicle, bool enable)
 		}
 
 		vehicle.RequestControl(800);
+		RESET_VEHICLE_WHEELS(vehicle.Handle(), true);
 		for (UINT i = 0; i <= 8; i++)
 		{
 			vehicle.FixTyre(i);

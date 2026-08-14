@@ -79,7 +79,11 @@ namespace sub
 	void MSWheels_();
 	void MSWheels2_();
 	void MSWheels3_();
-	void MSTyresBurst_();
+
+	namespace RemovableComponents
+	{
+		void Menu();
+	}
 
 	// Windows
 

@@ -8,6 +8,9 @@
 * (at your option) any later version.
 */
 #include "VehicleModShop.h"
+#include "..\Menu\MenuCategory.h"
+
+#include <unordered_set>
 
 namespace sub
 {
@@ -1796,6 +1799,8 @@ namespace sub
 		AddOption("Random Upgrades", veh_static12_autoUpgrade);
 		AddOption("Return to Stock", veh_static12_stockParts);
 
+		AddOption("Remove Vehicle Components", null, nullFunc, SUB::MSREMOVABLECOMPONENTS, true);
+
 		if (true) // Display Benny's sub ptr if veh is supported Static_12_veh_model.IsBennySupportedVehicle()
 		{
 			AddOption(Game::GetGXTEntry("S_MO_09", "Benny's Lowrider Mods"), null, nullFunc, SUB::MS_BENNYS); // Use 25 to 48 here.
@@ -2750,7 +2755,6 @@ namespace sub
 		AddLocal("CMOD_TYR_1", ms_custom_tyres, MSWheelsCustomTyres_, MSWheelsCustomTyres_, true); // Custom Tyres
 		AddLocal("CMOD_TYR_2", GET_VEHICLE_TYRES_CAN_BURST(s_selectedVehicleHandle) == FALSE, MSWheelsBPTyresOn_, MSWheelsBPTyresOn_, true); // Bulletproof Tyres
 		AddLocal("Drift Tyres", GET_DRIFT_TYRES_SET(s_selectedVehicleHandle), MSWheelsDriftTyresOn_, MSWheelsDriftTyresOn_, true); // Drift Tyres
-		AddOption("Remove Tires", null, nullFunc, SUB::MS_TYRESBURST);
 
 		AddOption(Game::GetGXTEntry("CMOD_MOD_TYR3", "Tire Smoke Colour"), set_msrgb_index_4, nullFunc, SUB::MSPAINTS_RGB);
 		if (Menu::IsLastDrawnOptionSelected())
@@ -3001,58 +3005,206 @@ namespace sub
 			}
 		}
 	}
-	void MSTyresBurst_()
+
+	namespace RemovableComponents
 	{
-		GTAvehicle vehicle = s_selectedVehicleHandle;
+		static const std::vector<std::string> kStates{ "Attached", "Detached" };
+		static const std::vector<std::string> kTyreStates{ "Intact", "Deflated" };
 
-		AddTitle("Remove Tyres");
-
-		std::vector<std::string> vCaptions_tyres{ "FrontLeft", "FrontRight", "2", "3", "BackLeft", "BackRight", "6", "7", "8" };
-		for (int i = 0; i < vCaptions_tyres.size(); i++)
+		struct WheelSlot
 		{
-			bool bBurstPressed = false, bUnburstPressed = false;
-			AddTickol(vCaptions_tyres[i], vehicle.IsTyreBursted(i), bBurstPressed, bUnburstPressed, TICKOL::CROSS);
-			if (bBurstPressed)
+			int id;
+			const char* name;
+			const char* bone;
+		};
+
+		static const std::array<WheelSlot, 6> kWheelSlots
+		{
+			WheelSlot{ 0, "Front Left", "wheel_lf" },
+			WheelSlot{ 1, "Front Right", "wheel_rf" },
+			WheelSlot{ 2, "Middle Left", "wheel_lm1" },
+			WheelSlot{ 3, "Middle Right", "wheel_rm1" },
+			WheelSlot{ 4, "Back Left", "wheel_lr" },
+			WheelSlot{ 5, "Back Right", "wheel_rr" }
+		};
+
+		struct VehicleRemovableComponentCache
+		{
+			Vehicle handle = 0;
+			std::unordered_set<int> doors;
+			std::unordered_set<int> tyres;
+		};
+
+		static VehicleRemovableComponentCache s_cache;
+
+		static VehicleRemovableComponentCache& GetCache(GTAvehicle vehicle)
+		{
+			const Vehicle handle = vehicle.Handle();
+			if (s_cache.handle == handle)
+				return s_cache;
+
+			s_cache = VehicleRemovableComponentCache{};
+			s_cache.handle = handle;
+			for (const auto door : vehicle.Doors_get())
+				if (vehicle.IsDoorBroken(door))
+					s_cache.doors.insert(static_cast<int>(door));
+			for (const auto& wheel : kWheelSlots)
+				if (vehicle.HasBone(wheel.bone) && vehicle.IsTyreBursted(wheel.id))
+					s_cache.tyres.insert(wheel.id);
+			return s_cache;
+		}
+
+		static void ReapplyCachedParts(GTAvehicle vehicle, VehicleRemovableComponentCache& cache)
+		{
+			for (const int door : cache.doors)
 			{
-				vehicle.RequestControl(800);
-				vehicle.SetCanTyresBurst(true);
-				vehicle.BurstTyre(i);
-			}
-			else if (bUnburstPressed)
-			{
-				std::vector<int> vTyresBurstedAlready;
-				for (int j = 0; j < vCaptions_tyres.size(); j++)
+				const auto doorType = static_cast<VehicleDoor>(door);
+				if (!vehicle.IsDoorBroken(doorType))
 				{
-					if (j != i)
-					{
-						if (vehicle.IsTyreBursted(j))
-							vTyresBurstedAlready.push_back(j);
-					}
+					vehicle.RequestControl(800);
+					vehicle.BreakDoor(doorType, true);
 				}
-				vehicle.RequestControl(600);
-				for (int j = 0; j < vCaptions_tyres.size(); j++)
-					vehicle.FixTyre(j);
-				vehicle.Repair(false);
-				for (auto& ttb : vTyresBurstedAlready)
-					vehicle.BurstTyre(ttb);
+			}
+
+			for (const auto& wheel : kWheelSlots)
+			{
+				if (vehicle.HasBone(wheel.bone) && cache.tyres.find(wheel.id) != cache.tyres.end() && !vehicle.IsTyreBursted(wheel.id))
+				{
+					vehicle.RequestControl(800);
+					vehicle.SetCanTyresBurst(true);
+					vehicle.BurstTyre(wheel.id);
+				}
 			}
 		}
 
-		bool bMakeAllWheelsInvis = false;
-		AddLocal("Make All Wheels Invisible", AreVehicleWheelsInvisible(vehicle), bMakeAllWheelsInvis, bMakeAllWheelsInvis); if (bMakeAllWheelsInvis)
+		static void AddDoorOptions(GTAvehicle vehicle)
 		{
-			vehicle.RequestControl(600);
-			if (!AreVehicleWheelsInvisible(vehicle))
+			auto& cache = GetCache(vehicle);
+			static const std::array<const char*, 7> names{ "Front Left Door", "Front Right Door", "Back Left Door", "Back Right Door", "Hood", "Trunk", "Trunk 2" };
+			for (const auto door : vehicle.Doors_get())
 			{
-				SetVehicleWheelsInvisible(vehicle, true);
-			}
-			else
-			{
-				SetVehicleWheelsInvisible(vehicle, false);
-				Game::Print::PrintBottomCentre("~b~Note:~s~ It may take a while for the wheels to come back.");
+				const int id = static_cast<int>(door);
+				const bool broken = cache.doors.find(id) != cache.doors.end();
+				const int state = AddTexterCycler(names[id], broken ? 1 : 0, kStates);
+				if (state == (broken ? 1 : 0))
+					continue;
+
+				vehicle.RequestControl(800);
+				if (state == 0)
+				{
+					vehicle.FixDoor(door);
+					cache.doors.erase(id);
+				}
+				else
+				{
+					vehicle.BreakDoor(door, true);
+					cache.doors.insert(id);
+				}
 			}
 		}
 
+		static void AddTyreOptions(GTAvehicle vehicle)
+		{
+			auto& cache = GetCache(vehicle);
+			for (const auto& wheel : kWheelSlots)
+			{
+				if (!vehicle.HasBone(wheel.bone))
+					continue;
+
+				const bool burst = cache.tyres.find(wheel.id) != cache.tyres.end();
+				const int state = AddTexterCycler(wheel.name, burst ? 1 : 0, kTyreStates);
+				if (state == (burst ? 1 : 0))
+					continue;
+
+				vehicle.RequestControl(800);
+				if (state == 0)
+				{
+					vehicle.FixTyre(wheel.id);
+					vehicle.Repair(false);
+					cache.tyres.erase(wheel.id);
+				}
+				else
+				{
+					vehicle.SetCanTyresBurst(true);
+					vehicle.BurstTyre(wheel.id);
+					cache.tyres.insert(wheel.id);
+				}
+			}
+
+			const bool hidden = AreVehicleWheelsInvisible(vehicle);
+			const int visibility = AddTexterCycler("All Wheels", hidden ? 1 : 0, { "Visible", "Hidden" });
+			if (visibility != (hidden ? 1 : 0))
+			{
+				vehicle.RequestControl(600);
+				SetVehicleWheelsInvisible(vehicle, visibility == 1);
+				if (visibility == 0)
+					Game::Print::PrintBottomCentre("~b~Note:~s~ It may take a while for the wheels to come back.");
+			}
+		}
+
+		static void AddExtraOptions(GTAvehicle vehicle)
+		{
+			for (int id = 0; id <= 20; ++id)
+			{
+				if (!vehicle.DoesExtraExist(id))
+					continue;
+
+				bool pressed = false;
+				AddTickol("Extra " + std::to_string(id), vehicle.GetExtraOn(id), pressed, pressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				if (pressed)
+				{
+					vehicle.RequestControl(800);
+					vehicle.SetExtraOn(id, !vehicle.GetExtraOn(id));
+				}
+			}
+		}
+
+		static bool HasExtras(GTAvehicle vehicle)
+		{
+			for (int id = 0; id <= 20; ++id)
+				if (vehicle.DoesExtraExist(id))
+					return true;
+			return false;
+		}
+
+		void Menu()
+		{
+			if (vehicleFixLoop)
+			{
+				Game::Print::PrintBottomLeft("~y~Removable Vehicle Components menu unavailable while Auto-Repair is enabled.");
+				Menu::SetPreviousMenu();
+				return;
+			}
+
+			GTAvehicle vehicle = s_selectedVehicleHandle;
+			if (!vehicle.Exists())
+			{
+				Menu::SetPreviousMenu();
+				return;
+			}
+
+			AddTitle("Removable Components");
+			auto& cache = GetCache(vehicle);
+			ReapplyCachedParts(vehicle, cache);
+			const bool hasDoors = !vehicle.Doors_get().empty();
+
+			if (hasDoors && MenuCategory::AddCategory("— ~b~Doors~s~"))
+				AddDoorOptions(vehicle);
+			if (HasExtras(vehicle) && MenuCategory::AddCategory("— ~b~Extras~s~"))
+				AddExtraOptions(vehicle);
+			if (vehicle.Model().IsHeli() && MenuCategory::AddCategory("— ~b~Helicopter Parts~s~"))
+			{
+				bool pressed = false;
+				AddTickol("Break Rudder", false, pressed, pressed, TICKOL::CROSS);
+				if (pressed)
+				{
+					vehicle.RequestControl(800);
+					SET_VEHICLE_RUDDER_BROKEN(vehicle.Handle(), true);
+				}
+			}
+			if (MenuCategory::AddCategory("— ~b~Tyres~s~"))
+				AddTyreOptions(vehicle);
+		}
 	}
 
 	// Windows
@@ -3482,7 +3634,7 @@ REGISTER_SUBMENU(MS_EMBLEM,            sub::MSEmblem_)
 REGISTER_SUBMENU(MSWHEELS,             sub::MSWheels_)
 REGISTER_SUBMENU(MSWHEELS2,            sub::MSWheels2_)
 REGISTER_SUBMENU(MSWHEELS3,            sub::MSWheels3_)
-REGISTER_SUBMENU(MS_TYRESBURST,        sub::MSTyresBurst_)
+REGISTER_SUBMENU(MSREMOVABLECOMPONENTS,     sub::RemovableComponents::Menu)
 REGISTER_SUBMENU(MSPAINTS,             sub::MSPaints_)
 REGISTER_SUBMENU(MSPAINTS2,            sub::MSPaints2_)
 REGISTER_SUBMENU(MSPAINTS2_CHROME,     sub::MSPaints_catind::Sub_Chrome)
