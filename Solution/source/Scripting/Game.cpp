@@ -587,7 +587,8 @@ namespace Game
 					(notification.title.has_value() ? titleLineHeight + titleDescriptionGap : 0.0f) +
 					(notification.descriptionLines.size() * descriptionLineHeight);
 
-				const DWORD calculatedReadingDuration = 1500 + static_cast<DWORD>(notification.descriptionLines.size()) * 650;
+				const size_t visibleCharacterCount = TextForMeasurement(notification.title.value_or(std::string()) + notification.description).length();
+				const DWORD calculatedReadingDuration = 1500 + static_cast<DWORD>(visibleCharacterCount) * 50;
 				const DWORD readingDuration = calculatedReadingDuration > 15000 ? 15000 : calculatedReadingDuration;
 				notification.displayDuration = (std::max)(notification.requestedDuration, readingDuration);
 				notification.visibleUntil = 0;
