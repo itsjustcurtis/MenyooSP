@@ -588,7 +588,7 @@ namespace Game
 					(notification.descriptionLines.size() * descriptionLineHeight);
 
 				const size_t visibleCharacterCount = TextForMeasurement(notification.title.value_or(std::string()) + notification.description).length();
-				const DWORD calculatedReadingDuration = 1500 + static_cast<DWORD>(visibleCharacterCount) * 50;
+				const DWORD calculatedReadingDuration = 1500 + static_cast<DWORD>(visibleCharacterCount) * 30;
 				const DWORD readingDuration = calculatedReadingDuration > 15000 ? 15000 : calculatedReadingDuration;
 				notification.displayDuration = (std::max)(notification.requestedDuration, readingDuration);
 				notification.visibleUntil = 0;
@@ -736,12 +736,12 @@ namespace Game
 		// Messages - Errors
 		void PrintErrorInvalidInput(std::string inputStr)
 		{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Input: " + inputStr);
+			Game::Print::ShowNotification("~r~Error:", "Invalid Input: " + inputStr);
 			addlog(ige::LogType::LOG_ERROR, "Invalid Input: " + inputStr);
 		}
 		void PrintErrorInvalidModel(std::string inputStr)
 		{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid Model: " + inputStr);
+			Game::Print::ShowNotification("~r~Error:", "Invalid Model: " + inputStr);
 			addlog(ige::LogType::LOG_ERROR, "Invalid Model: " + inputStr);
 		}
 

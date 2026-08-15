@@ -255,7 +255,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (worldObjects.size() > 2000)//GTA_MAX_ENTITIES - 48)
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Too many entities in world.");
+				Game::Print::ShowNotification("~r~Error:", "Too many entities in world.");
 				return;
 			}
 			if (yachtInfo.location == nullptr || yachtInfo.option == nullptr)

@@ -1694,7 +1694,7 @@ namespace sub::Spooner
 				}
 				else
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Task list is empty.");
+					Game::Print::ShowNotification("~r~Error:", "Task list is empty.");
 					addlog(ige::LogType::LOG_WARNING, "Cannot start tasks, Task list is empty");
 				}
 			}

@@ -209,7 +209,7 @@ namespace sub
 		if (miscFreecamOn)
 		{
 			noClipToggle = false;
-			Game::Print::PrintBottomCentre("Press ~b~" + VkCodeToStr(BindNoClip) + "~s~ OR ~b~X+LS~s~ OR ~b~Square+L3~s~ to toggle FreeCam.");
+			Game::Print::ShowNotification("Press ~b~" + VkCodeToStr(BindNoClip) + "~s~ OR ~b~X+LS~s~ OR ~b~Square+L3~s~ to toggle FreeCam.");
 			return;
 		}
 
@@ -622,7 +622,7 @@ namespace sub
 		if (radioForward) 
 		{
 			SKIP_RADIO_FORWARD();
-			Game::Print::PrintBottomCentre(oss_ << Game::GetGXTEntry(GET_PLAYER_RADIO_STATION_NAME()) << " - next track");
+			Game::Print::ShowNotification(oss_ << Game::GetGXTEntry(GET_PLAYER_RADIO_STATION_NAME()) << " - next track");
 		}
 
 	}

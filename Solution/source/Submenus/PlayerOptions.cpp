@@ -366,7 +366,7 @@ namespace sub
 			{
 				START_ENTITY_FIRE(g_activePedHandle);
 			}
-			Game::Print::PrintBottomCentre("~b~Note:~s~ If you're not on fire yet, kill yourself.");
+			Game::Print::ShowNotification("~b~Note:", "If you're not on fire yet, kill yourself.");
 			return;
 		}
 		if (burnModeOff) 
@@ -581,7 +581,7 @@ namespace sub
 
 		if (!playerPed.Exists())
 		{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ No longer in memory.");
+			Game::Print::ShowNotification("~r~Error:", "No longer in memory.");
 			addlog(ige::LogType::LOG_WARNING, "Cannot start clone menu, playerPed No longer in memory");
 			Menu::SetPreviousMenu();
 			return;

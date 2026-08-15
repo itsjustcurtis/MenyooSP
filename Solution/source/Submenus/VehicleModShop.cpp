@@ -651,7 +651,7 @@ namespace sub
 		if (set_mspaints_index_4) {
 			s_selectedPaintPart = 4;
 			if (GET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::FrontWheels) < 0)
-				Game::Print::PrintBottomCentre("~b~Note:~s~ Colours cannot always be applied to stock wheels.");
+				Game::Print::ShowNotification("~b~Note:", "Colours cannot always be applied to stock wheels.");
 			Menu::NewSetMenu(SUB::MSPAINTS2_SHARED);
 			return;
 		}
@@ -2155,7 +2155,7 @@ namespace sub
 			for (i = 0; i <= 12; i++)
 				if (DOES_EXTRA_EXIST(s_selectedVehicleHandle, i)) { Menu::NewSetMenu(SUB::MSEXTRA); break; }
 			if (Menu::activeSubmenu != SUB::MSEXTRA)
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Vehicle has no extras.");
+				Game::Print::ShowNotification("~r~Error:", "Vehicle has no extras.");
 			return;
 		}
 
@@ -2767,7 +2767,7 @@ namespace sub
 			//if (GET_VEHICLE_MOD(Static_12, 23) > -1) Menu::SetSub_new(SUB::MSPAINTS2_SHARED);
 			//else Game::Print::PrintBottomCentre("~r~Error:~s~ Colours cannot be applied to stock wheels.");
 			if (GET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::FrontWheels) < 0)
-				Game::Print::PrintBottomCentre("~b~Note:~s~ Colours cannot always be applied to stock wheels.");
+				Game::Print::ShowNotification("~b~Note:", "Colours cannot always be applied to stock wheels.");
 			Menu::NewSetMenu(SUB::MSPAINTS2_SHARED);
 			return;
 		}
@@ -3138,7 +3138,7 @@ namespace sub
 				vehicle.RequestControl(600);
 				SetVehicleWheelsInvisible(vehicle, visibility == 1);
 				if (visibility == 0)
-					Game::Print::PrintBottomCentre("~b~Note:~s~ It may take a while for the wheels to come back.");
+					Game::Print::ShowNotification("~b~Note:", "It may take a while for the wheels to come back.");
 			}
 		}
 

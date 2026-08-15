@@ -765,7 +765,7 @@ namespace sub
 		{
 			if (!RebuildFavCache(searchStr))
 			{
-				Game::Print::PrintBottomCentre("~r~Error~s~: No favourites found. Go to ~b~Custom Input~s~ and add an animation to the favourites.");
+				Game::Print::ShowNotification("~r~Error:", "No favourites found. Go to ~b~Custom Input~s~ and add an animation to the favourites.");
 				Menu::SetPreviousMenu();
 				return;
 			}
