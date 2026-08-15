@@ -3981,6 +3981,7 @@ void Menu::loops()
 
 	// HUD overlays
 	DrawGameInfo();
+	Game::Print::TickNotifications();
 
 	TickVehicleEffects(gameIsPaused);
 	SetPVOpsVehicleTextWorld2Screen();

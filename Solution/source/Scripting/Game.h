@@ -14,6 +14,7 @@
 
 #include <string>
 #include <sstream>
+#include <optional>
 
 typedef unsigned long DWORD, Hash;
 typedef signed char INT8;
@@ -34,6 +35,7 @@ std::wostream& operator<<(std::wostream& stream, std::string& text);
 namespace Game
 {
 	extern const std::pair<int, int> defaultScreenRes;
+	inline constexpr float defaultNotificationDuration = 2.5f;
 
 	// Request asset
 	bool RequestControlOfId(int netid);
@@ -77,6 +79,12 @@ namespace Game
 
 	namespace Print
 	{
+		void ShowNotification(const std::string& title, const std::string& description, float displayTimeInSeconds = defaultNotificationDuration);
+		void ShowNotification(const std::string& description, float displayTimeInSeconds = defaultNotificationDuration);
+		void ShowNotification(std::ostream& description, float displayTimeInSeconds = defaultNotificationDuration);
+		void ShowNotification(std::wostream& description, float displayTimeInSeconds = defaultNotificationDuration);
+		void TickNotifications();
+
 		// Game - Print/draw
 		void setupdraw();
 		void SetupDraw(INT8 font, const Vector2& scale, bool centred, bool right_justified, bool outline, RGBA colour = { 255, 255, 255, 255 }, Vector2 wrap = { 0, 1 });

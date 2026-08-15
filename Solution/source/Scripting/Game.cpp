@@ -19,9 +19,14 @@
 #include "GTAentity.h"
 #include "GTAped.h"
 #include "GTAplayer.h"
+#include "..\Menu\Menu.h"
 
 #include <string>
 #include <sstream>
+#include <algorithm>
+#include <deque>
+#include <optional>
+#include <vector>
 #include <Windows.h>
 #include "../Util/FileLogger.h"
 #include "../Util/ExePath.h"
@@ -406,6 +411,325 @@ namespace Game
 		{
 			std::wstring wtext = (dynamic_cast<std::wostringstream&>(s).str());
 			return PrintBottomLeft(std::string(wtext.begin(), wtext.end()), sender, subject, picName, iconType, flash, gxt);
+		}
+
+		// Custom notification system
+		namespace
+		{
+			enum class NotificationAnimation { Entering, Visible, Exiting };
+
+			struct QueuedNotification
+			{
+				std::optional<std::string> title;
+				std::string description;
+				std::vector<std::string> descriptionLines;
+				float panelHeight = 0.0f;
+				DWORD requestedDuration = 0;
+				DWORD displayDuration = 0;
+				DWORD visibleUntil = 0;
+				DWORD animationStarted = 0;
+				NotificationAnimation animation = NotificationAnimation::Entering;
+				bool anchorRight = true;
+			};
+
+			std::deque<QueuedNotification> notificationQueue;
+			std::optional<QueuedNotification> activeNotification;
+
+			constexpr DWORD animationDuration = 220;
+			constexpr size_t queueLimit = 32;
+			constexpr float panelWidth = 0.27f;
+			constexpr float rightMargin = 0.025f;
+			constexpr float stripeWidth = 0.003f;
+			constexpr float leftPadding = 0.014f;
+			constexpr float rightPadding = 0.012f;
+			constexpr float topPadding = 0.012f;
+			constexpr float bottomPadding = 0.012f;
+			constexpr float titleDescriptionGap = 0.0f;
+			constexpr float notificationRightMargin = 0.1f;
+			constexpr float leftBottomMargin = 0.22f;
+			constexpr float titleLineHeight = 0.03f;
+			constexpr float descriptionLineHeight = 0.02f;
+			constexpr float counterLineHeight = 0.032f;
+			constexpr float titleTextScale = 0.40f;
+			constexpr float descriptionTextScale = 0.33f;
+			constexpr float textWidth = panelWidth - stripeWidth - leftPadding - rightPadding;
+
+			bool IsFormattingTag(const std::string& tag)
+			{
+				return tag == "~r~" || tag == "~b~" || tag == "~g~" || tag == "~y~" || tag == "~p~" || tag == "~w~" || tag == "~o~" || tag == "~c~" || tag == "~m~" || tag == "~u~" || tag == "~s~" || tag == "~n~";
+			}
+
+			bool IsPersistentFormattingTag(const std::string& tag)
+			{
+				return IsFormattingTag(tag) && tag != "~s~" && tag != "~n~";
+			}
+
+			std::string TextForMeasurement(const std::string& text)
+			{
+				std::string visible;
+				for (std::string::size_type index = 0; index < text.length();)
+				{
+					if (text[index] == '~')
+					{
+						const std::string::size_type end = text.find('~', index + 1);
+						if (end != std::string::npos)
+						{
+							const std::string tag = text.substr(index, end - index + 1);
+							if (IsFormattingTag(tag))
+							{
+								index = end + 1;
+								continue;
+							}
+						}
+					}
+					visible += text[index++];
+				}
+				return visible;
+			}
+
+			std::vector<std::string> WrapText(const std::string& text, float maxWidth)
+			{
+				std::vector<std::string> lines;
+				std::string line;
+				std::string word;
+				std::string wordStartFormatting;
+				std::string activeFormatting;
+
+				auto beginWord = [&]()
+				{
+					if (word.empty()) wordStartFormatting = activeFormatting;
+				};
+				auto appendLine = [&](bool allowEmpty)
+				{
+					if (allowEmpty || !TextForMeasurement(line).empty()) lines.push_back(line);
+					line.clear();
+				};
+				auto appendWord = [&]()
+				{
+					if (word.empty()) return;
+					const std::string candidate = line.empty() ? wordStartFormatting + word : line + " " + word;
+					if (!line.empty() && Print::GetTextWidth(TextForMeasurement(candidate)) > maxWidth)
+					{
+						appendLine(false);
+						line = wordStartFormatting + word;
+					}
+					else
+					{
+						line = candidate;
+					}
+					word.clear();
+					wordStartFormatting.clear();
+				};
+
+				for (std::string::size_type index = 0; index < text.length();)
+				{
+					if (text[index] == '\r')
+					{
+						++index;
+						continue;
+					}
+					if (text[index] == '\n')
+					{
+						appendWord();
+						appendLine(true);
+						++index;
+						continue;
+					}
+					if (text[index] == '~')
+					{
+						const std::string::size_type end = text.find('~', index + 1);
+						if (end != std::string::npos)
+						{
+							const std::string tag = text.substr(index, end - index + 1);
+							if (tag == "~n~")
+							{
+								appendWord();
+								appendLine(true);
+								index = end + 1;
+								continue;
+							}
+							beginWord();
+							word += tag;
+							if (tag == "~s~") activeFormatting.clear();
+							else if (IsPersistentFormattingTag(tag)) activeFormatting += tag;
+							index = end + 1;
+							continue;
+						}
+					}
+					if (text[index] == ' ' || text[index] == '\t')
+					{
+						appendWord();
+						++index;
+						continue;
+					}
+					beginWord();
+					word += text[index++];
+				}
+
+				appendWord();
+				if (!line.empty() || lines.empty()) appendLine(true);
+				return lines;
+			}
+
+			std::string NormalizeNotificationText(std::string text)
+			{
+				text = Language::TranslateToSelected(std::move(text));
+				if (!DOES_TEXT_LABEL_EXIST(text.c_str())) return text;
+				const char* resolved = GET_FILENAME_FOR_AUDIO_CONVERSATION(text.c_str());
+				return resolved == nullptr ? text : resolved;
+			}
+
+			void PrepareNotification(QueuedNotification& notification, DWORD now)
+			{
+				Print::SetupDraw(font_options, Vector2(descriptionTextScale, descriptionTextScale), false, false, false, optiontext);
+				notification.descriptionLines = WrapText(notification.description, textWidth);
+				notification.panelHeight = topPadding + bottomPadding +
+					(notification.title.has_value() ? titleLineHeight + titleDescriptionGap : 0.0f) +
+					(notification.descriptionLines.size() * descriptionLineHeight);
+
+				const DWORD calculatedReadingDuration = 1500 + static_cast<DWORD>(notification.descriptionLines.size()) * 650;
+				const DWORD readingDuration = calculatedReadingDuration > 15000 ? 15000 : calculatedReadingDuration;
+				notification.displayDuration = (std::max)(notification.requestedDuration, readingDuration);
+				notification.visibleUntil = 0;
+				notification.animationStarted = now;
+				notification.animation = NotificationAnimation::Entering;
+				notification.anchorRight = Menu::activeSubmenu == SUB::CLOSED || get_xcoord_at_menu_leftEdge(0.0f, false) < 0.5f;
+			}
+
+			void StartNextNotification(DWORD now)
+			{
+				if (notificationQueue.empty()) return;
+				activeNotification = std::move(notificationQueue.front());
+				notificationQueue.pop_front();
+				PrepareNotification(*activeNotification, now);
+			}
+
+			int ApplyOpacity(UINT8 alpha, float opacity)
+			{
+				return static_cast<int>(static_cast<float>(alpha) * opacity);
+			}
+
+			bool IsDuplicate(const QueuedNotification& candidate)
+			{
+				if (activeNotification && activeNotification->title == candidate.title && activeNotification->description == candidate.description)
+					return true;
+
+				for (const auto& queued : notificationQueue)
+				{
+					if (queued.title == candidate.title && queued.description == candidate.description)
+						return true;
+				}
+
+				return false;
+			}
+
+			void EnqueueNotification(QueuedNotification notification)
+			{
+				if (IsDuplicate(notification)) return;
+				if (notificationQueue.size() >= queueLimit) notificationQueue.pop_front();
+				notificationQueue.push_back(std::move(notification));
+			}
+		}
+
+		void ShowNotification(const std::string& title, const std::string& description, float displayTimeInSeconds)
+		{
+			QueuedNotification notification;
+			notification.title = NormalizeNotificationText(title);
+			notification.description = NormalizeNotificationText(description);
+			notification.requestedDuration = displayTimeInSeconds > 0.0f ? static_cast<DWORD>(displayTimeInSeconds * 1000.0f) : 0;
+			EnqueueNotification(std::move(notification));
+		}
+
+		void ShowNotification(const std::string& description, float displayTimeInSeconds)
+		{
+			QueuedNotification notification;
+			notification.description = NormalizeNotificationText(description);
+			notification.requestedDuration = displayTimeInSeconds > 0.0f ? static_cast<DWORD>(displayTimeInSeconds * 1000.0f) : 0;
+			EnqueueNotification(std::move(notification));
+		}
+
+		void ShowNotification(std::ostream& description, float displayTimeInSeconds)
+		{
+			ShowNotification(dynamic_cast<std::ostringstream&>(description).str(), displayTimeInSeconds);
+		}
+
+		void ShowNotification(std::wostream& description, float displayTimeInSeconds)
+		{
+			const std::wstring text = dynamic_cast<std::wostringstream&>(description).str();
+			ShowNotification(std::string(text.begin(), text.end()), displayTimeInSeconds);
+		}
+
+		void TickNotifications()
+		{
+			const DWORD now = GetTickCount();
+			if (!activeNotification)
+			{
+				StartNextNotification(now);
+				if (!activeNotification) return;
+			}
+
+			if (activeNotification->animation == NotificationAnimation::Entering && now - activeNotification->animationStarted >= animationDuration)
+			{
+				activeNotification->animation = NotificationAnimation::Visible;
+				activeNotification->animationStarted = now;
+				activeNotification->visibleUntil = now + activeNotification->displayDuration;
+			}
+			else if (activeNotification->animation == NotificationAnimation::Visible && now >= activeNotification->visibleUntil)
+			{
+				activeNotification->animation = NotificationAnimation::Exiting;
+				activeNotification->animationStarted = now;
+			}
+			else if (activeNotification->animation == NotificationAnimation::Exiting && now - activeNotification->animationStarted >= animationDuration)
+			{
+				activeNotification.reset();
+				StartNextNotification(now);
+				if (!activeNotification) return;
+			}
+
+			QueuedNotification& notification = *activeNotification;
+			float progress = 1.0f;
+			if (notification.animation == NotificationAnimation::Entering)
+				progress = (std::min)(1.0f, static_cast<float>(now - notification.animationStarted) / animationDuration);
+			else if (notification.animation == NotificationAnimation::Exiting)
+				progress = 1.0f - (std::min)(1.0f, static_cast<float>(now - notification.animationStarted) / animationDuration);
+			const size_t pendingCount = notificationQueue.size();
+			const bool counterNeedsItsOwnLine = !notification.title.has_value() && pendingCount > 0;
+			notification.panelHeight = topPadding + bottomPadding +
+				(notification.title.has_value() ? titleLineHeight + titleDescriptionGap : 0.0f) +
+				(counterNeedsItsOwnLine ? counterLineHeight : 0.0f) +
+				(notification.descriptionLines.size() * descriptionLineHeight);
+			const float slideOffset = (1.0f - progress) * 0.20f * (notification.anchorRight ? 1.0f : -1.0f);
+			const float panelX = (notification.anchorRight ? 1.0f - rightMargin - panelWidth : rightMargin) + slideOffset;
+			const float bottomMargin = notification.anchorRight ? notificationRightMargin : leftBottomMargin;
+			const float panelY = 1.0f - bottomMargin - notification.panelHeight;
+			const float textX = panelX + stripeWidth + leftPadding;
+
+			DRAW_RECT(panelX + panelWidth / 2.0f, panelY + notification.panelHeight / 2.0f, panelWidth, notification.panelHeight, BG.R, BG.G, BG.B, ApplyOpacity(BG.A, progress), false);
+			DRAW_RECT(panelX + stripeWidth / 2.0f, panelY + notification.panelHeight / 2.0f, stripeWidth, notification.panelHeight, titlebox.R, titlebox.G, titlebox.B, ApplyOpacity(titlebox.A, progress), false);
+
+			if (pendingCount > 0)
+			{
+				const std::string counterText = "+" + std::to_string(pendingCount);
+				Print::SetupDraw(font_options, Vector2(descriptionTextScale, descriptionTextScale), false, false, false, { optiontext.R, optiontext.G, optiontext.B, static_cast<UINT8>(ApplyOpacity(optiontext.A, progress)) });
+				const float counterWidth = Print::GetTextWidth(counterText);
+				Print::SetupDraw(font_options, Vector2(descriptionTextScale, descriptionTextScale), false, false, false, { optiontext.R, optiontext.G, optiontext.B, static_cast<UINT8>(ApplyOpacity(optiontext.A, progress)) });
+				Print::drawstring(counterText, panelX + panelWidth - rightPadding - counterWidth, panelY + topPadding);
+			}
+
+			float descriptionY = panelY + topPadding + (counterNeedsItsOwnLine ? counterLineHeight : 0.0f);
+			if (notification.title.has_value())
+			{
+				Print::SetupDraw(font_title, Vector2(titleTextScale, titleTextScale), false, false, false, { titletext.R, titletext.G, titletext.B, static_cast<UINT8>(ApplyOpacity(titletext.A, progress)) });
+				Print::drawstring(*notification.title, textX, descriptionY);
+				descriptionY += titleLineHeight + titleDescriptionGap;
+			}
+
+			for (const auto& line : notification.descriptionLines)
+			{
+				Print::SetupDraw(font_options, Vector2(descriptionTextScale, descriptionTextScale), false, false, false, { optiontext.R, optiontext.G, optiontext.B, static_cast<UINT8>(ApplyOpacity(optiontext.A, progress)) }, { 0.0f, textX + textWidth });
+				Print::drawstring(line, textX, descriptionY);
+				descriptionY += descriptionLineHeight;
+			}
 		}
 
 		// Messages - Errors
