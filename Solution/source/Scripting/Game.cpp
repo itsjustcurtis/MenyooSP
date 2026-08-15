@@ -736,7 +736,7 @@ namespace Game
 			float descriptionY = panelY + topPadding + (counterNeedsItsOwnLine ? counterLineHeight : 0.0f);
 			if (notification.title.has_value())
 			{
-				Print::SetupDraw(font_title, Vector2(titleTextScale, titleTextScale), false, false, false, { titletext.R, titletext.G, titletext.B, static_cast<UINT8>(ApplyOpacity(titletext.A, progress)) });
+				Print::SetupDraw(font_title, Vector2(titleTextScale, titleTextScale), false, false, true, { titletext.R, titletext.G, titletext.B, static_cast<UINT8>(ApplyOpacity(titletext.A, progress)) });
 				Print::drawstring(*notification.title, textX, descriptionY);
 				descriptionY += titleLineHeight + titleDescriptionGap;
 			}
