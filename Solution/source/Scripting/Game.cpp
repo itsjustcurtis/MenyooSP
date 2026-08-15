@@ -24,7 +24,6 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
-#include <deque>
 #include <optional>
 #include <vector>
 #include <Windows.h>
@@ -445,30 +444,28 @@ namespace Game
 				DWORD visibleUntil = 0;
 				DWORD animationStarted = 0;
 				NotificationAnimation animation = NotificationAnimation::Entering;
-				bool anchorRight = true;
 			};
 
-			std::deque<QueuedNotification> notificationQueue;
 			std::optional<QueuedNotification> activeNotification;
+			std::optional<QueuedNotification> pendingNotification;
 
 			constexpr DWORD animationDuration = 220;
-			constexpr size_t queueLimit = 32;
+			constexpr float animationTravelDistance = 0.075f;
 			constexpr float panelWidth = 0.27f;
-			constexpr float rightMargin = 0.025f;
 			constexpr float stripeWidth = 0.003f;
 			constexpr float leftPadding = 0.014f;
 			constexpr float rightPadding = 0.012f;
 			constexpr float topPadding = 0.012f;
 			constexpr float bottomPadding = 0.012f;
 			constexpr float titleDescriptionGap = 0.0f;
-			constexpr float notificationRightMargin = 0.1f;
-			constexpr float leftBottomMargin = 0.22f;
+			constexpr float notificationBottomMargin = 0.06f;
 			constexpr float titleLineHeight = 0.03f;
 			constexpr float descriptionLineHeight = 0.02f;
-			constexpr float counterLineHeight = 0.032f;
 			constexpr float titleTextScale = 0.40f;
 			constexpr float descriptionTextScale = 0.33f;
 			constexpr float textWidth = panelWidth - stripeWidth - leftPadding - rightPadding;
+			constexpr size_t maximumTitleLength = 40;
+			constexpr size_t maximumDescriptionLength = 300;
 
 			bool IsFormattingTag(const std::string& tag)
 			{
@@ -480,7 +477,7 @@ namespace Game
 				return IsFormattingTag(tag) && tag != "~s~" && tag != "~n~";
 			}
 
-			std::string TextForMeasurement(const std::string& text)
+			std::string GetVisibleText(const std::string& text)
 			{
 				std::string visible;
 				for (std::string::size_type index = 0; index < text.length();)
@@ -517,14 +514,14 @@ namespace Game
 				};
 				auto appendLine = [&](bool allowEmpty)
 				{
-					if (allowEmpty || !TextForMeasurement(line).empty()) lines.push_back(line);
+					if (allowEmpty || !GetVisibleText(line).empty()) lines.push_back(line);
 					line.clear();
 				};
 				auto appendWord = [&]()
 				{
 					if (word.empty()) return;
 					const std::string candidate = line.empty() ? wordStartFormatting + word : line + " " + word;
-					if (!line.empty() && Print::GetTextWidth(TextForMeasurement(candidate)) > maxWidth)
+					if (!line.empty() && Print::GetTextWidth(GetVisibleText(candidate)) > maxWidth)
 					{
 						appendLine(false);
 						line = wordStartFormatting + word;
@@ -587,12 +584,26 @@ namespace Game
 				return lines;
 			}
 
-			std::string NormalizeNotificationText(std::string text)
+			std::string ResolveNotificationText(std::string text)
 			{
 				text = Language::TranslateToSelected(std::move(text));
 				if (!DOES_TEXT_LABEL_EXIST(text.c_str())) return text;
 				const char* resolved = GET_FILENAME_FOR_AUDIO_CONVERSATION(text.c_str());
 				return resolved == nullptr ? text : resolved;
+			}
+
+			std::string TruncateNotificationText(std::string text, size_t maximumLength)
+			{
+				if (text.length() <= maximumLength) return text;
+				text.resize(maximumLength);
+				if (const auto lastTagStart = text.rfind('~'); lastTagStart != std::string::npos && text.find('~', lastTagStart + 1) == std::string::npos)
+					text.resize(lastTagStart);
+				return text;
+			}
+
+			std::string PrepareNotificationText(std::string text, size_t maximumLength)
+			{
+				return TruncateNotificationText(ResolveNotificationText(std::move(text)), maximumLength);
 			}
 
 			void PrepareNotification(QueuedNotification& notification, DWORD now)
@@ -603,21 +614,20 @@ namespace Game
 					(notification.title.has_value() ? titleLineHeight + titleDescriptionGap : 0.0f) +
 					(notification.descriptionLines.size() * descriptionLineHeight);
 
-				const size_t visibleCharacterCount = TextForMeasurement(notification.title.value_or(std::string()) + notification.description).length();
+				const size_t visibleCharacterCount = GetVisibleText(notification.title.value_or(std::string()) + notification.description).length();
 				const DWORD calculatedReadingDuration = 1500 + static_cast<DWORD>(visibleCharacterCount) * 30;
 				const DWORD readingDuration = calculatedReadingDuration > 15000 ? 15000 : calculatedReadingDuration;
 				notification.displayDuration = (std::max)(notification.requestedDuration, readingDuration);
 				notification.visibleUntil = 0;
 				notification.animationStarted = now;
 				notification.animation = NotificationAnimation::Entering;
-				notification.anchorRight = Menu::activeSubmenu == SUB::CLOSED || get_xcoord_at_menu_leftEdge(0.0f, false) < 0.5f;
 			}
 
-			void StartNextNotification(DWORD now)
+			void StartPendingNotification(DWORD now)
 			{
-				if (notificationQueue.empty()) return;
-				activeNotification = std::move(notificationQueue.front());
-				notificationQueue.pop_front();
+				if (!pendingNotification) return;
+				activeNotification = std::move(pendingNotification);
+				pendingNotification.reset();
 				PrepareNotification(*activeNotification, now);
 			}
 
@@ -631,11 +641,8 @@ namespace Game
 				if (activeNotification && activeNotification->title == candidate.title && activeNotification->description == candidate.description)
 					return true;
 
-				for (const auto& queued : notificationQueue)
-				{
-					if (queued.title == candidate.title && queued.description == candidate.description)
-						return true;
-				}
+				if (pendingNotification && pendingNotification->title == candidate.title && pendingNotification->description == candidate.description)
+					return true;
 
 				return false;
 			}
@@ -643,16 +650,22 @@ namespace Game
 			void EnqueueNotification(QueuedNotification notification)
 			{
 				if (IsDuplicate(notification)) return;
-				if (notificationQueue.size() >= queueLimit) notificationQueue.pop_front();
-				notificationQueue.push_back(std::move(notification));
+				pendingNotification = std::move(notification);
+				if (activeNotification && activeNotification->animation != NotificationAnimation::Exiting)
+				{
+					activeNotification->animation = NotificationAnimation::Exiting;
+					activeNotification->animationStarted = GetTickCount();
+				}
 			}
 		}
 
 		void ShowNotification(const std::string& title, const std::string& description, float displayTimeInSeconds)
 		{
 			QueuedNotification notification;
-			notification.title = NormalizeNotificationText(title);
-			notification.description = NormalizeNotificationText(description);
+			const std::string resolvedTitle = PrepareNotificationText(title, maximumTitleLength);
+			if (!GetVisibleText(resolvedTitle).empty()) notification.title = resolvedTitle;
+			notification.description = PrepareNotificationText(description, maximumDescriptionLength);
+			if (GetVisibleText(notification.description).empty()) return;
 			notification.requestedDuration = displayTimeInSeconds > 0.0f ? static_cast<DWORD>(displayTimeInSeconds * 1000.0f) : 0;
 			EnqueueNotification(std::move(notification));
 		}
@@ -660,7 +673,8 @@ namespace Game
 		void ShowNotification(const std::string& description, float displayTimeInSeconds)
 		{
 			QueuedNotification notification;
-			notification.description = NormalizeNotificationText(description);
+			notification.description = PrepareNotificationText(description, maximumDescriptionLength);
+			if (GetVisibleText(notification.description).empty()) return;
 			notification.requestedDuration = displayTimeInSeconds > 0.0f ? static_cast<DWORD>(displayTimeInSeconds * 1000.0f) : 0;
 			EnqueueNotification(std::move(notification));
 		}
@@ -676,14 +690,13 @@ namespace Game
 			ShowNotification(std::string(text.begin(), text.end()), displayTimeInSeconds);
 		}
 
-		void TickNotifications()
+		void AdvanceNotificationState(DWORD now)
 		{
-			const DWORD now = GetTickCount();
 			if (!activeNotification)
 			{
-				StartNextNotification(now);
-				if (!activeNotification) return;
+				StartPendingNotification(now);
 			}
+			if (!activeNotification) return;
 
 			if (activeNotification->animation == NotificationAnimation::Entering && now - activeNotification->animationStarted >= animationDuration)
 			{
@@ -699,41 +712,34 @@ namespace Game
 			else if (activeNotification->animation == NotificationAnimation::Exiting && now - activeNotification->animationStarted >= animationDuration)
 			{
 				activeNotification.reset();
-				StartNextNotification(now);
-				if (!activeNotification) return;
+				StartPendingNotification(now);
 			}
+		}
 
+		void RenderNotification(DWORD now)
+		{
 			QueuedNotification& notification = *activeNotification;
 			float progress = 1.0f;
 			if (notification.animation == NotificationAnimation::Entering)
 				progress = (std::min)(1.0f, static_cast<float>(now - notification.animationStarted) / animationDuration);
 			else if (notification.animation == NotificationAnimation::Exiting)
 				progress = 1.0f - (std::min)(1.0f, static_cast<float>(now - notification.animationStarted) / animationDuration);
-			const size_t pendingCount = notificationQueue.size();
-			const bool counterNeedsItsOwnLine = !notification.title.has_value() && pendingCount > 0;
 			notification.panelHeight = topPadding + bottomPadding +
 				(notification.title.has_value() ? titleLineHeight + titleDescriptionGap : 0.0f) +
-				(counterNeedsItsOwnLine ? counterLineHeight : 0.0f) +
 				(notification.descriptionLines.size() * descriptionLineHeight);
-			const float slideOffset = (1.0f - progress) * 0.20f * (notification.anchorRight ? 1.0f : -1.0f);
-			const float panelX = (notification.anchorRight ? 1.0f - rightMargin - panelWidth : rightMargin) + slideOffset;
-			const float bottomMargin = notification.anchorRight ? notificationRightMargin : leftBottomMargin;
-			const float panelY = 1.0f - bottomMargin - notification.panelHeight;
+			const float panelX = (1.0f - panelWidth) / 2.0f;
+			float verticalOffset = 0.0f;
+			if (notification.animation == NotificationAnimation::Entering)
+				verticalOffset = (1.0f - progress) * animationTravelDistance;
+			else if (notification.animation == NotificationAnimation::Exiting)
+				verticalOffset = -(1.0f - progress) * animationTravelDistance;
+			const float panelY = 1.0f - notificationBottomMargin - notification.panelHeight + verticalOffset;
 			const float textX = panelX + stripeWidth + leftPadding;
 
 			DRAW_RECT(panelX + panelWidth / 2.0f, panelY + notification.panelHeight / 2.0f, panelWidth, notification.panelHeight, BG.R, BG.G, BG.B, ApplyOpacity(BG.A, progress), false);
 			DRAW_RECT(panelX + stripeWidth / 2.0f, panelY + notification.panelHeight / 2.0f, stripeWidth, notification.panelHeight, titlebox.R, titlebox.G, titlebox.B, ApplyOpacity(titlebox.A, progress), false);
 
-			if (pendingCount > 0)
-			{
-				const std::string counterText = "+" + std::to_string(pendingCount);
-				Print::SetupDraw(font_options, Vector2(descriptionTextScale, descriptionTextScale), false, false, false, { optiontext.R, optiontext.G, optiontext.B, static_cast<UINT8>(ApplyOpacity(optiontext.A, progress)) });
-				const float counterWidth = Print::GetTextWidth(counterText);
-				Print::SetupDraw(font_options, Vector2(descriptionTextScale, descriptionTextScale), false, false, false, { optiontext.R, optiontext.G, optiontext.B, static_cast<UINT8>(ApplyOpacity(optiontext.A, progress)) });
-				Print::drawstring(counterText, panelX + panelWidth - rightPadding - counterWidth, panelY + topPadding);
-			}
-
-			float descriptionY = panelY + topPadding + (counterNeedsItsOwnLine ? counterLineHeight : 0.0f);
+			float descriptionY = panelY + topPadding;
 			if (notification.title.has_value())
 			{
 				Print::SetupDraw(font_title, Vector2(titleTextScale, titleTextScale), false, false, true, { titletext.R, titletext.G, titletext.B, static_cast<UINT8>(ApplyOpacity(titletext.A, progress)) });
@@ -747,6 +753,13 @@ namespace Game
 				Print::drawstring(line, textX, descriptionY);
 				descriptionY += descriptionLineHeight;
 			}
+		}
+
+		void TickNotifications()
+		{
+			const DWORD now = GetTickCount();
+			AdvanceNotificationState(now);
+			if (activeNotification) RenderNotification(now);
 		}
 
 		// Messages - Errors
