@@ -301,29 +301,44 @@ namespace Game
 			}
 		}
 
+		// Game::Print::PrintBottomCentre notifications
+		namespace
+		{
+			struct PrintBottomCentreMessage
+			{
+				std::string messageText;
+				DWORD expiresAt;
+			};
+
+			std::optional<PrintBottomCentreMessage> activePrintBottomCentreMessage;
+
+			void DrawPrintBottomCentreMessage()
+			{
+				if (!activePrintBottomCentreMessage) return;
+
+				const DWORD now = GetTickCount();
+				if (now >= activePrintBottomCentreMessage->expiresAt)
+				{
+					activePrintBottomCentreMessage.reset();
+					return;
+				}
+
+				SetupDraw(0, Vector2(0.4f, 0.4f), true, false, false);
+				drawstring(activePrintBottomCentreMessage->messageText, 0.5f, 0.9f);
+			}
+		}
+
 		void PrintBottomCentre(std::string s, int time)
 		{
-			s = Language::TranslateToSelected(s);
-			const char* text = s.c_str();
+			activePrintBottomCentreMessage = PrintBottomCentreMessage{
+				Language::TranslateToSelected(std::move(s)),
+				GetTickCount() + static_cast<DWORD>((std::max)(0, time))
+			};
+		}
 
-			if (DOES_TEXT_LABEL_EXIST(text))
-			{
-				BEGIN_TEXT_COMMAND_PRINT(text);
-			}
-			else
-			{
-				if (s.length() < 100)
-				{
-					BEGIN_TEXT_COMMAND_PRINT("STRING");
-					ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(text);
-				}
-				else
-				{
-					BEGIN_TEXT_COMMAND_PRINT("jamyfafi");
-					add_text_component_long_string(s);
-				}
-			}
-			END_TEXT_COMMAND_PRINT(time, 1);
+		void TickPrintBottomCentre()
+		{
+			DrawPrintBottomCentreMessage();
 		}
 		void PrintBottomCentre(std::ostream& s, int time)
 		{
@@ -335,11 +350,12 @@ namespace Game
 			PrintBottomCentre(std::string(wtext2.begin(), wtext2.end()), time);
 		}
 
-		void Notification::Hide()
+		// Game Feed Notifications
+		void GameFeedNotification::Hide()
 		{
 			THEFEED_REMOVE_ITEM(this->mHandle);
 		}
-		Notification PrintBottomLeft(std::string s, bool gxt)
+		GameFeedNotification PrintBottomLeft(std::string s, bool gxt)
 		{
 			s = Language::TranslateToSelected(s);
 			const char* text = s.c_str();
@@ -365,16 +381,16 @@ namespace Game
 			//END_TEXT_COMMAND_THEFEED_POST_TICKER_FORCED(0, 1);
 			return END_TEXT_COMMAND_THEFEED_POST_TICKER(0, 0);
 		}
-		Notification PrintBottomLeft(std::ostream& s, bool gxt)
+		GameFeedNotification PrintBottomLeft(std::ostream& s, bool gxt)
 		{
 			return PrintBottomLeft((dynamic_cast<std::ostringstream&>(s).str()), gxt);
 		}
-		Notification PrintBottomLeft(std::wostream& s, bool gxt)
+		GameFeedNotification PrintBottomLeft(std::wostream& s, bool gxt)
 		{
 			std::wstring wtext = (dynamic_cast<std::wostringstream&>(s).str());
 			return PrintBottomLeft(std::string(wtext.begin(), wtext.end()), gxt);
 		}
-		Notification PrintBottomLeft(std::string s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt)
+		GameFeedNotification PrintBottomLeft(std::string s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt)
 		{
 			const char* text = s.c_str();
 
@@ -403,11 +419,11 @@ namespace Game
 
 			return END_TEXT_COMMAND_THEFEED_POST_TICKER(0, 0);
 		}
-		Notification PrintBottomLeft(std::ostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt)
+		GameFeedNotification PrintBottomLeft(std::ostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt)
 		{
 			return PrintBottomLeft((dynamic_cast<std::ostringstream&>(s).str()), sender, subject, picName, iconType, flash, gxt);
 		}
-		Notification PrintBottomLeft(std::wostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt)
+		GameFeedNotification PrintBottomLeft(std::wostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt)
 		{
 			std::wstring wtext = (dynamic_cast<std::wostringstream&>(s).str());
 			return PrintBottomLeft(std::string(wtext.begin(), wtext.end()), sender, subject, picName, iconType, flash, gxt);

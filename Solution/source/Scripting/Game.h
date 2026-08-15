@@ -84,6 +84,7 @@ namespace Game
 		void ShowNotification(std::ostream& description, float displayTimeInSeconds = defaultNotificationDuration);
 		void ShowNotification(std::wostream& description, float displayTimeInSeconds = defaultNotificationDuration);
 		void TickNotifications();
+		void TickPrintBottomCentre();
 
 		// Game - Print/draw
 		void setupdraw();
@@ -99,10 +100,10 @@ namespace Game
 		void PrintBottomCentre(std::ostream& s, int time = 2500);
 		void PrintBottomCentre(std::wostream& s, int time = 2500);
 
-		class Notification
+		class GameFeedNotification
 		{
 		public:
-			Notification(int newHandle) : mHandle(newHandle)
+			GameFeedNotification(int newHandle) : mHandle(newHandle)
 			{
 			}
 			int& Handle()
@@ -115,12 +116,12 @@ namespace Game
 		private:
 			int mHandle;
 		};
-		Notification PrintBottomLeft(std::string s, bool gxt = false);
-		Notification PrintBottomLeft(std::ostream& s, bool gxt = 0);
-		Notification PrintBottomLeft(std::wostream& s, bool gxt = 0);
-		Notification PrintBottomLeft(std::string s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
-		Notification PrintBottomLeft(std::ostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
-		Notification PrintBottomLeft(std::wostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
+		GameFeedNotification PrintBottomLeft(std::string s, bool gxt = false);
+		GameFeedNotification PrintBottomLeft(std::ostream& s, bool gxt = 0);
+		GameFeedNotification PrintBottomLeft(std::wostream& s, bool gxt = 0);
+		GameFeedNotification PrintBottomLeft(std::string s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
+		GameFeedNotification PrintBottomLeft(std::ostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
+		GameFeedNotification PrintBottomLeft(std::wostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
 
 		// Messages - Errors
 		void PrintErrorInvalidInput(std::string inputStr);

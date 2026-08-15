@@ -3981,6 +3981,7 @@ void Menu::loops()
 
 	// HUD overlays
 	DrawGameInfo();
+	Game::Print::TickPrintBottomCentre();
 	Game::Print::TickNotifications();
 
 	TickVehicleEffects(gameIsPaused);
