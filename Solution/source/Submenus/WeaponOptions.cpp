@@ -1082,7 +1082,7 @@ namespace sub
 				switch (pedCurrentWeapon)
 				{
 				case WEAPON_UNARMED:
-					Game::Print::PrintBottomCentre(oss_ << "This weapon isn't exactly valid: ~b~" << GetWeaponLabel(pedCurrentWeapon, true) << "~s~.");
+					Game::Print::ShowNotification(oss_ << "This weapon isn't exactly valid: ~b~" << GetWeaponLabel(pedCurrentWeapon, true) << "~s~.");
 					break;
 				default:
 					selectedCategory = WEAPONTYPE::WEAPE_CURRENTLYHELD;
@@ -1592,7 +1592,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else if (WeaponsLoadouts_catind::Create(_ped, _dir + "\\" + inputStr + ".xml"))
 						Game::Print::PrintBottomLeft("Loadout ~b~saved~s~.");
@@ -1613,7 +1613,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) ||
 						GetLastError() == ERROR_ALREADY_EXISTS)
@@ -1624,7 +1624,7 @@ namespace sub
 					}
 					else
 					{
-						Game::Print::PrintBottomCentre("~r~Failed~s~ to create folder.");
+						Game::Print::ShowNotification("~r~Failed", "to create folder.");
 					}
 				}
 				else
@@ -1663,7 +1663,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else if (rename(filePath.c_str(), (_dir + "\\" + inputStr + ".xml").c_str()) == 0)
 					{
@@ -1671,7 +1671,7 @@ namespace sub
 						Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
 					}
 					else
-						Game::Print::PrintBottomCentre("~r~Error~s~ renaming file.");
+					Game::Print::ShowNotification("~r~Error", "renaming file.");
 				}
 				else
 					Game::Print::PrintErrorInvalidInput(inputStr);
@@ -1685,7 +1685,7 @@ namespace sub
 				if (WeaponsLoadouts_catind::Create(_ped, filePath))
 					Game::Print::PrintBottomLeft("File ~b~overwritten~s~.");
 				else
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to overwrite file.");
+					Game::Print::ShowNotification("~r~Error:", "Unable to overwrite file.");
 			}
 
 			if (bDelete)
@@ -1693,7 +1693,7 @@ namespace sub
 				if (remove(filePath.c_str()) == 0)
 					Game::Print::PrintBottomLeft("File ~b~deleted~s~.");
 				else
-					Game::Print::PrintBottomCentre("~r~Error~s~ deleting file.");
+					Game::Print::ShowNotification("~r~Error", "deleting file.");
 				Menu::SetPreviousMenu();
 				Menu::Up();
 				return;

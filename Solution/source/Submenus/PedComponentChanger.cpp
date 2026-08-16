@@ -115,7 +115,7 @@ namespace sub
 	static bool PromptConfirm(int& state, const std::string& message)
 	{
 		if (state == 0) {
-			Game::Print::PrintBottomCentre(message);
+			Game::Print::ShowNotification(message);
 			state = 1;
 			return false;
 		}
@@ -910,7 +910,7 @@ namespace sub
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ No decal overlays available for this ped model.");
+				Game::Print::ShowNotification("~r~Error:", "No decal overlays available for this ped model.");
 			}
 		}
 	}
@@ -1989,7 +1989,7 @@ namespace sub
 			{
 				if (!IsSafePath(inputStr))
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 				}
 				else
 				{
@@ -2008,7 +2008,7 @@ namespace sub
 			{
 				if (!IsSafePath(inputStr))
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 				}
 				else if (CreateDirectoryA((dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
 				{
@@ -2018,7 +2018,7 @@ namespace sub
 				}
 				else
 				{
-					Game::Print::PrintBottomCentre("~r~Failed~s~ to create folder.");
+					Game::Print::ShowNotification("~r~Failed", "to create folder.");
 					addlog(ige::LogType::LOG_ERROR, "Attempt to create folder " + inputStr + " failed");
 				}
 			}
@@ -2072,7 +2072,7 @@ namespace sub
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to create file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to create file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to create file menyooStuff/defaultPed.xml failed");
 			}
 		}
@@ -2083,7 +2083,7 @@ namespace sub
 				Game::Print::PrintBottomLeft("File ~b~overwritten~s~.");
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to overwrite file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to overwrite file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to overwrite file " + filePath + " failed");
 			}
 		}
@@ -2095,14 +2095,14 @@ namespace sub
 			{
 				if (!IsSafePath(newName))
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 				}
 				else if (rename(filePath.c_str(), (dir + "\\" + newName + ".xml").c_str()) == 0)
 				{
 					name = newName;
 					Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
 				}
-				else Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to rename file.");
+				else Game::Print::ShowNotification("~r~Error:", "Unable to rename file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to rename file " + name + " to " + newName + "failed");
 			}
 			else Game::Print::PrintErrorInvalidInput(newName);
@@ -2119,7 +2119,7 @@ namespace sub
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to delete file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to delete file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to delete file " + filePath + " failed");
 			}
 			Menu::SetPreviousMenu();

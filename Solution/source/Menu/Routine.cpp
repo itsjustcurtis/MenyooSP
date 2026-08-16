@@ -2567,7 +2567,7 @@ void DriveOnWater(GTAped ped, Entity& waterobject)
 		SET_ENTITY_COORDS_NO_OFFSET(waterobject, Pos.x, Pos.y, whh, 0, 0, 0);
 		SET_ENTITY_ROTATION(waterobject, 0, 90, 0, 2, 1);
 		FREEZE_ENTITY_POSITION(waterobject, true);
-		Game::Print::PrintBottomCentre("~b~Note:~s~ Enable again if water level is incorrect/changes.");
+		Game::Print::ShowNotification("~b~Note:", "Enable again if water level is incorrect/changes.");
 		WAIT(65);
 		return;
 	}
@@ -3194,6 +3194,7 @@ void SetVehicleWheelsInvisible(GTAvehicle vehicle, bool enable)
 		}
 
 		vehicle.RequestControl(800);
+		RESET_VEHICLE_WHEELS(vehicle.Handle(), true);
 		for (UINT i = 0; i <= 8; i++)
 		{
 			vehicle.FixTyre(i);
@@ -3980,6 +3981,8 @@ void Menu::loops()
 
 	// HUD overlays
 	DrawGameInfo();
+	Game::Print::TickPrintBottomCentre();
+	Game::Print::TickNotifications();
 
 	TickVehicleEffects(gameIsPaused);
 	SetPVOpsVehicleTextWorld2Screen();

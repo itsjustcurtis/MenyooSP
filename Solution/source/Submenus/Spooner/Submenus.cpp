@@ -336,7 +336,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else if (FileManagement::SaveDbToFile(_dir + "\\" + inputStr + ".xml", true))
 					{
@@ -344,7 +344,7 @@ namespace sub
 					}
 					else
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
+						Game::Print::ShowNotification("~r~Error:", "Unable to save file.");
 						addlog(ige::LogType::LOG_ERROR, "Attempt to save Database file " + inputStr + ".xml failed");
 					}
 				}
@@ -360,7 +360,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else if (FileManagement::SaveWorldToFile(_dir + "\\" + inputStr + ".xml", worldEntities, Databases::MarkerDb))
 					{
@@ -368,7 +368,7 @@ namespace sub
 					}
 					else
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
+						Game::Print::ShowNotification("~r~Error:", "Unable to save file.");
 						addlog(ige::LogType::LOG_ERROR, "Attempt to save World file " + inputStr + ".xml failed");
 					}
 				}
@@ -389,7 +389,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else
 					{
@@ -402,7 +402,7 @@ namespace sub
 						}
 						else
 						{
-							Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
+							Game::Print::ShowNotification("~r~Error:", "Unable to save file.");
 							addlog(ige::LogType::LOG_ERROR, "Attempt to save Range Markers file " + inputStr + ".xml failed");
 						}
 					}
@@ -422,7 +422,7 @@ namespace sub
 			}
 			else
 			{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load file.");
+			Game::Print::ShowNotification("~r~Error:", "Unable to load file.");
 			}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerLoadFromFile, std::string(), 28U, "Enter file name:");
@@ -451,7 +451,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) ||
 						GetLastError() == ERROR_ALREADY_EXISTS)
@@ -462,7 +462,7 @@ namespace sub
 					}
 					else
 					{
-						Game::Print::PrintBottomCentre("~r~Failed~s~ to create folder.");
+						Game::Print::ShowNotification("~r~Failed", "to create folder.");
 						addlog(ige::LogType::LOG_ERROR, "Attempt to create new folder " + inputStr + " failed");
 					}
 				}
@@ -676,7 +676,7 @@ namespace sub
 				}
 				else
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load file.");
+					Game::Print::ShowNotification("~r~Error:", "Unable to load file.");
 					addlog(ige::LogType::LOG_ERROR, "Attempt to load placements from " + filePath + ".xml failed");
 				}
 			}
@@ -689,7 +689,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else if (rename(filePath.c_str(), (_dir + "\\" + inputStr + ".xml").c_str()) == 0)
 					{
@@ -698,7 +698,7 @@ namespace sub
 					}
 					else
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to rename file.");
+						Game::Print::ShowNotification("~r~Error:", "Unable to rename file.");
 						addlog(ige::LogType::LOG_ERROR, "Attempt to rename file " + _name + ".xml to " + inputStr + " failed");
 					}
 				}
@@ -716,7 +716,7 @@ namespace sub
 				}
 				else
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to overwrite file.");
+					Game::Print::ShowNotification("~r~Error:", "Unable to overwrite file.");
 					addlog(ige::LogType::LOG_ERROR, "Attempt to overwrite " + filePath + " failed");
 				}
 			}
@@ -730,7 +730,7 @@ namespace sub
 				}
 				else
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to delete file.");
+					Game::Print::ShowNotification("~r~Error:", "Unable to delete file.");
 					addlog(ige::LogType::LOG_ERROR, "Attempt to delete file " + filePath + " failed");
 				}
 				Menu::SetPreviousMenu();
@@ -1064,7 +1064,7 @@ namespace sub
 				}
 				else
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load file.");
+					Game::Print::ShowNotification("~r~Error:", "Unable to load file.");
 					addlog(ige::LogType::LOG_ERROR, "Attempt to load Placements file from" + filePath + " failed");
 				}
 			}
@@ -1077,7 +1077,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else if (rename(filePath.c_str(), (_dir + "\\" + inputStr + ".SP00N").c_str()) == 0)
 					{
@@ -1103,7 +1103,7 @@ namespace sub
 				}
 				else
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to delete file.");
+					Game::Print::ShowNotification("~r~Error:", "Unable to delete file.");
 					addlog(ige::LogType::LOG_ERROR, "Attempt to delete file" + filePath + " failed");
 				}
 				Menu::SetPreviousMenu();
@@ -1243,7 +1243,7 @@ namespace sub
 		{
 			if (Databases::EntityDb.empty())
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ The Spooner entity database is empty.");
+				Game::Print::ShowNotification("~r~Error:", "The Spooner entity database is empty.");
 				Menu::SetSub_previous();
 				return;
 			}
@@ -2401,7 +2401,7 @@ namespace sub
 			if (pedops_piggyback)
 			{
 				if (thisPed == myPed)
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Can't do that to yourself.");
+					Game::Print::ShowNotification("~r~Error:", "Can't do that to yourself.");
 				else
 				{
 					if (GET_ENTITY_ATTACHED_TO(myPed.Handle()) != thisPed.Handle())
@@ -2421,7 +2421,7 @@ namespace sub
 			if (pedops_shoulderRide)
 			{
 				if (thisPed == myPed)
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Can't do that to yourself.");
+					Game::Print::ShowNotification("~r~Error:", "Can't do that to yourself.");
 				else
 				{
 					if (GET_ENTITY_ATTACHED_TO(myPed.Handle()) != thisPed.Handle())
@@ -2445,12 +2445,12 @@ namespace sub
 				if (closestVeh.Exists())
 					thisPed.SetIntoVehicle(closestVeh, closestVeh.FirstFreeSeat(SEAT_DRIVER));
 				else
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to find a vehicle.");
+					Game::Print::ShowNotification("~r~Error:", "Unable to find a vehicle.");
 			}
 
 			if (pedops_wp_walk)
 			{
-				if (!IS_WAYPOINT_ACTIVE()) Game::Print::PrintBottomCentre("~r~Error:~s~ No Waypoint Set.");
+				if (!IS_WAYPOINT_ACTIVE()) Game::Print::ShowNotification("~r~Error:", "No Waypoint Set.");
 				else
 				{
 					Vector3 coord = GET_BLIP_INFO_ID_COORD(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint));
@@ -3304,7 +3304,7 @@ namespace sub
 							copy.m_direction = myPed.ForwardVector();
 						}
 						LightManagement::Add(copy);
-						Game::Print::PrintBottomCentre("Light added from preset");
+						Game::Print::ShowNotification("Light added from preset");
 					}
 
 				if (Menu::IsLastDrawnOptionSelected())
@@ -3364,7 +3364,7 @@ namespace sub
 				{
 					std::string input = Game::InputBox("", 10U, "Enter hex colour (RRGGBB or RRGGBBAA):", "#");
 					if (!HexToRGBA(input, *colour))
-						Game::Print::PrintBottomCentre("~r~Invalid hex colour.");
+						Game::Print::ShowNotification("~r~Invalid hex colour.");
 				}
 			}
 

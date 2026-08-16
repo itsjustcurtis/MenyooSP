@@ -2796,7 +2796,7 @@ namespace sub
 		{
 			if (!ev.IsVehicle())
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid vehicle.");
+				Game::Print::ShowNotification("~r~Error:", "Invalid vehicle.");
 				return;
 			}
 
@@ -3000,7 +3000,7 @@ namespace sub
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to save file.");
 			}
 		}
 
@@ -3009,7 +3009,7 @@ namespace sub
 			pugi::xml_document doc;
 			if (doc.load_file((const char*)filePath.c_str()).status != pugi::status_ok)
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to load file.");
 			}
 
 			GTAentity myPed = PLAYER_PED_ID();
@@ -3643,7 +3643,7 @@ namespace sub
 					{
 						if (!IsSafePath(inputStr))
 						{
-							Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+							Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 						}
 						else
 						{
@@ -3677,7 +3677,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
 					{
@@ -3687,7 +3687,7 @@ namespace sub
 					}
 					else
 					{
-						Game::Print::PrintBottomCentre("~r~Failed~s~ to create folder.");
+						Game::Print::ShowNotification("~r~Failed", "to create folder.");
 					}
 				}
 				else
@@ -3731,7 +3731,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else
 					{
@@ -3744,7 +3744,7 @@ namespace sub
 						}
 						else 
 						{
-							Game::Print::PrintBottomCentre("~r~Error~s~ renaming file.");
+							Game::Print::ShowNotification("~r~Error", "renaming file.");
 						}
 					}
 				}
@@ -3770,7 +3770,7 @@ namespace sub
 				}
 				else 
 				{
-					Game::Print::PrintBottomCentre("~r~Error~s~ deleting file.");
+						Game::Print::ShowNotification("~r~Error", "deleting file.");
 				}
 				Menu::SetPreviousMenu();
 				Menu::Up();

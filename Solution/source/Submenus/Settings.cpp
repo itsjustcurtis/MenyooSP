@@ -185,7 +185,7 @@ namespace sub
 			{
 				std::string input = Game::InputBox("", 10U, "Enter hex colour (RRGGBB or RRGGBBAA):", "#");
 				if (!HexToRGBA(input, *settingsRGBA))
-					Game::Print::PrintBottomCentre("~r~Invalid hex colour.");
+					Game::Print::ShowNotification("~r~Invalid hex colour.");
 			}
 		}
 

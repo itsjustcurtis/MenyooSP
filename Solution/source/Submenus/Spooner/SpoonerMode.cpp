@@ -1087,7 +1087,7 @@ namespace sub::Spooner
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Menu not opened yet.");
+				Game::Print::ShowNotification("~r~Error:", "Menu not opened yet.");
 			}
 		}
 		void TurnOff()
@@ -1284,7 +1284,7 @@ namespace sub::Spooner
 				{
 					const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, EntityManagement::GetEntityIndexInDb(selectedEntity) >= 0, true, Submenus::_copyEntTexterValue);
 					selectedEntity = copiedEntity;
-					Game::Print::PrintBottomCentre("Entity copied.", 2500);
+					Game::Print::ShowNotification("Entity copied.", 2.5f);
 				}
 			}
 
