@@ -307,9 +307,6 @@
     <ClCompile Include="Submenus\Spooner\Submenus_TaskSequence.cpp">
       <Filter>Submenus\Spooner</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\pugixml\src\pugixml.cpp">
-      <Filter>_external</Filter>
-    </ClCompile>
     <ClCompile Include="Menu\Language.cpp">
       <Filter>Menu</Filter>
     </ClCompile>
@@ -322,6 +319,7 @@
     <ClCompile Include="Submenus\Spooner\BlipCustoms.cpp">
       <Filter>Submenus\Spooner</Filter>
     </ClCompile>
+    <ClCompile Include="Submenus\Spooner\SpoonerBlips.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util\ExePath.h">
@@ -642,12 +640,6 @@
     </ClInclude>
     <ClInclude Include="Submenus\Spooner\Submenus_TaskSequence.h">
       <Filter>Submenus\Spooner</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\pugixml\src\pugixml.hpp">
-      <Filter>_external</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\pugixml\src\pugiconfig.hpp">
-      <Filter>_external</Filter>
     </ClInclude>
     <ClInclude Include="Menu\Language.h">
       <Filter>Menu</Filter>

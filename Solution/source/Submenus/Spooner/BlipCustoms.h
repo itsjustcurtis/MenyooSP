@@ -15,6 +15,7 @@ namespace sub::Spooner
 
         SpoonerBlip* AddBlip(const std::string& name, const Vector3& position, const Vector3& rotation);
         SpoonerBlip* AddBlip(const Vector3& position, const Vector3& rotation);
+        SpoonerBlip* AddBlip(SpoonerBlip::Type type, const std::string& name);
 
         void GetAllBlipsInRange(std::vector<SpoonerBlip>& result, const Vector3& position, float radius);
 
@@ -26,10 +27,10 @@ namespace sub::Spooner
 
         SpoonerBlip* CopyBlip(SpoonerBlip& blip);
 
-        void RemoveBlip(int index);
-        void RemoveBlip(SpoonerBlip& blip);
-
         void RefreshBlip(SpoonerBlip& blip);
         void RefreshAllBlips();
+
+        void AttachBlipToEntity(SpoonerBlip& blip, int entity, const Vector3& offset);
+        void DetachBlip(SpoonerBlip& blip);
     }
 }

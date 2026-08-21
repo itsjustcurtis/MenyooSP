@@ -11,7 +11,6 @@
 
 namespace sub::Spooner
 {
-    SpoonerBlip* SelectedBlip = nullptr;
     namespace BlipCustoms
     {
 
@@ -47,6 +46,19 @@ namespace sub::Spooner
             newBlip.BlipType = SpoonerBlip::Type::Radial;
 
             newBlip.Create();
+
+            return &newBlip;
+        }
+
+        SpoonerBlip* AddBlip(SpoonerBlip::Type type, const std::string& name)
+        {
+            Databases::BlipDb.reserve(Databases::BlipDb.size() + 1);
+            Databases::BlipDb.push_back(SpoonerBlip(name, Vector3(), Vector3()));
+
+            SpoonerBlip& newBlip = Databases::BlipDb.back();
+
+            newBlip.BlipType = type;
+
 
             return &newBlip;
         }
@@ -147,14 +159,12 @@ namespace sub::Spooner
                         blip.Offset.z
                     );
 
-                    // Only update if position actually changed (prevents unnecessary rebuild spam)
                     if (blip.X != worldPos.x || blip.Y != worldPos.y || blip.Z != worldPos.z)
                     {
                         blip.X = worldPos.x;
                         blip.Y = worldPos.y;
                         blip.Z = worldPos.z;
 
-                        // Rebuild to apply new position
                         blip.Remove();
                         blip.Create();
                     }

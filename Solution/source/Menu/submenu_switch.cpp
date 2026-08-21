@@ -272,6 +272,9 @@ void Menu::submenu_switch()
 	case SUB::SPOONER_BLIPS_ADD_ENTITY:				sub::Spooner::Submenus::Sub_Blip_Entity(); break;
 	case SUB::SPOONER_BLIPS_ADD_COORD:				sub::Spooner::Submenus::Sub_Blip_Coord(); break;
 	case SUB::SPOONER_BLIPS_RADIALINBLIP:			sub::Spooner::Submenus::Sub_Blip_RadialInBlip(); break;
+	case SUB::SPOONER_BLIPS_COORDINBLIP:			sub::Spooner::Submenus::Sub_Blip_CoordInBlip(); break;
+	case SUB::SPOONER_BLIPS_ENTITYINBLIP:			sub::Spooner::Submenus::Sub_Blip_EntityInBlip(); break;
+	case SUB::SPOONER_BLIPS_ENTITY_SELECT:			sub::Spooner::Submenus::Sub_Blip_Entity_Select(); break;
 	case SUB::SPOONER_BLIPS_ATTACH:					sub::Spooner::Submenus::Sub_Blip_Attach(); break;
 	case SUB::SPOONER_SAVEFILES:					sub::Spooner::Submenus::Sub_SaveFiles(); break;
 	case SUB::SPOONER_SAVEFILES_LOAD:				sub::Spooner::Submenus::Sub_SaveFiles_Load(); break;

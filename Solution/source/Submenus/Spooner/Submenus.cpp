@@ -3005,12 +3005,14 @@ namespace sub
 			AddTitle("Blip Management");
 
 			AddOption("Add Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_SELECT);
+
 			AddBreak("---Radial Blips---");
 			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
 			{
 				auto& m = Databases::BlipDb[i];
-				bool bBlipPressed = false;
+				if (m.BlipType != SpoonerBlip::Type::Radial) continue;
 
+				bool bBlipPressed = false;
 				AddOption(m.m_name, bBlipPressed); if (bBlipPressed)
 				{
 					sub::Spooner::SelectedBlip = &m;
@@ -3034,15 +3036,46 @@ namespace sub
 					}
 
 					if (bShortcutDeletePressed)
-					{
 						blipIndexInDbToDelete = i;
-					}
 				}
 			}
-			if (blipIndexInDbToDelete != -1)
+
+			AddBreak("---Coord Blips---");
+			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
 			{
-				BlipCustoms::RemoveBlip(blipIndexInDbToDelete);
+				auto& m = Databases::BlipDb[i];
+				if (m.BlipType != SpoonerBlip::Type::Coord) continue;
+
+				bool bBlipPressed = false;
+				AddOption(m.m_name, bBlipPressed); if (bBlipPressed)
+				{
+					sub::Spooner::SelectedBlip = &m;
+					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
+				}
+
+				if (*Menu::currentopATM == Menu::printingop)
+				{
+					m.m_selectedInSub = true;
+
+					bool bShortcutDeletePressed;
+					if (Menu::bit_controller)
+					{
+						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Coord Blip");
+						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
+					}
+					else
+					{
+						Menu::add_IB(VirtualKey::B, "Delete Coord Blip");
+						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
+					}
+
+					if (bShortcutDeletePressed)
+						blipIndexInDbToDelete = i;
+				}
 			}
+
+			if (blipIndexInDbToDelete != -1)
+				BlipCustoms::RemoveBlip(blipIndexInDbToDelete);
 
 			if (*Menu::currentopATM > Menu::printingop)
 				Menu::Up();
@@ -3073,11 +3106,46 @@ namespace sub
 					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
 				}
 
+				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
+				sub::Spooner::SelectedBlip->Alpha = 190;
+				sub::Spooner::SelectedBlip->Scale = 0.80f;
+				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
 				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
 			}
 
-			AddOption("Attach Blip to Entity", null, nullFunc, SUB::SPOONER_BLIPS_ADD_ENTITY);
-			AddOption("Create Coord Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_COORD);
+			bool bAttachBlipToEntityPressed = false;
+			AddTickol("Attach Blip to Entity", true, bAttachBlipToEntityPressed, bAttachBlipToEntityPressed, TICKOL::SMALLNEWSTAR);
+			if (bAttachBlipToEntityPressed)
+			{
+				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITY_SELECT;
+			}
+
+			bool bAddNewCoordBlipPressed = false;
+			AddTickol("Create Coord Blip", true, bAddNewCoordBlipPressed, bAddNewCoordBlipPressed, TICKOL::SMALLNEWSTAR);
+			if (bAddNewCoordBlipPressed)
+			{
+				auto& spoocam = SpoonerMode::spoonerModeCamera;
+
+				if (!spoocam.IsActive())
+				{
+					GTAentity myPed = PLAYER_PED_ID();
+					Vector3 myPos = myPed.Position_get();
+
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
+				}
+				else
+				{
+					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+				}
+
+				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Coord;
+				sub::Spooner::SelectedBlip->Alpha = 255;
+				sub::Spooner::SelectedBlip->Scale = 0.80f;
+				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
+			}
 		}
 
 		void Sub_Blip_Radial()
@@ -3100,17 +3168,48 @@ namespace sub
 			AddTitle("Entity Blip");
 		}
 
-		void Sub_Blip_Coord()
+		void Sub_Blip_Entity_Select()
 		{
-			AddTitle("Coord Blip");
+			AddTitle("Select Entity");
+
+			if (Databases::EntityDb.empty())
+			{
+				AddOption("No Entities In Database", null);
+				return;
+			}
+
+			for (auto& e : Databases::EntityDb)
+			{
+				if (e.Handle.Exists())
+				{
+					bool bEntityPressed = false;
+					AddOption(e.HashName, bEntityPressed);
+					if (bEntityPressed)
+					{
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(
+							SpoonerBlip::Type::Entity,
+							e.HashName
+						);
+
+						sub::Spooner::SelectedBlip->EntityHandle = e.Handle.GetHandle();
+						sub::Spooner::SelectedBlip->bAttached = true;
+						sub::Spooner::SelectedBlip->BlipHandle = HUD::ADD_BLIP_FOR_ENTITY(e.Handle.GetHandle());
+
+						Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITYINBLIP;
+						return;
+					}
+
+					if (*Menu::currentopATM == Menu::printingop)
+						EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(0, 255, 0, 200));
+				}
+				else
+				{
+					AddOption(e.HashName + " (Invalid)", null);
+				}
+			}
 		}
 
-		void Sub_Blip_CoordInBlip()
-		{
-			AddTitle("Coord Blip Options");
-		}
-
-		void Sub_Blip_RadialInBlip()
+		void Sub_Blip_EntityInBlip()
 		{
 			if (sub::Spooner::SelectedBlip == nullptr)
 			{
@@ -3120,49 +3219,38 @@ namespace sub
 
 			auto blip = sub::Spooner::SelectedBlip;
 
-			AddTitle("Radial Blip Options");
+			AddTitle("Entity Blip Options");
 
-			Vector3 pos(
-				blip->X,
-				blip->Y,
-				blip->Z
+			bool icon_plus = false;
+			bool icon_minus = false;
+
+			AddTexter(
+				"Icon",
+				0,
+				std::vector<std::string>{ BlipIcon::vNames.at(blip->Icon) },
+				null,
+				icon_plus,
+				icon_minus
 			);
 
-			World::DrawMarker(
-				MarkerType::DebugSphere,
-				pos,
-				Vector3(),
-				Vector3(),
-				Vector3(0.25f, 0.25f, 0.25f),
-				RGBA(255, 255, 0, 190)
-			);
-
-			World::DrawLightWithRange(
-				pos,
-				RGBA(255, 255, 0, 150),
-				2.3f,
-				1.5f
-			);
-
-			bool radius_plus = false;
-			bool radius_minus = false;
-
-			AddNumber("Radius", blip->RadialSize, 2, null, radius_plus, radius_minus);
-
-			if (radius_plus)
+			if (icon_plus)
 			{
-				if (blip->RadialSize < 5000.0f)
+				auto it = BlipIcon::vNames.find(blip->Icon);
+				if (std::next(it) != BlipIcon::vNames.end())
 				{
-					blip->RadialSize += 1.0f;
+					++it;
+					blip->Icon = it->first;
 					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
 				}
 			}
 
-			if (radius_minus)
+			if (icon_minus)
 			{
-				if (blip->RadialSize > 1.0f)
+				auto it = BlipIcon::vNames.find(blip->Icon);
+				if (it != BlipIcon::vNames.begin())
 				{
-					blip->RadialSize -= 1.0f;
+					--it;
+					blip->Icon = it->first;
 					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
 				}
 			}
@@ -3182,12 +3270,10 @@ namespace sub
 			if (colour_plus)
 			{
 				auto it = BlipColour::vNames.find(blip->Colour);
-
 				if (std::next(it) != BlipColour::vNames.end())
 				{
 					++it;
 					blip->Colour = it->first;
-
 					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
 				}
 			}
@@ -3195,12 +3281,453 @@ namespace sub
 			if (colour_minus)
 			{
 				auto it = BlipColour::vNames.find(blip->Colour);
-
 				if (it != BlipColour::vNames.begin())
 				{
 					--it;
 					blip->Colour = it->first;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
 
+			bool alpha_plus = false;
+			bool alpha_minus = false;
+
+			AddNumber("Alpha", blip->Alpha, 2, null, alpha_plus, alpha_minus);
+
+			if (alpha_plus)
+			{
+				if (blip->Alpha < 255)
+				{
+					blip->Alpha++;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			if (alpha_minus)
+			{
+				if (blip->Alpha > 0)
+				{
+					blip->Alpha--;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			bool scale_plus = false;
+			bool scale_minus = false;
+
+			AddNumber("Scale", blip->Scale, 2, null, scale_plus, scale_minus);
+
+			if (scale_plus)
+			{
+				if (blip->Scale < 10.0f)
+				{
+					blip->Scale += 0.1f;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			if (scale_minus)
+			{
+				if (blip->Scale > 0.1f)
+				{
+					blip->Scale -= 0.1f;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			bool deletePressed = false;
+
+			AddOption("Delete Blip", deletePressed);
+
+			if (deletePressed)
+			{
+				BlipCustoms::RemoveBlip(*blip);
+				sub::Spooner::SelectedBlip = nullptr;
+				Menu::SetSub_previous();
+				return;
+			}
+		}
+
+		void Sub_Blip_Coord()
+		{
+			AddTitle("Coord Blip");
+		}
+
+		void Sub_Blip_CoordInBlip()
+		{
+			if (sub::Spooner::SelectedBlip == nullptr)
+			{
+				Menu::SetSub_previous();
+				return;
+			}
+
+			auto blip = sub::Spooner::SelectedBlip;
+
+			AddTitle("Coord Blip Options");
+
+			Vector3 pos(blip->X, blip->Y, blip->Z);
+
+			World::DrawMarker(
+				MarkerType::DebugSphere,
+				pos,
+				Vector3(),
+				Vector3(),
+				Vector3(0.25f, 0.25f, 0.25f),
+				RGBA(255, 255, 0, 190)
+			);
+
+			World::DrawLightWithRange(
+				pos,
+				RGBA(255, 255, 0, 150),
+				2.3f,
+				1.5f
+			);
+
+			bool icon_plus = false;
+			bool icon_minus = false;
+
+			AddTexter(
+				"Icon",
+				0,
+				std::vector<std::string>{ BlipIcon::vNames.at(blip->Icon) },
+				null,
+				icon_plus,
+				icon_minus
+			);
+
+			if (icon_plus)
+			{
+				auto it = BlipIcon::vNames.find(blip->Icon);
+				if (std::next(it) != BlipIcon::vNames.end())
+				{
+					++it;
+					blip->Icon = it->first;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			if (icon_minus)
+			{
+				auto it = BlipIcon::vNames.find(blip->Icon);
+				if (it != BlipIcon::vNames.begin())
+				{
+					--it;
+					blip->Icon = it->first;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			bool scale_plus = false;
+			bool scale_minus = false;
+
+			AddNumber("Scale", blip->Scale, 2, null, scale_plus, scale_minus);
+
+			if (scale_plus)
+			{
+				if (blip->Scale < 10.0f)
+				{
+					blip->Scale += 0.1f;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			if (scale_minus)
+			{
+				if (blip->Scale > 0.1f)
+				{
+					blip->Scale -= 0.1f;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			bool colour_plus = false;
+			bool colour_minus = false;
+
+			AddTexter(
+				"Colour",
+				0,
+				std::vector<std::string>{ BlipColour::vNames.at(blip->Colour) },
+				null,
+				colour_plus,
+				colour_minus
+			);
+
+			if (colour_plus)
+			{
+				auto it = BlipColour::vNames.find(blip->Colour);
+				if (std::next(it) != BlipColour::vNames.end())
+				{
+					++it;
+					blip->Colour = it->first;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			if (colour_minus)
+			{
+				auto it = BlipColour::vNames.find(blip->Colour);
+				if (it != BlipColour::vNames.begin())
+				{
+					--it;
+					blip->Colour = it->first;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			bool alpha_plus = false;
+			bool alpha_minus = false;
+
+			AddNumber("Alpha", blip->Alpha, 2, null, alpha_plus, alpha_minus);
+
+			if (alpha_plus)
+			{
+				if (blip->Alpha < 255)
+				{
+					blip->Alpha++;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			if (alpha_minus)
+			{
+				if (blip->Alpha > 0)
+				{
+					blip->Alpha--;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			bool deletePressed = false;
+
+			AddOption("Delete Blip", deletePressed);
+
+			if (deletePressed)
+			{
+				BlipCustoms::RemoveBlip(*blip);
+				sub::Spooner::SelectedBlip = nullptr;
+				Menu::SetSub_previous();
+				return;
+			}
+
+			AddBreak("---Position---");
+			{
+				AddOption("~italic~" + Vector3(blip->X, blip->Y, blip->Z).ToString(), null);
+
+				bool bSetToPlayer = false;
+				AddOption("Set To Player Position", bSetToPlayer);
+				if (bSetToPlayer)
+				{
+					Vector3 pos = ENTITY::GET_ENTITY_COORDS(PLAYER_PED_ID(), true);
+					blip->X = pos.x;
+					blip->Y = pos.y;
+					blip->Z = pos.z;
+					BlipCustoms::RefreshBlip(*blip);
+				}
+
+				if (IS_WAYPOINT_ACTIVE())
+				{
+					bool bSetToWp = false;
+					AddOption("Set To Waypoint", bSetToWp);
+					if (bSetToWp)
+					{
+						Blip wp = GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint);
+						Vector3 wpCoords = GET_BLIP_COORDS(wp);
+						wpCoords.z = World::GetGroundHeight(wpCoords);
+
+						blip->X = wpCoords.x;
+						blip->Y = wpCoords.y;
+						blip->Z = wpCoords.z;
+						BlipCustoms::RefreshBlip(*blip);
+					}
+				}
+
+				bool bManual = false;
+				AddOption("Manual Placement", bManual, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT);
+				if (bManual)
+				{
+					SpoonerVector3ManualPlacementPtrs = std::make_tuple(
+						(GTAentity)0,
+						&blip->Offset,
+						(Vector3*)nullptr
+					);
+				}
+			}
+		}
+
+		void Sub_Blip_RadialInBlip()
+		{
+			if (sub::Spooner::SelectedBlip == nullptr)
+			{
+				Menu::SetSub_previous();
+				return;
+			}
+
+			auto blip = sub::Spooner::SelectedBlip;
+
+			AddTitle("Radial Blip Options");
+
+			Vector3 pos(blip->X, blip->Y, blip->Z);
+
+			World::DrawMarker(
+				MarkerType::DebugSphere,
+				pos,
+				Vector3(),
+				Vector3(),
+				Vector3(0.25f, 0.25f, 0.25f),
+				RGBA(255, 255, 0, 190)
+			);
+
+			World::DrawLightWithRange(
+				pos,
+				RGBA(255, 255, 0, 150),
+				2.3f,
+				1.5f
+			);
+
+			bool shape_plus = false;
+			bool shape_minus = false;
+
+			std::string shapeName = (blip->Shape == SpoonerBlip::RadialShape::Circle) ? "Circle" : "Square";
+
+			AddTexter("Shape", 0, std::vector<std::string>{ shapeName }, null, shape_plus, shape_minus);
+
+			if (shape_plus || shape_minus)
+			{
+				blip->Shape = (blip->Shape == SpoonerBlip::RadialShape::Circle)
+					? SpoonerBlip::RadialShape::Square
+					: SpoonerBlip::RadialShape::Circle;
+				sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+			}
+
+			//Circle options
+			if (blip->Shape == SpoonerBlip::RadialShape::Circle)
+			{
+				bool radius_plus = false;
+				bool radius_minus = false;
+
+				AddNumber("Radius", blip->RadialSize, 2, null, radius_plus, radius_minus);
+
+				if (radius_plus)
+				{
+					if (blip->RadialSize < 5000.0f)
+					{
+						blip->RadialSize += 1.0f;
+						sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+					}
+				}
+
+				if (radius_minus)
+				{
+					if (blip->RadialSize > 1.0f)
+					{
+						blip->RadialSize -= 1.0f;
+						sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+					}
+				}
+			}
+
+			//Square options
+			if (blip->Shape == SpoonerBlip::RadialShape::Square)
+			{
+				bool width_plus = false;
+				bool width_minus = false;
+
+				AddNumber("Width", blip->AreaWidth, 2, null, width_plus, width_minus);
+
+				if (width_plus)
+				{
+					if (blip->AreaWidth < 5000.0f)
+					{
+						blip->AreaWidth += 1.0f;
+						sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+					}
+				}
+
+				if (width_minus)
+				{
+					if (blip->AreaWidth > 1.0f)
+					{
+						blip->AreaWidth -= 1.0f;
+						sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+					}
+				}
+
+				bool height_plus = false;
+				bool height_minus = false;
+
+				AddNumber("Height", blip->AreaHeight, 2, null, height_plus, height_minus);
+
+				if (height_plus)
+				{
+					if (blip->AreaHeight < 5000.0f)
+					{
+						blip->AreaHeight += 1.0f;
+						sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+					}
+				}
+
+				if (height_minus)
+				{
+					if (blip->AreaHeight > 1.0f)
+					{
+						blip->AreaHeight -= 1.0f;
+						sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+					}
+				}
+				bool heading_plus = false;
+				bool heading_minus = false;
+
+				AddNumber("Rotation", blip->Heading, 2, null, heading_plus, heading_minus);
+
+				if (heading_plus)
+				{
+					if (blip->Heading < 90.0f)
+					{
+						blip->Heading += 1.0f;
+						sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+					}
+				}
+
+				if (heading_minus)
+				{
+					if (blip->Heading > 0.0f)
+					{
+						blip->Heading -= 1.0f;
+						sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+					}
+				}
+			}
+
+			bool colour_plus = false;
+			bool colour_minus = false;
+
+			AddTexter(
+				"Colour",
+				0,
+				std::vector<std::string>{ BlipColour::vNames.at(blip->Colour) },
+				null,
+				colour_plus,
+				colour_minus
+			);
+
+			if (colour_plus)
+			{
+				auto it = BlipColour::vNames.find(blip->Colour);
+				if (std::next(it) != BlipColour::vNames.end())
+				{
+					++it;
+					blip->Colour = it->first;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			if (colour_minus)
+			{
+				auto it = BlipColour::vNames.find(blip->Colour);
+				if (it != BlipColour::vNames.begin())
+				{
+					--it;
+					blip->Colour = it->first;
 					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
 				}
 			}

@@ -3,6 +3,7 @@
 #include "..\..\Util\GTAmath.h"
 #include <string>
 #include "../../Natives/natives.h"
+#include "../../Scripting/GTAblip.h"
 
 namespace sub::Spooner
 {
@@ -47,6 +48,7 @@ namespace sub::Spooner
             return *this;
         }
     };
+
     class SpoonerBlip
     {
     public:
@@ -58,16 +60,27 @@ namespace sub::Spooner
             Coord
         };
 
-        Type BlipType = Type::Coord;
+        enum class RadialShape
+        {
+            Circle,
+            Square
+        };
 
-        int EntityHandle = 0;   // entity this blip may attach to
+        Type BlipType = Type::Coord;
+        RadialShape Shape = RadialShape::Circle;
+
+        int EntityHandle = 0;
         std::string m_name;
         bool m_selectedInSub;
 
         float RadialSize = 60.0f;
+        float AreaWidth = 60.0f;
+        float AreaHeight = 60.0f;
+        float Heading = 0.0f;
         float Scale = 0.80f;
         int Colour = 0;
-        int Alpha = 190;
+        int Alpha = 255;
+        int Icon = BlipIcon::Standard;
 
         float X;
         float Y;
@@ -101,8 +114,21 @@ namespace sub::Spooner
         {
             if (BlipType == Type::Radial)
             {
-                BlipHandle = HUD::ADD_BLIP_FOR_RADIUS(X, Y, Z, RadialSize);
+                if (Shape == RadialShape::Circle)
+                    BlipHandle = HUD::ADD_BLIP_FOR_RADIUS(X, Y, Z, RadialSize);
+                else
+                    BlipHandle = HUD::ADD_BLIP_FOR_AREA(X, Y, Z, AreaWidth, AreaHeight);
 
+                HUD::SET_BLIP_ROTATION_WITH_FLOAT(BlipHandle, Heading);
+                HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
+                HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
+            }
+            else if (BlipType == Type::Entity)
+            {
+                BlipHandle = HUD::ADD_BLIP_FOR_ENTITY(EntityHandle);
+
+                HUD::SET_BLIP_SPRITE(BlipHandle, Icon);
+                HUD::SET_BLIP_SCALE(BlipHandle, Scale);
                 HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
                 HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
             }
@@ -110,6 +136,7 @@ namespace sub::Spooner
             {
                 BlipHandle = HUD::ADD_BLIP_FOR_COORD(X, Y, Z);
 
+                HUD::SET_BLIP_SPRITE(BlipHandle, Icon);
                 HUD::SET_BLIP_SCALE(BlipHandle, Scale);
                 HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
                 HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
@@ -128,10 +155,8 @@ namespace sub::Spooner
         void Update();
     };
 
-
     namespace Submenus
     {
-
         void Sub_Blip_Management();
         void Sub_Blip_Select();
 
@@ -144,9 +169,8 @@ namespace sub::Spooner
         void Sub_Blip_CoordInBlip();
 
         void Sub_Blip_Attach();
-
+        void Sub_Blip_Entity_Select();
     }
 
     extern SpoonerBlip* SelectedBlip;
-
 }
