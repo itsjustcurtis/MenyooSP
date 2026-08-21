@@ -4,7 +4,8 @@
 #include "BlipManagement.h"
 
 #include <vector>
-#include "../../SpoonerBlips.h"
+#include "SpoonerBlips.h"
+#include "Databases.h"
 
 namespace sub::Spooner
 {
