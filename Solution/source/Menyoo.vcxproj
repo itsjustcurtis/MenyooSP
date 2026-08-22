@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\external\pugixml\src\pugixml.cpp" />
     <ClCompile Include="Submenus\Spooner\BlipCustoms.cpp" />
     <ClCompile Include="Memory\Hooking.cpp" />
     <ClCompile Include="Menu\FolderPreviewBmps.cpp" />
@@ -127,6 +128,8 @@
     <ClCompile Include="Util\StringManip.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\external\pugixml\src\pugiconfig.hpp" />
+    <ClInclude Include="..\external\pugixml\src\pugixml.hpp" />
     <ClInclude Include="Submenus\Spooner\BlipCustoms.h" />
     <ClInclude Include="Memory\Hooking.h" />
     <ClInclude Include="Menu\FolderPreviewBmps.h" />

@@ -3040,6 +3040,40 @@ namespace sub
 				}
 			}
 
+			AddBreak("---Entity Blips---");
+			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
+			{
+				auto& m = Databases::BlipDb[i];
+				if (m.BlipType != SpoonerBlip::Type::Entity) continue;
+
+				bool bBlipPressed = false;
+				AddOption(m.m_name, bBlipPressed); if (bBlipPressed)
+				{
+					sub::Spooner::SelectedBlip = &m;
+					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITYINBLIP;
+				}
+
+				if (*Menu::currentopATM == Menu::printingop)
+				{
+					m.m_selectedInSub = true;
+
+					bool bShortcutDeletePressed;
+					if (Menu::bit_controller)
+					{
+						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Entity Blip");
+						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
+					}
+					else
+					{
+						Menu::add_IB(VirtualKey::B, "Delete Entity Blip");
+						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
+					}
+
+					if (bShortcutDeletePressed)
+						blipIndexInDbToDelete = i;
+				}
+			}
+
 			AddBreak("---Coord Blips---");
 			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
 			{
@@ -3195,6 +3229,10 @@ namespace sub
 						sub::Spooner::SelectedBlip->bAttached = true;
 						sub::Spooner::SelectedBlip->BlipHandle = HUD::ADD_BLIP_FOR_ENTITY(e.Handle.GetHandle());
 
+						sub::Spooner::SelectedBlip->Alpha = 255;
+						sub::Spooner::SelectedBlip->Scale = 0.80f;
+						sub::Spooner::SelectedBlip->Icon = BlipIcon::Standard;
+						BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
 						Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITYINBLIP;
 						return;
 					}
@@ -3333,6 +3371,15 @@ namespace sub
 					blip->Scale -= 0.1f;
 					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
 				}
+			}
+
+			bool bToggleRotation = false;
+			AddTickol("Sync Rotation With Entity", blip->bSyncRotation, bToggleRotation, bToggleRotation, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			if (bToggleRotation)
+			{
+				blip->bSyncRotation = !blip->bSyncRotation;
+				if (!blip->bSyncRotation)
+					HUD::SET_BLIP_ROTATION_WITH_FLOAT(blip->BlipHandle, 0.0f);
 			}
 
 			bool deletePressed = false;
