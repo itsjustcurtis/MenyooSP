@@ -3259,38 +3259,12 @@ namespace sub
 
 			AddTitle("Entity Blip Options");
 
-			bool icon_plus = false;
-			bool icon_minus = false;
-
-			AddTexter(
-				"Icon",
-				0,
-				std::vector<std::string>{ BlipIcon::vNames.at(blip->Icon) },
-				null,
-				icon_plus,
-				icon_minus
-			);
-
-			if (icon_plus)
+			bool bEditLabelPressed = false;
+			AddTexter("Label", 0, std::vector<std::string>{ blip->label.empty() ? "" : blip->label }, bEditLabelPressed);
+			if (bEditLabelPressed)
 			{
-				auto it = BlipIcon::vNames.find(blip->Icon);
-				if (std::next(it) != BlipIcon::vNames.end())
-				{
-					++it;
-					blip->Icon = it->first;
-					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
-				}
-			}
-
-			if (icon_minus)
-			{
-				auto it = BlipIcon::vNames.find(blip->Icon);
-				if (it != BlipIcon::vNames.begin())
-				{
-					--it;
-					blip->Icon = it->first;
-					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
-				}
+				blip->label = Game::InputBox(blip->label, 26U, "Enter blip label:", blip->label);
+				BlipCustoms::RefreshBlip(*blip);
 			}
 
 			bool colour_plus = false;
@@ -3323,6 +3297,40 @@ namespace sub
 				{
 					--it;
 					blip->Colour = it->first;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			bool icon_plus = false;
+			bool icon_minus = false;
+
+			AddTexter(
+				"Icon",
+				0,
+				std::vector<std::string>{ BlipIcon::vNames.at(blip->Icon) },
+				null,
+				icon_plus,
+				icon_minus
+			);
+
+			if (icon_plus)
+			{
+				auto it = BlipIcon::vNames.find(blip->Icon);
+				if (std::next(it) != BlipIcon::vNames.end())
+				{
+					++it;
+					blip->Icon = it->first;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			if (icon_minus)
+			{
+				auto it = BlipIcon::vNames.find(blip->Icon);
+				if (it != BlipIcon::vNames.begin())
+				{
+					--it;
+					blip->Icon = it->first;
 					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
 				}
 			}
@@ -3430,6 +3438,48 @@ namespace sub
 				1.5f
 			);
 
+			bool bEditLabelPressed = false;
+			AddTexter("Label", 0, std::vector<std::string>{ blip->label.empty() ? "" : blip->label }, bEditLabelPressed);
+			if (bEditLabelPressed)
+			{
+				blip->label = Game::InputBox(blip->label, 26U, "Enter blip name:", blip->label);
+				BlipCustoms::RefreshBlip(*blip);
+			}
+
+			bool colour_plus = false;
+			bool colour_minus = false;
+
+			AddTexter(
+				"Colour",
+				0,
+				std::vector<std::string>{ BlipColour::vNames.at(blip->Colour) },
+				null,
+				colour_plus,
+				colour_minus
+			);
+
+			if (colour_plus)
+			{
+				auto it = BlipColour::vNames.find(blip->Colour);
+				if (std::next(it) != BlipColour::vNames.end())
+				{
+					++it;
+					blip->Colour = it->first;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
+			if (colour_minus)
+			{
+				auto it = BlipColour::vNames.find(blip->Colour);
+				if (it != BlipColour::vNames.begin())
+				{
+					--it;
+					blip->Colour = it->first;
+					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
+				}
+			}
+
 			bool icon_plus = false;
 			bool icon_minus = false;
 
@@ -3483,40 +3533,6 @@ namespace sub
 				if (blip->Scale > 0.1f)
 				{
 					blip->Scale -= 0.1f;
-					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
-				}
-			}
-
-			bool colour_plus = false;
-			bool colour_minus = false;
-
-			AddTexter(
-				"Colour",
-				0,
-				std::vector<std::string>{ BlipColour::vNames.at(blip->Colour) },
-				null,
-				colour_plus,
-				colour_minus
-			);
-
-			if (colour_plus)
-			{
-				auto it = BlipColour::vNames.find(blip->Colour);
-				if (std::next(it) != BlipColour::vNames.end())
-				{
-					++it;
-					blip->Colour = it->first;
-					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
-				}
-			}
-
-			if (colour_minus)
-			{
-				auto it = BlipColour::vNames.find(blip->Colour);
-				if (it != BlipColour::vNames.begin())
-				{
-					--it;
-					blip->Colour = it->first;
 					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
 				}
 			}
