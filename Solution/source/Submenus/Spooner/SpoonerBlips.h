@@ -131,9 +131,6 @@ namespace sub::Spooner
                 HUD::SET_BLIP_SCALE(BlipHandle, Scale);
                 HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
                 HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
-
-                if (!bSyncRotation)
-                    HUD::SET_BLIP_ROTATION_WITH_FLOAT(BlipHandle, 0.0f);
             }
             else
             {

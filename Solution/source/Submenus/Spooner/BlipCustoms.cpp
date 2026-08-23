@@ -169,11 +169,14 @@ namespace sub::Spooner
                         blip.Create();
                     }
                 }
-                if (blip.BlipType == SpoonerBlip::Type::Entity && blip.bSyncRotation
-                    && blip.EntityHandle != 0 && ENTITY::DOES_ENTITY_EXIST(blip.EntityHandle))
+
+                if (blip.BlipType == SpoonerBlip::Type::Entity && blip.EntityHandle != 0 && ENTITY::DOES_ENTITY_EXIST(blip.EntityHandle))
                 {
-                    float heading = ENTITY::GET_ENTITY_HEADING(blip.EntityHandle);
-                    HUD::SET_BLIP_ROTATION_WITH_FLOAT(blip.BlipHandle, heading);
+                    if (blip.bSyncRotation)
+                    {
+                        float heading = ENTITY::GET_ENTITY_HEADING(blip.EntityHandle);
+                        HUD::SET_BLIP_ROTATION_WITH_FLOAT(blip.BlipHandle, heading);
+                    }
                 }
             }
         }
