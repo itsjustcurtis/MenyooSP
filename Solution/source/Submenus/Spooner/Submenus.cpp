@@ -81,47 +81,39 @@ namespace sub
 
 		void HandleKeyboardManipulation(Vector3& position, Vector3& rotation)
 		{
-			constexpr float HUD_LINE_HEIGHT = 0.025f;
-			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
-			const float hudX = 0.02f;
-			float hudY = 0.8f;
-
-			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
-			{
-				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
-				Game::Print::drawstring(text, hudX, hudY);
-				hudY += HUD_LINE_HEIGHT;
-			};
-
 			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
 			{
-				drawText("~y~Rotation Mode:");
-				drawText("~b~W/S: ~w~Pitch+ / Pitch-");
-				drawText("~b~A/D: ~w~Yaw+ / Yaw-");
-				drawText("~b~E/Q: ~w~Roll+ / Roll-");
-				drawText("~b~=/-: ~w~+/- Sensitivity");
-				drawText("~b~R: ~w~Edit position");
+				Menu::add_IB(VirtualKey::W, "Pitch+");
+				Menu::add_IB(VirtualKey::S, "Pitch-");
+				Menu::add_IB(VirtualKey::A, "Yaw+");
+				Menu::add_IB(VirtualKey::D, "Yaw-");
+				Menu::add_IB(VirtualKey::E, "Roll+");
+				Menu::add_IB(VirtualKey::Q, "Roll-");
+				Menu::add_IB(VirtualKey::R, "Edit position");
 			}
 			else
 			{
-				drawText("~y~Position Mode:");
-				drawText("~b~W/S: ~w~X+ / X-");
-				drawText("~b~A/D: ~w~Y+ / Y-");
-				drawText("~b~E/Q: ~w~Z+ / Z-");
-				drawText("~b~=/-: ~w~+/- Sensitivity");
-				drawText("~b~R: ~w~Edit rotation");
+				Menu::add_IB(VirtualKey::W, "X+");
+				Menu::add_IB(VirtualKey::S, "X-");
+				Menu::add_IB(VirtualKey::A, "Y+");
+				Menu::add_IB(VirtualKey::D, "Y-");
+				Menu::add_IB(VirtualKey::E, "Z+");
+				Menu::add_IB(VirtualKey::Q, "Z-");
+				Menu::add_IB(VirtualKey::R, "Edit rotation");
 			}
-			drawText("~b~ALT: ~w~Copy entity");
-			drawText("~b~B: ~w~Switch to gizmo / disable controls.");
- 
+			Menu::add_IB(VirtualKey::Add, "Increase Sensitivity");
+			Menu::add_IB(VirtualKey::Subtract, "Decrease Sensitivity");
+			Menu::add_IB(VirtualKey::C, "Copy (and add to DB)");
+			Menu::add_IB(VirtualKey::B, "Switch to Gizmo Mode");
+
 			static DWORD lastSensitivityChange = 0;
-			if (IsKeyJustUp(VirtualKey::OEMPlus) && GetTickCount() - lastSensitivityChange > 200)
+			if ((IsKeyJustUp(VirtualKey::OEMPlus)||(IsKeyJustUp(VirtualKey::Add))) && GetTickCount() - lastSensitivityChange > 200)
 			{
 				if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
 				lastSensitivityChange = GetTickCount();
 				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
 			}
-			if (IsKeyJustUp(VirtualKey::OEMMinus) && GetTickCount() - lastSensitivityChange > 200)
+			if ((IsKeyJustUp(VirtualKey::OEMMinus)||(IsKeyJustUp(VirtualKey::Subtract))) && GetTickCount() - lastSensitivityChange > 200)
 			{
 				if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10;
 				lastSensitivityChange = GetTickCount();
@@ -153,32 +145,20 @@ namespace sub
 
 		void DrawGizmoHUD()
 		{
-			constexpr float HUD_LINE_HEIGHT = 0.025f;
-			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
-			const float hudX = 0.02f;
-			float hudY = 0.8f;
-
-			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
-			{
-				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
-				Game::Print::drawstring(text, hudX, hudY);
-				hudY += HUD_LINE_HEIGHT;
-			};
-
 			std::string modeName;
 			switch (SpoonerMode::gizmoMode)
 			{
-				case SpoonerMode::eGizmoMode::Rotate: modeName = "Rotation"; break;
-				case SpoonerMode::eGizmoMode::Scale:  modeName = "Scale";    break;
-				default:                              modeName = "Position"; break;
+			case SpoonerMode::eGizmoMode::Rotate: modeName = "Rotation"; break;
+			case SpoonerMode::eGizmoMode::Scale:  modeName = "Scale";    break;
+			default:                              modeName = "Position"; break;
 			}
-			drawText("~y~Gizmo Mode ~s~(" + modeName + " Mode):");
-			drawText("~b~Left Click:~w~ Grab axis handle");
-			drawText("~b~R:~w~ Cycle mode");
-			drawText(SpoonerMode::bGizmoCameraLocked ? "~b~C:~w~ Unlock camera" : "~b~C:~w~ Lock camera");
-			drawText(SpoonerMode::bGizmoLocalSpace ? "~b~L:~w~ Edit in world space" : "~b~L:~w~ Edit in local space");
-			drawText("~b~ALT:~w~ Copy entity");
-			drawText("~b~B:~w~ Disable gizmo mode");
+
+			Menu::add_IB(INPUT_CURSOR_ACCEPT, "Grab axis handle (" + modeName + " Mode)");
+			Menu::add_IB(VirtualKey::R, "Cycle mode");
+			Menu::add_IB(VirtualKey::V, SpoonerMode::bGizmoCameraLocked ? "Unlock camera" : "Lock camera");
+			Menu::add_IB(VirtualKey::L, SpoonerMode::bGizmoLocalSpace ? "Edit in world space" : "Edit in local space");
+			Menu::add_IB(VirtualKey::C, "Copy (and add to DB)");
+			Menu::add_IB(VirtualKey::B, "Disable Gizmo Mode");
 		}
 
 		void HandleEntityEditingLogic(Vector3& position, Vector3& rotation, GTAentity* parentEntity)
@@ -221,7 +201,7 @@ namespace sub
 			lastRToggle = currentRToggle;
 
 			// toggling camera lock in gizmo mode
-			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::C))
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::V))
 			{
 				SpoonerMode::bGizmoCameraLocked = !SpoonerMode::bGizmoCameraLocked;
 			}
@@ -232,8 +212,8 @@ namespace sub
 				SpoonerMode::bGizmoLocalSpace = !SpoonerMode::bGizmoLocalSpace;
 			}
 
-			// make a quick copy of an entity by clicking ALT in editing modes
-			if (SpoonerMode::entityEditMode != SpoonerMode::eEntityEditMode::Disabled && IsKeyJustUp(VirtualKey::Menu))
+			// make a quick copy of an entity by clicking C in editing modes
+			if (SpoonerMode::entityEditMode != SpoonerMode::eEntityEditMode::Disabled && IsKeyJustUp(VirtualKey::C))
 			{
 				if (selectedEntity.handle.Exists())
 				{
@@ -248,17 +228,9 @@ namespace sub
 			const float hudX = 0.02f;
 			float hudY = 0.8f;
 
-			auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
-			{
-				Game::Print::SetupDraw(GTAfont::Arial, HUD_FONT_SIZE, false, false, true, colour);
-				Game::Print::drawstring(text, hudX, hudY);
-				hudY += HUD_LINE_HEIGHT;
-			};
-
 			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Disabled)
 			{
-				drawText("~r~Entity manipulation DISABLED.");
-				drawText("~b~Press B:~w~ Enable keyboard controls or gizmo editing mode.");
+				Menu::add_IB(VirtualKey::B, "Enable Keyboard Controls");
 				return;
 			}
 
