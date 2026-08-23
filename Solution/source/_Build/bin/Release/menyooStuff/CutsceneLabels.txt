@@ -774,6 +774,17 @@ sum25_bt2_carthief_mcs1
 sum25_bt2_delivery_ext
 sum25_cayo_surv_ext
 sum25_lsia_int
+sum26_heist_int
+sum26_kortz_cel
+sum26_kortz_esc_mcs3
+sum26_kortz_esc_mcs3_p0_t00
+sum26_kortz_exta
+sum26_kortz_extb
+sum26_kortz_las_mcs2
+sum26_kortz_rpl_mcs1a
+sum26_kortz_swr_mcs1c
+sum26_kortz_swr_mcs1c_p1_t02
+sum26_kortz_van_mcs1b
 tale_intro
 testbed_veh_blend
 test_arm_2_mcs_6
