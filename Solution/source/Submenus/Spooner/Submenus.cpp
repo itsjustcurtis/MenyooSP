@@ -3013,7 +3013,9 @@ namespace sub
 				if (m.BlipType != SpoonerBlip::Type::Radial) continue;
 
 				bool bBlipPressed = false;
-				AddOption(m.m_name, bBlipPressed); if (bBlipPressed)
+				std::string displayName = m.label.empty() ? "Radial Blip" : m.label;
+				AddOption(displayName, bBlipPressed);
+				if (bBlipPressed)
 				{
 					sub::Spooner::SelectedBlip = &m;
 					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
@@ -3047,7 +3049,9 @@ namespace sub
 				if (m.BlipType != SpoonerBlip::Type::Entity) continue;
 
 				bool bBlipPressed = false;
-				AddOption(m.m_name, bBlipPressed); if (bBlipPressed)
+				std::string displayName = m.label.empty() ? m.Name : m.label;
+				AddOption(displayName, bBlipPressed);
+				if (bBlipPressed)
 				{
 					sub::Spooner::SelectedBlip = &m;
 					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITYINBLIP;
@@ -3081,7 +3085,9 @@ namespace sub
 				if (m.BlipType != SpoonerBlip::Type::Coord) continue;
 
 				bool bBlipPressed = false;
-				AddOption(m.m_name, bBlipPressed); if (bBlipPressed)
+				std::string displayName = m.label.empty() ? BlipIcon::vNames.at(m.Icon) : m.label;
+				AddOption(displayName, bBlipPressed);
+				if (bBlipPressed)
 				{
 					sub::Spooner::SelectedBlip = &m;
 					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
