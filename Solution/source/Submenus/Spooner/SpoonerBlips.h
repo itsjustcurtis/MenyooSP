@@ -93,6 +93,7 @@ namespace sub::Spooner
         Blip BlipHandle = 0;
 
         std::string Name = "Blip";
+        std::string label = "";
 
         SpoonerBlip() = default;
 
@@ -112,6 +113,7 @@ namespace sub::Spooner
 
         void Create()
         {
+			//Radial Blips
             if (BlipType == Type::Radial)
             {
                 if (Shape == RadialShape::Circle)
@@ -122,7 +124,13 @@ namespace sub::Spooner
                 HUD::SET_BLIP_ROTATION_WITH_FLOAT(BlipHandle, Heading);
                 HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
                 HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
+
+                if (!label.empty())
+                    GTAblip(BlipHandle).SetBlipName(label);
+                else
+                    GTAblip(BlipHandle).SetBlipName("Radial Blip");
             }
+			//Entity Blips
             else if (BlipType == Type::Entity)
             {
                 BlipHandle = HUD::ADD_BLIP_FOR_ENTITY(EntityHandle);
@@ -131,7 +139,13 @@ namespace sub::Spooner
                 HUD::SET_BLIP_SCALE(BlipHandle, Scale);
                 HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
                 HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
+
+                if (!label.empty())
+                    GTAblip(BlipHandle).SetBlipName(label);
+                else
+                    GTAblip(BlipHandle).SetBlipName(Name);
             }
+			//Coordinate Blips
             else
             {
                 BlipHandle = HUD::ADD_BLIP_FOR_COORD(X, Y, Z);
@@ -140,6 +154,11 @@ namespace sub::Spooner
                 HUD::SET_BLIP_SCALE(BlipHandle, Scale);
                 HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
                 HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
+
+                if (!label.empty())
+                    GTAblip(BlipHandle).SetBlipName(label);
+                else
+                    GTAblip(BlipHandle).SetBlipName(BlipIcon::vNames.at(Icon));
             }
         }
 
