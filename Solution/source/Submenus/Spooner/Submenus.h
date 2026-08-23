@@ -76,7 +76,6 @@ namespace sub
 		void Sub_SpawnVehicle();
 
 		void Sub_Blip_Management();
-		void Sub_Blip_Select();
 		void Sub_Blip_Radial();
 		void Sub_Blip_Entity();
 		void Sub_Blip_Coord();

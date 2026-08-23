@@ -3004,7 +3004,68 @@ namespace sub
 			int blipIndexInDbToDelete = -1;
 			AddTitle("Blip Management");
 
-			AddOption("Add Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_SELECT);
+			//AddOption("Add Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_SELECT);
+			bool bAddNewRadialBlipPressed = false;
+
+			AddTickol("Create Radial Blip", true, bAddNewRadialBlipPressed, bAddNewRadialBlipPressed, TICKOL::SMALLNEWSTAR);
+			if (bAddNewRadialBlipPressed)
+			{
+				auto& spoocam = SpoonerMode::spoonerModeCamera;
+
+				if (!spoocam.IsActive())
+				{
+					GTAentity myPed = PLAYER_PED_ID();
+					Vector3 myPos = myPed.Position_get();
+
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
+				}
+				else
+				{
+					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+				}
+
+				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
+				sub::Spooner::SelectedBlip->Alpha = 190;
+				sub::Spooner::SelectedBlip->Scale = 0.80f;
+				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
+			}
+
+			bool bAttachBlipToEntityPressed = false;
+			AddTickol("Create Entity Blip", true, bAttachBlipToEntityPressed, bAttachBlipToEntityPressed, TICKOL::SMALLNEWSTAR);
+			if (bAttachBlipToEntityPressed)
+			{
+				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITY_SELECT;
+			}
+
+			bool bAddNewCoordBlipPressed = false;
+			AddTickol("Create Coord Blip", true, bAddNewCoordBlipPressed, bAddNewCoordBlipPressed, TICKOL::SMALLNEWSTAR);
+			if (bAddNewCoordBlipPressed)
+			{
+				auto& spoocam = SpoonerMode::spoonerModeCamera;
+
+				if (!spoocam.IsActive())
+				{
+					GTAentity myPed = PLAYER_PED_ID();
+					Vector3 myPos = myPed.Position_get();
+
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
+				}
+				else
+				{
+					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+				}
+
+				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Coord;
+				sub::Spooner::SelectedBlip->Alpha = 255;
+				sub::Spooner::SelectedBlip->Scale = 0.80f;
+				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
+			}
 
 			AddBreak("---Radial Blips---");
 			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
@@ -3119,73 +3180,6 @@ namespace sub
 
 			if (*Menu::currentopATM > Menu::printingop)
 				Menu::Up();
-		}
-
-		void Sub_Blip_Select()
-		{
-			AddTitle("Select Blip Type");
-
-			bool bAddNewRadialBlipPressed = false;
-
-			AddTickol("Create Radial Blip", true, bAddNewRadialBlipPressed, bAddNewRadialBlipPressed, TICKOL::SMALLNEWSTAR);
-			if (bAddNewRadialBlipPressed)
-			{
-				auto& spoocam = SpoonerMode::spoonerModeCamera;
-
-				if (!spoocam.IsActive())
-				{
-					GTAentity myPed = PLAYER_PED_ID();
-					Vector3 myPos = myPed.Position_get();
-
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
-				}
-				else
-				{
-					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
-
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
-				}
-
-				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
-				sub::Spooner::SelectedBlip->Alpha = 190;
-				sub::Spooner::SelectedBlip->Scale = 0.80f;
-				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
-			}
-
-			bool bAttachBlipToEntityPressed = false;
-			AddTickol("Attach Blip to Entity", true, bAttachBlipToEntityPressed, bAttachBlipToEntityPressed, TICKOL::SMALLNEWSTAR);
-			if (bAttachBlipToEntityPressed)
-			{
-				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITY_SELECT;
-			}
-
-			bool bAddNewCoordBlipPressed = false;
-			AddTickol("Create Coord Blip", true, bAddNewCoordBlipPressed, bAddNewCoordBlipPressed, TICKOL::SMALLNEWSTAR);
-			if (bAddNewCoordBlipPressed)
-			{
-				auto& spoocam = SpoonerMode::spoonerModeCamera;
-
-				if (!spoocam.IsActive())
-				{
-					GTAentity myPed = PLAYER_PED_ID();
-					Vector3 myPos = myPed.Position_get();
-
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
-				}
-				else
-				{
-					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
-
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
-				}
-
-				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Coord;
-				sub::Spooner::SelectedBlip->Alpha = 255;
-				sub::Spooner::SelectedBlip->Scale = 0.80f;
-				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
-			}
 		}
 
 		void Sub_Blip_Radial()

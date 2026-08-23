@@ -267,7 +267,7 @@ void Menu::submenu_switch()
 	case SUB::SPOONER_MANAGEDB:						sub::Spooner::Submenus::Sub_ManageEntities(); break;
 	case SUB::SPOONER_MANAGEDB_REMOVAL:				sub::Spooner::Submenus::Sub_ManageEntities_Removal(); break;
 	case SUB::SPOONER_BLIPS:						sub::Spooner::Submenus::Sub_Blip_Management(); break;
-	case SUB::SPOONER_BLIPS_ADD_SELECT:				sub::Spooner::Submenus::Sub_Blip_Select(); break;
+	//case SUB::SPOONER_BLIPS_ADD_SELECT:				sub::Spooner::Submenus::Sub_Blip_Select(); break;
 	case SUB::SPOONER_BLIPS_ADD_RADIAL:				sub::Spooner::Submenus::Sub_Blip_Radial(); break;
 	case SUB::SPOONER_BLIPS_ADD_ENTITY:				sub::Spooner::Submenus::Sub_Blip_Entity(); break;
 	case SUB::SPOONER_BLIPS_ADD_COORD:				sub::Spooner::Submenus::Sub_Blip_Coord(); break;

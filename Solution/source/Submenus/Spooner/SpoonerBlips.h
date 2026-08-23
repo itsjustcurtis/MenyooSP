@@ -179,7 +179,6 @@ namespace sub::Spooner
     namespace Submenus
     {
         void Sub_Blip_Management();
-        void Sub_Blip_Select();
 
         void Sub_Blip_Radial();
         void Sub_Blip_Entity();
