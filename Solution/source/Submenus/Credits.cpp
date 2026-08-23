@@ -31,6 +31,7 @@ namespace sub
     // Pulls raw JSON from GitHub over HTTPS. Returns empty string on any failure.
     static std::string FetchSupportersJson()
     {
+		addlog(ige::LogType::LOG_TRACE, "Fetching credits from API...");
         std::string result;
 
         HINTERNET hSession = WinHttpOpen(L"Menyoo/1.0",
@@ -38,6 +39,7 @@ namespace sub
             WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
         if (!hSession)
             return result;
+		addlog(ige::LogType::LOG_TRACE, "Credits API session opened");
 
         HINTERNET hConnect = WinHttpConnect(hSession, kApiHost, INTERNET_DEFAULT_HTTPS_PORT, 0);
         if (!hConnect)
@@ -45,6 +47,7 @@ namespace sub
             WinHttpCloseHandle(hSession);
             return result;
         }
+		addlog(ige::LogType::LOG_TRACE, "Credits API connection established");
 
         HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", kApiPath,
             nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
@@ -55,10 +58,12 @@ namespace sub
             WinHttpCloseHandle(hSession);
             return result;
         }
+		addlog(ige::LogType::LOG_TRACE, "Credits API request prepared");
 
         BOOL sent = WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
             WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
-
+        
+		addlog(ige::LogType::LOG_DEBUG, "Credits API request sent");
         if (sent && WinHttpReceiveResponse(hRequest, nullptr))
         {
             DWORD statusCode = 0;
@@ -69,6 +74,7 @@ namespace sub
 
             if (statusCode == 200)
             {
+				addlog(ige::LogType::LOG_TRACE, "Credits API returned status 200 OK, reading data...");
                 DWORD bytesAvailable = 0;
                 while (WinHttpQueryDataAvailable(hRequest, &bytesAvailable) && bytesAvailable > 0)
                 {
