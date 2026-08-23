@@ -3379,7 +3379,7 @@ namespace sub
 			{
 				blip->bSyncRotation = !blip->bSyncRotation;
 				if (!blip->bSyncRotation)
-					HUD::SET_BLIP_ROTATION_WITH_FLOAT(blip->BlipHandle, 0.0f);
+					BlipCustoms::RefreshBlip(*blip);
 			}
 
 			bool deletePressed = false;
