@@ -203,13 +203,6 @@ namespace sub
 		}
 		void SetPlayerAsEntityAlphaTarget() { s_selectedEntityTarget = PLAYER_PED_ID(); }
 
-
-
-		void SetEnt241() { g_Ped1 = selectedEntity.handle.Handle(); }
-		void SetEnt12() { g_Ped4 = selectedEntity.handle.Handle(); }
-
-
-
 	void Sub_SpoonerMain()
 		{
 			SpoonerMode::editingState.mode = SpoonerMode::eEditMode::Disabled;
@@ -1557,11 +1550,6 @@ namespace sub
 				AddOption("Animations", null, SetSelectedEntityAsActivePed, SUB::ANIMATIONSUB);
 			}
 			
-			// peds can access anims from ped options menu
-			if (selectedEntity.handle.IsVehicle() || selectedEntity.handle.IsProp()) {
-				AddOption("Animations", null, SetEnt241, SUB::ANIMATIONSUB);
-			}
-
 			if (selectedEntity.type == EntityType::PED)
 			{
 				AddOption("Ped Options", null, nullFunc, SUB::SPOONER_PEDOPS);

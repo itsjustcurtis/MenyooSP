@@ -81,6 +81,7 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD reason, LPVOID lpReserved)
 		removeHooks();
 		break;
 	}
+	addlog(ige::LogType::LOG_TRACE, "DLLMain finished");
 	return TRUE;
 }
 
