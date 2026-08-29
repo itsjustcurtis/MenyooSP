@@ -19,7 +19,7 @@ namespace sub
 			std::vector<CharStat_t> list; 
 		};
 	
-		const std::array<NamedCharStatList_t, 5> vCharStatLists
+		const std::array<NamedCharStatList_t, 4> vCharStatLists //Change 4 to 5 when properties are added back in
 		{ {
 			{ "Cash",{
 				{ "TOTAL_CASH", "Total Cash", StatDataType_t::INT, 0, static_cast<float>(INT_MAX) }
@@ -40,8 +40,8 @@ namespace sub
 			{ "K/D Ratio",{
 				{ "KILLS", "Kill Count", StatDataType_t::INT, 0, static_cast<float>(INT_MAX) },
 				{ "DEATHS", "Death Count", StatDataType_t::INT, 0, static_cast<float>(INT_MAX) }
-			} },
-			{ "Properties",{
+			} }/*,
+			{"Properties",{
 				{ "PROP_BOUGHT_TRAF", "Arms Trafficking", StatDataType_t::BOOL, 0, 1 },
 				{ "PROP_BOUGHT_CSCR", "Car Scrap Yard", StatDataType_t::BOOL, 0, 1 },
 				{ "PROP_BOUGHT_WEED", "Weed Shop", StatDataType_t::BOOL, 0, 1 },
@@ -58,7 +58,7 @@ namespace sub
 				{ "PROP_BOUGHT_BARHE", "Hen House Bar", StatDataType_t::BOOL, 0, 1 },
 				{ "PROP_BOUGHT_BARHO", "Hookies Bar", StatDataType_t::BOOL, 0, 1 },
 				{ "PROP_BOUGHT_STRIP", "Strip Club", StatDataType_t::BOOL, 0, 1 }
-			} }
+			} }*/
 			} };
 
 		std::pair<std::string, std::string> charNames[5] = { { "SP0_", "Michael" },{ "SP1_", "Franklin" },{ "SP2_", "Trevor" },{ "MP0_", "MP Char 1" },{ "MP1_", "MP Char 2" } };

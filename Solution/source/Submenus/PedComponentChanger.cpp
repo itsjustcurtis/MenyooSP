@@ -96,7 +96,7 @@ namespace sub
 		dict2.clear();
 		dict3.clear();
 
-		bool randomize = 0, frontView = 0, setDefault = 0,
+		bool randomize = 0, frontView = 0, setDefault = 0, clearAll = 0,
 			ComponentChanger_online_police_m = 0, ComponentChanger_online_robber_m = 0,
 			ComponentChanger_online_garbage_m = 0, ComponentChanger_online_police_f = 0,
 			ComponentChanger_offline_police_michael = 0, ComponentChanger_offline_firefighter_michael = 0;
@@ -157,6 +157,7 @@ namespace sub
 
 		AddOption("Random Components", randomize);
 		AddOption("Default Components", setDefault);
+		AddOption("Default Components and Accessories", clearAll);
 
 		/*switch (thisPedModel.hash)
 		{
@@ -188,6 +189,13 @@ namespace sub
 		if (setDefault) {
 			thisPed.RequestControlOnce();
 			SET_PED_DEFAULT_COMPONENT_VARIATION(thisPed.GetHandle());
+			return;
+		}
+
+		if (clearAll) {
+			thisPed.RequestControlOnce();
+			SET_PED_DEFAULT_COMPONENT_VARIATION(thisPed.GetHandle());
+			CLEAR_ALL_PED_PROPS(thisPed.Handle(), 0);
 			return;
 		}
 

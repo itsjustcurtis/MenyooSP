@@ -37,6 +37,7 @@ namespace sub
 		AddToggle("Centre Breaks", Menu::bit_centre_breaks);
 		AddToggle("Reset Player Model Upon Death (SP)", checkSelfDeathModel);
 		AddToggle("Sync Menyoo With Config File", bSyncWithConfig, MenuConfig::SaveConfig, MenuConfig::SaveConfig);
+		AddToggle("LSC Style Part Selection", g_LSCCustoms);
 		AddOption("Reset Toggles (Most Of Them)", null, MenuConfig::ConfigResetHaxValues);
 
 	}
