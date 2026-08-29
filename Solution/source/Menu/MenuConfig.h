@@ -15,6 +15,7 @@ namespace MenuConfig
 {
 	extern CSimpleIniA iniFile;
 	extern bool bSaveAtIntervals;
+	extern bool bShowNotificationBackground;
 
 // Camera configuration parameters
 namespace FreeCam {

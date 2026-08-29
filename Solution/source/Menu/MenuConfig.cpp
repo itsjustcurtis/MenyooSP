@@ -42,6 +42,7 @@
 
 CSimpleIniA MenuConfig::iniFile;
 bool MenuConfig::bSaveAtIntervals = true;
+bool MenuConfig::bShowNotificationBackground = true;
 
 // Initialize the default camera parameters
 namespace MenuConfig {
@@ -83,6 +84,7 @@ void MenuConfig::ConfigRead()
 	std::string section_settings = "settings";/////////
 
 	MenuConfig::bSaveAtIntervals = ini.GetBoolValue(section_settings.c_str(), "sync_with_config_at_intervals", MenuConfig::bSaveAtIntervals);
+	MenuConfig::bShowNotificationBackground = ini.GetBoolValue(section_settings.c_str(), "show_notification_background", MenuConfig::bShowNotificationBackground);
 	checkSelfDeathModel = ini.GetBoolValue(section_settings.c_str(), "DeathModelReset", checkSelfDeathModel);
 	menuToggleKey = ini.GetLongValue(section_settings.c_str(), "open_key", menuToggleKey);
 	menubindsGamepad.first = ini.GetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
@@ -348,6 +350,7 @@ void MenuConfig::SaveConfig()
 
 
 	ini.SetBoolValue(section_settings.c_str(), "sync_with_config_at_intervals", MenuConfig::bSaveAtIntervals);
+	ini.SetBoolValue(section_settings.c_str(), "show_notification_background", MenuConfig::bShowNotificationBackground);
 	ini.SetBoolValue(section_settings.c_str(), "DeathModelReset", checkSelfDeathModel);
 	ini.SetLongValue(section_settings.c_str(), "open_key", menuToggleKey);
 	ini.SetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);

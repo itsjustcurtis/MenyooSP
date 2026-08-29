@@ -29,6 +29,7 @@ namespace sub
 		AddOption("Menu Colours", null, nullFunc, SUB::SETTINGS_COLOURS);
 		AddOption("Menu Fonts", null, nullFunc, SUB::SETTINGS_FONTS);
 		AddOption("Menu Position", null, nullFunc, SUB::SETTINGS_MENUPOS);
+		AddToggle("Notification Background", MenuConfig::bShowNotificationBackground, MenuConfig::SaveConfig, MenuConfig::SaveConfig);
 		AddToggle("Mouse Support", Menu::usingMouseInput);
 		AddToggle("Gradients", Menu::useGradientBackgrounds);
 		AddToggle("Titlebox Globe", Menu::enableGlareEffect);
