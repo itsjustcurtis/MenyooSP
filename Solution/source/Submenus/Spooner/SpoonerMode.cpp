@@ -902,7 +902,10 @@ namespace sub::Spooner
 				MarkerManagement::DrawAll();
 
 			if (!Databases::BlipDb.empty())
+			{
+				BlipCustoms::DrawAll();
 				BlipCustoms::UpdateAttachedBlips();
+			}
 		}
 
 		void TurnOn()

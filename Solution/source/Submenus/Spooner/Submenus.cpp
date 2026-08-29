@@ -92,8 +92,8 @@ namespace sub
 			AddLocal("Spooner Mode", SpoonerMode::bEnabled, SpoonerMode::Toggle, SpoonerMode::Toggle);
 			AddOption("Spawn Entity Into World", null, nullFunc, SUB::SPOONER_SPAWN_CATEGORIES);
 			AddOption("Manage Entity Database", null, nullFunc, SUB::SPOONER_MANAGEDB);
-			AddOption("Manage Markers", null, nullFunc, SUB::SPOONER_MANAGEMARKERS);
 			AddOption("Manage Blips", null, nullFunc, SUB::SPOONER_BLIPS);
+			AddOption("Manage Markers", null, nullFunc, SUB::SPOONER_MANAGEMARKERS);
 			AddOption("Manage Saved Files", null, nullFunc, SUB::SPOONER_SAVEFILES);
 			AddOption("Quick Manual Placement (Legacy)", null, nullFunc, SUB::SPOONER_QUICKMANUALPLACEMENT);
 			AddOption("Edit Multiple Entities Simultaneously", null, nullFunc, SUB::SPOONER_GROUPSPOON);
@@ -3068,6 +3068,32 @@ namespace sub
 			}
 
 			AddBreak("---Radial Blips---");
+			bool bHasRadial = false;
+			for (auto& b : Databases::BlipDb) if (b.BlipType == SpoonerBlip::Type::Radial) { bHasRadial = true; break; }
+			if (!bHasRadial)
+			{
+				bool bAddRadial = false;
+				AddOption("Add Radial Blip", bAddRadial);
+				if (bAddRadial)
+				{
+					auto& spoocam = SpoonerMode::spoonerModeCamera;
+					if (!spoocam.IsActive())
+					{
+						GTAentity myPed = PLAYER_PED_ID();
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPed.Position_get(), Vector3(0, 0, myPed.Heading_get()));
+					}
+					else
+					{
+						Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+					}
+					sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
+					sub::Spooner::SelectedBlip->Alpha = 190;
+					sub::Spooner::SelectedBlip->Scale = 0.80f;
+					BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
+				}
+			}
 			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
 			{
 				auto& m = Databases::BlipDb[i];
@@ -3104,6 +3130,15 @@ namespace sub
 			}
 
 			AddBreak("---Entity Blips---");
+			bool bHasEntity = false;
+			for (auto& b : Databases::BlipDb) if (b.BlipType == SpoonerBlip::Type::Entity) { bHasEntity = true; break; }
+			if (!bHasEntity)
+			{
+				bool bAddEntity = false;
+				AddOption("Add Entity Blip", bAddEntity);
+				if (bAddEntity)
+					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITY_SELECT;
+			}
 			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
 			{
 				auto& m = Databases::BlipDb[i];
@@ -3140,6 +3175,32 @@ namespace sub
 			}
 
 			AddBreak("---Coord Blips---");
+			bool bHasCoord = false;
+			for (auto& b : Databases::BlipDb) if (b.BlipType == SpoonerBlip::Type::Coord) { bHasCoord = true; break; }
+			if (!bHasCoord)
+			{
+				bool bAddCoord = false;
+				AddOption("Add Coord Blip", bAddCoord);
+				if (bAddCoord)
+				{
+					auto& spoocam = SpoonerMode::spoonerModeCamera;
+					if (!spoocam.IsActive())
+					{
+						GTAentity myPed = PLAYER_PED_ID();
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPed.Position_get(), Vector3(0, 0, myPed.Heading_get()));
+					}
+					else
+					{
+						Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+					}
+					sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Coord;
+					sub::Spooner::SelectedBlip->Alpha = 255;
+					sub::Spooner::SelectedBlip->Scale = 0.80f;
+					BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
+				}
+			}
 			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
 			{
 				auto& m = Databases::BlipDb[i];
@@ -3227,8 +3288,6 @@ namespace sub
 
 						sub::Spooner::SelectedBlip->EntityHandle = e.Handle.GetHandle();
 						sub::Spooner::SelectedBlip->bAttached = true;
-						sub::Spooner::SelectedBlip->BlipHandle = HUD::ADD_BLIP_FOR_ENTITY(e.Handle.GetHandle());
-
 						sub::Spooner::SelectedBlip->Alpha = 255;
 						sub::Spooner::SelectedBlip->Scale = 0.80f;
 						sub::Spooner::SelectedBlip->Icon = BlipIcon::Standard;
@@ -3258,6 +3317,8 @@ namespace sub
 			auto blip = sub::Spooner::SelectedBlip;
 
 			AddTitle("Entity Blip Options");
+
+			AddOption("~italic~Handle: " + std::to_string(blip->EntityHandle), null);
 
 			bool bEditLabelPressed = false;
 			AddTexter("Label", 0, std::vector<std::string>{ blip->label.empty() ? "" : blip->label }, bEditLabelPressed);
@@ -3390,6 +3451,96 @@ namespace sub
 					BlipCustoms::RefreshBlip(*blip);
 			}
 
+			bool bToggleRoute = false;
+			AddTickol("Show Route", blip->bShowRoute, bToggleRoute, bToggleRoute, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			if (bToggleRoute)
+			{
+				blip->bShowRoute = !blip->bShowRoute;
+				HUD::SET_BLIP_ROUTE(blip->BlipHandle, blip->bShowRoute);
+			}
+
+			if (blip->bShowRoute)
+			{
+				bool routeColour_plus = false;
+				bool routeColour_minus = false;
+
+				AddTexter(
+					"Route Colour",
+					0,
+					std::vector<std::string>{ BlipColour::vNames.at(blip->RouteColour) },
+					null,
+					routeColour_plus,
+					routeColour_minus
+				);
+
+				if (routeColour_plus)
+				{
+					auto it = BlipColour::vNames.find(blip->RouteColour);
+					if (std::next(it) != BlipColour::vNames.end()) ++it;
+					else it = BlipColour::vNames.begin();
+					blip->RouteColour = it->first;
+					HUD::SET_BLIP_ROUTE_COLOUR(blip->BlipHandle, blip->RouteColour);
+				}
+
+				if (routeColour_minus)
+				{
+					auto it = BlipColour::vNames.find(blip->RouteColour);
+					if (it != BlipColour::vNames.begin()) --it;
+					else it = std::prev(BlipColour::vNames.end());
+					blip->RouteColour = it->first;
+					HUD::SET_BLIP_ROUTE_COLOUR(blip->BlipHandle, blip->RouteColour);
+				}
+			}
+
+			bool bToggleCone = false;
+			AddTickol("Show Cone", blip->bShowCone, bToggleCone, bToggleCone, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			if (bToggleCone)
+			{
+				blip->bShowCone = !blip->bShowCone;
+				HUD::SET_BLIP_SHOW_CONE(blip->BlipHandle, blip->bShowCone, blip->ConeColour);
+			}
+
+			bool bToggleShortRange = false;
+			AddTickol("Short Range", blip->bShortRange, bToggleShortRange, bToggleShortRange, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			if (bToggleShortRange)
+			{
+				blip->bShortRange = !blip->bShortRange;
+				HUD::SET_BLIP_AS_SHORT_RANGE(blip->BlipHandle, blip->bShortRange);
+			}
+
+			bool bToggleSelectable = false;
+			AddTickol("Selectable On Map", blip->bSelectableOnMap, bToggleSelectable, bToggleSelectable, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			if (bToggleSelectable)
+			{
+				blip->bSelectableOnMap = !blip->bSelectableOnMap;
+				HUD::SET_BLIP_DISPLAY(blip->BlipHandle, blip->bSelectableOnMap ? 2 : 8);
+			}
+
+			bool priority_plus = false;
+			bool priority_minus = false;
+
+			static const std::vector<int> priorityValues = { 2, 3, 5, 6, 7, 9 };
+			auto priorityIt = std::find(priorityValues.begin(), priorityValues.end(), blip->Priority);
+			if (priorityIt == priorityValues.end()) priorityIt = priorityValues.begin();
+
+			AddTexter("Priority", 0, std::vector<std::string>{ std::to_string(blip->Priority) }, null, priority_plus, priority_minus);
+
+			if (priority_plus)
+			{
+				if (std::next(priorityIt) != priorityValues.end()) ++priorityIt;
+				else priorityIt = priorityValues.begin();
+				blip->Priority = *priorityIt;
+				HUD::SET_BLIP_PRIORITY(blip->BlipHandle, blip->Priority);
+			}
+
+			if (priority_minus)
+			{
+				if (priorityIt != priorityValues.begin()) --priorityIt;
+				else priorityIt = std::prev(priorityValues.end());
+				blip->Priority = *priorityIt;
+				HUD::SET_BLIP_PRIORITY(blip->BlipHandle, blip->Priority);
+			}
+
 			bool deletePressed = false;
 
 			AddOption("Delete Blip", deletePressed);
@@ -3408,6 +3559,7 @@ namespace sub
 			AddTitle("Coord Blip");
 		}
 
+
 		void Sub_Blip_CoordInBlip()
 		{
 			if (sub::Spooner::SelectedBlip == nullptr)
@@ -3419,24 +3571,6 @@ namespace sub
 			auto blip = sub::Spooner::SelectedBlip;
 
 			AddTitle("Coord Blip Options");
-
-			Vector3 pos(blip->X, blip->Y, blip->Z);
-
-			World::DrawMarker(
-				MarkerType::DebugSphere,
-				pos,
-				Vector3(),
-				Vector3(),
-				Vector3(0.25f, 0.25f, 0.25f),
-				RGBA(255, 255, 0, 190)
-			);
-
-			World::DrawLightWithRange(
-				pos,
-				RGBA(255, 255, 0, 150),
-				2.3f,
-				1.5f
-			);
 
 			bool bEditLabelPressed = false;
 			AddTexter("Label", 0, std::vector<std::string>{ blip->label.empty() ? "" : blip->label }, bEditLabelPressed);
@@ -3560,6 +3694,57 @@ namespace sub
 				}
 			}
 
+			bool bToggleRoute = false;
+			AddTickol("Show Route", blip->bShowRoute, bToggleRoute, bToggleRoute, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			if (bToggleRoute)
+			{
+				blip->bShowRoute = !blip->bShowRoute;
+				HUD::SET_BLIP_ROUTE(blip->BlipHandle, blip->bShowRoute);
+			}
+
+			bool bToggleShortRange = false;
+			AddTickol("Short Range", blip->bShortRange, bToggleShortRange, bToggleShortRange, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			if (bToggleShortRange)
+			{
+				blip->bShortRange = !blip->bShortRange;
+				HUD::SET_BLIP_AS_SHORT_RANGE(blip->BlipHandle, blip->bShortRange);
+			}
+
+			bool bToggleSelectable = false;
+			AddTickol("Selectable On Map", blip->bSelectableOnMap, bToggleSelectable, bToggleSelectable, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			if (bToggleSelectable)
+			{
+				blip->bSelectableOnMap = !blip->bSelectableOnMap;
+				HUD::SET_BLIP_DISPLAY(blip->BlipHandle, blip->bSelectableOnMap ? 2 : 8);
+			}
+
+			bool priority_plus = false;
+			bool priority_minus = false;
+
+			static const std::vector<int> priorityValues = { 9, 7, 6, 5, 3, 2 };
+			auto priorityIt = std::find(priorityValues.begin(), priorityValues.end(), blip->Priority);
+			if (priorityIt == priorityValues.end()) priorityIt = priorityValues.begin();
+
+			AddTexter("Priority", 0, std::vector<std::string>{ std::to_string(blip->Priority) }, null, priority_plus, priority_minus);
+
+			if (priority_plus)
+			{
+				if (std::next(priorityIt) != priorityValues.end())
+				{
+					blip->Priority = *std::next(priorityIt);
+					HUD::SET_BLIP_PRIORITY(blip->BlipHandle, blip->Priority);
+				}
+			}
+
+			if (priority_minus)
+			{
+				if (priorityIt != priorityValues.begin())
+				{
+					blip->Priority = *std::prev(priorityIt);
+					HUD::SET_BLIP_PRIORITY(blip->BlipHandle, blip->Priority);
+				}
+			}
+
 			bool deletePressed = false;
 
 			AddOption("Delete Blip", deletePressed);
@@ -3628,24 +3813,6 @@ namespace sub
 			auto blip = sub::Spooner::SelectedBlip;
 
 			AddTitle("Radial Blip Options");
-
-			Vector3 pos(blip->X, blip->Y, blip->Z);
-
-			World::DrawMarker(
-				MarkerType::DebugSphere,
-				pos,
-				Vector3(),
-				Vector3(),
-				Vector3(0.25f, 0.25f, 0.25f),
-				RGBA(255, 255, 0, 190)
-			);
-
-			World::DrawLightWithRange(
-				pos,
-				RGBA(255, 255, 0, 150),
-				2.3f,
-				1.5f
-			);
 
 			bool shape_plus = false;
 			bool shape_minus = false;
