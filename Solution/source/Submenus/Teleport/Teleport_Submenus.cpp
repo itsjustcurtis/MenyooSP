@@ -94,11 +94,11 @@ namespace sub::TeleportLocations_catind
 					_selectedCategory = &cat;
 					if (reinterpret_cast<DWORD64>(cat.nextNamedLocListList) < SUB::MAX_SUBS && cat.nextNamedLocListList != nullptr)
 					{
-						Menu::SetSub_delayed = reinterpret_cast<DWORD64>(cat.nextNamedLocListList);
+						Menu::pendingSubmenu = reinterpret_cast<DWORD64>(cat.nextNamedLocListList);
 					}
 					else
 					{
-						Menu::SetSub_delayed = SUB::TELEPORTOPS_SELECTEDCATEGORY;
+						Menu::pendingSubmenu = SUB::TELEPORTOPS_SELECTEDCATEGORY;
 					}
 				}
 			}
@@ -113,7 +113,7 @@ namespace sub::TeleportLocations_catind
 		}
 		void Sub_CustomCoords()
 		{
-			GTAentity thisEntity = g_Ped1;
+			GTAentity thisEntity = g_activePedHandle;
 
 			if (!GrabbedCoords)
 			{
@@ -257,7 +257,7 @@ namespace sub::TeleportLocations_catind
 			}
 			}*/
 
-			//if (Menu::currentop > Menu::printingop && !vBlips.empty()) Menu::Up();
+			//if (Menu::selectedOptionIndex > Menu::currentOptionCount && !vBlips.empty()) Menu::Up();
 		}
 		void Sub_SavedLocations()
 		{
@@ -285,7 +285,7 @@ namespace sub::TeleportLocations_catind
 				std::string inputStr = Game::InputBox("", 28U, "Enter name:");
 				if (inputStr.length() > 0)
 				{
-					GTAentity ent = g_Ped1;
+					GTAentity ent = g_activePedHandle;
 					const Vector3& myPos = ent.GetPosition();
 					const Vector3& myRot = ent.Rotation_get();
 					auto nodeOldLoc = nodeRoot.find_child_by_attribute("name", inputStr.c_str());
@@ -342,9 +342,9 @@ namespace sub::TeleportLocations_catind
 						TeleMethods::ToCoordinates241(locPos);
 					}
 
-					if (Menu::printingop == *Menu::currentopATM)
+					if (Menu::IsLastDrawnOptionSelected())
 					{
-						if (Menu::bitController)
+						if (Menu::usingControllerInput)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 
@@ -352,7 +352,7 @@ namespace sub::TeleportLocations_catind
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (*Menu::currentopATM >= Menu::totalop)
+								if (Menu::IsSelectionAtBottom())
 									Menu::Up();
 								return; // Yeah
 							}
@@ -365,7 +365,7 @@ namespace sub::TeleportLocations_catind
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (*Menu::currentopATM >= Menu::totalop)
+								if (Menu::IsSelectionAtBottom())
 									Menu::Up();
 								return; // Yeah
 							}
@@ -374,7 +374,7 @@ namespace sub::TeleportLocations_catind
 
 				}
 			}
-			//if (Menu::currentop > Menu::printingop) Menu::Up();
+			//if (Menu::selectedOptionIndex > Menu::currentOptionCount) Menu::Up();
 		}
 
 	}

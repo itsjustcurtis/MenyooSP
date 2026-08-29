@@ -83,13 +83,13 @@ namespace sub::Spooner
 
 		bool IsHotkeyPressed()
 		{
-			bool bInSpoonerMenu = std::find(std::begin(Menu::currentArray), std::end(Menu::currentArray), SUB::SPOONER_MAIN) != std::end(Menu::currentArray);
+		bool bInSpoonerMenu = std::find(std::begin(Menu::submenuHistory), std::end(Menu::submenuHistory), SUB::SPOONER_MAIN) != std::end(Menu::submenuHistory);
 
 			if (!bInSpoonerMenu || !bIsSomethingHeld)
 			{
 				UINT8 index1 = bindsGamepad.first < 50 ? 0 : 2;
 				UINT8 index2 = bindsGamepad.second < 50 ? 0 : 2;
-				return Menu::bitController ? (IS_DISABLED_CONTROL_PRESSED(index1, bindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, bindsGamepad.second)) : IsKeyJustUp(bindsKeyboard);
+				return Menu::usingControllerInput ? (IS_DISABLED_CONTROL_PRESSED(index1, bindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, bindsGamepad.second)) : IsKeyJustUp(bindsKeyboard);
 			}
 			return false;
 		}
@@ -158,7 +158,7 @@ namespace sub::Spooner
 
 		void UpdatePreviewRotation()
 		{
-			if (modelPreviewInfo.entity.Exists() && Menu::currentsub != SUB::CLOSED)
+		if (modelPreviewInfo.entity.Exists() && Menu::activeSubmenu != SUB::CLOSED)
 			{
 				Menu::add_IB(INPUT_FRONTEND_RB, "");
 				Menu::add_IB(INPUT_FRONTEND_LB, "Rotate Preview");
@@ -394,7 +394,7 @@ namespace sub::Spooner
 				const Vector3& coordInFrontOfCam = freeCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 				GTAentity entityInFrontOfCam = freeCam.RaycastForEntity(Vector2(0.0f, 0.0f), 0, 160.0f);
 
-				if (Menu::bitController) // If controller
+				if (Menu::usingControllerInput) // If controller
 				{
 					float movementSensitivity = Settings::cameraMovementSensitivityGamepad;
 					//if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS)) movementSensitivity += 1.36f * movementSensitivity;
@@ -459,18 +459,18 @@ namespace sub::Spooner
 						freeCam.SetRotation(nextRotFinal);
 					}
 
-					if (Menu::currentsub == SUB::CLOSED)
+					if (Menu::activeSubmenu == SUB::CLOSED)
 					{
 						Menu::add_IB(INPUT_VEH_EXIT, "Open main menu");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_VEH_EXIT))
 						{
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
+							memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+							memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+							Menu::submenuHistory[0] = SUB::MAINMENU;
+							Menu::optionSelectionHistory[0] = 1;
+							Menu::menuHistoryIndex = 0;
 							Menu::NewSetMenu(SUB::SPOONER_MAIN);
-							Menu::currentop = 2;
+							Menu::selectedOptionIndex = 2;
 						}
 
 						if (!bIsSomethingHeld)
@@ -483,11 +483,11 @@ namespace sub::Spooner
 								{
 									newMarkerPtr->m_position.z += (newMarkerPtr->m_scale / 2);
 									SelectedMarker = newMarkerPtr;
-									memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-									memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-									Menu::currentArray[0] = SUB::MAINMENU;
-									Menu::currentop_ar[0] = 1;
-									Menu::currentArrayIndex = 0;
+									memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+									memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+									Menu::submenuHistory[0] = SUB::MAINMENU;
+									Menu::optionSelectionHistory[0] = 1;
+									Menu::menuHistoryIndex = 0;
 									Menu::NewSetMenu(SUB::SPOONER_MANAGEMARKERS_INMARKER);
 								}
 							}
@@ -585,7 +585,7 @@ namespace sub::Spooner
 								break;
 							}
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (Menu::activeSubmenu == SUB::CLOSED)
 							{
 								Menu::add_IB(INPUT_FRONTEND_RT, "Open property menu");
 								switch (spoonerModeMode)
@@ -644,7 +644,7 @@ namespace sub::Spooner
 							}
 							bIsSomethingHeld = false;
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (Menu::activeSubmenu == SUB::CLOSED)
 							{
 								Menu::add_IB(INPUT_FRONTEND_RT, "Open property menu");
 								Menu::add_IB(INPUT_FRONTEND_LT, "Move entity around (hold)");
@@ -680,11 +680,11 @@ namespace sub::Spooner
 							{
 								SpoonerMode::SetAsSelectedEntity(currentEnt);
 							}
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
+							memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+							memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+							Menu::submenuHistory[0] = SUB::MAINMENU;
+							Menu::optionSelectionHistory[0] = 1;
+							Menu::menuHistoryIndex = 0;
 							Menu::NewSetMenu(SUB::SPOONER_SELECTEDENTITYOPS);
 						}
 					}
@@ -768,18 +768,18 @@ namespace sub::Spooner
 						freeCam.SetRotation(nextRotFinal);
 					}
 
-					if (Menu::currentsub == SUB::CLOSED)
+					if (Menu::activeSubmenu == SUB::CLOSED)
 					{
 						Menu::add_IB(INPUT_VEH_EXIT, "Open main menu");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_VEH_EXIT))
 						{
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
+							memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+							memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+							Menu::submenuHistory[0] = SUB::MAINMENU;
+							Menu::optionSelectionHistory[0] = 1;
+							Menu::menuHistoryIndex = 0;
 							Menu::NewSetMenu(SUB::SPOONER_MAIN);
-							Menu::currentop = 2;
+							Menu::selectedOptionIndex = 2;
 						}
 
 						if (!bIsSomethingHeld)
@@ -792,11 +792,11 @@ namespace sub::Spooner
 								{
 									newMarkerPtr->m_position.z += (newMarkerPtr->m_scale / 2);
 									SelectedMarker = newMarkerPtr;
-									memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-									memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-									Menu::currentArray[0] = SUB::MAINMENU;
-									Menu::currentop_ar[0] = 1;
-									Menu::currentArrayIndex = 0;
+									memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+									memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+									Menu::submenuHistory[0] = SUB::MAINMENU;
+									Menu::optionSelectionHistory[0] = 1;
+									Menu::menuHistoryIndex = 0;
 									Menu::NewSetMenu(SUB::SPOONER_MANAGEMARKERS_INMARKER);
 								}
 							}
@@ -895,7 +895,7 @@ namespace sub::Spooner
 								break;
 							}
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (Menu::activeSubmenu == SUB::CLOSED)
 							{
 								Menu::add_IB(INPUT_CURSOR_CANCEL, "Open property menu");
 								switch (spoonerModeMode)
@@ -956,7 +956,7 @@ namespace sub::Spooner
 							}
 							bIsSomethingHeld = false;
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (Menu::activeSubmenu == SUB::CLOSED)
 							{
 								Menu::add_IB(INPUT_CURSOR_CANCEL, "Open property menu");
 								Menu::add_IB(INPUT_CURSOR_ACCEPT, "Move entity around (hold)");
@@ -992,11 +992,11 @@ namespace sub::Spooner
 							{
 								SpoonerMode::SetAsSelectedEntity(currentEnt);
 							}
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
+							memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+							memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+							Menu::submenuHistory[0] = SUB::MAINMENU;
+							Menu::optionSelectionHistory[0] = 1;
+							Menu::menuHistoryIndex = 0;
 							Menu::NewSetMenu(SUB::SPOONER_SELECTEDENTITYOPS);
 						}
 					}
@@ -1078,16 +1078,16 @@ namespace sub::Spooner
 
 		void TurnOn()
 		{
-			if (!g_menuNotOpenedYet)
+			if (!menuHasNotOpened)
 			{
 				SpoonerMode::bEnabled = true;
 				sub::Spooner::ImGuiSpooner::SetVisible(true);
-				if (Menu::currentsub != SUB::CLOSED)
+				if (Menu::activeSubmenu != SUB::CLOSED)
 					Game::Print::PrintBottomLeft("~b~Note:~s~ Spooner Mode instructions only appear when Menyoo is closed.");
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Menu not opened yet.");
+				Game::Print::ShowNotification("~r~Error:", "Menu not opened yet.");
 			}
 		}
 		void TurnOff()
@@ -1284,7 +1284,7 @@ namespace sub::Spooner
 				{
 					const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, EntityManagement::GetEntityIndexInDb(selectedEntity) >= 0, true, Submenus::_copyEntTexterValue);
 					selectedEntity = copiedEntity;
-					Game::Print::PrintBottomCentre("Entity copied.", 2500);
+					Game::Print::ShowNotification("Entity copied.", 2.5f);
 				}
 			}
 

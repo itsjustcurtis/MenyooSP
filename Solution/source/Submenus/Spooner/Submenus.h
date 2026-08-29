@@ -49,8 +49,9 @@ namespace sub
 
 		void HandleKeyboardPlacementInput(Vector3& position, Vector3& rotation);
 
-		void SetEnt241();
-		void SetEnt12();
+		void SetSelectedEntityAsActivePed();
+		void SetSelectedEntityAsVehicleTarget();
+		void SetPlayerAsEntityAlphaTarget();
 
 		void Sub_SpoonerMain();
 		void Sub_Settings();
@@ -58,6 +59,9 @@ namespace sub
 		void Sub_AutoSave();
 		void Sub_SaveFiles_Load();
 		void Sub_SaveFiles_Load_LegacySP00N();
+		void Sub_JobImporter();
+		void Sub_JobBrowser();
+		void Sub_JobBrowser_Info();
 		void Sub_ManageEntities();
 		void Sub_ManageEntities_Removal();
 		//void Sub_ManageEntities_Removal_FromDb();

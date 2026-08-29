@@ -263,7 +263,7 @@ namespace sub::Spooner
 						{
 							thisTargetEnt = e.handle;
 						}
-						if (*Menu::currentopATM == Menu::printingop)
+						if (Menu::IsLastDrawnOptionSelected())
 							EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 				}
@@ -419,10 +419,10 @@ namespace sub::Spooner
 				{
 					AddOption("~italic~" + cit->ToString(), null);
 
-					if (Menu::printingop == *Menu::currentopATM)
+					if (Menu::IsLastDrawnOptionSelected())
 					{
 						bool bRemoveCoordPressed = false;
-						if (Menu::bitController)
+						if (Menu::usingControllerInput)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove coord");
 							bRemoveCoordPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -484,7 +484,7 @@ namespace sub::Spooner
 
 				bool bRadius_plus = false, bRadius_minus = false;
 				AddNumber("Radius", thisRadius, 0, null, bRadius_plus, bRadius_minus);
-				if (*Menu::currentopATM == Menu::printingop)
+				if (Menu::IsLastDrawnOptionSelected())
 					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisRadius);
 				if (bRadius_plus) { if (thisRadius < FLT_MAX) thisRadius += 1.0f; }
 				if (bRadius_minus) { if (thisRadius > 0.0f) thisRadius -= 1.0f; }
@@ -509,7 +509,7 @@ namespace sub::Spooner
 
 				bool bSearchRadius_plus = false, bSearchRadius_minus = false;
 				AddNumber("Search Radius", thisSearchRadius, 0, null, bSearchRadius_plus, bSearchRadius_minus);
-				if (*Menu::currentopATM == Menu::printingop)
+				if (Menu::IsLastDrawnOptionSelected())
 					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisSearchRadius);
 				if (bSearchRadius_plus) { if (thisSearchRadius < FLT_MAX) thisSearchRadius += 1.0f; }
 				if (bSearchRadius_minus) { if (thisSearchRadius > 0.0f) thisSearchRadius -= 1.0f; }
@@ -739,7 +739,7 @@ namespace sub::Spooner
 						AddOption(current.first, bCurrentPressed); if (bCurrentPressed)
 						{
 							sub::AnimationMenu::selectedAnimDictPtr = &current;
-							Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS_INDICT;
+							Menu::pendingSubmenu = SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYANIMATION_ALLPEDANIMS_INDICT;
 						}
 					}
 				}
@@ -767,10 +767,10 @@ namespace sub::Spooner
 						tskPtr->animName = current;
 					}
 
-					if (Menu::printingop == *Menu::currentopATM)
+					if (Menu::IsLastDrawnOptionSelected())
 					{
 						bool bIsAFav = IsAnimationAFavourite(selectedDict.first, current);
-						if (Menu::bitController)
+						if (Menu::usingControllerInput)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -839,7 +839,7 @@ namespace sub::Spooner
 
 				bool bRadius_plus = false, bRadius_minus = false;
 				AddNumber("Radius", thisRadius, 0, null, bRadius_plus, bRadius_minus);
-				if (*Menu::currentopATM == Menu::printingop)
+				if (Menu::IsLastDrawnOptionSelected())
 					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisRadius);
 				if (bRadius_plus) { if (thisRadius < FLT_MAX) thisRadius += 1.0f; }
 				if (bRadius_minus) { if (thisRadius > 0.0f) thisRadius -= 1.0f; }
@@ -894,7 +894,7 @@ namespace sub::Spooner
 					AddOption(v.voiceName, bVoicePressed); if (bVoicePressed)
 					{
 						sub::Speech::_currVoiceInfo = &v;
-						Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYSPEECHWITHVOICE_INVOICE;
+						Menu::pendingSubmenu = SUB::SPOONER_TASKSEQUENCE_TASKSUB_PLAYSPEECHWITHVOICE_INVOICE;
 					}
 				}
 			}
@@ -956,7 +956,7 @@ namespace sub::Spooner
 						{
 							thisTargetVehicle = e.handle;
 						}
-						if (*Menu::currentopATM == Menu::printingop)
+						if (Menu::IsLastDrawnOptionSelected())
 							EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 				}
@@ -983,7 +983,7 @@ namespace sub::Spooner
 						{
 							thisTargetVehicle = e.handle;
 						}
-						if (*Menu::currentopATM == Menu::printingop)
+						if (Menu::IsLastDrawnOptionSelected())
 							EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 				}
@@ -1694,7 +1694,7 @@ namespace sub::Spooner
 				}
 				else
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Task list is empty.");
+					Game::Print::ShowNotification("~r~Error:", "Task list is empty.");
 					addlog(ige::LogType::LOG_WARNING, "Cannot start tasks, Task list is empty");
 				}
 			}
@@ -1715,15 +1715,15 @@ namespace sub::Spooner
 					if (taskList[i]->duration != -1) // Has settings
 					{
 						_selectedSTST = taskList[i];
-						Menu::SetSub_delayed = SUB::SPOONER_TASKSEQUENCE_INTASK;
+						Menu::pendingSubmenu = SUB::SPOONER_TASKSEQUENCE_INTASK;
 					}
 				}
 
-				if (Menu::printingop == *Menu::currentopATM)
+				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bRemoveTaskPressed = false;
 					char bMoveTaskPressed = 0i8;
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 						bRemoveTaskPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -1763,9 +1763,9 @@ namespace sub::Spooner
 
 			}
 
-			if (bMenuUpDown > 0) // Move currentop ahead
+			if (bMenuUpDown > 0) // Move selected option ahead
 			{
-				if (Menu::currentop == Menu::printingop) // Last task selected
+				if (Menu::selectedOptionIndex == Menu::currentOptionCount) // Last task selected
 				{
 					Menu::Top();
 					Menu::Down();
@@ -1774,9 +1774,9 @@ namespace sub::Spooner
 					Menu::Down();
 				//bMenuUpDown = 0;
 			}
-			else if (bMenuUpDown < 0) // Move currentop behind
+			else if (bMenuUpDown < 0) // Move selected option behind
 			{
-				if (Menu::currentop == 2) // First task selected
+				if (Menu::selectedOptionIndex == 2) // First task selected
 				{
 					Menu::Bottom();
 					Menu::Up();

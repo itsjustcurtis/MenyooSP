@@ -109,7 +109,7 @@ namespace sub
 		void ShowInstructionalButton(GTAmodel::Model model)
 		{
 			bool bIsAFav = IsPedAFavourite(model);
-			if (Menu::bitController)
+			if (Menu::usingControllerInput)
 			{
 				Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
@@ -325,11 +325,11 @@ namespace sub
 		if (model.IsInCdImage())
 		{
 			int context = 0;
-			for (int ci = Menu::currentArrayIndex; ci >= 0; ci--)
+			for (int ci = Menu::menuHistoryIndex; ci >= 0; ci--)
 			{
-				if (Menu::currentArray[ci] == SUB::SPOONER_SPAWN_PED) { context = 1; break; }
-				if (Menu::currentArray[ci] == SUB::BODYGUARD_SPAWN) { context = 2; break; }
-				if (Menu::currentArray[ci] == SUB::PEDGUN_ALLPEDS) { context = 3; break; }
+				if (Menu::submenuHistory[ci] == SUB::SPOONER_SPAWN_PED) { context = 1; break; }
+				if (Menu::submenuHistory[ci] == SUB::BODYGUARD_SPAWN) { context = 2; break; }
+				if (Menu::submenuHistory[ci] == SUB::PEDGUN_ALLPEDS) { context = 3; break; }
 			}
 
 			switch (context)
@@ -348,7 +348,7 @@ namespace sub
 				break;
 			}
 
-			if (*Menu::currentopATM == Menu::printingop)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				PedFavourites::ShowInstructionalButton(model);
 			}
@@ -364,7 +364,7 @@ namespace sub
 		rngped = { "", "" };
 		dict3.clear();
 
-		g_Ped1 = PLAYER_PED_ID();
+		g_activePedHandle = PLAYER_PED_ID();
 		AddTitle("Model Changer");
 		AddOption("~b~Search~s~ Peds", null, nullFunc, SUB::MODELCHANGER_SEARCH);
 		AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
@@ -394,8 +394,8 @@ namespace sub
 		if (modelChangerRandomPedVariation)
 		{
 			addlog(ige::LogType::LOG_TRACE, "Random Ped Selected");
-			SET_PED_RANDOM_COMPONENT_VARIATION(g_Ped1, 0);
-			SET_PED_RANDOM_PROPS(g_Ped1);
+			SET_PED_RANDOM_COMPONENT_VARIATION(g_activePedHandle, 0);
+			SET_PED_RANDOM_PROPS(g_activePedHandle);
 			return;
 		}
 

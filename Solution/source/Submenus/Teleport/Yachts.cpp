@@ -185,7 +185,7 @@ namespace sub::TeleportLocations_catind
 			Vector2 res = { 0.1f, 0.0889f };
 
 			FLOAT x_coord = 0.324f + menuPos.x;
-			FLOAT y_coord = OptionY + 0.044f + menuPos.y;
+			FLOAT y_coord = currentOptionY + 0.044f + menuPos.y;
 
 			if (menuPos.x > 0.45f) x_coord = menuPos.x - 0.003f;
 
@@ -255,7 +255,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (worldObjects.size() > 2000)//GTA_MAX_ENTITIES - 48)
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Too many entities in world.");
+				Game::Print::ShowNotification("~r~Error:", "Too many entities in world.");
 				return;
 			}
 			if (yachtInfo.location == nullptr || yachtInfo.option == nullptr)
@@ -541,7 +541,7 @@ namespace sub::TeleportLocations_catind
 				Menu::SetPreviousMenu();
 				return;
 			}
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 
 			AddTitle(currentYachtInfo.location->second.name);
 
@@ -552,7 +552,7 @@ namespace sub::TeleportLocations_catind
 
 			bool bYachtType_plus = false, bYachtType_minus = false;
 			AddTexter("Yacht", 0, std::vector<std::string>{ currentYachtInfo.option->second.title }, null, bYachtType_plus, bYachtType_minus);
-			if (*Menu::currentopATM == Menu::printingop) DrawYachtBmpPreview(currentYachtInfo.option->first);
+			if (Menu::IsLastDrawnOptionSelected()) DrawYachtBmpPreview(currentYachtInfo.option->first);
 			if (bYachtType_plus) { if (vOptionNames.rbegin()->first != currentYachtInfo.option->first) { currentYachtInfo.option = &*(++vOptionNames.find(currentYachtInfo.option->first)); } }
 			if (bYachtType_minus) { if (vOptionNames.begin()->first != currentYachtInfo.option->first) { currentYachtInfo.option = &*(--vOptionNames.find(currentYachtInfo.option->first)); } }
 

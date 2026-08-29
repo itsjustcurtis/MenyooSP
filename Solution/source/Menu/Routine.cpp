@@ -1,4 +1,4 @@
-﻿/*
+/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -156,7 +156,7 @@ void Menu::justopened()
 
 	sub::PopulateAllPaintIDs();
 
-	g_menuNotOpenedYet = false;
+	menuHasNotOpened = false;
 }
 inline void MenyooMain()
 {	
@@ -574,11 +574,10 @@ Hash kaboomGunHash = EXPLOSION::DIR_WATER_HYDRANT, bullet_gun_hash = WEAPON_FLAR
 GTAmodel::Model pedGunHash = PedHash::KillerWhale, objectGunHash = VEHICLE_BUS;
 FLOAT currentTimescale = 1.0f;
 
-INT g_Ped1;
-INT g_Ped2;
-INT g_Ped3;
-INT g_Ped4;
-const char* g_PlayerName;
+INT g_activePedHandle;
+INT g_activePlayerId;
+INT g_playerGroupId;
+const char* g_playerName;
 
 INT bitMSPaintsRGBMode;
 
@@ -607,7 +606,6 @@ bool bitVehicleGravity = false;
 bool bitFreezeVehicle = false;
 bool bitVehicleSlippyTires = false;
 
-INT msCurrentPaintIndex = 0;
 
 // String variables used in various submenus for search, storage, etc.
 std::string dict;
@@ -852,9 +850,9 @@ void SetPauseMenuTeleToWpCommand()
 		GTAentity myPed = PLAYER_PED_ID();
 		if (IS_WAYPOINT_ACTIVE() && myPed.IsAlive())
 		{
-			(Menu::bitController ? DxHookIMG::teleToWpBoxIconGamepad : DxHookIMG::teleToWpBoxIconKeyboard).Draw(0, Vector2(0.5f, 0.04f), Vector2(0.0943f, 0.016f), 0.0f, RGBA::AllWhite());
+			(Menu::usingControllerInput ? DxHookIMG::teleToWpBoxIconGamepad : DxHookIMG::teleToWpBoxIconKeyboard).Draw(0, Vector2(0.5f, 0.04f), Vector2(0.0943f, 0.016f), 0.0f, RGBA::AllWhite());
 
-			if (Menu::bitController ? IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_RLEFT) : IsKeyJustUp(VirtualKey::T))
+			if (Menu::usingControllerInput ? IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_RLEFT) : IsKeyJustUp(VirtualKey::T))
 			{
 				sub::TeleportLocations_catind::TeleMethods::ToWaypoint(myPed);
 			}
@@ -867,7 +865,7 @@ void SetPTFXLopTick()
 {
 	using sub::PtfxSubs::fxLoops;
 
-	if (GET_GAME_TIMER() > Menu::delayedTimer)
+	if (GET_GAME_TIMER() > Menu::nextDeferredActionTime)
 	{
 		for (auto it = fxLoops.begin(); it != fxLoops.end();)
 		{
@@ -1243,9 +1241,9 @@ void SetSoulSwitchGun()
 			SET_CONTROL_SHAKE(0, 4000, 210);
 			STOP_CONTROL_SHAKE(0);
 
-			if (g_Ped1 == playerPed.Handle())
+			if (g_activePedHandle == playerPed.Handle())
 			{
-				g_Ped1 = PLAYER_PED_ID();
+				g_activePedHandle = PLAYER_PED_ID();
 			}
 
 			soulSwitchEntity.Handle() = 0;
@@ -1521,7 +1519,7 @@ void SetForgeGunDist(float& distance)
 	DISABLE_CONTROL_ACTION(2, INPUT_LOOK_BEHIND, TRUE);
 	DISABLE_CONTROL_ACTION(2, INPUT_WEAPON_WHEEL_NEXT, TRUE);
 	DISABLE_CONTROL_ACTION(2, INPUT_WEAPON_WHEEL_PREV, TRUE);
-	if (Menu::bitController)
+	if (Menu::usingControllerInput)
 	{
 		if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_RS)) 
 		{
@@ -1566,7 +1564,7 @@ inline void SetForgeGunRotationHotKeys()
 	Vector3 Rot = GET_ENTITY_ROTATION(targetSlotEntity, 2);
 	FLOAT& precision = g_forgeGunPrecision;
 
-	if (!Menu::bitController)
+	if (!Menu::usingControllerInput)
 	{
 		if (IsKeyDown(VK_OEM_4)) 
 		{
@@ -1891,7 +1889,7 @@ void SetNoclip()
 
 	if (ent.Exists())
 	{
-		if (Menu::bitController ? (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_X) && IS_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LS)) : IsKeyJustUp(BindNoClip))
+		if (Menu::usingControllerInput ? (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_X) && IS_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LS)) : IsKeyJustUp(BindNoClip))
 		{
 			noClipToggle = !noClipToggle;
 			if (!noClipToggle)
@@ -1903,7 +1901,7 @@ void SetNoclip()
 				if (bitNoclipShowHelp)
 				{
 					bitNoclipShowHelp = false;
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Game::CustomHelpText::ShowTimedText(oss_ << "FreeCam:~n~~INPUT_MOVE_UD~ = " << Game::GetGXTEntry("ITEM_MOV_CAM")
 							<< "~n~~INPUT_LOOK_LR~ = " << Game::GetGXTEntry("ITEM_MOVE") << "~n~~INPUT_FRONTEND_RT~/~INPUT_FRONTEND_LT~ = " << "Ascend/Descend" << "~n~~INPUT_FRONTEND_RB~ = " << "Hasten", 6000);
@@ -1955,7 +1953,7 @@ void SetNoclip()
 		ent.SetVisible(false);
 		myPed.SetVisible(false);
 
-		Vector3 nextRot = cam.GetRotation() - Vector3(GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD), 0, GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR)) * (Menu::bitController ? 2.5f : 11.0f);
+		Vector3 nextRot = cam.GetRotation() - Vector3(GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD), 0, GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR)) * (Menu::usingControllerInput ? 2.5f : 11.0f);
 		nextRot.y = 0.0f; // No roll
 		ent.SetRotation(Vector3(0, 0, nextRot.z));
 		cam.SetRotation(nextRot);
@@ -1964,7 +1962,7 @@ void SetNoclip()
 			SET_GAMEPLAY_CAM_RELATIVE_HEADING(0.0f);
 		}
 
-		if (Menu::bitController)
+		if (Menu::usingControllerInput)
 		{
 			DISABLE_CONTROL_ACTION(0, INPUT_VEH_HORN, TRUE);
 
@@ -2127,7 +2125,7 @@ void SetLocalButtonSuperRun()
 
 void SetSelfRefillHealthWhenInCover()
 {
-	if (GET_GAME_TIMER() >= Menu::delayedTimer - 100)
+	if (GET_GAME_TIMER() >= Menu::nextDeferredActionTime - 100)
 	{
 		GTAped playerPed = PLAYER_PED_ID();
 		auto health = playerPed.GetHealth();
@@ -2259,7 +2257,7 @@ void SetPedSupermanAuto(Ped ped)
 		if (ped == PLAYER_PED_ID())
 		{
 			bool isBrakePressed, isBrakeReleased = false;
-			if (Menu::bitController)
+			if (Menu::usingControllerInput)
 			{
 				DISABLE_CONTROL_ACTION(2, INPUT_PARACHUTE_DEPLOY, TRUE);
 				isBrakePressed = IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RDOWN) != 0;
@@ -2368,7 +2366,7 @@ void SetLocalCarJump()
 			}
 			else
 			{
-				bPressed = Menu::bitController ? IS_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_RDOWN) : IS_CONTROL_JUST_PRESSED(2, INPUT_VEH_HANDBRAKE);
+				bPressed = Menu::usingControllerInput ? IS_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_RDOWN) : IS_CONTROL_JUST_PRESSED(2, INPUT_VEH_HANDBRAKE);
 			}
 			if (bPressed)
 			{
@@ -2383,7 +2381,7 @@ void SetLocalCarJump()
 			}
 			else
 			{
-				bPressed = Menu::bitController ? IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RDOWN) : IS_CONTROL_PRESSED(2, INPUT_VEH_HANDBRAKE);
+				bPressed = Menu::usingControllerInput ? IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RDOWN) : IS_CONTROL_PRESSED(2, INPUT_VEH_HANDBRAKE);
 			}
 			if (bPressed)
 			{
@@ -2398,10 +2396,10 @@ void SetLocalCarHydraulics()
 {
 	GTAvehicle vehicle = g_myVeh;
 
-	if ((Menu::bitController ? IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : get_key_pressed(VirtualKey::LeftShift)) && vehicle.IsOnAllWheels())
+	if ((Menu::usingControllerInput ? IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : get_key_pressed(VirtualKey::LeftShift)) && vehicle.IsOnAllWheels())
 	{
 		Vector2 normal;
-		if (Menu::bitController)
+		if (Menu::usingControllerInput)
 		{
 			DISABLE_CONTROL_ACTION(2, INPUT_VEH_HORN, true);
 			normal.x = GET_CONTROL_NORMAL(2, INPUT_SCRIPT_LEFT_AXIS_X);
@@ -2569,7 +2567,7 @@ void DriveOnWater(GTAped ped, Entity& waterobject)
 		SET_ENTITY_COORDS_NO_OFFSET(waterobject, Pos.x, Pos.y, whh, 0, 0, 0);
 		SET_ENTITY_ROTATION(waterobject, 0, 90, 0, 2, 1);
 		FREEZE_ENTITY_POSITION(waterobject, true);
-		Game::Print::PrintBottomCentre("~b~Note:~s~ Enable again if water level is incorrect/changes.");
+		Game::Print::ShowNotification("~b~Note:", "Enable again if water level is incorrect/changes.");
 		WAIT(65);
 		return;
 	}
@@ -2619,7 +2617,7 @@ inline void SetHandlingMultiplier()
 	{
 		return;
 	}
-	if (!Menu::bitController)
+	if (!Menu::usingControllerInput)
 	{
 		if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_SCRIPT_PAD_RIGHT) || IsKeyDown('D'))
 		{
@@ -2699,7 +2697,7 @@ void SetVehicleRainbowMode(GTAvehicle vehicle, bool useFader)
 void set_vehicle_neon_anim(GTAvehicle vehicle)
 {
 	addlog(ige::LogType::LOG_TRACE, "set_vehicle_neon_anim called");
-	if (g_Ped4 != g_myVeh)
+	if (vehicle != g_myVeh)
 	{
 		loop_neon_fade = 0;
 		loop_neon_flash = 0;
@@ -2908,7 +2906,7 @@ void SetVehicleWeapons()
 		SetVehicleWeaponLines();
 	}
 
-	if (Menu::bitController ? IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : IsKeyDown(VirtualKey::Add))
+	if (Menu::usingControllerInput ? IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : IsKeyDown(VirtualKey::Add))
 	{
 		if (vehicleRPG
 			|| vehicleFireworks
@@ -3196,6 +3194,7 @@ void SetVehicleWheelsInvisible(GTAvehicle vehicle, bool enable)
 		}
 
 		vehicle.RequestControl(800);
+		RESET_VEHICLE_WHEELS(vehicle.Handle(), true);
 		for (UINT i = 0; i <= 8; i++)
 		{
 			vehicle.FixTyre(i);
@@ -3733,7 +3732,7 @@ static void TickWeaponEffects()
 			SetTripleBullets();
 		}
 	}
-	if (GET_GAME_TIMER() >= Menu::delayedTimer && bulletTime)
+	if (GET_GAME_TIMER() >= Menu::nextDeferredActionTime && bulletTime)
 	{
 		SET_TIME_SCALE(currentTimescale);
 	}
@@ -3968,7 +3967,7 @@ void Menu::loops()
 	// Tick all categories
 	TickWorldState();
 
-	if (GET_GAME_TIMER() >= delayedTimer)
+	if (GET_GAME_TIMER() >= nextDeferredActionTime)
 	{
 		int player = PLAYER_ID();
 		GTAplayer player2;
@@ -3982,6 +3981,8 @@ void Menu::loops()
 
 	// HUD overlays
 	DrawGameInfo();
+	Game::Print::TickPrintBottomCentre();
+	Game::Print::TickNotifications();
 
 	TickVehicleEffects(gameIsPaused);
 	SetPVOpsVehicleTextWorld2Screen();

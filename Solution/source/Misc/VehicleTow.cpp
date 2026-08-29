@@ -207,13 +207,13 @@ namespace VehicleTow
 	// controls
 	bool VehicleTow::ExtendPressed()
 	{
-		return Menu::bitController ?
+		return Menu::usingControllerInput ?
 			IS_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LS) != 0
 			: IsKeyJustUp(VirtualKey::K);
 	}
 	bool VehicleTow::ShortenPressed()
 	{
-		return Menu::bitController ?
+		return Menu::usingControllerInput ?
 			IS_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LS) != 0
 			: get_key_pressed(VirtualKey::K);
 	}
@@ -224,7 +224,7 @@ namespace VehicleTow
 		std::string vehBehindName = vehBehind.Model().VehicleDisplayName(true);
 
 		Game::CustomHelpText::ShowTimedText(
-			oss_ << "Press " << (Menu::bitController ? "~INPUT_FRONTEND_LS~" : "~b~K~s~") << " to tow the ~h~" << vehBehindName << "~h~ behind your current vehicle."
+			oss_ << "Press " << (Menu::usingControllerInput ? "~INPUT_FRONTEND_LS~" : "~b~K~s~") << " to tow the ~h~" << vehBehindName << "~h~ behind your current vehicle."
 			, 100);
 	}
 

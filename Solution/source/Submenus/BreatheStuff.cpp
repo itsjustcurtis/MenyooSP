@@ -27,7 +27,7 @@ namespace sub
 		{
 			PTFX::LoopedPTFX& ptfx = g_breatheStuffPTFX;
 
-			if (Menu::bitController ? !IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : !IsKeyDown(VirtualKey::J))
+			if (Menu::usingControllerInput ? !IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : !IsKeyDown(VirtualKey::J))
 			{
 				if (ptfx.Exists())
 				{
@@ -296,7 +296,7 @@ namespace sub
 				ptfx.Start(playerPed, scale, Vector3(X, Y, Z), Vector3(aX, aY, aZ), RGBA::AllWhite(), Bone::Head);
 			}
 
-			if (GET_GAME_TIMER() >= Menu::delayedTimer)
+			if (GET_GAME_TIMER() >= Menu::nextDeferredActionTime)
 			{
 				ptfx.SetColour(RgbS::Random());
 			}
@@ -310,7 +310,7 @@ namespace sub
 			{
 				if (playerBreatheStuff == BreathePtfxType::None && type != BreathePtfxType::None)
 				{
-					Game::Print::PrintBottomLeft(oss_ << "Hold " << "~b~" << (Menu::bitController ? "LS" : "J") << "~s~" << " to breathe out stuff!");
+					Game::Print::PrintBottomLeft(oss_ << "Hold " << "~b~" << (Menu::usingControllerInput ? "LS" : "J") << "~s~" << " to breathe out stuff!");
 				}
 
 				if (g_breatheStuffPTFX.Exists())

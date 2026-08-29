@@ -22,19 +22,19 @@ namespace sub
 		AddTexter("Language", 0, { Language::GetSelectedLangTitle() }, bChangeLangPressed);
 		if (bChangeLangPressed)
 		{
-			Menu::SetSub_delayed = SUB::SETTINGS_LANGUAGE;
+			Menu::pendingSubmenu = SUB::SETTINGS_LANGUAGE;
 		}
 
 		AddOption("Themes", null, nullFunc, SUB::SETTINGS_THEMES);
 		AddOption("Menu Colours", null, nullFunc, SUB::SETTINGS_COLOURS);
 		AddOption("Menu Fonts", null, nullFunc, SUB::SETTINGS_FONTS);
 		AddOption("Menu Position", null, nullFunc, SUB::SETTINGS_MENUPOS);
-		AddToggle("Mouse Support", Menu::bit_mouse);
-		AddToggle("Gradients", Menu::gradients);
-		AddToggle("Titlebox Globe", Menu::bit_glare_test);
-		AddToggle("Centre Title", Menu::bit_centre_title);
-		AddToggle("Centre Options", Menu::bit_centre_options);
-		AddToggle("Centre Breaks", Menu::bit_centre_breaks);
+		AddToggle("Mouse Support", Menu::usingMouseInput);
+		AddToggle("Gradients", Menu::useGradientBackgrounds);
+		AddToggle("Titlebox Globe", Menu::enableGlareEffect);
+		AddToggle("Centre Title", Menu::centerTitleText);
+		AddToggle("Centre Options", Menu::centerOptionText);
+		AddToggle("Centre Breaks", Menu::centerBreakText);
 		AddToggle("Reset Player Model Upon Death (SP)", checkSelfDeathModel);
 		AddToggle("Sync Menyoo With Config File", bSyncWithConfig, MenuConfig::SaveConfig, MenuConfig::SaveConfig);
 		AddOption("Reset Toggles (Most Of Them)", null, MenuConfig::ConfigResetHaxValues);
@@ -110,7 +110,7 @@ namespace sub
 		bool pressed = false;
 		AddOption(text, pressed, nullFunc, SUB::SETTINGS_COLOURS2);
 
-		if (*Menu::currentopATM == Menu::printingop)
+		if (Menu::IsLastDrawnOptionSelected())
 		{
 			AddPresetColourOptionsPreviews(feature);
 		}
@@ -165,7 +165,7 @@ namespace sub
 		AddTitle("Set Colour");
 		AddNumber("Red", settingsRGBA->R, 0, settingsRInput, settingsRPlus, settingsRMinus);
 
-		switch (*Menu::currentopATM)
+		switch (*Menu::activeOptionIndex)
 		{
 		case 1:
 		case 2:
@@ -185,14 +185,14 @@ namespace sub
 			{
 				std::string input = Game::InputBox("", 10U, "Enter hex colour (RRGGBB or RRGGBBAA):", "#");
 				if (!HexToRGBA(input, *settingsRGBA))
-					Game::Print::PrintBottomCentre("~r~Invalid hex colour.");
+					Game::Print::ShowNotification("~r~Invalid hex colour.");
 			}
 		}
 
 		AddBreak("---Presets---");
 		AddPresetColourOptions(settingsRGBA->R, settingsRGBA->G, settingsRGBA->B);
 
-		switch (*Menu::currentopATM)
+		switch (*Menu::activeOptionIndex)
 		{
 			case 1: 
 				settingsRGBA2 = &settingsRGBA->R;
@@ -426,9 +426,9 @@ namespace sub
 
 		void SetActive()
 		{
-			Menu::gradients = grads;
+			Menu::useGradientBackgrounds = grads;
 			rainbowBoxes = rainbow;
-			Menu::thinLineOverScrect = thinLineOverFooter;
+			Menu::drawSeparatorLine = thinLineOverFooter;
 
 			titlebox = ttbox;
 			BG = bgbox;
@@ -450,9 +450,9 @@ namespace sub
 		bool IsActive()
 		{
 			return
-				Menu::gradients == grads &&
+				Menu::useGradientBackgrounds == grads &&
 				rainbowBoxes == rainbow &&
-				Menu::thinLineOverScrect == thinLineOverFooter &&
+				Menu::drawSeparatorLine == thinLineOverFooter &&
 
 				titlebox == ttbox &&
 				BG == bgbox &&
@@ -476,9 +476,9 @@ namespace sub
 		{
 			MenyooTheme curr;
 
-			curr.grads = Menu::gradients;
+			curr.grads = Menu::useGradientBackgrounds;
 			curr.rainbow = rainbowBoxes;
-			curr.thinLineOverFooter = Menu::thinLineOverScrect;
+			curr.thinLineOverFooter = Menu::drawSeparatorLine;
 
 			curr.ttbox = titlebox;
 			curr.bgbox = BG;

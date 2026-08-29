@@ -8,6 +8,7 @@
 * (at your option) any later version.
 */
 #include "PlayerOptions.h"
+#include "Spooner/Submenus.h"
 
 namespace sub
 {
@@ -58,11 +59,11 @@ namespace sub
 
 		bool butAmIOnline = NETWORK_IS_IN_SESSION() != 0;
 
-		g_Ped1 = PLAYER_PED_ID();
-		g_Ped2 = PLAYER_ID();
+		g_activePedHandle = PLAYER_PED_ID();
+		g_activePlayerId = PLAYER_ID();
 
-		GTAped myPed = g_Ped1;
-		GTAplayer myPlayer = g_Ped2;
+		GTAped myPed = g_activePedHandle;
+		GTAplayer myPlayer = g_activePlayerId;
 
 		int wantedLevel = myPlayer.GetWantedLevel();
 
@@ -92,7 +93,7 @@ namespace sub
 		AddOption("Opacity (Local)", goToAlphaLevel, nullFunc, SUB::ENTITYALPHALEVEL);
 		if (goToAlphaLevel)
 		{
-			g_Ped4 = myPed.Handle();
+			Spooner::Submenus::SetPlayerAsEntityAlphaTarget();
 		}
 
 		AddOption("Cloning Options", null, nullFunc, SUB::CLONECOMPANIONSUB);
@@ -244,7 +245,7 @@ namespace sub
 
 		if (supermanOn) 
 		{
-			if (Menu::bitController) 
+			if (Menu::usingControllerInput)
 			{
 				Game::Print::PrintBottomLeft("RT for Up. LT for Down. RB for Boost. A for Brake.");
 			}
@@ -257,11 +258,11 @@ namespace sub
 
 		if (supermanAutoOn) 
 		{
-			Vector3 Pos = GET_ENTITY_COORDS(g_Ped1, 1);
+			Vector3 Pos = GET_ENTITY_COORDS(g_activePedHandle, 1);
 			CREATE_AMBIENT_PICKUP(PICKUP_PARACHUTE, Pos.x, Pos.y, Pos.z, 0, 300, 1, 0, 1);
-			TASK_PARACHUTE(g_Ped1, true, false);
+			TASK_PARACHUTE(g_activePedHandle, true, false);
 			APPLY_FORCE_TO_ENTITY(PLAYER_PED_ID(), 1, 0.0f, 0.0f, 10.0f, 0.0, 0.0, 0.0, 1, 1, 1, 1, 0, 1);
-			if (Menu::bitController) 
+			if (Menu::usingControllerInput)
 			{
 				Game::Print::PrintBottomLeft("Press ~b~A~s~ for temporary brake.");
 			}
@@ -355,25 +356,25 @@ namespace sub
 		if (burnModeOn) 
 		{
 			addlog(ige::LogType::LOG_TRACE, "Burn Mode On");
-			if (GET_PLAYER_INVINCIBLE(g_Ped2)) 
+			if (GET_PLAYER_INVINCIBLE(g_activePlayerId))
 			{
-				SET_PLAYER_INVINCIBLE(g_Ped2, 0);
+				SET_PLAYER_INVINCIBLE(g_activePlayerId, 0);
 			}
-			SetPedInvincibleOff(g_Ped1);
+			SetPedInvincibleOff(g_activePedHandle);
 			WAIT(130);
-			if (!IS_ENTITY_ON_FIRE(g_Ped1)) 
+			if (!IS_ENTITY_ON_FIRE(g_activePedHandle))
 			{
-				START_ENTITY_FIRE(g_Ped1);
+				START_ENTITY_FIRE(g_activePedHandle);
 			}
-			Game::Print::PrintBottomCentre("~b~Note:~s~ If you're not on fire yet, kill yourself.");
+			Game::Print::ShowNotification("~b~Note:", "If you're not on fire yet, kill yourself.");
 			return;
 		}
 		if (burnModeOff) 
 		{
 			addlog(ige::LogType::LOG_TRACE, "Burn Mode Off");
-			if (IS_ENTITY_ON_FIRE(g_Ped1)) 
+			if (IS_ENTITY_ON_FIRE(g_activePedHandle))
 			{
-				STOP_ENTITY_FIRE(g_Ped1);
+				STOP_ENTITY_FIRE(g_activePedHandle);
 			}
 			return;
 		}
@@ -464,8 +465,8 @@ namespace sub
 			}
 			if (selfSweatMult == 0.0f) 
 			{ 
-				SET_PED_SWEAT(g_Ped1, selfSweatMult); 
-				CLEAR_PED_WETNESS(g_Ped1); 
+				SET_PED_SWEAT(g_activePedHandle, selfSweatMult);
+				CLEAR_PED_WETNESS(g_activePedHandle);
 			} 
 			return; 
 		}
@@ -505,7 +506,7 @@ namespace sub
 
 		void FlagListMenu()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 
 			AddTitle("Ped Flags");
 			AddOption("Custom", null, nullFunc, SUB::PEDFLAGMANAGER_CUSTOM);
@@ -524,7 +525,7 @@ namespace sub
 		int flagID = 0;
 		void CustomFlagSetterMenu()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			bool idInput = false;
 			bool idPlus = false;
 			bool idMinus = false; 
@@ -575,12 +576,12 @@ namespace sub
 
 	void CloneCompanionMenu()
 	{
-		GTAplayer player = g_Ped2;
-		GTAped playerPed = g_Ped1;
+		GTAplayer player = g_activePlayerId;
+		GTAped playerPed = g_activePedHandle;
 
 		if (!playerPed.Exists())
 		{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ No longer in memory.");
+			Game::Print::ShowNotification("~r~Error:", "No longer in memory.");
 			addlog(ige::LogType::LOG_WARNING, "Cannot start clone menu, playerPed No longer in memory");
 			Menu::SetPreviousMenu();
 			return;
