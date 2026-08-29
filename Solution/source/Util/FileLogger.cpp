@@ -9,7 +9,7 @@
 */
 #include "FileLogger.h"
 
-#include "..\macros.h"
+#include "..\..\generated\Version.h"
 
 #include <fstream>
 #include <iomanip>

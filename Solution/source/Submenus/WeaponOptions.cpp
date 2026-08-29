@@ -9,7 +9,7 @@
 */
 #include "WeaponOptions.h"
 
-#include "..\macros.h"
+#include "..\..\generated\Version.h"
 
 #include "..\Menu\Menu.h"
 #include "..\Menu\Routine.h"

@@ -10,6 +10,7 @@
 #include "Routine.h"
 
 #include "..\macros.h"
+#include "..\..\generated\Version.h"
 
 #include "Menu.h"
 #include "MenuConfig.h"

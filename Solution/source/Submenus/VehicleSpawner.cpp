@@ -7,6 +7,7 @@
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 */
+#include "..\..\generated\Version.h"
 #include "VehicleSpawner.h"
 #include "..\Util\FileLogger.h"
 #include "..\Util\VehiclePrices.h"
