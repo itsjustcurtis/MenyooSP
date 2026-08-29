@@ -42,6 +42,11 @@ typedef int INT, Vehicle, Ped, Object, Entity, ScrHandle;
 
 namespace sub
 {
+	void SetVehicleModShopTarget(Vehicle vehicle);
+	Vehicle GetVehicleModShopTarget();
+	void SelectSpawnPrimaryPaint();
+	void SelectSpawnSecondaryPaint();
+	void SetSelectedHudColour(int colour);
 	void PopulateAllPaintIDs();
 
 	// vehicle - upgrades
@@ -74,7 +79,11 @@ namespace sub
 	void MSWheels_();
 	void MSWheels2_();
 	void MSWheels3_();
-	void MSTyresBurst_();
+
+	namespace RemovableComponents
+	{
+		void Menu();
+	}
 
 	// Windows
 

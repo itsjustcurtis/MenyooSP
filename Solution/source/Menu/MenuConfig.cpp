@@ -1,4 +1,4 @@
-﻿/*
+/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -63,7 +63,8 @@ void MenuConfig::ConfigInit()
 	MenuConfig::iniFile.SetUnicode(true);
 	MenuConfig::iniFile.SetMultiKey(false);
 	MenuConfig::iniFile.SetMultiLine(false);
-	SetFileAttributesW(GetPathffW(Pathff::Main, false).c_str(), GetFileAttributes(GetPathffW(Pathff::Main, false).c_str()) & ~FILE_ATTRIBUTE_READONLY);
+	const auto path = GetPathffW(Pathff::Main, false);
+	SetFileAttributesW(path.c_str(), GetFileAttributesW(path.c_str()) & ~FILE_ATTRIBUTE_READONLY);
 
 	if (MenuConfig::iniFile.LoadFile((GetPathffA(Pathff::Main, true) + "menyooConfig.ini").c_str()) < 0)
 		addlog(ige::LogType::LOG_ERROR,  "Failed to load menyooConfig from " + GetPathffA(Pathff::Main, true) + "menyooConfig.ini.");
@@ -83,17 +84,17 @@ void MenuConfig::ConfigRead()
 
 	MenuConfig::bSaveAtIntervals = ini.GetBoolValue(section_settings.c_str(), "sync_with_config_at_intervals", MenuConfig::bSaveAtIntervals);
 	checkSelfDeathModel = ini.GetBoolValue(section_settings.c_str(), "DeathModelReset", checkSelfDeathModel);
-	menubinds = ini.GetLongValue(section_settings.c_str(), "open_key", menubinds);
+	menuToggleKey = ini.GetLongValue(section_settings.c_str(), "open_key", menuToggleKey);
 	menubindsGamepad.first = ini.GetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
 	menubindsGamepad.second = ini.GetLongValue(section_settings.c_str(), "open_button_for_gamepad_2", menubindsGamepad.second);
-	respawnbinds = ini.GetLongValue(section_settings.c_str(), "manual_respawn_button", respawnbinds);
-	stopanimbinds = ini.GetLongValue(section_settings.c_str(), "stop_animation_key", stopanimbinds);
+	respawnKey = ini.GetLongValue(section_settings.c_str(), "manual_respawn_button", respawnKey);
+	stopAnimationKey = ini.GetLongValue(section_settings.c_str(), "stop_animation_key", stopAnimationKey);
 	menuPos.x = ini.GetDoubleValue(section_settings.c_str(), "menuPosX", (menuPos.x + 0.0598f) * 100); menuPos.x = menuPos.x / 100 - 0.0598f;
 	menuPos.y = ini.GetDoubleValue(section_settings.c_str(), "menuPosY", (menuPos.y + 0.074f) * 100); menuPos.y = menuPos.y / 100 - 0.074f;
-	Menu::bit_glare_test = ini.GetBoolValue(section_settings.c_str(), "Titlebox_Globe", Menu::bit_glare_test);
-	Menu::bit_centre_title = ini.GetBoolValue(section_settings.c_str(), "centre_title", Menu::bit_centre_title);
-	Menu::bit_centre_options = ini.GetBoolValue(section_settings.c_str(), "centre_options", Menu::bit_centre_options);
-	Menu::bit_centre_breaks = ini.GetBoolValue(section_settings.c_str(), "centre_breaks", Menu::bit_centre_breaks);
+	Menu::enableGlareEffect = ini.GetBoolValue(section_settings.c_str(), "Titlebox_Globe", Menu::enableGlareEffect);
+	Menu::centerTitleText = ini.GetBoolValue(section_settings.c_str(), "centre_title", Menu::centerTitleText);
+	Menu::centerOptionText = ini.GetBoolValue(section_settings.c_str(), "centre_options", Menu::centerOptionText);
+	Menu::centerBreakText = ini.GetBoolValue(section_settings.c_str(), "centre_breaks", Menu::centerBreakText);
 	Language::configLangName = ini.GetValue(section_settings.c_str(), "language", Language::configLangName.c_str());
 	Language::Init();
 	g_loglevel = ini.GetLongValue(section_settings.c_str(), "log level", g_loglevel);
@@ -108,9 +109,9 @@ void MenuConfig::ConfigRead()
 	std::string section_colours = "colours";/////////
 
 
-	Menu::gradients = ini.GetBoolValue(section_colours.c_str(), "gradients", Menu::gradients);
+	Menu::useGradientBackgrounds = ini.GetBoolValue(section_colours.c_str(), "gradients", Menu::useGradientBackgrounds);
 	rainbowBoxes = ini.GetBoolValue(section_colours.c_str(), "rainbow_mode", rainbowBoxes);
-	Menu::thinLineOverScrect = ini.GetBoolValue(section_colours.c_str(), "thin_line_over_footer", Menu::thinLineOverScrect);
+	Menu::drawSeparatorLine = ini.GetBoolValue(section_colours.c_str(), "thin_line_over_footer", Menu::drawSeparatorLine);
 
 	titlebox.R = ini.GetLongValue(section_colours.c_str(), "titlebox_R", titlebox.R);
 	titlebox.G = ini.GetLongValue(section_colours.c_str(), "titlebox_G", titlebox.G);
@@ -191,7 +192,9 @@ void MenuConfig::ConfigRead()
 	sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile = ini.GetBoolValue(section_spooner.c_str(), "TeleportToReferenceWhenLoadingFile", sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile);
 	sub::Spooner::Settings::bKeepPositionWhenAttaching = ini.GetBoolValue(section_spooner.c_str(), "KeepPositionWhenAttaching", sub::Spooner::Settings::bKeepPositionWhenAttaching);
 	sub::Spooner::Settings::spoonerModeMode = (sub::Spooner::eSpoonerModeMode)ini.GetLongValue(section_spooner.c_str(), "SpoonerModeMethod", (UINT8)sub::Spooner::Settings::spoonerModeMode);
-
+	sub::Spooner::Settings::bAutoSaveDb = ini.GetBoolValue(section_spooner.c_str(), "AutoSaveDb", sub::Spooner::Settings::bAutoSaveDb);
+	sub::Spooner::Settings::autoSaveIntervalMs = (DWORD)ini.GetLongValue(section_spooner.c_str(), "AutoSaveIntervalMs", sub::Spooner::Settings::autoSaveIntervalMs);
+	sub::Spooner::Settings::autoSaveMaxFiles = (int)ini.GetLongValue(section_spooner.c_str(), "AutoSaveMaxFiles", sub::Spooner::Settings::autoSaveMaxFiles);
 
 	std::string section_haxValues = "hax-values";/////////
 
@@ -346,17 +349,17 @@ void MenuConfig::SaveConfig()
 
 	ini.SetBoolValue(section_settings.c_str(), "sync_with_config_at_intervals", MenuConfig::bSaveAtIntervals);
 	ini.SetBoolValue(section_settings.c_str(), "DeathModelReset", checkSelfDeathModel);
-	ini.SetLongValue(section_settings.c_str(), "open_key", menubinds);
+	ini.SetLongValue(section_settings.c_str(), "open_key", menuToggleKey);
 	ini.SetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
 	ini.SetLongValue(section_settings.c_str(), "open_button_for_gamepad_2", menubindsGamepad.second);
-	ini.SetLongValue(section_settings.c_str(), "manual_respawn_button", respawnbinds);
-	ini.SetLongValue(section_settings.c_str(), "stop_animation_key", stopanimbinds);
+	ini.SetLongValue(section_settings.c_str(), "manual_respawn_button", respawnKey);
+	ini.SetLongValue(section_settings.c_str(), "stop_animation_key", stopAnimationKey);
 	ini.SetDoubleValue(section_settings.c_str(), "menuPosX", (menuPos.x + 0.0598f) * 100);
 	ini.SetDoubleValue(section_settings.c_str(), "menuPosY", (menuPos.y + 0.074f) * 100);
-	ini.SetBoolValue(section_settings.c_str(), "Titlebox_Globe", Menu::bit_glare_test);
-	ini.SetBoolValue(section_settings.c_str(), "centre_title", Menu::bit_centre_title);
-	ini.SetBoolValue(section_settings.c_str(), "centre_options", Menu::bit_centre_options);
-	ini.SetBoolValue(section_settings.c_str(), "centre_breaks", Menu::bit_centre_breaks);
+	ini.SetBoolValue(section_settings.c_str(), "Titlebox_Globe", Menu::enableGlareEffect);
+	ini.SetBoolValue(section_settings.c_str(), "centre_title", Menu::centerTitleText);
+	ini.SetBoolValue(section_settings.c_str(), "centre_options", Menu::centerOptionText);
+	ini.SetBoolValue(section_settings.c_str(), "centre_breaks", Menu::centerBreakText);
 	ini.SetValue(section_settings.c_str(), "language", Language::configLangName.c_str());
 	ini.SetLongValue(section_settings.c_str(), "log level", g_loglevel);
 
@@ -370,9 +373,9 @@ void MenuConfig::SaveConfig()
 	std::string section_colours = "colours";/////////
 
 
-	ini.SetBoolValue(section_colours.c_str(), "gradients", Menu::gradients);
+	ini.SetBoolValue(section_colours.c_str(), "gradients", Menu::useGradientBackgrounds);
 	ini.SetBoolValue(section_colours.c_str(), "rainbow_mode", rainbowBoxes);
-	ini.SetBoolValue(section_colours.c_str(), "thin_line_over_footer", Menu::thinLineOverScrect);
+	ini.SetBoolValue(section_colours.c_str(), "thin_line_over_footer", Menu::drawSeparatorLine);
 
 	ini.SetLongValue(section_colours.c_str(), "titlebox_R", titlebox.R);
 	ini.SetLongValue(section_colours.c_str(), "titlebox_G", titlebox.G);
@@ -453,7 +456,9 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_spooner.c_str(), "TeleportToReferenceWhenLoadingFile", sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile);
 	ini.SetBoolValue(section_spooner.c_str(), "KeepPositionWhenAttaching", sub::Spooner::Settings::bKeepPositionWhenAttaching);
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeMethod", (UINT8)sub::Spooner::Settings::spoonerModeMode);
-
+	ini.SetBoolValue(section_spooner.c_str(), "AutoSaveDb", sub::Spooner::Settings::bAutoSaveDb);
+	ini.SetLongValue(section_spooner.c_str(), "AutoSaveIntervalMs", sub::Spooner::Settings::autoSaveIntervalMs);
+	ini.SetLongValue(section_spooner.c_str(), "AutoSaveMaxFiles", sub::Spooner::Settings::autoSaveMaxFiles);
 
 	std::string section_haxValues = "hax-values";/////////
 

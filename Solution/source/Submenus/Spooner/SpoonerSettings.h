@@ -11,6 +11,7 @@
 
 #include <string>
 #include <vector>
+#include <Windows.h>
 
 typedef unsigned char UINT8;
 
@@ -47,6 +48,12 @@ namespace sub::Spooner
 		extern bool bGridSnapEnabled;
 		extern float gridSnapSize;
 		extern float rotationSnapDegrees;
+		extern bool bSnapToGround;
+		extern bool bDrawGrid;
+
+		extern bool bAutoSaveDb;
+		extern DWORD autoSaveIntervalMs;
+		extern int autoSaveMaxFiles;
 	}
 
 }

@@ -382,6 +382,7 @@ namespace sub::TeleportLocations_catind
 			SET_AUDIO_FLAG("DisableFlightMusic", FALSE);
 			SET_AUDIO_FLAG("PlayerOnDLCHeist4Island", FALSE);
 			SET_ISLAND_ENABLED("HeistIsland", FALSE); 
+			SET_USE_ISLAND_MAP(FALSE);
 
 			SET_INSTANCE_PRIORITY_MODE(0);
 		}
@@ -393,7 +394,7 @@ namespace sub::TeleportLocations_catind
 				bCayoPericoEnabled = true;
 				_EnableIsland();
 			}
-			TeleportNetPed(g_Ped1, loc.pos.x, loc.pos.y, loc.pos.z);
+			TeleportNetPed(g_activePedHandle, loc.pos.x, loc.pos.y, loc.pos.z);
 		}
 
 		void Sub_CayoPerico()

@@ -308,7 +308,7 @@ namespace sub::TeleportLocations_catind
 				Menu::SetPreviousMenu();
 				return;
 			}
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			AddTitle(currentFacilityInfo.location->name);
 
 			for (auto& o : vOptionArrays)
@@ -322,7 +322,7 @@ namespace sub::TeleportLocations_catind
 					if (bOption_pressed)
 					{
 						selectedOptionArray = &o;
-						Menu::SetSub_delayed = SUB::TELEPORTOPS_FACILITIES_INOPTION;
+						Menu::pendingSubmenu = SUB::TELEPORTOPS_FACILITIES_INOPTION;
 					}
 				}
 			}

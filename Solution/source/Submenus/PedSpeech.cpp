@@ -354,7 +354,7 @@ namespace sub
 
 		void VoiceChangerMenu()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			if (!ped.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -388,14 +388,14 @@ namespace sub
 				{
 					ped.RequestControl();
 					ped.SetVoiceName(v.voiceName);
-					Game::Print::PrintBottomCentre("Voice ~b~changed~s~.\n ~r~Note:~s~ This does not work for all peds.");
+					Game::Print::ShowNotification("Voice ~b~changed~s~.", "~r~Note:~s~ This does not work for all peds.");
 				}
 			}
 		}
 
 		void AmbientSpeechPlayerMenu()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			_currVoiceInfo = nullptr;
 			if (!ped.Exists())
 			{
@@ -421,14 +421,14 @@ namespace sub
 				AddOption(v.voiceName, bVoicePressed); if (bVoicePressed)
 				{
 					_currVoiceInfo = &v;
-					Menu::SetSub_delayed = SUB::SPEECHPLAYER_INVOICE;
+					Menu::pendingSubmenu = SUB::SPEECHPLAYER_INVOICE;
 				}
 			}
 
 		}
 		void Sub_AmbientSpeechPlayer_InVoice()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			if (_currVoiceInfo == nullptr || !ped.Exists())
 			{
 				Menu::SetPreviousMenu();
