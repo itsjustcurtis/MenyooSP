@@ -1774,9 +1774,6 @@ namespace sub
 
 		AddTitle("Menyoo Customs");
 
-		AddOption("Random Upgrades", veh_static12_autoUpgrade);
-		AddOption("Return to Stock", veh_static12_stockParts);
-
 		if (true) // Display Benny's sub ptr if veh is supported Static_12_veh_model.IsBennySupportedVehicle()
 		{
 			AddOption(Game::GetGXTEntry("S_MO_09", "Benny's Lowrider Mods"), null, nullFunc, SUB::MS_BENNYS); // Use 25 to 48 here.
@@ -1907,7 +1904,8 @@ namespace sub
 				vehicle.SetSirenActive(!vehicle.GetSirenActive());
 		}
 
-		AddOption("AUTO UPGRADE", veh_static12_autoUpgrade);
+		AddOption("Random Upgrades", veh_static12_autoUpgrade);
+		AddOption("Return to Stock", veh_static12_stockParts);
 		AddToggle("LSC Style Part Selection", g_LSCCustoms);
 
 		if (GET_VEHICLE_MOD_KIT != 0)
