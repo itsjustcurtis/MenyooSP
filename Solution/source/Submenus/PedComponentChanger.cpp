@@ -28,6 +28,7 @@
 #include "..\Scripting\Camera.h"
 #include "..\Scripting\GameplayCamera.h"
 #include "..\Scripting\World.h"
+#include "Spooner\SpoonerMode.h"
 #include "..\Scripting\Game.h"
 #include "..\Util\ExePath.h"
 #include "..\Util\FileLogger.h"
@@ -73,22 +74,53 @@ namespace sub
 	// Component changer
 
 	Camera g_cam_componentChanger;
+	static int s_selectedComponentIndex = 0;
+	static int s_selectedPropIndex = 0;
+	static int s_selectedOverlayIndex = 0;
 
 	void AddPedComponentOption(const std::string& text, int index)
 	{
 		bool pressed = false;
 		AddOption(text, pressed, nullFunc, SUB::COMPONENTS2, true, true); if (pressed)
 		{
-			g_Ped4 = index;
+			s_selectedComponentIndex = index;
 		}
 	}
 	void AddPedPropOption(const std::string& text, int index)
 	{
 		bool pressed = false;
-		AddOption(text, pressed, nullFunc, SUB::COMPONENTSPROPS2); if (pressed)
+		AddOption(text, pressed, nullFunc, SUB::COMPONENTSPROPS2, true, true); if (pressed)
 		{
-			g_Ped4 = index;
+			s_selectedPropIndex = index;
 		}
+	}
+
+	void SyncCollectionToGlobalId(GTAmemory::DrawableCollectionData& data, int globalId)
+	{
+		for (int c = 0; c < (int)data.collections.size(); c++)
+		{
+			for (int l = 0; l < (int)data.collections[c].localToGlobal.size(); l++)
+			{
+				if (data.collections[c].localToGlobal[l] == globalId)
+				{
+					data.currentCollectionIdx = c;
+					data.currentLocalIdx = l;
+					return;
+				}
+			}
+		}
+	}
+
+	// Returns false when option is not confirmed, true when confirmed.
+	static bool PromptConfirm(int& state, const std::string& message)
+	{
+		if (state == 0) {
+			Game::Print::ShowNotification(message);
+			state = 1;
+			return false;
+		}
+		state = 0;
+		return true;
 	}
 
 	void ComponentChanger()
@@ -96,13 +128,9 @@ namespace sub
 		dict2.clear();
 		dict3.clear();
 
-		bool randomize = 0, frontView = 0, setDefault = 0, clearAll = 0,
-			ComponentChanger_online_police_m = 0, ComponentChanger_online_robber_m = 0,
-			ComponentChanger_online_garbage_m = 0, ComponentChanger_online_police_f = 0,
-			ComponentChanger_offline_police_michael = 0, ComponentChanger_offline_firefighter_michael = 0;
+		bool bRandomComponents = 0, frontView = 0, bDefaultComponents = 0;
 
-		GTAped thisPed = g_Ped1;
-		const Model& thisPedModel = thisPed.Model();
+		GTAped thisPed = g_activePedHandle;
 
 		if (g_cam_componentChanger.Exists())
 		{
@@ -121,164 +149,62 @@ namespace sub
 
 		const std::vector<std::string> components
 		{
-			"Head",
-			"Beard/Mask",
-			"Hair",
-			"Torso",
-			"Legs",
-			"Hands/Back",
-			"Shoes",
-			"Teeth/Scarf/Necklace/Bracelets",
-			"Accessory/Tops",
-			"Task/Armour",
-			"Emblem",
-			"Tops2 (Outer)"
+			"Head ~c~[head]",
+			"Beard/Mask ~c~[berd]",
+			"Hair ~c~[hair]",
+			"Torso ~c~[uppr]",
+			"Legs ~c~[lowr]",
+			"Hands/Back ~c~[hand]",
+			"Shoes ~c~[feet]",
+			"Teeth/Scarf/Necklace/Bracelets ~c~[teef]",
+			"Accessory/Tops ~c~[accs]",
+			"Task/Armour ~c~[task]",
+			"Emblem ~c~[decl]",
+			"Tops2 (Outer) ~c~[jbib]"
 		};
 
 		AddBreak("---Components---");
 
 		for ( int i = 0; i < PV_COMP_MAX; i++)
 		{
-			if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, i) > 0) AddPedComponentOption(components[i], i);
+			if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_activePedHandle, i) > 0) AddPedComponentOption(components[i], i);
 		}
 
-		/*AddpedcomponentOption_("Head", PV_COMP_HEAD);
-		AddpedcomponentOption_("Beard/Mask", PV_COMP_BERD); // Beard // FACE_BRD
-		AddpedcomponentOption_("Hair", PV_COMP_HAIR); // Hair // FACE_HAIR
-		AddpedcomponentOption_("Torso", PV_COMP_UPPR);
-		AddpedcomponentOption_("Legs", PV_COMP_LOWR);
-		AddpedcomponentOption_("Hands/Back", PV_COMP_HAND);
-		AddpedcomponentOption_("Shoes", PV_COMP_FEET); // Shoes // CSHOP_ITEM39
-		AddpedcomponentOption_("Teeth/Scarf/Necklace/Bracelets", PV_COMP_TEEF);
-		AddpedcomponentOption_("Accessory/Tops", PV_COMP_ACCS); // Accessory // PIM_TACCE
-		AddpedcomponentOption_("Task/Armour", PV_COMP_TASK);
-		AddpedcomponentOption_("Emblem", PV_COMP_DECL);
-		AddpedcomponentOption_("Tops2 (Outer)", PV_COMP_JBIB);*/
+		AddBreak("---Utilities---");
+		AddOption("Random Components", bRandomComponents);
+		AddOption("Default Components", bDefaultComponents);
 
-		AddOption("Random Components", randomize);
-		AddOption("Default Components", setDefault);
-		AddOption("Default Components and Accessories", clearAll);
+		static int confirmRandom = 0, confirmDefault = 0;
+		static UINT16 lastSub = 0;
+		if (lastSub != Menu::activeSubmenu)
+			confirmRandom = 0, confirmDefault = 0;
+		lastSub = Menu::activeSubmenu;
 
-		/*switch (thisPedModel.hash)
-		{
-		case PedHash::FreemodeMale01:
-		case PedHash::FreemodeFemale01:
-		case PedHash::Michael:
-			AddBreak("---Premade Outfits---"); break;
-		}
-		if (thisPedModel.hash == PedHash::FreemodeMale01)
-			AddOption("Police (Freemode Male)", ComponentChanger_online_police_m);
-		if (thisPedModel.hash == PedHash::FreemodeFemale01)
-			AddOption("Police (Freemode Female)", ComponentChanger_online_police_f);
-		if (thisPedModel.hash == PedHash::FreemodeMale01)
-			AddOption("Robber (Freemode Male)", ComponentChanger_online_robber_m);
-		if (thisPedModel.hash == PedHash::FreemodeMale01)
-			AddOption("Garbage Man (Freemode Male)", ComponentChanger_online_garbage_m);
-		if (thisPedModel.hash == PedHash::Michael)
-			AddOption("Police (Michael)", ComponentChanger_offline_police_michael);
-		if (thisPedModel.hash == PedHash::Michael)
-			AddOption("Firefighter (Michael)", ComponentChanger_offline_firefighter_michael);*/ //Get rid of this, default outfits makes this redundant.
-
-
-		if (randomize) {
-			thisPed.RequestControlOnce();
-			SET_PED_RANDOM_COMPONENT_VARIATION(thisPed.GetHandle(), 0);
-			return;
-		}		
-		
-		if (setDefault) {
-			thisPed.RequestControlOnce();
-			SET_PED_DEFAULT_COMPONENT_VARIATION(thisPed.GetHandle());
+		if (bRandomComponents) {
+			if (PromptConfirm(confirmRandom, "~r~Randomize ~w~all components? Press again to confirm.")) {
+				thisPed.RequestControlOnce();
+				SET_PED_RANDOM_COMPONENT_VARIATION(thisPed.GetHandle(), 0);
+			}
 			return;
 		}
 
-		if (clearAll) {
-			thisPed.RequestControlOnce();
-			SET_PED_DEFAULT_COMPONENT_VARIATION(thisPed.GetHandle());
-			CLEAR_ALL_PED_PROPS(thisPed.Handle(), 0);
+		if (bDefaultComponents) {
+			if (PromptConfirm(confirmDefault, "~r~Clear ~w~all components? Press again to confirm.")) {
+				thisPed.RequestControlOnce();
+				SET_PED_DEFAULT_COMPONENT_VARIATION(thisPed.GetHandle());
+			}
 			return;
 		}
-
-		/*if (ComponentChanger_online_police_m) {
-			SET_PED_PROP_INDEX(g_Ped1, 0, 47, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_PROP_INDEX(g_Ped1, 1, 10, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_PROP_INDEX(g_Ped1, 2, 3, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 0, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 1, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 35, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 25, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 7, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 58, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 9, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 10, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 55, 0, 0);
-			return;
-		}
-
-		if (ComponentChanger_online_police_f) {
-			SET_PED_PROP_INDEX(g_Ped1, 0, 45, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 100, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 34, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 48, 0, 0);
-			return;
-		}
-
-		if (ComponentChanger_offline_police_michael) {
-			SET_PED_PROP_INDEX(g_Ped1, 0, 10, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 6, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 6, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 6, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 8, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 0, 0, 0);
-			return;
-		}
-
-		if (ComponentChanger_offline_firefighter_michael) {
-			SET_PED_PROP_INDEX(g_Ped1, 0, 0, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 1, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 1, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 1, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 1, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 1, 0, 0);
-			return;
-		}
-
-		if (ComponentChanger_online_robber_m) {
-			SET_PED_PROP_INDEX(g_Ped1, 0, 48, 1, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 29, 1, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 34, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 45, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 24, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 7, 40, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 25, 1, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 0, 16, 0);
-			return;
-		}
-
-		if (ComponentChanger_online_garbage_m) {
-			SET_PED_PROP_INDEX(g_Ped1, 1, 4, 0, NETWORK_IS_GAME_IN_PROGRESS(), 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 0, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 1, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 3, 64, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 4, 36, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 5, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 6, 23, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 7, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 8, 59, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 9, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 10, 0, 0, 0);
-			SET_PED_COMPONENT_VARIATION(g_Ped1, 11, 57, 0, 0);
-			return;
-		} */
 
 		if (frontView) {
 			if (g_cam_componentChanger.Exists())
 			{
 				g_cam_componentChanger.SetActive(false);
 				g_cam_componentChanger.Destroy();
-				World::SetRenderingCamera(0);
+				if (sub::Spooner::SpoonerMode::bEnabled && sub::Spooner::SpoonerMode::spoonerModeCamera.Exists())
+					World::SetRenderingCamera(sub::Spooner::SpoonerMode::spoonerModeCamera);
+				else
+					World::SetRenderingCamera(0);
 			}
 			else
 			{
@@ -301,145 +227,122 @@ namespace sub
 			return;
 		}
 	}
-	void DrawPedVariationInfo(const std::string& info)
-	{
-		FLOAT x_coord = 0.066f + menuPos.x;
-		FLOAT y_coord = OptionY + menuPos.y + 0.035f;
-
-		Game::Print::SetupDraw(font_selection, Vector2(0.0f, (font_options == 0 ? 0.33f : 0.4f)), false, false, false, selectedtext);
-		Game::Print::drawstring(info, x_coord, y_coord);
-	}
 	void ComponentChanger2()
 	{
-		bool increment = false, decrement = false, inputPressed = false;
+		int globalDrawableId = GET_PED_DRAWABLE_VARIATION(g_activePedHandle, s_selectedComponentIndex);
+		int textureId = GET_PED_TEXTURE_VARIATION(g_activePedHandle, s_selectedComponentIndex);
+		int prevGlobalDrawableId = globalDrawableId;
+		int prevTextureId = textureId;
 
-		int drawableCurrent = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4),
-			textureCurrent = GET_PED_TEXTURE_VARIATION(g_Ped1, g_Ped4),
-			paletteCurrent = GET_PED_PALETTE_VARIATION(g_Ped1, g_Ped4);
-
-		int drawableOld = drawableCurrent;
-		int textureOld = textureCurrent;
-		int paletteOld = paletteCurrent;
-
-		int maxDrawable = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-		int maxTexture = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent);
+		int maxGlobalDrawableId = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_activePedHandle, s_selectedComponentIndex) - 1;
+		int maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedComponentIndex, globalDrawableId);
 
 		AddTitle("Set Variation");
 
-		if(GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", drawableCurrent, 0, inputPressed, increment, decrement);
-		if(GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, drawableCurrent)) AddNumber("Texture", textureCurrent, 0, inputPressed, increment, decrement);
-		//AddNumber("Palette", paletteCurrent, 0, null, increment, decrement);
+		if (maxGlobalDrawableId >= 0)
+			AddNumberStepper("Type", globalDrawableId, 0, 1.0, 0, maxGlobalDrawableId, false, true);
 
-		// Displaying collection info (collection:local_id), doesn't support enhanced yet.
-		if (!g_isEnhanced) {
-			DrawPedVariationInfo(GTAmemory::GetPedDrawableCollectionString(g_Ped1, g_Ped4));
-		}
-
-		switch (*Menu::currentopATM)
+		if (globalDrawableId != prevGlobalDrawableId)
 		{
-		case 1:
-			if (inputPressed)
-			{
-				std::string inputStr = Game::InputBox("", 5U, "", std::to_string(drawableOld));
-				if (inputStr.length() > 0)
-				{
-					try
-					{
-						drawableCurrent = stoi(inputStr);
-						if (drawableCurrent > maxDrawable)
-						{
-							drawableCurrent = drawableOld;
-							Game::Print::PrintErrorInvalidInput(inputStr);
-						}
-					}
-					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
-				}
-			}
-			else if (increment || decrement)
-			{
-				drawableCurrent = cycleInt(drawableCurrent, increment, 0, maxDrawable);
-				textureCurrent = 0;
-			}
-			break;
-		case 2:
-			if (inputPressed)
-			{
-				std::string inputStr = Game::InputBox("", 5U, "", std::to_string(textureOld));
-				if (inputStr.length() > 0)
-				{
-					try
-					{
-						textureCurrent = stoi(inputStr);
-						if (textureCurrent > maxTexture)
-						{
-							textureCurrent = textureOld;
-							Game::Print::PrintErrorInvalidInput(inputStr);
-						}
-					}
-					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
-				}
-			}
-			else if (increment || decrement)
-			{
-				textureCurrent = cycleInt(textureCurrent, increment, 0, maxTexture);
-			}
-			break;
-		case 3:
-			if (increment || decrement)
-			{
-				paletteCurrent = cycleInt(paletteCurrent, increment, 0, 10);
-			}
-			break;
+			textureId = 0;
+			maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedComponentIndex, globalDrawableId);
 		}
 
-        if (drawableOld != drawableCurrent
-            || textureOld != textureCurrent
-            || paletteOld != paletteCurrent)
-        {
-			if (g_Ped4 == PV_COMP_ACCS && !GET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true)) //checks if accessory category & DisableTakeOffScubaGear is false
+		if (maxTextureId > 0)
+			AddNumberStepper("Texture", textureId, 0, 1.0, 0, maxTextureId - 1, false, true);
+
+		// Collection data section (legacy only)
+		bool collectionModified = false;
+		if (!g_isEnhanced && maxGlobalDrawableId >= 0)
+		{
+			static GTAmemory::DrawableCollectionData s_cache[PV_COMP_MAX];
+			static Hash s_cachedModel[PV_COMP_MAX] = {};
+			Hash modelHash = GET_ENTITY_MODEL(g_activePedHandle);
+
+			if (s_cachedModel[s_selectedComponentIndex] != modelHash)
 			{
-				SET_PED_CONFIG_FLAG(g_Ped1, ePedConfigFlags::DisableTakeOffScubaGear, true);
+				s_cache[s_selectedComponentIndex] = GTAmemory::BuildDrawableCollectionData(g_activePedHandle, s_selectedComponentIndex);
+				s_cachedModel[s_selectedComponentIndex] = modelHash;
 			}
-        	//if (IS_PED_COMPONENT_VARIATION_VALID(g_Ped1, g_Ped4, drawableCurrent, textureCurrent))
-        	SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, drawableCurrent, textureCurrent, paletteCurrent);
-            while (!HasPedSpecificDrawable(drawableCurrent))
-            {
-                if (increment)
-                {
-                    if (drawableCurrent < GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
-                    {
-                        drawableCurrent++;
-                        textureCurrent = 0;
-                    }
-                    else
-                    {
-                        drawableCurrent = 0;
-                        textureCurrent = 0;
-                    }
-                }
-                else if (decrement)
-                {
-                    if (drawableCurrent > -1)
-                    {
-                        drawableCurrent--;
-                        textureCurrent = 0;
-                        //Game::Print::PrintBottomLeft(oss_ << "drawableCurrent prev " << drawableCurrent << ".");
-                    }
-                    else
-                    {
-                        drawableCurrent = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-                        textureCurrent = 0;
-                    }
-                }
-                SET_PED_COMPONENT_VARIATION(g_Ped1, g_Ped4, drawableCurrent, textureCurrent, paletteCurrent);
-            }
-        }
-    }
+
+			auto& data = s_cache[s_selectedComponentIndex];
+
+			if (!data.collections.empty())
+			{
+				AddBreak("---Collection Data---");
+
+				if (data.currentCollectionIdx < 0)
+					data.currentCollectionIdx = 0;
+				if (data.currentCollectionIdx >= (int)data.collections.size())
+					data.currentCollectionIdx = 0;
+
+				std::vector<std::string> names;
+				for (auto& c : data.collections)
+					names.push_back(c.name);
+
+				int prevCollectionIdx = data.currentCollectionIdx;
+				data.currentCollectionIdx = AddTexterCycler("Collection", data.currentCollectionIdx, names);
+				bool collectionChanged = (data.currentCollectionIdx != prevCollectionIdx);
+
+				if (collectionChanged)
+					data.currentLocalIdx = 0;
+
+				auto& col = data.collections[data.currentCollectionIdx];
+				if (data.currentLocalIdx < 0 || data.currentLocalIdx > col.maxLocalId)
+					data.currentLocalIdx = 0;
+
+				int prevLocalDrawableId = data.currentLocalIdx;
+
+				AddNumberStepper("Local ID", data.currentLocalIdx, 0, 1.0, 0, col.maxLocalId, false, true);
+				bool localDrawableIdChanged = collectionChanged || (data.currentLocalIdx != prevLocalDrawableId);
+
+				if (localDrawableIdChanged)
+				{
+					globalDrawableId = col.localToGlobal[data.currentLocalIdx];
+					textureId = 0;
+					maxTextureId = GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedComponentIndex, globalDrawableId);
+					collectionModified = true;
+				}
+				else if (globalDrawableId != prevGlobalDrawableId)
+				{
+					SyncCollectionToGlobalId(data, globalDrawableId);
+					collectionModified = true;
+				}
+			}
+		}
+
+		if (collectionModified || globalDrawableId != prevGlobalDrawableId || textureId != prevTextureId)
+		{
+			if (s_selectedComponentIndex == PV_COMP_ACCS && !GET_PED_CONFIG_FLAG(g_activePedHandle, ePedConfigFlags::DisableTakeOffScubaGear, true))
+			{
+				SET_PED_CONFIG_FLAG(g_activePedHandle, ePedConfigFlags::DisableTakeOffScubaGear, true);
+			}
+
+			SET_PED_COMPONENT_VARIATION(g_activePedHandle, s_selectedComponentIndex, globalDrawableId, textureId, 0);
+
+			bool goingForward = (globalDrawableId > prevGlobalDrawableId);
+			while (!HasPedSpecificDrawable(globalDrawableId))
+			{
+				if (goingForward)
+				{
+					if (globalDrawableId < maxGlobalDrawableId) globalDrawableId++;
+					else globalDrawableId = 0;
+				}
+				else
+				{
+					if (globalDrawableId > 0) globalDrawableId--;
+					else globalDrawableId = maxGlobalDrawableId;
+				}
+				textureId = 0;
+				SET_PED_COMPONENT_VARIATION(g_activePedHandle, s_selectedComponentIndex, globalDrawableId, textureId, 0);
+			}
+		}
+	}
 
     bool HasPedSpecificDrawable(int compon_drawable_new)
     {
         bool compon_drawable_correct = false;
-        int drawableCurrent = GET_PED_DRAWABLE_VARIATION(g_Ped1, g_Ped4);
+		int drawableCurrent = GET_PED_DRAWABLE_VARIATION(g_activePedHandle, s_selectedComponentIndex);
         if (compon_drawable_new == drawableCurrent)
         {
             compon_drawable_correct = true;
@@ -448,7 +351,7 @@ namespace sub
     }
     void ComponentChangerProps_()
 	{
-		GTAped thisPed = g_Ped1;
+		GTAped thisPed = g_activePedHandle;
 
 		if (g_cam_componentChanger.Exists())
 		{
@@ -456,17 +359,17 @@ namespace sub
 			g_cam_componentChanger.PointAt(thisPed, Bone::Head);
 		}
 
-		bool randomProps = false, clearAllProps = false;
+		bool bRandomProps = false, bDefaultProps = false;
 		const std::vector<std::string> propNames
 		{
-			"Hats",
-			"Glasses",
-			"Ear Pieces",
+			"Hats ~c~[p_head]",
+			"Glasses ~c~[p_eyes]",
+			"Ear Pieces ~c~[p_ears]",
 			"Unknown 3",
 			"Unknown 4",
 			"Unknown 5",
-			"Watches",
-			"Bangles",
+			"Watches ~c~[p_lwrist]",
+			"Bangles ~c~[p_rwrist]",
 			"Unknown 8",
 			"Unknown 9"
 		};
@@ -475,141 +378,150 @@ namespace sub
 
 		for (int i = 0; i < static_cast<int>(propNames.size()); ++i)
 		{
-			if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, i) > 0)
+			if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_activePedHandle, i) > 0)
 				AddPedPropOption(propNames[i], i);
 		}
 
 		AddBreak("---Utilities---");
-		AddOption("Random Accessories", randomProps);
-		AddTickol("Clear Accessories", true, clearAllProps, clearAllProps, TICKOL::CROSS);
+		AddOption("Random Accessories", bRandomProps);
+		AddTickol("Default Accessories", true, bDefaultProps, bDefaultProps, TICKOL::CROSS);
 
-		if (randomProps)
+		static int confirmRandomProps = 0, confirmDefaultProps = 0;
+		static UINT16 lastPropsSub = 0;
+		if (lastPropsSub != Menu::activeSubmenu)
+			confirmRandomProps = 0, confirmDefaultProps = 0;
+		lastPropsSub = Menu::activeSubmenu;
+
+		if (bRandomProps)
 		{
-			thisPed.RequestControlOnce();
-			SET_PED_RANDOM_PROPS(thisPed.Handle());
+			if (PromptConfirm(confirmRandomProps, "~r~Randomize ~w~all accessories? Press again to confirm.")) {
+				thisPed.RequestControlOnce();
+				SET_PED_RANDOM_PROPS(thisPed.Handle());
+			}
 			return;
 		}
 
-		if (clearAllProps)
+		if (bDefaultProps)
 		{
-			thisPed.RequestControlOnce();
-			CLEAR_ALL_PED_PROPS(thisPed.Handle(), 0);
+			if (PromptConfirm(confirmDefaultProps, "~r~Clear ~w~all accessories? Press again to confirm.")) {
+				thisPed.RequestControlOnce();
+				CLEAR_ALL_PED_PROPS(thisPed.Handle(), 0);
+			}
 			return;
 		}
 	}
 
 	void ComponentChangerProps2()
 	{
-		GTAentity ped = g_Ped1;
-		auto& propId = g_Ped4;
+		int propTypeCurrent = GET_PED_PROP_INDEX(g_activePedHandle, s_selectedPropIndex, 0);
+		int propTextureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_activePedHandle, s_selectedPropIndex);
+		int propTypeOld = propTypeCurrent;
+		int propTextureOld = propTextureCurrent;
 
-		bool increment = false, decrement = false;
-
-		int propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0),
-			propTextureCurrent = GET_PED_PROP_TEXTURE_INDEX(g_Ped1, g_Ped4);
-		int propTypeOld = propTypeCurrent,
-			propTextureOld = propTextureCurrent;
+		int maxGlobalPropId = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_activePedHandle, s_selectedPropIndex) - 1;
+		int maxTextureId = propTypeCurrent >= 0 ? GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedPropIndex, propTypeCurrent) : 0;
 
 		AddTitle("Set Variation");
 
-		if (GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) > 0) AddNumber("Type", propTypeCurrent, 0, null, increment, decrement);
-		if (GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) > 0) AddNumber("Texture", propTextureCurrent, 0, null, increment, decrement);
-
-		// Displaying collection info (collection:local_id), doesn't support enhanced yet.
-		if (!g_isEnhanced) {
-			DrawPedVariationInfo(GTAmemory::GetPedPropCollectionString(g_Ped1, g_Ped4));
-		}
-
-		switch (Menu::currentop)
+		if (maxGlobalPropId >= 0)
 		{
-		case 1:
-			if (increment)
-			{
-				if (propTypeCurrent < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
-				{
-					propTypeCurrent++;
-					propTextureCurrent = 0;
-				}
-				else
-				{
-					propTypeCurrent = -1;
-					propTextureCurrent = 0;
-				}
-			}
-			else if (decrement)
-			{
-				if (propTypeCurrent > -1)
-				{
-					propTypeCurrent--;
-					propTextureCurrent = 0;
-				}
-				else
-				{
-					propTypeCurrent = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-					propTextureCurrent = 0;
-				}
-			}
-			break;
-		case 2:
-			if (increment)
-			{
-				if (propTextureCurrent < GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1)
-				{
-					propTextureCurrent++;
-				}
-				else propTextureCurrent = 0;
-			}
-			else if (decrement)
-			{
-				if (propTextureCurrent > 0)
-				{
-					propTextureCurrent--;
-				}
-				else propTextureCurrent = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_Ped1, g_Ped4, propTypeCurrent) - 1;
-			}
-			break;
+			AddNumberStepper("Type", propTypeCurrent, 0, 1.0, -1, maxGlobalPropId, false, true);
 		}
-		if (ped.Exists() && (propTypeCurrent != propTypeOld || propTextureCurrent != propTextureOld))
+
+		if (propTypeCurrent != propTypeOld)
+		{
+			propTextureCurrent = 0;
+			maxTextureId = propTypeCurrent >= 0 ? GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedPropIndex, propTypeCurrent) : 0;
+		}
+		if (maxTextureId > 0)
+		{
+			AddNumberStepper("Texture", propTextureCurrent, 0, 1.0, 0, maxTextureId - 1, false, true);
+		}
+
+		// Collection data section (legacy only)
+		bool collectionModified = false;
+		if (!g_isEnhanced && maxGlobalPropId >= 0)
+		{
+			static GTAmemory::DrawableCollectionData s_cache[PV_COMP_MAX];
+			static Hash s_cachedModel[PV_COMP_MAX] = {};
+			Hash modelHash = GET_ENTITY_MODEL(g_activePedHandle);
+
+			if (s_cachedModel[s_selectedPropIndex] != modelHash)
+			{
+				s_cache[s_selectedPropIndex] = GTAmemory::BuildPropCollectionData(g_activePedHandle, s_selectedPropIndex);
+				s_cachedModel[s_selectedPropIndex] = modelHash;
+			}
+
+			auto& data = s_cache[s_selectedPropIndex];
+
+			if (!data.collections.empty())
+			{
+				AddBreak("---Collection Data---");
+
+				if (data.currentCollectionIdx < 0)
+					data.currentCollectionIdx = 0;
+				if (data.currentCollectionIdx >= (int)data.collections.size())
+					data.currentCollectionIdx = 0;
+
+				std::vector<std::string> names;
+				for (auto& c : data.collections)
+					names.push_back(c.name);
+
+				int prevCollectionIdx = data.currentCollectionIdx;
+				data.currentCollectionIdx = AddTexterCycler("Collection", data.currentCollectionIdx, names);
+				bool collectionChanged = (data.currentCollectionIdx != prevCollectionIdx);
+
+				if (collectionChanged)
+					data.currentLocalIdx = 0;
+
+				auto& col = data.collections[data.currentCollectionIdx];
+				if (data.currentLocalIdx < 0 || data.currentLocalIdx > col.maxLocalId)
+					data.currentLocalIdx = 0;
+
+				int prevLocalPropId = data.currentLocalIdx;
+				AddNumberStepper("Local ID", data.currentLocalIdx, 0, 1.0, 0, col.maxLocalId, false, true);
+				bool localPropIdChanged = collectionChanged || (data.currentLocalIdx != prevLocalPropId);
+
+				if (localPropIdChanged)
+				{
+					propTypeCurrent = col.localToGlobal[data.currentLocalIdx];
+					propTextureCurrent = 0;
+					maxTextureId = GET_NUMBER_OF_PED_PROP_TEXTURE_VARIATIONS(g_activePedHandle, s_selectedPropIndex, propTypeCurrent);
+					collectionModified = true;
+				}
+				else if (propTypeCurrent != propTypeOld && propTypeCurrent >= 0)
+				{
+					SyncCollectionToGlobalId(data, propTypeCurrent);
+					collectionModified = true;
+				}
+			}
+		}
+
+		if (collectionModified || propTypeCurrent != propTypeOld || propTextureCurrent != propTextureOld)
 		{
 			if (propTypeCurrent == -1)
 			{
-				CLEAR_PED_PROP(ped.Handle(), propId, 0);
+				CLEAR_PED_PROP(g_activePedHandle, s_selectedPropIndex, 0);
 			}
 			else
 			{
-				SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
+				SET_PED_PROP_INDEX(g_activePedHandle, s_selectedPropIndex, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 
-				// Skip prop types that don't actually apply to this ped
+				bool goingForward = (propTypeCurrent > propTypeOld);
 				while (!HasPedSpecificPropType(propTypeCurrent))
 				{
-					if (increment)
+					if (goingForward)
 					{
-
-						if (propTypeCurrent < GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1)
-						{
-							propTypeCurrent++;
-							propTextureCurrent = 0;
-						}
-						else
-						{
-							propTypeCurrent = -1;
-							propTextureCurrent = 0;
-						}
+						if (propTypeCurrent < maxGlobalPropId) propTypeCurrent++;
+						else propTypeCurrent = -1;
 					}
-					else if (decrement)
+					else
 					{
-						if (propTypeCurrent > -1)
-						{
-							propTypeCurrent--;
-							propTextureCurrent = 0;
-						}
-						else
-						{
-							propTypeCurrent = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(g_Ped1, g_Ped4) - 1;
-							propTextureCurrent = 0;
-						}
+						if (propTypeCurrent > -1) propTypeCurrent--;
+						else propTypeCurrent = maxGlobalPropId;
 					}
-					SET_PED_PROP_INDEX(ped.Handle(), propId, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);					
+					propTextureCurrent = 0;
+					SET_PED_PROP_INDEX(g_activePedHandle, s_selectedPropIndex, propTypeCurrent, propTextureCurrent, NETWORK_IS_GAME_IN_PROGRESS(), 0);
 				}
 			}
 		}
@@ -618,7 +530,7 @@ namespace sub
 	bool HasPedSpecificPropType(int propTypeNew)
 	{
 		bool propTypeCorrect = false;
-		int propTypeCurrent = GET_PED_PROP_INDEX(g_Ped1, g_Ped4, 0);
+		int propTypeCurrent = GET_PED_PROP_INDEX(g_activePedHandle, s_selectedPropIndex, 0);
 		if (propTypeNew == propTypeCurrent)
 		{
 			propTypeCorrect = true;
@@ -637,9 +549,9 @@ namespace sub
 
 		void ClearPreviewTattoo()
 		{
-			if (g_previewTattoo && DOES_ENTITY_EXIST(g_Ped1))
+			if (g_previewTattoo && DOES_ENTITY_EXIST(g_activePedHandle))
 			{
-				g_previewTattoo->Remove(g_Ped1);
+				g_previewTattoo->Remove(g_activePedHandle);
 				g_previewTattoo = nullptr;
 			}
 		}
@@ -737,12 +649,23 @@ namespace sub
 			}
 		}
 
+		std::string GetDecalCaption(Hash collection, Hash value)
+		{
+			for (auto& [pedHash, dictType] : vAllDecals)
+				for (auto& [type, dictZone] : dictType)
+					for (auto& [zone, listDecals] : dictZone)
+						for (auto& decal : listDecals)
+							if (decal.collection == collection && decal.value == value)
+								return decal.caption;
+			return {};
+		}
+
 		std::pair<std::string, std::map<std::string, std::vector<NamedPedDecal>>>* selectedType;
 		std::pair<std::string, std::vector<NamedPedDecal>>* selectedZone;
 
 		void Sub_Decals_Types()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			const auto& pedModel = ped.Model();
 
 			const auto& vPed = vAllDecals.find(pedModel.hash);
@@ -778,6 +701,11 @@ namespace sub
 		{
 			AddTitle(selectedType->first);
 
+			bool bSearchPressed = false;
+			AddOption("~b~Search~s~", bSearchPressed, nullFunc, SUB::PEDDECALS_ZONES_SEARCH, true);
+
+			AddBreak("---Categories---");
+
 			for (auto& zone : selectedType->second)
 			{
 				bool bZonePressed = false;
@@ -788,9 +716,125 @@ namespace sub
 				}
 			}
 		}
+
+		namespace DecalSearch
+		{
+			struct SearchResult {
+				std::string zoneName;
+				const NamedPedDecal* decal;
+			};
+			static std::vector<SearchResult> results;
+			static bool dirty = true;
+			static std::string lastSearch;
+			static std::string searchStr;
+			static const void* lastTypePtr = nullptr;
+
+			void RebuildResults(const std::string& searchStr)
+			{
+				results.clear();
+				std::string searchUpper = boost::to_upper_copy(searchStr);
+
+				for (auto& zone : selectedType->second)
+				{
+					for (auto& decal : zone.second)
+					{
+						if (!searchUpper.empty())
+						{
+							std::string nameUpper = boost::to_upper_copy(decal.caption);
+							if (nameUpper.find(searchUpper) == std::string::npos)
+								continue;
+						}
+						results.push_back({ zone.first, &decal });
+					}
+				}
+			}
+		}
+
+		void Sub_Decals_Zones_Search()
+		{
+			using namespace DecalSearch;
+			GTAentity ped = g_activePedHandle;
+
+			bool bShortcutDecalPreviewPressed = false;
+
+			if (Menu::OnSubBack == nullptr)
+			{
+				Menu::OnSubBack = []
+				{
+					ClearPreviewTattoo();
+					searchStr.clear();
+				};
+			}
+
+			AddTitle("Search");
+
+			bool bSearchPressed = false;
+			AddOption(searchStr.empty() ? "~b~SEARCH~s~" : ("~b~" + searchStr + "~s~"), bSearchPressed, nullFunc, -1, true);
+			if (bSearchPressed)
+			{
+				searchStr = Game::InputBox(searchStr, 64U, "Search decals:", boost::to_lower_copy(searchStr));
+				boost::to_upper(searchStr);
+			}
+
+			if (dirty || searchStr != lastSearch || lastTypePtr != selectedType)
+			{
+				RebuildResults(searchStr);
+				lastSearch = searchStr;
+				lastTypePtr = selectedType;
+				dirty = false;
+			}
+
+			AddBreak("---Results: " + std::to_string(results.size()) + "---");
+
+			for (auto& result : results)
+			{
+				bool isHovered = (*Menu::activeOptionIndex == Menu::currentOptionCount + 1);
+				bool bDecalPressedApply = false, bDecalPressedRemove = false;
+				bool bIsOnPed = result.decal->IsOnPed(ped);
+
+				AddTickol("~c~" + result.zoneName + " / ~s~" + result.decal->caption, bIsOnPed, bDecalPressedApply, bDecalPressedRemove, TICKOL::TATTOOTHING);
+
+				if (g_tattooPreviewMode && isHovered)
+				{
+					if (g_previewTattoo != result.decal)
+					{
+						ClearPreviewTattoo();
+						if (!bIsOnPed) {
+							result.decal->Apply(ped);
+							g_previewTattoo = result.decal;
+						}
+					}
+				}
+
+				if (bDecalPressedApply)
+				{
+					result.decal->Apply(ped);
+				}
+				else if (bDecalPressedRemove && g_previewTattoo == result.decal)
+				{
+					ClearPreviewTattoo();
+					result.decal->Apply(ped);
+				}
+				else if (bDecalPressedRemove)
+				{
+					result.decal->Remove(ped);
+				}
+			}
+
+			Menu::add_IB(VirtualKey::B, g_tattooPreviewMode ? "Preview: ON " : "Preview: OFF ");
+			bShortcutDecalPreviewPressed = IsKeyJustUp(VirtualKey::B);
+			if (bShortcutDecalPreviewPressed)
+			{
+				g_tattooPreviewMode = !g_tattooPreviewMode;
+				if (!g_tattooPreviewMode)
+				{
+					ClearPreviewTattoo();
+				}
+			}
+		}
 		void Sub_Decals_InZone()
 		{
-			GTAentity ped = g_Ped1;
+			GTAentity ped = g_activePedHandle;
 
 			bool bShortcutDecalPreviewPressed = false;
 
@@ -806,7 +850,7 @@ namespace sub
 
 			for (const auto& decal : selectedZone->second)
 			{
-				bool isHovered = (*Menu::currentopATM == Menu::printingop + 1);
+				bool isHovered = (*Menu::activeOptionIndex == Menu::currentOptionCount + 1);
 				bool bDecalPressedApply = false, bDecalPressedRemove = false;
 				bool bIsOnPed = decal.IsOnPed(ped);
 
@@ -857,16 +901,16 @@ namespace sub
 		}
 		void OpenSubDecals()
 		{
-			GTAentity ped = g_Ped1;
+			GTAentity ped = g_activePedHandle;
 			bool allowed = vAllDecals.find(ped.Model().hash) != vAllDecals.end();
 
 			if (vAllDecals.find(ped.Model().hash) != vAllDecals.end())
 			{
-				Menu::SetSub_delayed = SUB::PEDDECALS_TYPES;
+				Menu::pendingSubmenu = SUB::PEDDECALS_TYPES;
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ No decal overlays available for this ped model.");
+				Game::Print::ShowNotification("~r~Error:", "No decal overlays available for this ped model.");
 			}
 		}
 	}
@@ -875,7 +919,7 @@ namespace sub
 
 	namespace PedDamageTextures
 	{
-		auto& selectedPedHandle = g_Ped1;
+		auto& selectedPedHandle = g_activePedHandle;
 		int boneToUse = 0;
 
 		std::map<Ped, std::vector<std::string>> vPedsAndDamagePacks;
@@ -1060,6 +1104,31 @@ namespace sub
 		};
 #pragma endregion
 
+		namespace PedFaceGen
+		{
+			// [gender][skin]: [0=Male/1=Female][0=White,1=Black,2=Hispanic,3=Asian,4=Arab,5=Pakistani]
+			const std::vector<int> parentIdsByGenderSkin[2][6] = {
+				{ // Male
+					{0, 1, 12, 13, 42, 43, 44, 45},		// White
+					{2, 3, 14, 15},						// Black
+					{4, 5, 16},                         // Hispanic
+					{6, 7, 17, 18},						// Asian
+					{10, 11, 20},                       // Arab
+					{8, 9, 19}                          // Pakistani
+				},
+				{ // Female
+					{21, 22, 33, 34},					// White
+					{23, 24, 35, 36},					// Black
+					{25, 26, 37},                       // Hispanic
+					{27, 28, 38, 39},					// Asian
+					{31, 32, 41},                       // Arab
+					{29, 30, 40}                        // Pakistani
+				}
+			};
+
+			sFaceGenData settings;
+		}
+
 		inline int getMaxShapeAndSkinIds()
 		{
 			return g_unlockMaxIDs ? 255 : 46;
@@ -1094,7 +1163,7 @@ namespace sub
 
 		void Sub_Main()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			Model pedModel = ped.Model();
 
 			if (g_cam_componentChanger.Exists())
@@ -1150,6 +1219,7 @@ namespace sub
 			AddOption("Overlays", null, nullFunc, SUB::PED_HEADFEATURES_HEADOVERLAYS);
 			AddOption("Facial Features", null, nullFunc, SUB::PED_HEADFEATURES_FACEFEATURES);
 			AddOption("Shape & Skin Tone", null, nullFunc, SUB::PED_HEADFEATURES_SKINTONE);
+			AddOption("Face Generator", null, nullFunc, SUB::PED_HEADFEATURES_FACEGENERATOR);
 
 			AddBreak("---Hair---");
 			AddNumber("Hair Colour", pedHead->hairColour, 0, null, hairColourPlus, hairColourMinus);
@@ -1179,7 +1249,7 @@ namespace sub
 		}
 		void Sub_HeadOverlays()
 		{
-			auto& overlayIndex = g_Ped4;
+			auto& overlayIndex = s_selectedOverlayIndex;
 			AddTitle("Overlays");
 
 			for (UINT i = 0; i < vCaptions_headOverlays.size(); i++)
@@ -1189,7 +1259,7 @@ namespace sub
 				if (bOverlayNamePressed)
 				{
 					overlayIndex = i;
-					Menu::SetSub_delayed = SUB::PED_HEADFEATURES_HEADOVERLAYS_INITEM;
+					Menu::pendingSubmenu = SUB::PED_HEADFEATURES_HEADOVERLAYS_INITEM;
 				}
 			}
 		}
@@ -1208,8 +1278,8 @@ namespace sub
 
 		void Sub_HeadOverlays_InItem()
 		{
-			auto& overlayIndex = g_Ped4;
-			GTAped ped = g_Ped1;
+			auto& overlayIndex = s_selectedOverlayIndex;
+			GTAped ped = g_activePedHandle;
 
 			auto colourType = GetPedHeadOverlayColourType((PedHeadOverlay)overlayIndex);
 			bool bColoursAvailable = (colourType != 0);
@@ -1341,7 +1411,7 @@ namespace sub
 
 		void Sub_FaceFeatures()
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 
 			AddTitle("Facial Features");
 
@@ -1373,7 +1443,7 @@ namespace sub
 
 		void Sub_SkinTone() // HEAD_BLEND
 		{
-			GTAped ped = g_Ped1;
+			GTAped ped = g_activePedHandle;
 			//auto& blendData = _pedHead->blendData;
 			PedHeadBlendData blendData;
 			GET_PED_HEAD_BLEND_DATA(ped.Handle(), (Any*)&blendData);
@@ -1427,6 +1497,206 @@ namespace sub
 			addMixSlider("Tone", blendData.skinMix);
 			addMixSlider("Ancestor (Shape & Tone)", blendData.thirdMix);
 		}
+
+		void Sub_FaceGenerator()
+		{
+			GTAped ped = g_activePedHandle;
+
+			std::vector<std::string> genderOpts = { "Any", "Male", "Female" };
+			std::vector<std::string> skinOpts = { "Any", "White", "Black", "Hispanic", "Asian", "Arab", "Pakistani" };
+
+			bool bRandFace = false, bRandShapes = false, bRandSkins = false, 
+				bRandAllFeatures = false, bResetAllFeatures = false, bRandEverything = false;
+
+			// set parent gender filter based on current ped model
+			if (PedFaceGen::settings.lastPedModel != ped.Model().hash)
+			{
+				PedFaceGen::settings.lastPedModel = ped.Model().hash;
+				PedFaceGen::settings.parentGenderFilter = (ped.Model().hash == PedHash::FreemodeMale01) ? 1 : (ped.Model().hash == PedHash::FreemodeFemale01) ? 2 : 0;
+			}
+
+			auto buildCandidateList = [&]() -> std::vector<int>
+			{
+				std::vector<int> candidates;
+				int skinIdx = PedFaceGen::settings.skinColorFilter - 1; // -1 = Any (all columns)
+				int genderStart = (PedFaceGen::settings.parentGenderFilter == 0) ? 0 : PedFaceGen::settings.parentGenderFilter - 1;
+				int genderEnd   = (PedFaceGen::settings.parentGenderFilter == 0) ? 1 : PedFaceGen::settings.parentGenderFilter - 1;
+
+				for (int g = genderStart; g <= genderEnd; g++)
+				{
+					if (skinIdx < 0)
+					{
+						for (int s = 0; s < 6; s++)
+							candidates.insert(candidates.end(), PedFaceGen::parentIdsByGenderSkin[g][s].begin(), PedFaceGen::parentIdsByGenderSkin[g][s].end());
+					}
+					else
+					{
+						candidates.insert(candidates.end(), PedFaceGen::parentIdsByGenderSkin[g][skinIdx].begin(), PedFaceGen::parentIdsByGenderSkin[g][skinIdx].end());
+					}
+				}
+				return candidates;
+			};
+
+			// randomly picks a parent ID from candidate list
+			auto pickRandomId = [](const std::vector<int>& candidates) -> int
+			{
+				if (candidates.empty()) return 0;
+				return candidates[GET_RANDOM_INT_IN_RANGE(0, static_cast<int>(candidates.size()))];
+			};
+
+			auto randomizeMix = []() -> float
+			{
+				return GET_RANDOM_FLOAT_IN_RANGE(0.0f, 1.0f);
+			};
+
+			// --- UI ---
+			AddTitle("Face Generator");
+
+			// --- Parents ---
+			AddTickol("Use Third Parent", PedFaceGen::settings.useThirdParent, PedFaceGen::settings.useThirdParent, PedFaceGen::settings.useThirdParent, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			PedFaceGen::settings.parentGenderFilter = AddTexterCycler("Parent Filter", PedFaceGen::settings.parentGenderFilter, genderOpts);
+			PedFaceGen::settings.skinColorFilter = AddTexterCycler("Skin Colour", PedFaceGen::settings.skinColorFilter, skinOpts);
+			
+			// Show non-rockstar parents only if parent / skin color filter is set to "Any" (we don't know the genders/races of modded-parents)
+			bool showNonRockstar = (PedFaceGen::settings.parentGenderFilter == 0) && (PedFaceGen::settings.skinColorFilter == 0);
+			if (showNonRockstar)
+				AddNumberStepper("Non-Rockstar Parent Max ID", PedFaceGen::settings.nonRockstarMax, 0, 1.0, 46.0, 255.0);
+
+			// --- Randomize ---
+			AddBreak("---Randomize---");
+			AddOption("Randomize Face", bRandFace);
+			AddOption("Randomize Face Shapes", bRandShapes);
+			AddOption("Randomize Face Textures", bRandSkins);
+			AddOption("Randomize Everything", bRandEverything);
+
+			if (bRandFace || bRandShapes || bRandSkins || bRandEverything)
+			{
+				auto candidates = buildCandidateList();
+				if (showNonRockstar)
+					for (int id = 46; id <= PedFaceGen::settings.nonRockstarMax; id++)
+						candidates.push_back(id);
+				if (candidates.empty()) candidates.push_back(0);
+
+				PedHeadBlendData bd;
+				GET_PED_HEAD_BLEND_DATA(ped.Handle(), (Any*)&bd);
+
+				if (bRandFace || bRandEverything)
+				{
+					bd.shapeFirstID = pickRandomId(candidates);
+					bd.shapeSecondID = pickRandomId(candidates);
+					bd.skinFirstID = pickRandomId(candidates);
+					bd.skinSecondID = pickRandomId(candidates);
+					bd.shapeMix = randomizeMix();
+					bd.skinMix = randomizeMix();
+					if (PedFaceGen::settings.useThirdParent)
+					{
+						bd.shapeThirdID = pickRandomId(candidates);
+						bd.skinThirdID = pickRandomId(candidates);
+						bd.thirdMix = randomizeMix();
+					}
+				}
+				else if (bRandShapes)
+				{
+					bd.shapeFirstID = pickRandomId(candidates);
+					bd.shapeSecondID = pickRandomId(candidates);
+					bd.shapeMix = randomizeMix();
+					if (PedFaceGen::settings.useThirdParent)
+					{
+						bd.shapeThirdID = pickRandomId(candidates);
+						bd.thirdMix = randomizeMix();
+					}
+				}
+				else if (bRandSkins)
+				{
+					bd.skinFirstID = pickRandomId(candidates);
+					bd.skinSecondID = pickRandomId(candidates);
+					bd.skinMix = randomizeMix();
+					if (PedFaceGen::settings.useThirdParent)
+					{
+						bd.skinThirdID = pickRandomId(candidates);
+					}
+				}
+				UpdatePedHeadBlendData(ped, bd, false);
+
+				if (bRandEverything)
+				{
+					for (int i = 0; i < 20; i++)
+					{
+						float val = GET_RANDOM_FLOAT_IN_RANGE(-1.0f, 1.0f);
+						pedHead->facialFeatureData[i] = val;
+						SET_PED_MICRO_MORPH(ped.Handle(), i, val);
+					}
+				}
+				return;
+			}
+
+			// --- Facial Features ---
+			AddBreak("---Facial Features---");
+			AddOption("Randomize Facial Features", bRandAllFeatures);
+			if (bRandAllFeatures)
+			{
+				for (int i = 0; i < 20; i++)
+				{
+					float val = GET_RANDOM_FLOAT_IN_RANGE(-1.0f, 1.0f);
+					pedHead->facialFeatureData[i] = val;
+					SET_PED_MICRO_MORPH(ped.Handle(), i, val);
+				}
+				return;
+			}
+
+			struct FeatureGroup { const char* label; int start; int end; };
+			const FeatureGroup groups[] =
+			{
+				{ "Nose",           0,  5 },
+				{ "Brows",          6,  7 },
+				{ "Cheeks & Eyes",  8,  11 },
+				{ "Lips",           12, 12 },
+				{ "Jaw",            13, 14 },
+				{ "Chin",           15, 18 },
+				{ "Neck",           19, 19 },
+			};
+
+			for (const auto& grp : groups)
+			{
+				bool bPressed = false;
+				AddOption(std::string("Randomize ") + grp.label, bPressed);
+				if (bPressed)
+				{
+					for (int i = grp.start; i <= grp.end; i++)
+					{
+						float val = GET_RANDOM_FLOAT_IN_RANGE(-1.0f, 1.0f);
+						pedHead->facialFeatureData[i] = val;
+						SET_PED_MICRO_MORPH(ped.Handle(), i, val);
+					}
+					return;
+				}
+			}
+			AddBreak("---Reset---");
+			AddOption("Reset All Facial Features", bResetAllFeatures);
+			if (bResetAllFeatures)
+			{
+				for (int i = 0; i < 20; i++)
+				{
+					pedHead->facialFeatureData[i] = 0.0f;
+					SET_PED_MICRO_MORPH(ped.Handle(), i, 0.0f);
+				}
+				return;
+			}
+			for (const auto& grp : groups)
+			{
+				bool bPressed = false;
+				AddOption(std::string("Reset ") + grp.label, bPressed);
+				if (bPressed)
+				{
+					for (int i = grp.start; i <= grp.end; i++)
+					{
+						pedHead->facialFeatureData[i] = 0.0f;
+						SET_PED_MICRO_MORPH(ped.Handle(), i, 0.0f);
+					}
+					return;
+				}
+			}
+		}
 	}
 
 	// Outfits (saver)
@@ -1434,8 +1704,9 @@ namespace sub
 	namespace ComponentChangerOutfit
 	{
 		UINT8 persistentAttachmentsTexterIndex = 0;
+		bool legacyXMLFormat = false;
 
-		bool Create(GTAentity ped, std::string filePath)
+		bool Create(GTAentity ped, std::string filePath, bool legacyXMLFormat)
 		{
 			sub::Spooner::SpoonerEntity eped;
 			eped.handle = ped;
@@ -1463,7 +1734,7 @@ namespace sub
 
 			auto nodeEntity = doc.append_child("OutfitPedData"); // Root
 			nodeEntity.append_child("ClearDecalOverlays").text() = bClearDecalOverlays;
-			sub::Spooner::FileManagement::AddEntityToXmlNode(eped, nodeEntity);
+			sub::Spooner::FileManagement::AddEntityToXmlNode(eped, nodeEntity, legacyXMLFormat);
 
 			// Attachments
 			auto nodeAttachments = nodeEntity.append_child("SpoonerAttachments");
@@ -1479,7 +1750,7 @@ namespace sub
 						if (att.Handle() == ped.Handle())
 						{
 							auto nodeAttachment = nodeAttachments.append_child("Attachment");
-							sub::Spooner::FileManagement::AddEntityToXmlNode(e, nodeAttachment);
+							sub::Spooner::FileManagement::AddEntityToXmlNode(e, nodeAttachment, legacyXMLFormat);
 						}
 					}
 				}
@@ -1507,71 +1778,15 @@ namespace sub
 			{
 				if (ep.Handle() == PLAYER_PED_ID())
 				{
-					bool bWas241 = (g_Ped1 == ep.Handle());
+					bool bWas241 = (g_activePedHandle == ep.Handle());
 					ChangeModel(eModel);
 					ep = PLAYER_PED_ID();
-					if (bWas241) g_Ped1 = ep.Handle();
+					if (bWas241) g_activePedHandle = ep.Handle();
 				}
 
 				if (nodePedStuff.child("HasShortHeight").text().as_bool()) SET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, 1);
 
-				auto nodePedHeadFeatures = nodePedStuff.child("HeadFeatures");
-				if (sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel) && nodePedHeadFeatures)
-				{
-					auto nodePedHeadBlend = nodePedHeadFeatures.child("ShapeAndSkinTone");
-					PED::SET_PED_HEAD_BLEND_DATA(ep.Handle(), 0, 0, 0, 1, 1, 1, 0.0f, 0.0f, 0.0f, false);
-					PedHeadBlendData headBlend;
-					headBlend.shapeFirstID = nodePedHeadBlend.child("ShapeFatherId").text().as_int();
-					headBlend.shapeSecondID = nodePedHeadBlend.child("ShapeMotherId").text().as_int();
-					headBlend.shapeThirdID = nodePedHeadBlend.child("ShapeOverrideId").text().as_int();
-					headBlend.skinFirstID = nodePedHeadBlend.child("ToneFatherId").text().as_int();
-					headBlend.skinSecondID = nodePedHeadBlend.child("ToneMotherId").text().as_int();
-					headBlend.skinThirdID = nodePedHeadBlend.child("ToneOverrideId").text().as_int();
-					headBlend.shapeMix = nodePedHeadBlend.child("ShapeVal").text().as_float();
-					headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
-					headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
-					headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
-					if (!g_unlockMaxIDs && (headBlend.shapeFirstID > 45 || headBlend.shapeSecondID > 45 || headBlend.shapeThirdID > 45))
-					{
-						Game::Print::PrintBottomCentre("~r~Warning:~s~ Parent Head Index outside normal range. Ensure Addon Heads are installed and Max Head IDs are unlocked");
-						addlog(ige::LogType::LOG_WARNING, "Ped Head Index " + std::to_string(max(headBlend.shapeFirstID, max(headBlend.shapeSecondID, headBlend.shapeThirdID))) + " outside normal range of 0-45. Ensure Matching Addon Heads are installed from XML Source and Max Head IDs are unlocked.");
-					}
-					ep.SetHeadBlendData(headBlend);
-
-					if (nodePedHeadFeatures.attribute("WasInArray").as_bool())
-					{
-						sub::PedHeadFeatures_catind::sPedHeadFeatures pedHead;
-						pedHead.hairColour = nodePedHeadFeatures.child("HairColour").text().as_int();
-						pedHead.hairColourStreaks = nodePedHeadFeatures.child("HairColourStreaks").text().as_int();
-						pedHead.eyeColour = nodePedHeadFeatures.child("EyeColour").text().as_int();
-
-						SET_PED_HAIR_TINT(ep.Handle(), pedHead.hairColour, pedHead.hairColourStreaks);
-						SET_HEAD_BLEND_EYE_COLOR(ep.Handle(), SYSTEM::ROUND((float)pedHead.eyeColour)); // Sjaak says so
-
-						auto nodePedFacialFeatures = nodePedHeadFeatures.child("FacialFeatures");
-						int ii = 0;
-						for (auto nodePedFacialFeature = nodePedFacialFeatures.first_child(); nodePedFacialFeature; nodePedFacialFeature = nodePedFacialFeature.next_sibling())
-						{
-							ii = stoi(std::string(nodePedFacialFeature.name()).substr(1));
-							pedHead.facialFeatureData[ii] = nodePedFacialFeature.text().as_float();
-							SET_PED_MICRO_MORPH(ep.Handle(), ii, pedHead.facialFeatureData[ii]);
-						}
-
-						auto nodePedHeadOverlays = nodePedHeadFeatures.child("Overlays");
-						ii = 0;
-						for (auto nodePedHeadOverlay = nodePedHeadOverlays.first_child(); nodePedHeadOverlay; nodePedHeadOverlay = nodePedHeadOverlay.next_sibling())
-						{
-							ii = stoi(std::string(nodePedHeadOverlay.name()).substr(1));
-							auto overlayData_index = nodePedHeadOverlay.attribute("index").as_int();
-							pedHead.overlayData[ii].colour = nodePedHeadOverlay.attribute("colour").as_int();
-							pedHead.overlayData[ii].colourSecondary = nodePedHeadOverlay.attribute("colourSecondary").as_int();
-							pedHead.overlayData[ii].opacity = nodePedHeadOverlay.attribute("opacity").as_float();
-							SET_PED_HEAD_OVERLAY(ep.Handle(), ii, overlayData_index, pedHead.overlayData[ii].opacity);
-							SET_PED_HEAD_OVERLAY_TINT(ep.Handle(), ii, sub::PedHeadFeatures_catind::GetPedHeadOverlayColourType((PedHeadOverlay)ii), pedHead.overlayData[ii].colour, pedHead.overlayData[ii].colourSecondary);
-						}
-						sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = pedHead;
-					}
-				}
+				sub::Spooner::FileManagement::LoadPedHeadFeaturesFromXml(ep, nodePedStuff.child("HeadFeatures"), eModel);
 
 				auto nodeFacialMood = nodePedStuff.child("FacialMood");
 				if (nodeFacialMood)
@@ -1595,68 +1810,27 @@ namespace sub
 			decalsApplied.clear();
 			if (applyDecals)
 			{
-				auto nodePedTattooLogoDecals = nodePedStuff.child("TattooLogoDecals");
-				if (nodePedTattooLogoDecals)
-				{
-					for (auto nodeDecal = nodePedTattooLogoDecals.first_child(); nodeDecal; nodeDecal = nodeDecal.next_sibling())
-					{
-						sub::PedDecals::PedDecalValue decal(nodeDecal.attribute("collection").as_uint(), nodeDecal.attribute("value").as_uint());
-						decalsApplied.push_back(decal);
-						ADD_PED_DECORATION_FROM_HASHES(ep.Handle(), decal.collection, decal.value);
-					}
-				}
+				sub::Spooner::FileManagement::LoadPedDecalsFromXml(ep, nodePedStuff.child("TattooLogoDecals"));
 			}
 
 			if (applyComps)
 			{
-				auto nodePedComps = nodePedStuff.child("PedComps");
-				for (auto nodePedCompsObject = nodePedComps.first_child(); nodePedCompsObject; nodePedCompsObject = nodePedCompsObject.next_sibling())
-				{
-					int pedCompId = stoi(std::string(nodePedCompsObject.name()).substr(1));
-					std::string pedCompIdValueStr = nodePedCompsObject.text().as_string();
-					int pedCompIdValueDrawable = stoi(pedCompIdValueStr.substr(0, pedCompIdValueStr.find(",")));
-					int pedCompIdValueTexture = stoi(pedCompIdValueStr.substr(pedCompIdValueStr.find(",") + 1));
-
-					if (GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(ep.Handle(), pedCompId) >= pedCompIdValueDrawable && GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(ep.Handle(), pedCompId, pedCompIdValueDrawable) >= pedCompIdValueTexture)
-					{
-						SET_PED_COMPONENT_VARIATION(ep.Handle(), pedCompId, pedCompIdValueDrawable, pedCompIdValueTexture, 0);
-						addlog(ige::LogType::LOG_DEBUG, "Applied ped component " + std::to_string(pedCompId) + " with drawable " + std::to_string(pedCompIdValueDrawable) + " and texture " + std::to_string(pedCompIdValueTexture));
-					}
-					else
-					{
-						addlog(ige::LogType::LOG_WARNING, "Ped comp " + std::to_string(pedCompId) + " out of range - Drawable " + std::to_string(pedCompIdValueDrawable) + " and texture " + std::to_string(pedCompIdValueTexture));
-					}
-				}
+				sub::Spooner::FileManagement::LoadPedCompsFromXml(ep, nodePedStuff.child("PedComps"));
 			}
 
 			if (applyProps)
 			{
 				CLEAR_ALL_PED_PROPS(ep.Handle(), 0);
-				auto nodePedProps = nodePedStuff.child("PedProps");
-				for (auto nodePedPropsObject = nodePedProps.first_child(); nodePedPropsObject; nodePedPropsObject = nodePedPropsObject.next_sibling())
-				{
-					int pedPropId = stoi(std::string(nodePedPropsObject.name()).substr(1));
-					std::string pedPropIdValueStr = nodePedPropsObject.text().as_string();
-					SET_PED_PROP_INDEX(ep.Handle(), pedPropId, stoi(pedPropIdValueStr.substr(0, pedPropIdValueStr.find(","))), stoi(pedPropIdValueStr.substr(pedPropIdValueStr.find(",") + 1)), bNetworkIsGameInProgress, 0);
-				}
+				sub::Spooner::FileManagement::LoadPedPropsFromXml(ep, nodePedStuff.child("PedProps"), bNetworkIsGameInProgress != 0);
 			}
 
 			sub::PedDamageTextures::ClearAllBloodDamage(ep);
 			sub::PedDamageTextures::ClearAllVisibleDamage(ep);
 			if (applyDamageTextures)
 			{
-				auto nodePedDamagePacks = nodePedStuff.child("DamagePacks");
-				if (nodePedDamagePacks)
-				{
-					auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
-					dmgPacksApplied.clear();
-					for (auto nodePedDamagePack = nodePedDamagePacks.first_child(); nodePedDamagePack; nodePedDamagePack = nodePedDamagePack.next_sibling())
-					{
-						const std::string dpnta = nodePedDamagePack.text().as_string();
-						ep.ApplyDamagePack(dpnta, 1.0f, 1.0f);
-						dmgPacksApplied.push_back(dpnta);
-					}
-				}
+				auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
+				dmgPacksApplied.clear();
+				sub::Spooner::FileManagement::LoadPedDamagePacksFromXml(ep, nodePedStuff.child("DamagePacks"));
 			}
 
 			if (applyAttachedEntities)
@@ -1725,6 +1899,8 @@ namespace sub
 		if (attachmentsPlus) { if (persistentAttachmentsTexterIndex < 2) persistentAttachmentsTexterIndex++; }
 		if (attachmentsMinus) { if (persistentAttachmentsTexterIndex > 0) persistentAttachmentsTexterIndex--; }
 
+		ComponentChangerOutfit::legacyXMLFormat = AddTexterCycler("XML Format", ComponentChangerOutfit::legacyXMLFormat, { "New XML format", "Legacy XML format" }) == 1;
+
 		AddOption("Save Outfit To File", savePressed);
 
 		AddOption("Create New Folder", createFolderPressed);
@@ -1750,7 +1926,7 @@ namespace sub
 		if (bFolderBackPressed)
 		{
 			dir = dir.substr(0, dir.rfind("\\"));
-			Menu::currentop = 5;
+			Menu::selectedOptionIndex = 5;
 		}
 
 		if (!fileNames.empty())
@@ -1781,10 +1957,10 @@ namespace sub
 					if (bFilePressed)
 					{
 						dir = dir + "\\" + fileName;
-						Menu::currentop = 5;
+						Menu::selectedOptionIndex = 5;
 					}
 
-					if (Menu::printingop == *Menu::currentopATM && !bFilePressed)
+					if (Menu::IsLastDrawnOptionSelected() && !bFilePressed)
 					{
 						if (FolderPreviewBmps_catind::bFolderBmpsEnabled)
 						{
@@ -1799,7 +1975,7 @@ namespace sub
 					if (bFilePressed)
 					{
 						name = fileName.substr(0, fileName.rfind('.'));
-						Menu::SetSub_delayed = SUB::COMPONENTS_OUTFITS2;
+						Menu::pendingSubmenu = SUB::COMPONENTS_OUTFITS2;
 						return;
 					}
 				}
@@ -1813,11 +1989,11 @@ namespace sub
 			{
 				if (!IsSafePath(inputStr))
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 				}
 				else
 				{
-					ComponentChangerOutfit::Create(g_Ped1, dir + "\\" + inputStr + ".xml");
+					ComponentChangerOutfit::Create(g_activePedHandle, dir + "\\" + inputStr + ".xml", ComponentChangerOutfit::legacyXMLFormat);
 					Game::Print::PrintBottomLeft("File ~b~created~s~.");
 				}
 			}
@@ -1832,17 +2008,17 @@ namespace sub
 			{
 				if (!IsSafePath(inputStr))
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 				}
 				else if (CreateDirectoryA((dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
 				{
 					dir = dir + "\\" + inputStr;
-					Menu::currentop = 5;
+					Menu::selectedOptionIndex = 5;
 					Game::Print::PrintBottomLeft("Folder ~b~created~s~.");
 				}
 				else
 				{
-					Game::Print::PrintBottomCentre("~r~Failed~s~ to create folder.");
+					Game::Print::ShowNotification("~r~Failed", "to create folder.");
 					addlog(ige::LogType::LOG_ERROR, "Attempt to create folder " + inputStr + " failed");
 				}
 			}
@@ -1861,8 +2037,9 @@ namespace sub
 		AddTitle(name);
 		AddOption("Apply", outfits2_apply);
 		AddOption("Apply Clothing & Attachments", outfits2_applyAllFeatures);
-		AddOption((std::string)"Apply " + (g_Ped1 == PLAYER_PED_ID() ? "Ped Model" : "Head Features"), outfits2_applyModel);
+		AddOption((std::string)"Apply " + (g_activePedHandle == PLAYER_PED_ID() ? "Ped Model" : "Head Features"), outfits2_applyModel);
 		AddOption("Apply and Set as Default", outfits2_applySetDefault);
+		ComponentChangerOutfit::legacyXMLFormat = AddTexterCycler("XML Format", ComponentChangerOutfit::legacyXMLFormat, { "New XML format", "Legacy XML format" }) == 1;
 		AddOption("Rename File", outfits2_rename);
 		AddOption("Overwrite File", outfits2_overwrite);
 		AddOption("Delete File", outfits2_delete);
@@ -1875,38 +2052,38 @@ namespace sub
 
 		if (outfits2_applyModel)
 		{
-			bool s1isme = g_Ped1 == PLAYER_PED_ID();
-			ComponentChangerOutfit::Apply(g_Ped1, filePath, true, false, false, false, false, false);
-			if (s1isme) g_Ped1 = PLAYER_PED_ID();
+			bool s1isme = g_activePedHandle == PLAYER_PED_ID();
+			ComponentChangerOutfit::Apply(g_activePedHandle, filePath, true, false, false, false, false, false);
+			if (s1isme) g_activePedHandle = PLAYER_PED_ID();
 		}
 
 		if (outfits2_applyAllFeatures)
 		{
-			ComponentChangerOutfit::Apply(g_Ped1, filePath, false, true, true, true, true, true);
+			ComponentChangerOutfit::Apply(g_activePedHandle, filePath, false, true, true, true, true, true);
 		}
 
 		if (outfits2_applySetDefault)
 		{
 			ComponentChangerOutfit::Apply(PLAYER_PED_ID(), filePath, true, false, false, false, false, false);
 			ComponentChangerOutfit::Apply(PLAYER_PED_ID(), filePath, false, true, true, true, true, true);
-			if (ComponentChangerOutfit::Create(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml"))
+			if (ComponentChangerOutfit::Create(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", ComponentChangerOutfit::legacyXMLFormat))
 			{
 				Game::Print::PrintBottomLeft("Set as ~b~Default~s~, Outfit will be auto loaded on next game launch.");
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to create file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to create file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to create file menyooStuff/defaultPed.xml failed");
 			}
 		}
 
 		if (outfits2_overwrite)
 		{
-			if (ComponentChangerOutfit::Create(g_Ped1, filePath))
+			if (ComponentChangerOutfit::Create(g_activePedHandle, filePath, ComponentChangerOutfit::legacyXMLFormat))
 				Game::Print::PrintBottomLeft("File ~b~overwritten~s~.");
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to overwrite file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to overwrite file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to overwrite file " + filePath + " failed");
 			}
 		}
@@ -1918,14 +2095,14 @@ namespace sub
 			{
 				if (!IsSafePath(newName))
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 				}
 				else if (rename(filePath.c_str(), (dir + "\\" + newName + ".xml").c_str()) == 0)
 				{
 					name = newName;
 					Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
 				}
-				else Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to rename file.");
+				else Game::Print::ShowNotification("~r~Error:", "Unable to rename file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to rename file " + name + " to " + newName + "failed");
 			}
 			else Game::Print::PrintErrorInvalidInput(newName);
@@ -1942,7 +2119,7 @@ namespace sub
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to delete file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to delete file.");
 				addlog(ige::LogType::LOG_ERROR, "Attempt to delete file " + filePath + " failed");
 			}
 			Menu::SetPreviousMenu();
@@ -2037,7 +2214,7 @@ namespace sub
 
 	void ComponentChanger_DefaultOutfits()
 	{
-		GTAped ped = g_Ped1;
+		GTAped ped = g_activePedHandle;
 		Hash modelHash = ped.Model().hash;
 		int charType = -1;
 		// Only Freemode Characters seem to work.  It should work for Story Mode Characters but nothing comes up.  They don't have many anyway.
@@ -2197,6 +2374,7 @@ REGISTER_SUBMENU(COMPONENTS_OUTFITS_DEFAULT, sub::ComponentChanger_DefaultOutfit
 REGISTER_SUBMENU(PEDDECALS_TYPES, sub::PedDecals::Sub_Decals_Types)
 REGISTER_SUBMENU(PEDDECALS_ZONES, sub::PedDecals::Sub_Decals_Zones)
 REGISTER_SUBMENU(PEDDECALS_INZONE, sub::PedDecals::Sub_Decals_InZone)
+REGISTER_SUBMENU(PEDDECALS_ZONES_SEARCH, sub::PedDecals::Sub_Decals_Zones_Search)
 REGISTER_SUBMENU(PEDDAMAGET_CATEGORYLIST, sub::PedDamageTextures::Sub_CategoryList)
 REGISTER_SUBMENU(PEDDAMAGET_BONESELECTION, sub::PedDamageTextures::Sub_BoneSelection)
 REGISTER_SUBMENU(PEDDAMAGET_BLOOD, sub::PedDamageTextures::Sub_Blood)
@@ -2207,3 +2385,4 @@ REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS, sub::PedHeadFeatures_catind::Sub
 REGISTER_SUBMENU(PED_HEADFEATURES_HEADOVERLAYS_INITEM, sub::PedHeadFeatures_catind::Sub_HeadOverlays_InItem)
 REGISTER_SUBMENU(PED_HEADFEATURES_FACEFEATURES, sub::PedHeadFeatures_catind::Sub_FaceFeatures)
 REGISTER_SUBMENU(PED_HEADFEATURES_SKINTONE, sub::PedHeadFeatures_catind::Sub_SkinTone)
+REGISTER_SUBMENU(PED_HEADFEATURES_FACEGENERATOR, sub::PedHeadFeatures_catind::Sub_FaceGenerator)

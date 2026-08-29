@@ -43,14 +43,14 @@ namespace sub::BodyguardMenu
                 SelectedBodyguard = &bg;
             }
 
-            if (*Menu::currentopATM == Menu::printingop)
+            if (Menu::IsLastDrawnOptionSelected())
             {
                 if (bg.Handle.Exists())
                     ENTITY::SET_ENTITY_HAS_GRAVITY(bg.Handle.GetHandle(), true);
                 sub::BodyguardMenu::BodyguardManagement::ShowArrowAboveEntity(bg.Handle);
 
                 bool bDeletePressed = false;
-                if (Menu::bitController)
+                if (Menu::usingControllerInput)
                 {
                     Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Bodyguard");
                     bDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;

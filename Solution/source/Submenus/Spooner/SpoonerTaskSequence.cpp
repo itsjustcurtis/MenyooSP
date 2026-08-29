@@ -144,6 +144,9 @@ namespace sub::Spooner
 
 		case STSTaskType::SnapTasks: tskPtr = (new STSTasks::SnapTasks); break;
 		case STSTaskType::EndSequence: tskPtr = (new STSTasks::EndSequence); break;
+
+		case STSTaskType::LightMoveWithEntity: tskPtr = (new STSTasks::LightMoveWithEntity); break;
+		case STSTaskType::LightPointAtEntity: tskPtr = (new STSTasks::LightPointAtEntity); break;
 		}
 
 		if (tskPtr != nullptr)

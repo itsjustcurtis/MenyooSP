@@ -8,12 +8,14 @@
 * (at your option) any later version.
 */
 #include "MiscOptions.h"
+#include "Spooner/Submenus.h"
+#include "VehicleModShop.h"
 
 namespace sub
 {
 	void MiscOps()
 	{
-		g_Ped1 = PLAYER_PED_ID();
+		g_activePedHandle = PLAYER_PED_ID();
 
 		const std::vector<std::string> explosions_wp_names{ "Off", "Visible & Shaky", "Visible", "Invisible" };
 
@@ -207,7 +209,7 @@ namespace sub
 		if (miscFreecamOn)
 		{
 			noClipToggle = false;
-			Game::Print::PrintBottomCentre("Press ~b~" + VkCodeToStr(BindNoClip) + "~s~ OR ~b~X+LS~s~ OR ~b~Square+L3~s~ to toggle FreeCam.");
+			Game::Print::ShowNotification("Press ~b~" + VkCodeToStr(BindNoClip) + "~s~ OR ~b~X+LS~s~ OR ~b~Square+L3~s~ to toggle FreeCam.");
 			return;
 		}
 
@@ -392,9 +394,9 @@ namespace sub
 		AddTitle("Clear Area");
 
 		AddNumber("Range To Clear", g_clearAreaRadius, 2, clearAreaRadiusInput, clearAreaRadiusPlus, clearAreaRadiusMinus);
-		if (*Menu::currentopATM == Menu::printingop)
+		if (Menu::IsLastDrawnOptionSelected())
 		{
-			sub::Spooner::EntityManagement::DrawRadiusDisplayingMarker(GET_ENTITY_COORDS(g_Ped1, 1), g_clearAreaRadius);
+			sub::Spooner::EntityManagement::DrawRadiusDisplayingMarker(GET_ENTITY_COORDS(g_activePedHandle, 1), g_clearAreaRadius);
 		}
 
 		AddOption("Vehicles", clearAreaVehicles);
@@ -404,22 +406,22 @@ namespace sub
 
 		if (clearAreaVehicles) 
 		{ 
-			ClearAreaOfEntities(EntityType::VEHICLE, GET_ENTITY_COORDS(g_Ped1, 1), g_clearAreaRadius, { GET_VEHICLE_PED_IS_IN(g_Ped1, 0) });
+			ClearAreaOfEntities(EntityType::VEHICLE, GET_ENTITY_COORDS(g_activePedHandle, 1), g_clearAreaRadius, { GET_VEHICLE_PED_IS_IN(g_activePedHandle, 0) });
 			return; 
 		}
 		if (clearAreaPeds) 
 		{ 
-			ClearAreaOfEntities(EntityType::PED, GET_ENTITY_COORDS(g_Ped1, 1), g_clearAreaRadius, { g_Ped1 });
+			ClearAreaOfEntities(EntityType::PED, GET_ENTITY_COORDS(g_activePedHandle, 1), g_clearAreaRadius, { g_activePedHandle });
 			return;
 		}
 		if (clearAreaObjects) 
 		{ 
-			ClearAreaOfEntities(EntityType::PROP, GET_ENTITY_COORDS(g_Ped1, 1), g_clearAreaRadius, {}); 
+			ClearAreaOfEntities(EntityType::PROP, GET_ENTITY_COORDS(g_activePedHandle, 1), g_clearAreaRadius, {});
 			return;
 		}
 		if (clearAreaAll) 
 		{ 
-			ClearAreaOfEntities(EntityType::ALL, GET_ENTITY_COORDS(g_Ped1, 1), g_clearAreaRadius, { g_Ped1, GET_VEHICLE_PED_IS_IN(g_Ped1, 0) }); 
+			ClearAreaOfEntities(EntityType::ALL, GET_ENTITY_COORDS(g_activePedHandle, 1), g_clearAreaRadius, { g_activePedHandle, GET_VEHICLE_PED_IS_IN(g_activePedHandle, 0) });
 			return;
 		}
 
@@ -518,7 +520,7 @@ namespace sub
 
 	void RadioMenu()
 	{
-		GTAped ped = g_Ped1;
+		GTAped ped = g_activePedHandle;
 		GTAvehicle vehicle = ped.CurrentVehicle();
 		bool mobileRadioOn = false;
 		bool mobileRadioOff = false;
@@ -548,10 +550,10 @@ namespace sub
 						SET_VEH_RADIO_STATION(vehicle.Handle(), GET_RADIO_STATION_NAME(i));
 					}
 				}
-				if (Menu::printingop == *Menu::currentopATM)
+				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsCurrentlyFrozen = frozenStation == i;
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsCurrentlyFrozen ? "Freeze" : "Unfreeze") + (std::string)" station");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
@@ -608,19 +610,19 @@ namespace sub
 			SET_FRONTEND_RADIO_ACTIVE(true);
 			SET_MOBILE_RADIO_ENABLED_DURING_GAMEPLAY(true);
 			SET_MOBILE_PHONE_RADIO_STATE(1);
-			PLAY_SOUND_FROM_ENTITY(-1, "Radio_On", g_Ped1, "TAXI_SOUNDS", 0, 0);
+			PLAY_SOUND_FROM_ENTITY(-1, "Radio_On", g_activePedHandle, "TAXI_SOUNDS", 0, 0);
 		}
 		if (mobileRadioOff) 
 		{
 			SET_MOBILE_RADIO_ENABLED_DURING_GAMEPLAY(false);
 			SET_MOBILE_PHONE_RADIO_STATE(0);
-			PLAY_SOUND_FROM_ENTITY(-1, "Radio_Off", g_Ped1, "TAXI_SOUNDS", 0, 0);
+			PLAY_SOUND_FROM_ENTITY(-1, "Radio_Off", g_activePedHandle, "TAXI_SOUNDS", 0, 0);
 		}
 
 		if (radioForward) 
 		{
 			SKIP_RADIO_FORWARD();
-			Game::Print::PrintBottomCentre(oss_ << Game::GetGXTEntry(GET_PLAYER_RADIO_STATION_NAME()) << " - next track");
+			Game::Print::ShowNotification(oss_ << Game::GetGXTEntry(GET_PLAYER_RADIO_STATION_NAME()) << " - next track");
 		}
 
 	}
@@ -892,7 +894,7 @@ namespace sub
 				AddOption(h.second, bCompSelected, nullFunc, SUB::MSPAINTS_RGB); 
 				if (bCompSelected)
 				{
-					g_Ped4 = h.first;
+					SetSelectedHudColour(h.first);
 					bitMSPaintsRGBMode = 10;
 				}
 			}
@@ -904,7 +906,7 @@ namespace sub
 				AddOption(HudColour::vHudColours[i], bCompSelected, nullFunc, SUB::MSPAINTS_RGB); 
 				if (bCompSelected)
 				{
-					g_Ped4 = i;
+					SetSelectedHudColour(i);
 					bitMSPaintsRGBMode = 10;
 				}
 			}

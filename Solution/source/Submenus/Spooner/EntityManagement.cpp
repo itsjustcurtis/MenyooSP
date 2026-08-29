@@ -347,7 +347,7 @@ namespace sub::Spooner
 						}
 					}
 				}
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid model.\n Check suggested locations: [" + suggestedLocation + "]");
+				Game::Print::ShowNotification("~r~Error:", "Invalid model.\n Check suggested locations: [" + suggestedLocation + "]");
 				return SpoonerEntity();
 			}
 

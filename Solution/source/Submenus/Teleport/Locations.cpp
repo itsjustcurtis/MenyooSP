@@ -581,6 +581,7 @@ namespace sub::TeleportLocations_catind
 			{ "Arena War Locations (ALPHA)", nullptr, (const std::vector<NamedTeleLocationList>*)SUB::TELEPORTOPS_ARENAWAR },
 			{ "Yachts", nullptr, (const std::vector<NamedTeleLocationList>*)SUB::TELEPORTOPS_YACHTS },
 			{ "Cayo Perico", nullptr, (const std::vector<NamedTeleLocationList>*)SUB::TELEPORTOPS_CAYOPERICO },
+			{ "Mansion Interiors", nullptr, (const std::vector<NamedTeleLocationList>*)SUB::TELEPORTOPS_MANSIONS },
 			{ "Others", &vOthers, nullptr }
 		};
 	}

@@ -71,6 +71,7 @@ namespace sub
 
 		extern std::map<Hash, std::map<std::string, std::map<std::string, std::vector<NamedPedDecal>>>> vAllDecals; // PedHash[Type][Zone]
 		void PopulateDecalsDict();
+		std::string GetDecalCaption(Hash collection, Hash value);
 
 		extern std::pair<std::string, std::map<std::string, std::vector<NamedPedDecal>>>* selectedType;
 		extern std::pair<std::string, std::vector<NamedPedDecal>>* selectedZone;
@@ -155,6 +156,24 @@ namespace sub
 		void Sub_FaceFeatures();
 		void Sub_SkinTone();
 
+		namespace PedFaceGen
+		{
+			struct sFaceGenData
+			{
+				bool useThirdParent = false;
+				bool useNonRockstarParents = false;
+				int parentGenderFilter = 0; // 0=Any, 1=Male, 2=Female
+				int skinColorFilter = 0; // 0=Any, 1=White, 2=Black, 3=Hispanic, 4=Asian, 5=Arab, 6=Pakistani
+				int nonRockstarMax = 46;
+				Hash lastPedModel = 0;
+			};
+
+			extern const std::vector<int> parentIdsByGenderSkin[2][6];
+			extern sFaceGenData settings;
+		}
+
+		void Sub_FaceGenerator();
+
 	}
 
 	// Outfits (saver)
@@ -162,7 +181,8 @@ namespace sub
 	namespace ComponentChangerOutfit
 	{
 		extern UINT8 persistentAttachmentsTexterIndex;
-		bool Create(GTAentity ped, std::string filePath);
+		extern bool legacyXMLFormat;
+		bool Create(GTAentity ped, std::string filePath, bool legacyXMLFormat = false);
 		bool Apply(GTAped ep, const std::string& filePath, bool applyModelAndHead, bool applyProps, bool applyComps, bool applyDecals, bool applyDamageTextures, bool applyAttachedEntities);
 
 	}
