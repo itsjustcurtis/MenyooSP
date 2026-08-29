@@ -15,13 +15,15 @@
 #include <string>
 //#include <utility>
 
-typedef unsigned char UINT8;
-typedef unsigned long DWORD, Hash;
-typedef char *PCHAR;
+using UINT8 = unsigned char;
+using DWORD = unsigned long;
+using Hash = unsigned long;
+using PCHAR = char*;
 
 class GTAentity;
 
-typedef struct { std::string label, name; } WeaponS;
+struct WeaponS { std::string label, name; };
+
 class s_Weapon_Components_Tint
 {
 public:
@@ -34,6 +36,7 @@ struct NamedWeaponComponent
 {
 	std::string name; Hash hash;
 };
+
 class WeaponAndComponents
 {
 public:
@@ -69,18 +72,16 @@ namespace WeaponIndivs
 	const WeaponAndComponents* get_weapon(Hash weaponHash);
 	bool get_weapon_components(Hash weaponHash, std::vector<NamedWeaponComponent>& result);
 	UINT8 get_weapon_components_count(Hash weaponHash);
-	//bool is_weapon_moddable(Hash weaponHash);
 	bool is_weapon_tintable(Hash weaponHash);
-
 }
 
 
 // Weapon - labels
-std::string get_weapon_label(Hash hash, bool gxt);
+std::string GetWeaponLabel(Hash hash, bool gxt);
 
 // Weapon - give
 void GivePedParachute(GTAentity ped);
-void give_ped_max_ammo(GTAentity ped);
-void give_all_weapons_to_ped(GTAentity ped, bool bInfAmmo = false);
+void GivePedMaxAmmo(GTAentity ped);
+void GiveAllWeaponsToPed(GTAentity ped, bool bInfAmmo = false);
 
 

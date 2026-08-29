@@ -54,6 +54,7 @@
 #include "..\..\Submenus\PtfxSubs.h"
 #include "..\..\Submenus\FunnyVehicles.h"
 #include "..\..\Util\FileLogger.h"
+#include "..\..\Util\ObjectCategories.h"
 
 #include <Shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
@@ -74,11 +75,182 @@ namespace sub
 		float _fSaveRangeRadius = 5.0f;
 		UINT8 _copyEntTexterValue = 0;
 		UINT8 _entTypeToShowTexterValue = 0;
+		EntityScaleState _vehScale, _pedScale, _objScale;
 		void SetEnt241() { g_Ped1 = selectedEntity.handle.Handle(); }
 		void SetEnt12() { g_Ped4 = selectedEntity.handle.Handle(); }
 
-		void Sub_SpoonerMain()
+		void HandleKeyboardManipulation(Vector3& position, Vector3& rotation)
 		{
+			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
+			{
+				Menu::add_IB(VirtualKey::W, "Pitch+");
+				Menu::add_IB(VirtualKey::S, "Pitch-");
+				Menu::add_IB(VirtualKey::A, "Yaw+");
+				Menu::add_IB(VirtualKey::D, "Yaw-");
+				Menu::add_IB(VirtualKey::E, "Roll+");
+				Menu::add_IB(VirtualKey::Q, "Roll-");
+				Menu::add_IB(VirtualKey::R, "Edit position");
+			}
+			else
+			{
+				Menu::add_IB(VirtualKey::W, "X+");
+				Menu::add_IB(VirtualKey::S, "X-");
+				Menu::add_IB(VirtualKey::A, "Y+");
+				Menu::add_IB(VirtualKey::D, "Y-");
+				Menu::add_IB(VirtualKey::E, "Z+");
+				Menu::add_IB(VirtualKey::Q, "Z-");
+				Menu::add_IB(VirtualKey::R, "Edit rotation");
+			}
+			Menu::add_IB(VirtualKey::Add, "Increase Sensitivity");
+			Menu::add_IB(VirtualKey::Subtract, "Decrease Sensitivity");
+			Menu::add_IB(VirtualKey::C, "Copy (and add to DB)");
+			Menu::add_IB(VirtualKey::B, "Switch to Gizmo Mode");
+
+			static DWORD lastSensitivityChange = 0;
+			if ((IsKeyJustUp(VirtualKey::OEMPlus)||(IsKeyJustUp(VirtualKey::Add))) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
+				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
+			}
+			if ((IsKeyJustUp(VirtualKey::OEMMinus)||(IsKeyJustUp(VirtualKey::Subtract))) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10;
+				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
+			}
+
+			float step = _manualPlacementPrecision;
+			if (Settings::bGridSnapEnabled)
+			{
+				float snapAmount = SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate
+					? Settings::rotationSnapDegrees
+					: Settings::gridSnapSize;
+				if (snapAmount > 0.0f) step = snapAmount;
+			}
+
+			auto& target = SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate ? rotation : position;
+			if (IsKeyDown(VirtualKey::W)) target.x += step;
+			if (IsKeyDown(VirtualKey::S)) target.x -= step;
+			if (IsKeyDown(VirtualKey::A)) target.y += step;
+			if (IsKeyDown(VirtualKey::D)) target.y -= step;
+			if (IsKeyDown(VirtualKey::E)) target.z += step;
+			if (IsKeyDown(VirtualKey::Q)) target.z -= step;
+
+			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
+				rotation = SpoonerMode::SnapRotation(rotation);
+			else
+				position = SpoonerMode::SnapPos(position);
+		}
+
+		void DrawGizmoHUD()
+		{
+			std::string modeName;
+			switch (SpoonerMode::gizmoMode)
+			{
+			case SpoonerMode::eGizmoMode::Rotate: modeName = "Rotation"; break;
+			case SpoonerMode::eGizmoMode::Scale:  modeName = "Scale";    break;
+			default:                              modeName = "Position"; break;
+			}
+
+			Menu::add_IB(INPUT_CURSOR_ACCEPT, "Grab axis handle (" + modeName + " Mode)");
+			Menu::add_IB(VirtualKey::R, "Cycle mode");
+			Menu::add_IB(VirtualKey::V, SpoonerMode::bGizmoCameraLocked ? "Unlock camera" : "Lock camera");
+			Menu::add_IB(VirtualKey::L, SpoonerMode::bGizmoLocalSpace ? "Edit in world space" : "Edit in local space");
+			Menu::add_IB(VirtualKey::C, "Copy (and add to DB)");
+			Menu::add_IB(VirtualKey::B, "Disable Gizmo Mode");
+		}
+
+		void HandleEntityEditingLogic(Vector3& position, Vector3& rotation, GTAentity* parentEntity)
+		{
+			// toggling between Disabled / Keyboard / Gizmo modes
+			static bool lastBToggle = false;
+			bool currentBToggle = IsKeyJustUp(VirtualKey::B);
+			if (currentBToggle && !lastBToggle)
+			{
+				switch (SpoonerMode::entityEditMode)
+				{
+				case SpoonerMode::eEntityEditMode::Disabled:
+					SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Keyboard;
+					SpoonerMode::bGizmoCameraLocked = false;
+					break;
+				case SpoonerMode::eEntityEditMode::Keyboard:
+					SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Gizmo;
+					SpoonerMode::bGizmoCameraLocked = false;
+					break;
+				case SpoonerMode::eEntityEditMode::Gizmo:
+					SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
+					SpoonerMode::bGizmoCameraLocked = false;
+					break;
+				}
+			}
+			lastBToggle = currentBToggle;
+
+			// toggling between the rotation / position modes
+			static bool lastRToggle = false;
+			bool currentRToggle = IsKeyJustUp(VirtualKey::R);
+			if (currentRToggle && !lastRToggle)
+			{
+				switch (SpoonerMode::gizmoMode)
+				{
+					case SpoonerMode::eGizmoMode::Translate: SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Rotate; break;
+					case SpoonerMode::eGizmoMode::Rotate:    SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Scale;  break;
+					case SpoonerMode::eGizmoMode::Scale:     SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Translate; break;
+				}
+			}
+			lastRToggle = currentRToggle;
+
+			// toggling camera lock in gizmo mode
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::V))
+			{
+				SpoonerMode::bGizmoCameraLocked = !SpoonerMode::bGizmoCameraLocked;
+			}
+
+			// toggling world / local gizmo orientation in gizmo mode
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::L))
+			{
+				SpoonerMode::bGizmoLocalSpace = !SpoonerMode::bGizmoLocalSpace;
+			}
+
+			// make a quick copy of an entity by clicking C in editing modes
+			if (SpoonerMode::entityEditMode != SpoonerMode::eEntityEditMode::Disabled && IsKeyJustUp(VirtualKey::C))
+			{
+				if (selectedEntity.handle.Exists())
+				{
+					const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, EntityManagement::GetEntityIndexInDb(selectedEntity) >= 0, true, _copyEntTexterValue);
+					selectedEntity = copiedEntity;
+					Game::Print::PrintBottomCentre("Entity copied.", 2500);
+				}
+			}
+
+			constexpr float HUD_LINE_HEIGHT = 0.025f;
+			const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
+			const float hudX = 0.02f;
+			float hudY = 0.8f;
+
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Disabled)
+			{
+				Menu::add_IB(VirtualKey::B, "Enable Keyboard Controls");
+				return;
+			}
+
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Keyboard)
+			{
+				// keyboard edit mode doesn't support scaling, so we are switching to translate
+				if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Scale)
+					SpoonerMode::gizmoMode = SpoonerMode::eGizmoMode::Translate;
+				HandleKeyboardManipulation(position, rotation);
+			}
+			else if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo)
+			{
+				DrawGizmoHUD();
+			}
+		}
+
+	void Sub_SpoonerMain()
+		{
+			SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
+			SpoonerMode::bGizmoCameraLocked = false;
 			selectedEntity.handle = 0;
 			_searchStr.clear(); // Sub_SaveFiles _searchStr
 			dict3.clear(); // Sub_SaveFiles _dir
@@ -104,6 +276,7 @@ namespace sub
 
 			AddTitle("Settings");
 			AddToggle("Display Model Previews (Spooner Mode)", Settings::bShowModelPreviews);
+			AddToggle("Display Spooner Info", Settings::bDisplaySpoonerInfo);
 			AddToggle("Display Entity Surrounding Box", Settings::bShowBoxAroundSelectedEntity);
 			AddToggle("Spawn Dynamic Objects", Settings::bSpawnDynamicProps);
 			AddToggle("Spawn Dynamic Peds", Settings::bSpawnDynamicPeds);
@@ -127,6 +300,31 @@ namespace sub
 			}
 
 			AddOption("Reload Model List Files", null, PopulateGlobalEntityModelsArrays);
+
+			AddBreak("---Grid Snap---");
+			AddToggle("Grid Snap", Settings::bGridSnapEnabled);
+
+			bool gridSize_input = false, gridSize_plus = false, gridSize_minus = false;
+			AddNumber("Grid Size (m)", Settings::gridSnapSize, 2, gridSize_input, gridSize_plus, gridSize_minus);
+			if (gridSize_plus && Settings::gridSnapSize < 100.0f) Settings::gridSnapSize += 0.25f;
+			if (gridSize_minus && Settings::gridSnapSize > 0.25f) Settings::gridSnapSize -= 0.25f;
+			if (gridSize_input)
+			{
+				std::string inputStr = Game::InputBox("", 10U, "Grid size in meters:", std::to_string(Settings::gridSnapSize).substr(0, 8));
+				if (inputStr.length() > 0) { try { Settings::gridSnapSize = stof(inputStr); } catch (...) {} }
+				if (Settings::gridSnapSize < 0.01f) Settings::gridSnapSize = 0.25f;
+			}
+
+			bool rotSnap_input = false, rotSnap_plus = false, rotSnap_minus = false;
+			AddNumber("Rotation Snap (deg)", Settings::rotationSnapDegrees, 1, rotSnap_input, rotSnap_plus, rotSnap_minus);
+			if (rotSnap_plus && Settings::rotationSnapDegrees < 90.0f) Settings::rotationSnapDegrees += 5.0f;
+			if (rotSnap_minus && Settings::rotationSnapDegrees > 0.0f) Settings::rotationSnapDegrees -= 5.0f;
+			if (rotSnap_input)
+			{
+				std::string inputStr = Game::InputBox("", 10U, "Rotation snap degrees (0=off):", std::to_string(Settings::rotationSnapDegrees).substr(0, 6));
+				if (inputStr.length() > 0) { try { Settings::rotationSnapDegrees = stof(inputStr); } catch (...) {} }
+				if (Settings::rotationSnapDegrees < 0.0f) Settings::rotationSnapDegrees = 0.0f;
+			}
 
 			if (bSmm_plus) { if ((UINT8)Settings::spoonerModeMode < spoonerModeModeNames.size() - 1) Settings::spoonerModeMode = eSpoonerModeMode((UINT8)Settings::spoonerModeMode + 1); }
 			if (bSmm_minus) { if ((UINT8)Settings::spoonerModeMode > 0) Settings::spoonerModeMode = eSpoonerModeMode((UINT8)Settings::spoonerModeMode - 1); }
@@ -200,7 +398,11 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter file name:");
 				if (inputStr.length() > 0)
 				{
-					if (FileManagement::SaveDbToFile(_dir + "\\" + inputStr + ".xml", true))
+					if (!IsSafePath(inputStr))
+					{
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					}
+					else if (FileManagement::SaveDbToFile(_dir + "\\" + inputStr + ".xml", true))
 					{
 						Game::Print::PrintBottomLeft("File ~b~saved~s~.");
 					}
@@ -220,7 +422,11 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter file name:");
 				if (inputStr.length() > 0)
 				{
-					if (FileManagement::SaveWorldToFile(_dir + "\\" + inputStr + ".xml", worldEntities, Databases::MarkerDb))
+					if (!IsSafePath(inputStr))
+					{
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					}
+					else if (FileManagement::SaveWorldToFile(_dir + "\\" + inputStr + ".xml", worldEntities, Databases::MarkerDb))
 					{
 						Game::Print::PrintBottomLeft("File ~b~saved~s~.");
 					}
@@ -230,8 +436,6 @@ namespace sub
 						addlog(ige::LogType::LOG_ERROR, "Attempt to save World file " + inputStr + ".xml failed");
 					}
 				}
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerSaveWorldToFile, std::string(), 28U, "Enter file name:");
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_dir);
 			}
 
 			std::vector<Entity> vSaveRangeEntities;
@@ -247,23 +451,26 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter file name:");
 				if (inputStr.length() > 0)
 				{
-					std::vector<SpoonerMarker> vSaveRangeMarkers;
-					MarkerManagement::GetAllMarkersInRange(vSaveRangeMarkers, myPos, fSaveRangeRadius);
-
-					if (FileManagement::SaveWorldToFile(_dir + "\\" + inputStr + ".xml", vSaveRangeEntities, vSaveRangeMarkers))
+					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomLeft("File ~b~saved~s~.");
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
 					}
 					else
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
-						addlog(ige::LogType::LOG_ERROR, "Attempt to save Range Markers file " + inputStr + ".xml failed");
+						std::vector<SpoonerMarker> vSaveRangeMarkers;
+						MarkerManagement::GetAllMarkersInRange(vSaveRangeMarkers, myPos, fSaveRangeRadius);
+
+						if (FileManagement::SaveWorldToFile(_dir + "\\" + inputStr + ".xml", vSaveRangeEntities, vSaveRangeMarkers))
+						{
+							Game::Print::PrintBottomLeft("File ~b~saved~s~.");
+						}
+						else
+						{
+							Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
+							addlog(ige::LogType::LOG_ERROR, "Attempt to save Range Markers file " + inputStr + ".xml failed");
+						}
 					}
 				}
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SpoonerSaveRangeToFile, std::string(), 28U, "Enter file name:");
-				//OnscreenKeyboard::State::arg1._float = fSaveRangeRadius;
-				//OnscreenKeyboard::State::arg2._vec3 = new Vector3(myPos);
-				//OnscreenKeyboard::State::arg3._ptr = reinterpret_cast<void*>(&_dir);
 			}
 
 			/*bool bLoadFromFile = false;
@@ -306,7 +513,11 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter folder name:");
 				if (inputStr.length() > 0)
 				{
-					if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) ||
+					if (!IsSafePath(inputStr))
+					{
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					}
+					else if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) ||
 						GetLastError() == ERROR_ALREADY_EXISTS)
 					{
 						_dir = _dir + "\\" + inputStr;
@@ -330,8 +541,16 @@ namespace sub
 			bool bFolderBackPressed = false;
 			AddOption("..", bFolderBackPressed); if (bFolderBackPressed)
 			{
-				_dir = _dir.substr(0, _dir.rfind("\\"));
-				Menu::currentop = 6;
+				std::string baseDir = GetPathffA(Pathff::Spooner, false);
+				if (_dir.length() > baseDir.length() && _dir.find(baseDir) == 0)
+				{
+					_dir = _dir.substr(0, _dir.rfind("\\"));
+					Menu::currentop = 6;
+				}
+				else
+				{
+					_dir = baseDir;
+				}
 			}
 
 			if (!vfilnames.empty())
@@ -460,7 +679,11 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter new name:", _name);
 				if (inputStr.length() > 0)
 				{
-					if (rename(filePath.c_str(), (_dir + "\\" + inputStr + ".xml").c_str()) == 0)
+					if (!IsSafePath(inputStr))
+					{
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					}
+					else if (rename(filePath.c_str(), (_dir + "\\" + inputStr + ".xml").c_str()) == 0)
 					{
 						_name = inputStr;
 						Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
@@ -679,7 +902,7 @@ namespace sub
 						AddOption("Set To Waypoint", bSetPosToWp); if (bSetPosToWp)
 						{
 							GTAblip wpBlip = GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint);
-							Vector3 wpCoords = wpBlip.Position_get();
+							Vector3 wpCoords = wpBlip.GetPosition();
 							wpCoords.z = World::GetGroundHeight(wpCoords);
 							*std::get<1>(nas) = wpCoords;
 							if (!xNode)
@@ -790,7 +1013,7 @@ namespace sub
 				{
 					AddBreak("Weather To Set");
 					std::string weatherToSetStr = nodeWeatherToSet.text().as_string();
-					int weatherToSetInt = static_cast<int>(World::Weather_get(weatherToSetStr));
+					int weatherToSetInt = static_cast<int>(World::GetWeather(weatherToSetStr));
 					//bool weatherToSet_plus = false, weatherToSet_minus = false;
 					//AddTexter("Weather To Set", (weatherToSetInt == -1 ? 0 : weatherToSetInt), (weatherToSetInt == -1 ? std::vector<std::string>{"None"} : World::sWeatherNames), null, weatherToSet_plus, weatherToSet_minus);
 					//if (weatherToSet_plus){ if (weatherToSetInt < World::sWeatherNames.size() - 1){ weatherToSetInt++; nodeWeatherToSet.text() = World::WeatherName_get(static_cast<WeatherType>(weatherToSetInt)).c_str(); doc.save_file((const char*)filePath.c_str()); } }
@@ -844,7 +1067,11 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter new name:", _name);
 				if (inputStr.length() > 0)
 				{
-					if (rename(filePath.c_str(), (_dir + "\\" + inputStr + ".SP00N").c_str()) == 0)
+					if (!IsSafePath(inputStr))
+					{
+						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+					}
+					else if (rename(filePath.c_str(), (_dir + "\\" + inputStr + ".SP00N").c_str()) == 0)
 					{
 						_name = inputStr;
 						Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
@@ -1038,6 +1265,8 @@ namespace sub
 		}*/
 		void Sub_SelectedEntityOps()
 		{
+			SpoonerMode::entityEditMode = SpoonerMode::eEntityEditMode::Disabled;
+			SpoonerMode::bGizmoCameraLocked = false;
 			if (!selectedEntity.handle.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -1140,7 +1369,7 @@ namespace sub
 			AddLocal("Dynamic", selectedEntity.dynamic, bDynamicPressed, bDynamicPressed); if (bDynamicPressed)
 			{
 				selectedEntity.dynamic = !selectedEntity.dynamic;
-				selectedEntity.handle.Dynamic_set(selectedEntity.dynamic);
+				selectedEntity.handle.SetDynamic(selectedEntity.dynamic);
 				selectedEntity.handle.FreezePosition(!selectedEntity.dynamic);
 			}
 
@@ -1320,7 +1549,7 @@ namespace sub
 
 			AddOption("Attachment Options", null, nullFunc, SUB::SPOONER_ATTACHMENTOPS);
 			AddOption("Manual Placement", null, nullFunc, SUB::SPOONER_MANUALPLACEMENT);
-			AddOption("Manual Resize (beta)", null, nullFunc, SUB::SPOONER_SIZEMANIPULATION);
+			AddOption("Manual Resize", null, nullFunc, SUB::SPOONER_SIZEMANIPULATION);
 
 		}
 		void Sub_AttachmentOps()
@@ -1339,9 +1568,9 @@ namespace sub
 				Databases::EntityDb[thisEntityIndexInDb] = selectedEntity;
 			}
 
-			GTAentity baseEntityIfExists;
-			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, baseEntityIfExists);
-			EntityType baseEntityType = (EntityType)baseEntityIfExists.Type();
+			GTAentity parentEntity;
+			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, parentEntity);
+			EntityType parentEntityType = (EntityType)parentEntity.Type();
 
 			bool prec_plus = 0, prec_minus = 0;
 
@@ -1372,18 +1601,21 @@ namespace sub
 				bool pitch_plus = 0, pitch_minus = 0;
 				bool roll_plus = 0, roll_minus = 0;
 				bool yaw_plus = 0, yaw_minus = 0;
+				bool bResetRot = 0;
 
 				int nextBoneIndex = selectedEntity.attachmentArgs.boneIndex;
 				Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
 				Vector3 nextRot = selectedEntity.attachmentArgs.rotation;
 
+				HandleEntityEditingLogic(nextOffset, nextRot, &parentEntity);
+
 				// Bone text scroller if type is PED or VEHICLE. Reattach and reset args on bone change.
-				if (baseEntityType == EntityType::PED)
+				if (parentEntityType == EntityType::PED)
 				{
 					int obj_currentPedBoneArrayIndex = 17; // SKEL_ROOT is at index 17 idk
 					for (int i = 0; i < Bone::vBoneNames.size(); i++)
 					{
-						if (nextBoneIndex == GTAped(baseEntityIfExists).GetBoneIndex(Bone::vBoneNames[i].boneid))
+						if (nextBoneIndex == GTAped(parentEntity).GetBoneIndex(Bone::vBoneNames[i].boneid))
 						{
 							obj_currentPedBoneArrayIndex = i;
 							break;
@@ -1398,7 +1630,7 @@ namespace sub
 						if (obj_currentPedBoneArrayIndex < Bone::vBoneNames.size() - 1)
 						{
 							obj_currentPedBoneArrayIndex++;
-							nextBoneIndex = GTAped(baseEntityIfExists).GetBoneIndex(Bone::vBoneNames[obj_currentPedBoneArrayIndex].boneid);
+							nextBoneIndex = GTAped(parentEntity).GetBoneIndex(Bone::vBoneNames[obj_currentPedBoneArrayIndex].boneid);
 							//nextOffset = Vector3::Zero();
 							//nextRot = Vector3::Zero();
 						}
@@ -1408,7 +1640,7 @@ namespace sub
 						if (obj_currentPedBoneArrayIndex > 0)
 						{
 							obj_currentPedBoneArrayIndex--;
-							nextBoneIndex = GTAped(baseEntityIfExists).GetBoneIndex(Bone::vBoneNames[obj_currentPedBoneArrayIndex].boneid);
+							nextBoneIndex = GTAped(parentEntity).GetBoneIndex(Bone::vBoneNames[obj_currentPedBoneArrayIndex].boneid);
 							//nextOffset = Vector3::Zero();
 							//nextRot = Vector3::Zero();
 						}
@@ -1422,7 +1654,7 @@ namespace sub
 						//	if (pb.name.find(srch) != std::string::npos)
 						//	{
 						//		bool found = true;
-						//		nextBoneIndex = GTAped(baseEntityIfExists).GetBoneIndex(pb.boneid);
+						//		nextBoneIndex = GTAped(parentEntity).GetBoneIndex(pb.boneid);
 						//		//obj_currentPedBoneArrayIndex = index; // Not needed
 						//		nextOffset = Vector3::Zero();
 						//		nextRot = Vector3::Zero();
@@ -1433,12 +1665,12 @@ namespace sub
 						Menu::SetSub_delayed = SUB::SPOONER_ATTACHMENTOPS_SELECTBONE;
 					}
 				}
-				else if (baseEntityType == EntityType::VEHICLE)
+				else if (parentEntityType == EntityType::VEHICLE)
 				{
 					int obj_currentVehBoneArrayIndex = 10; // 10 is bodyshell idk
 					for (int i = 0; i < VBone::vNames.size(); i++)
 					{
-						if (nextBoneIndex == GTAvehicle(baseEntityIfExists).GetBoneIndex(VBone::vNames[i]))
+						if (nextBoneIndex == GTAvehicle(parentEntity).GetBoneIndex(VBone::vNames[i]))
 						{
 							obj_currentVehBoneArrayIndex = i;
 							break;
@@ -1453,7 +1685,7 @@ namespace sub
 						if (obj_currentVehBoneArrayIndex < VBone::vNames.size() - 1)
 						{
 							obj_currentVehBoneArrayIndex++;
-							nextBoneIndex = GTAvehicle(baseEntityIfExists).GetBoneIndex(VBone::vNames[obj_currentVehBoneArrayIndex]);
+							nextBoneIndex = GTAvehicle(parentEntity).GetBoneIndex(VBone::vNames[obj_currentVehBoneArrayIndex]);
 							//nextOffset = Vector3::Zero();
 							//nextRot = Vector3::Zero();
 						}
@@ -1463,7 +1695,7 @@ namespace sub
 						if (obj_currentVehBoneArrayIndex > 0)
 						{
 							obj_currentVehBoneArrayIndex--;
-							nextBoneIndex = GTAvehicle(baseEntityIfExists).GetBoneIndex(VBone::vNames[obj_currentVehBoneArrayIndex]);
+							nextBoneIndex = GTAvehicle(parentEntity).GetBoneIndex(VBone::vNames[obj_currentVehBoneArrayIndex]);
 							//nextOffset = Vector3::Zero();
 							//nextRot = Vector3::Zero();
 						}
@@ -1477,7 +1709,7 @@ namespace sub
 						//	if (vbn.find(srch) != std::string::npos)
 						//	{
 						//		bool found = true;
-						//		nextBoneIndex = GTAvehicle(baseEntityIfExists).GetBoneIndex(vbn);
+						//		nextBoneIndex = GTAvehicle(parentEntity).GetBoneIndex(vbn);
 						//		//obj_currentVehBoneArrayIndex = index; // Not needed
 						//		nextOffset = Vector3::Zero();
 						//		nextRot = Vector3::Zero();
@@ -1495,6 +1727,7 @@ namespace sub
 				AddNumber("Pitch", nextRot.x, 4, null, pitch_plus, pitch_minus);
 				AddNumber("Roll", nextRot.y, 4, null, roll_plus, roll_minus);
 				AddNumber("Yaw", nextRot.z, 4, null, yaw_plus, yaw_minus);
+				AddOption("Reset rotation", bResetRot);
 
 				if (x_plus) nextOffset.x += _manualPlacementPrecision;
 				if (x_minus) nextOffset.x -= _manualPlacementPrecision;
@@ -1503,16 +1736,23 @@ namespace sub
 				if (z_plus) nextOffset.z += _manualPlacementPrecision;
 				if (z_minus) nextOffset.z -= _manualPlacementPrecision;
 
-				if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-				if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-				if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-				if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-				if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-				if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+				if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+				if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+				if (roll_plus) nextRot.y += _manualPlacementPrecision;
+				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+				if (bResetRot) nextRot = Vector3();
+
+
+				WrapAngle(nextRot.x);
+				WrapAngle(nextRot.y);
+				WrapAngle(nextRot.z);
 
 				if (nextOffset != selectedEntity.attachmentArgs.offset || nextRot != selectedEntity.attachmentArgs.rotation || nextBoneIndex != selectedEntity.attachmentArgs.boneIndex)
 				{
-					EntityManagement::AttachEntity(selectedEntity, baseEntityIfExists, nextBoneIndex, nextOffset, nextRot);
+					EntityManagement::AttachEntity(selectedEntity, parentEntity, nextBoneIndex, nextOffset, nextRot);
 				}
 			}
 
@@ -1613,7 +1853,7 @@ namespace sub
 
 			GTAentity baseEntity;
 			bool seIsAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, baseEntity);
-			EntityType baseEntityType = (EntityType)baseEntity.Type();
+			EntityType parentEntityType = (EntityType)baseEntity.Type();
 			if (!baseEntity.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -1631,7 +1871,7 @@ namespace sub
 			AddTitle("Bone");
 
 			// Bone text scroller if type is PED or VEHICLE. Reattach and reset args on bone change.
-			if (baseEntityType == EntityType::PED)
+			if (parentEntityType == EntityType::PED)
 			{
 				GTAped baseEntityPed = baseEntity;
 				defaultBone = baseEntityPed.GetBoneIndex(Bone::SKEL_ROOT);
@@ -1654,7 +1894,7 @@ namespace sub
 					}
 				}
 			}
-			else if (baseEntityType == EntityType::VEHICLE)
+			else if (parentEntityType == EntityType::VEHICLE)
 			{
 				GTAvehicle baseEntityVeh = baseEntity;
 				defaultBone = baseEntityVeh.GetBoneIndex(VBone::bodyshell);
@@ -1705,7 +1945,8 @@ namespace sub
 				z_plus = 0, z_minus = 0,
 				pitch_plus = 0, pitch_minus = 0,
 				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0;
+				yaw_plus = 0, yaw_minus = 0,
+				bResetRot = 0;
 
 			AddTitle("Manual Placement");
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
@@ -1715,9 +1956,12 @@ namespace sub
 			AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 			AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 			AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
+			AddOption("Reset rotation", bResetRot);
 
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
+
+			HandleEntityEditingLogic(nextPos, nextRot, nullptr);
 
 			if (x_plus) nextPos.x += _manualPlacementPrecision;
 			if (x_minus) nextPos.x -= _manualPlacementPrecision;
@@ -1726,12 +1970,18 @@ namespace sub
 			if (z_plus) nextPos.z += _manualPlacementPrecision;
 			if (z_minus) nextPos.z -= _manualPlacementPrecision;
 
-			if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-			if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-			if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-			if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-			if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-			if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+			if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+			if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+			if (roll_plus) nextRot.y += _manualPlacementPrecision;
+			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+		
+			if (bResetRot) nextRot = Vector3();
+
+			WrapAngle(nextRot.x);
+			WrapAngle(nextRot.y);
+			WrapAngle(nextRot.z);
 
 			if (nextPos != currPos)
 			{
@@ -1743,19 +1993,6 @@ namespace sub
 			}
 			if (nextRot != currRot)
 			{
-				/*bool doPedIdleAnim = !selectedEntity.taskSequence.IsActive() && selectedEntity.type == EntityType::PED && (nextRot.y != currRot.y || nextRot.x != currRot.x);
-				INT8 pedWasPlayingAnimOrScenario = 0;
-				if (doPedIdleAnim) pedWasPlayingAnimOrScenario = thisPed.Task().IsPlayingAnimation(selectedEntity.lastAnimation.dict, selectedEntity.lastAnimation.name) ? 1 : thisPed.Task().IsUsingScenario(selectedEntity.lastAnimation.name) ? 2 : 0;
-				if (doPedIdleAnim) thisPed.Task().PlayAnimation("idle", "mp_sleep");
-				selectedEntity.handle.Rotation_set(nextRot);
-				if (doPedIdleAnim) {
-					if (pedWasPlayingAnimOrScenario == 1)
-						thisPed.Task().PlayAnimation(selectedEntity.lastAnimation.dict, selectedEntity.lastAnimation.name);
-					else if (pedWasPlayingAnimOrScenario == 2)
-						thisPed.Task().StartScenario(selectedEntity.lastAnimation.name, 0, false);
-					else thisPed.Task().ClearAnimation("idle", "mp_sleep");
-				}*/
-
 				selectedEntity.handle.SetRotation(nextRot);
 				currRot = selectedEntity.handle.Rotation_get();
 				GTAentity attBase;
@@ -1775,40 +2012,50 @@ namespace sub
 
 			AddTitle("Size Manipulation");
 
-			UINT64 ptr = GTAmemory::_entityAddressFunc(selectedEntity.handle.Handle());
-			if (!ptr) return;
+			Entity handle = selectedEntity.handle.Handle();
 
-			float length = GTAmemory::ReadFloat(ptr + 0x60);
-			float width = GTAmemory::ReadFloat(ptr + 0x74);
-			float height = GTAmemory::ReadFloat(ptr + 0x88);
+			auto& state = IS_ENTITY_A_VEHICLE(handle) ? _vehScale
+			            : IS_ENTITY_A_PED(handle) ? _pedScale
+			            : _objScale;
+
+			if (state.handle != handle)
+			{
+				state.handle = handle;
+				state.scale = selectedEntity.handle.GetScale();
+			}
 
 			bool prec_plus = false, prec_minus = false;
 			bool x_plus = false, x_minus = false;
 			bool y_plus = false, y_minus = false;
 			bool z_plus = false, z_minus = false;
+			bool bResetScale = false;
 
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
-			AddNumber("Length (Y)", length, 4, null, y_plus, y_minus);
-			AddNumber("Width (X)", width, 4, null, x_plus, x_minus);
-			AddNumber("Height (Z)", height, 4, null, z_plus, z_minus);
-
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
-			if (y_plus) length += (_manualPlacementPrecision * 25.0f);
-			if (y_minus) length -= (_manualPlacementPrecision * 25.0f);
-			if (x_plus) width += (_manualPlacementPrecision * 25.0f);
-			if (x_minus) width -= (_manualPlacementPrecision * 25.0f);
-			if (z_plus) height += (_manualPlacementPrecision * 25.0f);
-			if (z_minus) height -= (_manualPlacementPrecision * 25.0f);
+			AddNumber("Scale X (Length)", state.scale.x, 4, null, x_plus, x_minus);
+			AddNumber("Scale Y (Width)",  state.scale.y, 4, null, y_plus, y_minus);
+			AddNumber("Scale Z (Height)", state.scale.z, 4, null, z_plus, z_minus);
+			AddOption("Reset scale", bResetScale);
 
-			if (length < 0.01f) length = 0.01f;
-			if (width < 0.01f) width = 0.01f;
-			if (height < 0.01f) height = 0.01f;
+			if (x_plus)  state.scale.x = max(0.01f, state.scale.x + _manualPlacementPrecision);
+			if (x_minus) state.scale.x = max(0.01f, state.scale.x - _manualPlacementPrecision);
+			if (y_plus)  state.scale.y = max(0.01f, state.scale.y + _manualPlacementPrecision);
+			if (y_minus) state.scale.y = max(0.01f, state.scale.y - _manualPlacementPrecision);
+			if (z_plus)  state.scale.z = max(0.01f, state.scale.z + _manualPlacementPrecision);
+			if (z_minus) state.scale.z = max(0.01f, state.scale.z - _manualPlacementPrecision);
 
-			GTAmemory::WriteFloat(ptr + 0x60, length);
-			GTAmemory::WriteFloat(ptr + 0x74, width);
-			GTAmemory::WriteFloat(ptr + 0x88, height);
+			if (bResetScale) state.scale = Vector3(1.0f, 1.0f, 1.0f);
+
+			bool bScaleChanged = x_plus || x_minus || y_plus || y_minus || z_plus || z_minus || bResetScale;
+			if (bScaleChanged && !IS_ENTITY_A_VEHICLE(handle) && !IS_ENTITY_A_PED(handle))
+			{
+				selectedEntity.handle.SetIsCollisionEnabled(false);
+				selectedEntity.handle.FreezePosition(true);
+				selectedEntity.handle.SetScale(state.scale);
+			}
+
 		}
 
 		void Sub_QuickManualPlacement()
@@ -1847,8 +2094,6 @@ namespace sub
 
 			bool bPropertiesSubPressed = false, bEnt_plus = false, bEnt_minus = false;
 			AddTexter(selectedEntity.hashName, currIndexInDb, std::vector<std::string>{}, bPropertiesSubPressed, bEnt_plus, bEnt_minus);
-			if (*Menu::currentopATM == Menu::printingop)
-				EntityManagement::ShowArrowAboveEntity(selectedEntity.handle, RGBA(51, 153, 255, 200));
 			if (bPropertiesSubPressed)
 			{
 				Menu::SetSub_delayed = SUB::SPOONER_SELECTEDENTITYOPS;
@@ -1897,7 +2142,8 @@ namespace sub
 				z_plus = 0, z_minus = 0,
 				pitch_plus = 0, pitch_minus = 0,
 				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0;
+				yaw_plus = 0, yaw_minus = 0,
+				bResetRot = 0;
 
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
 			AddNumber("X", currPos.x, 4, null, x_plus, x_minus);
@@ -1906,10 +2152,13 @@ namespace sub
 			AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 			AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 			AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
+			AddOption("Reset rotation", bResetRot);
 			AddOption("Other Properites", null, nullFunc, SUB::SPOONER_SELECTEDENTITYOPS);
 
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 			if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
+
+			HandleEntityEditingLogic(nextPos, nextRot, nullptr);
 
 			if (x_plus) nextPos.x += _manualPlacementPrecision;
 			if (x_minus) nextPos.x -= _manualPlacementPrecision;
@@ -1918,12 +2167,18 @@ namespace sub
 			if (z_plus) nextPos.z += _manualPlacementPrecision;
 			if (z_minus) nextPos.z -= _manualPlacementPrecision;
 
-			if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-			if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-			if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-			if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-			if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-			if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+			if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+			if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+			if (roll_plus) nextRot.y += _manualPlacementPrecision;
+			if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+			if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+			if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+			if (bResetRot) nextRot = Vector3();
+
+			WrapAngle(nextRot.x);
+			WrapAngle(nextRot.y);
+			WrapAngle(nextRot.z);
 
 			if (nextPos != currPos) selectedEntity.handle.SetPosition(nextPos);
 			if (nextRot != currRot) selectedEntity.handle.SetRotation(nextRot);
@@ -1952,7 +2207,8 @@ namespace sub
 				z_plus = 0, z_minus = 0,
 				pitch_plus = 0, pitch_minus = 0,
 				roll_plus = 0, roll_minus = 0,
-				yaw_plus = 0, yaw_minus = 0;
+				yaw_plus = 0, yaw_minus = 0,
+				bResetRot = 0;
 
 			AddNumber("Scroll Sensitivity", _manualPlacementPrecision, 4, null, prec_minus, prec_plus);
 			if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
@@ -1981,12 +2237,20 @@ namespace sub
 				AddNumber("Pitch", currRot.x, 4, null, pitch_plus, pitch_minus);
 				AddNumber("Roll", currRot.y, 4, null, roll_plus, roll_minus);
 				AddNumber("Yaw", currRot.z, 4, null, yaw_plus, yaw_minus);
-				if (pitch_plus) { nextRot.x += _manualPlacementPrecision; if (nextRot.x > 180.0f) nextRot.x -= 360.0f; }
-				if (pitch_minus) { nextRot.x -= _manualPlacementPrecision; if (nextRot.x < -180.0f) nextRot.x += 360.0f; }
-				if (roll_plus) { nextRot.y += _manualPlacementPrecision; if (nextRot.y > 180.0f) nextRot.y -= 360.0f; }
-				if (roll_minus) { nextRot.y -= _manualPlacementPrecision; if (nextRot.y < -180.0f) nextRot.y += 360.0f; }
-				if (yaw_plus) { nextRot.z += _manualPlacementPrecision; if (nextRot.z > 180.0f) nextRot.z -= 360.0f; }
-				if (yaw_minus) { nextRot.z -= _manualPlacementPrecision; if (nextRot.z < -180.0f) nextRot.z += 360.0f; }
+				AddOption("Reset rotation", bResetRot);
+
+				if (pitch_plus) nextRot.x += _manualPlacementPrecision;
+				if (pitch_minus) nextRot.x -= _manualPlacementPrecision;
+				if (roll_plus) nextRot.y += _manualPlacementPrecision;
+				if (roll_minus) nextRot.y -= _manualPlacementPrecision;
+				if (yaw_plus) nextRot.z += _manualPlacementPrecision;
+				if (yaw_minus) nextRot.z -= _manualPlacementPrecision;
+
+				if (bResetRot) { *std::get<2>(SpoonerVector3ManualPlacementPtrs) = Vector3(); }
+
+				WrapAngle(nextRot.x);
+				WrapAngle(nextRot.y);
+				WrapAngle(nextRot.z);
 			}
 
 		}
@@ -2047,6 +2311,8 @@ namespace sub
 				if (prec_plus) { if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10; }
 				if (prec_minus) { if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10; }
 
+				// HandleEntityEditingLogic(nextPosOffset, nextRotOffset, nullptr); // doesn't really work as expected, just applies the delta to all objects instead of calculating a centroid and making changes based on it. 
+
 				if (x_plus) nextPosOffset.x += _manualPlacementPrecision;
 				if (x_minus) nextPosOffset.x -= _manualPlacementPrecision;
 				if (y_plus) nextPosOffset.y += _manualPlacementPrecision;
@@ -2054,12 +2320,16 @@ namespace sub
 				if (z_plus) nextPosOffset.z += _manualPlacementPrecision;
 				if (z_minus) nextPosOffset.z -= _manualPlacementPrecision;
 
-				if (pitch_plus) { nextRotOffset.x += _manualPlacementPrecision; if (nextRotOffset.x > 180.0f) nextRotOffset.x -= 360.0f; }
-				if (pitch_minus) { nextRotOffset.x -= _manualPlacementPrecision; if (nextRotOffset.x < -180.0f) nextRotOffset.x += 360.0f; }
-				if (roll_plus) { nextRotOffset.y += _manualPlacementPrecision; if (nextRotOffset.y > 180.0f) nextRotOffset.y -= 360.0f; }
-				if (roll_minus) { nextRotOffset.y -= _manualPlacementPrecision; if (nextRotOffset.y < -180.0f) nextRotOffset.y += 360.0f; }
-				if (yaw_plus) { nextRotOffset.z += _manualPlacementPrecision; if (nextRotOffset.z > 180.0f) nextRotOffset.z -= 360.0f; }
-				if (yaw_minus) { nextRotOffset.z -= _manualPlacementPrecision; if (nextRotOffset.z < -180.0f) nextRotOffset.z += 360.0f; }
+				if (pitch_plus) nextRotOffset.x += _manualPlacementPrecision;
+				if (pitch_minus) nextRotOffset.x -= _manualPlacementPrecision;
+				if (roll_plus) nextRotOffset.y += _manualPlacementPrecision;
+				if (roll_minus) nextRotOffset.y -= _manualPlacementPrecision;
+				if (yaw_plus) nextRotOffset.z += _manualPlacementPrecision;
+				if (yaw_minus) nextRotOffset.z -= _manualPlacementPrecision;
+
+				WrapAngle(nextRotOffset.x);
+				WrapAngle(nextRotOffset.y);
+				WrapAngle(nextRotOffset.z);
 
 				if (!nextPosOffset.IsZero())
 				{
@@ -2318,7 +2588,7 @@ namespace sub
 			bool butAmIOnline = NETWORK_IS_IN_SESSION() != 0;
 			bool isPedMyPed = thisPed.Handle() == myPed.Handle();
 			bool bIsPedShortHeighted = GET_PED_CONFIG_FLAG(thisPed.Handle(), ePedConfigFlags::_Shrink, false) != 0;
-			PedGroup myPedGroup = myPed.CurrentPedGroup_get();
+			PedGroup myPedGroup = myPed.GetCurrentPedGroup();
 
 			bool pedops_isStill_toggle = false,
 				pedops_canRagdoll_toggle = false,
@@ -2335,15 +2605,15 @@ namespace sub
 
 			if (!isPedMyPed)
 				MenuOptions::AddOption_RelationshipTextScroller();
-			AddToggle("Is Still (Block Fleeing)", selectedEntity.isStill, pedops_isStill_toggle, pedops_isStill_toggle); if (pedops_isStill_toggle) { thisPed.BlockPermanentEvents_set(selectedEntity.isStill); }
-			AddLocal("Can Ragdoll", thisPed.CanRagdoll_get(), pedops_canRagdoll_toggle, pedops_canRagdoll_toggle); if (pedops_canRagdoll_toggle) { bool ns = !thisPed.CanRagdoll_get(); thisPed.CanRagdoll_set(ns); SET_PED_RAGDOLL_ON_COLLISION(thisPed.Handle(), ns); }
+			AddToggle("Is Still (Block Fleeing)", selectedEntity.isStill, pedops_isStill_toggle, pedops_isStill_toggle); if (pedops_isStill_toggle) { thisPed.SetBlockPermanentEvent(selectedEntity.isStill); }
+			AddLocal("Can Ragdoll", thisPed.GetCanRagdoll(), pedops_canRagdoll_toggle, pedops_canRagdoll_toggle); if (pedops_canRagdoll_toggle) { bool ns = !thisPed.GetCanRagdoll(); thisPed.SetCanRagdoll(ns); SET_PED_RAGDOLL_ON_COLLISION(thisPed.Handle(), ns); }
 			AddLocal("Is Short Heighted (Small)", bIsPedShortHeighted, pedops_shortHeighted_toggle, pedops_shortHeighted_toggle); if (pedops_shortHeighted_toggle) { SET_PED_CONFIG_FLAG(selectedEntity.handle.Handle(), ePedConfigFlags::_Shrink, bIsPedShortHeighted ? 0 : 1); }
 
-			int thisArmour = thisPed.Armour_get();
+			int thisArmour = thisPed.GetArmour();
 			bool bArmour_plus = false, bArmour_minus = false, bArmour_input = false;
 			AddNumber("Armour", thisArmour, 0, bArmour_input, bArmour_plus, bArmour_minus);
-			if (bArmour_plus) { if (thisArmour < INT_MAX) { thisArmour++; thisPed.Armour_set(thisArmour); } }
-			if (bArmour_minus) { if (thisArmour > 0) { thisArmour--;  thisPed.Armour_set(thisArmour); } }
+			if (bArmour_plus) { if (thisArmour < INT_MAX) { thisArmour++; thisPed.SetArmour(thisArmour); } }
+			if (bArmour_minus) { if (thisArmour > 0) { thisArmour--;  thisPed.SetArmour(thisArmour); } }
 			if (bArmour_input)
 			{
 				std::string inputStr = Game::InputBox("", 5U, "", std::to_string(thisArmour));
@@ -2352,7 +2622,7 @@ namespace sub
 					try
 					{
 						thisArmour = stoi(inputStr);
-						thisPed.Armour_set(thisArmour);
+						thisPed.SetArmour(thisArmour);
 					}
 					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
 				}
@@ -2365,7 +2635,7 @@ namespace sub
 			{
 				g_cam_componentChanger.SetActive(false);
 				g_cam_componentChanger.Destroy();
-				World::RenderingCamera_set(0);
+				World::SetRenderingCamera(0);
 			}
 
 			AddOption("Animations", null, SetEnt241, SUB::ANIMATIONSUB);
@@ -2488,7 +2758,7 @@ namespace sub
 			auto& selectedCategoryIndex = msCurrentPaintIndex;
 			GTAped myPed = PLAYER_PED_ID();
 			GTAped thisPed = selectedEntity.handle;
-			Hash pedCurrWeapon = thisPed.Weapon_get();
+			Hash pedCurrWeapon = thisPed.GetWeapon();
 			bool isPedMyPed = thisPed.Handle() == myPed.Handle();
 
 			AddTitle("Weapon");
@@ -2506,7 +2776,7 @@ namespace sub
 				//std::vector<s_Weapon_Components_Tint> weaponsBackup;
 				//myPed.StoreWeaponsInArray(weaponsBackup);
 				//GTAped(thisPed).GiveWeaponsFromArray(weaponsBackup);
-				Hash weaponHash = myPed.Weapon_get();
+				Hash weaponHash = myPed.GetWeapon();
 				GIVE_DELAYED_WEAPON_TO_PED(thisPed.Handle(), weaponHash, 9999, true);
 				GIVE_WEAPON_TO_PED(thisPed.Handle(), weaponHash, 1, true, false);
 				int ammo;
@@ -2531,12 +2801,12 @@ namespace sub
 			AddTitle(WeaponIndivs::vCategoryNames[selectedCategoryIndex]);
 
 			GTAped thisPed = selectedEntity.handle;
-			Hash currentWeapon = thisPed.Weapon_get();
+			Hash currentWeapon = thisPed.GetWeapon();
 
 			for (auto& wc : *WeaponIndivs::vAllWeapons[selectedCategoryIndex])
 			{
 				bool bWeapPressed = false;
-				AddTickol(get_weapon_label(wc.weaponHash, true), currentWeapon == wc.weaponHash, bWeapPressed, bWeapPressed); if (bWeapPressed)
+				AddTickol(GetWeaponLabel(wc.weaponHash, true), currentWeapon == wc.weaponHash, bWeapPressed, bWeapPressed); if (bWeapPressed)
 				{
 					GIVE_DELAYED_WEAPON_TO_PED(thisPed.Handle(), wc.weaponHash, 9999, true);
 					GIVE_WEAPON_TO_PED(thisPed.Handle(), wc.weaponHash, 1, true, false);
@@ -2607,7 +2877,7 @@ namespace sub
 				{
 					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f + SpoonerMarker().m_scale / 2);
 					spawnPos.z += SpoonerMarker().m_scale / 2;
-					SelectedMarker = MarkerManagement::AddMarker(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+					SelectedMarker = MarkerManagement::AddMarker(spawnPos, Vector3(0, 0, spoocam.GetRotation().z));
 				}
 				Menu::SetSub_delayed = SUB::SPOONER_MANAGEMARKERS_INMARKER;
 			}
@@ -2750,7 +3020,7 @@ namespace sub
 					AddOption("Set To Waypoint", bSetPosToWp); if (bSetPosToWp)
 					{
 						GTAblip wpBlip = GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint);
-						Vector3 wpCoords = wpBlip.Position_get();
+						Vector3 wpCoords = wpBlip.GetPosition();
 						wpCoords.z = World::GetGroundHeight(wpCoords);
 						SelectedMarker->m_position = wpCoords;
 						SelectedMarker->m_attachmentArgs.attachedTo = 0;
@@ -2820,7 +3090,7 @@ namespace sub
 					AddOption("Set To Waypoint", bSetPosToWp); if (bSetPosToWp)
 					{
 						GTAblip wpBlip = GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint);
-						Vector3 wpCoords = wpBlip.Position_get();
+						Vector3 wpCoords = wpBlip.GetPosition();
 						wpCoords.z = World::GetGroundHeight(wpCoords);
 						SelectedMarker->m_destinationVal.m_position = wpCoords;
 						SelectedMarker->m_destinationVal.m_attachmentArgs.attachedTo = 0;
@@ -3004,11 +3274,313 @@ namespace sub
 			AddOption("Ped", null, nullFunc, SUB::SPOONER_SPAWN_PED);
 			AddOption("Vehicle", null, nullFunc, SUB::SPOONER_SPAWN_VEHICLE);
 		}
+
+		namespace ObjectSearch
+		{
+			static constexpr size_t MaxVisibleResults = 500;
+			static int sortIndex = 0;
+			static int categoryFilter = 0;
+			static int dlcFilter = 0;
+			static int stuntFilter = 0;
+			static int lodFilter = 0;
+			static int sizeFilter = 0;
+			static std::vector<std::string> results;
+			static std::vector<std::string> categoryOptions;
+			static std::vector<std::string> dlcOptions;
+			static std::vector<std::string> stuntOptions;
+			static std::vector<std::string> sizeOptions;
+			static std::string lastSearch = "\x01";
+			static int lastSort = -1, lastCategory = -1, lastDlc = -1, lastStunt = -1, lastLod = -1, lastSize = -1;
+			static size_t lastObjectCount = 0;
+			static bool dirty = true;
+
+			static const std::vector<std::string> sortOptionsList = { "Name (A-Z)", "Name (Z-A)" };
+			static const std::vector<std::string> lodOptionsList = { "Hide LOD", "Show All" };
+
+			void BuildCategoryOptions()
+			{
+				std::array<int, ObjectCategories::Category_Count> counts = {};
+				for (const auto& modelName : objectModels)
+				{
+					counts[ObjectCategories::GetObjectCategory(modelName)]++;
+				}
+
+				categoryOptions.clear();
+				categoryOptions.push_back("All (" + std::to_string(objectModels.size()) + ")");
+				for (int i = 0; i < ObjectCategories::Category_Count; i++)
+				{
+					const auto category = static_cast<ObjectCategories::Category>(i);
+					categoryOptions.push_back(std::string(ObjectCategories::GetObjectCategoryName(category)) + " (" + std::to_string(counts[i]) + ")");
+				}
+			}
+
+			void BuildDlcOptions()
+			{
+				std::array<int, ObjectCategories::DLC_Count> counts = {};
+				for (const auto& modelName : objectModels)
+				{
+					counts[ObjectCategories::GetObjectDlcGroup(modelName)]++;
+				}
+
+				dlcOptions.clear();
+				dlcOptions.push_back("All (" + std::to_string(objectModels.size()) + ")");
+				for (int i = 0; i < ObjectCategories::DLC_Count; i++)
+				{
+					const auto group = static_cast<ObjectCategories::DlcGroup>(i);
+					dlcOptions.push_back(std::string(ObjectCategories::GetObjectDlcGroupName(group)) + " (" + std::to_string(counts[i]) + ")");
+				}
+			}
+
+			void BuildStuntOptions()
+			{
+				std::array<int, ObjectCategories::Stunt_Count> counts = {};
+				for (const auto& modelName : objectModels)
+				{
+					auto st = ObjectCategories::GetStuntType(modelName);
+					if (st != ObjectCategories::Stunt_None) counts[st]++;
+				}
+
+				int totalStunt = 0;
+				for (int i = 1; i < ObjectCategories::Stunt_Count; i++) totalStunt += counts[i];
+
+				stuntOptions.clear();
+				stuntOptions.push_back("All");
+				stuntOptions.push_back("All Stunt (" + std::to_string(totalStunt) + ")");
+				for (int i = 1; i < ObjectCategories::Stunt_Count; i++)
+				{
+					if (counts[i] > 0)
+						stuntOptions.push_back(std::string(ObjectCategories::GetStuntTypeName(static_cast<ObjectCategories::StuntType>(i))) + " (" + std::to_string(counts[i]) + ")");
+					else
+						stuntOptions.push_back(ObjectCategories::GetStuntTypeName(static_cast<ObjectCategories::StuntType>(i)));
+				}
+			}
+
+			void BuildSizeOptions()
+			{
+				std::array<int, ObjectCategories::Size_Count> counts = {};
+				for (const auto& modelName : objectModels)
+				{
+					auto sz = ObjectCategories::GetNamedSize(modelName);
+					if (sz != ObjectCategories::Size_Unknown) counts[sz]++;
+				}
+
+				int totalSized = 0;
+				for (int i = 1; i < ObjectCategories::Size_Count; i++) totalSized += counts[i];
+
+				sizeOptions.clear();
+				sizeOptions.push_back("All");
+				sizeOptions.push_back("Has Size (" + std::to_string(totalSized) + ")");
+				for (int i = 1; i < ObjectCategories::Size_Count; i++)
+				{
+					auto sz = static_cast<ObjectCategories::SizeClass>(i);
+					sizeOptions.push_back(std::string(ObjectCategories::GetSizeClassName(sz)) + " (" + std::to_string(counts[i]) + ")");
+				}
+			}
+
+			void EnsureOptions()
+			{
+				if (categoryOptions.empty() || dlcOptions.empty() || stuntOptions.empty() || sizeOptions.empty() || lastObjectCount != objectModels.size())
+				{
+					BuildCategoryOptions();
+					BuildDlcOptions();
+					BuildStuntOptions();
+					BuildSizeOptions();
+					lastObjectCount = objectModels.size();
+					dirty = true;
+				}
+			}
+
+			void RebuildResults(const std::string& searchStr)
+			{
+				results.clear();
+				std::string searchUpper = boost::to_upper_copy(searchStr);
+
+				for (const auto& modelName : objectModels)
+				{
+					if (lodFilter == 0 && ObjectCategories::IsLodProxy(modelName))
+						continue;
+
+					if (categoryFilter != 0)
+					{
+						const auto category = ObjectCategories::GetObjectCategory(modelName);
+						if (static_cast<int>(category) != (categoryFilter - 1))
+							continue;
+					}
+
+					if (dlcFilter != 0)
+					{
+						const auto dlcGroup = ObjectCategories::GetObjectDlcGroup(modelName);
+						if (static_cast<int>(dlcGroup) != (dlcFilter - 1))
+							continue;
+					}
+
+					if (stuntFilter != 0)
+					{
+						auto st = ObjectCategories::GetStuntType(modelName);
+						if (stuntFilter == 1)
+						{
+							if (st == ObjectCategories::Stunt_None) continue;
+						}
+						else
+						{
+							if (static_cast<int>(st) != (stuntFilter - 1)) continue;
+						}
+					}
+
+					if (sizeFilter != 0)
+					{
+						auto sz = ObjectCategories::GetNamedSize(modelName);
+						if (sizeFilter == 1)
+						{
+							if (sz == ObjectCategories::Size_Unknown) continue;
+						}
+						else
+						{
+							if (static_cast<int>(sz) != (sizeFilter - 1)) continue;
+						}
+					}
+
+					if (!searchUpper.empty())
+					{
+						std::string modelUpper = boost::to_upper_copy(modelName);
+						if (modelUpper.find(searchUpper) == std::string::npos)
+							continue;
+					}
+
+					results.push_back(modelName);
+				}
+
+				switch (sortIndex)
+				{
+				case 0:
+					std::sort(results.begin(), results.end(), [](const auto& a, const auto& b) {
+						return boost::to_lower_copy(a) < boost::to_lower_copy(b);
+					});
+					break;
+				case 1:
+					std::sort(results.begin(), results.end(), [](const auto& a, const auto& b) {
+						return boost::to_lower_copy(a) > boost::to_lower_copy(b);
+					});
+					break;
+				}
+			}
+		}
+
+		void ObjectSpawnerSearchMenu()
+		{
+			using namespace ObjectSearch;
+			auto& searchStr = dict;
+
+			EnsureOptions();
+
+			AddTitle("Object Search");
+
+			bool bSearchPressed = false;
+			AddOption(searchStr.empty() ? "~b~SEARCH~s~" : ("~b~" + searchStr + "~s~"), bSearchPressed, nullFunc, -1, true);
+			if (bSearchPressed)
+			{
+				searchStr = Game::InputBox(searchStr, 64U, "Search objects:", boost::to_lower_copy(searchStr));
+				boost::to_upper(searchStr);
+			}
+
+			bool sortRight = false, sortLeft = false;
+			AddTexter("Sort", sortIndex, sortOptionsList, null, sortRight, sortLeft);
+			if (sortRight && sortIndex < (int)(sortOptionsList.size() - 1)) sortIndex++;
+			if (sortLeft && sortIndex > 0) sortIndex--;
+
+			bool catRight = false, catLeft = false;
+			AddTexter("Category", categoryFilter, categoryOptions, null, catRight, catLeft);
+			if (catRight && categoryFilter < (int)(categoryOptions.size() - 1)) categoryFilter++;
+			if (catLeft && categoryFilter > 0) categoryFilter--;
+
+			bool dlcRight = false, dlcLeft = false;
+			AddTexter("DLC", dlcFilter, dlcOptions, null, dlcRight, dlcLeft);
+			if (dlcRight && dlcFilter < (int)(dlcOptions.size() - 1)) dlcFilter++;
+			if (dlcLeft && dlcFilter > 0) dlcFilter--;
+
+			bool stuntRight = false, stuntLeft = false;
+			AddTexter("Stunt", stuntFilter, stuntOptions, null, stuntRight, stuntLeft);
+			if (stuntRight && stuntFilter < (int)(stuntOptions.size() - 1)) stuntFilter++;
+			if (stuntLeft && stuntFilter > 0) stuntFilter--;
+
+			bool sizeRight = false, sizeLeft = false;
+			AddTexter("Size", sizeFilter, sizeOptions, null, sizeRight, sizeLeft);
+			if (sizeRight && sizeFilter < (int)(sizeOptions.size() - 1)) sizeFilter++;
+			if (sizeLeft && sizeFilter > 0) sizeFilter--;
+
+			bool lodRight = false, lodLeft = false;
+			AddTexter("LOD/Proxy", lodFilter, lodOptionsList, null, lodRight, lodLeft);
+			if (lodRight && lodFilter < 1) lodFilter++;
+			if (lodLeft && lodFilter > 0) lodFilter--;
+
+			if (searchStr != lastSearch || sortIndex != lastSort ||
+				categoryFilter != lastCategory || dlcFilter != lastDlc ||
+				stuntFilter != lastStunt || lodFilter != lastLod ||
+				sizeFilter != lastSize)
+			{
+				dirty = true;
+			}
+
+			if (dirty)
+			{
+				RebuildResults(searchStr);
+				lastSearch = searchStr;
+				lastSort = sortIndex;
+				lastCategory = categoryFilter;
+				lastDlc = dlcFilter;
+				lastStunt = stuntFilter;
+				lastLod = lodFilter;
+				lastSize = sizeFilter;
+				dirty = false;
+			}
+
+			if (results.size() > MaxVisibleResults)
+				AddBreak("---Results: " + std::to_string(results.size()) + " (showing " + std::to_string(MaxVisibleResults) + ")---");
+			else
+				AddBreak("---Results: " + std::to_string(results.size()) + "---");
+
+			const size_t visibleCount = results.size() < MaxVisibleResults ? results.size() : MaxVisibleResults;
+			for (size_t i = 0; i < visibleCount; i++)
+			{
+				const auto& modelName = results[i];
+				Model currentModel = GET_HASH_KEY(modelName);
+
+				MenuOptions::AddOption_AddProp(modelName, currentModel.hash);
+
+				if (Menu::printingop == *Menu::currentopATM)
+				{
+					bool bIsAFav = FavouritesManagement::IsPropAFavourite(modelName, currentModel.hash);
+					if (Menu::bitController)
+					{
+						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+
+						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
+						{
+							!bIsAFav ? FavouritesManagement::AddPropToFavourites(modelName, currentModel.hash) : FavouritesManagement::RemovePropFromFavourites(modelName, currentModel.hash);
+						}
+					}
+					else
+					{
+						Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+
+						if (IsKeyJustUp(VirtualKey::B))
+						{
+							!bIsAFav ? FavouritesManagement::AddPropToFavourites(modelName, currentModel.hash) : FavouritesManagement::RemovePropFromFavourites(modelName, currentModel.hash);
+						}
+					}
+				}
+			}
+		}
+
 		void Sub_SpawnProp()
 		{
 			AddTitle("Spawn Object");
 
 			AddOption("Favourites", null, nullFunc, SUB::SPOONER_SPAWN_PROP_FAVOURITES);
+			bool bOpenObjectSearch = false;
+			AddOption("Search Objects", bOpenObjectSearch, nullFunc, SUB::OBJECTSPAWNER_SEARCH);
+			if (bOpenObjectSearch)
+				dict.clear();
 
 			bool bSearchPressed = false;
 			AddOption(_searchStr.empty() ? "SEARCH" : boost::to_upper_copy(_searchStr), bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
@@ -3143,55 +3715,22 @@ namespace sub
 			AddTitle("Spawn Ped");
 
 			AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
+			AddOption("~b~Search~s~ Peds", null, nullFunc, SUB::MODELCHANGER_SEARCH);
 
-			bool bSearchPressed = false;
-			AddOption(_searchStr.empty() ? "SEARCH" : boost::to_upper_copy(_searchStr), bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
-			{
-				_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", _searchStr);
-				boost::to_lower(_searchStr);
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToLower, _searchStr, 126U, std::string(), _searchStr);
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
-			}
-
-			if (!_searchStr.empty())
-			{
-				for (auto& current : g_pedModels)
-				{
-					if (current.first.find(_searchStr) == std::string::npos && current.second.find(_searchStr) == std::string::npos)
-						continue;
-
-					Model currentModel = GET_HASH_KEY(current.first);
-
-					if (currentModel.IsInCdImage())
-					{
-						MenuOptions::AddOptionAddPed(current.second, currentModel);
-						if (*Menu::currentopATM == Menu::printingop) PedFavourites::ShowInstructionalButton(currentModel);
-					}
-				}
-			}
-			else
-			{
-				AddOption("Player", null, nullFunc, SUB::MODELCHANGER_PLAYER);
-				AddOption("Animals", null, nullFunc, SUB::MODELCHANGER_ANIMAL);
-				AddOption("Ambient Females", null, nullFunc, SUB::MODELCHANGER_AMBFEMALES);
-				AddOption("Ambient Males", null, nullFunc, SUB::MODELCHANGER_AMBMALES);
-				AddOption("Cutscene Models", null, nullFunc, SUB::MODELCHANGER_CS);
-				AddOption("Gang Females", null, nullFunc, SUB::MODELCHANGER_GANGFEMALES);
-				AddOption("Gang Males", null, nullFunc, SUB::MODELCHANGER_GANGMALES);
-				AddOption("Story Models", null, nullFunc, SUB::MODELCHANGER_STORY);
-				AddOption("Multiplayer Models", null, nullFunc, SUB::MODELCHANGER_MP);
-				AddOption("Scenario Females", null, nullFunc, SUB::MODELCHANGER_SCENARIOFEMALES);
-				AddOption("Scenario Males", null, nullFunc, SUB::MODELCHANGER_SCENARIOMALES);
-				AddOption("Story Scenario Females", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOFEMALES);
-				AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
-				AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
-			}
-
-			bool bInputPressed = false;
-			AddOption("INPUT MODEL", bInputPressed); if (bInputPressed)
-			{
-				EntityManagement::InputEntityIntoDb(EntityType::PED);
-			}
+			AddOption("Player", null, nullFunc, SUB::MODELCHANGER_PLAYER);
+			AddOption("Animals", null, nullFunc, SUB::MODELCHANGER_ANIMAL);
+			AddOption("Ambient Females", null, nullFunc, SUB::MODELCHANGER_AMBFEMALES);
+			AddOption("Ambient Males", null, nullFunc, SUB::MODELCHANGER_AMBMALES);
+			AddOption("Cutscene Models", null, nullFunc, SUB::MODELCHANGER_CS);
+			AddOption("Gang Females", null, nullFunc, SUB::MODELCHANGER_GANGFEMALES);
+			AddOption("Gang Males", null, nullFunc, SUB::MODELCHANGER_GANGMALES);
+			AddOption("Story Models", null, nullFunc, SUB::MODELCHANGER_STORY);
+			AddOption("Multiplayer Models", null, nullFunc, SUB::MODELCHANGER_MP);
+			AddOption("Scenario Females", null, nullFunc, SUB::MODELCHANGER_SCENARIOFEMALES);
+			AddOption("Scenario Males", null, nullFunc, SUB::MODELCHANGER_SCENARIOMALES);
+			AddOption("Story Scenario Females", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOFEMALES);
+			AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
+			AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
 		}
 		void Sub_SpawnVehicle()
 		{
@@ -3202,6 +3741,7 @@ namespace sub
 
 			AddTitle("Spawn Vehicle");
 			AddOption("Favourites", null, nullFunc, SUB::SPAWNVEHICLE_FAVOURITES);
+			AddOption("~b~Search~s~ Vehicles", null, nullFunc, SUB::SPAWNVEHICLE_SEARCH);
 
 			AddBreak("---Cars---");
 			AddVehicleCategoryOption("Open Wheel", Indices::OPENWHEEL);
@@ -3233,12 +3773,6 @@ namespace sub
 			AddVehicleCategoryOption("Helicopters", Indices::HELICOPTER);
 			AddVehicleCategoryOption("Boats", Indices::BOAT);
 			AddVehicleCategoryOption("Others", Indices::OTHER);
-
-			bool bInputPressed = false;
-			AddOption("INPUT MODEL", bInputPressed); if (bInputPressed)
-			{
-				EntityManagement::InputEntityIntoDb(EntityType::VEHICLE);
-			}
 		}
 	}
 
@@ -3889,7 +4423,7 @@ namespace sub
 
 		if (Network_ObjectSub_Clear) {
 			Vector3 temp = GET_ENTITY_COORDS(g_Ped1, 1);
-			clear_attachments_off_entity(g_Ped1, EntityType::PROP);
+			ClearAttachmentsOffEntity(g_Ped1, EntityType::PROP);
 			CLEAR_AREA_OF_OBJECTS(temp.x, temp.y, temp.z, 2.5f, 0);
 			return;
 		}
@@ -3933,14 +4467,14 @@ namespace sub
 
 		if (Network_ObjectSub_ClearPeds) {
 			Vector3 temp = GET_ENTITY_COORDS(g_Ped1, 1);
-			clear_attachments_off_entity(g_Ped1, EntityType::PED);
+			ClearAttachmentsOffEntity(g_Ped1, EntityType::PED);
 			CLEAR_AREA_OF_PEDS(temp.x, temp.y, temp.z, 2.5f, 0);
 			return;
 		}
 
 		if (Network_ObjectSub_ClearVehicles) {
 			Vector3 temp = GET_ENTITY_COORDS(g_Ped1, 1);
-			clear_attachments_off_entity(g_Ped1, EntityType::VEHICLE);
+			ClearAttachmentsOffEntity(g_Ped1, EntityType::VEHICLE);
 			CLEAR_AREA_OF_PEDS(temp.x, temp.y, temp.z, 2.5f, 0);
 			return;
 		}
@@ -3988,3 +4522,4 @@ REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_ATTACHTO,                      	sub::Spoo
 REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_SELECTBONE,                    	sub::Spooner::Submenus::Sub_AttachmentOps_SelectBone)
 REGISTER_SUBMENU(SPOONER_MANUALPLACEMENT,                             	sub::Spooner::Submenus::Sub_ManualPlacement)
 REGISTER_SUBMENU(SPOONER_SIZEMANIPULATION,                            	sub::Spooner::Submenus::Sub_SizeManipulation)
+REGISTER_SUBMENU(OBJECTSPAWNER_SEARCH,                                	sub::Spooner::Submenus::ObjectSpawnerSearchMenu)

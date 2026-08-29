@@ -165,7 +165,8 @@ void MenuConfig::ConfigRead()
 	font_options = ini.GetLongValue(section_fonts.c_str(), "options", font_options);
 	font_selection = ini.GetLongValue(section_fonts.c_str(), "selection", font_selection);
 	font_breaks = ini.GetLongValue(section_fonts.c_str(), "breaks", font_breaks);
-	font_xyzh = ini.GetLongValue(section_fonts.c_str(), "font_xyzh", font_xyzh);
+	font_hud = ini.GetLongValue(section_fonts.c_str(), "font_xyzh", font_hud); // backwards compability, in newer versions font_xyzh has been renamed to font_hud
+	font_hud = ini.GetLongValue(section_fonts.c_str(), "font_hud", font_hud);
 	font_speedo = ini.GetLongValue(section_fonts.c_str(), "font_speedo", font_speedo);
 
 
@@ -199,7 +200,8 @@ void MenuConfig::ConfigRead()
 	showFullHUD = ini.GetBoolValue(section_haxValues.c_str(), "show_full_hud", showFullHUD);
 	ManualRespawn::g_manualRespawn.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "manual_respawn", ManualRespawn::g_manualRespawn.Enabled());
 	noClip = ini.GetBoolValue(section_haxValues.c_str(), "freecam", noClip);
-	xyzhCoords = ini.GetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", xyzhCoords);
+	bDisplayXyzhCoords = ini.GetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", bDisplayXyzhCoords);
+	sub::Spooner::Settings::bDisplaySpoonerInfo = ini.GetBoolValue(section_spooner.c_str(), "DisplaySpoonerInfo", sub::Spooner::Settings::bDisplaySpoonerInfo);
 	FPSCounter::bDisplayFps = ini.GetBoolValue(section_haxValues.c_str(), "display_fps", FPSCounter::bDisplayFps);
 	sub::TVChannelStuff::loopBasicTV = ini.GetBoolValue(section_haxValues.c_str(), "basic_tv_player", sub::TVChannelStuff::loopBasicTV);
 	syncClock = ini.GetBoolValue(section_haxValues.c_str(), "sync_clock", syncClock);
@@ -425,7 +427,7 @@ void MenuConfig::SaveConfig()
 	ini.SetLongValue(section_fonts.c_str(), "options", font_options);
 	ini.SetLongValue(section_fonts.c_str(), "selection", font_selection);
 	ini.SetLongValue(section_fonts.c_str(), "breaks", font_breaks);
-	ini.SetLongValue(section_fonts.c_str(), "font_xyzh", font_xyzh);
+	ini.SetLongValue(section_fonts.c_str(), "font_hud", font_hud);
 	ini.SetLongValue(section_fonts.c_str(), "font_speedo", font_speedo);
 
 
@@ -440,6 +442,7 @@ void MenuConfig::SaveConfig()
 	ini.SetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityGamepad", sub::Spooner::Settings::cameraRotationSensitivityGamepad);
 	ini.SetBoolValue(section_spooner.c_str(), "ShowModelPreviews", sub::Spooner::Settings::bShowModelPreviews);
 	ini.SetBoolValue(section_spooner.c_str(), "ShowBoxAroundSelectedEntity", sub::Spooner::Settings::bShowBoxAroundSelectedEntity);
+	ini.SetBoolValue(section_spooner.c_str(), "DisplaySpoonerInfo", sub::Spooner::Settings::bDisplaySpoonerInfo);
 	ini.SetBoolValue(section_spooner.c_str(), "SpawnDynamicProps", sub::Spooner::Settings::bSpawnDynamicProps);
 	ini.SetBoolValue(section_spooner.c_str(), "SpawnDynamicPeds", sub::Spooner::Settings::bSpawnDynamicPeds);
 	ini.SetBoolValue(section_spooner.c_str(), "SpawnDynamicVehicles", sub::Spooner::Settings::bSpawnDynamicVehicles);
@@ -459,7 +462,7 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_haxValues.c_str(), "show_full_hud", showFullHUD);
 	ini.SetBoolValue(section_haxValues.c_str(), "manual_respawn", ManualRespawn::g_manualRespawn.Enabled());
 	ini.SetBoolValue(section_haxValues.c_str(), "freecam", noClip);
-	ini.SetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", xyzhCoords);
+	ini.SetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", bDisplayXyzhCoords);
 	ini.SetBoolValue(section_haxValues.c_str(), "display_fps", FPSCounter::bDisplayFps);
 	ini.SetBoolValue(section_haxValues.c_str(), "basic_tv_player", sub::TVChannelStuff::loopBasicTV);
 	ini.SetBoolValue(section_haxValues.c_str(), "sync_clock", syncClock);

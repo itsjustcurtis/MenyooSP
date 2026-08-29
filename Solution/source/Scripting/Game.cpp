@@ -280,11 +280,20 @@ namespace Game
 			ADD_TEXT_COMPONENT_INTEGER(text);
 			END_TEXT_COMMAND_DISPLAY_TEXT(X, Y, 0);
 		}
-		void drawfloat(float text, UINT8 decimal_places, float X, float Y)
+		void drawfloat(double text, UINT8 decimal_places, float X, float Y)
 		{
-			BEGIN_TEXT_COMMAND_DISPLAY_TEXT("NUMBER");
-			ADD_TEXT_COMPONENT_FLOAT(text, decimal_places);
-			END_TEXT_COMMAND_DISPLAY_TEXT(X, Y, 0);
+			if (decimal_places == 0 && text > 16777216.0)
+			{
+				BEGIN_TEXT_COMMAND_DISPLAY_TEXT("STRING");
+				ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(std::to_string(static_cast<long long>(text)).c_str());
+				END_TEXT_COMMAND_DISPLAY_TEXT(X, Y, 0);
+			}
+			else
+			{
+				BEGIN_TEXT_COMMAND_DISPLAY_TEXT("NUMBER");
+				ADD_TEXT_COMPONENT_FLOAT(static_cast<float>(text), decimal_places);
+				END_TEXT_COMMAND_DISPLAY_TEXT(X, Y, 0);
+			}
 		}
 
 		void PrintBottomCentre(std::string s, int time)

@@ -32,8 +32,23 @@ namespace sub::Spooner
 		extern bool bEnabled;
 		extern bool bIsSomethingHeld;
 		extern bool bHeldEntityHasCollision;
+
+		enum class eEntityEditMode : UINT8 { Disabled, Keyboard, Gizmo };
+		extern eEntityEditMode entityEditMode;
+		enum class eGizmoMode : UINT8 { Translate, Rotate, Scale };
+		extern eGizmoMode gizmoMode;
+		extern bool bGizmoCameraLocked;
+		extern bool bGizmoLocalSpace; // false = world-aligned, true = entity-local axes
 		extern Camera spoonerModeCamera;
 		extern float spoonerModeCameraCamDistance;
+
+		struct SpoonerStats {
+			int totalNumEntities;
+			int totalNumProps;
+			int totalNumPeds;
+			int totalNumVehicles;
+		};
+		SpoonerStats GetSpoonerStats();
 
 		bool IsHotkeyPressed();
 
@@ -46,12 +61,15 @@ namespace sub::Spooner
 			std::set<GTAentity> previousEntities;
 		};
 		extern ModelPreviewInfoStructure modelPreviewInfo;
+		extern float previewYawOffset;
 		void SpawnModelPreview();
 
 		void ResetSelectedEntity();
 		bool GetEntityPtr(GTAentity& inEntity, SpoonerEntity*& outEntity);
 		SpoonerEntity GetEntityPtrValue(GTAentity& entity);
 		inline void SetAsSelectedEntity(GTAentity& entity);
+		Vector3 SnapPos(Vector3 pos);
+		Vector3 SnapRotation(Vector3 rot);
 
 		inline void CamTick();
 		void Tick();
@@ -62,6 +80,3 @@ namespace sub::Spooner
 	}
 
 }
-
-
-

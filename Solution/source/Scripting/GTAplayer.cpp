@@ -38,7 +38,7 @@ INT8& GTAplayer::Handle()
 {
 	return index;
 }
-INT8 GTAplayer::GetHandle() const
+INT8 GTAplayer::GetHandle() const noexcept
 {
 	return index;
 }

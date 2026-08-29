@@ -24,6 +24,8 @@ namespace boost
 	std::string to_lower_copy(std::string str);
 }
 
+bool IsSafePath(const std::string& path);
+
 
 
 

@@ -29,8 +29,8 @@ enum class CameraShake : int;
 class GameplayCamera final
 {
 public:
-	static float FieldOfView_get();
-	static void FieldOfView_set(float value);
+	static float GetFieldOfView();
+	static void SetFieldOfView(float value);
 
 	static bool IsAimCamActive();
 	static bool IsFirstPersonAimCamActive();
@@ -42,13 +42,13 @@ public:
 	static Vector3 GetOffsetInWorldCoords(float X, float Y, float Z);
 	static Vector3 GetOffsetGivenWorldCoords(const Vector3& worldCoords);
 	static Vector3 GetOffsetGivenWorldCoords(float X, float Y, float Z);
-	static float RelativeHeading_get();
-	static void RelativeHeading_set(float value);
+	static float GetRelativeHeading();
+	static void SetRelativeHeading(float value);
 	static float GetRelativePitch();
-	static void RelativePitch_set(float value);
+	static void SetRelativePitch(float value);
 	static Vector3 GetRotation();
 	static Vector3 GetDirection();
-	static float Zoom_get();
+	static float GetZoom();
 	static void SetShakeAmplitude(float value);
 
 	static void Shake(CameraShake shakeType, float amplitude);

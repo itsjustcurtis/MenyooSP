@@ -13,6 +13,7 @@
 
 #include "Menu.h"
 #include "MenuConfig.h"
+#include "../Submenus/Spooner/ImGuiSpooner.h"
 
 #include "..\Util\FileLogger.h"
 #include "..\Util\ExePath.h"
@@ -68,6 +69,7 @@
 #include "..\Submenus\BreatheStuff.h"
 #include "..\Submenus\MiscOptions.h"
 #include "..\Submenus\Teleport\Yachts.h"
+#include "..\Submenus\Teleport\CayoPerico.h"
 #include "..\Submenus\Teleport\TeleMethods.h"
 #include "..\Submenus\PtfxSubs.h"
 #include "..\Submenus\Spooner\SpoonerEntity.h"
@@ -148,7 +150,7 @@ void Menu::justopened()
 				<< "				    Note: this issue can be ignored if bugged content has been fixed by a mod" << std::endl;
 		}
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Populate All Paint IDs");
 	sub::PopulateAllPaintIDs();
 
 	g_menuNotOpenedYet = false;
@@ -219,7 +221,7 @@ inline void MenyooMain()
 		TickMenyooConfig();
 		if (firstTick)
 			addlog(ige::LogType::LOG_TRACE, "First Tick - Neonanims");
-		if (loop_neon_rgb)         TickRainbowFader();
+		if (loop_neon_rgb || carColorChange) TickRainbowFader();
 		if (loop_neon_fade == 1)   TickNeonFadeAnim();
 		if (loop_neon_fade == 2)   TickNeonHeartbeatAnim();
 		if (loop_neon_fade == 3)   TickNeonShiftAnim();
@@ -236,6 +238,17 @@ inline void MenyooMain()
 }
 void ThreadMenyooMain()
 {
+	static bool s_imguiInitAttempted = false;
+	if (!s_imguiInitAttempted && !g_isEnhanced)
+	{
+		s_imguiInitAttempted = true;
+		addlog(ige::LogType::LOG_TRACE, "Spawning ImGui spooner init thread");
+		CreateThread(NULL, 0, [](LPVOID) -> DWORD {
+			sub::Spooner::ImGuiSpooner::Initialize();
+			return 0;
+		}, NULL, 0, NULL);
+	}
+
 	addlog(ige::LogType::LOG_TRACE, "Launching MenyooMain");
 	MenyooMain();
 }
@@ -616,7 +629,7 @@ bool playerInvincibility = false;
 bool noClip = false;
 bool noClipToggle = false; 
 bool superRun = false;
-bool xyzhCoords = false; 
+bool bDisplayXyzhCoords = false; 
 bool ignoredByEveryone = false; 
 bool neverWanted = false;
 bool superman = false;
@@ -1727,8 +1740,8 @@ void SetBecomePed(GTAped ped)
 	SetPedInvincibleOff(oldPed.Handle());
 	CHANGE_PLAYER_PED(PLAYER_ID(), ped.Handle(), true, true);
 
-	GameplayCamera::RelativeHeading_set(0.0f);
-	GameplayCamera::RelativePitch_set(camPitchRelative);
+	GameplayCamera::SetRelativeHeading(0.0f);
+	GameplayCamera::SetRelativePitch(camPitchRelative);
 
 	ped = PLAYER_PED_ID();
 
@@ -1758,13 +1771,13 @@ void SetPedInvincibleOff(Ped ped)
 }
 void SetPedNoRagdollOn(Ped ped)
 {
-	SET_PED_CAN_RAGDOLL(ped, 2);
-	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 2);
+	SET_PED_CAN_RAGDOLL(ped, 0);
+	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 0);
 }
 void SetPedNoRagdollOff(Ped ped)
 {
-	SET_PED_CAN_RAGDOLL(ped, 0);
-	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 0);
+	SET_PED_CAN_RAGDOLL(ped, 1);
+	SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 1);
 }
 void SetPedSeatbeltOn(Ped ped)
 {
@@ -1807,7 +1820,7 @@ void SetNoclipOff2()
 	{
 		cam.SetActive(false);
 		cam.Destroy();
-		World::RenderingCamera_set(0);
+		World::SetRenderingCamera(0);
 	}
 }
 void SetNoclip()
@@ -1878,8 +1891,8 @@ void SetNoclip()
 			cam.SetRotation(GameplayCamera::GetRotation());
 			cam.AttachTo(ent, camOffset);
 			cam.SetFieldOfView(MenuConfig::FreeCam::defaultFov); // Use configured FOV
-			cam.DepthOfFieldStrength_set(0.0f);
-			World::RenderingCamera_set(cam);
+			cam.SetDepthOfFieldStrength(0.0f);
+			World::SetRenderingCamera(cam);
 		}
 
 		ent.RequestControl();
@@ -1888,7 +1901,7 @@ void SetNoclip()
 		ent.SetVisible(false);
 		myPed.SetVisible(false);
 
-		Vector3 nextRot = cam.Rotation_get() - Vector3(GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD), 0, GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR)) * (Menu::bitController ? 2.5f : 11.0f);
+		Vector3 nextRot = cam.GetRotation() - Vector3(GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD), 0, GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR)) * (Menu::bitController ? 2.5f : 11.0f);
 		nextRot.y = 0.0f; // No roll
 		ent.SetRotation(Vector3(0, 0, nextRot.z));
 		cam.SetRotation(nextRot);
@@ -2000,7 +2013,7 @@ void SetNoclip()
 			// Space + scroll wheel to control camera FOV
 			if (IsKeyDown(VK_SPACE))
 			{
-				float currentFov = cam.FieldOfView_get();
+				float currentFov = cam.GetFieldOfView();
 				if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
 				{
 					currentFov = min(currentFov + MenuConfig::FreeCam::fovAdjustStep, MenuConfig::FreeCam::maxFov);
@@ -2072,21 +2085,61 @@ void SetSelfRefillHealthWhenInCover()
 	}
 }
 
-void xyzhDrawFloat(float text, float x_coord, float y_coord)
+void DrawGameInfo()
 {
-	Game::Print::SetupDraw(font_xyzh, Vector2(0.35f, 0.35f), false, false, true);
-	Game::Print::drawfloat(text, 4, x_coord, y_coord);
-}
-void XYZH()
-{
-	Vector3 Pos = GET_ENTITY_COORDS(PLAYER_PED_ID(), 1);
+	constexpr float HUD_LINE_HEIGHT = 0.025f;
+	const Vector2 HUD_FONT_SIZE(0.35f, 0.35f);
 
-	Game::Print::SetupDraw(font_xyzh, Vector2(0.35f, 0.36f), false, false, true);
-	Game::Print::drawstring("Coords:", 0.94f, 0.03f);
-	xyzhDrawFloat(Pos.x, 0.94f, 0.06f);
-	xyzhDrawFloat(Pos.y, 0.94f, 0.09f);
-	xyzhDrawFloat(Pos.z, 0.94f, 0.12f);
-	xyzhDrawFloat(GET_ENTITY_HEADING(PLAYER_PED_ID()), 0.94f, 0.15f);
+	float hudY = 0.09f; // automatically increments with each drawn line
+
+	// automatically move the HUD to the left if menyoo menus are on the right to make sure that neither is obstructed
+	bool bRightJustified = get_xcoord_at_menu_leftEdge(0.0f, false) < 0.5f;
+	float hudX = bRightJustified ? 0.98f : 0.02f;
+	Vector2 hudTextWrap = bRightJustified ? Vector2(0.0f, 0.98f) : Vector2(0.0f, 1.0f);
+
+
+	auto drawText = [&](const std::string& text, RGBA colour = {255, 255, 255, 255})
+	{
+		Game::Print::SetupDraw(font_hud, HUD_FONT_SIZE, false, bRightJustified, true, colour, hudTextWrap);
+		Game::Print::drawstring(text, hudX, hudY);
+		hudY += HUD_LINE_HEIGHT;
+	};
+
+	auto drawFloat = [&](float value, UINT8 decimals, RGBA colour = {255, 255, 255, 255})
+	{
+		Game::Print::SetupDraw(font_hud, HUD_FONT_SIZE, false, bRightJustified, true, colour, hudTextWrap);
+		Game::Print::drawfloat(value, decimals, hudX, hudY);
+		hudY += HUD_LINE_HEIGHT;
+	};
+
+	if (FPSCounter::bDisplayFps)
+	{
+		auto fps = FPSCounter::g_fpsCounter.Get();
+		drawText(std::to_string(fps) + " FPS");
+		hudY += HUD_LINE_HEIGHT/2; // for visual separation between hud elements
+	}
+
+	if (bDisplayXyzhCoords)
+	{
+		Vector3 pos = GET_ENTITY_COORDS(PLAYER_PED_ID(), 1);
+		float heading = GET_ENTITY_HEADING(PLAYER_PED_ID());
+		drawText("Coords:");
+		drawFloat(pos.x, 4);
+		drawFloat(pos.y, 4);
+		drawFloat(pos.z, 4);
+		drawFloat(heading, 4);
+		hudY += HUD_LINE_HEIGHT/2; // for visual separation between hud elements
+	}
+
+	if (sub::Spooner::SpoonerMode::bEnabled && sub::Spooner::Settings::bDisplaySpoonerInfo)
+	{
+		auto stats = sub::Spooner::SpoonerMode::GetSpoonerStats();
+		drawText("Total Entities Spawned: " + std::to_string(stats.totalNumEntities));
+		drawText("Objects Spawned: " + std::to_string(stats.totalNumProps));
+		drawText("Peds Spawned: " + std::to_string(stats.totalNumPeds));
+		drawText("Vehicles Spawned: " + std::to_string(stats.totalNumVehicles));
+		hudY += HUD_LINE_HEIGHT/2; // for visual separation between hud elements
+	}
 }
 
 void SetLocalSupermanManual()
@@ -3039,7 +3092,7 @@ std::string GetVehicleEngineSoundName(const GTAvehicle& vehicle)
 void SetVehicleEngineSoundName(GTAvehicle vehicle, const std::string& name)
 {
 	g_vehListEngineSounds[vehicle.GetHandle()] = name;
-	vehicle.EngineSound_set(name);
+	vehicle.SetEngineSound(name);
 }
 
 std::unordered_set<Vehicle> g_vehWheelsInvisForRussian;
@@ -3874,14 +3927,7 @@ void Menu::loops()
 	TickPlayerAbilities();
 
 	// HUD overlays
-	if (xyzhCoords)
-	{
-		XYZH();
-	}
-	if (FPSCounter::bDisplayFps)
-	{
-		FPSCounter::DisplayFps();
-	}
+	DrawGameInfo();
 
 	TickVehicleEffects(gameIsPaused);
 	SetPVOpsVehicleTextWorld2Screen();
@@ -3946,6 +3992,7 @@ void ThreadMenuLoops2()
 		}
 
 		sub::TeleportLocations_catind::Yachts::Tick();
+		sub::TeleportLocations_catind::CayoPerico::Tick();
 		ManualRespawn::g_manualRespawn.Tick();
 
 		if (unlimitedVehicleBoost)

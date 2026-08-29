@@ -632,6 +632,10 @@ public:
 	static std::string GetVehicleModelName(Hash modelHash);
 	static std::string GetVehicleMakeName(Hash modelHash);
 
+	// Ped Variation Collections (returns "collection:local_id" format, e.g., "mp_f_clothes_01:23")
+	static std::string GetPedDrawableCollectionString(int pedHandle, int componentId);
+	static std::string GetPedPropCollectionString(int pedHandle, int anchorPoint);
+
 private:
 	static UINT64 modelHashTable, modelNum2, modelNum3, modelNum4;
 	static int modelNum1;

@@ -13,8 +13,6 @@
 
 #include <string>
 
-//class RGBA;
-//class RgbS;
 class Vector3;
 class GTAentity;
 

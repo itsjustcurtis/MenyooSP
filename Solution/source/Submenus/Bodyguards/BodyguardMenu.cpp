@@ -19,6 +19,7 @@
 #include "../../Util\ExePath.h"
 #include "../../Submenus/Spooner/EntityManagement.h"
 #include "../../Submenus/Spooner/SpoonerEntity.h"
+#include "../../Util/FileLogger.h"
 
 #include "BodyguardManagement.h"
 #include "BodyguardSpawn.h"
@@ -31,7 +32,8 @@ namespace sub::BodyguardMenu
     int armor = 200;
     int health = 200;
     bool godmode = true;
-    int blipIcon = 1; // 1 = Standard, 280 = Friend, 480 = VIP
+    int blipIcon = 1;           // 1 = Standard, 280 = Friend, 480 = VIP
+    int currentFormation = 0;
 }
 
 static constexpr int BLIP_COLOUR_BLUELIGHT = 3;
@@ -133,12 +135,55 @@ namespace sub
 {
     void BodyguardMainMenu()
     {
+        bool bHealth_plus = false, bHealth_minus = false, bHealth_input = false;
+        bool bArmor_plus = false, bArmor_minus = false, bArmor_input = false;
+        int blipIndex = 0;
+        static const std::vector<std::pair<int, std::string>> blipOptions =
+        {
+            { 1,   "Standard" },
+            { 280, "Friend"   },
+            { 480, "VIP"      }
+        };
+        bool bBlipInput = false;
+        bool bIcon_Plus = false, bIcon_Minus = false;
+        bool oldGodmode = sub::BodyguardMenu::godmode;
+
+        int formationIndex = 0;
+        static const std::vector<std::pair<int, std::string>> formationOptions =
+        {
+            { 0, "Default Formation" },
+            { 1, "Circle (Inward)" },
+            { 2, "Circle (North)" },
+            { 3, "Line" }
+        };
+
+        for (size_t i = 0; i < blipOptions.size(); ++i)
+        {
+            if (blipOptions[i].first == sub::BodyguardMenu::blipIcon)
+            {
+                blipIndex = (int)i;
+                break;
+            }
+        }
+
+        for (size_t i = 0; i < formationOptions.size(); ++i)
+        {
+            if (formationOptions[i].first == sub::BodyguardMenu::currentFormation)
+            {
+                formationIndex = (int)i;
+                break;
+            }
+        }
+
+        bool bFormationInput = false;
+        bool bForm_Plus = false, bForm_Minus = false;
+        bool bTeleportBodyguards = false;
+
         AddTitle("Bodyguards");
 
         AddOption("Spawn Bodyguard", null, nullFunc, SUB::BODYGUARD_SPAWN);
         AddOption("Bodyguard List", null, nullFunc, SUB::BODYGUARD_LIST);
 
-        static bool bHealth_plus = false, bHealth_minus = false, bHealth_input = false;
         AddNumber("Default Health", sub::BodyguardMenu::health, 0, bHealth_input, bHealth_plus, bHealth_minus);
         if (bHealth_plus && sub::BodyguardMenu::health < INT_MAX) ++sub::BodyguardMenu::health;
         if (bHealth_minus && sub::BodyguardMenu::health > 0) --sub::BodyguardMenu::health;
@@ -152,7 +197,6 @@ namespace sub
             }
         }
 
-        static bool bArmor_plus = false, bArmor_minus = false, bArmor_input = false;
         AddNumber("Default Armor", sub::BodyguardMenu::armor, 0, bArmor_input, bArmor_plus, bArmor_minus);
         if (bArmor_plus && sub::BodyguardMenu::armor < INT_MAX) ++sub::BodyguardMenu::armor;
         if (bArmor_minus && sub::BodyguardMenu::armor > 0) --sub::BodyguardMenu::armor;
@@ -166,7 +210,6 @@ namespace sub
             }
         }
 
-        bool oldGodmode = sub::BodyguardMenu::godmode;
         AddToggle("Godmode", sub::BodyguardMenu::godmode);
 
         if (oldGodmode != sub::BodyguardMenu::godmode)
@@ -182,62 +225,47 @@ namespace sub
             }
         }
 
-        static int blipIndex = 0;
-        static const std::vector<std::pair<int, std::string>> blipOptions =
+
+        AddTexter("Bodyguard Blip", 0, { blipOptions[blipIndex].second }, bBlipInput, bIcon_Plus, bIcon_Minus);
+
+        if (bIcon_Plus) 
         {
-            { 1,   "Standard" },
-            { 280, "Friend"   },
-            { 480, "VIP"      }
-        };
-
-        // show labels using AddTexter
-        static bool bBlipInput = false;
-        bool icon_plus = false, icon_minus = false;
-
-        // current label from our restricted blipOptions array
-        AddTexter("Bodyguard Blip", 0, { blipOptions[blipIndex].second }, bBlipInput, icon_plus, icon_minus);
-
-        // scroll through our 3-choice array
-        if (icon_plus)
-        {
+            addlog(ige::LogType::LOG_TRACE, "Bodyguard Blip Plus Pressed");
             blipIndex = (blipIndex + 1) % blipOptions.size();
             sub::BodyguardMenu::blipIcon = blipOptions[blipIndex].first;
             sub::BodyguardMenu::RefreshAllBodyguardBlips();
+			addlog(ige::LogType::LOG_DEBUG, "Bodyguard Blip Set: " + std::to_string(blipIndex));
         }
-
-        if (icon_minus)
+        if (bIcon_Minus)
         {
+            addlog(ige::LogType::LOG_TRACE, "Bodyguard Blip Minus Pressed");
             blipIndex = (blipIndex == 0 ? (int)blipOptions.size() - 1 : blipIndex - 1);
             sub::BodyguardMenu::blipIcon = blipOptions[blipIndex].first;
             sub::BodyguardMenu::RefreshAllBodyguardBlips();
+            addlog(ige::LogType::LOG_DEBUG, "Bodyguard Blip Set: " + std::to_string(blipIndex));
         }
 
-        static int formationIndex = 0;
-        static const std::vector<std::pair<int, std::string>> formationOptions =
+		AddTexter("Formation", 0, { formationOptions[formationIndex].second }, bFormationInput, bForm_Plus, bForm_Minus);
+
+        if (bForm_Plus)
         {
-            { 0, "Default Formation" },
-            { 1, "Circle (Inward)" },
-            { 2, "Circle (North)" },
-            { 3, "Line" }
-        };
-
-        static bool bFormationInput = false;
-        bool form_plus = false, form_minus = false;
-
-        AddTexter("Formation", 0, { formationOptions[formationIndex].second }, bFormationInput, form_plus, form_minus);
-
-        if (form_plus || form_minus)
-        {
-            if (form_plus)
-                formationIndex = (formationIndex + 1) % formationOptions.size();
-            else
-                formationIndex = (formationIndex == 0 ? (int)formationOptions.size() - 1 : formationIndex - 1);
-
+            addlog(ige::LogType::LOG_TRACE, "Formation Plus Pressed");
+            formationIndex = (formationIndex + 1) % formationOptions.size();
+            sub::BodyguardMenu::currentFormation = formationOptions[formationIndex].first; // ADD THIS
             int playerGroup = PLAYER::GET_PLAYER_GROUP(PLAYER::PLAYER_ID());
             PED::SET_GROUP_FORMATION(playerGroup, formationOptions[formationIndex].first);
+            addlog(ige::LogType::LOG_DEBUG, "Formation Set: " + std::to_string(formationIndex));
+        }
+        if (bForm_Minus)
+        {
+            addlog(ige::LogType::LOG_TRACE, "Formation Minus Pressed");
+            formationIndex = (formationIndex == 0 ? (int)formationOptions.size() - 1 : formationIndex - 1);
+            sub::BodyguardMenu::currentFormation = formationOptions[formationIndex].first; // ADD THIS
+            int playerGroup = PLAYER::GET_PLAYER_GROUP(PLAYER::PLAYER_ID());
+            PED::SET_GROUP_FORMATION(playerGroup, formationOptions[formationIndex].first);
+            addlog(ige::LogType::LOG_DEBUG, "Formation Set: " + std::to_string(formationIndex));
         }
 
-        bool bTeleportBodyguards = false;
         AddOption("Bring Bodyguards To Self", bTeleportBodyguards);
 
         if (bTeleportBodyguards)

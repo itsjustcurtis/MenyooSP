@@ -90,7 +90,8 @@ jobs:
             echo "CANCELJOB=true" >> $GITHUB_ENV
             exit 0
           elif [[ $VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(a|b|rc)[0-9]+$ ]]; then
-            echo "Version is a pre-release. Proceeding with pre-release build."
+            echo "Version is a private pre-release. Cancelling workflow."
+            echo "CANCELJOB=true" >> $GITHUB_ENV
           else
             echo "Version is invalid or a development version. Cancelling workflow."
             echo "CANCELJOB=true" >> $GITHUB_ENV

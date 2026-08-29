@@ -65,12 +65,12 @@ public:
 	//virtual ~GTAentity();
 
 	int& Handle();
-	int GetHandle() const;
+	int GetHandle() const noexcept;
 	//void SetHandle(Entity newHandle);
 
 	UINT64 MemoryAddress() const;
 
-	int Type() const;
+	int Type() const noexcept;
 
 	GTAblip CurrentBlip() const;
 
@@ -81,18 +81,18 @@ public:
 	bool IsPositionFrozen() const;
 	void FreezePosition(bool value);
 
-	void Dynamic_set(bool value);
+	void SetDynamic(bool value);
 
-	float GetHeading() const;
-	void Heading_set(float value);
+	float GetHeading() const noexcept;
+	void SetHeading(float value);
 
-	int GetHealth() const;
+	int GetHealth() const noexcept;
 	void SetHealth(int value);
 
-	float Vehicle_engine_get() const;
-	void Vehicle_engine_set(float value);
+	float GetVehicleEngine() const;
+	void SetVehicleEngine(float value);
 
-	float HeightAboveGround() const;
+	float HeightAboveGround() const noexcept;
 	float GetGroundZ() const;
 	virtual void PlaceOnGround();
 
@@ -128,7 +128,7 @@ public:
 	int LandingGearState_get() const;
 	void SetLandingGearState(int state);
 
-	int GetMaxHealth() const;
+	int GetMaxHealth() const noexcept;
 	void SetMaxHealth(int value);
 
 	bool ToggleLandingGear() const;
@@ -147,22 +147,24 @@ public:
 
 	Vector3 Rotation_get() const;
 	void SetRotation(Vector3 value);
-	Vector3 Direction_get() const;
-	void Direction_set(Vector3 value);
+	Vector3 GetScale() const;
+	void SetScale(Vector3 value);
+	Vector3 GetDirection() const;
+	void SetDirection(Vector3 value);
 
-	Vector3 Velocity_get() const;
-	void Velocity_set(Vector3 value);
-	Vector3 RotationVelocity_get() const;
+	Vector3 GetVelocity() const;
+	void SetVelocity(Vector3 value);
+	Vector3 GetRotationVelocity() const;
 	float GetSpeed() const;
-	void MaxSpeed_set(float value);
-	Vector3 SpeedVector_get(bool relative);
+	void SetMaxSpeed(float value);
+	Vector3 GetSpeedVector(bool relative);
 
 
-	int GetAlpha() const;
+	int GetAlpha() const noexcept;
 	void SetAlpha(int value);
 	void ResetAlpha();
 
-	int GetLODDistance() const;
+	int GetLODDistance() const noexcept;
 	void SetLODDistance(int value);
 
 	bool GetHasGravity() const;
@@ -170,8 +172,8 @@ public:
 
 	Vector3 CollisionNormal() const;
 	bool HasCollided() const;
-	void IsRecordingCollisions_set(bool value);
-	void HasCollisionWithEntity_set(const GTAentity& ent, bool value);
+	void SetIsRecordingCollisions(bool value);
+	void SetHasCollisionWithEntity(const GTAentity& ent, bool value);
 	bool GetIsCollisionEnabled() const;
 	void SetIsCollisionEnabled(bool value);
 	void ToggleLandingGear();

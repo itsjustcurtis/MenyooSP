@@ -25,16 +25,16 @@
 
 enum class IntersectOptions : int
 {
-	Everything = -1,
-	Map = 1,
-	Mission_Entities = 2,
-	Peds1 = 12,//4 and 8 both seem to be peds
-	Objects = 16,
-	Unk1 = 32,
-	Unk2 = 64,
-	Unk3 = 128,
-	Vegetation = 256,
-	Unk4 = 512
+	Everything = -1,        // Hit any kind of entity / surface
+	Map = 1,                // Static world geometry / map
+	Mission_Entities = 2,   // Mission-flagged entities
+	Peds1 = 12,             // Peds (4|8 -- both bits seem to refer to peds)
+	Objects = 16,           // Props / dynamic objects
+	Unk1 = 32,              // Unknown flag
+	Unk2 = 64,              // Unknown flag
+	Unk3 = 128,             // Unknown flag
+	Vegetation = 256,       // Trees / foliage
+	Unk4 = 512              // Unknown flag
 };
 
 class RaycastResult

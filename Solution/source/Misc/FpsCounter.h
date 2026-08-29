@@ -9,8 +9,6 @@
 */
 #pragma once
 
-#include <string>
-
 typedef unsigned long DWORD;
 
 namespace FPSCounter
@@ -25,18 +23,11 @@ namespace FPSCounter
 	public:
 		FpsCounter();
 
-		DWORD Get() const;
-
-		std::string GetString() const;
+		DWORD Get();
 
 		void Tick();
 	};
-	extern FpsCounter g_fpsCounter;
-
-
-	void DisplayFps();
-
-	void DisplayFpsTick();
+extern FpsCounter g_fpsCounter;
 
 	extern bool bDisplayFps;
 }

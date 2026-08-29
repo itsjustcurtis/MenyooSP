@@ -52,7 +52,7 @@ namespace sub::Spooner
 		}*/
 		bool GetPedRelationshipGroup(const GTAped& ped, Hash& outHash)
 		{
-			outHash = ped.RelationshipGroup_get();
+			outHash = ped.GetRelationshipGroup();
 			return (outHash == GET_HASH_KEY(rgSpoonerFriends) || outHash == GET_HASH_KEY(rgSpoonerEnemies) || outHash == GET_HASH_KEY(rgSpoonerNeutral));
 		}
 		void SetPedRelationshipGroup(GTAped ped, Hash group)
@@ -76,7 +76,7 @@ namespace sub::Spooner
 				rgCreated = true;
 			}
 
-			ped.RelationshipGroup_set(group);
+			ped.SetRelationshipGroup(group);
 
 			for (auto& r : Databases::RelationshipDb)
 			{

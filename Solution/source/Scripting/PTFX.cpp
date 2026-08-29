@@ -189,11 +189,11 @@ namespace PTFX
 	}
 	void LoopedPTFX::SetAlpha(UINT8 value)
 	{
-		SET_PARTICLE_FX_LOOPED_ALPHA(this->mHandle, (float)value/255);
+		SET_PARTICLE_FX_LOOPED_ALPHA(this->mHandle, static_cast<float>(value)/255);
 	}
 	void LoopedPTFX::SetColour(const RgbS& value)
 	{
-		SET_PARTICLE_FX_LOOPED_COLOUR(this->mHandle, (float)value.R/255, (float)value.G/255, (float)value.B/255, false);
+		SET_PARTICLE_FX_LOOPED_COLOUR(this->mHandle, static_cast<float>(value.R)/255, static_cast<float>(value.G)/255, static_cast<float>(value.B)/255, false);
 	}
 
 	void LoopedPTFX::Remove()
@@ -351,11 +351,11 @@ namespace PTFX
 
 	void NonLoopedPTFX::SetColour(const RgbS& value)
 	{
-		SET_PARTICLE_FX_NON_LOOPED_COLOUR((float)value.R / 255, (float)value.G / 255, (float)value.B / 255);
+		SET_PARTICLE_FX_NON_LOOPED_COLOUR(static_cast<float>(value.R) / 255, static_cast<float>(value.G) / 255, static_cast<float>(value.B) / 255);
 	}
 	void NonLoopedPTFX::SetAlpha(UINT8 value)
 	{
-		SET_PARTICLE_FX_NON_LOOPED_ALPHA((float)value/255);
+		SET_PARTICLE_FX_NON_LOOPED_ALPHA(static_cast<float>(value)/255);
 	}
 #pragma endregion
 

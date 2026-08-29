@@ -238,7 +238,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (garageInfo.location != nullptr)
 			{
-				teleport_net_ped(ped, garageInfo.location->second->at(garageInfo.garageId).pos);
+				TeleportNetPed(ped, garageInfo.location->second->at(garageInfo.garageId).pos);
 			}
 		}
 

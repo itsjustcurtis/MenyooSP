@@ -277,7 +277,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (info.location != nullptr)
 			{
-				teleport_net_ped(ped, info.location->pos);
+				TeleportNetPed(ped, info.location->pos);
 			}
 		}
 

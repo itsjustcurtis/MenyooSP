@@ -19,7 +19,7 @@ namespace sub
 			std::vector<CharStat_t> list; 
 		};
 	
-		const std::array<NamedCharStatList_t, 5> vCharStatLists
+		const std::array<NamedCharStatList_t, 4> vCharStatLists //Change 4 to 5 when properties are added back in
 		{ {
 			{ "Cash",{
 				{ "TOTAL_CASH", "Total Cash", StatDataType_t::INT, 0, static_cast<float>(INT_MAX) }
@@ -40,30 +40,101 @@ namespace sub
 			{ "K/D Ratio",{
 				{ "KILLS", "Kill Count", StatDataType_t::INT, 0, static_cast<float>(INT_MAX) },
 				{ "DEATHS", "Death Count", StatDataType_t::INT, 0, static_cast<float>(INT_MAX) }
-			} },
-			{ "Properties",{
-				{ "PROP_BOUGHT_TRAF", "Arms Trafficking", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_CSCR", "Car Scrap Yard", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_WEED", "Weed Shop", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_TAXI", "Taxi Lot", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_CMSH", "Car Mod Shop", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_SOCO", "Sonar Collections", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_TOWI", "Towing Impound", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_GOLF", "Golf Club", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_CINV", "Vinewood Cinema", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_CIND", "Downtown Cinema", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_CINM", "Morningwood Cinema", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_BARTE", "Tequilala Bar", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_BARPI", "Pitchers Bar", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_BARHE", "Hen House Bar", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_BARHO", "Hookies Bar", StatDataType_t::BOOL, 0, 0 },
-				{ "PROP_BOUGHT_STRIP", "Strip Club", StatDataType_t::BOOL, 0, 0 }
-			} }
+			} }/*,
+			{"Properties",{
+				{ "PROP_BOUGHT_TRAF", "Arms Trafficking", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_CSCR", "Car Scrap Yard", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_WEED", "Weed Shop", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_TAXI", "Taxi Lot", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_CMSH", "Car Mod Shop", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_SOCO", "Sonar Collections", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_TOWI", "Towing Impound", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_GOLF", "Golf Club", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_CINV", "Vinewood Cinema", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_CIND", "Downtown Cinema", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_CINM", "Morningwood Cinema", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_BARTE", "Tequilala Bar", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_BARPI", "Pitchers Bar", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_BARHE", "Hen House Bar", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_BARHO", "Hookies Bar", StatDataType_t::BOOL, 0, 1 },
+				{ "PROP_BOUGHT_STRIP", "Strip Club", StatDataType_t::BOOL, 0, 1 }
+			} }*/
 			} };
 
-		std::pair<std::string, std::string> charNames[3] = { { "SP0_", "Michael" },{ "SP1_", "Franklin" },{ "SP2_", "Trevor" } };
+		std::pair<std::string, std::string> charNames[5] = { { "SP0_", "Michael" },{ "SP1_", "Franklin" },{ "SP2_", "Trevor" },{ "MP0_", "MP Char 1" },{ "MP1_", "MP Char 2" } };
 		std::pair<std::string, std::string>* selectedCharName;
 		const NamedCharStatList_t* selectedStatList;
+
+		bool IsOnlineChar(const std::string& prefix)
+		{
+			return prefix == "MP0_" || prefix == "MP1_";
+		}
+
+		const std::array<NamedCharStatList_t, 8> vMPPropertyLists
+		{ {
+			{ "Apartments / Garages",{
+				{ "PROPERTY_HOUSE", "Primary Apartment", StatDataType_t::INT, 0, 200 },
+				{ "MULTI_PROPERTY_1", "Property Slot 2", StatDataType_t::INT, 0, 200 },
+				{ "MULTI_PROPERTY_2", "Property Slot 3", StatDataType_t::INT, 0, 200 },
+				{ "MULTI_PROPERTY_3", "Property Slot 4", StatDataType_t::INT, 0, 200 },
+				{ "MULTI_PROPERTY_4", "Property Slot 5", StatDataType_t::INT, 0, 200 },
+				{ "MULTI_PROPERTY_5", "Property Slot 6", StatDataType_t::INT, 0, 200 },
+				{ "MULTI_PROPERTY_6", "Property Slot 7", StatDataType_t::INT, 0, 200 },
+				{ "MULTI_PROPERTY_7", "Property Slot 8", StatDataType_t::INT, 0, 200 },
+				{ "MULTI_PROPERTY_8", "Property Slot 9", StatDataType_t::INT, 0, 200 },
+				{ "MULTI_PROPERTY_9", "Property Slot 10", StatDataType_t::INT, 0, 200 }
+			} },
+			{ "CEO",{
+				{ "PROP_OFFICE", "Office", StatDataType_t::INT, 0, 200 },
+				{ "PROP_OFFICE_VAR", "Office Style", StatDataType_t::INT, 0, 10 },
+				{ "PROP_OFFICE_GAR1", "Office Garage 1", StatDataType_t::INT, 0, 10 },
+				{ "PROP_OFFICE_GAR2", "Office Garage 2", StatDataType_t::INT, 0, 10 },
+				{ "PROP_OFFICE_GAR3", "Office Garage 3", StatDataType_t::INT, 0, 10 },
+				{ "PROP_OFFICE_MODSHOP", "Mod Shop", StatDataType_t::INT, 0, 10 },
+				{ "PROP_OFFICE_ACCOMMODATION", "Accommodation", StatDataType_t::INT, 0, 10 }
+			} },
+			{ "MC / Businesses",{
+				{ "PROP_CLUBHOUSE", "Clubhouse", StatDataType_t::INT, 0, 200 },
+				{ "PROP_FAC_SLOT0", "Business Slot 1", StatDataType_t::INT, 0, 200 },
+				{ "PROP_FAC_SLOT1", "Business Slot 2", StatDataType_t::INT, 0, 200 },
+				{ "PROP_FAC_SLOT2", "Business Slot 3", StatDataType_t::INT, 0, 200 },
+				{ "PROP_FAC_SLOT3", "Business Slot 4", StatDataType_t::INT, 0, 200 },
+				{ "PROP_FAC_SLOT4", "Business Slot 5", StatDataType_t::INT, 0, 200 },
+				{ "PROP_FAC_SLOT5", "Business Slot 6", StatDataType_t::INT, 0, 200 }
+			} },
+			{ "Warehouses",{
+				{ "PROP_WHOUSE_SLOT0", "Warehouse Slot 1", StatDataType_t::INT, 0, 200 },
+				{ "PROP_WHOUSE_SLOT1", "Warehouse Slot 2", StatDataType_t::INT, 0, 200 },
+				{ "PROP_WHOUSE_SLOT2", "Warehouse Slot 3", StatDataType_t::INT, 0, 200 },
+				{ "PROP_WHOUSE_SLOT3", "Warehouse Slot 4", StatDataType_t::INT, 0, 200 },
+				{ "PROP_WHOUSE_SLOT4", "Warehouse Slot 5", StatDataType_t::INT, 0, 200 },
+				{ "PROP_IE_WAREHOUSE", "Vehicle Warehouse", StatDataType_t::INT, 0, 200 }
+			} },
+			{ "Military / Smuggling",{
+				{ "PROP_DEFUNCBASE", "Bunker / Facility", StatDataType_t::INT, 0, 200 },
+				{ "PROP_HANGAR", "Hangar", StatDataType_t::INT, 0, 10 }
+			} },
+			{ "Entertainment",{
+				{ "PROP_NIGHTCLUB", "Nightclub", StatDataType_t::INT, 0, 200 },
+				{ "PROP_CASINO_GAR1", "Casino Penthouse Garage", StatDataType_t::INT, 0, 10 },
+				{ "PROP_ARCADE_GAR1", "Arcade Garage", StatDataType_t::INT, 0, 10 },
+				{ "ARCADE_OWNED", "Arcade Owned", StatDataType_t::INT, 0, 1 }
+			} },
+			{ "Newer Properties",{
+				{ "PROP_AUTO_SHOP", "Auto Shop", StatDataType_t::INT, 0, 200 },
+				{ "PROP_FIXER_HQ", "Agency", StatDataType_t::INT, 0, 200 },
+				{ "FIXER_HQ_OWNED", "Agency Owned", StatDataType_t::INT, 0, 1 },
+				{ "MULTSTOREY_GAR_OWNED", "Multi-Storey Garage", StatDataType_t::INT, 0, 1 },
+				{ "SALVAGE_YARD_OWNED", "Salvage Yard", StatDataType_t::INT, 0, 1 },
+				{ "PROP_BAIL_OFFICE", "Bail Office", StatDataType_t::INT, 0, 200 },
+				{ "BAIL_OFFICE_OWNED", "Bail Office Owned", StatDataType_t::INT, 0, 1 }
+			} },
+			{ "Mansions",{
+				{ "MANSION_TH_OWNED", "Tongva Estate", StatDataType_t::INT, 0, 1 },
+				{ "MANSION_AJ_OWNED", "Richman Villa", StatDataType_t::INT, 0, 1 },
+				{ "MANSION_MD_OWNED", "Vinewood Residence", StatDataType_t::INT, 0, 1 }
+			} }
+		} };
 
 		// Setters/Getters
 		int StatGetInt(const std::string& name)
@@ -92,29 +163,98 @@ namespace sub
 			return STAT_GET_STRING(GET_HASH_KEY(name), -1);
 		}
 
+		void SetAbilitySourceStats(const std::string& prefix, const std::string& statName, int value)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Setting Ability Source Stats for " + prefix + statName + " to " + std::to_string(value));
+			if (statName == "STAMINA")
+			{
+				STAT_SET_FLOAT(GET_HASH_KEY(prefix + "DIST_RUNNING"), value * 175.0f, true);
+				STAT_SET_INT(GET_HASH_KEY(prefix + "TIME_SWIMMING"), value, true);
+			}
+			else if (statName == "STRENGTH")
+				STAT_SET_INT(GET_HASH_KEY(prefix + "UNARMED_HITS"), value * 25, true);
+			else if (statName == "LUNG_CAPACITY")
+				STAT_INCREMENT(GET_HASH_KEY(prefix + "TIME_UNDERWATER"), value * 60.0f);
+			else if (statName == "WHEELIE_ABILITY")
+				STAT_SET_INT(GET_HASH_KEY(prefix + "NUMBER_NEAR_MISS"), value * 60, true);
+			else if (statName == "FLYING_ABILITY")
+			{
+				STAT_SET_INT(GET_HASH_KEY(prefix + "TIME_DRIVING_PLANE"), value * 10, true);
+				STAT_SET_INT(GET_HASH_KEY(prefix + "TIME_DRIVING_HELI"), value * 10, true);
+				STAT_SET_INT(GET_HASH_KEY(prefix + "PLANE_LANDINGS"), value, true);
+			}
+			else if (statName == "SHOOTING_ABILITY")
+			{
+				STAT_SET_INT(GET_HASH_KEY(prefix + "HITS_MISSION"), value * 50, true);
+				STAT_SET_INT(GET_HASH_KEY(prefix + "HITS_PEDS_VEHICLES"), value * 100, true);
+			}
+			else if (statName == "STEALTH_ABILITY")
+			{
+				STAT_SET_FLOAT(GET_HASH_KEY(prefix + "DIST_WALK_ST"), value * 50.0f, true);
+				STAT_SET_INT(GET_HASH_KEY(prefix + "KILLS_STEALTH"), value * 2, true);
+			}
+			else if (statName == "SPECIAL_ABILITY_UNLOCKED")
+				STAT_SET_INT(GET_HASH_KEY(prefix + "SPECIAL_ABILITY_UNLOCKED"), value, true);
+		}
+
+		bool IsAbilityStat(const std::string& statName)
+		{
+			return statName == "STAMINA" || statName == "STRENGTH" || statName == "LUNG_CAPACITY" ||
+				statName == "WHEELIE_ABILITY" || statName == "FLYING_ABILITY" ||
+				statName == "SHOOTING_ABILITY" || statName == "STEALTH_ABILITY" || 
+				statName == "SPECIAL_ABILITY" || statName == "SPECIAL_ABILITY_UNLOCKED";
+		}
+
 		void StatSetInt(const std::string& name, int value)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Setting Stat " + name + " to " + std::to_string(value));
+			TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME("stats_controller");
 			STAT_SET_INT(GET_HASH_KEY(name), value, 1);
+
+			for (auto& ch : charNames)
+			{
+				if (name.find(ch.first) == 0)
+				{
+					std::string statPart = name.substr(ch.first.length());
+					if (IsAbilityStat(statPart))
+					{
+						SetAbilitySourceStats(ch.first, statPart, value);
+						if (value >= 100)
+							STAT_SET_BOOL(GET_HASH_KEY(ch.first + statPart + "_MAXED"), true, true);
+						else
+							STAT_SET_BOOL(GET_HASH_KEY(ch.first + statPart + "_MAXED"), false, true);
+						if (!STAT_SAVE_PENDING_OR_REQUESTED())
+							STAT_SAVE(0, 0, 3, 0);
+					}
+					break;
+				}
+			}
 		}
 
 		void StatSetBool(const std::string& name, bool value)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Setting Stat " + name + " to " + std::string(value ? "true" : "false"));
+			TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME("stats_controller");
 			STAT_SET_BOOL(GET_HASH_KEY(name), value, 1);
 		}
 
 		void StatSetFloat(const std::string& name, float value)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Setting Stat " + name + " to " + std::to_string(value));
+			TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME("stats_controller");
 			STAT_SET_FLOAT(GET_HASH_KEY(name), value, 1);
 		}
 
 		void StatSetString(const std::string& name, const std::string& value)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Setting Stat " + name + " to " + value);
+			TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME("stats_controller");
 			STAT_SET_STRING(GET_HASH_KEY(name), value.c_str(), 1);
 		}
 
 		void AddOptionStats(const CharStat_t& stat)
 		{
-			bool bStatValue_plus = false, bStatValue_minus = false, bStatValue_input = false;
+			bool bStatValue_plus = false, bStatValue_minus = false, bStatValue_input = false, bFillPressed = false, bEmptyPressed = false;;
 
 			const std::string& statName = selectedCharName->first + stat.name;
 
@@ -125,6 +265,7 @@ namespace sub
 				bool statValue = StatGetBool(statName);
 				AddTickol(stat.caption, statValue, bStatValue_input, bStatValue_input, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bStatValue_input)
 				{
+					addlog(ige::LogType::LOG_DEBUG, "Toggling Stat " + stat.caption + " from " + std::string(statValue ? "true" : "false") + " to " + std::string(!statValue ? "true" : "false"));
 					statValue = !statValue;
 					StatSetBool(statName, statValue);
 				}
@@ -132,16 +273,36 @@ namespace sub
 			}
 			case StatDataType_t::INT:
 			{
+				if (stat.name == "SPECIAL_ABILITY")
+				{
+					int liveValue = StatGetInt(statName);
+
+					AddNumber("Special Ability", liveValue*3.3333, 0, null, bFillPressed, bEmptyPressed);
+					if (bFillPressed)
+					{
+						SPECIAL_ABILITY_FILL_METER(PLAYER_ID(), false,null);
+						addlog(ige::LogType::LOG_DEBUG, "Special ability meter filled");
+					}
+					if (bEmptyPressed)
+					{
+						SPECIAL_ABILITY_DEPLETE_METER(PLAYER_ID(), false,null);
+						addlog(ige::LogType::LOG_DEBUG, "Special ability meter depleted");
+					}
+					break;
+				}
 				int statValue = StatGetInt(statName);
-				AddNumber(stat.caption, statValue, 0, bStatValue_input, bStatValue_plus, bStatValue_minus); if (bStatValue_input)
+				AddNumber(stat.caption, statValue, 0, bStatValue_input, bStatValue_plus, bStatValue_minus); 
+				if (bStatValue_input)
 				{
 					std::string inputStr = Game::InputBox(std::string(), (int)std::to_string((int)stat.max).length() + 1, "Enter integer value:", std::to_string(statValue));
 					if (inputStr.length() > 0)
 					{
 						try
 						{
+							addlog(ige::LogType::LOG_DEBUG, "Setting Stat " + stat.caption + " to " + std::to_string(statValue) + " via input");
 							statValue = stoi(inputStr);
 							StatSetInt(statName, statValue);
+							addlog(ige::LogType::LOG_TRACE, "Stat " + stat.caption + " successfully set to " + std::to_string(StatGetInt(statName)) + " via input");
 						}
 						catch (...) 
 						{ 
@@ -154,16 +315,20 @@ namespace sub
 				{ 
 					if (statValue < stat.max) 
 					{ 
-						statValue += 1.0f; 
-						StatSetInt(statName, statValue); 
+						addlog(ige::LogType::LOG_DEBUG, "Increasing Stat " + stat.caption + " from " + std::to_string(statValue) + " to " + std::to_string(statValue + 1) + " via plus button");
+						statValue += 1; 
+						StatSetInt(statName, statValue);
+						addlog(ige::LogType::LOG_TRACE, "Stat " + stat.caption + " successfully set to " + std::to_string(StatGetInt(statName)) + " via plus button");
 					} 
 				}
 				if (bStatValue_minus) 
 				{ 
 					if (statValue > stat.min) 
 					{ 
-						statValue -= 1.0f; 
-						StatSetInt(statName, statValue); 
+						addlog(ige::LogType::LOG_DEBUG, "Decreasing Stat " + stat.caption + " from " + std::to_string(statValue) + " to " + std::to_string(statValue - 1) + " via minus button");
+						statValue -= 1; 
+						StatSetInt(statName, statValue);
+						addlog(ige::LogType::LOG_TRACE, "Stat " + stat.caption + " successfully set to " + std::to_string(StatGetInt(statName)) + " via minus button");
 					} 
 				}
 				break;
@@ -178,6 +343,7 @@ namespace sub
 					{
 						try
 						{
+							addlog(ige::LogType::LOG_DEBUG, "Setting Stat " + stat.caption + " to " + inputStr + " via input");
 							statValue = stof(inputStr);
 							StatSetFloat(statName, statValue);
 						}
@@ -192,16 +358,18 @@ namespace sub
 				{ 
 					if (statValue < stat.max) 
 					{ 
-						statValue += 0.05f; 
-						StatSetInt(statName, statValue); 
-					} 
+						addlog(ige::LogType::LOG_DEBUG, "Increasing Stat " + stat.caption + " from " + std::to_string(statValue) + " to " + std::to_string(statValue + 0.05f) + " via plus button");
+						statValue += 0.05f;
+						StatSetFloat(statName, statValue);
+					}
 				}
-				if (bStatValue_minus) 
-				{ 
-					if (statValue > stat.min) 
-					{ 
-						statValue -= 0.05f; 
-						StatSetInt(statName, statValue); 
+				if (bStatValue_minus)
+				{
+					if (statValue > stat.min)
+					{
+						addlog(ige::LogType::LOG_DEBUG, "Decreasing Stat " + stat.caption + " from " + std::to_string(statValue) + " to " + std::to_string(statValue - 0.05f) + " via minus button");
+						statValue -= 0.05f;
+						StatSetFloat(statName, statValue); 
 					} 
 				}
 				break;
@@ -213,16 +381,30 @@ namespace sub
 		{
 			AddTitle("Stat Manager");
 
-			/*for (auto& charName : charNames)
+			AddBreak("---Story Mode---");
+			for (int i = 0; i < 3; i++)
 			{
 				bool bGoToCharacterPressed = false;
-				AddOption(charName.second, bGoToCharacterPressed, nullFunc, SUB::SPSTATMANAGER_INCHAR); if (bGoToCharacterPressed)
+				AddOption(charNames[i].second, bGoToCharacterPressed, nullFunc, SUB::SPSTATMANAGER_INCHAR); if (bGoToCharacterPressed)
 				{
-					selectedCharName = &charName;
+					selectedCharName = &charNames[i];
 				}
 			}
 
-			AddBreak("---Achievements---");*/
+			if (NETWORK_IS_IN_SESSION())
+			{
+				AddBreak("---GTA Online---");
+				for (int i = 3; i < 5; i++)
+				{
+					bool bGoToCharacterPressed = false;
+					AddOption(charNames[i].second, bGoToCharacterPressed, nullFunc, SUB::SPSTATMANAGER_INCHAR); if (bGoToCharacterPressed)
+					{
+						selectedCharName = &charNames[i];
+					}
+				}
+			}
+			
+			AddBreak("---Achievements---");
 			bool unlockAllAchievements = false;
 			AddOption("Unlock All Achievements", unlockAllAchievements); 
 			if (unlockAllAchievements)
@@ -337,6 +519,19 @@ namespace sub
 					AddOptionStats(statList.list.front());
 				}
 				else
+				{
+					bool bStatListPressed = false;
+					AddOption(statList.title, bStatListPressed, nullFunc, SUB::SPSTATMANAGER_INCHAR_INLIST); if (bStatListPressed)
+					{
+						selectedStatList = &statList;
+					}
+				}
+			}
+
+			if (IsOnlineChar(selectedCharName->first))
+			{
+				AddBreak("---Property Ownership---");
+				for (auto& statList : vMPPropertyLists)
 				{
 					bool bStatListPressed = false;
 					AddOption(statList.title, bStatListPressed, nullFunc, SUB::SPSTATMANAGER_INCHAR_INLIST); if (bStatListPressed)

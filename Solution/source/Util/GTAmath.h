@@ -871,6 +871,7 @@ float get_random_float_in_range(float min, float max);
 
 float DegreeToRadian(float angle);
 float RadianToDegree(float angle);
+void WrapAngle(float& angle);
 
 Vector3 DegreeToRadian(const Vector3& angles);
 float GetHeadingFromCoords(const Vector3& source, const Vector3& target);

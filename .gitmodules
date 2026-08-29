@@ -7,3 +7,6 @@
 [submodule "Solution/external/simpleini"]
 	path = Solution/external/simpleini
 	url = https://github.com/brofield/simpleini
+[submodule "Solution/external/MinHook"]
+	path = Solution/external/MinHook
+	url = https://github.com/TsudaKageyu/minhook.git
