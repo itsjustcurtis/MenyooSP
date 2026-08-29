@@ -1906,7 +1906,6 @@ namespace sub
 
 		AddOption("Random Upgrades", veh_static12_autoUpgrade);
 		AddOption("Return to Stock", veh_static12_stockParts);
-		AddToggle("LSC Style Part Selection", g_LSCCustoms);
 
 		if (GET_VEHICLE_MOD_KIT != 0)
 		{
