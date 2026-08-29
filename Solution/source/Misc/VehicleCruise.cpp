@@ -41,7 +41,7 @@ namespace VehicleCruise
 
 	void VehicleCruise::BeginCruise()
 	{
-		cruiseSpeed = GTAped(PLAYER_PED_ID()).CurrentVehicle().SpeedVector_get(true).y;
+		cruiseSpeed = GTAped(PLAYER_PED_ID()).CurrentVehicle().GetSpeedVector(true).y;
 	}
 	void VehicleCruise::EndCruise()
 	{
@@ -80,7 +80,7 @@ namespace VehicleCruise
 
 		bool isPlane = vehicleModel.IsPlane();
 
-		float speed = vehicle.SpeedVector_get(true).y;
+		float speed = vehicle.GetSpeedVector(true).y;
 
 		if (cruiseSpeed < 0.01f)
 		{

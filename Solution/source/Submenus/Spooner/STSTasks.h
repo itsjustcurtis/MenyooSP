@@ -184,6 +184,33 @@ namespace sub::Spooner
 			void LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle) override;
 		};
 
+		class LookAtCoordEyesOnly final : public STSTask
+		{
+		private:
+			void GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const override;
+			void ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask) override;
+			void ImportTaskDataSpecific(STSTask* otherTsk) override;
+		public:
+			Vector3 coord;
+			LookAtCoordEyesOnly();
+			void RunP(GTAped& ep) override;
+			void EndP(GTAped& ep) override;
+		};
+
+		class LookAtEntityEyesOnly final : public STSTask
+		{
+		private:
+			void GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const override;
+			void ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask) override;
+			void ImportTaskDataSpecific(STSTask* otherTsk) override;
+		public:
+			GTAentity targetEntity;
+			LookAtEntityEyesOnly();
+			void RunP(GTAped& ep) override;
+			void EndP(GTAped& ep) override;
+			void LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle) override;
+		};
+
 		class TeleportToCoord final : public STSTask
 		{
 		private:

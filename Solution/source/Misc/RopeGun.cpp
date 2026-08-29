@@ -256,7 +256,7 @@ namespace RopeGun
 
 	void RopeGun::PrintGunInstructions()
 	{
-		Game::Print::PrintBottomLeft(oss_ << "Use the ~b~" << get_weapon_label(whash, true) << "~s~ for hax.");
+		Game::Print::PrintBottomLeft(oss_ << "Use the ~b~" << GetWeaponLabel(whash, true) << "~s~ for hax.");
 		Game::Print::PrintBottomLeft("Two bullet hits on two different entities or surfaces (WHILE AIMING) create a rope.");
 	}
 	void RopeGun::PrintShootCountHelpText()

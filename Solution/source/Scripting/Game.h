@@ -85,7 +85,7 @@ namespace Game
 		void drawstringGXT(const std::string& s, float X, float Y);
 		void drawstringGXT(std::ostream& os, float X, float Y);
 		void drawinteger(int text, float X, float Y);
-		void drawfloat(float text, UINT8 decimal_places, float X, float Y);
+		void drawfloat(double text, UINT8 decimal_places, float X, float Y);
 		
 		void PrintBottomCentre(std::string s, int time = 2500);
 		void PrintBottomCentre(std::ostream& s, int time = 2500);

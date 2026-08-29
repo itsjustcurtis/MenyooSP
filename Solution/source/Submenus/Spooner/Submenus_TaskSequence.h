@@ -33,6 +33,8 @@ namespace sub::Spooner
 			void FaceEntity();
 			void LookAtCoord();
 			void LookAtEntity();
+			void LookAtCoordEyesOnly();
+			void LookAtEntityEyesOnly();
 			void TeleportToCoord();
 			void SeekCoverAtCoord();
 			void SlideToCoord();

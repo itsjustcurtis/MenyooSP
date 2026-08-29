@@ -306,22 +306,25 @@ namespace sub
 		Model model = VEHICLE_ADDER;
 		model.Load(5000);
 
+		addlog(ige::LogType::LOG_TRACE, "Starting PopulateAllPaintIDs");
 		//spawn dummy vehicle
 		Vector3 coords = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER::PLAYER_PED_ID(), 0.0, 0.0, -100.0);
 		float heading = ENTITY::GET_ENTITY_HEADING(PLAYER::PLAYER_PED_ID());
+		addlog(ige::LogType::LOG_TRACE, "Creating dummy vehicle for paint ID population");
 		Vehicle veh = CREATE_VEHICLE(model.hash, coords.x, coords.y, coords.z, heading, 1, 0, 0);
 		VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(veh, 5.0f);
 		int painttype, colour, pearl, second;
-
+		addlog(ige::LogType::LOG_TRACE, "Dummy vehicle created, starting paint ID population");
 		//Loop paint types (normal, metallic, matte etc...)
 		for (painttype = 0; painttype < 7; painttype++)
 		{
 			int numcols = GET_NUM_MOD_COLORS(painttype, 0);
 			const char* colourname;
-
+			addlog(ige::LogType::LOG_TRACE, "Populating paint type " + std::to_string(painttype) + " with " + std::to_string(numcols) + " colours");
 			//loop colour options and assign to PAINTS_ vectors
 			for (int i = 0; i < numcols; i++)
 			{
+				addlog(ige::LogType::LOG_TRACE, "Populating colour " + std::to_string(i) + " of paint type " + std::to_string(painttype));
 				second = 0;
 				//set and get colour ID's and names
 				VEHICLE::SET_VEHICLE_MOD_KIT(veh, 0);
@@ -334,7 +337,7 @@ namespace sub
 					paintIndex_maxValue = colour;
 				if (pearl > paintIndex_maxValue)
 					paintIndex_maxValue = pearl;
-
+				addlog(ige::LogType::LOG_TRACE, "Colour ID: " + std::to_string(colour) + ", Pearl ID: " + std::to_string(pearl) + ", Colour Name: " + (colourname != nullptr ? colourname : "null"));
 				// write to relevant vector, depending on painttype
 				switch (painttype)
 				{
@@ -348,6 +351,7 @@ namespace sub
 
 					PAINTS_METALLIC[i].paint = colour;
 					PAINTS_METALLIC[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Metallic Colour: " + PAINTS_METALLIC[i].name + ", Paint ID: " + std::to_string(PAINTS_METALLIC[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_METALLIC[i].pearl));
 					break;
 				case 1:
 					PAINTS_NORMAL.resize(numcols);
@@ -359,6 +363,7 @@ namespace sub
 
 					PAINTS_NORMAL[i].paint = colour;
 					PAINTS_NORMAL[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Normal Colour: " + PAINTS_NORMAL[i].name + ", Paint ID: " + std::to_string(PAINTS_NORMAL[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_NORMAL[i].pearl));
 					break;
 				case 2:
 					PAINTS_PEARL.resize(numcols);
@@ -370,6 +375,7 @@ namespace sub
 
 					PAINTS_PEARL[i].paint = -1;
 					PAINTS_PEARL[i].pearl = colour;
+					addlog(ige::LogType::LOG_TRACE, "Added Pearl Colour: " + PAINTS_PEARL[i].name + ", Paint ID: " + std::to_string(PAINTS_PEARL[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_PEARL[i].pearl));
 					break;
 				case 3:
 					PAINTS_MATTE.resize(numcols);
@@ -381,6 +387,7 @@ namespace sub
 
 					PAINTS_MATTE[i].paint = colour;
 					PAINTS_MATTE[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Matte Colour: " + PAINTS_MATTE[i].name + ", Paint ID: " + std::to_string(PAINTS_MATTE[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_MATTE[i].pearl));	
 					break;
 				case 4:
 					PAINTS_METAL.resize(numcols);
@@ -392,6 +399,7 @@ namespace sub
 
 					PAINTS_METAL[i].paint = colour;
 					PAINTS_METAL[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Metal Colour: " + PAINTS_METAL[i].name + ", Paint ID: " + std::to_string(PAINTS_METAL[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_METAL[i].pearl));
 					break;
 				case 5:
 					PAINTS_CHROME.resize(numcols);
@@ -403,6 +411,7 @@ namespace sub
 
 					PAINTS_CHROME[i].paint = colour;
 					PAINTS_CHROME[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Chrome Colour: " + PAINTS_CHROME[i].name + ", Paint ID: " + std::to_string(PAINTS_CHROME[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_CHROME[i].pearl));
 					break;
 				case 6:
 					PAINTS_CHAMELEON.resize(numcols);
@@ -414,6 +423,7 @@ namespace sub
 
 					PAINTS_CHAMELEON[i].paint = colour;
 					PAINTS_CHAMELEON[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Chameleon Colour: " + PAINTS_CHAMELEON[i].name + ", Paint ID: " + std::to_string(PAINTS_CHAMELEON[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_CHAMELEON[i].pearl));
 					break;
 				}
 
@@ -423,6 +433,7 @@ namespace sub
 		ENTITY::SET_VEHICLE_AS_NO_LONGER_NEEDED(&veh);
 		VEHICLE::DELETE_VEHICLE(&veh);
 		model.Unload();
+		addlog(ige::LogType::LOG_TRACE, "Finished PopulateAllPaintIDs");
 	}
 
 	void AddMSPaintsPointOption_(const std::string& text, INT8 index, bool& extra_option_code = null)
@@ -821,9 +832,9 @@ namespace sub
 				int randb = rand() % 255;
 				paintCarUsing_index(g_Ped4, msCurrentPaintIndex, 0, -1);
 				if (msCurrentPaintIndex == 1)
-					vehicle.CustomPrimaryColour_set(randr, randg, randb);
+					vehicle.SetCustomPrimaryColour(randr, randg, randb);
 				else if (msCurrentPaintIndex == 2)
-					vehicle.CustomSecondaryColour_set(randr, randg, randb);
+					vehicle.SetCustomSecondaryColour(randr, randg, randb);
 				getpaint = true;
 			}
 			return;
@@ -893,14 +904,14 @@ namespace sub
 				if (GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(g_Ped4))
 				{
 					RgbS copy = vehicle.GetCustomPrimaryColour();
-					vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
+					vehicle.SetCustomSecondaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			case 2:
 				if (GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(g_Ped4))
 				{
 					RgbS copy = vehicle.GetCustomSecondaryColour();
-					vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
+					vehicle.SetCustomPrimaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			}
@@ -1119,11 +1130,11 @@ namespace sub
 
 		switch (bitMSPaintsRGBMode)
 		{
-		case 0: vehicle.CustomPrimaryColour_set(R, G, B);
+		case 0: vehicle.SetCustomPrimaryColour(R, G, B);
 			break;
-		case 1: vehicle.CustomSecondaryColour_set(R, G, B);
+		case 1: vehicle.SetCustomSecondaryColour(R, G, B);
 			break;
-		case 2: vehicle.NeonLightsColour_set(R, G, B);
+		case 2: vehicle.SetNeonLightsColour(R, G, B);
 			break;
 		case 3:
 			g_multiPlatNeonsColor.R = R;
@@ -1132,7 +1143,7 @@ namespace sub
 			break;
 		case 4:
 			vehicle.ToggleMod(VehicleMod::TireSmoke, true);
-			vehicle.TyreSmokeColour_set(R, G, B);
+			vehicle.SetTyreSmokeColour(R, G, B);
 			break;
 
 			/*case 7: GET_PLAYER_PARACHUTE_TINT_INDEX(Static_240, &inull); _SET_PLAYER_PARACHUTE_SMOKE_COLOUR(Static_240, R, G, B);
@@ -1510,14 +1521,14 @@ namespace sub
 			{
 				RgbS copy = vehicle.GetCustomPrimaryColour();
 				paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
-				vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
+				vehicle.SetCustomPrimaryColour(copy.R, copy.G, copy.B);
 				break;
 			}
 			case 2:
 			{
 				RgbS copy = vehicle.GetCustomSecondaryColour();
 				paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
-				vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
+				vehicle.SetCustomSecondaryColour(copy.R, copy.G, copy.B);
 				break;
 			}
 			}
@@ -1535,7 +1546,7 @@ namespace sub
 				{
 					RgbS copy = vehicle.GetCustomPrimaryColour();
 					paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
-					vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
+					vehicle.SetCustomPrimaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			case 2:
@@ -1543,7 +1554,7 @@ namespace sub
 				{
 					RgbS copy = vehicle.GetCustomSecondaryColour();
 					paintCarUsing_index(g_Ped4, msCurrentPaintIndex, PAINTS_FINISH[ms_paints_finish].paint, -1);
-					vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
+					vehicle.SetCustomSecondaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			}
@@ -1763,9 +1774,6 @@ namespace sub
 
 		AddTitle("Menyoo Customs");
 
-		AddOption("Random Upgrades", veh_static12_autoUpgrade);
-		AddOption("Return to Stock", veh_static12_stockParts);
-
 		if (true) // Display Benny's sub ptr if veh is supported Static_12_veh_model.IsBennySupportedVehicle()
 		{
 			AddOption(Game::GetGXTEntry("S_MO_09", "Benny's Lowrider Mods"), null, nullFunc, SUB::MS_BENNYS); // Use 25 to 48 here.
@@ -1804,7 +1812,7 @@ namespace sub
 			if (GET_NUM_VEHICLE_MODS(g_Ped4, i) > 0)
 			{
 				lastMod = -2;
-				AddOption(get_mod_slot_name(g_Ped4, i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
+				AddOption(GetModSlotName(g_Ped4, i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
 				{
 					msCurrentPaintIndex = i;
 				}
@@ -1882,9 +1890,7 @@ namespace sub
 		AddNumber("Torque Multiplier", torqueMultVal, 2, torque_input, torque_plus, torque_minus);
 		AddNumber(Game::GetGXTEntry("FMMC_VEHST_0", "Top Speed") + " (Kmph)", maxSpeedMultVal * 3.6f, 0, maxSpeed_input, maxSpeed_plus, maxSpeed_minus);
 		AddOption(Game::GetGXTEntry("CMOD_MOD_LGT", "Lights"), null, nullFunc, SUB::MSLIGHTS);
-		//bool bLightsOnTogglePressed = false; AddTickol(Game::GetGXTEntry("CMOD_MOD_LGT", "Lights"), vehicle.LightsOn_get(), bLightsOnTogglePressed, bLightsOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bLightsOnTogglePressed) vehicle.LightsOn_set(!vehicle.LightsOn_get());
 		bool bEngineOnTogglePressed = false; AddTickol(Game::GetGXTEntry("CMM_MOD_G3", "Engine"), vehicle.GetEngineRunning(), bEngineOnTogglePressed, bEngineOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bEngineOnTogglePressed) vehicle.SetEngineRunning(!vehicle.GetEngineRunning());
-		//bool bLoudRadioTogglePressed = false; AddTickol("Loud Radio", vehicle.LoudRadioActive_get(), bLoudRadioTogglePressed, bLoudRadioTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bLoudRadioTogglePressed) vehicle.LoudRadioActive_set(!vehicle.LoudRadioActive_get());
 
 		if (Static_12_veh_model.IsPlane()) {
 			AddOption("Plane Aileron On", aileron_on);
@@ -1898,8 +1904,8 @@ namespace sub
 				vehicle.SetSirenActive(!vehicle.GetSirenActive());
 		}
 
-		AddOption("AUTO UPGRADE", veh_static12_autoUpgrade);
-		AddToggle("LSC Style Part Selection", g_LSCCustoms);
+		AddOption("Random Upgrades", veh_static12_autoUpgrade);
+		AddOption("Return to Stock", veh_static12_stockParts);
 
 		if (GET_VEHICLE_MOD_KIT != 0)
 		{
@@ -2174,7 +2180,7 @@ namespace sub
 				{
 					headLightsMultVal = stof(inputStr);
 					vehicle.RequestControl();
-					vehicle.LightsMultiplier_set(headLightsMultVal);
+					vehicle.SetLightsMultiplier(headLightsMultVal);
 					if (headLightsMultIt != g_multListHeadLights.end())
 						headLightsMultIt->second = headLightsMultVal;
 					else
@@ -2195,7 +2201,7 @@ namespace sub
 			{
 				headLightsMultVal += 0.1f;
 				vehicle.RequestControl();
-				vehicle.LightsMultiplier_set(headLightsMultVal);
+				vehicle.SetLightsMultiplier(headLightsMultVal);
 				if (headLightsMultIt != g_multListHeadLights.end())
 					headLightsMultIt->second = headLightsMultVal;
 				else
@@ -2209,7 +2215,7 @@ namespace sub
 			{
 				headLightsMultVal -= 0.1f;
 				vehicle.RequestControl();
-				vehicle.LightsMultiplier_set(headLightsMultVal);
+				vehicle.SetLightsMultiplier(headLightsMultVal);
 				if (headLightsMultIt != g_multListHeadLights.end())
 					headLightsMultIt->second = headLightsMultVal;
 				else
@@ -2231,7 +2237,7 @@ namespace sub
 				{
 					rpmMultVal = stof(inputStr);
 					vehicle.RequestControl(400);
-					vehicle.EnginePowerMultiplier_set(rpmMultVal);
+					vehicle.SetEnginePowerMultiplier(rpmMultVal);
 					if (rpmMultIt != g_multListRPM.end())
 						rpmMultIt->second = rpmMultVal;
 					else
@@ -2252,7 +2258,7 @@ namespace sub
 			{
 				rpmMultVal += 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EnginePowerMultiplier_set(rpmMultVal);
+				vehicle.SetEnginePowerMultiplier(rpmMultVal);
 				if (rpmMultIt != g_multListRPM.end())
 					rpmMultIt->second = rpmMultVal;
 				else
@@ -2266,7 +2272,7 @@ namespace sub
 			{
 				rpmMultVal -= 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EnginePowerMultiplier_set(rpmMultVal);
+				vehicle.SetEnginePowerMultiplier(rpmMultVal);
 				if (rpmMultIt != g_multListRPM.end())
 					rpmMultIt->second = rpmMultVal;
 				else
@@ -2288,7 +2294,7 @@ namespace sub
 				{
 					torqueMultVal = stof(inputStr);
 					vehicle.RequestControl(400);
-					vehicle.EngineTorqueMultiplier_set(torqueMultVal);
+					vehicle.SetEngineTorqueMulitplier(torqueMultVal);
 					if (torqueMultIt != g_multListTorque.end())
 						torqueMultIt->second = torqueMultVal;
 					else
@@ -2309,7 +2315,7 @@ namespace sub
 			{
 				torqueMultVal += 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EngineTorqueMultiplier_set(torqueMultVal);
+				vehicle.SetEngineTorqueMulitplier(torqueMultVal);
 				if (torqueMultIt != g_multListTorque.end())
 					torqueMultIt->second = torqueMultVal;
 				else
@@ -2323,7 +2329,7 @@ namespace sub
 			{
 				torqueMultVal -= 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EngineTorqueMultiplier_set(torqueMultVal);
+				vehicle.SetEngineTorqueMulitplier(torqueMultVal);
 				if (torqueMultIt != g_multListTorque.end())
 					torqueMultIt->second = torqueMultVal;
 				else
@@ -2345,7 +2351,7 @@ namespace sub
 				{
 					maxSpeedMultVal = stof(inputStr) / 3.6f;
 					vehicle.RequestControl(400);
-					vehicle.MaxSpeed_set(maxSpeedMultVal);
+					vehicle.SetMaxSpeed(maxSpeedMultVal);
 					if (maxSpeedMultIt != g_multListMaxSpeed.end())
 						maxSpeedMultIt->second = maxSpeedMultVal;
 					else
@@ -2365,7 +2371,7 @@ namespace sub
 			{
 				maxSpeedMultVal += 1.0f / 3.6f;
 				vehicle.RequestControl(400);
-				vehicle.MaxSpeed_set(maxSpeedMultVal);
+				vehicle.SetMaxSpeed(maxSpeedMultVal);
 				if (maxSpeedMultIt != g_multListMaxSpeed.end())
 					maxSpeedMultIt->second = maxSpeedMultVal;
 				else
@@ -2379,7 +2385,7 @@ namespace sub
 			{
 				maxSpeedMultVal -= 1.0f / 3.6f;
 				vehicle.RequestControl(400);
-				vehicle.MaxSpeed_set(maxSpeedMultVal);
+				vehicle.SetMaxSpeed(maxSpeedMultVal);
 				if (maxSpeedMultIt != g_multListMaxSpeed.end())
 					maxSpeedMultIt->second = maxSpeedMultVal;
 				else
@@ -2443,7 +2449,7 @@ namespace sub
 				if (GET_NUM_VEHICLE_MODS(vehicle.Handle(), i) > 0)
 				{
 					lastMod = -2;
-					AddOption(get_mod_slot_name(vehicle.Handle(), i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
+					AddOption(GetModSlotName(vehicle.Handle(), i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
 					{
 						msCurrentPaintIndex = i;
 					}
@@ -2474,14 +2480,14 @@ namespace sub
 			selectmod = false;
 		}
 
-		AddTitle(get_mod_slot_name(vehicle, modType, true));
+		AddTitle(GetModSlotName(vehicle, modType, true));
 
 		if (g_LSCCustoms) //to allow toggleable LSC style menu nav
 		{
 			for (INT i = -1; i <= maxMod; i++)
 			{
 				bool pressed = false;
-				AddTickol(get_mod_text_label(vehicle, modType, i, true), lastMod == i, pressed, pressed,
+				AddTickol(GetModTextLabel(vehicle, modType, i, true), lastMod == i, pressed, pressed,
 					IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING, TICKOL::NONE, false);
 				if (*Menu::currentopATM == Menu::printingop && currMod != i)
 					SET_VEHICLE_MOD(vehicle, modType, i, GET_VEHICLE_MOD_VARIATION(vehicle, modType));
@@ -2504,7 +2510,7 @@ namespace sub
 			for (INT i = -1; i <= maxMod; i++)
 			{
 				bool pressed = false;
-				AddTickol(get_mod_text_label(vehicle, modType, i, true), currMod == i, pressed, pressed,
+				AddTickol(GetModTextLabel(vehicle, modType, i, true), currMod == i, pressed, pressed,
 					IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING, TICKOL::NONE, false); if (pressed)
 				{
 					SET_VEHICLE_MOD(vehicle, modType, i, GET_VEHICLE_MOD_VARIATION(vehicle, modType));
@@ -2766,7 +2772,7 @@ namespace sub
 
 		if (MSWheelsDriftTyresOn_) {
 			vehicle.RequestControlOnce();
-			vehicle.CanTyresDrift_set(!vehicle.CanTyresDrift_get());
+			vehicle.SetCanTyresDrift(!vehicle.GetCanTyresDrift());
 			return;
 		}
 	}
@@ -2923,7 +2929,7 @@ namespace sub
 			{
 				for (i = ids[j]; i < ids[j + 1]; i++)
 				{
-					__AddOption(get_mod_text_label(g_Ped4, VehicleMod::FrontWheels, i, false), g_Ped4, wtype, i, chrtype == 2);
+					__AddOption(GetModTextLabel(g_Ped4, VehicleMod::FrontWheels, i, false), g_Ped4, wtype, i, chrtype == 2);
 				}
 			}
 			addlog(ige::LogType::LOG_TRACE, "Finished Adding Wheel Options");
@@ -2957,7 +2963,7 @@ namespace sub
 		AddTitle(bIsChromeSelected ? "Chrome Wheels" : "Normal Wheels");
 		for (; i < windices2; i++)
 		{
-			__AddOption(get_mod_text_label(g_Ped4, VehicleMod::FrontWheels, i, false), g_Ped4, wtype, i, chrtype == 2);
+			__AddOption(GetModTextLabel(g_Ped4, VehicleMod::FrontWheels, i, false), g_Ped4, wtype, i, chrtype == 2);
 		}
 
 		if (g_LSCCustoms)
@@ -3255,8 +3261,8 @@ namespace sub
 		{
 			rightind = false;
 			hazard = false;
-			vehicle.LeftIndicatorLightOn_set(!leftind);
-			vehicle.RightIndicatorLightOn_set(false);
+			vehicle.SetLeftIndicatorLightOn(!leftind);
+			vehicle.SetRightIndicatorLightOn(false);
 			leftind = !leftind;
 		}
 		bool bRindOnTogglePressed = false;
@@ -3265,8 +3271,8 @@ namespace sub
 		{
 			leftind = false;
 			hazard = false;
-			vehicle.RightIndicatorLightOn_set(!rightind);
-			vehicle.LeftIndicatorLightOn_set(false);
+			vehicle.SetRightIndicatorLightOn(!rightind);
+			vehicle.SetLeftIndicatorLightOn(false);
 			rightind = !rightind;
 		}
 		bool bHzdOnTogglePressed = false;
@@ -3277,16 +3283,16 @@ namespace sub
 			{
 				rightind = false;
 				leftind = false;
-				vehicle.RightIndicatorLightOn_set(!hazard);
-				vehicle.LeftIndicatorLightOn_set(!hazard);
+				vehicle.SetRightIndicatorLightOn(!hazard);
+				vehicle.SetLeftIndicatorLightOn(!hazard);
 				hazard = !hazard;
 			}
 			else
 			{
 				rightind = false;
 				leftind = false;
-				vehicle.RightIndicatorLightOn_set(true);
-				vehicle.LeftIndicatorLightOn_set(true);
+				vehicle.SetRightIndicatorLightOn(true);
+				vehicle.SetLeftIndicatorLightOn(true);
 				hazard = true;
 			}
 
@@ -3379,7 +3385,7 @@ namespace sub
 		if (neon_fade_minus)
 		{
 			if (loop_neon_fade == 0)
-				loop_neon_fade = NEON_FADE.size()-1;
+				loop_neon_fade = static_cast<int>(NEON_FADE.size())-1;
 			else
 				loop_neon_fade--;
 		}
@@ -3393,7 +3399,7 @@ namespace sub
 		if (neon_flash_minus)
 		{
 			if (loop_neon_flash == 0)
-				loop_neon_flash = NEON_FLASH.size()-1;
+				loop_neon_flash = static_cast<int>(NEON_FLASH.size())-1;
 			else
 				loop_neon_flash--;
 		}

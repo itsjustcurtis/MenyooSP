@@ -349,3 +349,4 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database 
 healthchecksdb
+/Solution/source/_Build/bin/Release/moveasi.bat

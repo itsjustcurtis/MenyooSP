@@ -78,7 +78,7 @@ void TeleportNetPed(GTAentity ped, float X, float Y, float Z, bool bWait, bool b
 	if (ped.Equals(myPed) || ped.Equals(myVeh))
 	{
 		if (sub::Spooner::SpoonerMode::spoonerModeCamera.Exists())
-			sub::Spooner::SpoonerMode::spoonerModeCamera.Position_set(X, Y, Z + 3.0f);
+			sub::Spooner::SpoonerMode::spoonerModeCamera.SetPosition(X, Y, Z + 3.0f);
 	}
 
 	//LOAD_ALL_OBJECTS_NOW();
@@ -86,11 +86,11 @@ void TeleportNetPed(GTAentity ped, float X, float Y, float Z, bool bWait, bool b
 	//SET_STREAMING(TRUE);
 
 }
-void teleport_net_ped(GTAentity ped, const Vector3& pos, bool bWait, bool bPtfx)
+void TeleportNetPed(GTAentity ped, const Vector3& pos, bool bWait, bool bPtfx)
 {
 	TeleportNetPed(ped, pos.x, pos.y, pos.z, bWait, bPtfx);
 }
-void teleport_to_missionBlip(GTAped ped)
+void TeleportToMissionBlip(GTAped ped)
 {
 	//GTAblip blip;
 	addlog(ige::LogType::LOG_DEBUG, "Teleporting to Mission Objective");
@@ -159,11 +159,17 @@ namespace sub::TeleportLocations_catind
 		{
 			if (IS_WAYPOINT_ACTIVE())
 			{
-				Vector3 blipCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).Position_get();
+				Vector3 blipCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).GetPosition();
 
 				GTAentity e = ped;
 				if (ped.IsInVehicle())
 					e = ped.CurrentVehicle();
+
+				if (!e.Exists())
+				{
+					Game::Print::PrintBottomCentre("~r~Error:~s~ Entity is no longer valid.");
+					return;
+				}
 
 				GET_GROUND_Z_FOR_3D_COORD(blipCoords.x, blipCoords.y, 810.0, &blipCoords.z, 0, 0);
 
@@ -185,25 +191,25 @@ namespace sub::TeleportLocations_catind
 		}
 		void ToWaypoint241()
 		{
-			TeleMethods::ToWaypoint(g_Ped1);
+			TeleMethods::ToWaypoint(PLAYER_PED_ID());
 		}
 		void ToMissionBlip241()
 		{
-			teleport_to_missionBlip(g_Ped1);
+			TeleportToMissionBlip(PLAYER_PED_ID());
 		}
 		void ToForward241()
 		{
-			auto& entityToTeleport = g_Ped1;
-			Vector3 yoffsetforward = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(entityToTeleport, 0.0f, 3.5f, 0.0f);
+			GTAentity entityToTeleport = PLAYER_PED_ID();
+			Vector3 yoffsetforward = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(entityToTeleport.Handle(), 0.0f, 3.5f, 0.0f);
 			TeleportNetPed(entityToTeleport, yoffsetforward.x, yoffsetforward.y, yoffsetforward.z, true, false);
 		}
 		void ToCoordinates241(const Vector3& coord)
 		{
-			TeleportNetPed(g_Ped1, coord.x, coord.y, coord.z);
+			TeleportNetPed(PLAYER_PED_ID(), coord.x, coord.y, coord.z);
 		}
 		void ToTeleLocation241(const TeleLocation& loc)
 		{
-			auto& entityToTeleport = g_Ped1;
+			GTAentity entityToTeleport = PLAYER_PED_ID();
 
 			bool isOnline = NETWORK_IS_IN_SESSION() != 0;
 			if (loc.bOnTheLine && loc.bOffTheLine)

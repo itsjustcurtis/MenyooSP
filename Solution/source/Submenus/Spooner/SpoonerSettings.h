@@ -31,6 +31,7 @@ namespace sub::Spooner
 		extern eSpoonerModeMode spoonerModeMode;
 
 		extern bool bShowModelPreviews;
+		extern bool bDisplaySpoonerInfo;
 		extern bool bShowBoxAroundSelectedEntity;
 		extern bool bSpawnDynamicProps;
 		extern bool bSpawnDynamicPeds;
@@ -42,6 +43,10 @@ namespace sub::Spooner
 		extern bool bKeepPositionWhenAttaching;
 
 		extern bool bTeleportToReferenceWhenLoadingFile;
+
+		extern bool bGridSnapEnabled;
+		extern float gridSnapSize;
+		extern float rotationSnapDegrees;
 	}
 
 }

@@ -336,8 +336,17 @@ namespace sub
 			if (spi >= 0)
 			{
 				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				spe.lastAnimation.dict = animDict;
-				spe.lastAnimation.name = animName;
+				sub::Spooner::SpoonerEntity::Animation animData;
+				animData.dict = animDict;
+				animData.name = animName;
+				animData.speed = g_customAnimSpeed;
+				animData.speedMultiplier = g_customAnimSpeedMult;
+				animData.playbackRate = g_CustomAnimRate;
+				animData.duration = g_customAnimDuration;
+				animData.flag = g_customAnimFlag;
+				animData.lockPos = g_customAnimLockPos;
+				spe.AddOrUpdateLastAnimation(animData);
+
 				if (att.Exists() && spe.attachmentArgs.isAttached)
 				{
 					spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
@@ -345,8 +354,7 @@ namespace sub
 				spe.taskSequence.Reset();
 				if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
 				{
-					sub::Spooner::selectedEntity.lastAnimation.dict = spe.lastAnimation.dict;
-					sub::Spooner::selectedEntity.lastAnimation.name = spe.lastAnimation.name;
+					sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
 					sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
 				}
 			}
@@ -402,8 +410,7 @@ namespace sub
 		if (spi >= 0)
 		{
 			auto& spe = sub::Spooner::Databases::EntityDb[spi];
-			spe.lastAnimation.dict.clear();
-			spe.lastAnimation.name.clear();
+			spe.ClearLastAnimations();
 			if (att.Exists() && spe.attachmentArgs.isAttached)
 			{
 				spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
@@ -411,8 +418,7 @@ namespace sub
 			spe.taskSequence.Reset();
 			if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
 			{
-				sub::Spooner::selectedEntity.lastAnimation.dict = spe.lastAnimation.dict;
-				sub::Spooner::selectedEntity.lastAnimation.name = spe.lastAnimation.name;
+				sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
 				sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
 			}
 		}
@@ -602,6 +608,24 @@ namespace sub
 				g_customAnimDuration -= 100;
 				return;
 			}
+		}
+		if (flagPlus) {
+			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
+			{
+				if (it->first == g_customAnimFlag)
+				{
+					++it;
+					if (it != AnimFlag::vFlagNames.end())
+					{
+						g_customAnimFlag = it->first;
+					}
+					break;
+				}
+			}
+			return;
+		};
+		if (flagPlus)
+		{
 			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
 			{
 				if (it->first == g_customAnimFlag)
@@ -858,8 +882,16 @@ namespace sub
 			if (spi >= 0)
 			{
 				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				spe.lastAnimation.dict = sub_animDict;
-				spe.lastAnimation.name = sub_animName;
+				sub::Spooner::SpoonerEntity::Animation animData;
+				animData.dict = sub_animDict;
+				animData.name = sub_animName;
+				animData.speed = g_customAnimSpeed;
+				animData.speedMultiplier = g_customAnimSpeedMult;
+				animData.playbackRate = g_CustomAnimRate;
+				animData.duration = g_customAnimDuration;
+				animData.flag = g_customAnimFlag;
+				animData.lockPos = g_customAnimLockPos;
+				spe.AddOrUpdateLastAnimation(animData);
 				if (att.Exists() && spe.attachmentArgs.isAttached)
 				{
 					spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
@@ -867,8 +899,7 @@ namespace sub
 				spe.taskSequence.Reset();
 				if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
 				{
-					sub::Spooner::selectedEntity.lastAnimation.dict = spe.lastAnimation.dict;
-					sub::Spooner::selectedEntity.lastAnimation.name = spe.lastAnimation.name;
+					sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
 					sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
 				}
 			}
@@ -902,8 +933,7 @@ namespace sub
 			if (spi >= 0)
 			{
 				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				spe.lastAnimation.dict.clear();
-				spe.lastAnimation.name.clear();
+				spe.ClearLastAnimations();
 				if (att.Exists() && spe.attachmentArgs.isAttached)
 				{
 					spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
@@ -911,8 +941,7 @@ namespace sub
 				spe.taskSequence.Reset();
 				if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
 				{
-					sub::Spooner::selectedEntity.lastAnimation.dict = spe.lastAnimation.dict;
-					sub::Spooner::selectedEntity.lastAnimation.name = spe.lastAnimation.name;
+					sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
 					sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
 				}
 			}
@@ -1268,8 +1297,8 @@ namespace sub
 				if (spi >= 0)
 				{
 					auto& spe = sub::Spooner::Databases::EntityDb[spi];
-					spe.lastAnimation.dict.clear();
-					spe.lastAnimation.name = scenarioLabel;
+					spe.ClearLastAnimations();
+					spe.currentScenario = scenarioLabel;
 					if (att.Exists() && spe.attachmentArgs.isAttached)
 					{
 						spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
@@ -1277,8 +1306,8 @@ namespace sub
 					spe.taskSequence.Reset();
 					if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
 					{
-						sub::Spooner::selectedEntity.lastAnimation.dict = spe.lastAnimation.dict;
-						sub::Spooner::selectedEntity.lastAnimation.name = spe.lastAnimation.name;
+						sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
+						sub::Spooner::selectedEntity.currentScenario = spe.currentScenario;
 						sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
 					}
 				}
@@ -1313,8 +1342,8 @@ namespace sub
 			if (spi >= 0)
 			{
 				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				spe.lastAnimation.dict.clear();
-				spe.lastAnimation.name.clear();
+				spe.ClearLastAnimations();
+				spe.currentScenario.clear();
 				if (att.Exists() && spe.attachmentArgs.isAttached)
 				{
 					spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
@@ -1322,8 +1351,8 @@ namespace sub
 				spe.taskSequence.Reset();
 				if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
 				{
-					sub::Spooner::selectedEntity.lastAnimation.dict = spe.lastAnimation.dict;
-					sub::Spooner::selectedEntity.lastAnimation.name = spe.lastAnimation.name;
+					sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
+					sub::Spooner::selectedEntity.currentScenario = spe.currentScenario;
 					sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
 				}
 			}

@@ -60,13 +60,13 @@ namespace World
 {
 	extern const std::vector<std::pair<std::string, std::string>> sWeatherNames;
 	
-	void GravityLevel_set(int value);
+	void SetGravityLevel(int value);
 
-	Camera RenderingCamera_get();
-	void RenderingCamera_set(Camera newCamera, bool ease = false);
+	Camera GetRenderingCamera();
+	void SetRenderingCamera(Camera newCamera, bool ease = false);
 
-	void Weather_set(WeatherType weather);
-	void Weather_set(const std::string& weatherName);
+	void SetWeather(WeatherType weather);
+	void SetWeather(const std::string& weatherName);
 	void SetWeatherOverTime(WeatherType weather, DWORD ms);
 	void SetWeatherOverTime(const std::string& weatherName, DWORD ms);
 	void SetWeatherOverride(WeatherType weather);
@@ -74,10 +74,10 @@ namespace World
 	void ClearWeatherOverride();
 	void SetWeatherTransition(WeatherType from, WeatherType to, DWORD ms);
 	void GetWeatherTransition(WeatherType& from, WeatherType& to, DWORD& time);
-	WeatherType Weather_get();
-	WeatherType Weather_get(const std::string& weatherName);
-	std::string WeatherName_get();
-	std::string WeatherName_get(const WeatherType& weatherType);
+	WeatherType GetWeather();
+	WeatherType GetWeather(const std::string& weatherName);
+	std::string GetWeatherName();
+	std::string GetWeatherName(const WeatherType& weatherType);
 
 	void GetActiveCheckpoints(std::vector<Checkpoint>& result);
 
@@ -147,8 +147,6 @@ namespace World
 
 	bool WorldToScreen(const Vector3& worldCoords, Vector2& screenCoords);
 
-	//RaycastResult Raycast(Vector3 source, Vector3 target, IntersectOptions options);
-	//RaycastResult Raycast(Vector3 source, Vector3 target, IntersectOptions options, GTAentity entity);
 	GTAentity EntityFromAimCamRay();
 
 	void DrawMarker(int type, const Vector3& pos, const Vector3& dir, const Vector3& rot, const Vector3& scale, const RGBA& colour);
@@ -171,9 +169,9 @@ namespace World
 
 // World - clear area
 void ClearAreaOfEntities(const EntityType& type, const Vector3& coords, float radius, const std::vector<GTAentity>& excludes);
-void clear_area_of_vehicles_around_entity(Entity entity, float radius, bool memry = true);
-void clear_area_of_peds_around_entity(Entity entity, float radius, bool memry = true);
-void clear_attachments_off_entity(const GTAentity& entity, const EntityType& entType);
+void ClearAreaOfVehiclesAroundEntity(Entity entity, float radius, bool memry = true);
+void ClearAreaOfPedsAroundEntity(Entity entity, float radius, bool memry = true);
+void ClearAttachmentsOffEntity(const GTAentity& entity, const EntityType& entType);
 
 
 

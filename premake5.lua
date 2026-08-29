@@ -22,6 +22,20 @@ project "Menyoo"
         "Solution/external/pugixml/src/pugixml.cpp",
         "Solution/external/pugixml/src/pugiconfig.hpp",
         "Solution/external/pugixml/src/pugixml.hpp",
+        "Solution/external/imgui/imgui.cpp",
+        "Solution/external/imgui/imgui_draw.cpp",
+        "Solution/external/imgui/imgui_tables.cpp",
+        "Solution/external/imgui/imgui_widgets.cpp",
+        "Solution/external/imgui/imgui_impl_dx11.cpp",
+        "Solution/external/imgui/imgui_impl_win32.cpp",
+        "Solution/external/imgui/**.h",
+        "Solution/external/ImGuizmo/ImGuizmo.cpp",
+        "Solution/external/ImGuizmo/**.h",
+        "Solution/external/d3dhook/D3D11Hook.cpp",
+        "Solution/external/d3dhook/**.h",
+        "Solution/external/MinHook/include/MinHook.h",
+        "Solution/external/MinHook/src/**.c",
+        "Solution/external/MinHook/src/**.h",
     }
 
     includedirs {
@@ -34,9 +48,11 @@ project "Menyoo"
         "Solution/generated",
     }
 
-    links { "ScriptHookV" }
+    links { "ScriptHookV", "d3d11", "d3dcompiler", "dxgi", "Psapi" }
 
-    libdirs { "Solution/external/ScriptHookV/SDK/lib" }
+    libdirs {
+        "Solution/external/ScriptHookV/SDK/lib",
+    }
 
     defines {
         "WIN32",
@@ -48,7 +64,7 @@ project "Menyoo"
     buildoptions { "/bigobj" }
     linkoptions { "/SUBSYSTEM:WINDOWS" }
 
-    staticruntime "On"
+    staticruntime "Off"
 
     prebuildcommands {
         'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(SolutionDir)..\\tools\\generate-version.ps1" -OutputDirectory "$(SolutionDir)generated"',

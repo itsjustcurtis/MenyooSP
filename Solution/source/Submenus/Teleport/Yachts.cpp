@@ -223,6 +223,34 @@ namespace sub::TeleportLocations_catind
 			}
 			return Vector3();
 		}
+
+		struct YachtPropCfg
+		{
+			bool dynamic = true;
+			bool applyTint = false;          // SET_OBJECT_TINT_INDEX to yachts variation
+			bool detachAfterAttach = false;  // attach for placement, then detach so world pos sticks
+			bool freezeAfterAttach = false;
+			bool makeDynamic = false;
+		};
+
+		// Create a prop, attach to parent, apply common setup, and record it for cleanup.
+		static GTAprop AttachYachtProp(Model model, GTAentity parent,
+			const Vector3& offset, const Vector3& rotation,
+			YachtBuildInfoStructure& yachtInfo, const YachtPropCfg& cfg = {})
+		{
+			GTAprop p = World::CreateProp(model, Vector3(), cfg.dynamic, false);
+			p.AttachTo(parent, 0, false, offset, rotation);
+			p.SetIsCollisionEnabled(true);
+			if (cfg.applyTint) SET_OBJECT_TINT_INDEX(p.Handle(), yachtInfo.yachtPropTextureVariation);
+			SET_ENTITY_LIGHTS(p.Handle(), 0);
+			if (cfg.detachAfterAttach) p.Detach();
+			if (cfg.freezeAfterAttach) p.FreezePosition(true);
+			if (cfg.makeDynamic) { p.FreezePosition(false); p.SetDynamic(true); }
+			p.SetMissionEntity(true);
+			yachtInfo.vSpawnedEntities.push_back(p);
+			return p;
+		}
+
 		void CreateYacht(YachtBuildInfoStructure& yachtInfo)
 		{
 			if (worldObjects.size() > 2000)//GTA_MAX_ENTITIES - 48)
@@ -230,258 +258,208 @@ namespace sub::TeleportLocations_catind
 				Game::Print::PrintBottomCentre("~r~Error:~s~ Too many entities in world.");
 				return;
 			}
-			if (yachtInfo.location != nullptr && yachtInfo.option != nullptr)
+			if (yachtInfo.location == nullptr || yachtInfo.option == nullptr)
+				return;
+
+			auto& posh = yachtInfo.location->second.poses[yachtInfo.internalLocationIndex - 1];
+			char buffer[64];
+
+			SET_INSTANCE_PRIORITY_MODE(true);
+			ON_ENTER_MP();
+
+			sprintf_s(buffer, "%02d", yachtInfo.location->first);
+			const std::string groupIdStr = buffer;
+
+			sprintf_s(buffer, "apa_yacht_grp%s_%i", groupIdStr.c_str(), yachtInfo.internalLocationIndex);
+			const std::string iplInitials = buffer;
+
+			REQUEST_IPL(iplInitials.c_str());
+			REQUEST_IPL((iplInitials + "_int").c_str());
+			REQUEST_IPL((iplInitials + "_lod").c_str());
+			SET_INSTANCE_PRIORITY_MODE(false);
+
+			WAIT(200);
+
+			for (DWORD timeOut = GetTickCount() + 6500; GetTickCount() < timeOut;)
 			{
-				auto& posh = yachtInfo.location->second.poses[yachtInfo.internalLocationIndex - 1];
-
-				char buffer[64];// = new char[64];
-
-				//Game::Print::PrintBottomLeft("Building Yacht.");
-
-				SET_INSTANCE_PRIORITY_MODE(true);
-				ON_ENTER_MP();
-
-				sprintf_s(buffer, "%02d", yachtInfo.location->first);
-				std::string groupIdStr = buffer;
-
-				sprintf_s(buffer, "apa_yacht_grp%s_%i", groupIdStr.c_str(), yachtInfo.internalLocationIndex);
-				std::string iplInitials = buffer;
-
-				REQUEST_IPL((iplInitials).c_str());
-				REQUEST_IPL((iplInitials + "_int").c_str());
-				REQUEST_IPL((iplInitials + "_lod").c_str());
-				SET_INSTANCE_PRIORITY_MODE(false);
-
-				WAIT(200);
-
-				for (DWORD timeOut = GetTickCount() + 6500; GetTickCount() < timeOut;)
+				if (World::GetClosestPropOfType(posh.pos, 3.0f, 0x4FCAD2E0).Exists())
 				{
-					if (World::GetClosestPropOfType(posh.pos, 3.0f, 0x4FCAD2E0).Exists()) break; // apa_mp_apa_yacht
+					break; // apa_mp_apa_yacht
 				}
+			}
 
-				UINT8 optionNumber = yachtInfo.option->first;
-				//char optionNumberChar = '0' + optionNumber;
+			const UINT8 optionNumber = yachtInfo.option->first;
 
-				std::vector<Entity> propYachtArr;
-				GTAmemory::GetPropHandles(propYachtArr, posh.pos, 3.0f, { 0x4FCAD2E0 }); // apa_mp_apa_yacht
-				yachtInfo.yachtProp = World::GetClosestPropOfType(posh.pos, 3.0f, 0x4FCAD2E0); // apa_mp_apa_yacht
-				auto& propYacht = yachtInfo.yachtProp;
-				if (!propYacht.Exists() && !propYachtArr.empty()) { if (DOES_ENTITY_EXIST(propYachtArr.front())) propYacht = propYachtArr.front(); }
-				if (!propYacht.Exists())
+			std::vector<Entity> propYachtArr;
+			GTAmemory::GetPropHandles(propYachtArr, posh.pos, 3.0f, { 0x4FCAD2E0 }); // apa_mp_apa_yacht
+			yachtInfo.yachtProp = World::GetClosestPropOfType(posh.pos, 3.0f, 0x4FCAD2E0);
+			auto& propYacht = yachtInfo.yachtProp;
+			if (!propYacht.Exists() && !propYachtArr.empty() && DOES_ENTITY_EXIST(propYachtArr.front()))
+			{
+				propYacht = propYachtArr.front();
+			}
+			if (!propYacht.Exists())
+			{
+				yachtInfo.vMarkerPositions.clear();
+				Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to build yacht. Try again.");
+				return;
+			}
+
+			SET_OBJECT_TINT_INDEX(propYacht.Handle(), yachtInfo.yachtPropTextureVariation);
+			auto& propYachtWin = propYacht; // kept as alias; original code selected a different handle here
+
+			const Vector3 baseAttachOffset(0.0032f, 0.0028f, 14.5700f);
+
+			// Railings
+			sprintf_s(buffer, "apa_mp_apa_yacht_o%u_rail_%c", optionNumber, yachtInfo.railingColour);
+			AttachYachtProp(std::string(buffer), propYachtWin, baseAttachOffset, Vector3(), yachtInfo, { .dynamic = false });
+
+			// Collision / visual shells for the selected yacht option
+			std::vector<std::string> optionColModels;
+			switch (optionNumber)
+			{
+			case 1:
+				optionColModels = { "apa_mp_apa_yacht_option1", "apa_mp_apa_yacht_option1_cola" };
+				break;
+			case 2:
+				optionColModels = { "apa_mp_apa_yacht_option2", "apa_mp_apa_yacht_option2_cola", "apa_mp_apa_yacht_option2_colb" };
+				break;
+			case 3:
+				optionColModels = { "apa_mp_apa_yacht_option3", "apa_mp_apa_yacht_option3_cola", "apa_mp_apa_yacht_option3_colb", "apa_mp_apa_yacht_option3_colc", "apa_mp_apa_yacht_option3_cold", "apa_mp_apa_yacht_option3_cole" };
+				break;
+			}
+			for (const std::string& modelName : optionColModels)
+			{
+				AttachYachtProp(modelName, propYachtWin, baseAttachOffset, Vector3(), yachtInfo, { .dynamic = false, .applyTint = true });
+			}
+
+			// Lighting
+			sprintf_s(buffer, "apa_mp_apa_y%u_l%u%c", optionNumber, yachtInfo.lightingType, yachtInfo.lightingColour);
+			AttachYachtProp(std::string(buffer), propYachtWin, baseAttachOffset, Vector3(), yachtInfo, { .dynamic = false });
+
+			// Doors
+			sprintf_s(buffer, "apa_mp_apa_yacht_door%c", yachtInfo.doorColour);
+			const std::string doorModel = buffer;
+			const std::vector<std::pair<Vector3, Vector3>> doorOffsets = {
+				{ { 0.01894f,  -3.3871f,  6.6600f }, { 0.0f, 0.0f,  90.2950f } },
+				{ { 0.0046f,   -0.6018f,  6.6600f }, { 0.0f, 0.0f, -89.7050f } },
+				{ { -36.8202f, -1.2778f,  0.6500f }, { 0.0f, 0.0f, -89.9550f } }
+			};
+			for (const auto& d : doorOffsets)
+			{
+				AttachYachtProp(doorModel, propYachtWin, d.first, d.second, yachtInfo, { .applyTint = true });
+			}
+
+			// Flag
+			AttachYachtProp("apa_prop_flag_" + vFlagSuffixes[yachtInfo.flagIndex], propYachtWin, Vector3(-56.6221f, -2.0013f, 1.5937f), Vector3(49.6800f, 0.0f, -89.9500f), yachtInfo);
+
+			// Keypad (prop_ld_keypad_01b)
+			AttachYachtProp(0x25286EB9, propYachtWin, Vector3(-36.8196f, -2.8881f, 0.8880f), Vector3(0.0f, 0.0f, -84.7550f), yachtInfo);
+
+			// Radomes (apa_mp_apa_yacht_radar_01a)
+			static const std::map<UINT8, std::vector<std::pair<Vector3, float>>> radomeOffsets = {
+				{ 1, { { { 0.95549f,  -2.1682f,  9.6040f },  90.0f }, { { 1.2820f,   -1.9895f, 13.4305f }, -180.0f }, { { 5.4844f,   -1.9817f, 18.1568f },  -90.0f } } },
+				{ 2, { { { -2.2487f,  -1.9926f, 17.3200f }, -90.0f }, { { 1.6188f,   -1.9927f, 14.0505f }, -180.0f }, { { 7.6349f,   -1.9927f, 10.3491f },   90.0f } } },
+				{ 3, { { { 10.8361f,  -1.9899f,  9.8530f },  90.0f }, { { -0.2231f,  -1.9601f, 12.8964f },  180.0f }, { { -15.0487f, -1.9918f,  9.0674f },   90.0f } } }
+			};
+			for (const auto& r : radomeOffsets.at(optionNumber))
+			{
+				AttachYachtProp(0x49566db0, propYachtWin, r.first, Vector3(0, 0, r.second), yachtInfo, { .applyTint = true, .detachAfterAttach = true, .freezeAfterAttach = true });
+			}
+
+			// Buoys (apa_prop_yacht_float_1a)
+			static const std::vector<Vector3> buoyOffsets = {
+				{ -53.4131f,   -10.0086f,  -6.0113f },
+				{ -1631.3173f, -1819.5632f, -0.6474f },
+				{ -58.8841f,     0.2735f,  -6.1121f },
+				{ -1619.7332f, -1820.7730f, -0.8027f }
+			};
+			for (const Vector3& b : buoyOffsets)
+			{
+				AttachYachtProp(0x51d2a887, propYachtWin, b, Vector3(), yachtInfo, { .detachAfterAttach = true, .makeDynamic = true });
+			}
+
+			// Jacuzzi (apa_mp_apa_yacht_jacuzzi_ripple1)
+			if (optionNumber >= 2)
+			{
+				AttachYachtProp(0x98B5E3D4, propYachtWin, Vector3(-50.8033f, -1.9774f, 0.1368f), Vector3(), yachtInfo);
+			}
+
+			// Vehicles
+			static const std::map<UINT8, std::vector<std::tuple<Model, Vector3, Vector3>>> vehicleOffsets = {
+				{ 1, {
+					{ VEHICLE_TROPIC2,    { -54.3528f, -13.3907f, -5.1819f }, { 1.6733f,  1.9946f,  -109.0565f } },
+					{ VEHICLE_SEASHARK3,  { -61.5043f,  -8.9306f, -5.5869f }, { 4.1636f, -0.8436f,   116.3082f } }
+				} },
+				{ 2, {
+					{ VEHICLE_SEASHARK3,  { -61.5275f,   4.6035f, -5.3742f }, { 4.6320f, -1.7134f,    63.7883f } },
+					{ VEHICLE_SEASHARK3,  { -61.5155f,  -8.8960f, -5.3594f }, { 4.5635f, -1.1910f,  -243.6808f } },
+					{ VEHICLE_DINGHY4,    { -54.3522f, -13.3903f, -4.8438f }, { 4.8526f, -1.0505f,  -109.0528f } },
+					{ VEHICLE_SPEEDER2,   { -53.7848f,   9.1620f, -4.6511f }, { 3.3195f,  0.8531f,   -69.9578f } },
+					{ VEHICLE_SWIFT2,     { -30.8168f,  -1.8687f,  6.5134f }, { -0.2890f, 0.0000f,   -90.0000f } }
+				} },
+				{ 3, {
+					{ VEHICLE_SEASHARK3,    { -61.5189f,   2.3503f, -5.8703f }, {  5.6612f,  0.2225f,   64.4417f } },
+					{ VEHICLE_SEASHARK3,    { -61.5050f,  -8.9017f, -5.6858f }, {  7.4903f, -0.0753f,  116.2442f } },
+					{ VEHICLE_SEASHARK3,    { -61.52280f,  4.5982f, -5.8566f }, {  5.9844f, -0.3815f,   64.5492f } },
+					{ VEHICLE_SEASHARK3,    { -61.5087f,  -6.6536f, -5.7382f }, {  7.2774f,  0.9445f,  114.6004f } },
+					{ VEHICLE_DINGHY4,      { -54.3447f, -13.3947f, -5.4129f }, {  3.6041f, -2.1484f, -108.2869f } },
+					{ VEHICLE_TORO,         { -54.3726f,   9.1093f, -5.5979f }, { -1.8536f,  0.7891f,  -69.8533f } },
+					{ VEHICLE_SUPERVOLITO2, { -30.8329f,  -1.8728f,  7.2883f }, {  0.0409f,  0.0000f,  -90.0000f } }
+				} }
+			};
+			for (const auto& v : vehicleOffsets.at(optionNumber))
+			{
+				const Model& vehModel = std::get<0>(v);
+				GTAvehicle veh = World::CreateVehicle(vehModel, Vector3(), 0.0f, false);
+				veh.AttachTo(propYachtWin, 0, false, std::get<1>(v), std::get<2>(v));
+				veh.Detach();
+				veh.FreezePosition(false);
+				veh.SetIsCollisionEnabled(true);
+				SET_ENTITY_LIGHTS(veh.Handle(), 0);
+				if (vehModel.IsBoat()) SET_BOAT_ANCHOR(veh.Handle(), true);
+				yachtInfo.vSpawnedEntities.push_back(veh);
+			}
+
+			// Peds
+			static const std::vector<std::tuple<Model, Vector3, Vector3, PTFX::sFxData>> pedSetup = {
+				{ PedHash::BoatStaff01Male,   { 14.2079f, -2.1206f, 7.3519f }, { 0.0f, 0.0f, -88.2933f }, { std::string(), std::string() } },
+				{ PedHash::BoatStaff01Female, { 23.3344f, -1.6929f, 3.5506f }, { 0.0f, 0.0f,  88.9650f }, { "anim@mini@yacht@bar@drink@idle_a", "idle_a_bartender" } }
+			};
+			for (const auto& p : pedSetup)
+			{
+				GTAped ped = World::CreatePed(std::get<0>(p), Vector3(), 0.0f, false);
+				ped.AttachTo(propYachtWin, 0, false, std::get<1>(p), std::get<2>(p));
+				ped.Detach();
+				ped.FreezePosition(false);
+				ped.SetIsCollisionEnabled(true);
+				SET_ENTITY_LIGHTS(ped.Handle(), 0);
+				ped.SetRelationshipGroup("PLAYER");
+				ped.SetBlockPermanentEvent(true);
+				const auto& animArgs = std::get<3>(p);
+				if (animArgs.asset.empty())
 				{
-					yachtInfo.vMarkerPositions.clear();
-					Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to build yacht. Try again.");
-					return;
+					if (!animArgs.effect.empty()) ped.Task().StartScenario(animArgs.effect);
 				}
-				const Vector3& propYachtPos = propYacht.GetPosition();
-
-				SET_OBJECT_TINT_INDEX(propYacht.Handle(), yachtInfo.yachtPropTextureVariation);
-
-				auto& propYachtWin = propYacht;//World::GetClosestPropOfType(yachtInfo.location->second.pos, 4.0f, 0xBCDAC9E7); // apa_mp_apa_yacht_win
-											   //if (!propYachtWin.Exists()) propYachtWin = propYacht;
-
-
-				sprintf_s(buffer, "apa_mp_apa_yacht_o%u_rail_%c", optionNumber, yachtInfo.railingColour);
-				GTAprop propRailings = World::CreateProp(std::string(buffer), Vector3(), false, false);
-				propRailings.SetIsCollisionEnabled(true);
-				propRailings.AttachTo(propYachtWin, 0, false, Vector3(0.0032f, 0.0028f, 14.5700f), Vector3());
-				SET_ENTITY_LIGHTS(propRailings.Handle(), 0);
-				propRailings.SetMissionEntity(true);
-				yachtInfo.vSpawnedEntities.push_back(propRailings);
-
-				std::vector<std::string> optionColModels;
-				switch (optionNumber)
+				else if (!animArgs.effect.empty())
 				{
-				case 1:
-					optionColModels = { "apa_mp_apa_yacht_option1", "apa_mp_apa_yacht_option1_cola" };
-					break;
-				case 2:
-					optionColModels = { "apa_mp_apa_yacht_option2", "apa_mp_apa_yacht_option2_cola", "apa_mp_apa_yacht_option2_colb" };
-					break;
-				case 3:
-					optionColModels = { "apa_mp_apa_yacht_option3", "apa_mp_apa_yacht_option3_cola", "apa_mp_apa_yacht_option3_colb", "apa_mp_apa_yacht_option3_colc", "apa_mp_apa_yacht_option3_cold", "apa_mp_apa_yacht_option3_cole" };
-					break;
+					ped.Task().PlayAnimation(animArgs.asset, animArgs.effect);
 				}
-				for (Model ms : optionColModels)
-				{
-					GTAprop p = World::CreateProp(ms, Vector3(), false, false);
-					p.AttachTo(propYachtWin, 0, false, Vector3(0.0032f, 0.0028f, 14.5700f), Vector3());
-					p.SetIsCollisionEnabled(true);
-					SET_OBJECT_TINT_INDEX(p.Handle(), yachtInfo.yachtPropTextureVariation);
-					SET_ENTITY_LIGHTS(p.Handle(), 0);
-					propRailings.SetMissionEntity(true);
-					yachtInfo.vSpawnedEntities.push_back(p);
-				}
+				yachtInfo.vSpawnedEntities.push_back(ped);
+			}
 
-				sprintf_s(buffer, "apa_mp_apa_y%u_l%u%c", optionNumber, yachtInfo.lightingType, yachtInfo.lightingColour);
-				GTAprop propLights = World::CreateProp(std::string(buffer), propYachtPos, false, false);
-				propLights.AttachTo(propYachtWin, 0, false, Vector3(0.0032f, 0.0028f, 14.5700f), Vector3());
-				propLights.SetIsCollisionEnabled(true);
-				SET_ENTITY_LIGHTS(propLights.Handle(), 0);
-				propLights.SetMissionEntity(true);
-				yachtInfo.vSpawnedEntities.push_back(propLights);
+			// Blip
+			GTAblip blipYacht = propYachtWin.AddBlip();
+			blipYacht.SetIcon(BlipIcon::Yacht);
+			blipYacht.SetBlipName("Menyoo Yacht");
+			blipYacht.SetColour(BlipColour::Blue);
+			blipYacht.SetAlpha(200);
+			blipYacht.SetFriendly(true);
+			blipYacht.SetScale(0.8f);
 
-				sprintf_s(buffer, "apa_mp_apa_yacht_door%c", yachtInfo.doorColour);
-				for (auto& doorOffset : std::vector<std::pair<Vector3, Vector3>>
-				{
-					{ { 0.01894f, -3.3871f, 6.6600f },{ 0.0000f, 0.0000f, 90.2950f } },
-					{ { 0.0046f, -0.6018f, 6.6600f },{ 0.0000f, 0.0000f, -89.7050f } },
-					{ { -36.8202f, -1.2778f, 0.6500f },{ 0.0000f, 0.0000f, -89.9550f } }
-				})
-				{
-					GTAprop propDoor = World::CreateProp(std::string(buffer), Vector3(), true, false);
-					propDoor.AttachTo(propYachtWin, 0, false, doorOffset.first, doorOffset.second);
-					propDoor.SetIsCollisionEnabled(true);
-					SET_OBJECT_TINT_INDEX(propDoor.Handle(), yachtInfo.yachtPropTextureVariation);
-					SET_ENTITY_LIGHTS(propDoor.Handle(), 0);
-					propDoor.SetMissionEntity(true);
-					yachtInfo.vSpawnedEntities.push_back(propDoor);
-				}
-
-				// Flag
-				GTAprop propFlag = World::CreateProp("apa_prop_flag_" + vFlagSuffixes[yachtInfo.flagIndex], Vector3(), true, false);
-				propFlag.AttachTo(propYachtWin, 0, false, Vector3(-56.6221f, -2.0013f, 1.5937f), Vector3(49.6800f, 0.0000f, -89.9500f));
-				propFlag.SetIsCollisionEnabled(true);
-				SET_ENTITY_LIGHTS(propFlag.Handle(), 0);
-				propFlag.SetMissionEntity(true);
-				yachtInfo.vSpawnedEntities.push_back(propFlag);
-
-				// Keypad
-				GTAprop propKeypad = World::CreateProp(0x25286EB9, Vector3(), true, false); // prop_ld_keypad_01b
-				propKeypad.AttachTo(propYachtWin, 0, false, Vector3(-36.8196f, -2.8881f, 0.8880f), Vector3(0.0000f, 0.0000f, -84.7550f));
-				propKeypad.SetIsCollisionEnabled(true);
-				SET_ENTITY_LIGHTS(propKeypad.Handle(), 0);
-				propKeypad.SetMissionEntity(true);
-				yachtInfo.vSpawnedEntities.push_back(propKeypad);
-
-				std::map<UINT8, std::vector<std::pair<Vector3, float>>> radomeOffsets
-				{
-					{ 1,{ { { 0.95549f, -2.1682f, 9.6040f }, 90.0000f },{ { 1.2820f, -1.9895f, 13.4305f }, -180.0000f },{ { 5.4844f, -1.9817f, 18.1568f }, -90.0000f } } },
-					{ 2,{ { { -2.2487f, -1.9926f, 17.3200f }, -90.0000f },{ { 1.6188f, -1.9927f, 14.0505f }, -180.0000f },{ { 7.6349f, -1.9927f, 10.3491f }, 90.0000f } } },
-					{ 3,{ { { 10.8361f, -1.9899f, 9.8530f }, 90.0000f },{ { -0.2231f, -1.9601f, 12.8964f }, 180.0000f },{ { -15.0487f, -1.9918f, 9.0674f }, 90.0000f } } }
-				};
-				auto& radomeOffset = radomeOffsets[optionNumber];
-				for (auto& r : radomeOffset)
-				{
-					GTAprop propRadome = World::CreateProp(0x49566db0, Vector3(), true, false); // apa_mp_apa_yacht_radar_01a
-					propRadome.AttachTo(propYachtWin, 0, false, r.first, Vector3(0, 0, r.second));
-					propRadome.Detach();
-					propRadome.FreezePosition(true);
-					propRadome.SetIsCollisionEnabled(true);
-					SET_OBJECT_TINT_INDEX(propRadome.Handle(), yachtInfo.yachtPropTextureVariation);
-					SET_ENTITY_LIGHTS(propRadome.Handle(), 0);
-					propRadome.SetMissionEntity(true);
-					yachtInfo.vSpawnedEntities.push_back(propRadome);
-				}
-
-				// Buoys
-				for (auto& b : std::vector<Vector3>
-				{
-					{ -53.4131f, -10.0086f, -6.0113f },
-					{ -1631.3173f, -1819.5632f, -0.6474f },
-					{ -58.8841f, 0.2735f, -6.1121f },
-					{ -1619.7332f, -1820.7730f, -0.8027f }
-				})
-				{
-					GTAprop propBuoy = World::CreateProp(0x51d2a887, Vector3(), true, false); // apa_prop_yacht_float_1a
-					propBuoy.AttachTo(propYachtWin, 0, false, b, Vector3());
-					propBuoy.Detach();
-					propBuoy.FreezePosition(false);
-					propBuoy.Dynamic_set(true);
-					propBuoy.SetIsCollisionEnabled(true);
-					SET_ENTITY_LIGHTS(propBuoy.Handle(), 0);
-					propBuoy.SetMissionEntity(true);
-					yachtInfo.vSpawnedEntities.push_back(propBuoy);
-				}
-
-				// Jacuzzi
-				if (optionNumber >= 2)
-				{
-					GTAprop propJacuzzi = World::CreateProp(0x98B5E3D4, Vector3(), true, false); // apa_mp_apa_yacht_jacuzzi_ripple1
-					propJacuzzi.AttachTo(propYachtWin, 0, false, Vector3(-50.8033f, -1.9774f, 0.1368f), Vector3());
-					propJacuzzi.SetIsCollisionEnabled(true);
-					SET_ENTITY_LIGHTS(propJacuzzi.Handle(), 0);
-					propJacuzzi.SetMissionEntity(true);
-					yachtInfo.vSpawnedEntities.push_back(propJacuzzi);
-				}
-
-				// Vehicles
-				std::map<UINT8, std::vector<std::tuple<Model, Vector3, Vector3>>> vVehicleOffsetsArr
-				{
-					{ 1,{
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_TROPIC2,{ -54.3528f, -13.3907f, -5.1819f },{ 1.6733f, 1.9946f, -109.0565f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_SEASHARK3,{ -61.5043f, -8.9306f, -5.5869f },{ 4.1636f, -0.8436f, 116.3082f })
-					} },
-					{ 2,{
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_SEASHARK3,{ -61.5275f, 4.6035f, -5.3742f },{ 4.6320f, -1.7134f, 63.7883f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_SEASHARK3,{ -61.5155f, -8.896f, -5.3594f },{ 4.5635f, -1.1910f, -243.6808f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_DINGHY4,{ -54.3522f, -13.3903f, -4.8438f },{ 4.8526f, -1.0505f, -109.0528f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_SPEEDER2,{ -53.7848f, 9.1620f, -4.6511f },{ 3.3195f, 0.8531f, -69.9578f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_SWIFT2,{ -30.8168f, -1.8687f, 6.5134f },{ -0.2890f, 0.0000f, -90.0000f })
-					} },
-					{ 3,{
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_SEASHARK3,{ -61.5189f, 2.3503f, -5.8703f },{ 5.6612f, 0.2225f, 64.4417f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_SEASHARK3,{ -61.5050f, -8.9017f, -5.6858f },{ 7.4903f, -0.0753f, 116.2442f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_SEASHARK3,{ -61.52280f, 4.5982f, -5.8566f },{ 5.9844f, -0.3815f, 64.5492f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_SEASHARK3,{ -61.5087f, -6.6536f, -5.7382f },{ 7.2774f, 0.9445f, 114.6004f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_DINGHY4,{ -54.3447f, -13.3947f, -5.4129f },{ 3.6041f, -2.1484f, -108.2869f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_TORO,{ -54.3726f, 9.1093f, -5.5979f },{ -1.8536f, 0.7891f, -69.8533f }),
-						std::make_tuple<Model, Vector3, Vector3>(VEHICLE_SUPERVOLITO2,{ -30.8329f, -1.8728f, 7.2883f },{ 0.0409f, 0.0000f, -90.0000f })
-					} }
-				};
-				auto& vVehicleOffsets = vVehicleOffsetsArr[optionNumber];
-				for (auto& v : vVehicleOffsets)
-				{
-					GTAvehicle veh = World::CreateVehicle(std::get<0>(v), Vector3(), 0.0f, false);
-					veh.AttachTo(propYachtWin, 0, false, std::get<1>(v), std::get<2>(v));
-					veh.Detach();
-					veh.FreezePosition(false);
-					veh.SetIsCollisionEnabled(true);
-					SET_ENTITY_LIGHTS(veh.Handle(), 0);
-					if (std::get<0>(v).IsBoat()) SET_BOAT_ANCHOR(veh.Handle(), true);
-					//veh.MissionEntity_set(true);
-					yachtInfo.vSpawnedEntities.push_back(veh);
-				}
-
-				// Peds
-				for (auto& p : std::vector<std::tuple<Model, Vector3, Vector3, PTFX::sFxData>>
-				{
-					std::make_tuple<Model, Vector3, Vector3, PTFX::sFxData>(PedHash::BoatStaff01Male,{ 14.2079f, -2.1206f, 7.3519f },{ 0.0000f, 0.0000f, -88.2933f },{ std::string(), std::string() }),
-					std::make_tuple<Model, Vector3, Vector3, PTFX::sFxData>(PedHash::BoatStaff01Female,{ 23.3344f, -1.6929f, 3.5506f },{ 0.0000f, 0.0000f, 88.9650f },{ "anim@mini@yacht@bar@drink@idle_a", "idle_a_bartender" }),
-				})
-				{
-					GTAped ped = World::CreatePed(std::get<0>(p), Vector3(), 0.0f, false);
-					ped.AttachTo(propYachtWin, 0, false, std::get<1>(p), std::get<2>(p));
-					ped.Detach();
-					ped.FreezePosition(false);
-					ped.SetIsCollisionEnabled(true);
-					SET_ENTITY_LIGHTS(ped.Handle(), 0);
-					ped.SetRelationshipGroup("PLAYER");
-					ped.BlockPermanentEvents_set(true);
-					auto& animArgs = std::get<3>(p);
-					if (animArgs.asset.empty()) { if (!animArgs.effect.empty()) { ped.Task().StartScenario(animArgs.effect); } }
-					else if (!animArgs.effect.empty()) { ped.Task().PlayAnimation(animArgs.asset, animArgs.effect); }
-					//ped.MissionEntity_set(true);
-					yachtInfo.vSpawnedEntities.push_back(ped);
-				}
-
-				// Blip
-				GTAblip blipYacht = yachtInfo.blip;
-				blipYacht = propYachtWin.AddBlip();
-				blipYacht.SetIcon(BlipIcon::Yacht);
-				blipYacht.SetBlipName("Menyoo Yacht");
-				blipYacht.SetColour(BlipColour::Blue);
-				blipYacht.SetAlpha(200);
-				blipYacht.SetFriendly(true);
-				blipYacht.SetScale(0.8f);
-
-				for (auto& v : YachtOffsets::markerOffsets)//YachtVectors::markerVectors)
-				{
-					//currentYachtInfo.vMarkerPositions.push_back({ GetYachtVectorWorldPosition(currentYachtInfo, v.first), GetYachtVectorWorldPosition(currentYachtInfo, v.second) });
-					currentYachtInfo.vMarkerPositions.push_back({ propYachtWin.GetOffsetInWorldCoords(v.first), propYachtWin.GetOffsetInWorldCoords(v.second) });
-				}
-
-				//delete[] buffer;
+			for (const auto& v : YachtOffsets::markerOffsets)
+			{
+				currentYachtInfo.vMarkerPositions.push_back({propYachtWin.GetOffsetInWorldCoords(v.first), propYachtWin.GetOffsetInWorldCoords(v.second)});
 			}
 		}
 		void DeleteYacht(YachtBuildInfoStructure& yachtInfo)
@@ -506,9 +484,9 @@ namespace sub::TeleportLocations_catind
 				Vector3 yachtPos = posh.pos;
 				Vector3 teleOffset = YachtOffsets::teleportLocationOffset;
 				if (yachtInfo.yachtProp.Exists())
-					teleport_net_ped(ped, yachtInfo.yachtProp.GetOffsetInWorldCoords(teleOffset));
+					TeleportNetPed(ped, yachtInfo.yachtProp.GetOffsetInWorldCoords(teleOffset));
 				else
-					teleport_net_ped(ped, yachtPos + Vector3::RotationToDirection(Vector3::DirectionToRotation(teleOffset) + Vector3(0, 0, posh.h)) * teleOffset.Length());
+					TeleportNetPed(ped, yachtPos + Vector3::RotationToDirection(Vector3::DirectionToRotation(teleOffset) + Vector3(0, 0, posh.h)) * teleOffset.Length());
 			}
 		}
 
@@ -655,21 +633,6 @@ namespace sub::TeleportLocations_catind
 					float scale = 0.75f;
 					auto& vPositions = yachtInfo.vMarkerPositions;
 
-					//auto& scaleformGamerName = yachtInfo.vScaleforms[2];
-					////if (scaleformGamerName.first.Load("YACHT_GAMERNAME"))
-					//if (!scaleformGamerName.first.HasLoaded())
-					//{
-					//	scaleformGamerName.first.Load("YACHT_GAMERNAME");
-					//	//scaleformGamerName.first.Handle() = invoke<int>(0x2F14983962462691, "YACHT_GAMERNAME");
-					//}
-					//else
-					//{
-					//	scaleformGamerName.first.CallFunction("SET_MISSION_INFO");
-					//	scaleformGamerName.first.PushString2("AAAAYYYYY HAX");//(scaleformGamerName.second);
-					//	scaleformGamerName.first.PopFunction();
-					//	scaleformGamerName.first.Render3D(myPos + Vector3::WorldUp() * 1.3f, GameplayCamera::Rotation_get() + Vector3(0, 0, 180), Vector3(1, 1, 1), Vector3(21, 21, 7));
-					//}
-
 					for (auto& p : vPositions)
 					{
 						World::DrawMarker(MarkerType::VerticalCylinder, p.first + Vector3::WorldDown() * 0.8301f, Vector3(), Vector3(), Vector3::One() * scale, colour);
@@ -685,15 +648,14 @@ namespace sub::TeleportLocations_catind
 									myPed.RequestControl();
 									WAIT(20);
 									myPed.SetPosition(p.second);
-									//myPed.Heading_set(same);
 									TaskSequence sq;
 									const Vector3& outsideMarkerPos = myPed.GetOffsetInWorldCoords(0, scale + 1.0f, 0);
 									TASK_GO_STRAIGHT_TO_COORD(0, outsideMarkerPos.x, outsideMarkerPos.y, outsideMarkerPos.z, 1.5f, 2000, Vector3::DirectionToRotation(Vector3::Normalize(outsideMarkerPos - p.second)).z, 0.0f);
 									sq.Close();
 									sq.MakePedPerform(myPed);
 									sq.Clear();
-									GameplayCamera::RelativeHeading_set(0.0f);
-									GameplayCamera::RelativePitch_set(0.0f);
+									GameplayCamera::SetRelativeHeading(0.0f);
+									GameplayCamera::SetRelativePitch(0.0f);
 									WAIT(100);
 									DO_SCREEN_FADE_IN(300);
 									return;

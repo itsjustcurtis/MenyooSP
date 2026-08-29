@@ -63,9 +63,9 @@ namespace sub
 		AddOption("Delete All Cameras", bDeleteAllCams);
 		if (bDeleteAllCams)
 		{
-			World::RenderingCamera_set(0);
+			World::SetRenderingCamera(0);
 			World::DestroyAllCameras();
-			World::RenderingCamera_set(0);
+			World::SetRenderingCamera(0);
 		}
 
 		AddOption("Rectangle Draw Tool (Mouse) (ALPHA) [DEV]", null, DrawToolsMenu, -1, true);
@@ -868,7 +868,7 @@ namespace sub
 				SET_MINIMAP_HIDE_FOW(revealMinimap);
 			}
 
-			AddToggle("Display XYZH Coords", xyzhCoords);
+			AddToggle("Display XYZH Coords", bDisplayXyzhCoords);
 			AddToggle("Display FPS", FPSCounter::bDisplayFps);
 			AddToggle("Hide HUD", hideHUD);
 			AddToggle("Show Full HUD", showFullHUD);

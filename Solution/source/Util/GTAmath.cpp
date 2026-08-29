@@ -765,6 +765,13 @@ Vector3 DegreeToRadian(const Vector3& angles)
 {
 	return Vector3(angles.x * 0.0174532925199433F, angles.y * 0.0174532925199433F, angles.z * 0.0174532925199433F);
 }
+
+void WrapAngle(float& angle)
+{
+	while (angle > 180.0f) angle -= 360.0f;
+	while (angle < -180.0f) angle += 360.0f;
+}
+
 float GetHeadingFromCoords(const Vector3& source, const Vector3& target)
 {
 	return atan2((target.y - source.y), (target.x - source.x));

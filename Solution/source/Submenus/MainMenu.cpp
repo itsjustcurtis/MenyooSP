@@ -32,6 +32,7 @@ namespace sub
 		AddOption("Object Spooner", null, nullFunc, SUB::SPOONER_MAIN);
 		AddOption("Misc Options", null, nullFunc, SUB::MISCOPS);
 		AddOption("Settings", null, nullFunc, SUB::SETTINGS);
+		AddOption("The People Behind Menyoo", null, nullFunc, SUB::CREDITSSUB);
 
 		g_Ped2 = PLAYER_ID();
 		g_Ped1 = PLAYER_PED_ID();

@@ -82,7 +82,7 @@ namespace sub::Spooner
 			std::vector<std::string> relationshipStringVec{ "NONE" };
 			for (UINT8 i = 0; i < RelationshipManagement::relationshipGroups.size(); i++)
 			{
-				if (GTAped(selectedEntity.handle).RelationshipGroup_get() == GET_HASH_KEY(RelationshipManagement::relationshipGroups[i]))
+				if (GTAped(selectedEntity.handle).GetRelationshipGroup() == GET_HASH_KEY(RelationshipManagement::relationshipGroups[i]))
 					relationshipStringVec[0] = RelationshipManagement::relationshipGroups[i];
 			}
 
@@ -95,7 +95,7 @@ namespace sub::Spooner
 				{
 					for (INT8 i = 0; i < RelationshipManagement::relationshipGroups.size(); i++)
 					{
-						if (GTAped(selectedEntity.handle).RelationshipGroup_get() == GET_HASH_KEY(RelationshipManagement::relationshipGroups[i]))
+						if (GTAped(selectedEntity.handle).GetRelationshipGroup() == GET_HASH_KEY(RelationshipManagement::relationshipGroups[i]))
 						{
 							i++;
 							if (i >= RelationshipManagement::relationshipGroups.size())
@@ -114,7 +114,7 @@ namespace sub::Spooner
 			{
 				for (INT8 i = 0; i < RelationshipManagement::relationshipGroups.size(); i++)
 				{
-					if (GTAped(selectedEntity.handle).RelationshipGroup_get() == GET_HASH_KEY(RelationshipManagement::relationshipGroups[i]))
+					if (GTAped(selectedEntity.handle).GetRelationshipGroup() == GET_HASH_KEY(RelationshipManagement::relationshipGroups[i]))
 					{
 						i--;
 						if (i < 0)
