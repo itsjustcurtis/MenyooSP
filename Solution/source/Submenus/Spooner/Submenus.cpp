@@ -104,6 +104,44 @@ namespace sub
 		namespace MultiSelect
 		{
 			std::vector<SpoonerEntity> MultiSelect::g_selectedEntities;
+			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
+			{
+				Menu::add_IB(VirtualKey::W, "Pitch+");
+				Menu::add_IB(VirtualKey::S, "Pitch-");
+				Menu::add_IB(VirtualKey::A, "Yaw+");
+				Menu::add_IB(VirtualKey::D, "Yaw-");
+				Menu::add_IB(VirtualKey::E, "Roll+");
+				Menu::add_IB(VirtualKey::Q, "Roll-");
+				Menu::add_IB(VirtualKey::R, "Edit position");
+			}
+			else
+			{
+				Menu::add_IB(VirtualKey::W, "X+");
+				Menu::add_IB(VirtualKey::S, "X-");
+				Menu::add_IB(VirtualKey::A, "Y+");
+				Menu::add_IB(VirtualKey::D, "Y-");
+				Menu::add_IB(VirtualKey::E, "Z+");
+				Menu::add_IB(VirtualKey::Q, "Z-");
+				Menu::add_IB(VirtualKey::R, "Edit rotation");
+			}
+			Menu::add_IB(VirtualKey::Add, "Increase Sensitivity");
+			Menu::add_IB(VirtualKey::Subtract, "Decrease Sensitivity");
+			Menu::add_IB(VirtualKey::C, "Copy (and add to DB)");
+			Menu::add_IB(VirtualKey::B, "Switch to Gizmo Mode");
+
+			static DWORD lastSensitivityChange = 0;
+			if ((IsKeyJustUp(VirtualKey::OEMPlus)||(IsKeyJustUp(VirtualKey::Add))) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (_manualPlacementPrecision < 10.0f) _manualPlacementPrecision *= 10;
+				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
+			}
+			if ((IsKeyJustUp(VirtualKey::OEMMinus)||(IsKeyJustUp(VirtualKey::Subtract))) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (_manualPlacementPrecision > 0.0001f) _manualPlacementPrecision /= 10;
+				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(_manualPlacementPrecision), 3000);
+			}
 
 			void Add(const SpoonerEntity& entity)
 			{
@@ -120,6 +158,37 @@ namespace sub
 					return;
 				MultiSelect::g_selectedEntities.erase(MultiSelect::g_selectedEntities.begin() + index);
 			}
+			auto& target = SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate ? rotation : position;
+			if (IsKeyDown(VirtualKey::W)) target.x += step;
+			if (IsKeyDown(VirtualKey::S)) target.x -= step;
+			if (IsKeyDown(VirtualKey::A)) target.y += step;
+			if (IsKeyDown(VirtualKey::D)) target.y -= step;
+			if (IsKeyDown(VirtualKey::E)) target.z += step;
+			if (IsKeyDown(VirtualKey::Q)) target.z -= step;
+
+			if (SpoonerMode::gizmoMode == SpoonerMode::eGizmoMode::Rotate)
+				rotation = SpoonerMode::SnapRotation(rotation);
+			else
+				position = SpoonerMode::SnapPos(position);
+		}
+
+		void DrawGizmoHUD()
+		{
+			std::string modeName;
+			switch (SpoonerMode::gizmoMode)
+			{
+			case SpoonerMode::eGizmoMode::Rotate: modeName = "Rotation"; break;
+			case SpoonerMode::eGizmoMode::Scale:  modeName = "Scale";    break;
+			default:                              modeName = "Position"; break;
+			}
+
+			Menu::add_IB(INPUT_CURSOR_ACCEPT, "Grab axis handle (" + modeName + " Mode)");
+			Menu::add_IB(VirtualKey::R, "Cycle mode");
+			Menu::add_IB(VirtualKey::V, SpoonerMode::bGizmoCameraLocked ? "Unlock camera" : "Lock camera");
+			Menu::add_IB(VirtualKey::L, SpoonerMode::bGizmoLocalSpace ? "Edit in world space" : "Edit in local space");
+			Menu::add_IB(VirtualKey::C, "Copy (and add to DB)");
+			Menu::add_IB(VirtualKey::B, "Disable Gizmo Mode");
+		}
 
 			void Remove(GTAentity handle)
 			{
@@ -144,6 +213,8 @@ namespace sub
 			}
 
 			void Clear()
+			// toggling camera lock in gizmo mode
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo && IsKeyJustUp(VirtualKey::V))
 			{
 				MultiSelect::g_selectedEntities.clear();
 			}
@@ -160,6 +231,8 @@ namespace sub
 			}
 
 			void CreatePivot()
+			// make a quick copy of an entity by clicking C in editing modes
+			if (SpoonerMode::entityEditMode != SpoonerMode::eEntityEditMode::Disabled && IsKeyJustUp(VirtualKey::C))
 			{
 				Vector3 centroid;
 				int count = 0;
@@ -192,6 +265,10 @@ namespace sub
 						e.handle.AttachTo(g_multiSelectPivot, -1, false, relPos, relRot);
 					}
 				}
+			if (SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Disabled)
+			{
+				Menu::add_IB(VirtualKey::B, "Enable Keyboard Controls");
+				return;
 			}
 		}
 

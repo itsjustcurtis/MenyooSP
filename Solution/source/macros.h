@@ -7,6 +7,8 @@
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 */
+#include "Version.h"
+
 #pragma once
 
 //#pragma comment(lib, "$(SolutionDir)\external\ScriptHookV.lib")

@@ -128,7 +128,10 @@ namespace sub
 		dict2.clear();
 		dict3.clear();
 
-		bool bRandomComponents = 0, frontView = 0, bDefaultComponents = 0;
+		bool randomize = 0, frontView = 0, setDefault = 0, clearAll = 0,
+			ComponentChanger_online_police_m = 0, ComponentChanger_online_robber_m = 0,
+			ComponentChanger_online_garbage_m = 0, ComponentChanger_online_police_f = 0,
+			ComponentChanger_offline_police_michael = 0, ComponentChanger_offline_firefighter_michael = 0;
 
 		GTAped thisPed = g_activePedHandle;
 
