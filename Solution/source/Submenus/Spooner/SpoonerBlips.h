@@ -81,6 +81,15 @@ namespace sub::Spooner
         int Colour = 0;
         int Alpha = 255;
         int Icon = BlipIcon::Standard;
+        int Priority = 2;
+
+        bool bShowRoute = false;
+        int RouteColour = BlipColour::White;
+        bool bShowCone = false;
+        int ConeColour = 3;
+        bool bShortRange = false;
+        bool bSelectableOnMap = true;
+        bool bSyncRotation = false;
 
         float X;
         float Y;
@@ -113,7 +122,6 @@ namespace sub::Spooner
 
         void Create()
         {
-			//Radial Blips
             if (BlipType == Type::Radial)
             {
                 if (Shape == RadialShape::Circle)
@@ -128,9 +136,8 @@ namespace sub::Spooner
                 if (!label.empty())
                     GTAblip(BlipHandle).SetBlipName(label);
                 else
-                    GTAblip(BlipHandle).SetBlipName("Radial Blip");
+                    GTAblip(BlipHandle).SetBlipName("Area");
             }
-			//Entity Blips
             else if (BlipType == Type::Entity)
             {
                 BlipHandle = HUD::ADD_BLIP_FOR_ENTITY(EntityHandle);
@@ -139,13 +146,19 @@ namespace sub::Spooner
                 HUD::SET_BLIP_SCALE(BlipHandle, Scale);
                 HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
                 HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
+                HUD::SET_BLIP_ROUTE(BlipHandle, bShowRoute);
+                if (bShowRoute)
+                    HUD::SET_BLIP_ROUTE_COLOUR(BlipHandle, RouteColour);
+                HUD::SET_BLIP_SHOW_CONE(BlipHandle, bShowCone, ConeColour);
+                HUD::SET_BLIP_AS_SHORT_RANGE(BlipHandle, bShortRange);
+                HUD::SET_BLIP_PRIORITY(BlipHandle, Priority);
+                HUD::SET_BLIP_DISPLAY(BlipHandle, bSelectableOnMap ? 2 : 8);
 
                 if (!label.empty())
                     GTAblip(BlipHandle).SetBlipName(label);
                 else
                     GTAblip(BlipHandle).SetBlipName(Name);
             }
-			//Coordinate Blips
             else
             {
                 BlipHandle = HUD::ADD_BLIP_FOR_COORD(X, Y, Z);
@@ -154,6 +167,10 @@ namespace sub::Spooner
                 HUD::SET_BLIP_SCALE(BlipHandle, Scale);
                 HUD::SET_BLIP_ALPHA(BlipHandle, Alpha);
                 HUD::SET_BLIP_COLOUR(BlipHandle, Colour);
+                HUD::SET_BLIP_ROUTE(BlipHandle, bShowRoute);
+                HUD::SET_BLIP_AS_SHORT_RANGE(BlipHandle, bShortRange);
+                HUD::SET_BLIP_PRIORITY(BlipHandle, Priority);
+                HUD::SET_BLIP_DISPLAY(BlipHandle, bSelectableOnMap ? 2 : 8);
 
                 if (!label.empty())
                     GTAblip(BlipHandle).SetBlipName(label);
@@ -172,13 +189,12 @@ namespace sub::Spooner
         }
 
         void Update();
-
-        bool bSyncRotation = false;
     };
 
     namespace Submenus
     {
         void Sub_Blip_Management();
+        void Sub_Blip_Select();
 
         void Sub_Blip_Radial();
         void Sub_Blip_Entity();

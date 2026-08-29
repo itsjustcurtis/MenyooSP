@@ -1078,7 +1078,10 @@ namespace sub::Spooner
 			applyScaleTick(Submenus::_objScale);
 
 			if (!Databases::BlipDb.empty())
+			{
+				BlipCustoms::DrawAll();
 				BlipCustoms::UpdateAttachedBlips();
+			}
 		}
 
 		void TurnOn()

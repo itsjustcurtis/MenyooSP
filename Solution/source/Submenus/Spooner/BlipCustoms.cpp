@@ -2,6 +2,7 @@
 
 #include "..\..\Natives\natives2.h"
 #include "..\..\Scripting\World.h"
+#include "..\..\Scripting\enums.h"
 
 #include "Databases.h"
 #include "SpoonerBlips.h"
@@ -18,7 +19,36 @@ namespace sub::Spooner
         {
             for (auto& blip : Databases::BlipDb)
             {
-                // reserved
+                Vector3 pos(blip.X, blip.Y, blip.Z);
+
+                bool bSelectedInSub = blip.m_selectedInSub;
+                blip.m_selectedInSub = false;
+
+                RGBA baseColour = RGBA(255, 255, 0, 190);
+                RGBA selectedColour = RGBA(baseColour.Inverse(false), 240);
+
+                World::DrawMarker(
+                    MarkerType::DebugSphere,
+                    pos,
+                    Vector3(),
+                    Vector3(),
+                    Vector3(0.25f, 0.25f, 0.25f),
+                    bSelectedInSub ? selectedColour : baseColour,
+                    bSelectedInSub,
+                    false,
+                    2,
+                    false,
+                    std::string(),
+                    std::string(),
+                    false
+                );
+
+                World::DrawLightWithRange(
+                    pos,
+                    bSelectedInSub ? RGBA(baseColour.Inverse(false), 150) : baseColour,
+                    2.3f,
+                    1.5f
+                );
             }
         }
 
@@ -150,7 +180,8 @@ namespace sub::Spooner
         {
             for (auto& blip : Databases::BlipDb)
             {
-                if (blip.bAttached && blip.EntityHandle != 0 && ENTITY::DOES_ENTITY_EXIST(blip.EntityHandle))
+                if (blip.bAttached && blip.EntityHandle != 0 && ENTITY::DOES_ENTITY_EXIST(blip.EntityHandle)
+                    && blip.BlipType != SpoonerBlip::Type::Entity)
                 {
                     Vector3 worldPos = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(
                         blip.EntityHandle,
