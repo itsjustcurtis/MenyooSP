@@ -150,7 +150,7 @@ void Menu::justopened()
 				<< "				    Note: this issue can be ignored if bugged content has been fixed by a mod" << std::endl;
 		}
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Populate All Paint IDs");
 	sub::PopulateAllPaintIDs();
 
 	g_menuNotOpenedYet = false;
