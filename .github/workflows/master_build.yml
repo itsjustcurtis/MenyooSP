@@ -2,72 +2,37 @@ name: Master_Build
 
 on:
   push:
-    branches: [ "main", "Development" ]
-  #workflow_run:
-  #  workflows: ["MSBuild"]
-  #  types:
-  #    - completed
-      
-
+    branches:
+      - '**'
+    tags: [ "v*" ]
 
 env:
   BUILD_CONFIGURATION: Release
-  CANCELJOB: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
-  check-version-and-merge:
+  validate-tag:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     outputs:
-      CANCELJOB: ${{ steps.set_output.outputs.CANCELJOB }}
-
+      stable: ${{ steps.validate.outputs.stable }}
     steps:
-      - name: Checkout repository
-        if: env.CANCELJOB != 'true'  
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-      - name: Extract version from macros.h
-        id: extract_version
-        if: env.CANCELJOB != 'true' 
-        run: |
-          VERSION=$(grep '#define MENYOO_CURRENT_VER_' Solution/source/macros.h | awk '{print $3}' | tr -d '"')
-          echo "VERSION=v$VERSION" >> $GITHUB_ENV
-          echo "Extracted version: $VERSION"
-          
-      - name: Check if tag already exists
-        if: env.CANCELJOB != 'true' 
-        run: |
-          VERSION=${{ env.VERSION }}
-          echo "Checking for tag: $VERSION"  
-          RELEASE_LIST=$(gh release list)
-          TAGS=$(echo "$RELEASE_LIST" | awk '{print $1}')
-          echo "$TAGS"
-          
-           echo "Checking if tag exists:"
-          for tag in $TAGS; do
-            if [ "$tag" = "$VERSION" ]; then
-              echo "Tag $VERSION already exists. Cancelling workflow."
-              echo "CANCELJOB=true" >> $GITHUB_ENV
-              exit 0
-            fi
-          done
-          
-          echo "Tag $VERSION does not exist. Proceeding."
+      - name: Validate stable release tag
+        id: validate
+        shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Check version pattern and merge
-        id: check_version
-        if: env.CANCELJOB != 'true' 
+          TAG: ${{ github.ref_name }}
         run: |
-          VERSION=${{ env.VERSION }}
-          echo "Checking version pattern: $VERSION"
-          if [[ $GITHUB_REF == "refs/heads/main" ]]; then
-            echo "Already on main branch. Skipping merge check."
-            exit 0
+          stable=false
+
+          if [[ "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            stable=true
           fi
 
           # Function to check for existing PR with the same version
@@ -93,99 +58,91 @@ jobs:
             echo "Version is a private pre-release. Cancelling workflow."
             echo "CANCELJOB=true" >> $GITHUB_ENV
           else
-            echo "Version is invalid or a development version. Cancelling workflow."
-            echo "CANCELJOB=true" >> $GITHUB_ENV
-            exit 0
+            echo "stable=false" >> "$GITHUB_OUTPUT"
+            echo "$TAG is not an exact stable SemVer release tag."
           fi
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set output
-        id: set_output
-        run: echo "CANCELJOB=${{ env.CANCELJOB }}" >> $GITHUB_OUTPUT
 
   build:
     runs-on: windows-latest
-    needs: check-version-and-merge
-
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
-    - name: Generate solution with Premake
-      run: Solution/external/premake/premake5.exe vs2022
+      - name: Generate solution with Premake
+        run: Solution/external/premake/premake5.exe vs2022
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.1
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v3
 
-    - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=x64 Solution/Menyoo.sln -verbosity:minimal
-      
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        # Artifact name
-        name: MenyooSP
-        path: |
-          Solution/source/_Build/bin/Release/
-          !Solution/source/_Build/bin/Release/Trash/
-          !Solution/source/_Build/bin/Release/*.map
-  
-    - name: Cancel Workflow Action if build fails
-      uses: vishnudxb/cancel-workflow@v1.2
-      if: failure()
-      with:
-        repo: MAFINS/MenyooSP
-        workflow_id: ${{ github.run_id }}
-        access_token: ${{ github.token }}
+      - name: Build
+        run: msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform=x64 Solution/Menyoo.sln -verbosity:minimal
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: MenyooSP
+          path: |
+            Solution/source/_Build/bin/Release/
+            !Solution/source/_Build/bin/Release/Trash/
+            !Solution/source/_Build/bin/Release/*.map
 
-  pre-release:
-    if: github.ref == 'refs/heads/main' || (github.ref == 'refs/heads/Development' && needs.check-version-and-merge.outputs.CANCELJOB != 'true')
-    needs: build
-    permissions: write-all
-    name: "Pre Release"
+  release:
+    if: needs.validate-tag.outputs.stable == 'true'
+    needs:
+      - build
+      - validate-tag
+    permissions:
+      contents: write
+    name: Release
     runs-on: windows-latest
-
     steps:
-      #- name: Wait on artifact upload
-        #uses: lewagon/wait-on-check-action@v1.1.2
-        #with:
-          #ref: ${{github.ref}}
-          #check-name: 'Upload a Build Artifact'
-          #repo-token: ${{ secrets.GITHUB_TOKEN }}
-          #wait-interval: 10
-          
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-      #- name: Download workflow artifact
-        #uses: dawidd6/action-download-artifact@v2.23.0
-        #with:
-         #github_token: ${{secrets.GITHUB_TOKEN}}
-         #workflow_conclusion: ""
-         #name: MenyooSP
-         #skip_unpack: true
-      - uses: actions/download-artifact@v4
-     
-      - name: Extract version from macros.h
-        id: extract_version
-        run: |
-          Select-String -Path "Solution\source\macros.h" -Pattern '#define MENYOO_CURRENT_VER_' | ForEach-Object {
-            $_.Line -match '#define MENYOO_CURRENT_VER_\s+"(.*?)"' | Out-Null
-            $matches[1]
-          } | Out-File -FilePath version.txt
-          $VERSION = Get-Content version.txt
-          echo "VERSION=v$VERSION" >> $env:GITHUB_ENV
-          echo "Extracted version: $VERSION"
+      - name: Download build artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: MenyooSP
+          path: MenyooSP
+
       - name: Zip artifact for deployment
         run: Compress-Archive -Path "MenyooSP/*" -DestinationPath "MenyooSP.zip"
-      - uses: "marvinpinto/action-automatic-releases@latest"
+
+      - name: Generate release notes
+        shell: bash
+        env:
+          TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          previous_tag=$(git tag --merged "$GITHUB_SHA" --list 'v[0-9]*' | \
+            grep -E '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' | \
+            grep -Fxv "$TAG" | sort -V | tail -n 1)
+
+          if [[ -n "$previous_tag" ]]; then
+            range="$previous_tag..$TAG"
+            heading="Full Changelog: $previous_tag...$TAG"
+          else
+            range="$TAG"
+            heading="Full Changelog: $TAG"
+          fi
+
+          {
+            echo '<details>'
+            echo "<summary>$heading</summary>"
+            echo
+            git log --format='- [`%h`](https://github.com/'"$REPOSITORY"'/commit/%H) %s' --no-decorate "$range"
+            echo
+            echo '</details>'
+          } > release-notes.md
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v3.0.2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: ${{ env.VERSION }}
-          prerelease: ${{ github.ref_name != 'main' }}
-          title: ${{ steps.version.outputs.version}}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          prerelease: false
+          body_path: release-notes.md
           files: MenyooSP.zip

@@ -1,12 +1,3 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #include "Credits.h"
 #include "MainMenu.h"
 
@@ -15,10 +6,13 @@
 #include <string>
 #include <vector>
 #include <windows.h>
+#include <winhttp.h>
 #include <shellapi.h>
-#include <pugixml/src/pugixml.hpp>
+#include <fstream>
+#include <json\single_include\nlohmann\json.hpp>
 
 #pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "winhttp.lib")
 
 namespace sub
 {
@@ -31,39 +25,111 @@ namespace sub
     static std::vector<CreditsTier> g_CreditsTiers;
     static bool g_CreditsLoaded = false;
 
-    static void LoadCredits()
+    static const wchar_t* kApiHost = L"raw.githubusercontent.com";
+    static const wchar_t* kApiPath = L"/itsjustcurtis/menyoo-API/main/data/supporters.json";
+
+    // Pulls raw JSON from GitHub over HTTPS. Returns empty string on any failure.
+    static std::string FetchSupportersJson()
     {
-        addlog(ige::LogType::LOG_DEBUG, "Loading credits from XML...");
+		addlog(ige::LogType::LOG_TRACE, "Fetching credits from API...");
+        std::string result;
+
+        HINTERNET hSession = WinHttpOpen(L"Menyoo/1.0",
+            WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+            WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+        if (!hSession)
+            return result;
+		addlog(ige::LogType::LOG_TRACE, "Credits API session opened");
+
+        HINTERNET hConnect = WinHttpConnect(hSession, kApiHost, INTERNET_DEFAULT_HTTPS_PORT, 0);
+        if (!hConnect)
+        {
+            WinHttpCloseHandle(hSession);
+            return result;
+        }
+		addlog(ige::LogType::LOG_TRACE, "Credits API connection established");
+
+        HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", kApiPath,
+            nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
+            WINHTTP_FLAG_SECURE);
+        if (!hRequest)
+        {
+            WinHttpCloseHandle(hConnect);
+            WinHttpCloseHandle(hSession);
+            return result;
+        }
+		addlog(ige::LogType::LOG_TRACE, "Credits API request prepared");
+
+        BOOL sent = WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+            WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
+        
+		addlog(ige::LogType::LOG_DEBUG, "Credits API request sent");
+        if (sent && WinHttpReceiveResponse(hRequest, nullptr))
+        {
+            DWORD statusCode = 0;
+            DWORD statusSize = sizeof(statusCode);
+            WinHttpQueryHeaders(hRequest,
+                WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                WINHTTP_HEADER_NAME_BY_INDEX, &statusCode, &statusSize, WINHTTP_NO_HEADER_INDEX);
+
+            if (statusCode == 200)
+            {
+				addlog(ige::LogType::LOG_TRACE, "Credits API returned status 200 OK, reading data...");
+                DWORD bytesAvailable = 0;
+                while (WinHttpQueryDataAvailable(hRequest, &bytesAvailable) && bytesAvailable > 0)
+                {
+                    std::vector<char> buffer(bytesAvailable);
+                    DWORD bytesRead = 0;
+                    if (!WinHttpReadData(hRequest, buffer.data(), bytesAvailable, &bytesRead))
+                        break;
+                    result.append(buffer.data(), bytesRead);
+                }
+            }
+            else
+            {
+                addlog(ige::LogType::LOG_ERROR, "Credits API returned status " + std::to_string(statusCode));
+            }
+        }
+        else
+        {
+            addlog(ige::LogType::LOG_ERROR, "Credits API request failed: " + std::to_string(GetLastError()));
+        }
+
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return result;
+    }
+
+    static std::string GetCacheFilePath()
+    {
+        return GetPathffA(Pathff::Main, true) + "Supporters.json";
+    }
+
+    static void ParseSupportersJson(const std::string& raw)
+    {
         g_CreditsTiers.clear();
 
-        pugi::xml_document doc;
-        std::string path = GetPathffA(Pathff::Main, true) + "Supporters.xml";
-
-        addlog(ige::LogType::LOG_TRACE, "Credits path: " + path);
-
-        pugi::xml_parse_result result = doc.load_file(path.c_str());
-        if (result.status != pugi::status_ok)
+        nlohmann::json j = nlohmann::json::parse(raw, nullptr, false);
+        if (j.is_discarded() || !j.contains("tiers"))
         {
-            addlog(ige::LogType::LOG_ERROR, "Credits XML load failed: " + std::string(result.description()));
+            addlog(ige::LogType::LOG_ERROR, "Credits JSON parse failed");
             return;
         }
 
-        if (doc.load_file(path.c_str()).status != pugi::status_ok)
-            return;
-
-        pugi::xml_node root = doc.child("Credits");
-        if (!root)
-            return;
-
-        for (pugi::xml_node tierNode : root.children("Tier"))
+        for (const auto& tierNode : j["tiers"])
         {
             CreditsTier tier;
-            tier.name = tierNode.attribute("name").as_string();
-            addlog(ige::LogType::LOG_TRACE, "Processing credits tier: " + tier.name);
-            for (pugi::xml_node memberNode : tierNode.children("Member"))
+            tier.name = tierNode.value("name", "");
+
+            if (tier.name == "Contributor")
             {
-                std::string member = memberNode.text().as_string();
-                addlog(ige::LogType::LOG_TRACE, "Processing credits member: " + member);
+                tier.members.push_back("MAFINS");
+                tier.members.push_back("ItsJustCurtis");
+            }
+
+            for (const auto& member : tierNode.value("members", std::vector<std::string>{}))
+            {
                 if (!member.empty())
                     tier.members.push_back(member);
             }
@@ -71,6 +137,33 @@ namespace sub
             if (!tier.members.empty())
                 g_CreditsTiers.push_back(tier);
         }
+    }
+
+    static void LoadCredits()
+    {
+        addlog(ige::LogType::LOG_DEBUG, "Loading credits from API...");
+
+        std::string raw = FetchSupportersJson();
+
+        if (!raw.empty())
+        {
+            // Cache the fresh copy for offline fallback next time.
+            std::ofstream cacheOut(GetCacheFilePath(), std::ios::binary | std::ios::trunc);
+            if (cacheOut)
+                cacheOut << raw;
+        }
+        else
+        {
+            addlog(ige::LogType::LOG_ERROR, "Credits API fetch failed, falling back to cache");
+            std::ifstream cacheIn(GetCacheFilePath(), std::ios::binary);
+            if (cacheIn)
+            {
+                raw.assign((std::istreambuf_iterator<char>(cacheIn)), std::istreambuf_iterator<char>());
+            }
+        }
+
+        if (!raw.empty())
+            ParseSupportersJson(raw);
 
         g_CreditsLoaded = true;
     }
@@ -98,8 +191,7 @@ namespace sub
 
         if (g_CreditsTiers.empty())
         {
-            bool dummy = false;
-            AddOption("No credits found - Check Supporters.xml from your download", null);
+            AddOption("No credits found - Check your connection", null);
             return;
         }
 

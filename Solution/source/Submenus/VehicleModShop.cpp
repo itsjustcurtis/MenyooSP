@@ -339,22 +339,25 @@ namespace sub
 		Model model = VEHICLE_ADDER;
 		model.Load(5000);
 
+		addlog(ige::LogType::LOG_TRACE, "Starting PopulateAllPaintIDs");
 		//spawn dummy vehicle
 		Vector3 coords = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER::PLAYER_PED_ID(), 0.0, 0.0, -100.0);
 		float heading = ENTITY::GET_ENTITY_HEADING(PLAYER::PLAYER_PED_ID());
+		addlog(ige::LogType::LOG_TRACE, "Creating dummy vehicle for paint ID population");
 		Vehicle veh = CREATE_VEHICLE(model.hash, coords.x, coords.y, coords.z, heading, 1, 0, 0);
 		VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(veh, 5.0f);
 		int painttype, colour, pearl, second;
-
+		addlog(ige::LogType::LOG_TRACE, "Dummy vehicle created, starting paint ID population");
 		//Loop paint types (normal, metallic, matte etc...)
 		for (painttype = 0; painttype < 7; painttype++)
 		{
 			int numcols = GET_NUM_MOD_COLORS(painttype, 0);
 			const char* colourname;
-
+			addlog(ige::LogType::LOG_TRACE, "Populating paint type " + std::to_string(painttype) + " with " + std::to_string(numcols) + " colours");
 			//loop colour options and assign to PAINTS_ vectors
 			for (int i = 0; i < numcols; i++)
 			{
+				addlog(ige::LogType::LOG_TRACE, "Populating colour " + std::to_string(i) + " of paint type " + std::to_string(painttype));
 				second = 0;
 				//set and get colour ID's and names
 				VEHICLE::SET_VEHICLE_MOD_KIT(veh, 0);
@@ -367,7 +370,7 @@ namespace sub
 					paintIndex_maxValue = colour;
 				if (pearl > paintIndex_maxValue)
 					paintIndex_maxValue = pearl;
-
+				addlog(ige::LogType::LOG_TRACE, "Colour ID: " + std::to_string(colour) + ", Pearl ID: " + std::to_string(pearl) + ", Colour Name: " + (colourname != nullptr ? colourname : "null"));
 				// write to relevant vector, depending on painttype
 				switch (painttype)
 				{
@@ -381,6 +384,7 @@ namespace sub
 
 					PAINTS_METALLIC[i].paint = colour;
 					PAINTS_METALLIC[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Metallic Colour: " + PAINTS_METALLIC[i].name + ", Paint ID: " + std::to_string(PAINTS_METALLIC[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_METALLIC[i].pearl));
 					break;
 				case 1:
 					PAINTS_NORMAL.resize(numcols);
@@ -392,6 +396,7 @@ namespace sub
 
 					PAINTS_NORMAL[i].paint = colour;
 					PAINTS_NORMAL[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Normal Colour: " + PAINTS_NORMAL[i].name + ", Paint ID: " + std::to_string(PAINTS_NORMAL[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_NORMAL[i].pearl));
 					break;
 				case 2:
 					PAINTS_PEARL.resize(numcols);
@@ -403,6 +408,7 @@ namespace sub
 
 					PAINTS_PEARL[i].paint = -1;
 					PAINTS_PEARL[i].pearl = colour;
+					addlog(ige::LogType::LOG_TRACE, "Added Pearl Colour: " + PAINTS_PEARL[i].name + ", Paint ID: " + std::to_string(PAINTS_PEARL[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_PEARL[i].pearl));
 					break;
 				case 3:
 					PAINTS_MATTE.resize(numcols);
@@ -414,6 +420,7 @@ namespace sub
 
 					PAINTS_MATTE[i].paint = colour;
 					PAINTS_MATTE[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Matte Colour: " + PAINTS_MATTE[i].name + ", Paint ID: " + std::to_string(PAINTS_MATTE[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_MATTE[i].pearl));	
 					break;
 				case 4:
 					PAINTS_METAL.resize(numcols);
@@ -425,6 +432,7 @@ namespace sub
 
 					PAINTS_METAL[i].paint = colour;
 					PAINTS_METAL[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Metal Colour: " + PAINTS_METAL[i].name + ", Paint ID: " + std::to_string(PAINTS_METAL[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_METAL[i].pearl));
 					break;
 				case 5:
 					PAINTS_CHROME.resize(numcols);
@@ -436,6 +444,7 @@ namespace sub
 
 					PAINTS_CHROME[i].paint = colour;
 					PAINTS_CHROME[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Chrome Colour: " + PAINTS_CHROME[i].name + ", Paint ID: " + std::to_string(PAINTS_CHROME[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_CHROME[i].pearl));
 					break;
 				case 6:
 					PAINTS_CHAMELEON.resize(numcols);
@@ -447,6 +456,7 @@ namespace sub
 
 					PAINTS_CHAMELEON[i].paint = colour;
 					PAINTS_CHAMELEON[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Chameleon Colour: " + PAINTS_CHAMELEON[i].name + ", Paint ID: " + std::to_string(PAINTS_CHAMELEON[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_CHAMELEON[i].pearl));
 					break;
 				}
 
@@ -456,6 +466,7 @@ namespace sub
 		ENTITY::SET_VEHICLE_AS_NO_LONGER_NEEDED(&veh);
 		VEHICLE::DELETE_VEHICLE(&veh);
 		model.Unload();
+		addlog(ige::LogType::LOG_TRACE, "Finished PopulateAllPaintIDs");
 	}
 
 	void AddMSPaintsPointOption_(const std::string& text, INT8 index, bool& extra_option_code = null)
@@ -1796,11 +1807,6 @@ namespace sub
 
 		AddTitle("Menyoo Customs");
 
-		AddOption("Random Upgrades", veh_static12_autoUpgrade);
-		AddOption("Return to Stock", veh_static12_stockParts);
-
-		AddOption("Remove Vehicle Components", null, nullFunc, SUB::MSREMOVABLECOMPONENTS, true);
-
 		if (true) // Display Benny's sub ptr if veh is supported Static_12_veh_model.IsBennySupportedVehicle()
 		{
 			AddOption(Game::GetGXTEntry("S_MO_09", "Benny's Lowrider Mods"), null, nullFunc, SUB::MS_BENNYS); // Use 25 to 48 here.
@@ -1857,7 +1863,8 @@ namespace sub
 			AddOption(Game::GetGXTEntry("CMOD_MOD_WIN", "Windows"), null, nullFunc, SUB::MSWINDOWS, true, false); // Windows CMOD_MOD_WIN
 		}
 		AddOption(Game::GetGXTEntry("CMOD_COL0_3", "Emblem"), null, nullFunc, SUB::MS_EMBLEM, true, false); // Crew Emblems CMOD_COL0_3
-		AddOption(Game::GetGXTEntry("CMOD_MOD_GLD2", "Extras"), SubMS_Extra, nullFunc, -1, true, false); // Extras CMOD_MOD_GLD2
+		AddOption("Remove Vehicle Components and Extras", null, nullFunc, SUB::MSREMOVABLECOMPONENTS, true);
+		//AddOption(Game::GetGXTEntry("CMOD_MOD_GLD2", "Extras"), SubMS_Extra, nullFunc, -1, true, false); // Extras CMOD_MOD_GLD2  //Removed to make way for Remove Vehicle Components
 		if (GET_VEHICLE_LIVERY_COUNT(s_selectedVehicleHandle) > 0)
 			AddNumber(Game::GetGXTEntry("CMOD_COL0_4", "Livery"), ms_livery, 0, null, ms_livery_plus, ms_livery_minus);
 		if (GET_VEHICLE_LIVERY2_COUNT(s_selectedVehicleHandle) > 0)
@@ -1931,8 +1938,8 @@ namespace sub
 				vehicle.SetSirenActive(!vehicle.GetSirenActive());
 		}
 
-		AddOption("AUTO UPGRADE", veh_static12_autoUpgrade);
-		AddToggle("LSC Style Part Selection", g_LSCCustoms);
+		AddOption("Random Upgrades", veh_static12_autoUpgrade);
+		AddOption("Return to Stock", veh_static12_stockParts);
 
 		if (GET_VEHICLE_MOD_KIT != 0)
 		{
@@ -3188,11 +3195,11 @@ namespace sub
 			ReapplyCachedParts(vehicle, cache);
 			const bool hasDoors = !vehicle.Doors_get().empty();
 
-			if (hasDoors && MenuCategory::AddCategory("— ~b~Doors~s~"))
+			if (hasDoors && MenuCategory::AddCategory("� ~b~Doors~s~"))
 				AddDoorOptions(vehicle);
-			if (HasExtras(vehicle) && MenuCategory::AddCategory("— ~b~Extras~s~"))
+			if (HasExtras(vehicle) && MenuCategory::AddCategory("� ~b~Extras~s~"))
 				AddExtraOptions(vehicle);
-			if (vehicle.Model().IsHeli() && MenuCategory::AddCategory("— ~b~Helicopter Parts~s~"))
+			if (vehicle.Model().IsHeli() && MenuCategory::AddCategory("� ~b~Helicopter Parts~s~"))
 			{
 				bool pressed = false;
 				AddTickol("Break Rudder", false, pressed, pressed, TICKOL::CROSS);
@@ -3202,7 +3209,7 @@ namespace sub
 					SET_VEHICLE_RUDDER_BROKEN(vehicle.Handle(), true);
 				}
 			}
-			if (MenuCategory::AddCategory("— ~b~Tyres~s~"))
+			if (MenuCategory::AddCategory("� ~b~Tyres~s~"))
 				AddTyreOptions(vehicle);
 		}
 	}
