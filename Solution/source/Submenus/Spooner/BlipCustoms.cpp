@@ -209,6 +209,15 @@ namespace sub::Spooner
                         HUD::SET_BLIP_ROTATION_WITH_FLOAT(blip.BlipHandle, heading);
                     }
                 }
+                for (int i = (int)Databases::BlipDb.size() - 1; i >= 0; i--)
+                {
+                    auto& blip = Databases::BlipDb[i];
+                    if (blip.BlipType == SpoonerBlip::Type::Entity
+                        && (blip.EntityHandle == 0 || !ENTITY::DOES_ENTITY_EXIST(blip.EntityHandle)))
+                    {
+                        RemoveBlip(i);
+                    }
+                }
             }
         }
 

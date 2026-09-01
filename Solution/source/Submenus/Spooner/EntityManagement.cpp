@@ -43,6 +43,7 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
+#include "BlipCustoms.h"
 
 namespace sub::Spooner
 {
@@ -784,8 +785,28 @@ namespace sub::Spooner
 				newEntity.Handle.Model().Unload();
 			if (addToDb)
 				Databases::EntityDb.push_back(newEntity);
+
+			// Copy any entity blips attached to the original
+			for (int i = 0; i < (int)Databases::BlipDb.size(); i++)
+			{
+				if (Databases::BlipDb[i].BlipType == SpoonerBlip::Type::Entity
+					&& Databases::BlipDb[i].EntityHandle == orig.Handle.GetHandle())
+				{
+					SpoonerBlip* newBlip = sub::Spooner::BlipCustoms::AddBlip(
+						SpoonerBlip::Type::Entity,
+						Databases::BlipDb[i].Name
+					);
+					*newBlip = Databases::BlipDb[i];
+					newBlip->EntityHandle = newEntity.Handle.GetHandle();
+					newBlip->BlipHandle = 0;
+					WAIT(0);
+					sub::Spooner::BlipCustoms::RefreshBlip(*newBlip);
+				}
+			}
+
 			return newEntity;
-		}
+	} 
+
 
 		void DetachEntity(SpoonerEntity& ent)
 		{
