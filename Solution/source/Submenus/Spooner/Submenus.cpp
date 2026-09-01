@@ -3719,6 +3719,8 @@ namespace sub
 
 			AddTitle("Entity Blip Options");
 
+			AddOption("~italic~Handle: " + std::to_string(blip->EntityHandle), null);
+
 			bool bEditLabelPressed = false;
 			AddTexter("Label", 0, std::vector<std::string>{ blip->label.empty() ? "" : blip->label }, bEditLabelPressed);
 			if (bEditLabelPressed)
