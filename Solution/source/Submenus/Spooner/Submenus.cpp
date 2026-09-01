@@ -74,6 +74,8 @@
 #include <array>
 #include <pugixml/src/pugixml.hpp>
 #include <dirent\include\dirent.h>
+#include "../../BlipMapping.h"
+
 namespace sub
 {
 	namespace Spooner::Submenus
@@ -1377,6 +1379,26 @@ namespace sub
 				}
 				Menu::SetPreviousMenu();
 				return;
+			}
+
+			bool bAddEntityBlipPressed = false;
+			AddOption("Add Entity Blip", bAddEntityBlipPressed);
+			if (bAddEntityBlipPressed)
+			{
+				sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(
+					SpoonerBlip::Type::Entity,
+					SelectedEntity.HashName
+				);
+
+				auto mapping = GetBlipMappingForEntity(SelectedEntity.Handle);
+				sub::Spooner::SelectedBlip->EntityHandle = SelectedEntity.Handle.GetHandle();
+				sub::Spooner::SelectedBlip->bAttached = true;
+				sub::Spooner::SelectedBlip->Icon = mapping.icon;
+				sub::Spooner::SelectedBlip->bSyncRotation = mapping.syncRotation;
+				sub::Spooner::SelectedBlip->Alpha = 255;
+				sub::Spooner::SelectedBlip->Scale = (mapping.icon == BlipIcon::Standard || mapping.icon == BlipIcon::Enemy) ? 0.80f : 1.0f;
+				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITYINBLIP;
 			}
 
 			bool bDynamicPressed = false;
@@ -3443,69 +3465,6 @@ namespace sub
 				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
 			}
 
-			AddBreak("---Radial Blips---");
-			bool bHasRadial = false;
-			for (auto& b : Databases::BlipDb) if (b.BlipType == SpoonerBlip::Type::Radial) { bHasRadial = true; break; }
-			if (!bHasRadial)
-			{
-				bool bAddRadial = false;
-				AddOption("Add Radial Blip", bAddRadial);
-				if (bAddRadial)
-				{
-					auto& spoocam = SpoonerMode::spoonerModeCamera;
-					if (!spoocam.IsActive())
-					{
-						GTAentity myPed = PLAYER_PED_ID();
-						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPed.Position_get(), Vector3(0, 0, myPed.Heading_get()));
-					}
-					else
-					{
-						Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
-						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
-					}
-					sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
-					sub::Spooner::SelectedBlip->Alpha = 190;
-					sub::Spooner::SelectedBlip->Scale = 0.80f;
-					BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
-				}
-			}
-			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
-			{
-				auto& m = Databases::BlipDb[i];
-				if (m.BlipType != SpoonerBlip::Type::Radial) continue;
-
-				bool bBlipPressed = false;
-				std::string displayName = m.label.empty() ? "Radial Blip" : m.label;
-				AddOption(displayName, bBlipPressed);
-				if (bBlipPressed)
-				{
-					sub::Spooner::SelectedBlip = &m;
-					Menu::pendingSubmenu = SUB::SPOONER_BLIPS_RADIALINBLIP;
-				}
-
-
-				if (*Menu::activeOptionIndex == Menu::currentOptionCount)
-				{
-					m.m_selectedInSub = true;
-
-					bool bShortcutDeletePressed;
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Radial Blip");
-						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-					}
-					else
-					{
-						Menu::add_IB(VirtualKey::B, "Delete Radial Blip");
-						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
-					}
-
-					if (bShortcutDeletePressed)
-						blipIndexInDbToDelete = i;
-				}
-			}
-
 			AddBreak("---Entity Blips---");
 			bool bHasEntity = false;
 			for (auto& b : Databases::BlipDb) if (b.BlipType == SpoonerBlip::Type::Entity) { bHasEntity = true; break; }
@@ -3527,15 +3486,19 @@ namespace sub
 				if (bBlipPressed)
 				{
 					sub::Spooner::SelectedBlip = &m;
-					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITYINBLIP;
+					Menu::pendingSubmenu = SUB::SPOONER_BLIPS_RADIALINBLIP;
 				}
 
-				if (*Menu::currentopATM == Menu::printingop)
+
+				if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 				{
 					m.m_selectedInSub = true;
 
+					GTAentity ent = m.EntityHandle;
+					EntityManagement::ShowArrowAboveEntity(ent, RGBA(0, 255, 255, 200));
+
 					bool bShortcutDeletePressed;
-					if (Menu::bit_controller)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Entity Blip");
 						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -3605,6 +3568,68 @@ namespace sub
 					else
 					{
 						Menu::add_IB(VirtualKey::B, "Delete Coord Blip");
+						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
+					}
+
+					if (bShortcutDeletePressed)
+						blipIndexInDbToDelete = i;
+				}
+			}
+
+			AddBreak("---Radial Blips---");
+			bool bHasRadial = false;
+			for (auto& b : Databases::BlipDb) if (b.BlipType == SpoonerBlip::Type::Radial) { bHasRadial = true; break; }
+			if (!bHasRadial)
+			{
+				bool bAddRadial = false;
+				AddOption("Add Radial Blip", bAddRadial);
+				if (bAddRadial)
+				{
+					auto& spoocam = SpoonerMode::spoonerModeCamera;
+					if (!spoocam.IsActive())
+					{
+						GTAentity myPed = PLAYER_PED_ID();
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPed.Position_get(), Vector3(0, 0, myPed.Heading_get()));
+					}
+					else
+					{
+						Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+					}
+					sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
+					sub::Spooner::SelectedBlip->Alpha = 190;
+					sub::Spooner::SelectedBlip->Scale = 0.80f;
+					BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
+				}
+			}
+			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
+			{
+				auto& m = Databases::BlipDb[i];
+				if (m.BlipType != SpoonerBlip::Type::Radial) continue;
+
+				bool bBlipPressed = false;
+				std::string displayName = m.label.empty() ? "Radial Blip" : m.label;
+				AddOption(displayName, bBlipPressed);
+				if (bBlipPressed)
+				{
+					sub::Spooner::SelectedBlip = &m;
+					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
+				}
+
+				if (*Menu::currentopATM == Menu::printingop)
+				{
+					m.m_selectedInSub = true;
+
+					bool bShortcutDeletePressed;
+					if (Menu::bit_controller)
+					{
+						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Radial Blip");
+						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
+					}
+					else
+					{
+						Menu::add_IB(VirtualKey::B, "Delete Radial Blip");
 						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
 					}
 
@@ -3693,8 +3718,6 @@ namespace sub
 			auto blip = sub::Spooner::SelectedBlip;
 
 			AddTitle("Entity Blip Options");
-
-			AddOption("~italic~Handle: " + std::to_string(blip->EntityHandle), null);
 
 			bool bEditLabelPressed = false;
 			AddTexter("Label", 0, std::vector<std::string>{ blip->label.empty() ? "" : blip->label }, bEditLabelPressed);
