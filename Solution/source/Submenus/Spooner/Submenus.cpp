@@ -1142,24 +1142,47 @@ namespace sub
 				return;
 			}
 
-			bool bAddEntityBlipPressed = false;
-			AddOption("Add Entity Blip", bAddEntityBlipPressed);
-			if (bAddEntityBlipPressed)
+			sub::Spooner::SpoonerBlip* existingBlip = nullptr;
+			for (auto& blip : Databases::BlipDb)
 			{
-				sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(
-					SpoonerBlip::Type::Entity,
-					SelectedEntity.HashName
-				);
+				if (blip.BlipType == SpoonerBlip::Type::Entity
+					&& blip.EntityHandle == SelectedEntity.Handle.GetHandle())
+				{
+					existingBlip = &blip;
+					break;
+				}
+			}
 
-				auto mapping = GetBlipMappingForEntity(SelectedEntity.Handle);
-				sub::Spooner::SelectedBlip->EntityHandle = SelectedEntity.Handle.GetHandle();
-				sub::Spooner::SelectedBlip->bAttached = true;
-				sub::Spooner::SelectedBlip->Icon = mapping.icon;
-				sub::Spooner::SelectedBlip->bSyncRotation = mapping.syncRotation;
-				sub::Spooner::SelectedBlip->Alpha = 255;
-				sub::Spooner::SelectedBlip->Scale = (mapping.icon == BlipIcon::Standard || mapping.icon == BlipIcon::Enemy) ? 0.80f : 1.0f;
-				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITYINBLIP;
+			if (existingBlip)
+			{
+				bool bDeleteBlipPressed = false;
+				AddOption("Delete Entity Blip", bDeleteBlipPressed);
+				if (bDeleteBlipPressed)
+				{
+					BlipCustoms::RemoveBlip(*existingBlip);
+				}
+			}
+			else
+			{
+				bool bAddEntityBlipPressed = false;
+				AddOption("Add Entity Blip", bAddEntityBlipPressed);
+				if (bAddEntityBlipPressed)
+				{
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(
+						SpoonerBlip::Type::Entity,
+						SelectedEntity.HashName
+					);
+
+					auto mapping = GetBlipMappingForEntity(SelectedEntity.Handle);
+					sub::Spooner::SelectedBlip->EntityHandle = SelectedEntity.Handle.GetHandle();
+					sub::Spooner::SelectedBlip->bAttached = true;
+					sub::Spooner::SelectedBlip->Icon = mapping.icon;
+					sub::Spooner::SelectedBlip->bSyncRotation = mapping.syncRotation;
+					sub::Spooner::SelectedBlip->Alpha = 255;
+					sub::Spooner::SelectedBlip->Scale = (mapping.icon == BlipIcon::Standard || mapping.icon == BlipIcon::Enemy) ? 0.80f : 1.0f;
+					BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITYINBLIP;
+				}
 			}
 
 			bool bDynamicPressed = false;
