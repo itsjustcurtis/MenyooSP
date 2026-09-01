@@ -276,6 +276,7 @@ void Menu::submenu_switch()
 	case SUB::SPOONER_BLIPS_ENTITYINBLIP:			sub::Spooner::Submenus::Sub_Blip_EntityInBlip(); break;
 	case SUB::SPOONER_BLIPS_ENTITY_SELECT:			sub::Spooner::Submenus::Sub_Blip_Entity_Select(); break;
 	case SUB::SPOONER_BLIPS_ATTACH:					sub::Spooner::Submenus::Sub_Blip_Attach(); break;
+	case SUB::SPOONER_BLIPS_ICONS:					sub::Spooner::Submenus::Sub_Blip_Icons(); break;
 	case SUB::SPOONER_SAVEFILES:					sub::Spooner::Submenus::Sub_SaveFiles(); break;
 	case SUB::SPOONER_SAVEFILES_LOAD:				sub::Spooner::Submenus::Sub_SaveFiles_Load(); break;
 	case SUB::SPOONER_SAVEFILES_LOAD_LEGACYSP00N:	sub::Spooner::Submenus::Sub_SaveFiles_Load_LegacySP00N(); break;

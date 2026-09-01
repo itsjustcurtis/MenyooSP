@@ -203,7 +203,8 @@ namespace sub::Spooner
         void Sub_Blip_RadialInBlip();
         void Sub_Blip_EntityInBlip();
         void Sub_Blip_CoordInBlip();
-
+        
+        void Sub_Blip_Icons();
         void Sub_Blip_Attach();
         void Sub_Blip_Entity_Select();
     }

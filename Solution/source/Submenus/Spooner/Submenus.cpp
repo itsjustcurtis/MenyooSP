@@ -3049,33 +3049,6 @@ namespace sub
 			AddTitle("Blip Management");
 
 			//AddOption("Add Blip", null, nullFunc, SUB::SPOONER_BLIPS_ADD_SELECT);
-			bool bAddNewRadialBlipPressed = false;
-
-			AddTickol("Create Radial Blip", true, bAddNewRadialBlipPressed, bAddNewRadialBlipPressed, TICKOL::SMALLNEWSTAR);
-			if (bAddNewRadialBlipPressed)
-			{
-				auto& spoocam = SpoonerMode::spoonerModeCamera;
-
-				if (!spoocam.IsActive())
-				{
-					GTAentity myPed = PLAYER_PED_ID();
-					Vector3 myPos = myPed.Position_get();
-
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
-				}
-				else
-				{
-					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
-
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
-				}
-
-				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
-				sub::Spooner::SelectedBlip->Alpha = 190;
-				sub::Spooner::SelectedBlip->Scale = 0.80f;
-				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
-			}
 
 			bool bAttachBlipToEntityPressed = false;
 			AddTickol("Create Entity Blip", true, bAttachBlipToEntityPressed, bAttachBlipToEntityPressed, TICKOL::SMALLNEWSTAR);
@@ -3109,6 +3082,33 @@ namespace sub
 				sub::Spooner::SelectedBlip->Scale = 0.80f;
 				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
 				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
+			}
+
+			bool bAddNewRadialBlipPressed = false;
+			AddTickol("Create Radial Blip", true, bAddNewRadialBlipPressed, bAddNewRadialBlipPressed, TICKOL::SMALLNEWSTAR);
+			if (bAddNewRadialBlipPressed)
+			{
+				auto& spoocam = SpoonerMode::spoonerModeCamera;
+
+				if (!spoocam.IsActive())
+				{
+					GTAentity myPed = PLAYER_PED_ID();
+					Vector3 myPos = myPed.Position_get();
+
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
+				}
+				else
+				{
+					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
+
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+				}
+
+				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
+				sub::Spooner::SelectedBlip->Alpha = 190;
+				sub::Spooner::SelectedBlip->Scale = 0.80f;
+				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
 			}
 
 			AddBreak("---Entity Blips---");
@@ -3365,7 +3365,7 @@ namespace sub
 
 			AddTitle("Entity Blip Options");
 
-			AddOption("~italic~Handle: " + std::to_string(blip->EntityHandle), null);
+			AddOption("Icon: " + BlipIcon::vNames.at(blip->Icon), null, nullFunc, SUB::SPOONER_BLIPS_ICONS);
 
 			bool bEditLabelPressed = false;
 			AddTexter("Label", 0, std::vector<std::string>{ blip->label.empty() ? "" : blip->label }, bEditLabelPressed);
@@ -3405,40 +3405,6 @@ namespace sub
 				{
 					--it;
 					blip->Colour = it->first;
-					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
-				}
-			}
-
-			bool icon_plus = false;
-			bool icon_minus = false;
-
-			AddTexter(
-				"Icon",
-				0,
-				std::vector<std::string>{ BlipIcon::vNames.at(blip->Icon) },
-				null,
-				icon_plus,
-				icon_minus
-			);
-
-			if (icon_plus)
-			{
-				auto it = BlipIcon::vNames.find(blip->Icon);
-				if (std::next(it) != BlipIcon::vNames.end())
-				{
-					++it;
-					blip->Icon = it->first;
-					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
-				}
-			}
-
-			if (icon_minus)
-			{
-				auto it = BlipIcon::vNames.find(blip->Icon);
-				if (it != BlipIcon::vNames.begin())
-				{
-					--it;
-					blip->Icon = it->first;
 					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
 				}
 			}
@@ -3619,6 +3585,8 @@ namespace sub
 
 			AddTitle("Coord Blip Options");
 
+			AddOption("Icon: " + BlipIcon::vNames.at(blip->Icon), null, nullFunc, SUB::SPOONER_BLIPS_ICONS);
+
 			bool bEditLabelPressed = false;
 			AddTexter("Label", 0, std::vector<std::string>{ blip->label.empty() ? "" : blip->label }, bEditLabelPressed);
 			if (bEditLabelPressed)
@@ -3657,40 +3625,6 @@ namespace sub
 				{
 					--it;
 					blip->Colour = it->first;
-					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
-				}
-			}
-
-			bool icon_plus = false;
-			bool icon_minus = false;
-
-			AddTexter(
-				"Icon",
-				0,
-				std::vector<std::string>{ BlipIcon::vNames.at(blip->Icon) },
-				null,
-				icon_plus,
-				icon_minus
-			);
-
-			if (icon_plus)
-			{
-				auto it = BlipIcon::vNames.find(blip->Icon);
-				if (std::next(it) != BlipIcon::vNames.end())
-				{
-					++it;
-					blip->Icon = it->first;
-					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
-				}
-			}
-
-			if (icon_minus)
-			{
-				auto it = BlipIcon::vNames.find(blip->Icon);
-				if (it != BlipIcon::vNames.begin())
-				{
-					--it;
-					blip->Icon = it->first;
 					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
 				}
 			}
@@ -4165,6 +4099,43 @@ namespace sub
 					{
 						AddOption(e.HashName + " (Invalid)", null);
 					}
+				}
+			}
+		}
+
+		void Sub_Blip_Icons()
+		{
+			if (sub::Spooner::SelectedBlip == nullptr)
+			{
+				Menu::SetSub_previous();
+				return;
+			}
+
+			AddTitle("Blip Icons");
+
+			bool bSearchPressed = false;
+			AddOption(_searchStr.empty() ? "SEARCH" : boost::to_upper_copy(_searchStr), bSearchPressed, nullFunc, -1, true);
+			if (bSearchPressed)
+			{
+				_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", _searchStr);
+				boost::to_lower(_searchStr);
+			}
+
+			for (const auto& [icon, name] : BlipIcon::vNames)
+			{
+				if (!_searchStr.empty())
+				{
+					std::string nameLower = boost::to_lower_copy(name);
+					if (nameLower.find(_searchStr) == std::string::npos)
+						continue;
+				}
+
+				bool bIconPressed = false;
+				AddTickol(name, sub::Spooner::SelectedBlip->Icon == icon, bIconPressed, bIconPressed, TICKOL::TICK2);
+				if (bIconPressed)
+				{
+					sub::Spooner::SelectedBlip->Icon = icon;
+					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
 				}
 			}
 		}
