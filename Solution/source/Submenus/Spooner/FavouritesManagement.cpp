@@ -88,6 +88,63 @@ namespace sub::Spooner
 		bool(*IsVehicleAFavourite)(GTAmodel::Model vehModel) = SpawnVehicle_IsVehicleModelAFavourite;
 		bool(*AddVehicleToFavourites)(GTAmodel::Model vehModel, const std::string& customName) = SpawnVehicle_AddVehicleModelToFavourites;
 		bool(*RemoveVehicleFromFavourites)(GTAmodel::Model vehModel) = SpawnVehicle_RemoveVehicleModelFromFavourites;
+
+		std::string xmlFavouriteBlipIcons = "FavouriteBlipIcons.xml";
+
+		void GetFavouriteBlipIcons(std::vector<int>& result)
+		{
+			result.clear();
+			pugi::xml_document doc;
+			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteBlipIcons).c_str()).status != pugi::status_ok)
+				return;
+			auto nodeRoot = doc.child("FavouriteBlipIcons");
+			for (auto node = nodeRoot.first_child(); node; node = node.next_sibling())
+				result.push_back(node.text().as_int());
+		}
+
+		bool IsBlipIconAFavourite(int icon)
+		{
+			pugi::xml_document doc;
+			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteBlipIcons).c_str()).status != pugi::status_ok)
+				return false;
+			auto nodeRoot = doc.child("FavouriteBlipIcons");
+			for (auto node = nodeRoot.first_child(); node; node = node.next_sibling())
+				if (node.text().as_int() == icon) return true;
+			return false;
+		}
+
+		bool AddBlipIconToFavourites(int icon)
+		{
+			pugi::xml_document doc;
+			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteBlipIcons).c_str()).status != pugi::status_ok)
+			{
+				doc.reset();
+				auto nodeDeclaration = doc.append_child(pugi::node_declaration);
+				nodeDeclaration.append_attribute("version") = "1.0";
+				nodeDeclaration.append_attribute("encoding") = "ISO-8859-1";
+				doc.append_child("FavouriteBlipIcons");
+			}
+			auto nodeRoot = doc.child("FavouriteBlipIcons");
+			nodeRoot.append_child("Icon").text() = icon;
+			return doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteBlipIcons).c_str());
+		}
+
+		bool RemoveBlipIconFromFavourites(int icon)
+		{
+			pugi::xml_document doc;
+			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteBlipIcons).c_str()).status != pugi::status_ok)
+				return false;
+			auto nodeRoot = doc.child("FavouriteBlipIcons");
+			for (auto node = nodeRoot.first_child(); node; node = node.next_sibling())
+			{
+				if (node.text().as_int() == icon)
+				{
+					nodeRoot.remove_child(node);
+					break;
+				}
+			}
+			return doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteBlipIcons).c_str());
+		}
 	}
 
 }

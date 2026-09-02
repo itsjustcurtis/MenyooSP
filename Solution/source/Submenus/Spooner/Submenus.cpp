@@ -4121,21 +4121,101 @@ namespace sub
 				boost::to_lower(_searchStr);
 			}
 
-			for (const auto& [icon, name] : BlipIcon::vNames)
-			{
-				if (!_searchStr.empty())
-				{
-					std::string nameLower = boost::to_lower_copy(name);
-					if (nameLower.find(_searchStr) == std::string::npos)
-						continue;
-				}
+			static int sortMode = 0;
+			bool sort_plus = false;
+			bool sort_minus = false;
+			AddTexter("Sort", 0, std::vector<std::string>{ sortMode == 0 ? "Regular" : "Alphabetic" }, null, sort_plus, sort_minus);
+			if (sort_plus || sort_minus)
+				sortMode = sortMode == 0 ? 1 : 0;
 
+			std::vector<std::pair<int, std::string>> entries(BlipIcon::vNames.begin(), BlipIcon::vNames.end());
+
+			if (!_searchStr.empty())
+			{
+				entries.erase(std::remove_if(entries.begin(), entries.end(), [](const std::pair<int, std::string>& e)
+					{
+						std::string nameLower = boost::to_lower_copy(e.second);
+						return nameLower.find(_searchStr) == std::string::npos;
+					}), entries.end());
+			}
+
+			if (sortMode == 1)
+			{
+				std::sort(entries.begin(), entries.end(), [](const std::pair<int, std::string>& a, const std::pair<int, std::string>& b)
+					{
+						return a.second < b.second;
+					});
+			}
+
+			std::vector<int> favourites;
+			FavouritesManagement::GetFavouriteBlipIcons(favourites);
+
+			std::vector<std::pair<int, std::string>> favEntries, otherEntries;
+			for (auto& e : entries)
+			{
+				if (std::find(favourites.begin(), favourites.end(), e.first) != favourites.end())
+					favEntries.push_back(e);
+				else
+					otherEntries.push_back(e);
+			}
+
+			if (!favEntries.empty())
+				AddBreak("---Favourites---");
+
+			for (const auto& [icon, name] : favEntries)
+			{
 				bool bIconPressed = false;
 				AddTickol(name, sub::Spooner::SelectedBlip->Icon == icon, bIconPressed, bIconPressed, TICKOL::TICK2);
 				if (bIconPressed)
 				{
 					sub::Spooner::SelectedBlip->Icon = icon;
 					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+				}
+
+				if (Menu::printingop == *Menu::currentopATM)
+				{
+					if (Menu::bit_controller)
+					{
+						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove from favourites");
+						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
+							FavouritesManagement::RemoveBlipIconFromFavourites(icon);
+					}
+					else
+					{
+						Menu::add_IB(VirtualKey::B, "Remove from favourites");
+						if (IsKeyJustUp(VirtualKey::B))
+							FavouritesManagement::RemoveBlipIconFromFavourites(icon);
+					}
+				}
+			}
+
+			if (!otherEntries.empty())
+				AddBreak("---All Icons---");
+
+			for (const auto& [icon, name] : otherEntries)
+			{
+				bool bIconPressed = false;
+				AddTickol(name, sub::Spooner::SelectedBlip->Icon == icon, bIconPressed, bIconPressed, TICKOL::TICK2);
+				if (bIconPressed)
+				{
+					sub::Spooner::SelectedBlip->Icon = icon;
+					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
+				}
+
+				if (Menu::printingop == *Menu::currentopATM)
+				{
+					if (Menu::bit_controller)
+					{
+						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Add to favourites");
+						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
+							FavouritesManagement::AddBlipIconToFavourites(icon);
+					}
+					else
+					{
+						Menu::add_IB(VirtualKey::B, "Add to favourites");
+						if (IsKeyJustUp(VirtualKey::B))
+							FavouritesManagement::AddBlipIconToFavourites(icon);
+					}
 				}
 			}
 		}
