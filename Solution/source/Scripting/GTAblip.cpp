@@ -36,7 +36,7 @@ namespace BlipIcon {
 		{ BlipIcon::Enemy, "Enemy" },
 		{ BlipIcon::Friend, "Friend" },
 		{ BlipIcon::VIP, "VIP" },
-		{ BlipIcon::BigBlip, "BigBlip" },
+		//{ BlipIcon::BigBlip, "BigBlip" },
 		{ BlipIcon::PoliceOfficer, "PoliceOfficer" },
 		{ BlipIcon::PoliceArea, "PoliceArea" },
 		{ BlipIcon::Square, "Square" },
