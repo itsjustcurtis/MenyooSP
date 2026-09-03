@@ -86,7 +86,7 @@ namespace sub::Spooner
         bool bShowRoute = false;
         int RouteColour = BlipColour::White;
         bool bShowCone = false;
-        int ConeColour = 3;
+        int ConeColour = 9;
         bool bShortRange = false;
         bool bSelectableOnMap = true;
         bool bSyncRotation = false;

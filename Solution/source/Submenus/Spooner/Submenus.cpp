@@ -3105,7 +3105,7 @@ namespace sub
 				}
 
 				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
-				sub::Spooner::SelectedBlip->Alpha = 190;
+				sub::Spooner::SelectedBlip->Alpha = 160;
 				sub::Spooner::SelectedBlip->Scale = 0.80f;
 				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
 				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
@@ -3242,7 +3242,7 @@ namespace sub
 						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
 					}
 					sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
-					sub::Spooner::SelectedBlip->Alpha = 190;
+					sub::Spooner::SelectedBlip->Alpha = 160;
 					sub::Spooner::SelectedBlip->Scale = 0.80f;
 					BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
 					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
@@ -3365,8 +3365,6 @@ namespace sub
 
 			AddTitle("Entity Blip Options");
 
-			AddOption("Icon: " + BlipIcon::vNames.at(blip->Icon), null, nullFunc, SUB::SPOONER_BLIPS_ICONS);
-
 			bool bEditLabelPressed = false;
 			AddTexter("Label", 0, std::vector<std::string>{ blip->label.empty() ? "" : blip->label }, bEditLabelPressed);
 			if (bEditLabelPressed)
@@ -3409,28 +3407,7 @@ namespace sub
 				}
 			}
 
-			bool alpha_plus = false;
-			bool alpha_minus = false;
-
-			AddNumber("Alpha", blip->Alpha, 2, null, alpha_plus, alpha_minus);
-
-			if (alpha_plus)
-			{
-				if (blip->Alpha < 255)
-				{
-					blip->Alpha++;
-					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
-				}
-			}
-
-			if (alpha_minus)
-			{
-				if (blip->Alpha > 0)
-				{
-					blip->Alpha--;
-					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
-				}
-			}
+			AddOption("Icon: " + BlipIcon::vNames.at(blip->Icon), null, nullFunc, SUB::SPOONER_BLIPS_ICONS);
 
 			bool scale_plus = false;
 			bool scale_minus = false;
@@ -3506,11 +3483,11 @@ namespace sub
 			}
 
 			bool bToggleCone = false;
-			AddTickol("Show Cone", blip->bShowCone, bToggleCone, bToggleCone, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddTickol("Show Cone (Only for peds)", blip->bShowCone, bToggleCone, bToggleCone, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 			if (bToggleCone)
 			{
 				blip->bShowCone = !blip->bShowCone;
-				HUD::SET_BLIP_SHOW_CONE(blip->BlipHandle, blip->bShowCone, blip->ConeColour);
+				HUD::SET_BLIP_SHOW_CONE(blip->BlipHandle, blip->bShowCone, 9);
 			}
 
 			bool bToggleShortRange = false;
@@ -3585,8 +3562,6 @@ namespace sub
 
 			AddTitle("Coord Blip Options");
 
-			AddOption("Icon: " + BlipIcon::vNames.at(blip->Icon), null, nullFunc, SUB::SPOONER_BLIPS_ICONS);
-
 			bool bEditLabelPressed = false;
 			AddTexter("Label", 0, std::vector<std::string>{ blip->label.empty() ? "" : blip->label }, bEditLabelPressed);
 			if (bEditLabelPressed)
@@ -3628,6 +3603,8 @@ namespace sub
 					sub::Spooner::BlipCustoms::RefreshBlip(*blip);
 				}
 			}
+
+			AddOption("Icon: " + BlipIcon::vNames.at(blip->Icon), null, nullFunc, SUB::SPOONER_BLIPS_ICONS);
 
 			bool scale_plus = false;
 			bool scale_minus = false;
