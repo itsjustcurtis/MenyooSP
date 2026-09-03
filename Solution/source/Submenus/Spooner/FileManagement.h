@@ -26,6 +26,8 @@ namespace sub::Spooner
 	class SpoonerEntityWithInitHandle;
 	class SpoonerMarker;
 	class SpoonerMarkerWithInitHandle;
+	class SpoonerBlip;
+	class SpoonerBlipWithInitHandle;
 
 	namespace FileManagement
 	{
@@ -40,6 +42,9 @@ namespace sub::Spooner
 
 		void AddMarkerToXmlNode(SpoonerMarker& m, pugi::xml_node& nodeMarker);
 		SpoonerMarkerWithInitHandle SpawnMarkerFromXmlNode(pugi::xml_node& nodeMarker);
+
+		void AddBlipToXmlNode(SpoonerBlip& b, pugi::xml_node& nodeBlip);
+		SpoonerBlip SpawnBlipFromXmlNode(pugi::xml_node& nodeBlip, const std::vector<SpoonerEntityWithInitHandle>& newDb);
 
 		bool SaveDbToFile(const std::string& filePath, bool bForceReferenceCoords);
 		bool SaveWorldToFile(const std::string& filePath, std::vector<Entity>& vEntityHandles, std::vector<SpoonerMarker>& v
