@@ -45,6 +45,8 @@
 #include "..\PtfxSubs.h"
 #include "..\PedAnimation.h"
 #include "..\Teleport\TeleMethods.h"
+#include "BlipCustoms.h"
+#include "SpoonerBlips.h"
 
 #include <string>
 #include <unordered_set>
@@ -1243,6 +1245,101 @@ namespace sub::Spooner
 			return mi;
 		}
 
+		void AddBlipToXmlNode(SpoonerBlip& b, pugi::xml_node& nodeBlip)
+		{
+			nodeBlip.append_child("Name").text() = b.Name.c_str();
+			nodeBlip.append_child("Label").text() = b.label.c_str();
+			nodeBlip.append_child("BlipType").text() = (int)b.BlipType;
+			nodeBlip.append_child("Icon").text() = b.Icon;
+			nodeBlip.append_child("Colour").text() = b.Colour;
+			nodeBlip.append_child("Alpha").text() = b.Alpha;
+			nodeBlip.append_child("Scale").text() = b.Scale;
+			nodeBlip.append_child("Priority").text() = b.Priority;
+			nodeBlip.append_child("ShowRoute").text() = b.bShowRoute;
+			nodeBlip.append_child("RouteColour").text() = b.RouteColour;
+			nodeBlip.append_child("ShortRange").text() = b.bShortRange;
+			nodeBlip.append_child("SelectableOnMap").text() = b.bSelectableOnMap;
+			nodeBlip.append_child("ShowCone").text() = b.bShowCone;
+			nodeBlip.append_child("ConeColour").text() = b.ConeColour;
+			nodeBlip.append_child("SyncRotation").text() = b.bSyncRotation;
+
+			if (b.BlipType == SpoonerBlip::Type::Radial)
+			{
+				nodeBlip.append_child("RadialShape").text() = (int)b.Shape;
+				nodeBlip.append_child("RadialSize").text() = b.RadialSize;
+				nodeBlip.append_child("AreaWidth").text() = b.AreaWidth;
+				nodeBlip.append_child("AreaHeight").text() = b.AreaHeight;
+				nodeBlip.append_child("Heading").text() = b.Heading;
+			}
+
+			if (b.BlipType == SpoonerBlip::Type::Entity)
+			{
+				nodeBlip.append_child("EntityInitHandle").text() = b.EntityHandle;
+			}
+
+			auto nodePos = nodeBlip.append_child("Position");
+			nodePos.append_attribute("X") = b.X;
+			nodePos.append_attribute("Y") = b.Y;
+			nodePos.append_attribute("Z") = b.Z;
+		}
+
+		SpoonerBlip SpawnBlipFromXmlNode(pugi::xml_node& nodeBlip, const std::vector<SpoonerEntityWithInitHandle>& newDb)
+		{
+			SpoonerBlip b;
+			b.Name = nodeBlip.child("Name").text().as_string();
+			b.label = nodeBlip.child("Label").text().as_string();
+			b.BlipType = (SpoonerBlip::Type)nodeBlip.child("BlipType").text().as_int();
+			b.Icon = nodeBlip.child("Icon").text().as_int();
+			b.Colour = nodeBlip.child("Colour").text().as_int();
+			b.Alpha = nodeBlip.child("Alpha").text().as_int(255);
+			b.Scale = nodeBlip.child("Scale").text().as_float(0.80f);
+			b.Priority = nodeBlip.child("Priority").text().as_int(2);
+			b.bShowRoute = nodeBlip.child("ShowRoute").text().as_bool();
+			b.RouteColour = nodeBlip.child("RouteColour").text().as_int();
+			b.bShortRange = nodeBlip.child("ShortRange").text().as_bool();
+			b.bSelectableOnMap = nodeBlip.child("SelectableOnMap").text().as_bool(true);
+			b.bShowCone = nodeBlip.child("ShowCone").text().as_bool();
+			b.ConeColour = nodeBlip.child("ConeColour").text().as_int(3);
+			b.bSyncRotation = nodeBlip.child("SyncRotation").text().as_bool();
+
+			if (b.BlipType == SpoonerBlip::Type::Radial)
+			{
+				b.Shape = (SpoonerBlip::RadialShape)nodeBlip.child("RadialShape").text().as_int();
+				b.RadialSize = nodeBlip.child("RadialSize").text().as_float(60.0f);
+				b.AreaWidth = nodeBlip.child("AreaWidth").text().as_float(60.0f);
+				b.AreaHeight = nodeBlip.child("AreaHeight").text().as_float(60.0f);
+				b.Heading = nodeBlip.child("Heading").text().as_float();
+			}
+
+			auto nodePos = nodeBlip.child("Position");
+			b.X = nodePos.attribute("X").as_float();
+			b.Y = nodePos.attribute("Y").as_float();
+			b.Z = nodePos.attribute("Z").as_float();
+
+			if (b.BlipType == SpoonerBlip::Type::Entity)
+			{
+				int initHandle = nodeBlip.child("EntityInitHandle").text().as_int();
+				bool found = false;
+				for (auto& e : newDb)
+				{
+					if (e.initHandle == initHandle)
+					{
+						b.EntityHandle = e.e.Handle.GetHandle();
+						b.bAttached = true;
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					Game::Print::PrintBottomLeft("~r~Blip Error:~s~ Entity blip \"" + b.Name + "\" failed to load — host entity not found.");
+					return SpoonerBlip(); // Return empty blip to signal skip
+				}
+			}
+
+			return b;
+		}
+
 		void AddLightToXmlNode(SpoonerLight& l, pugi::xml_node& nodeLight)
 		{
 			nodeLight.append_child("Name").text() = l.m_name.c_str();
@@ -1574,6 +1671,12 @@ namespace sub::Spooner
 			{
 				auto nodeMarker = nodeRoot.append_child("Marker");
 				AddMarkerToXmlNode(m, nodeMarker);
+			}
+
+			for (auto& b : Databases::BlipDb)
+			{
+				auto nodeBlip = nodeRoot.append_child("Blip");
+				AddBlipToXmlNode(b, nodeBlip);
 			}
 
 			for (auto& l : Databases::LightDb)
@@ -2174,6 +2277,18 @@ namespace sub::Spooner
 						}
 					}
 					if (bStartTaskSeqsOnLoad) e.e.taskSequence.Start();
+				}
+
+				for (auto nodeBlip = nodeRoot.child("Blip"); nodeBlip; nodeBlip = nodeBlip.next_sibling("Blip"))
+				{
+					SpoonerBlip b = SpawnBlipFromXmlNode(nodeBlip, newDb);
+					if (b.BlipType == SpoonerBlip::Type::Entity && b.EntityHandle == 0 && !nodeBlip.child("EntityInitHandle").empty())
+						continue; // Skip failed entity blips
+
+					SpoonerBlip* newBlip = sub::Spooner::BlipCustoms::AddBlip(b.BlipType, b.Name);
+					*newBlip = b;
+					newBlip->BlipHandle = 0;
+					sub::Spooner::BlipCustoms::RefreshBlip(*newBlip);
 				}
 
 				Databases::EntityDb.push_back(e.e);
