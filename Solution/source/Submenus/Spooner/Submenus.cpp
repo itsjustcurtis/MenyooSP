@@ -3702,7 +3702,7 @@ namespace sub
 			bool priority_plus = false;
 			bool priority_minus = false;
 
-			static const std::vector<int> priorityValues = { 9, 7, 6, 5, 3, 2 };
+			static const std::vector<int> priorityValues = { 2, 3, 5, 6, 7, 9 };
 			auto priorityIt = std::find(priorityValues.begin(), priorityValues.end(), blip->Priority);
 			if (priorityIt == priorityValues.end()) priorityIt = priorityValues.begin();
 
@@ -3710,20 +3710,18 @@ namespace sub
 
 			if (priority_plus)
 			{
-				if (std::next(priorityIt) != priorityValues.end())
-				{
-					blip->Priority = *std::next(priorityIt);
-					HUD::SET_BLIP_PRIORITY(blip->BlipHandle, blip->Priority);
-				}
+				if (std::next(priorityIt) != priorityValues.end()) ++priorityIt;
+				else priorityIt = priorityValues.begin();
+				blip->Priority = *priorityIt;
+				HUD::SET_BLIP_PRIORITY(blip->BlipHandle, blip->Priority);
 			}
 
 			if (priority_minus)
 			{
-				if (priorityIt != priorityValues.begin())
-				{
-					blip->Priority = *std::prev(priorityIt);
-					HUD::SET_BLIP_PRIORITY(blip->BlipHandle, blip->Priority);
-				}
+				if (priorityIt != priorityValues.begin()) --priorityIt;
+				else priorityIt = std::prev(priorityValues.end());
+				blip->Priority = *priorityIt;
+				HUD::SET_BLIP_PRIORITY(blip->BlipHandle, blip->Priority);
 			}
 
 			bool deletePressed = false;
@@ -4166,14 +4164,11 @@ namespace sub
 			{
 				bool bIconPressed = false;
 				AddTickol(name, sub::Spooner::SelectedBlip->Icon == icon, bIconPressed, bIconPressed, TICKOL::TICK2);
-				if (bIconPressed)
-				{
-					sub::Spooner::SelectedBlip->Icon = icon;
-					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-				}
 
 				if (Menu::printingop == *Menu::currentopATM)
 				{
+					sub::Spooner::SelectedBlip->Icon = icon;
+					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
 					if (Menu::bit_controller)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove from favourites");
@@ -4196,14 +4191,11 @@ namespace sub
 			{
 				bool bIconPressed = false;
 				AddTickol(name, sub::Spooner::SelectedBlip->Icon == icon, bIconPressed, bIconPressed, TICKOL::TICK2);
-				if (bIconPressed)
-				{
-					sub::Spooner::SelectedBlip->Icon = icon;
-					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-				}
 
 				if (Menu::printingop == *Menu::currentopATM)
 				{
+					sub::Spooner::SelectedBlip->Icon = icon;
+					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
 					if (Menu::bit_controller)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Add to favourites");

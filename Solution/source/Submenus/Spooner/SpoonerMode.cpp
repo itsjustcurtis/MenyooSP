@@ -903,7 +903,19 @@ namespace sub::Spooner
 
 			if (!Databases::BlipDb.empty())
 			{
-				BlipCustoms::DrawAll();
+				auto sub = Menu::currentsub;
+				bool bInBlipSub =
+					sub == SUB::SPOONER_BLIPS ||
+					sub == SUB::SPOONER_BLIPS_ADD_SELECT ||
+					sub == SUB::SPOONER_BLIPS_RADIALINBLIP ||
+					sub == SUB::SPOONER_BLIPS_COORDINBLIP ||
+					sub == SUB::SPOONER_BLIPS_ENTITYINBLIP ||
+					sub == SUB::SPOONER_BLIPS_ATTACH ||
+					sub == SUB::SPOONER_BLIPS_ENTITY_SELECT ||
+					sub == SUB::SPOONER_BLIPS_ICONS;
+
+				if (bInBlipSub)
+					BlipCustoms::DrawAll();
 				BlipCustoms::UpdateAttachedBlips();
 			}
 		}
