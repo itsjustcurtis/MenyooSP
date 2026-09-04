@@ -1607,6 +1607,8 @@ namespace sub
 				Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
 				Vector3 nextRot = selectedEntity.attachmentArgs.rotation;
 
+				SpoonerMode::UpdateEntityEditingState(nextOffset, nextRot);
+
 				SpoonerMode::editingState.transformMode = static_cast<SpoonerMode::eTransformMode>(AddTexterCycler("Editing", (int)SpoonerMode::editingState.transformMode > 1 ? 0 : (int)SpoonerMode::editingState.transformMode, {"Position", "Rotation"}));
 
 				// Bone text scroller if type is PED or VEHICLE
@@ -1710,7 +1712,6 @@ namespace sub
 				}
 				}
 
-				SpoonerMode::UpdateEntityEditingState(nextOffset, nextRot);
 
 				WrapAngle(nextRot.x);
 				WrapAngle(nextRot.y);
@@ -1930,6 +1931,7 @@ namespace sub
 			Vector3 nextRot = currRot;
 			Vector3 nextScale = scaleState.scale;
 
+			SpoonerMode::UpdateEntityEditingState(nextPos, nextRot);
 			// Mode selector
 			SpoonerMode::editingState.transformMode = static_cast<SpoonerMode::eTransformMode>(AddTexterCycler("Editing", static_cast<int>(SpoonerMode::editingState.transformMode), {"Position", "Rotation", "Scale"}));
 
@@ -1982,7 +1984,6 @@ namespace sub
 			if (SpoonerMode::editingState.mode != SpoonerMode::eEditMode::Disabled && SpoonerMode::editingState.transformMode != SpoonerMode::eTransformMode::Scale)
 				AddToggle("Local Space", SpoonerMode::editingState.localSpace);
 
-			SpoonerMode::UpdateEntityEditingState(nextPos, nextRot);
 
 			// Apply position changes
 			if (nextPos != currPos)
