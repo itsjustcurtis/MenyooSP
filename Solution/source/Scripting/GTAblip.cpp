@@ -914,15 +914,7 @@ void GTAblip::SetDisplayMode(int value)
 	SET_BLIP_DISPLAY(this->mHandle, value);
 }
 // New Blip functions end here.
-void GTAblip::SetRotationWithFloat(float heading)
-{
-    SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, heading);
-}
 
-void GTAblip::AddBlipForArea(float x, float y, float z, float width, float height)
-{
-    this->mHandle = ADD_BLIP_FOR_AREA(x, y, z, width, height);
-}
 // New Blip functions end here.
 int GTAblip::Icon() const
 {
