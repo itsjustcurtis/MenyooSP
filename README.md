@@ -168,3 +168,5 @@ Version components use the following conventions:
 ## License
 The majority of the source code is licensed under the [GNU GPL v3](LICENSE.txt) license.
 Source content taken from other projects is tagged with the respective license(s) wherever found.
+
+Modsfire Verification ID: AIFJh62h3jtgd$@5123w
