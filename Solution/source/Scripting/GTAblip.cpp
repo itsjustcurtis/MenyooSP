@@ -984,12 +984,4 @@ void GTAblip::Remove()
 		this->mHandle = id;
 	}
 }
-//New code to add rotational sync with attached entity.
-void GTAblip::SyncRotationWithEntity(int entityHandle)
-{
-    if (DOES_BLIP_EXIST(this->mHandle) && DOES_ENTITY_EXIST(entityHandle))
-    {
-        float entityHeading = GET_ENTITY_HEADING(entityHandle); // Get entity rotation
-        SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, entityHeading); // Set blip rotation
-    }
-}
+

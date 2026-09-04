@@ -933,12 +933,6 @@ public:
 
 	void SetPriority(int priority);
 
-	void SetRotationWithFloat(float heading);
-
-	void AddBlipForArea(float x, float y, float z, float width, float height);
-
-	void SyncRotationWithEntity(int entityHandle);
-
 //New functions end here
 
 //New functions
