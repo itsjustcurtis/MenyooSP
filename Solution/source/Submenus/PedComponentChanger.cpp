@@ -128,7 +128,10 @@ namespace sub
 		dict2.clear();
 		dict3.clear();
 
-		bool bRandomComponents = 0, frontView = 0, bDefaultComponents = 0;
+		bool bRandomComponents = 0, frontView = 0, bDefaultComponents = 0, bClearAll = 0,
+			ComponentChanger_online_police_m = 0, ComponentChanger_online_robber_m = 0,
+			ComponentChanger_online_garbage_m = 0, ComponentChanger_online_police_f = 0,
+			ComponentChanger_offline_police_michael = 0, ComponentChanger_offline_firefighter_michael = 0;
 
 		GTAped thisPed = g_activePedHandle;
 
@@ -173,6 +176,7 @@ namespace sub
 		AddBreak("---Utilities---");
 		AddOption("Random Components", bRandomComponents);
 		AddOption("Default Components", bDefaultComponents);
+		AddOption("Default Components and Accessories", bClearAll);
 
 		static int confirmRandom = 0, confirmDefault = 0;
 		static UINT16 lastSub = 0;
@@ -196,6 +200,14 @@ namespace sub
 			return;
 		}
 
+		if (bClearAll) {
+			if (PromptConfirm(confirmDefault, "~r~Clear ~w~all components and Accessories? Press again to confirm.")) {
+				thisPed.RequestControlOnce();
+				SET_PED_DEFAULT_COMPONENT_VARIATION(thisPed.GetHandle());
+				CLEAR_ALL_PED_PROPS(thisPed.Handle(), 0);
+			}
+			return;
+		}
 		if (frontView) {
 			if (g_cam_componentChanger.Exists())
 			{

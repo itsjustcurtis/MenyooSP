@@ -1807,11 +1807,6 @@ namespace sub
 
 		AddTitle("Menyoo Customs");
 
-		AddOption("Random Upgrades", veh_static12_autoUpgrade);
-		AddOption("Return to Stock", veh_static12_stockParts);
-
-		AddOption("Remove Vehicle Components", null, nullFunc, SUB::MSREMOVABLECOMPONENTS, true);
-
 		if (true) // Display Benny's sub ptr if veh is supported Static_12_veh_model.IsBennySupportedVehicle()
 		{
 			AddOption(Game::GetGXTEntry("S_MO_09", "Benny's Lowrider Mods"), null, nullFunc, SUB::MS_BENNYS); // Use 25 to 48 here.
@@ -1868,7 +1863,8 @@ namespace sub
 			AddOption(Game::GetGXTEntry("CMOD_MOD_WIN", "Windows"), null, nullFunc, SUB::MSWINDOWS, true, false); // Windows CMOD_MOD_WIN
 		}
 		AddOption(Game::GetGXTEntry("CMOD_COL0_3", "Emblem"), null, nullFunc, SUB::MS_EMBLEM, true, false); // Crew Emblems CMOD_COL0_3
-		AddOption(Game::GetGXTEntry("CMOD_MOD_GLD2", "Extras"), SubMS_Extra, nullFunc, -1, true, false); // Extras CMOD_MOD_GLD2
+		AddOption("Remove Vehicle Components and Extras", null, nullFunc, SUB::MSREMOVABLECOMPONENTS, true);
+		//AddOption(Game::GetGXTEntry("CMOD_MOD_GLD2", "Extras"), SubMS_Extra, nullFunc, -1, true, false); // Extras CMOD_MOD_GLD2  //Removed to make way for Remove Vehicle Components
 		if (GET_VEHICLE_LIVERY_COUNT(s_selectedVehicleHandle) > 0)
 			AddNumber(Game::GetGXTEntry("CMOD_COL0_4", "Livery"), ms_livery, 0, null, ms_livery_plus, ms_livery_minus);
 		if (GET_VEHICLE_LIVERY2_COUNT(s_selectedVehicleHandle) > 0)
@@ -3199,11 +3195,11 @@ namespace sub
 			ReapplyCachedParts(vehicle, cache);
 			const bool hasDoors = !vehicle.Doors_get().empty();
 
-			if (hasDoors && MenuCategory::AddCategory("— ~b~Doors~s~"))
+			if (hasDoors && MenuCategory::AddCategory("� ~b~Doors~s~"))
 				AddDoorOptions(vehicle);
-			if (HasExtras(vehicle) && MenuCategory::AddCategory("— ~b~Extras~s~"))
+			if (HasExtras(vehicle) && MenuCategory::AddCategory("� ~b~Extras~s~"))
 				AddExtraOptions(vehicle);
-			if (vehicle.Model().IsHeli() && MenuCategory::AddCategory("— ~b~Helicopter Parts~s~"))
+			if (vehicle.Model().IsHeli() && MenuCategory::AddCategory("� ~b~Helicopter Parts~s~"))
 			{
 				bool pressed = false;
 				AddTickol("Break Rudder", false, pressed, pressed, TICKOL::CROSS);
@@ -3213,7 +3209,7 @@ namespace sub
 					SET_VEHICLE_RUDDER_BROKEN(vehicle.Handle(), true);
 				}
 			}
-			if (MenuCategory::AddCategory("— ~b~Tyres~s~"))
+			if (MenuCategory::AddCategory("� ~b~Tyres~s~"))
 				AddTyreOptions(vehicle);
 		}
 	}
