@@ -1299,6 +1299,7 @@ namespace sub
 		dict2.clear();
 		dict3.clear();
 		bool spawnRandom = 0;
+		bool spawnVehicleInput = 0;
 
 		AddTitle("Vehicles");
 
@@ -1340,12 +1341,13 @@ namespace sub
 		AddVehicleCategoryOption("Others", OTHER);
 
 		AddOption("Random Vehicle", spawnRandom);
-		AddOption("~b~Input~s~ Model", spawnVehicleInput);c
+		AddOption("~b~Input~s~ Model", spawnVehicleInput);
 
 		if (spawnRandom || spawnVehicleInput)
 		{
+			Model model;
+			Ped ped = g_Ped1
 			if (g_vehHashes.empty()) return;
-			if (spawnRandom)
 			if (spawnRandom)
 			{
 				if (g_vehHashes.empty())
