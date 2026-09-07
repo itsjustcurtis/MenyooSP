@@ -203,6 +203,8 @@ namespace sub
 		}
 		void SetPlayerAsEntityAlphaTarget() { s_selectedEntityTarget = PLAYER_PED_ID(); }
 
+
+
 	void Sub_SpoonerMain()
 		{
 			SpoonerMode::editingState.mode = SpoonerMode::eEditMode::Disabled;
@@ -221,8 +223,6 @@ namespace sub
 			AddOption("Manage Light Sources", null, nullFunc, SUB::SPOONER_MANAGELIGHTS);
 			AddOption("Manage Saved Files", null, nullFunc, SUB::SPOONER_SAVEFILES);
 			AddOption("Job Importer", null, nullFunc, SUB::SPOONER_JOBIMPORTER);
-			AddOption("Quick Manual Placement (Legacy)", null, nullFunc, SUB::SPOONER_QUICKMANUALPLACEMENT);
-			AddOption("Edit Multiple Entities Simultaneously", null, nullFunc, SUB::SPOONER_GROUPSPOON);
 			AddOption("Settings", null, nullFunc, SUB::SPOONER_SETTINGS);
 		}
 		void Sub_Settings()
@@ -661,7 +661,7 @@ namespace sub
 			{
 				Vector2 res = { 0.1f, 0.0889f };
 				FLOAT x_coord = 0.324f + menuPos.x;
-				FLOAT y_coord = currentOptionY + 0.044f + menuPos.y;
+                FLOAT y_coord = currentOptionY + 0.044f + menuPos.y;
 				if (menuPos.x > 0.45f) x_coord = menuPos.x - 0.003f;
 				DRAW_RECT(x_coord, y_coord, res.x + 0.003f, res.y + 0.003f, 0, 0, 0, 212, false);
 				mapPreviewTexture.Draw(0, Vector2(x_coord, y_coord), Vector2(res.x, res.y / 2 + 0.005f), 0.0f, RGBA::AllWhite());
@@ -1551,7 +1551,7 @@ namespace sub
 			if (selectedEntity.handle.IsVehicle() || selectedEntity.handle.IsProp()) {
 				AddOption("Animations", null, SetSelectedEntityAsActivePed, SUB::ANIMATIONSUB);
 			}
-			
+
 			if (selectedEntity.type == EntityType::PED)
 			{
 				AddOption("Ped Options", null, nullFunc, SUB::SPOONER_PEDOPS);
@@ -1606,6 +1606,8 @@ namespace sub
 				int nextBoneIndex = selectedEntity.attachmentArgs.boneIndex;
 				Vector3 nextOffset = selectedEntity.attachmentArgs.offset;
 				Vector3 nextRot = selectedEntity.attachmentArgs.rotation;
+
+				SpoonerMode::UpdateEntityEditingState(nextOffset, nextRot);
 
 				SpoonerMode::editingState.transformMode = static_cast<SpoonerMode::eTransformMode>(AddTexterCycler("Editing", (int)SpoonerMode::editingState.transformMode > 1 ? 0 : (int)SpoonerMode::editingState.transformMode, {"Position", "Rotation"}));
 
@@ -1710,7 +1712,6 @@ namespace sub
 				}
 				}
 
-				SpoonerMode::UpdateEntityEditingState(nextOffset, nextRot);
 
 				WrapAngle(nextRot.x);
 				WrapAngle(nextRot.y);
@@ -1930,6 +1931,7 @@ namespace sub
 			Vector3 nextRot = currRot;
 			Vector3 nextScale = scaleState.scale;
 
+			SpoonerMode::UpdateEntityEditingState(nextPos, nextRot);
 			// Mode selector
 			SpoonerMode::editingState.transformMode = static_cast<SpoonerMode::eTransformMode>(AddTexterCycler("Editing", static_cast<int>(SpoonerMode::editingState.transformMode), {"Position", "Rotation", "Scale"}));
 
@@ -1982,7 +1984,6 @@ namespace sub
 			if (SpoonerMode::editingState.mode != SpoonerMode::eEditMode::Disabled && SpoonerMode::editingState.transformMode != SpoonerMode::eTransformMode::Scale)
 				AddToggle("Local Space", SpoonerMode::editingState.localSpace);
 
-			SpoonerMode::UpdateEntityEditingState(nextPos, nextRot);
 
 			// Apply position changes
 			if (nextPos != currPos)
@@ -4764,6 +4765,14 @@ REGISTER_SUBMENU(SPOONER_SAVEFILES_LOAD_LEGACYSP00N,                  	sub::Spoo
 REGISTER_SUBMENU(SPOONER_AUTOSAVE,                                    	sub::Spooner::Submenus::Sub_AutoSave)
 REGISTER_SUBMENU(SPOONER_VECTOR3_MANUALEDITING,                     	sub::Spooner::Submenus::Sub_Vector3_ManualEditing)
 REGISTER_SUBMENU(SPOONER_MULTISELECT,                                  	sub::Spooner::Submenus::Sub_MultiSelect)
+REGISTER_SUBMENU(SPOONER_JOBIMPORTER,                                    	sub::Spooner::Submenus::Sub_JobImporter)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER,                                     	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_MYCONTENT,                                	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_FRIENDCONTENT,                            	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_MOSTRECENT,                               	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_TOPRATED,                                 	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_CREWCONTENT,                              	sub::Spooner::Submenus::Sub_JobBrowser)
+REGISTER_SUBMENU(SPOONER_JOBBROWSER_INFO,                                	sub::Spooner::Submenus::Sub_JobBrowser_Info)
 REGISTER_SUBMENU(SPOONER_SETTINGS,                                    	sub::Spooner::Submenus::Sub_Settings)
 REGISTER_SUBMENU(SPOONER_SELECTEDENTITYOPS,                           	sub::Spooner::Submenus::Sub_SelectedEntityOps)
 REGISTER_SUBMENU(SPOONER_PEDOPS,                                      	sub::Spooner::Submenus::Sub_PedOps)
@@ -4774,5 +4783,4 @@ REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_ATTACHTO,                      	sub::Spoo
 REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_SELECTBONE,                    	sub::Spooner::Submenus::Sub_AttachmentOps_SelectBone)
 REGISTER_SUBMENU(SPOONER_MANUALEDITING,                               	sub::Spooner::Submenus::Sub_ManualEditing)
 REGISTER_SUBMENU(SPOONER_MANUALEDITING_SNAP,                          	sub::Spooner::Submenus::Sub_Snapping)
-
 REGISTER_SUBMENU(OBJECTSPAWNER_SEARCH,                                	sub::Spooner::Submenus::ObjectSpawnerSearchMenu)

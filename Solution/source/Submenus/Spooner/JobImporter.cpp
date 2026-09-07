@@ -59,12 +59,12 @@ namespace sub::Spooner::JobBrowser
 
     static int GetQueryType() //there is a couple more that could add later
     {
-        if (Menu::currentsub == (int)SUB::SPOONER_JOBBROWSER) return 0; // Bookmarked
-        if (Menu::currentsub == (int)SUB::SPOONER_JOBBROWSER_MYCONTENT) return 1; // My Content
-        if (Menu::currentsub == (int)SUB::SPOONER_JOBBROWSER_FRIENDCONTENT) return 2; // Friend Content
-        if (Menu::currentsub == (int)SUB::SPOONER_JOBBROWSER_MOSTRECENT) return 3; // Most Recent images don't seem to load with this one but maybe cause too many
-        if (Menu::currentsub == (int)SUB::SPOONER_JOBBROWSER_TOPRATED) return 4; // Top Rated
-        if (Menu::currentsub == (int)SUB::SPOONER_JOBBROWSER_CREWCONTENT) return 5; // Crew Content
+        if (Menu::activeSubmenu == (int)SUB::SPOONER_JOBBROWSER) return 0; // Bookmarked
+        if (Menu::activeSubmenu == (int)SUB::SPOONER_JOBBROWSER_MYCONTENT) return 1; // My Content
+        if (Menu::activeSubmenu == (int)SUB::SPOONER_JOBBROWSER_FRIENDCONTENT) return 2; // Friend Content
+        if (Menu::activeSubmenu == (int)SUB::SPOONER_JOBBROWSER_MOSTRECENT) return 3; // Most Recent images don't seem to load with this one but maybe cause too many
+        if (Menu::activeSubmenu == (int)SUB::SPOONER_JOBBROWSER_TOPRATED) return 4; // Top Rated
+        if (Menu::activeSubmenu == (int)SUB::SPOONER_JOBBROWSER_CREWCONTENT) return 5; // Crew Content
         return 0;
     }
 
@@ -96,7 +96,7 @@ namespace sub::Spooner::JobBrowser
     {
         Vector2 res = { 0.1f, 0.0889f };
         FLOAT x_coord = 0.324f + menuPos.x;
-        FLOAT y_coord = OptionY + 0.044f + menuPos.y;
+        FLOAT y_coord = currentOptionY + 0.044f + menuPos.y;
         if (menuPos.x > 0.45f) x_coord = menuPos.x - 0.003f;
         DRAW_RECT(x_coord, y_coord, res.x + 0.003f, res.y + 0.003f, 0, 0, 0, 212, false);
         tex.Draw(0, Vector2(x_coord, y_coord), Vector2(res.x, res.y / 2 + 0.005f), 0.0f, RGBA::AllWhite());
@@ -373,10 +373,10 @@ namespace sub::Spooner::JobBrowser
         AddTitle(GetQueryTitle());
 
         static int lastSubmenu = -1;
-        if (lastSubmenu != Menu::currentsub)
+        if (lastSubmenu != Menu::activeSubmenu)
         {
             bool isComingFromInfo = (lastSubmenu == (int)SUB::SPOONER_JOBBROWSER_INFO);
-            lastSubmenu = Menu::currentsub;
+            lastSubmenu = Menu::activeSubmenu;
             if (!isComingFromInfo)
             {
                 StartQuery();
@@ -479,7 +479,7 @@ namespace sub::Spooner::JobBrowser
                 std::string displayName = (results[i].verified ? "~g~[V] ~s~" : "") + results[i].name;
                 AddOption(displayName, bSelected);
                 
-                if (sub::Spooner::JobImporter::savePreviewImage && Menu::printingop == *Menu::currentopATM)
+                if (sub::Spooner::JobImporter::savePreviewImage && Menu::IsLastDrawnOptionSelected())
                 {
                     const std::string& cid = results[i].cid;
                     if (!cid.empty())
@@ -509,7 +509,7 @@ namespace sub::Spooner::JobBrowser
                 {
                     selectedResultIndex = (int)i;
                     downloadStatus = "";
-                    Menu::SetSub_delayed = SUB::SPOONER_JOBBROWSER_INFO;
+                    Menu::pendingSubmenu = SUB::SPOONER_JOBBROWSER_INFO;
                 }
             }
         }
