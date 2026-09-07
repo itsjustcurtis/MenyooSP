@@ -1340,13 +1340,30 @@ namespace sub
 		AddVehicleCategoryOption("Others", OTHER);
 
 		AddOption("Random Vehicle", spawnRandom);
+		AddOption("~b~Input~s~ Model", spawnVehicleInput);c
 
-		if (spawnRandom)
+		if (spawnRandom || spawnVehicleInput)
 		{
 			if (g_vehHashes.empty()) return;
-
-			Model model = g_vehHashes[GET_RANDOM_INT_IN_RANGE(0, (int)g_vehHashes.size())];
-			Ped ped = g_Ped1;
+			if (spawnRandom)
+			if (spawnRandom)
+			{
+				if (g_vehHashes.empty())
+				{
+					return;
+				}
+				model = g_vehHashes[GET_RANDOM_INT_IN_RANGE(0, (int)g_vehHashes.size())];
+				
+			}
+			else if (spawnVehicleInput)
+			{
+				std::string inputStr = Game::InputBox("", 64U, "Enter vehicle model name (e.g. adder):");
+				if (inputStr.length() == 0)
+				{
+					return;
+				}
+				model = GET_HASH_KEY(inputStr);
+			}
 
 			if (model.IsInCdImage() && model.IsVehicle())
 			{
