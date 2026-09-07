@@ -42,10 +42,8 @@ namespace sub::Spooner::ImGuiSpooner
 		Vector3 camRot{};
 		float   camFov = 50.0f;
 
-		SpoonerMode::eGizmoMode gizmoMode = SpoonerMode::eGizmoMode::Translate; // SpoonerMode::gizmoMode
-		bool gizmoEditModeActive = false;     // entityEditMode == eEntityEditMode::Gizmo
-		bool cameraLocked = false;            // SpoonerMode::bGizmoCameraLocked
-		bool localSpace = false;              // SpoonerMode::bGizmoLocalSpace
+		// SpoonerMode state mirrored here for render-thread access
+		SpoonerMode::EditingState editingState;
 
 		// Render-thread interaction state.
 		bool gizmoOver = false;
@@ -225,7 +223,7 @@ namespace sub::Spooner::ImGuiSpooner
 		s.gizmoOver = false;
 		s.gizmoUsing = false;
 
-		if (!s.entityValid || !s.gizmoEditModeActive) return;
+		if (!s.entityValid || s.editingState.mode != SpoonerMode::eEditMode::Gizmo) return;
 
 		ImGuiIO& io = ImGui::GetIO();
 
@@ -236,13 +234,13 @@ namespace sub::Spooner::ImGuiSpooner
 		ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
 		ImGuizmo::OPERATION op;
-		switch (s.gizmoMode)
+		switch (s.editingState.transformMode)
 		{
-			case SpoonerMode::eGizmoMode::Rotate: op = ImGuizmo::ROTATE; break;
-			case SpoonerMode::eGizmoMode::Scale:  op = ImGuizmo::SCALE;  break;
-			default:                              op = ImGuizmo::TRANSLATE; break;
+			case SpoonerMode::eTransformMode::Rotation: op = ImGuizmo::ROTATE; break;
+			case SpoonerMode::eTransformMode::Scale:    op = ImGuizmo::SCALE;  break;
+			default:                                          op = ImGuizmo::TRANSLATE; break;
 		}
-		ImGuizmo::MODE gizmoMode = s.localSpace ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
+		ImGuizmo::MODE gizmoMode = s.editingState.localSpace ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
 
 		if (op == ImGuizmo::TRANSLATE)
 		{
@@ -388,7 +386,7 @@ namespace sub::Spooner::ImGuiSpooner
 		{
 			std::lock_guard<std::mutex> lock(g_Mutex);
 
-			ImGui::GetIO().MouseDrawCursor = g_Shared.gizmoEditModeActive && g_Shared.cameraLocked;
+			ImGui::GetIO().MouseDrawCursor = g_Shared.editingState.mode == SpoonerMode::eEditMode::Gizmo && g_Shared.editingState.cameraLocked;
 
 			RunGizmo_NoLock(g_Shared);
 		}
@@ -432,11 +430,13 @@ namespace sub::Spooner::ImGuiSpooner
 		{
 			GTAentity parentEntity(ENTITY::GET_ENTITY_ATTACHED_TO(sel.handle.Handle()));
 
+			// Normal entity (not attached)
 			if (!sel.attachmentArgs.isAttached)
 			{
-				if (s.pending.positionDirty) sel.handle.SetPosition(s.pending.positionVal);
-				if (s.pending.rotationDirty) sel.handle.SetRotation(s.pending.rotationVal);
+				if (s.pending.positionDirty) sel.handle.SetPosition(SpoonerMode::SnapPos(s.pending.positionVal));
+				if (s.pending.rotationDirty) sel.handle.SetRotation(SpoonerMode::SnapRot(s.pending.rotationVal));
 			}
+			// Attached entity - converting to local offsets
 			else if (parentEntity.Exists())
 			{
 				if (s.pending.positionDirty) GetAttachmentOffset(sel, parentEntity, s.pending.positionVal);
@@ -463,6 +463,7 @@ namespace sub::Spooner::ImGuiSpooner
 					sel.handle.AttachTo(parentEntity, sel.attachmentArgs.boneIndex, sel.handle.GetIsCollisionEnabled(), sel.attachmentArgs.offset, sel.attachmentArgs.rotation);
 				}
 			}
+
 			if (s.pending.scaleDirty) {
 				sel.handle.SetScale(s.pending.scaleVal);
 				// syncing scale so that it doesn't reset every time we grab the gizmo
@@ -498,17 +499,16 @@ namespace sub::Spooner::ImGuiSpooner
 			s.camFov   = CAM::GET_GAMEPLAY_CAM_FOV();
 		}
 
-		s.gizmoMode = SpoonerMode::gizmoMode;
+		s.editingState = SpoonerMode::editingState;
 
-		const bool inGizmoNow = SpoonerMode::entityEditMode == SpoonerMode::eEntityEditMode::Gizmo;
+		const bool inGizmoNow = s.editingState.mode == SpoonerMode::eEditMode::Gizmo;
 		static bool s_wasInGizmo = false;
 		if (inGizmoNow && !s_wasInGizmo)
-			SpoonerMode::bGizmoCameraLocked = true;
+		{
+			SpoonerMode::editingState.cameraLocked = true;
+			s.editingState.cameraLocked = true;
+		}
 		s_wasInGizmo = inGizmoNow;
-
-		s.gizmoEditModeActive = inGizmoNow;
-		s.cameraLocked = SpoonerMode::bGizmoCameraLocked;
-		s.localSpace = SpoonerMode::bGizmoLocalSpace;
 
 		SpoonerEntity& sel = selectedEntity;
 		s.entityValid = (sel.handle.Handle() != 0) && sel.handle.Exists();
@@ -534,7 +534,7 @@ namespace sub::Spooner::ImGuiSpooner
 			RefreshSnapshot_ScriptThread(g_Shared);
 
 			suppressGameInput = g_Visible && (
-				(g_Shared.gizmoEditModeActive && g_Shared.cameraLocked) ||
+				(g_Shared.editingState.mode == SpoonerMode::eEditMode::Gizmo && g_Shared.editingState.cameraLocked) ||
 				g_Shared.gizmoOver ||
 				g_Shared.gizmoUsing);
 		}

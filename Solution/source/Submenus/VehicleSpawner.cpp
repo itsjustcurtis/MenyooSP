@@ -961,7 +961,7 @@ namespace sub
 			Vector2 res = { 0.1f, 0.0889f };
 
 			FLOAT x_coord = 0.324f + menuPos.x;
-			FLOAT y_coord = OptionY + 0.044f + menuPos.y;
+			FLOAT y_coord = currentOptionY + 0.044f + menuPos.y;
 
 			if (menuPos.x > 0.45f)
 			{
@@ -995,7 +995,7 @@ namespace sub
 		void DrawVehicleModelName(const GTAmodel::Model& vehModel)
 		{
 			FLOAT x_coord = menuPos.x + 0.25f;
-			FLOAT y_coord = OptionY + menuPos.y;
+			FLOAT y_coord = currentOptionY + menuPos.y;
 
 			Game::Print::SetupDraw(font_selection, Vector2(0.0f, (font_options == 0? 0.33f:0.4f)), false, true, false, selectedtext,{0, x_coord});
 			Game::Print::drawstring("ModelName: " + vehModel.VehicleModelName(), 0, y_coord);
@@ -1088,6 +1088,7 @@ namespace sub
 
 		void DrawVehicleStats(const GTAmodel::Model& vehModel)
 		{
+			if (!vehModel.IsValid()) return;
 			Hash hash = vehModel.hash;
 
 			if (statsCache.hash != hash)
@@ -1143,7 +1144,7 @@ namespace sub
 			if (menuPos.x > 0.45f)
 				panelX = menuPos.x - 0.003f;
 
-			float panelY = OptionY + 0.094f + menuPos.y;
+			float panelY = currentOptionY + 0.094f + menuPos.y;
 			float panelW = 0.100f;
 			float barH = 0.018f;
 			float barSpacing = 0.0195f;
@@ -1243,7 +1244,7 @@ namespace sub
 			{
 				spawnVehicleIndex = index;
 				dict = std::string(text);
-				Menu::SetSub_delayed = SUB::SPAWNVEHICLE_ALLCATS;
+				Menu::pendingSubmenu = SUB::SPAWNVEHICLE_ALLCATS;
 
 				if (extra_option_code != nullptr)
 				{
@@ -1298,8 +1299,7 @@ namespace sub
 		using namespace VehicleSpawner;
 		dict2.clear();
 		dict3.clear();
-		bool spawnRandom = 0;
-		bool spawnVehicleInput = 0;
+		bool spawnRandom = 0, spawnVehicleInput = 0;
 
 		AddTitle("Vehicles");
 
@@ -1346,7 +1346,7 @@ namespace sub
 		if (spawnRandom || spawnVehicleInput)
 		{
 			Model model;
-			Ped ped = g_Ped1;
+			Ped ped = g_activePedHandle;
 			if (g_vehHashes.empty()) return;
 			if (spawnRandom)
 			{
@@ -1547,9 +1547,9 @@ namespace sub
 		for (auto& vehModel : results)
 		{
 			bool bIsSpooner = false;
-			for (int ci = Menu::currentArrayIndex; ci >= 0 && ci >= Menu::currentArrayIndex - 2; ci--)
+			for (int ci = Menu::menuHistoryIndex; ci >= 0 && ci >= Menu::menuHistoryIndex - 2; ci--)
 			{
-				if (Menu::currentArray[ci] == SUB::SPOONER_SPAWN_VEHICLE)
+				if (Menu::submenuHistory[ci] == SUB::SPOONER_SPAWN_VEHICLE)
 				{
 					bIsSpooner = true;
 					break;
@@ -1559,9 +1559,9 @@ namespace sub
 			if (bIsSpooner)
 				sub::Spooner::MenuOptions::AddOption_AddVehicle(vehModel.VehicleDisplayName(true), vehModel);
 			else
-				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_Ped1);
+				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_activePedHandle);
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				if (g_spawnVehicleDrawBMPs)
 				{
@@ -1572,7 +1572,7 @@ namespace sub
 				DrawVehicleModelName(vehModel);
 
 				bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(vehModel);
-				if (Menu::bitController)
+				if (Menu::usingControllerInput)
 				{
 					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
@@ -1620,7 +1620,7 @@ namespace sub
 		AddBreak("---Neons---");
 		AddToggle("Toggle", g_spawnVehicleNeonToggle);
 		AddOption("RGB Colour", setRGBCarcolIndex9, nullFunc, SUB::MSPAINTS_RGB); 
-		if (*Menu::currentopATM == Menu::printingop) 
+		if (Menu::IsLastDrawnOptionSelected())
 		{
 			AddPresetColourOptionsPreview(g_spawnVehicleNeonColor);
 		}
@@ -1642,11 +1642,11 @@ namespace sub
 
 		if (setMSPaintIndex10) 
 		{
-			msCurrentPaintIndex = 10;
+			SelectSpawnPrimaryPaint();
 		}
 		if (setMSPaintIndex11) 
 		{
-			msCurrentPaintIndex = 11;
+			SelectSpawnSecondaryPaint();
 		}
 		if (setRGBCarcolIndex9) 
 		{
@@ -1955,18 +1955,18 @@ namespace sub
 			bool setEngineSoundPressed = false;
 			bool spawnVehicleForAllPlayersPressed = false;
 
-			switch (Menu::currentArray[Menu::currentArrayIndex])
+			switch (Menu::submenuHistory[Menu::menuHistoryIndex])
 			{
 			case SUB::SPOONER_SPAWN_VEHICLE:
 				sub::Spooner::MenuOptions::AddOption_AddVehicle(vehModel.VehicleDisplayName(true), vehModel);
 				break;
 			case SUB::SPAWNVEHICLE:
-				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_Ped1);
+				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_activePedHandle);
 				break;
 
 			}
 			/// one submenu back >>>
-			switch (Menu::currentArray[Menu::currentArrayIndex - 1]) /// -1
+			switch (Menu::submenuHistory[Menu::menuHistoryIndex - 1]) /// -1
 			{
 			case SUB::OBJECTGUN:
 				AddObjectGunOption(vehModel.VehicleDisplayName(true), vehModel, nullptr, false);
@@ -1975,17 +1975,18 @@ namespace sub
 				AddKaboomGunOption(vehModel.VehicleDisplayName(true), vehModel.hash, nullptr, false);
 				break;
 			case SUB::MSENGINESOUND:
-				AddTickol(vehModel.VehicleDisplayName(true), GetVehicleEngineSoundName(g_Ped4) == vehModel.VehicleDisplayName(false), setEngineSoundPressed, setEngineSoundPressed); 
+				Vehicle engineSoundVehicleTarget = GetVehicleModShopTarget();
+				AddTickol(vehModel.VehicleDisplayName(true), GetVehicleEngineSoundName(engineSoundVehicleTarget) == vehModel.VehicleDisplayName(false), setEngineSoundPressed, setEngineSoundPressed);
 				if (setEngineSoundPressed)
 				{
-					GTAvehicle veh12 = g_Ped4;
+					GTAvehicle veh12 = engineSoundVehicleTarget;
 					veh12.RequestControl(200);
 					SetVehicleEngineSoundName(veh12, vehModel.VehicleDisplayName(false));
 				}
 				break;
 			}
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				if (g_spawnVehicleDrawBMPs)
 				{
@@ -1996,7 +1997,7 @@ namespace sub
 				DrawVehicleModelName(vehModel);
 
 				bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(vehModel);
-				if (Menu::bitController)
+				if (Menu::usingControllerInput)
 				{
 					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
@@ -2023,7 +2024,7 @@ namespace sub
 		auto& searchStr = dict2;
 		using namespace VehicleSpawner;
 
-		GTAped myPed = g_Ped1;
+		GTAped myPed = g_activePedHandle;
 		GTAvehicle myVehicle = myPed.CurrentVehicle();
 		bool isInVehicle = myVehicle.Exists();
 
@@ -2146,7 +2147,7 @@ namespace sub
 				{
 					bool setEngineSoundPressed = false;
 
-					switch (Menu::currentArray[Menu::currentArrayIndex])
+					switch (Menu::submenuHistory[Menu::menuHistoryIndex])
 					{
 					case SUB::SPOONER_SPAWN_VEHICLE:
 						sub::Spooner::MenuOptions::AddOption_AddVehicle(vehDisplayName, vehModel);
@@ -2157,7 +2158,7 @@ namespace sub
 						AddOption(vehDisplayName, bFavPressed);
 						if (bFavPressed)
 						{
-							Vehicle vehicle = SpawnVehicle(vehModel, g_Ped1, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
+							Vehicle vehicle = SpawnVehicle(vehModel, g_activePedHandle, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
 							if (vehicle != 0)
 							{
 								GTAvehicle gv(vehicle);
@@ -2177,7 +2178,7 @@ namespace sub
 					}
 					}
 					/// one submenu back >>>
-					switch (Menu::currentArray[Menu::currentArrayIndex - 1]) /// -1
+					switch (Menu::submenuHistory[Menu::menuHistoryIndex - 1]) /// -1
 					{
 					case SUB::OBJECTGUN:
 						AddObjectGunOption(vehDisplayName, vehModel, &null, false);
@@ -2186,9 +2187,10 @@ namespace sub
 						AddKaboomGunOption(vehDisplayName, vehModel.hash, &null, false);
 						break;
 					case SUB::MSENGINESOUND:
-						AddTickol(vehDisplayName, GetVehicleEngineSoundName(g_Ped4) == vehModel.VehicleDisplayName(false), setEngineSoundPressed, setEngineSoundPressed); if (setEngineSoundPressed)
+						Vehicle engineSoundVehicleTarget = GetVehicleModShopTarget();
+						AddTickol(vehDisplayName, GetVehicleEngineSoundName(engineSoundVehicleTarget) == vehModel.VehicleDisplayName(false), setEngineSoundPressed, setEngineSoundPressed); if (setEngineSoundPressed)
 						{
-							GTAvehicle veh12 = g_Ped4;
+							GTAvehicle veh12 = engineSoundVehicleTarget;
 							veh12.RequestControl(200);
 							SetVehicleEngineSoundName(veh12, vehModel.VehicleDisplayName(false));
 						}
@@ -2196,7 +2198,7 @@ namespace sub
 					}
 				}
 
-				if (Menu::printingop == *Menu::currentopATM)
+				if (Menu::IsLastDrawnOptionSelected())
 				{
 					if (g_spawnVehicleDrawBMPs)
 					{
@@ -2206,7 +2208,7 @@ namespace sub
 
 					DrawVehicleModelName(vehModel);
 
-					if (Menu::bitController)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 
@@ -2214,7 +2216,7 @@ namespace sub
 						{
 							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
-							if (*Menu::currentopATM >= Menu::totalop)
+						if (Menu::IsSelectionAtBottom())
 							{
 								Menu::Up();
 							}
@@ -2229,7 +2231,7 @@ namespace sub
 						{
 							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
-							if (*Menu::currentopATM >= Menu::totalop)
+						if (Menu::IsSelectionAtBottom())
 							{
 								Menu::Up();
 							}
@@ -2670,12 +2672,12 @@ namespace sub
 		{
 			AddOption(selectedCategory.captions[i], spawnVehicle);
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				vehDlcIdToSpawn = static_cast<int>(i);
 			}
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 
 				if (g_spawnVehicleDrawBMPs)
@@ -2686,7 +2688,7 @@ namespace sub
 
 				const bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(selectedCategory.values[vehDlcIdToSpawn]);
 
-				if (Menu::bitController)
+				if (Menu::usingControllerInput)
 				{
 					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + std::string(" favourites"));
 
@@ -2729,7 +2731,7 @@ namespace sub
 
 		if (spawnVehicle)
 		{
-			SpawnVehicle(selectedCategory.values[vehDlcIdToSpawn], g_Ped1, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
+			SpawnVehicle(selectedCategory.values[vehDlcIdToSpawn], g_activePedHandle, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
 		}
 	}
 
@@ -2740,7 +2742,7 @@ namespace sub
 		{
 			AddOption(VehicleDlcCategories[i].name, null, nullFunc, SUB::SPAWNVEHICLEDLC);
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 				vehDLCCategoryID = static_cast<int>(i);
 			}
@@ -2812,7 +2814,7 @@ namespace sub
 		{
 			if (!ev.IsVehicle())
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid vehicle.");
+				Game::Print::ShowNotification("~r~Error:", "Invalid vehicle.");
 				return;
 			}
 
@@ -3016,7 +3018,7 @@ namespace sub
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to save file.");
 			}
 		}
 
@@ -3025,7 +3027,7 @@ namespace sub
 			pugi::xml_document doc;
 			if (doc.load_file((const char*)filePath.c_str()).status != pugi::status_ok)
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to load file.");
 			}
 
 			GTAentity myPed = PLAYER_PED_ID();
@@ -3386,7 +3388,7 @@ namespace sub
 			std::ofstream outfile;
 			auto& _dir = dict3;
 			int r, g, b;
-			VEHICLE::GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(g_Ped4, &r, &g, &b);
+			VEHICLE::GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(g_myVeh, &r, &g, &b);
 			std::array<int, 3> hsv = GetHSVFromRGB(r, g, b);
 			float normalisedcolour = NormalizeHSV(hsv[0], hsv[1], hsv[2]);
 
@@ -3422,7 +3424,7 @@ namespace sub
 			}
 			int prim, sec;
 			std::string finish;
-			GET_VEHICLE_COLOURS(g_Ped4, &prim, &sec);
+			GET_VEHICLE_COLOURS(g_myVeh, &prim, &sec);
 			switch (prim)
 			{
 			case 0:
@@ -3508,7 +3510,7 @@ namespace sub
 			auto& _name = dict;
 			auto& _dir = dict3;
 
-			auto ped = g_Ped1;
+			auto ped = g_activePedHandle;
 			auto vehicle = GET_VEHICLE_PED_IS_USING(ped);
 			bool isPedInVeh = IS_PED_IN_ANY_VEHICLE(ped, 0) || IS_PED_SITTING_IN_ANY_VEHICLE(ped);
 
@@ -3579,7 +3581,7 @@ namespace sub
 			AddOption("..", bFolderBackPressed); if (bFolderBackPressed)
 			{
 				_dir = _dir.substr(0, _dir.rfind("\\"));
-				Menu::currentop = 6;
+				Menu::selectedOptionIndex = 6;
 			}
 
 			if (!vfilnames.empty())
@@ -3625,10 +3627,10 @@ namespace sub
 						if (bFilePressed)
 						{
 							_dir = _dir + "\\" + filname;
-							Menu::currentop = 6;
+							Menu::selectedOptionIndex = 6;
 						}
 
-						if (Menu::printingop == *Menu::currentopATM && !bFilePressed)
+						if (Menu::IsLastDrawnOptionSelected() && !bFilePressed)
 						{
 							if (FolderPreviewBmps_catind::bFolderBmpsEnabled)
 							{
@@ -3642,7 +3644,7 @@ namespace sub
 						if (bFilePressed)
 						{
 							_name = filname.substr(0, filname.rfind('.'));
-							Menu::SetSub_delayed = SUB::VEHICLE_SAVER_INITEM;
+							Menu::pendingSubmenu = SUB::VEHICLE_SAVER_INITEM;
 							return;
 						}
 					}
@@ -3659,7 +3661,7 @@ namespace sub
 					{
 						if (!IsSafePath(inputStr))
 						{
-							Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+							Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 						}
 						else
 						{
@@ -3693,17 +3695,17 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
 					{
 						_dir = _dir + "\\" + inputStr;
-						Menu::currentop = 6;
+						Menu::selectedOptionIndex = 6;
 						Game::Print::PrintBottomLeft("Folder ~b~created~s~.");
 					}
 					else
 					{
-						Game::Print::PrintBottomCentre("~r~Failed~s~ to create folder.");
+						Game::Print::ShowNotification("~r~Failed", "to create folder.");
 					}
 				}
 				else
@@ -3720,7 +3722,7 @@ namespace sub
 			auto& _dir = dict3;
 			std::string filePath = _dir + "\\" + _name + ".xml";
 
-			auto& ped = g_Ped1;
+			auto& ped = g_activePedHandle;
 			auto vehicle = GET_VEHICLE_PED_IS_USING(ped);
 			bool isPedInVeh = IS_PED_IN_ANY_VEHICLE(ped, 0) || IS_PED_SITTING_IN_ANY_VEHICLE(ped);
 
@@ -3747,7 +3749,7 @@ namespace sub
 				{
 					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid characters in name.");
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else
 					{
@@ -3760,7 +3762,7 @@ namespace sub
 						}
 						else 
 						{
-							Game::Print::PrintBottomCentre("~r~Error~s~ renaming file.");
+							Game::Print::ShowNotification("~r~Error", "renaming file.");
 						}
 					}
 				}
@@ -3786,7 +3788,7 @@ namespace sub
 				}
 				else 
 				{
-					Game::Print::PrintBottomCentre("~r~Error~s~ deleting file.");
+						Game::Print::ShowNotification("~r~Error", "deleting file.");
 				}
 				Menu::SetPreviousMenu();
 				Menu::Up();

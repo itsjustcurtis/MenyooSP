@@ -16,6 +16,9 @@
 typedef int ScrHandle, Entity, Ped, Vehicle;
 typedef unsigned long DWORD, Hash;
 
+class GTAped;
+namespace GTAmodel { class Model; }
+
 namespace pugi {
 	class xml_node;
 }
@@ -26,6 +29,7 @@ namespace sub::Spooner
 	class SpoonerEntityWithInitHandle;
 	class SpoonerMarker;
 	class SpoonerMarkerWithInitHandle;
+	class SpoonerLight;
 
 	namespace FileManagement
 	{
@@ -35,15 +39,24 @@ namespace sub::Spooner
 		//bool Rename(const std::string& oldName, const std::string& newName, std::string extension = ".xml");
 		//bool Delete(const std::string& fileName, std::string extension = ".xml");
 
-		void AddEntityToXmlNode(SpoonerEntity& e, pugi::xml_node& nodeEntity);
+		void AddEntityToXmlNode(SpoonerEntity& e, pugi::xml_node& nodeEntity, bool legacyXMLFormat = false);
 		SpoonerEntityWithInitHandle SpawnEntityFromXmlNode(pugi::xml_node& nodeEntity, std::unordered_set<Hash>& vModelHashes);
+
+		// Shared ped sub-loaders (backward-compatible with old _N and new named format)
+		void LoadPedCompsFromXml(GTAped ep, const pugi::xml_node& nodePedComps);
+		void LoadPedPropsFromXml(GTAped ep, const pugi::xml_node& nodePedProps, bool bNetworkIsGameInProgress);
+		void LoadPedHeadFeaturesFromXml(GTAped ep, const pugi::xml_node& nodePedHeadFeatures, const GTAmodel::Model& eModel);
+		void LoadPedDecalsFromXml(GTAped ep, const pugi::xml_node& nodePedDecals);
+		void LoadPedDamagePacksFromXml(GTAped ep, const pugi::xml_node& nodePedDamagePacks);
 
 		void AddMarkerToXmlNode(SpoonerMarker& m, pugi::xml_node& nodeMarker);
 		SpoonerMarkerWithInitHandle SpawnMarkerFromXmlNode(pugi::xml_node& nodeMarker);
 
+		void AddLightToXmlNode(SpoonerLight& l, pugi::xml_node& nodeLight);
+		void SpawnLightFromXmlNode(pugi::xml_node& nodeLight);
+
 		bool SaveDbToFile(const std::string& filePath, bool bForceReferenceCoords);
-		bool SaveWorldToFile(const std::string& filePath, std::vector<Entity>& vEntityHandles, std::vector<SpoonerMarker>& v
-		);
+		bool SaveWorldToFile(const std::string& filePath, std::vector<Entity>& vEntityHandles, std::vector<SpoonerMarker>& vMarkers);
 		bool LoadPlacementsFromFile(const std::string& filePath);
 
 		bool LoadPlacementsFromSP00NFile(const std::string& filePath);

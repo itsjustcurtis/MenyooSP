@@ -56,7 +56,7 @@ namespace sub::Spooner
 		{ STSTaskType::FleeFromCoord,{ "Flee From Position", EntityType::PED } },
 		{ STSTaskType::NearestAppropriateAction,{ "Closest Appropriate Action", EntityType::PED } },
 		{ STSTaskType::ScenarioAction,{ "Perform Scenario Action", EntityType::PED } },
-		{ STSTaskType::PlayAnimation,{ "Play Animation", EntityType::PED } },
+		{ STSTaskType::PlayAnimation,{ "Play Animation", EntityType::ALL } },
 		{ STSTaskType::SetActiveWeapon,{ "Set Active Weapon", EntityType::PED } },
 		{ STSTaskType::AimAtCoord,{ "Aim At Position", EntityType::PED } },
 		{ STSTaskType::AimAtEntity,{ "Aim At Entity", EntityType::PED } },
@@ -90,6 +90,9 @@ namespace sub::Spooner
 
 		{ STSTaskType::SnapTasks,{ "Refresh (Snap & Stand)", EntityType::PED } },
 		{ STSTaskType::EndSequence,{ "End Sequence", EntityType::ALL } },
+
+		{ STSTaskType::LightMoveWithEntity,{ "Make a Light Move With This Entity", EntityType::ALL } },
+		{ STSTaskType::LightPointAtEntity,{ "Make a Light Point At This Entity", EntityType::ALL } },
 	};
 
 	// STSTask

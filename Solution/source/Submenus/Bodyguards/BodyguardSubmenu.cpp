@@ -18,7 +18,7 @@ namespace sub
 
 namespace sub::BodyguardMenu
 {
-    void SetEnt242() { g_Ped1= SelectedBodyguard->Handle.Handle(); }
+    void SetSelectedBodyguardAsActivePed() { g_activePedHandle = SelectedBodyguard->Handle.Handle(); }
     void BodyguardEntityOps()
     {
         // Determine the title dynamically
@@ -67,16 +67,16 @@ namespace sub::BodyguardMenu
             return;
         }
 
-        AddOption("Wardrobe", null, SetEnt242, SUB::COMPONENTS);
+        AddOption("Wardrobe", null, SetSelectedBodyguardAsActivePed, SUB::COMPONENTS);
         if (g_cam_componentChanger.Exists())
         {
             g_cam_componentChanger.SetActive(false);
             g_cam_componentChanger.Destroy();
             World::SetRenderingCamera(0);
         }
-        AddOption("Voice Changer", null, SetEnt242, SUB::VOICECHANGER);
+        AddOption("Voice Changer", null, SetSelectedBodyguardAsActivePed, SUB::VOICECHANGER);
         AddOption("Weapons", null, nullFunc, SUB::BODYGUARD_WEAPONOPS);
-        AddOption("Loadouts", null, SetEnt242, SUB::WEAPONOPS_LOADOUTS);
+        AddOption("Loadouts", null, SetSelectedBodyguardAsActivePed, SUB::WEAPONOPS_LOADOUTS);
     }
     void BodyguardWeaponOps()
     {
@@ -109,13 +109,13 @@ namespace sub::BodyguardMenu
 
         if (g_WeaponOpsPedOverride != 0)
         {
-            g_Ped1 = g_WeaponOpsPedOverride;
-            g_Ped2 = g_WeaponOpsPlayerOverride;
+            g_activePedHandle = g_WeaponOpsPedOverride;
+            g_activePlayerId = g_WeaponOpsPlayerOverride;
         }
         else
         {
-            g_Ped1 = PLAYER::PLAYER_PED_ID();
-            g_Ped2 = PLAYER::PLAYER_ID();
+            g_activePedHandle = PLAYER::PLAYER_PED_ID();
+            g_activePlayerId = PLAYER::PLAYER_ID();
         }
 
         WeaponsLoadouts_catind::Sub_Loadouts_InItem();

@@ -118,7 +118,6 @@ namespace sub::Spooner
 
 
 	SpoonerEntity selectedEntity;
-	std::vector<SpoonerEntity> selectedSpoonGroup;
 
 }
 

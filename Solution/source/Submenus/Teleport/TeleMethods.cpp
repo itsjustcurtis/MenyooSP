@@ -167,7 +167,7 @@ namespace sub::TeleportLocations_catind
 
 				if (!e.Exists())
 				{
-					Game::Print::PrintBottomCentre("~r~Error:~s~ Entity is no longer valid.");
+					Game::Print::ShowNotification("~r~Error:", "Entity is no longer valid.");
 					return;
 				}
 
@@ -186,7 +186,7 @@ namespace sub::TeleportLocations_catind
 				SET_ENTITY_COORDS(e.Handle(), blipCoords.x, blipCoords.y, blipCoords.z, 0, 0, 0, 1);
 			}
 			else {
-				Game::Print::PrintBottomCentre("~r~Error:~s~ No Waypoint set.");
+				Game::Print::ShowNotification("~r~Error:", "No Waypoint set.");
 			}
 		}
 		void ToWaypoint241()

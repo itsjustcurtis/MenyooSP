@@ -3310,10 +3310,10 @@ namespace sub
                 switch (lastSubmenuSource)
                 {
                 case SUB::PLAYEROPS: case SUB::SPOONER_SELECTEDENTITYOPS:
-                    AddOptionEntity(favourites[i], g_Ped1);
+                    AddOptionEntity(favourites[i], g_activePedHandle);
                     break;
                 case SUB::PTFXSUB:
-                    AddOptionLoopOnEntity(favourites[i], g_Ped1);
+                    AddOptionLoopOnEntity(favourites[i], g_activePedHandle);
                     break; // Subception
                 case SUB::TRIGGERFXGUN:
                     TriggerFxGun::AddOptionGunFX(favourites[i]);
@@ -3371,10 +3371,10 @@ namespace sub
             AddOption("Favourites", detectKeypress, nullFunc, SUB::PTFX_FAVORITES);
             if (detectKeypress)
             {
-                lastSubmenuSource = Menu::currentArray[Menu::currentArrayIndex];
+                lastSubmenuSource = Menu::submenuHistory[Menu::menuHistoryIndex];
             }
             AddToggle("Only Show Favorites", showOnlyFaves);
-            switch (Menu::currentArray[Menu::currentArrayIndex])
+            switch (Menu::submenuHistory[Menu::menuHistoryIndex])
             {
             case SUB::PLAYEROPS: case SUB::SPOONER_SELECTEDENTITYOPS:
                 AddOption("Loop On Entity", null, nullFunc, SUB::PTFXSUB);
@@ -3388,7 +3388,7 @@ namespace sub
                     fxLoops.clear();
                 }
                 PtfxS nonefx = { "None", "", "" };
-                AddOptionLoopOnEntity(nonefx, g_Ped1);
+                AddOptionLoopOnEntity(nonefx, g_activePedHandle);
                 break;
             }
             }
@@ -3397,14 +3397,14 @@ namespace sub
             {
                 const auto& current = displayedFx[i];
 
-                switch (Menu::currentArray[Menu::currentArrayIndex])
+                switch (Menu::submenuHistory[Menu::menuHistoryIndex])
                 {
                 case SUB::PLAYEROPS:
                 case SUB::SPOONER_SELECTEDENTITYOPS:
-                    AddOptionEntity(current, g_Ped1);
+                    AddOptionEntity(current, g_activePedHandle);
                     break;
                 case SUB::PTFXSUB:
-                    AddOptionLoopOnEntity(current, g_Ped1);
+                    AddOptionLoopOnEntity(current, g_activePedHandle);
                     break;
                 case SUB::TRIGGERFXGUN:
                     TriggerFxGun::AddOptionGunFX(current);
@@ -3412,13 +3412,13 @@ namespace sub
                 }
 
                 // Handle favorite toggling
-                if (*Menu::currentopATM == Menu::printingop)
+                 if (Menu::IsLastDrawnOptionSelected())
                 {
                     if (favouritesLoaded) 
                     {
                         favouritesLoaded = false;
                     }
-                    if (Menu::bitController)
+                    if (Menu::usingControllerInput)
                     {
                         Menu::add_IB(INPUT_SCRIPT_RLEFT, IsAlreadyFavorite(current) ? "Remove From Favourites" : "Add To Favourites");
                         bShortcutToggleFavesPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -3452,7 +3452,7 @@ namespace sub
                 }
             }
             // Block navigation input if on first page
-            if (ptfxPage + 1 != 0 && totalPages != 0 && *Menu::currentopATM != 1)
+            if (ptfxPage + 1 != 0 && totalPages != 0 && *Menu::activeOptionIndex != 1)
             {
                 if (IsOptionLPressed())
                 {

@@ -86,7 +86,9 @@ namespace sub::Spooner
 		AddBlip = 51,
 		RemoveBlip = 52,
 		LookAtCoordEyesOnly = 53,
-		LookAtEntityEyesOnly = 54
+		LookAtEntityEyesOnly = 54,
+		LightMoveWithEntity = 55,
+		LightPointAtEntity = 56
 	};
 
 	extern std::vector<std::pair<STSTaskType, std::pair<std::string, EntityType>>> vSTSTaskTypeNames;

@@ -16,6 +16,7 @@
 Solution/Menyoo.sln
 Solution/Menyoo.vcxproj.filters
 Solution/Menyoo.vcxproj
+Solution/generated/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

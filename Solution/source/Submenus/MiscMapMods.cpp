@@ -75,7 +75,7 @@ namespace sub
 				LoadFromXml();
 				if (showMsg)
 				{
-					Game::Print::PrintBottomCentre(name + " ~b~loaded~s~.");
+					Game::Print::ShowNotification(name + " ~b~loaded~s~.");
 				}
 			}
 			void Unload(bool showMsg = true)
@@ -87,7 +87,7 @@ namespace sub
 				ohandles.clear();
 
 				if (showMsg)
-					Game::Print::PrintBottomCentre(name + " ~p~unloaded~s~.");
+					Game::Print::ShowNotification(name + " ~p~unloaded~s~.");
 			}
 			const std::string& Name()
 			{

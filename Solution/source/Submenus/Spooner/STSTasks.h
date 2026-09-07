@@ -359,7 +359,7 @@ namespace sub::Spooner
 			int flag;
 			bool lockPos, durationToAnimDuration;
 			PlayAnimation();
-			void RunP(GTAped& ep) override;
+			void Run(void* ve) override;
 			void LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle) override;
 		};
 
@@ -711,6 +711,34 @@ namespace sub::Spooner
 			TriggerFx();
 			void RunP(GTAped& ep) override;
 			void EndP(GTAped& ep) override;
+		};
+
+		class LightMoveWithEntity final : public STSTask
+		{
+		private:
+			void GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const override;
+			void ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask) override;
+			void ImportTaskDataSpecific(STSTask* otherTsk) override;
+		public:
+			UINT lightId;
+			Vector3 offset;
+			bool offsetInitialized;
+			LightMoveWithEntity();
+			void Run(void* ve) override;
+		};
+
+		class LightPointAtEntity final : public STSTask
+		{
+		private:
+			void GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const override;
+			void ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask) override;
+			void ImportTaskDataSpecific(STSTask* otherTsk) override;
+		public:
+			UINT lightId;
+			int m_pedBoneId;
+			std::string m_vehBoneTag;
+			LightPointAtEntity();
+			void Run(void* ve) override;
 		};
 
 		class EndSequence final : public STSTask

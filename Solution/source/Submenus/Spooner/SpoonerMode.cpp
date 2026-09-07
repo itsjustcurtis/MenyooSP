@@ -38,6 +38,7 @@
 #include "Databases.h"
 #include "SpoonerMarker.h"
 #include "MarkerManagement.h"
+#include "SpoonerLight.h"
 #include "Submenus.h"
 #include "..\\..\\Memory\\GTAmemory.h"
 
@@ -54,14 +55,15 @@ namespace sub::Spooner
 		std::pair<UINT16, UINT16> bindsGamepad = { INPUT_FRONTEND_RB, INPUT_FRONTEND_RIGHT };
 
 		bool bEnabled = false;
+		bool hasWarned = false;
 		bool bIsSomethingHeld = false;
 		bool bHeldEntityHasCollision = true;
-		eEntityEditMode entityEditMode = eEntityEditMode::Disabled;
-		eGizmoMode gizmoMode = eGizmoMode::Translate;
-		bool bGizmoCameraLocked = false;
-		bool bGizmoLocalSpace = false;
+		EditingState editingState;
 		Camera spoonerModeCamera;
 		float spoonerModeCameraCamDistance = 5.0f;
+		float spoonerModeCameraSpeed = 1.0f;
+		DWORD lastSpoonerSpeedDisplayTime = 0;
+		float lastSpoonerSpeedValue = 1.0f;
 		eSpoonerModeMode& spoonerModeMode = Settings::spoonerModeMode;
 
 		SpoonerStats GetSpoonerStats()
@@ -82,13 +84,13 @@ namespace sub::Spooner
 
 		bool IsHotkeyPressed()
 		{
-			bool bInSpoonerMenu = std::find(std::begin(Menu::currentArray), std::end(Menu::currentArray), SUB::SPOONER_MAIN) != std::end(Menu::currentArray);
+		bool bInSpoonerMenu = std::find(std::begin(Menu::submenuHistory), std::end(Menu::submenuHistory), SUB::SPOONER_MAIN) != std::end(Menu::submenuHistory);
 
 			if (!bInSpoonerMenu || !bIsSomethingHeld)
 			{
 				UINT8 index1 = bindsGamepad.first < 50 ? 0 : 2;
 				UINT8 index2 = bindsGamepad.second < 50 ? 0 : 2;
-				return Menu::bitController ? (IS_DISABLED_CONTROL_PRESSED(index1, bindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, bindsGamepad.second)) : IsKeyJustUp(bindsKeyboard);
+				return Menu::usingControllerInput ? (IS_DISABLED_CONTROL_PRESSED(index1, bindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, bindsGamepad.second)) : IsKeyJustUp(bindsKeyboard);
 			}
 			return false;
 		}
@@ -100,11 +102,18 @@ namespace sub::Spooner
 				float g = Settings::gridSnapSize;
 				pos.x = round(pos.x / g) * g;
 				pos.y = round(pos.y / g) * g;
-				pos.z = round(pos.z / g) * g;
+				if (!Settings::bSnapToGround)
+					pos.z = round(pos.z / g) * g;
+			}
+			if (Settings::bSnapToGround)
+			{
+				float groundZ;
+				if (GET_GROUND_Z_FOR_3D_COORD(pos.x, pos.y, pos.z + 0.1f, &groundZ, false, false))
+					pos.z = groundZ;
 			}
 			return pos;
 		}
-		Vector3 SnapRotation(Vector3 rot)
+		Vector3 SnapRot(Vector3 rot)
 		{
 			if (Settings::bGridSnapEnabled && Settings::rotationSnapDegrees > 0.0f)
 			{
@@ -116,12 +125,41 @@ namespace sub::Spooner
 			return rot;
 		}
 
+		void DrawSnappingGrid()
+		{
+			float gridSize = Settings::gridSnapSize;
+
+			Vector3 origin = selectedEntity.handle.GetPosition();
+			origin.x = round(origin.x / gridSize) * gridSize;
+			origin.y = round(origin.y / gridSize) * gridSize;
+
+			float z = round(origin.z / gridSize) * gridSize;
+			const int cells = 10; // number of cells to draw in each direction (i.e setting this to 10 will draw a 20x20 grid)
+			const RGBA color(255, 255, 255, 110);
+
+			for (int i = -cells; i <= cells; i++)
+			{
+				float x = origin.x + i * gridSize;
+				Vector3 start(x, origin.y - cells * gridSize, z);
+				Vector3 end(x, origin.y + cells * gridSize, z);
+				World::DrawLine(start, end, color);
+			}
+
+			for (int i = -cells; i <= cells; i++)
+			{
+				float y = origin.y + i * gridSize;
+				Vector3 start(origin.x - cells * gridSize, y, z);
+				Vector3 end(origin.x + cells * gridSize, y, z);
+				World::DrawLine(start, end, color);
+			}
+		}
+
 		ModelPreviewInfoStructure modelPreviewInfo = { EntityType::ALL, 0, 0, 0,{} };
 		float previewYawOffset = 0.0f;
 
 		void UpdatePreviewRotation()
 		{
-			if (modelPreviewInfo.entity.Exists() && Menu::currentsub != SUB::CLOSED)
+		if (modelPreviewInfo.entity.Exists() && Menu::activeSubmenu != SUB::CLOSED)
 			{
 				Menu::add_IB(INPUT_FRONTEND_RB, "");
 				Menu::add_IB(INPUT_FRONTEND_LB, "Rotate Preview");
@@ -357,10 +395,12 @@ namespace sub::Spooner
 				const Vector3& coordInFrontOfCam = freeCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 				GTAentity entityInFrontOfCam = freeCam.RaycastForEntity(Vector2(0.0f, 0.0f), 0, 160.0f);
 
-				if (Menu::bitController) // If controller
+				if (Menu::usingControllerInput) // If controller
 				{
 					float movementSensitivity = Settings::cameraMovementSensitivityGamepad;
 					//if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS)) movementSensitivity += 1.36f * movementSensitivity;
+					if (!bIsSomethingHeld)
+						movementSensitivity *= spoonerModeCameraSpeed;
 
 					nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
 					nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
@@ -373,21 +413,42 @@ namespace sub::Spooner
 					if (!bIsSomethingHeld || spoonerModeMode == eSpoonerModeMode::GroundEase)
 					{
 						if (!bIsSomethingHeld)
+						{
 							nextRot.y = -freeCam.GetRotation().y; // Roll should be 0 when no entity is held
+
+							// Mouse wheel to adjust speed
+							if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
+							{
+								spoonerModeCameraSpeed = min(spoonerModeCameraSpeed + 0.1f, 10.0f);
+								lastSpoonerSpeedValue = spoonerModeCameraSpeed;
+								lastSpoonerSpeedDisplayTime = GetTickCount();
+							}
+							if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))
+							{
+								spoonerModeCameraSpeed = max(spoonerModeCameraSpeed - 0.1f, 0.1f);
+								lastSpoonerSpeedValue = spoonerModeCameraSpeed;
+								lastSpoonerSpeedDisplayTime = GetTickCount();
+							}
+						}
 						if (nextOffset.x || nextOffset.y)
 							freeCam.SetPosition(freeCam.GetOffsetInWorldCoords(nextOffset.x, nextOffset.y, 0));
 
 						if (!bIsSomethingHeld && Settings::bShowModelPreviews)
 							SpoonerMode::SpawnModelPreview();
 					}
+					if (!bIsSomethingHeld && GetTickCount() - lastSpoonerSpeedDisplayTime < 1000)
+					{
+						Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+						Game::Print::DrawString(oss_ << "Spooner Camera Speed: " << lastSpoonerSpeedValue, 0.5f, 0.95f);
+					}
 					if (!nextRot.IsZero())
 					{
 						Vector3 nextRotFinal = freeCam.GetRotation() + nextRot;
 						//float fcrXfinal = fmod(nextRotFinal.x, 360.0f); // What if -10/350/710?
-						//if (fcrXfinal > -10.0f && fcrXfinal < 0.0f)
-						//	nextRotFinal.x = -10.0f;
-						//else if (fcrXfinal >= 0.0f && fcrXfinal < 10.0f)
-						//	nextRotFinal.x = 10.0f;
+//if (fcrXfinal > -10.0f && fcrXfinal < 0.0f)
+//	nextRotFinal.x = -10.0f;
+//else if (fcrXfinal >= 0.0f && fcrXfinal < 10.0f)
+//	nextRotFinal.x = 10.0f;
 						switch (spoonerModeMode)
 						{
 						case eSpoonerModeMode::GroundEase:
@@ -399,18 +460,18 @@ namespace sub::Spooner
 						freeCam.SetRotation(nextRotFinal);
 					}
 
-					if (Menu::currentsub == SUB::CLOSED)
+					if (Menu::activeSubmenu == SUB::CLOSED)
 					{
 						Menu::add_IB(INPUT_VEH_EXIT, "Open main menu");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_VEH_EXIT))
 						{
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
+							memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+							memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+							Menu::submenuHistory[0] = SUB::MAINMENU;
+							Menu::optionSelectionHistory[0] = 1;
+							Menu::menuHistoryIndex = 0;
 							Menu::NewSetMenu(SUB::SPOONER_MAIN);
-							Menu::currentop = 2;
+							Menu::selectedOptionIndex = 2;
 						}
 
 						if (!bIsSomethingHeld)
@@ -423,11 +484,11 @@ namespace sub::Spooner
 								{
 									newMarkerPtr->m_position.z += (newMarkerPtr->m_scale / 2);
 									SelectedMarker = newMarkerPtr;
-									memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-									memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-									Menu::currentArray[0] = SUB::MAINMENU;
-									Menu::currentop_ar[0] = 1;
-									Menu::currentArrayIndex = 0;
+									memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+									memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+									Menu::submenuHistory[0] = SUB::MAINMENU;
+									Menu::optionSelectionHistory[0] = 1;
+									Menu::menuHistoryIndex = 0;
 									Menu::NewSetMenu(SUB::SPOONER_MANAGEMARKERS_INMARKER);
 								}
 							}
@@ -525,7 +586,7 @@ namespace sub::Spooner
 								break;
 							}
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (Menu::activeSubmenu == SUB::CLOSED)
 							{
 								Menu::add_IB(INPUT_FRONTEND_RT, "Open property menu");
 								switch (spoonerModeMode)
@@ -584,7 +645,7 @@ namespace sub::Spooner
 							}
 							bIsSomethingHeld = false;
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (Menu::activeSubmenu == SUB::CLOSED)
 							{
 								Menu::add_IB(INPUT_FRONTEND_RT, "Open property menu");
 								Menu::add_IB(INPUT_FRONTEND_LT, "Move entity around (hold)");
@@ -620,11 +681,11 @@ namespace sub::Spooner
 							{
 								SpoonerMode::SetAsSelectedEntity(currentEnt);
 							}
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
+							memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+							memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+							Menu::submenuHistory[0] = SUB::MAINMENU;
+							Menu::optionSelectionHistory[0] = 1;
+							Menu::menuHistoryIndex = 0;
 							Menu::NewSetMenu(SUB::SPOONER_SELECTEDENTITYOPS);
 						}
 					}
@@ -639,8 +700,10 @@ namespace sub::Spooner
 					float movementSensitivity = Settings::cameraMovementSensitivityKeyboard;
 					if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
 						movementSensitivity = 4.0f * movementSensitivity;
-					
-					if (entityEditMode != eEntityEditMode::Keyboard && !(entityEditMode == eEntityEditMode::Gizmo && bGizmoCameraLocked))
+					if (!bIsSomethingHeld)
+						movementSensitivity *= spoonerModeCameraSpeed;
+
+					if (editingState.mode != eEditMode::Keyboard && !(editingState.mode == eEditMode::Gizmo && editingState.cameraLocked))
 					{
 						nextOffset.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
 						nextOffset.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
@@ -648,7 +711,7 @@ namespace sub::Spooner
 					}
 
 					// blocks camera rotation while we are using the gizmo to edit entity pos / rot
-					if (!bGizmoCameraLocked || entityEditMode != eEntityEditMode::Gizmo)
+					if (!editingState.cameraLocked || editingState.mode != eEditMode::Gizmo)
 					{
 						float rotationSensitivity = Settings::cameraRotationSensitivityMouse;
 						nextRot.z = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR) * rotationSensitivity;
@@ -659,21 +722,42 @@ namespace sub::Spooner
 					if (!bIsSomethingHeld || spoonerModeMode == eSpoonerModeMode::GroundEase)
 					{
 						if (!bIsSomethingHeld)
+						{
 							nextRot.y = -freeCam.GetRotation().y; // Roll should be 0 when no entity is held
+
+							// Mouse wheel to adjust speed
+							if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
+							{
+								spoonerModeCameraSpeed = min(spoonerModeCameraSpeed + 0.1f, 10.0f);
+								lastSpoonerSpeedValue = spoonerModeCameraSpeed;
+								lastSpoonerSpeedDisplayTime = GetTickCount();
+							}
+							if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))
+							{
+								spoonerModeCameraSpeed = max(spoonerModeCameraSpeed - 0.1f, 0.1f);
+								lastSpoonerSpeedValue = spoonerModeCameraSpeed;
+								lastSpoonerSpeedDisplayTime = GetTickCount();
+							}
+						}
 						if (!nextOffset.IsZero())
 							freeCam.SetPosition(freeCam.GetOffsetInWorldCoords(nextOffset));
 
 						if (!bIsSomethingHeld && Settings::bShowModelPreviews)
 							SpoonerMode::SpawnModelPreview();
 					}
+					if (!bIsSomethingHeld && GetTickCount() - lastSpoonerSpeedDisplayTime < 1000)
+					{
+						Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
+						Game::Print::DrawString(oss_ << "Spooner Camera Speed: " << lastSpoonerSpeedValue, 0.5f, 0.95f);
+					}
 					if (!nextRot.IsZero())
 					{
 						Vector3 nextRotFinal = freeCam.GetRotation() + nextRot;
 						//float fcrXfinal = fmod(nextRotFinal.x, 360.0f); // What if -10/350/710?
-						//if (fcrXfinal > -10.0f && fcrXfinal < 0.0f)
-						//	nextRotFinal.x = -10.0f;
-						//else if (fcrXfinal >= 0.0f && fcrXfinal < 10.0f)
-						//	nextRotFinal.x = 10.0f;
+//if (fcrXfinal > -10.0f && fcrXfinal < 0.0f)
+//	nextRotFinal.x = -10.0f;
+//else if (fcrXfinal >= 0.0f && fcrXfinal < 10.0f)
+//	nextRotFinal.x = 10.0f;
 						switch (spoonerModeMode)
 						{
 						case eSpoonerModeMode::GroundEase:
@@ -685,18 +769,18 @@ namespace sub::Spooner
 						freeCam.SetRotation(nextRotFinal);
 					}
 
-					if (Menu::currentsub == SUB::CLOSED)
+					if (Menu::activeSubmenu == SUB::CLOSED)
 					{
 						Menu::add_IB(INPUT_VEH_EXIT, "Open main menu");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_VEH_EXIT))
 						{
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
+							memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+							memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+							Menu::submenuHistory[0] = SUB::MAINMENU;
+							Menu::optionSelectionHistory[0] = 1;
+							Menu::menuHistoryIndex = 0;
 							Menu::NewSetMenu(SUB::SPOONER_MAIN);
-							Menu::currentop = 2;
+							Menu::selectedOptionIndex = 2;
 						}
 
 						if (!bIsSomethingHeld)
@@ -709,11 +793,11 @@ namespace sub::Spooner
 								{
 									newMarkerPtr->m_position.z += (newMarkerPtr->m_scale / 2);
 									SelectedMarker = newMarkerPtr;
-									memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-									memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-									Menu::currentArray[0] = SUB::MAINMENU;
-									Menu::currentop_ar[0] = 1;
-									Menu::currentArrayIndex = 0;
+									memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+									memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+									Menu::submenuHistory[0] = SUB::MAINMENU;
+									Menu::optionSelectionHistory[0] = 1;
+									Menu::menuHistoryIndex = 0;
 									Menu::NewSetMenu(SUB::SPOONER_MANAGEMARKERS_INMARKER);
 								}
 							}
@@ -721,7 +805,7 @@ namespace sub::Spooner
 					}
 
 					// does not draw the cursor when inside gizmo entity editing mode.
-					if (entityEditMode != eEntityEditMode::Gizmo && (entityInFrontOfCam.Exists() || bIsSomethingHeld))
+					if (editingState.mode != eEditMode::Gizmo && (entityInFrontOfCam.Exists() || bIsSomethingHeld))
 					{
 						DRAW_RECT(0.5f, 0.5f, 0.02f, 0.002f, 0, 255, 0, 255, false);
 						DRAW_RECT(0.5f, 0.5f, 0.001f, 0.03f, 0, 255, 0, 255, false);
@@ -812,7 +896,7 @@ namespace sub::Spooner
 								break;
 							}
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (Menu::activeSubmenu == SUB::CLOSED)
 							{
 								Menu::add_IB(INPUT_CURSOR_CANCEL, "Open property menu");
 								switch (spoonerModeMode)
@@ -873,7 +957,7 @@ namespace sub::Spooner
 							}
 							bIsSomethingHeld = false;
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (Menu::activeSubmenu == SUB::CLOSED)
 							{
 								Menu::add_IB(INPUT_CURSOR_CANCEL, "Open property menu");
 								Menu::add_IB(INPUT_CURSOR_ACCEPT, "Move entity around (hold)");
@@ -909,19 +993,30 @@ namespace sub::Spooner
 							{
 								SpoonerMode::SetAsSelectedEntity(currentEnt);
 							}
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
+							memset(Menu::submenuHistory, 0, sizeof(Menu::submenuHistory));
+							memset(Menu::optionSelectionHistory, 0, sizeof(Menu::optionSelectionHistory));
+							Menu::submenuHistory[0] = SUB::MAINMENU;
+							Menu::optionSelectionHistory[0] = 1;
+							Menu::menuHistoryIndex = 0;
 							Menu::NewSetMenu(SUB::SPOONER_SELECTEDENTITYOPS);
 						}
 					}
 					// does not draw the cursor when inside gizmo entity editing mode.
-					else if (entityEditMode != eEntityEditMode::Gizmo)
+					else if (editingState.mode != eEditMode::Gizmo)
 					{
 						DRAW_RECT(0.5f, 0.5f, 0.02f, 0.002f, 255, 255, 255, 255, false);
 						DRAW_RECT(0.5f, 0.5f, 0.001f, 0.03f, 255, 255, 255, 255, false);
+					}
+				}
+				if (!bIsSomethingHeld && myPed.Exists() && freeCam.Exists())
+				{
+					float distToPlayer = myPed.GetPosition().DistanceTo(freeCam.GetPosition());
+					if (distToPlayer > 350.0f)
+					{
+						Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.35f, 0.35f), true, false, true, RGBA(255, 200, 0, 255));
+						Game::Print::DrawString(oss_ << "WARNING: Your camera is too far from the player. You might experience texture loss or the environment might look low quality.", 0.5f, 0.72f);
+						Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.35f, 0.35f), true, false, true, RGBA(255, 200, 0, 255));
+						Game::Print::DrawString(oss_ << "This is expected - use the Freecam (available in \"Misc Options\" menu) to move around the map freely.", 0.5f, 0.75f);
 					}
 				}
 			}
@@ -941,6 +1036,7 @@ namespace sub::Spooner
 				}
 			}
 		}
+
 		void Tick()
 		{
 			if (SpoonerMode::IsHotkeyPressed())
@@ -954,6 +1050,10 @@ namespace sub::Spooner
 			if (Settings::bShowBoxAroundSelectedEntity)
 				EntityManagement::ShowBoxAroundEntity(selectedEntity.handle);
 
+			// Snapping grid; visible only when using Spooner Camera
+			if (Settings::bDrawGrid && Settings::bGridSnapEnabled && SpoonerMode::bEnabled && selectedEntity.handle.Exists())
+				DrawSnappingGrid();
+
 			for (auto& ent : Databases::EntityDb)
 			{
 				if (ent.handle.Exists())
@@ -962,6 +1062,9 @@ namespace sub::Spooner
 
 			if (!Databases::MarkerDb.empty())
 				MarkerManagement::DrawAll();
+
+			if (!Databases::LightDb.empty())
+				LightManagement::DrawAll();
 
 			auto applyScaleTick = [](const Submenus::EntityScaleState& s)
 			{
@@ -976,16 +1079,16 @@ namespace sub::Spooner
 
 		void TurnOn()
 		{
-			if (!g_menuNotOpenedYet)
+			if (!menuHasNotOpened)
 			{
 				SpoonerMode::bEnabled = true;
 				sub::Spooner::ImGuiSpooner::SetVisible(true);
-				if (Menu::currentsub != SUB::CLOSED)
+				if (Menu::activeSubmenu != SUB::CLOSED)
 					Game::Print::PrintBottomLeft("~b~Note:~s~ Spooner Mode instructions only appear when Menyoo is closed.");
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Menu not opened yet.");
+				Game::Print::ShowNotification("~r~Error:", "Menu not opened yet.");
 			}
 		}
 		void TurnOff()
@@ -1008,6 +1111,188 @@ namespace sub::Spooner
 				SpoonerMode::SpawnModelPreview();
 			}
 		}
+		void ProcessKeyboardManipulation(Vector3& position, Vector3& rotation)
+		{
+			if (!bEnabled) return;
+
+			float& precision = editingState.transformMode == eTransformMode::Position ? editingState.precisionPos
+			                 : editingState.transformMode == eTransformMode::Rotation ? editingState.precisionRot
+			                 : editingState.precisionScale;
+
+			static DWORD lastSensitivityChange = 0;
+			if ((IsKeyJustUp(VirtualKey::OEMPlus) || (IsKeyJustUp(VirtualKey::Add))) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (precision < 10.0f) precision *= 10;
+				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(precision), 3000);
+			}
+			if ((IsKeyJustUp(VirtualKey::OEMMinus) || (IsKeyJustUp(VirtualKey::Subtract))) && GetTickCount() - lastSensitivityChange > 200)
+			{
+				if (precision > 0.0001f) precision /= 10;
+				lastSensitivityChange = GetTickCount();
+				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(precision), 3000);
+			}
+
+			float step = precision;
+			// if grid snap is enabled, override precision with the snap amount for the current transform mode
+			if (Settings::bGridSnapEnabled)
+			{
+				float snapAmount = editingState.transformMode == eTransformMode::Rotation
+					? Settings::rotationSnapDegrees
+					: Settings::gridSnapSize;
+				if (snapAmount > 0.0f) step = snapAmount;
+			}
+
+			auto& target = editingState.transformMode == eTransformMode::Rotation ? rotation : position;
+			if (IsKeyDown(VirtualKey::W)) target.x += step;
+			if (IsKeyDown(VirtualKey::S)) target.x -= step;
+			if (IsKeyDown(VirtualKey::A)) target.y += step;
+			if (IsKeyDown(VirtualKey::D)) target.y -= step;
+			if (IsKeyDown(VirtualKey::E)) target.z += step;
+			if (IsKeyDown(VirtualKey::Q)) target.z -= step;
+
+			if (editingState.transformMode == eTransformMode::Rotation)
+				rotation = SnapRot(rotation);
+			else
+				position = SnapPos(position);
+		}
+
+		void DrawEditingHUD()
+		{
+			if (!bEnabled && !hasWarned)
+			{
+				Game::Print::ShowNotification("Entity manipulation requires the Spooner Camera.", "~(b~Press F9:~w~ Enable Spooner Mode.",5);
+				hasWarned = true;	
+				return;
+			}
+
+			if (editingState.mode == eEditMode::Disabled)
+			{
+				Menu::add_IB(VirtualKey::B, "Keyboard Controls");
+			}
+			else if (editingState.mode == eEditMode::Keyboard)
+			{
+				if (editingState.transformMode == eTransformMode::Rotation)
+				{
+					Menu::add_IB(VirtualKey::Subtract, "Sensitivity");
+					Menu::add_IB(VirtualKey::Add, "Sensitivity");
+					Menu::add_IB(VirtualKey::D, "Roll-");
+					Menu::add_IB(VirtualKey::A, "Roll+");
+					Menu::add_IB(VirtualKey::Q, "Yaw-");
+					Menu::add_IB(VirtualKey::E, "Yaw+");
+					Menu::add_IB(VirtualKey::S, "Pitch-");
+					Menu::add_IB(VirtualKey::W, "Pitch+");
+					Menu::add_IB(VirtualKey::R, "Edit Position");
+				}
+				else
+				{
+					Menu::add_IB(VirtualKey::Subtract, "Sensitivity");
+					Menu::add_IB(VirtualKey::Add, "Sensitivity");
+					Menu::add_IB(VirtualKey::Q, "Z-");
+					Menu::add_IB(VirtualKey::E, "Z+");
+					Menu::add_IB(VirtualKey::D, "Y-");
+					Menu::add_IB(VirtualKey::A, "Y+");
+					Menu::add_IB(VirtualKey::S, "X-");
+					Menu::add_IB(VirtualKey::W, "X+");
+					Menu::add_IB(VirtualKey::R, "Edit Rotation");
+				}
+				Menu::add_IB(VirtualKey::C, "Copy");
+				Menu::add_IB(VirtualKey::B, "Gizmo Controls");
+			}
+			else if (editingState.mode == eEditMode::Gizmo)
+			{
+				std::string modeName;
+				switch (editingState.transformMode)
+				{
+					case eTransformMode::Rotation: modeName = "Rotation"; break;
+					case eTransformMode::Scale:  modeName = "Scale";    break;
+					default:                              modeName = "Position"; break;
+				}
+
+				Menu::add_IB(INPUT_CURSOR_ACCEPT, "Grab axis handle (" + modeName + " Mode)");
+				Menu::add_IB(VirtualKey::R, "Cycle mode");
+				Menu::add_IB(VirtualKey::V, editingState.cameraLocked ? "Unlock camera" : "Lock camera");
+				Menu::add_IB(VirtualKey::L, editingState.localSpace ? "Edit in world space" : "Edit in local space");
+				Menu::add_IB(VirtualKey::C, "Copy");
+				Menu::add_IB(VirtualKey::B, "Disable Controls");
+			}
+		}
+
+		void UpdateEntityEditingState(Vector3& position, Vector3& rotation)
+		{
+			// toggling between Disabled / Keyboard / Gizmo modes
+			static bool lastBToggle = false;
+			bool currentBToggle = IsKeyJustUp(VirtualKey::B);
+			if (currentBToggle && !lastBToggle)
+			{
+				switch (editingState.mode)
+				{
+					case eEditMode::Disabled:
+						editingState.mode = eEditMode::Keyboard;
+						break;
+					case eEditMode::Keyboard:
+						editingState.mode = eEditMode::Gizmo;
+						break;
+					case eEditMode::Gizmo:
+						editingState.mode = eEditMode::Disabled;
+						break;
+					}
+				editingState.cameraLocked = false;
+			}
+			lastBToggle = currentBToggle;
+
+			// toggling between transform modes
+			static bool lastRToggle = false;
+			bool currentRToggle = IsKeyJustUp(VirtualKey::R);
+			if (currentRToggle && !lastRToggle)
+			{
+				if (editingState.mode != eEditMode::Disabled)
+				{
+					// In keyboard mode, R just toggles between position and rotation editing (scale is not supported in keyboard mode)
+					static const eTransformMode table[2][3] = {
+						// Position, Rotation, Scale
+						{ eTransformMode::Rotation, eTransformMode::Position, eTransformMode::Position }, // Keyboard editing mode (scale is not supported, it just redirects to position)
+						{ eTransformMode::Rotation, eTransformMode::Scale,    eTransformMode::Position }  // Gizmo editing mode
+					};
+					editingState.transformMode = table[(int)editingState.mode - 1][(int)editingState.transformMode];
+				}
+			}
+			lastRToggle = currentRToggle;
+
+			// toggling camera lock
+			if (editingState.mode != eEditMode::Disabled && IsKeyJustUp(VirtualKey::V))
+			{
+				editingState.cameraLocked = !editingState.cameraLocked;
+			}
+
+			// toggling world / local space editing
+			if (editingState.mode != eEditMode::Disabled && IsKeyJustUp(VirtualKey::L))
+			{
+				editingState.localSpace = !editingState.localSpace;
+			}
+
+			// make a quick copy of an entity by clicking C in editing modes
+			if (editingState.mode != eEditMode::Disabled && IsKeyJustUp(VirtualKey::C))
+			{
+				if (selectedEntity.handle.Exists())
+				{
+					const SpoonerEntity& copiedEntity = EntityManagement::CopyEntity(selectedEntity, EntityManagement::GetEntityIndexInDb(selectedEntity) >= 0, true, Submenus::_copyEntTexterValue);
+					selectedEntity = copiedEntity;
+					Game::Print::ShowNotification("Entity copied.", 2.5f);
+				}
+			}
+
+			if (editingState.mode == eEditMode::Keyboard)
+			{
+				// keyboard edit mode doesn't support scaling
+				if (editingState.transformMode == eTransformMode::Scale)
+					editingState.transformMode = eTransformMode::Position;
+				ProcessKeyboardManipulation(position, rotation);
+			}
+
+			DrawEditingHUD();
+		}
+
 		void Toggle()
 		{
 			SpoonerMode::bEnabled ? SpoonerMode::TurnOff() : SpoonerMode::TurnOn();

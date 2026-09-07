@@ -75,7 +75,6 @@ namespace sub::Spooner
 	
 
 	extern SpoonerEntity selectedEntity;
-	extern std::vector<SpoonerEntity> selectedSpoonGroup;
 }
 
 

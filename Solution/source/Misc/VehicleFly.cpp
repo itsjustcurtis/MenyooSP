@@ -98,7 +98,7 @@ namespace VehicleFly
 
 	float VehicleFly::Pressed_GoUp()
 	{
-		if (Menu::bitController)
+		if (Menu::usingControllerInput)
 		{
 			return GET_DISABLED_CONTROL_NORMAL(2, INPUT_VEH_ACCELERATE);
 		}
@@ -109,7 +109,7 @@ namespace VehicleFly
 	}
 	float VehicleFly::Pressed_GoDown()
 	{
-		if (Menu::bitController)
+		if (Menu::usingControllerInput)
 		{
 			return GET_DISABLED_CONTROL_NORMAL(2, INPUT_VEH_BRAKE);
 		}
@@ -120,7 +120,7 @@ namespace VehicleFly
 	}
 	float VehicleFly::Pressed_GoForward()
 	{
-		if (Menu::bitController)
+		if (Menu::usingControllerInput)
 		{
 			float norm = -GET_DISABLED_CONTROL_NORMAL(2, INPUT_SCRIPT_LEFT_AXIS_Y);
 			return (norm > 0.0f) ? (norm) : 0.0f;
@@ -132,7 +132,7 @@ namespace VehicleFly
 	}
 	float VehicleFly::Pressed_GoBackward()
 	{
-		if (Menu::bitController)
+		if (Menu::usingControllerInput)
 		{
 			float norm = -GET_DISABLED_CONTROL_NORMAL(2, INPUT_SCRIPT_LEFT_AXIS_Y);
 			return (norm < 0.0f) ? abs(norm) : 0.0f;
@@ -144,7 +144,7 @@ namespace VehicleFly
 	}
 	float VehicleFly::Pressed_GoRight()
 	{
-		if (Menu::bitController)
+		if (Menu::usingControllerInput)
 		{
 			float norm = GET_DISABLED_CONTROL_NORMAL(2, INPUT_SCRIPT_LEFT_AXIS_X);
 			return (norm > 0.0f) ? norm : 0.0f;
@@ -156,7 +156,7 @@ namespace VehicleFly
 	}
 	float VehicleFly::Pressed_GoLeft()
 	{
-		if (Menu::bitController)
+		if (Menu::usingControllerInput)
 		{
 			float norm = GET_DISABLED_CONTROL_NORMAL(2, INPUT_SCRIPT_LEFT_AXIS_X);
 			return (norm < 0.0f) ? abs(norm) : 0.0f;
@@ -228,7 +228,7 @@ namespace VehicleFly
 	
 	void VehicleFly::PrintFlyInstructions()
 	{
-		const bool& c = Menu::bitController;
+		const bool& c = Menu::usingControllerInput;
 		Game::Print::PrintBottomLeft(
 			oss_ << (c ? "~b~Accelerate" : "~b~Handbrake") << "~s~ for Up." << "\n"
 			<< (c ? "~b~Brake" : "~b~Sprint") << "~s~ for Down."

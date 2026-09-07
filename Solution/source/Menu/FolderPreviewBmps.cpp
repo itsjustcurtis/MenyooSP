@@ -115,7 +115,7 @@ namespace sub
 				Vector2 res = { 0.1f, 0.0889f };
 
 				FLOAT x_coord = 0.324f + menuPos.x;
-				FLOAT y_coord = OptionY + 0.044f + menuPos.y;
+				FLOAT y_coord = currentOptionY + 0.044f + menuPos.y;
 
 				if (menuPos.x > 0.45f) x_coord = menuPos.x - 0.003f;
 

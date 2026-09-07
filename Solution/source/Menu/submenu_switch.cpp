@@ -40,5 +40,5 @@ bool SubMenuRegistry::IsRegistered(int sub)
 
 void Menu::submenu_switch()
 {
-	SubMenuRegistry::Dispatch(currentsub);
+	SubMenuRegistry::Dispatch(activeSubmenu);
 }

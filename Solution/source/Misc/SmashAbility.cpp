@@ -47,7 +47,7 @@ namespace SmashAbility
 		const Vector3& myPos = myPed.GetPosition();
 
 		if (!myPed.Task().IsPlayingAnimation("mini@strip_club@idles@dj@idle_01", "idle_01"))
-			myPed.Task().PlayAnimation("mini@strip_club@idles@dj@idle_01", "idle_01", 1, 1, -1, AnimFlag::UpperBodySecondTask, 0, false);
+			myPed.Task().PlayAnimation("mini@strip_club@idles@dj@idle_01", "idle_01", 1, 1, -1, AnimFlag::UpperBody | AnimFlag::SecondTask, 0, false);
 
 		std::vector<Entity> entList;
 		GTAmemory::GetEntityHandles(entList, myPos, 25.0f);

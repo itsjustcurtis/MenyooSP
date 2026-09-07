@@ -96,7 +96,7 @@ namespace MagnetGun
 	void MagnetGun::DisplayMagnetGunHelp()
 	{
 		Game::Print::PrintBottomLeft(oss_ << "Use the ~b~" << GetWeaponLabel(_whash, true), "~s~ to use the magnet ability.");
-		Game::Print::PrintBottomLeft(oss_ << "Use the ~b~ " << (Menu::bitController ? "L and R Sticks" : "Mouse Scroll") << "~s~ to alter the magnet gun distance.");
+		Game::Print::PrintBottomLeft(oss_ << "Use the ~b~ " << (Menu::usingControllerInput ? "L and R Sticks" : "Mouse Scroll") << "~s~ to alter the magnet gun distance.");
 	}
 
 

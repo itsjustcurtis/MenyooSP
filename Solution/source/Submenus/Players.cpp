@@ -26,9 +26,9 @@ namespace sub
 				AddOption(name, bPlayerPressed);
 				if (bPlayerPressed)
 				{
-					g_Ped2 = i;
-					g_Ped1 = GET_PLAYER_PED(g_Ped2);
-					g_PlayerName = name;
+					g_activePlayerId = i;
+					g_activePedHandle = GET_PLAYER_PED(g_activePlayerId);
+					g_playerName = name;
 					Menu::NewSetMenu(SUB::PLAYERSSUBAMENU);
 				}
 			}
@@ -52,14 +52,14 @@ namespace sub
 			spectatePlayerStr = "Spectate Player";
 		}
 
-		AddTitle(g_PlayerName); // Title = player name
+		AddTitle(g_playerName); // Title = player name
 		AddOption("Set Waypoint To Player", setWaypoint);
-		AddLocal(spectatePlayerStr, spectatePlayer == g_Ped2, spectateOn, spectateOff); // Spectate Player
+		AddLocal(spectatePlayerStr, spectatePlayer == g_activePlayerId, spectateOn, spectateOff); // Spectate Player
 
 		if (spectateOn)
 		{
 			Ped ped;
-			spectatePlayer = g_Ped2;
+			spectatePlayer = g_activePlayerId;
 			for (int i = 0; i < GAME_PLAYERCOUNT; i++)
 			{
 				if (!NETWORK_IS_PLAYER_ACTIVE(i)) 
@@ -104,7 +104,7 @@ namespace sub
 
 		if (setWaypoint)
 		{
-			GTAplayer player = g_Ped2;
+			GTAplayer player = g_activePlayerId;
 			if (player.IsActive())
 			{
 				const GTAped& playerPed = player.GetPed();

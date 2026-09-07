@@ -8,6 +8,7 @@
 * (at your option) any later version.
 */
 #include "VehicleOptions.h"
+#include "VehicleModShop.h"
 #include "..\Util\FileLogger.h"
 
 namespace sub
@@ -93,12 +94,12 @@ namespace sub
 		bool slamOn = false;
 		bool heavyMassOff = false;
 
-		g_Ped1 = PLAYER_PED_ID();
-		g_Ped2 = PLAYER_ID();
+		g_activePedHandle = PLAYER_PED_ID();
+		g_activePlayerId = PLAYER_ID();
 
 		bool amIOnline = NETWORK_IS_IN_SESSION() != 0;
-		GTAped myPed = g_Ped1;
-		GTAplayer myPlayer = g_Ped2;
+		GTAped myPed = g_activePedHandle;
+		GTAplayer myPlayer = g_activePlayerId;
 		GTAvehicle myVehicle = g_myVeh;
 		bool myPedIsInVehicle = myPed.IsInVehicle();
 		const Model& myVehicleModel = myVehicle.Model();
@@ -157,7 +158,7 @@ namespace sub
 		AddToggle("SuprKar Mode", superCarMode, superCarModeOn, superCarModeOff);
 		AddLocal("Fly Mode", VehicleFly::g_vehicleFly.Enabled(), VehicleFly::ToggleOnOff, VehicleFly::ToggleOnOff);
 		AddToggle("Glue to Ground", superGrip);
-		AddTexter("Vehicle Jump", carJump, Menu::bitController ? std::vector<std::string>{"Off", "Tap/Press A/X", "Hold A/X"} : std::vector<std::string>{ "Off", "Tap/Press Space", "Hold Space" }, null, carJumpPlus, carJumpMinus);
+		AddTexter("Vehicle Jump", carJump, Menu::usingControllerInput ? std::vector<std::string>{"Off", "Tap/Press A/X", "Hold A/X"} : std::vector<std::string>{ "Off", "Tap/Press Space", "Hold Space" }, null, carJumpPlus, carJumpMinus);
 		AddToggle("Hydraulics", carHydraulics, hydraulicsOn);
 		AddToggle("Drive On Water", driveOnWater, driveOnWaterOn, driveOnWaterOff);
 		AddToggle("Increased Mass", vehicleHeavyMass, null, heavyMassOff);
@@ -198,7 +199,7 @@ namespace sub
 
 		if (slamOn) 
 		{ 
-			Game::Print::PrintBottomCentre("~b~Note:~s~ If you try hard enough, you can drive on walls too!"); 
+			Game::Print::ShowNotification("~b~Note:", "If you try hard enough, you can drive on walls too!");
 			return; 
 		}
 
@@ -209,7 +210,7 @@ namespace sub
 
 		if (setVehiclePed) 
 		{
-			g_Ped4 = g_myVeh;
+			sub::SetVehicleModShopTarget(g_myVeh);
 		}
 		if (goToSlamItMenu) 
 		{
@@ -220,11 +221,11 @@ namespace sub
 		{
 			if (DOES_ENTITY_EXIST(g_myVeh)) 
 			{ 
-				g_Ped4 = g_myVeh; Menu::NewSetMenu(SUB::MODSHOP); 
+				sub::SetVehicleModShopTarget(g_myVeh); Menu::NewSetMenu(SUB::MODSHOP);
 			}
 			else 
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+				Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			}
 			return;
 		}
@@ -232,11 +233,11 @@ namespace sub
 		{
 			if (DOES_ENTITY_EXIST(g_myVeh)) 
 			{ 
-				g_Ped4 = g_myVeh; Menu::NewSetMenu(SUB::ENTITYALPHALEVEL); 
+				sub::SetVehicleModShopTarget(g_myVeh); Menu::NewSetMenu(SUB::ENTITYALPHALEVEL);
 			}
 			else 
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+				Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			}
 			return;
 		}
@@ -271,7 +272,7 @@ namespace sub
 		{
 			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) 
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+				Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			}
 			else
 			{
@@ -366,7 +367,7 @@ namespace sub
 
 		if (invisible) 
 		{
-			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			else
 			{
 				myVehicle.RequestControlOnce();
@@ -377,7 +378,7 @@ namespace sub
 
 		if (slippyTires) 
 		{
-			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			else
 			{
 				bitVehicleSlippyTires = !bitVehicleSlippyTires;
@@ -389,7 +390,7 @@ namespace sub
 
 		if (vehicleMenuEngine) 
 		{
-			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			else
 			{
 				if (GET_VEHICLE_ENGINE_HEALTH(g_myVeh) > 0.0f)
@@ -397,14 +398,14 @@ namespace sub
 					myVehicle.RequestControlOnce();
 					SET_VEHICLE_ENGINE_HEALTH(g_myVeh, -1.0f);
 					SET_VEHICLE_UNDRIVEABLE(g_myVeh, 1);
-					Game::Print::PrintBottomCentre("Engine Killed");
+					Game::Print::ShowNotification("Engine Killed");
 				}
 				else
 				{
 					myVehicle.RequestControlOnce();
 					SET_VEHICLE_ENGINE_HEALTH(g_myVeh, 1250.0f);
 					SET_VEHICLE_UNDRIVEABLE(g_myVeh, 0);
-					Game::Print::PrintBottomCentre("Engine Revived");
+					Game::Print::ShowNotification("Engine Revived");
 				}
 			}
 			return;
@@ -442,7 +443,7 @@ namespace sub
 
 		if (hydraulicsOn) 
 		{
-			Game::Print::PrintBottomLeft(oss_ "Use ~b~" << (Menu::bitController ? "LS/L1 + stick movement" : "LeftShift + WASD") << "~s~ for hydraulics.");
+			Game::Print::PrintBottomLeft(oss_ "Use ~b~" << (Menu::usingControllerInput ? "LS/L1 + stick movement" : "LeftShift + WASD") << "~s~ for hydraulics.");
 			return;
 		}
 
@@ -484,53 +485,53 @@ namespace sub
 
 		if (noGravityOn) 
 		{
-			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			else
 			{
 				myVehicle.RequestControlOnce();
 				SET_VEHICLE_GRAVITY(g_myVeh, 0);
 				bitVehicleGravity = true;
-				Game::Print::PrintBottomCentre("Vehicle Gravity ~g~Disabled");
+				Game::Print::ShowNotification("Vehicle Gravity ~g~Disabled");
 			}
 			return;
 		}
 		if (noGravityOff) 
 		{
-			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			else
 			{
 				myVehicle.RequestControlOnce();
 				SET_VEHICLE_GRAVITY(g_myVeh, 1);
 				bitVehicleGravity = false;
-				Game::Print::PrintBottomCentre("Vehicle Gravity ~r~Enabled");
+				Game::Print::ShowNotification("Vehicle Gravity ~r~Enabled");
 			}
 			return;
 		}
 
 		if (freezeCarOn) 
 		{
-			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			else
 			{
 				bitFreezeVehicle = true;
 				myVehicle.RequestControlOnce();
 				SET_VEHICLE_FORWARD_SPEED(g_myVeh, 0.0f);
 				FREEZE_ENTITY_POSITION(g_myVeh, 1);
-				Game::Print::PrintBottomCentre("Vehicle Freeze ~g~On");
+				Game::Print::ShowNotification("Vehicle Freeze ~g~On");
 			}
 			return;
 		}
 
 		if (freezeCarOff) 
 		{
-			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			else
 			{
 				bitFreezeVehicle = false;
 				myVehicle.RequestControlOnce();
 				SET_VEHICLE_FORWARD_SPEED(g_myVeh, 8.0f);
 				FREEZE_ENTITY_POSITION(g_myVeh, 0);
-				Game::Print::PrintBottomCentre("Vehicle Freeze ~r~Off");
+				Game::Print::ShowNotification("Vehicle Freeze ~r~Off");
 			}
 			return;
 		}
@@ -539,7 +540,7 @@ namespace sub
 		{
 			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) 
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+				Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			}
 			else
 			{
@@ -565,12 +566,12 @@ namespace sub
 
 		if (deleteCar) 
 		{
-			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+			if (!IS_PED_IN_ANY_VEHICLE(PLAYER_PED_ID(), 0)) Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			else
 			{
 				myVehicle.Delete(false);
-				Game::Print::PrintBottomCentre("Poof!");
-				*Menu::currentopATM = 1;
+				Game::Print::ShowNotification("Poof!");
+				*Menu::activeOptionIndex = 1;
 			}
 			return;
 		}
@@ -626,7 +627,7 @@ namespace sub
 		{
 			if (!myPed.IsInVehicle()) 
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ You are not in a vehicle.");
+				Game::Print::ShowNotification("~r~Error:", "You are not in a vehicle.");
 			}
 			else
 			{
@@ -677,7 +678,7 @@ namespace sub
 		{
 			if (!pv.Exists()) 
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ No longer in memory.");
+				Game::Print::ShowNotification("~r~Error:", "No longer in memory.");
 			}
 			else
 			{
@@ -690,7 +691,7 @@ namespace sub
 		{
 			if (!pv.Exists()) 
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ No longer in memory.");
+				Game::Print::ShowNotification("~r~Error:", "No longer in memory.");
 			}
 			else
 			{
@@ -710,7 +711,7 @@ namespace sub
 		{
 			if (!pv.Exists()) 
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ No longer in memory.");
+				Game::Print::ShowNotification("~r~Error:", "No longer in memory.");
 			}
 			else
 			{
@@ -1041,11 +1042,9 @@ namespace sub
 
 	namespace VehicleSlam
 	{
-		Vehicle& slamVehicle = g_Ped4;
 		float* slamValue;
 		void InitSub(GTAvehicle veh, float* val)
 		{
-			slamVehicle = veh.Handle();
 			slamValue = val;
 		}
 
@@ -1080,7 +1079,7 @@ namespace sub
 					*slamValue = sl.value;
 					if (sl.value <= -0.35f)
 					{
-						Game::Print::PrintBottomCentre("~b~Note:~s~ You can even drive on walls with this value.");
+						Game::Print::ShowNotification("~b~Note:", "You can even drive on walls with this value.");
 					}
 				}
 			}
@@ -1230,7 +1229,7 @@ namespace sub
 		AddToggle("Rainbow Mode", multiPlatNeonsRainbow);
 
 		AddOption("Set Colour", setRGBIndexTo3, nullFunc, SUB::MSPAINTS_RGB);
-		if (*Menu::currentopATM == Menu::printingop)
+		if (Menu::IsLastDrawnOptionSelected())
 		{
 			AddPresetColourOptionsPreview(g_multiPlatNeonsColor);
 		}

@@ -20,6 +20,7 @@
 
 #include "SpoonerEntity.h"
 #include "SpoonerMarker.h"
+#include "SpoonerLight.h"
 
 #include <vector>
 #include <utility>
@@ -33,6 +34,7 @@ namespace sub::Spooner
 		std::vector<std::pair<GTAentity, Hash>> RelationshipDb; // Why did I make this?
 		std::vector<std::pair<GTAblip, std::string>> RefBlipDb;
 		std::vector<SpoonerMarker> MarkerDb;
+		std::vector<SpoonerLight> LightDb;
 	}
 
 }

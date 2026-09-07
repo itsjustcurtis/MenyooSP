@@ -17,6 +17,7 @@ project "Menyoo"
     files {
         "Solution/source/**.h",
         "Solution/source/**.cpp",
+        "Solution/generated/Version.h",
         "Solution/source/Menyoo.rc",
         "Solution/external/pugixml/src/pugixml.cpp",
         "Solution/external/pugixml/src/pugiconfig.hpp",
@@ -44,6 +45,7 @@ project "Menyoo"
         "Solution/external/ImGuizmo",
         "Solution/external/d3dhook",
         "Solution/external/MinHook/include",
+        "Solution/generated",
     }
 
     links { "ScriptHookV", "d3d11", "d3dcompiler", "dxgi", "Psapi" }
@@ -63,6 +65,10 @@ project "Menyoo"
     linkoptions { "/SUBSYSTEM:WINDOWS" }
 
     staticruntime "Off"
+
+    prebuildcommands {
+        'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(SolutionDir)..\\tools\\generate-version.ps1" -OutputDirectory "$(SolutionDir)generated"',
+    }
 
     filter "configurations:Debug"
         runtime "Debug"
