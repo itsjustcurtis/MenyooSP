@@ -1346,7 +1346,7 @@ namespace sub
 		if (spawnRandom || spawnVehicleInput)
 		{
 			Model model;
-			Ped ped = g_Ped1
+			Ped ped = g_Ped1;
 			if (g_vehHashes.empty()) return;
 			if (spawnRandom)
 			{
