@@ -151,7 +151,7 @@ namespace sub::TeleportLocations_catind
 				DO_SCREEN_FADE_OUT(50);
 				CreateWarehouse(currentWarehouseInfo);
 				TeleportPedToWarehouse(ped, currentWarehouseInfo);
-				//Menu::SetSub_previous();
+				//Menu::SetPreviousMenu();
 				DO_SCREEN_FADE_IN(200);
 				return;
 			}

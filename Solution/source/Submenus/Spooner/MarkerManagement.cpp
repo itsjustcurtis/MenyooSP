@@ -88,7 +88,7 @@ namespace sub::Spooner
 				{
 					finalPosition = marker.m_attachmentArgs.attachedTo.GetOffsetInWorldCoords(marker.m_attachmentArgs.offset);
 					marker.m_position = finalPosition; // If detached, stay at pos
-					const Vector3& entRot = marker.m_attachmentArgs.attachedTo.Rotation_get();
+					const Vector3& entRot = marker.m_attachmentArgs.attachedTo.GetRotation();
 					//finalDirection = Vector3::DirectionToRotation(entRot);
 					finalRotation = Vector3(0, 0, entRot.z) + marker.m_attachmentArgs.rotation;
 				}
@@ -140,7 +140,7 @@ namespace sub::Spooner
 									if (dest->m_attachmentArgs.attachedTo.Exists())
 									{
 										finalDest = dest->m_attachmentArgs.attachedTo.GetOffsetInWorldCoords(dest->m_attachmentArgs.offset);
-										finalDestHeading = dest->m_attachmentArgs.attachedTo.Rotation_get().z + marker.m_destinationHeading;
+										finalDestHeading = dest->m_attachmentArgs.attachedTo.GetRotation().z + marker.m_destinationHeading;
 									}
 									else
 									{

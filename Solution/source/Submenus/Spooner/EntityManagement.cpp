@@ -364,7 +364,7 @@ namespace sub::Spooner
 			{
 				GTAentity myPedOrVehicle = myPed.IsInVehicle() ? (GTAentity)myPed.CurrentVehicle() : (GTAentity)myPed;
 
-				newEntity.handle = World::CreateProp(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 2.6f + dimensions.Dim2.y, 0), myPedOrVehicle.Rotation_get(), bDynamic, false);
+				newEntity.handle = World::CreateProp(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 2.6f + dimensions.Dim2.y, 0), myPedOrVehicle.GetRotation(), bDynamic, false);
 				if (unloadModel)
 					model.Unload();
 				if (!myPedOrVehicle.IsInAir())
@@ -448,7 +448,7 @@ namespace sub::Spooner
 			{
 				GTAentity myPedOrVehicle = myPed.IsInVehicle() ? (GTAentity)myPed.CurrentVehicle() : (GTAentity)myPed;
 
-				newEntity.handle = World::CreatePed(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 2.6f + dimensions.Dim2.y, 0), myPedOrVehicle.Rotation_get(), myPedOrVehicle.HeightAboveGround() < 3.0f);
+				newEntity.handle = World::CreatePed(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 2.6f + dimensions.Dim2.y, 0), myPedOrVehicle.GetRotation(), myPedOrVehicle.HeightAboveGround() < 3.0f);
 				if (unloadModel)
 					model.Unload();
 			}
@@ -547,7 +547,7 @@ namespace sub::Spooner
 			{
 				GTAentity myPedOrVehicle = myPed.IsInVehicle() ? (GTAentity)myPed.CurrentVehicle() : (GTAentity)myPed;
 
-				newEntity.handle = World::CreateVehicle(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 3.6f + dimensions.Dim2.y, 0), myPedOrVehicle.Rotation_get(), false);
+				newEntity.handle = World::CreateVehicle(model, myPedOrVehicle.GetOffsetInWorldCoords(0, myPedOrVehicle.Dim1().y + 3.6f + dimensions.Dim2.y, 0), myPedOrVehicle.GetRotation(), false);
 				if (unloadModel)
 					model.Unload();
 				if (!myPedOrVehicle.IsInAir())
@@ -665,7 +665,7 @@ namespace sub::Spooner
 			EntityType entType = (EntityType)orig.handle.Type();
 			if (entType == EntityType::PROP)
 			{
-				newEntity.handle = World::CreateProp(orig.handle.Model(), orig.handle.GetPosition(), orig.handle.Rotation_get(), bDynamic, false);
+				newEntity.handle = World::CreateProp(orig.handle.Model(), orig.handle.GetPosition(), orig.handle.GetRotation(), bDynamic, false);
 				SET_NETWORK_ID_CAN_MIGRATE(OBJ_TO_NET(newEntity.handle.Handle()), true);
 				GTAprop eo = newEntity.handle;
 
@@ -678,7 +678,7 @@ namespace sub::Spooner
 				GTAped ep;
 				GTAped origPed = orig.handle;
 
-				//newEntity.handle = World::CreatePed(orig.handle.Model(), orig.handle.Position_get(), orig.handle.Rotation_get(), false);
+				//newEntity.handle = World::CreatePed(orig.handle.Model(), orig.handle.GetPosition(), orig.handle.GetRotation(), false);
 				newEntity.handle = origPed.Clone(origPed.GetHeading(), true, true);
 				ep = newEntity.handle;
 
@@ -690,7 +690,7 @@ namespace sub::Spooner
 					SetPedWeaponMovementClipSet(ep, wMovGrpStr);
 
 				ep.SetPosition(origPed.GetPosition());
-				ep.SetRotation(origPed.Rotation_get());
+				ep.SetRotation(origPed.GetRotation());
 				sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = sub::PedHeadFeatures_catind::vPedHeads[origPed.Handle()];
 				sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()] = sub::PedDamageTextures::vPedsAndDamagePacks[origPed.Handle()];
 				sub::PedDecals::vPedsAndDecals[ep.Handle()] = sub::PedDecals::vPedsAndDecals[origPed.Handle()];
@@ -742,10 +742,10 @@ namespace sub::Spooner
 			}
 			else if (entType == EntityType::VEHICLE)
 			{
-				//newEntity.handle = World::CreateVehicle(orig.handle.Model(), orig.handle.Position_get(), orig.handle.Rotation_get(), false);
+				//newEntity.handle = World::CreateVehicle(orig.handle.Model(), orig.handle.GetPosition(), orig.handle.GetRotation(), false);
 				newEntity.handle = clone_vehicle(orig.handle);
 				newEntity.handle.SetPosition(orig.handle.GetPosition());
-				newEntity.handle.SetRotation(orig.handle.Rotation_get());
+				newEntity.handle.SetRotation(orig.handle.GetRotation());
 				SET_NETWORK_ID_CAN_MIGRATE(VEH_TO_NET(newEntity.handle.Handle()), true);
 			}
 
@@ -907,7 +907,7 @@ namespace sub::Spooner
 			DetachEntity(ent);
 			if (bAttachWithRelativePosRot)
 			{
-				AttachEntity(ent, to, 0, to.GetOffsetGivenWorldCoords(ent.handle.GetPosition()), ent.handle.Rotation_get() - to.Rotation_get());
+				AttachEntity(ent, to, 0, to.GetOffsetGivenWorldCoords(ent.handle.GetPosition()), ent.handle.GetRotation() - to.GetRotation());
 			}
 			else
 			{

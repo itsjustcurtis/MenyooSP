@@ -880,7 +880,7 @@ void SetPTFXLopTick()
 			case EntityType::PED:
 				if (IS_PED_A_PLAYER(it->entity.Handle()) && it->entity.Handle() != PLAYER_PED_ID())
 				{
-					PTFX::TriggerPTFX(it->asset, it->fx, NULL, GET_PED_BONE_COORDS(it->entity.Handle(), Bone::SKEL_Head, 0.0f, 0.0f, 0.0f), it->entity.Rotation_get(), GET_RANDOM_FLOAT_IN_RANGE(0.76f, 1.4f));
+					PTFX::TriggerPTFX(it->asset, it->fx, NULL, GET_PED_BONE_COORDS(it->entity.Handle(), Bone::SKEL_Head, 0.0f, 0.0f, 0.0f), it->entity.GetRotation(), GET_RANDOM_FLOAT_IN_RANGE(0.76f, 1.4f));
 				}
 				else
 				{
@@ -2313,7 +2313,7 @@ void SetVehicleNosPTFXThisFrame(GTAvehicle vehicle)
 	}
 	else
 	{
-		const Vector3& otherWayRot = vehicle.Rotation_get() + Vector3(0, 0, -90.0f);
+		const Vector3& otherWayRot = vehicle.GetRotation() + Vector3(0, 0, -90.0f);
 		for (auto& exh : { VBone::exhaust, VBone::exhaust_2 })
 		{
 			muzzleFlash.Start(vehicle.GetBoneCoords(vehicle.GetBoneIndex(exh)), 1.0f, otherWayRot);
@@ -2667,7 +2667,7 @@ void SetVehicleFlip(GTAvehicle vehicle)
 		if (!vehicle.IsInAir() && !vehicle.IsInWater() && !model.IsPlane() && !model.IsHeli())
 		{
 			vehicle.RequestControlOnce();
-			vehicle.SetRotation(Vector3(0, 0, vehicle.Rotation_get().z));
+			vehicle.SetRotation(Vector3(0, 0, vehicle.GetRotation().z));
 		}
 	}
 }

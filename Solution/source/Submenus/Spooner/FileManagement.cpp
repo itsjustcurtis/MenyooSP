@@ -462,7 +462,7 @@ namespace sub::Spooner
 
 			auto nodeEntityPosRot = nodeEntity.append_child("PositionRotation");
 			const Vector3& epos = e.handle.GetPosition();
-			const Vector3& erot = e.handle.Rotation_get();
+			const Vector3& erot = e.handle.GetRotation();
 			nodeEntityPosRot.append_child("X").text() = epos.x;
 			nodeEntityPosRot.append_child("Y").text() = epos.y;
 			nodeEntityPosRot.append_child("Z").text() = epos.z;
@@ -1592,7 +1592,7 @@ namespace sub::Spooner
 			addlog(ige::LogType::LOG_INFO,  "Saving World to xml file " + filePath);
 
 			//GTAentity myPed = PLAYER_PED_ID();
-			//auto& myPos = myPed.Position_get();
+			//auto& myPos = myPed.GetPosition();
 			//bool bCheckEntDistFromSelf = maxDistFromSelf < FLT_MAX;
 
 			pugi::xml_node nodeNote;
@@ -1779,7 +1779,7 @@ namespace sub::Spooner
 				if (e.handle.Exists())
 				{
 					//if (bCheckEntDistFromSelf)
-					//{if (myPos.DistanceTo(e.handle.Position_get()) > maxDistFromSelf) continue;}
+					//{if (myPos.DistanceTo(e.handle.GetPosition()) > maxDistFromSelf) continue;}
 
 					auto indInDb = EntityManagement::GetEntityIndexInDb(e);
 					if (indInDb >= 0)

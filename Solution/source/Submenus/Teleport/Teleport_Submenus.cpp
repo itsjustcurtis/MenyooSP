@@ -251,9 +251,9 @@ namespace sub::TeleportLocations_catind
 			/*for (auto& blip : vBlips)
 			{
 			bool bPressedBlip = false;
-			AddOption(blip.IconName() + " (" + World::GetZoneName(blip.Position_get(), true) + ")", bPressedBlip); if (bPressedBlip)
+			AddOption(blip.IconName() + " (" + World::GetZoneName(blip.GetPosition(), true) + ")", bPressedBlip); if (bPressedBlip)
 			{
-			TeleMethods::ToCoordinates241(blip.Position_get());
+			TeleMethods::ToCoordinates241(blip.GetPosition());
 			}
 			}*/
 
@@ -268,7 +268,7 @@ namespace sub::TeleportLocations_catind
 			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str()).status != pugi::status_ok)
 			{
 				//Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load " + xmlSavedMapLocations);
-				//Menu::SetSub_previous();
+				//Menu::SetPreviousMenu();
 				doc.reset();
 				auto nodeDecleration = doc.append_child(pugi::node_declaration);
 				nodeDecleration.append_attribute("version") = "1.0";
@@ -287,7 +287,7 @@ namespace sub::TeleportLocations_catind
 				{
 					GTAentity ent = g_activePedHandle;
 					const Vector3& myPos = ent.GetPosition();
-					const Vector3& myRot = ent.Rotation_get();
+					const Vector3& myRot = ent.GetRotation();
 					auto nodeOldLoc = nodeRoot.find_child_by_attribute("name", inputStr.c_str());
 					if (nodeOldLoc) // If not null
 					{

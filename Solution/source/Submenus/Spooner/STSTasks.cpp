@@ -1243,7 +1243,7 @@ namespace sub::Spooner
 		void FightHatedTargets::RunP(GTAped& ep)
 		{
 			std::vector<GTAped> pedHandles;
-			//GTAmemory::GetPedHandles(pedHandles, ep.Position_get(), this->radius);
+			//GTAmemory::GetPedHandles(pedHandles, ep.GetPosition(), this->radius);
 			World::GetNearbyPeds(pedHandles, ep.GetPosition(), this->radius);
 
 			TaskSequence squ;
@@ -1788,7 +1788,7 @@ namespace sub::Spooner
 		}
 		void AchieveVelocity::RunP(GTAped& ep)
 		{
-			ep.SetVelocity(Vector3::RotationToDirection((this->isRelative ? ep.Rotation_get() : Vector3::Zero()) + Vector3(this->pitch, 0.0f, this->heading)) * this->magnitude);
+			ep.SetVelocity(Vector3::RotationToDirection((this->isRelative ? ep.GetRotation() : Vector3::Zero()) + Vector3(this->pitch, 0.0f, this->heading)) * this->magnitude);
 		}
 
 		void AchievePushForce::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -2023,7 +2023,7 @@ namespace sub::Spooner
 			if (e.attachmentArgs.isAttached && sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.handle, att))
 				EntityManagement::AttachEntity(e, att, e.attachmentArgs.boneIndex, e.attachmentArgs.offset, (this->isRelative ? e.attachmentArgs.rotation : Vector3()) + rotationValue);
 			else
-				e.handle.SetRotation((this->isRelative ? e.handle.Rotation_get() : Vector3()) + rotationValue);
+				e.handle.SetRotation((this->isRelative ? e.handle.GetRotation() : Vector3()) + rotationValue);
 		}
 
 		void ChangeOpacity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const

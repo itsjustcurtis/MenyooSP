@@ -82,10 +82,8 @@ namespace sub
 		std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualEditingPtrs = { 0, nullptr, nullptr };
 		float _fSaveRangeRadius = 5.0f;
 		UINT8 _copyEntTexterValue = 0;
-		UINT8 _entTypeToShowTexterValue = 0;
-		void SetSelectedEntityAsActivePed() { Static_241 = SelectedEntity.Handle.Handle(); }
-		void SetSelectedEntityAsVehicleTarget() { Static_12 = SelectedEntity.Handle.Handle(); }
 		GTAblip SelectedBlip;
+		UINT8 _entTypeToShowTexterValue = 0;
 		EntityScaleState _vehScale, _pedScale, _objScale;
 		static GTAentity s_selectedEntityTarget;
 		static UINT s_spoonerPedWeaponCategory = 0;
@@ -187,13 +185,13 @@ namespace sub
 				g_multiSelectPivot.FreezePosition(true);
 
 				Vector3 pivotPos = g_multiSelectPivot.GetPosition();
-				Vector3 pivotRot = g_multiSelectPivot.Rotation_get();
+				Vector3 pivotRot = g_multiSelectPivot.GetRotation();
 				for (auto& e : MultiSelect::g_selectedEntities)
 				{
 					if (e.handle.Exists())
 					{
 						Vector3 relPos = e.handle.GetPosition() - pivotPos;
-						Vector3 relRot = e.handle.Rotation_get() - pivotRot;
+						Vector3 relRot = e.handle.GetRotation() - pivotRot;
 						e.handle.AttachTo(g_multiSelectPivot, -1, false, relPos, relRot);
 					}
 				}
@@ -1250,7 +1248,7 @@ namespace sub
 			if (Databases::EntityDb.empty())
 			{
 				Game::Print::ShowNotification("~r~Error:", "The Spooner entity database is empty.");
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -1926,7 +1924,7 @@ namespace sub
 			AddTitle("Manual Editing");
 
 			Vector3 currPos = selectedEntity.handle.GetPosition();
-			Vector3 currRot = selectedEntity.handle.Rotation_get();
+			Vector3 currRot = selectedEntity.handle.GetRotation();
 
 			Entity handle = selectedEntity.handle.Handle();
 			auto& scaleState = IS_ENTITY_A_VEHICLE(handle) ? _vehScale
@@ -2007,7 +2005,7 @@ namespace sub
 				WrapAngle(nextRot.y);
 				WrapAngle(nextRot.z);
 				selectedEntity.handle.SetRotation(SpoonerMode::SnapRot(nextRot));
-				currRot = selectedEntity.handle.Rotation_get();
+				currRot = selectedEntity.handle.GetRotation();
 				GTAentity attBase;
 				if (EntityManagement::GetEntityThisEntityIsAttachedTo(selectedEntity.handle, attBase))
 					World::DrawLine(attBase.GetPosition(), currPos, RGBA::AllWhite());
@@ -2182,7 +2180,7 @@ namespace sub
 				bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
 
 				Vector3 pivotPos = g_multiSelectPivot.GetPosition();
-				Vector3 pivotRot = g_multiSelectPivot.Rotation_get();
+				Vector3 pivotRot = g_multiSelectPivot.GetRotation();
 				Vector3 basePos = pivotPos;
 				Vector3 baseRot = pivotRot;
 
@@ -2644,7 +2642,7 @@ namespace sub
 			if (SelectedMarker->m_attachmentArgs.attachedTo.Exists())
 			{
 				finalPosition = SelectedMarker->m_attachmentArgs.attachedTo.GetOffsetInWorldCoords(SelectedMarker->m_attachmentArgs.offset);
-				finalRotation = SelectedMarker->m_attachmentArgs.attachedTo.Rotation_get() + SelectedMarker->m_attachmentArgs.rotation;
+				finalRotation = SelectedMarker->m_attachmentArgs.attachedTo.GetRotation() + SelectedMarker->m_attachmentArgs.rotation;
 			}
 			else
 			{
@@ -2658,7 +2656,7 @@ namespace sub
 			if (dest->m_attachmentArgs.attachedTo.Exists())
 			{
 				finalDest = dest->m_attachmentArgs.attachedTo.GetOffsetInWorldCoords(dest->m_attachmentArgs.offset);
-				finalDestHeading = dest->m_attachmentArgs.attachedTo.Rotation_get().z + SelectedMarker->m_destinationHeading;
+				finalDestHeading = dest->m_attachmentArgs.attachedTo.GetRotation().z + SelectedMarker->m_destinationHeading;
 			}
 			else
 			{
@@ -2890,7 +2888,7 @@ namespace sub
 						if (SelectedMarker->m_attachmentArgs.attachedTo.Exists())
 						{
 							finalPosition = SelectedMarker->m_attachmentArgs.attachedTo.GetOffsetInWorldCoords(SelectedMarker->m_attachmentArgs.offset);
-							finalRotation = SelectedMarker->m_attachmentArgs.attachedTo.Rotation_get() + SelectedMarker->m_attachmentArgs.rotation;
+							finalRotation = SelectedMarker->m_attachmentArgs.attachedTo.GetRotation() + SelectedMarker->m_attachmentArgs.rotation;
 						}
 						else
 						{
@@ -2904,7 +2902,7 @@ namespace sub
 						if (dest->m_attachmentArgs.attachedTo.Exists())
 						{
 							finalDest = dest->m_attachmentArgs.attachedTo.GetOffsetInWorldCoords(dest->m_attachmentArgs.offset);
-							finalDestHeading = dest->m_attachmentArgs.attachedTo.Rotation_get().z + SelectedMarker->m_destinationHeading;
+							finalDestHeading = dest->m_attachmentArgs.attachedTo.GetRotation().z + SelectedMarker->m_destinationHeading;
 						}
 						else
 						{
@@ -2939,7 +2937,7 @@ namespace sub
 				if (SelectedMarker->m_attachmentArgs.attachedTo.Exists())
 				{
 					SelectedMarker->m_position = SelectedMarker->m_attachmentArgs.attachedTo.GetOffsetInWorldCoords(SelectedMarker->m_attachmentArgs.offset);
-					SelectedMarker->m_rotation = SelectedMarker->m_attachmentArgs.attachedTo.Rotation_get() + SelectedMarker->m_attachmentArgs.rotation;
+					SelectedMarker->m_rotation = SelectedMarker->m_attachmentArgs.attachedTo.GetRotation() + SelectedMarker->m_attachmentArgs.rotation;
 				}
 				SelectedMarker->m_attachmentArgs.attachedTo = 0;
 				SelectedMarker->m_attachmentArgs.offset.clear();
@@ -2960,7 +2958,7 @@ namespace sub
 							if (Settings::bKeepPositionWhenAttaching)
 							{
 								SelectedMarker->m_attachmentArgs.offset = e.handle.GetOffsetGivenWorldCoords(SelectedMarker->m_position);
-								SelectedMarker->m_attachmentArgs.rotation = SelectedMarker->m_rotation - e.handle.Rotation_get();
+								SelectedMarker->m_attachmentArgs.rotation = SelectedMarker->m_rotation - e.handle.GetRotation();
 							}
 							else
 							{
@@ -3397,18 +3395,18 @@ namespace sub
 				if (!spoocam.IsActive())
 				{
 					GTAentity myPed = PLAYER_PED_ID();
-					Vector3 myPos = myPed.Position_get();
+					Vector3 myPos = myPed.GetPosition();
 
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.GetHeading()));
 				}
 				else
 				{
 					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
 
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.GetRotation().z));
 				}
 
-				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
+				Menu::pendingSubmenu = SUB::SPOONER_BLIPS_RADIALINBLIP;
 			}
 
 			AddOption("Attach Blip to Entity", null, nullFunc, SUB::SPOONER_BLIPS_ADD_ENTITY);
@@ -3424,7 +3422,7 @@ namespace sub
 			{
 				sub::Spooner::BlipCustoms::RemoveBlip(*sub::Spooner::SelectedBlip);
 				sub::Spooner::SelectedBlip = nullptr;
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 			}
 		}
 
@@ -3442,7 +3440,7 @@ namespace sub
 		{
 			if (sub::Spooner::SelectedBlip == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -3454,7 +3452,7 @@ namespace sub
 			{
 				sub::Spooner::BlipCustoms::RemoveBlip(*sub::Spooner::SelectedBlip);
 				sub::Spooner::SelectedBlip = nullptr;
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 			}
 		}
 
@@ -4817,17 +4815,6 @@ namespace sub
 	}
 
 }
-
-
-
-// forward-declare the SpoonerBlip pointer so we can reference it in this file unambiguously
-namespace sub {
-	namespace Spooner {
-		struct SpoonerBlip;         // forward declaration of the struct/class
-		extern SpoonerBlip* SelectedBlip; // extern declaration (definition is later in file)
-	}
-}
-
 
 #include "..\..\Menu\submenu_switch.h"
 #include "..\..\Menu\submenu_enum.h"

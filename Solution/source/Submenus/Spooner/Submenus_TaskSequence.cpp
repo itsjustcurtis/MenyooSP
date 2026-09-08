@@ -1203,7 +1203,7 @@ namespace sub::Spooner
 
 				const GTAentity& thisEntity = selectedEntity.handle;
 				const Vector3& entityPos = thisEntity.GetPosition();
-				const Vector3& entityRot = thisEntity.Rotation_get();
+				const Vector3& entityRot = thisEntity.GetRotation();
 				const Vector3& rotForVel = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + Vector3(tskPtr->pitch, 0.0f, tskPtr->heading);
 				const Vector3& dirForVel = Vector3::RotationToDirection(rotForVel);
 
@@ -1239,7 +1239,7 @@ namespace sub::Spooner
 
 				const GTAentity& thisEntity = selectedEntity.handle;
 				const Vector3& entityPos = thisEntity.GetPosition();
-				const Vector3& entityRot = thisEntity.Rotation_get();
+				const Vector3& entityRot = thisEntity.GetRotation();
 				const Vector3& rotForFrc = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + Vector3(tskPtr->pitch, 0.0f, tskPtr->heading);
 				const Vector3& dirForFrc = Vector3::RotationToDirection(rotForFrc);
 
@@ -1388,7 +1388,7 @@ namespace sub::Spooner
 
 				const GTAentity& thisEntity = selectedEntity.handle;
 				const Vector3& entityPos = thisEntity.GetPosition();
-				const Vector3& entityRot = thisEntity.Rotation_get();
+				const Vector3& entityRot = thisEntity.GetRotation();
 				const Vector3& rotForRot = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + tskPtr->rotationValue;
 				const Vector3& dirForRot = Vector3::RotationToDirection(rotForRot);
 				const Vector3& rotForRoll = Vector3(rotForRot.y + 90.0f, 0.0f, rotForRot.y > 0 ? rotForRot.z - 90.0f : rotForRot.z + 90.0f);

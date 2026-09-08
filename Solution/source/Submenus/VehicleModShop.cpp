@@ -591,7 +591,7 @@ namespace sub
 				lastpaint = getpaintCarUsing_index(vehicle, s_selectedPaintPart);
 				lastpearl = getpaintCarUsing_index(vehicle, 3);
 				iscustompaint = false;
-				//Menu::SetSub_previous();
+				//Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -2528,7 +2528,7 @@ namespace sub
 				if (pressed)
 				{
 					lastMod = i;
-					//Menu::SetSub_previous();
+					//Menu::SetPreviousMenu();
 				}
 				if (Menu::OnSubBack == nullptr)
 				{
@@ -2678,7 +2678,7 @@ namespace sub
 					lastfwheel = GET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels);
 					lastbwheel = GET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels);
 					addlog(ige::LogType::LOG_DEBUG, "Wheels Set, lastwheeltype = " + std::to_string(lastwheeltype) + ", lastfwheel = " + std::to_string(lastfwheel) + ", lastbwheel = " + std::to_string(lastbwheel));
-					//Menu::SetSub_previous();
+					//Menu::SetPreviousMenu();
 					return;
 				}
 			}

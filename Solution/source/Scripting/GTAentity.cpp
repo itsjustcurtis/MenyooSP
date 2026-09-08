@@ -388,7 +388,7 @@ void GTAentity::SetPosition(Vector3 value)
 	SET_ENTITY_COORDS_NO_OFFSET(this->mHandle, value.x, value.y, value.z, 1, 1, 1);
 }
 
-Vector3 GTAentity::Rotation_get() const
+Vector3 GTAentity::GetRotation() const
 {
 	return GET_ENTITY_ROTATION(this->mHandle, 2);
 }

@@ -225,19 +225,6 @@ namespace sub
             }
         }
 
-        static int blipIndex = 0;
-        static const std::vector<std::pair<int, std::string>> blipOptions =
-        {
-			{ 270, "Ally"     },  
-            { 1,   "Standard" },
-            { 280, "Friend"   },
-            { 480, "VIP"      }
-        };
-
-        // show labels using AddTexter
-        static bool bBlipInput = false;
-        bool icon_plus = false, icon_minus = false;
-
         AddTexter("Bodyguard Blip", 0, { blipOptions[blipIndex].second }, bBlipInput, bIcon_Plus, bIcon_Minus);
 
         if (bIcon_Plus) 

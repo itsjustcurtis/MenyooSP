@@ -189,7 +189,7 @@ namespace sub::TeleportLocations_catind
 					DO_SCREEN_FADE_OUT(50);
 					CreateClubhouse(currentClubhouseInfo);
 					TeleportPedToClubhouse(ped, currentClubhouseInfo);
-					//Menu::SetSub_previous();
+					//Menu::SetPreviousMenu();
 					DO_SCREEN_FADE_IN(200);
 					return;
 				}
@@ -342,7 +342,7 @@ namespace sub::TeleportLocations_catind
 					DO_SCREEN_FADE_OUT(50);
 					CreateBusiness(currentBusinessInfo);
 					TeleportPedToBusiness(ped, currentBusinessInfo);
-					//Menu::SetSub_previous();
+					//Menu::SetPreviousMenu();
 					DO_SCREEN_FADE_IN(200);
 					return;
 				}
