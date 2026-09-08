@@ -3654,7 +3654,7 @@ namespace sub
 					AddOption("Adjust Attachment", bAdjust, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT);
 					if (bAdjust)
 					{
-						SpoonerVector3ManualPlacementPtrs = std::make_tuple(
+						SpoonerVector3ManualEditingPtrs = std::make_tuple(
 							(GTAentity)blip->EntityHandle,
 							&blip->Offset,
 							(Vector3*)nullptr
@@ -3667,7 +3667,7 @@ namespace sub
 					AddOption("Manual Placement", bManual, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT);
 					if (bManual)
 					{
-						SpoonerVector3ManualPlacementPtrs = std::make_tuple(
+						SpoonerVector3ManualEditingPtrs = std::make_tuple(
 							(GTAentity)0,
 							&blip->Offset,
 							(Vector3*)nullptr
