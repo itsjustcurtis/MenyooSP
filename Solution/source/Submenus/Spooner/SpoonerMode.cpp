@@ -1079,7 +1079,7 @@ namespace sub::Spooner
 
 			if (!Databases::BlipDb.empty())
 			{
-				auto sub = Menu::currentsub;
+				auto sub = Menu::activeSubmenu;
 				bool bInBlipSub =
 					sub == SUB::SPOONER_BLIPS ||
 					sub == SUB::SPOONER_BLIPS_ADD_SELECT ||

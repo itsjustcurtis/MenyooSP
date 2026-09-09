@@ -84,7 +84,6 @@ namespace sub
 		std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualEditingPtrs = { 0, nullptr, nullptr };
 		float _fSaveRangeRadius = 5.0f;
 		UINT8 _copyEntTexterValue = 0;
-		GTAblip SelectedBlip;
 		UINT8 _entTypeToShowTexterValue = 0;
 		EntityScaleState _vehScale, _pedScale, _objScale;
 		static GTAentity s_selectedEntityTarget;
@@ -1385,7 +1384,7 @@ namespace sub
 			for (auto& blip : Databases::BlipDb)
 			{
 				if (blip.BlipType == SpoonerBlip::Type::Entity
-					&& blip.EntityHandle == SelectedEntity.Handle.GetHandle())
+					&& blip.EntityHandle == selectedEntity.handle.GetHandle())
 				{
 					existingBlip = &blip;
 					break;
@@ -1409,18 +1408,18 @@ namespace sub
 				{
 					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(
 						SpoonerBlip::Type::Entity,
-						SelectedEntity.HashName
+						selectedEntity.hashName
 					);
 
-					auto mapping = GetBlipMappingForEntity(SelectedEntity.Handle);
-					sub::Spooner::SelectedBlip->EntityHandle = SelectedEntity.Handle.GetHandle();
+					auto mapping = GetBlipMappingForEntity(selectedEntity.handle);
+					sub::Spooner::SelectedBlip->EntityHandle = selectedEntity.handle.GetHandle();
 					sub::Spooner::SelectedBlip->bAttached = true;
 					sub::Spooner::SelectedBlip->Icon = mapping.icon;
 					sub::Spooner::SelectedBlip->bSyncRotation = mapping.syncRotation;
 					sub::Spooner::SelectedBlip->Alpha = 255;
 					sub::Spooner::SelectedBlip->Scale = (mapping.icon == BlipIcon::Standard || mapping.icon == BlipIcon::Enemy) ? 0.80f : 1.0f;
 					BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITYINBLIP;
+					Menu::pendingSubmenu = SUB::SPOONER_BLIPS_ENTITYINBLIP;
 				}
 			}
 
@@ -3431,7 +3430,7 @@ namespace sub
 			AddTickol("Create Entity Blip", true, bAttachBlipToEntityPressed, bAttachBlipToEntityPressed, TICKOL::SMALLNEWSTAR);
 			if (bAttachBlipToEntityPressed)
 			{
-				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITY_SELECT;
+				Menu::pendingSubmenu = SUB::SPOONER_BLIPS_ENTITY_SELECT;
 			}
 
 			bool bAddNewCoordBlipPressed = false;
@@ -3443,22 +3442,22 @@ namespace sub
 				if (!spoocam.IsActive())
 				{
 					GTAentity myPed = PLAYER_PED_ID();
-					Vector3 myPos = myPed.Position_get();
+					Vector3 myPos = myPed.GetPosition();
 
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.GetHeading()));
 				}
 				else
 				{
 					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
 
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.GetRotation().z));
 				}
 
 				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Coord;
 				sub::Spooner::SelectedBlip->Alpha = 255;
 				sub::Spooner::SelectedBlip->Scale = 0.80f;
 				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
+				Menu::pendingSubmenu = SUB::SPOONER_BLIPS_COORDINBLIP;
 			}
 
 			bool bAddNewRadialBlipPressed = false;
@@ -3470,22 +3469,22 @@ namespace sub
 				if (!spoocam.IsActive())
 				{
 					GTAentity myPed = PLAYER_PED_ID();
-					Vector3 myPos = myPed.Position_get();
+					Vector3 myPos = myPed.GetPosition();
 
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.Heading_get()));
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPos, Vector3(0, 0, myPed.GetHeading()));
 				}
 				else
 				{
 					Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
 
-					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+					sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.GetRotation().z));
 				}
 
 				sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
 				sub::Spooner::SelectedBlip->Alpha = 160;
 				sub::Spooner::SelectedBlip->Scale = 0.80f;
 				BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-				Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
+				Menu::pendingSubmenu = SUB::SPOONER_BLIPS_RADIALINBLIP;
 			}
 
 			AddBreak("---Entity Blips---");
@@ -3496,7 +3495,7 @@ namespace sub
 				bool bAddEntity = false;
 				AddOption("Add Entity Blip", bAddEntity);
 				if (bAddEntity)
-					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITY_SELECT;
+					Menu::pendingSubmenu = SUB::SPOONER_BLIPS_ENTITY_SELECT;
 			}
 			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
 			{
@@ -3550,18 +3549,18 @@ namespace sub
 					if (!spoocam.IsActive())
 					{
 						GTAentity myPed = PLAYER_PED_ID();
-						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPed.Position_get(), Vector3(0, 0, myPed.Heading_get()));
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPed.GetPosition(), Vector3(0, 0, myPed.GetHeading()));
 					}
 					else
 					{
 						Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
-						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.GetRotation().z));
 					}
 					sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Coord;
 					sub::Spooner::SelectedBlip->Alpha = 255;
 					sub::Spooner::SelectedBlip->Scale = 0.80f;
 					BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
+					Menu::pendingSubmenu = SUB::SPOONER_BLIPS_COORDINBLIP;
 				}
 			}
 			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
@@ -3575,15 +3574,15 @@ namespace sub
 				if (bBlipPressed)
 				{
 					sub::Spooner::SelectedBlip = &m;
-					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_COORDINBLIP;
+					Menu::pendingSubmenu = SUB::SPOONER_BLIPS_COORDINBLIP;
 				}
 
-				if (*Menu::currentopATM == Menu::printingop)
+				if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 				{
 					m.m_selectedInSub = true;
 
 					bool bShortcutDeletePressed;
-					if (Menu::bit_controller)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Coord Blip");
 						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -3612,18 +3611,18 @@ namespace sub
 					if (!spoocam.IsActive())
 					{
 						GTAentity myPed = PLAYER_PED_ID();
-						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPed.Position_get(), Vector3(0, 0, myPed.Heading_get()));
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(myPed.GetPosition(), Vector3(0, 0, myPed.GetHeading()));
 					}
 					else
 					{
 						Vector3 spawnPos = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 120.0f, 30.0f);
-						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.Rotation_get().z));
+						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(spawnPos, Vector3(0, 0, spoocam.GetRotation().z));
 					}
 					sub::Spooner::SelectedBlip->BlipType = SpoonerBlip::Type::Radial;
 					sub::Spooner::SelectedBlip->Alpha = 160;
 					sub::Spooner::SelectedBlip->Scale = 0.80f;
 					BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
+					Menu::pendingSubmenu = SUB::SPOONER_BLIPS_RADIALINBLIP;
 				}
 			}
 			for (UINT i = 0; i < Databases::BlipDb.size(); i++)
@@ -3637,15 +3636,15 @@ namespace sub
 				if (bBlipPressed)
 				{
 					sub::Spooner::SelectedBlip = &m;
-					Menu::SetSub_delayed = SUB::SPOONER_BLIPS_RADIALINBLIP;
+					Menu::pendingSubmenu = SUB::SPOONER_BLIPS_RADIALINBLIP;
 				}
 
-				if (*Menu::currentopATM == Menu::printingop)
+				if (*Menu::activeOptionIndex == Menu::currentOptionCount)
 				{
 					m.m_selectedInSub = true;
 
 					bool bShortcutDeletePressed;
-					if (Menu::bit_controller)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Radial Blip");
 						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -3699,33 +3698,33 @@ namespace sub
 
 			for (auto& e : Databases::EntityDb)
 			{
-				if (e.Handle.Exists())
+				if (e.handle.Exists())
 				{
 					bool bEntityPressed = false;
-					AddOption(e.HashName, bEntityPressed);
+					AddOption(e.hashName, bEntityPressed);
 					if (bEntityPressed)
 					{
 						sub::Spooner::SelectedBlip = sub::Spooner::BlipCustoms::AddBlip(
 							SpoonerBlip::Type::Entity,
-							e.HashName
+							e.hashName
 						);
 
-						sub::Spooner::SelectedBlip->EntityHandle = e.Handle.GetHandle();
+						sub::Spooner::SelectedBlip->EntityHandle = e.handle.GetHandle();
 						sub::Spooner::SelectedBlip->bAttached = true;
 						sub::Spooner::SelectedBlip->Alpha = 255;
 						sub::Spooner::SelectedBlip->Scale = 0.80f;
 						sub::Spooner::SelectedBlip->Icon = BlipIcon::Standard;
 						BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-						Menu::SetSub_delayed = SUB::SPOONER_BLIPS_ENTITYINBLIP;
+						Menu::pendingSubmenu = SUB::SPOONER_BLIPS_ENTITYINBLIP;
 						return;
 					}
 
-					if (*Menu::currentopATM == Menu::printingop)
-						EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(0, 255, 0, 200));
+					if (*Menu::activeOptionIndex == Menu::currentOptionCount)
+						EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 				}
 				else
 				{
-					AddOption(e.HashName + " (Invalid)", null);
+					AddOption(e.hashName + " (Invalid)", null);
 				}
 			}
 		}
@@ -3734,7 +3733,7 @@ namespace sub
 		{
 			if (sub::Spooner::SelectedBlip == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -3916,7 +3915,7 @@ namespace sub
 			{
 				BlipCustoms::RemoveBlip(*blip);
 				sub::Spooner::SelectedBlip = nullptr;
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 		}
@@ -3931,7 +3930,7 @@ namespace sub
 		{
 			if (sub::Spooner::SelectedBlip == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -4086,7 +4085,7 @@ namespace sub
 			{
 				BlipCustoms::RemoveBlip(*blip);
 				sub::Spooner::SelectedBlip = nullptr;
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -4126,7 +4125,7 @@ namespace sub
 				AddOption("Manual Placement", bManual, nullFunc, SUB::SPOONER_VECTOR3_MANUALPLACEMENT);
 				if (bManual)
 				{
-					SpoonerVector3ManualPlacementPtrs = std::make_tuple(
+					SpoonerVector3ManualEditingPtrs = std::make_tuple(
 						(GTAentity)0,
 						&blip->Offset,
 						(Vector3*)nullptr
@@ -4401,7 +4400,7 @@ namespace sub
 		{
 			if (sub::Spooner::SelectedBlip == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -4431,25 +4430,25 @@ namespace sub
 				AddBreak("---Database---");
 				for (auto& e : Databases::EntityDb)
 				{
-					if (e.Handle.Exists())
+					if (e.handle.Exists())
 					{
 						bool bEntityPressed = false;
-						AddTickol(e.HashName, blip->EntityHandle == e.Handle.GetHandle(), bEntityPressed, bEntityPressed, TICKOL::TICK2);
+						AddTickol(e.hashName, blip->EntityHandle == e.handle.GetHandle(), bEntityPressed, bEntityPressed, TICKOL::TICK2);
 						if (bEntityPressed)
 						{
-							blip->EntityHandle = e.Handle.GetHandle();
+							blip->EntityHandle = e.handle.GetHandle();
 							blip->Offset.clear();
 							blip->bAttached = true;
 							BlipCustoms::RefreshBlip(*blip);
-							Menu::SetSub_previous();
+							Menu::SetPreviousMenu();
 							return;
 						}
 
-						if (*Menu::currentopATM == Menu::printingop) EntityManagement::ShowArrowAboveEntity(e.Handle, RGBA(0, 255, 0, 200));
+						if (*Menu::activeOptionIndex == Menu::currentOptionCount) EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(0, 255, 0, 200));
 					}
 					else
 					{
-						AddOption(e.HashName + " (Invalid)", null);
+						AddOption(e.hashName + " (Invalid)", null);
 					}
 				}
 			}
@@ -4459,7 +4458,7 @@ namespace sub
 		{
 			if (sub::Spooner::SelectedBlip == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -4519,11 +4518,11 @@ namespace sub
 				bool bIconPressed = false;
 				AddTickol(name, sub::Spooner::SelectedBlip->Icon == icon, bIconPressed, bIconPressed, TICKOL::TICK2);
 
-				if (Menu::printingop == *Menu::currentopATM)
+				if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 				{
 					sub::Spooner::SelectedBlip->Icon = icon;
 					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-					if (Menu::bit_controller)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove from favourites");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
@@ -4546,11 +4545,11 @@ namespace sub
 				bool bIconPressed = false;
 				AddTickol(name, sub::Spooner::SelectedBlip->Icon == icon, bIconPressed, bIconPressed, TICKOL::TICK2);
 
-				if (Menu::printingop == *Menu::currentopATM)
+				if (Menu::currentOptionCount == *Menu::activeOptionIndex)
 				{
 					sub::Spooner::SelectedBlip->Icon = icon;
 					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-					if (Menu::bit_controller)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Add to favourites");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
@@ -5975,3 +5974,13 @@ REGISTER_SUBMENU(SPOONER_ATTACHMENTOPS_SELECTBONE,                    	sub::Spoo
 REGISTER_SUBMENU(SPOONER_MANUALEDITING,                               	sub::Spooner::Submenus::Sub_ManualEditing)
 REGISTER_SUBMENU(SPOONER_MANUALEDITING_SNAP,                          	sub::Spooner::Submenus::Sub_Snapping)
 REGISTER_SUBMENU(OBJECTSPAWNER_SEARCH,                                	sub::Spooner::Submenus::ObjectSpawnerSearchMenu)
+REGISTER_SUBMENU(SPOONER_BLIPS,											sub::Spooner::Submenus::Sub_Blip_Management)
+REGISTER_SUBMENU(SPOONER_BLIPS_ADD_RADIAL,								sub::Spooner::Submenus::Sub_Blip_Radial)
+REGISTER_SUBMENU(SPOONER_BLIPS_ADD_ENTITY,								sub::Spooner::Submenus::Sub_Blip_Entity)
+REGISTER_SUBMENU(SPOONER_BLIPS_ADD_COORD,								sub::Spooner::Submenus::Sub_Blip_Coord)
+REGISTER_SUBMENU(SPOONER_BLIPS_RADIALINBLIP,							sub::Spooner::Submenus::Sub_Blip_RadialInBlip)
+REGISTER_SUBMENU(SPOONER_BLIPS_COORDINBLIP,								sub::Spooner::Submenus::Sub_Blip_CoordInBlip)
+REGISTER_SUBMENU(SPOONER_BLIPS_ENTITYINBLIP,							sub::Spooner::Submenus::Sub_Blip_EntityInBlip)
+REGISTER_SUBMENU(SPOONER_BLIPS_ENTITY_SELECT,							sub::Spooner::Submenus::Sub_Blip_Entity_Select)
+REGISTER_SUBMENU(SPOONER_BLIPS_ATTACH,									sub::Spooner::Submenus::Sub_Blip_Attach)
+REGISTER_SUBMENU(SPOONER_BLIPS_ICONS,									sub::Spooner::Submenus::Sub_Blip_Icons)

@@ -826,14 +826,14 @@ namespace sub::Spooner
 			for (int i = 0; i < (int)Databases::BlipDb.size(); i++)
 			{
 				if (Databases::BlipDb[i].BlipType == SpoonerBlip::Type::Entity
-					&& Databases::BlipDb[i].EntityHandle == orig.Handle.GetHandle())
+					&& Databases::BlipDb[i].EntityHandle == orig.handle.GetHandle())
 				{
 					SpoonerBlip* newBlip = sub::Spooner::BlipCustoms::AddBlip(
 						SpoonerBlip::Type::Entity,
 						Databases::BlipDb[i].Name
 					);
 					*newBlip = Databases::BlipDb[i];
-					newBlip->EntityHandle = newEntity.Handle.GetHandle();
+					newBlip->EntityHandle = newEntity.handle.GetHandle();
 					newBlip->BlipHandle = 0;
 					WAIT(0);
 					sub::Spooner::BlipCustoms::RefreshBlip(*newBlip);

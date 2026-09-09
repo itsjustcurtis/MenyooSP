@@ -1,7 +1,7 @@
 #include "BlipMapping.h"
-#include "../../Scripting/GTAentity.h"
-#include "../../Natives/natives.h"
-#include "../../Scripting/GTAblip.h"
+#include "Scripting/GTAentity.h"
+#include "Natives/natives.h"
+#include "Scripting/GTAblip.h"
 #include "Natives/natives2.h"
 #include "Scripting/Model.h"
 

@@ -101,9 +101,9 @@ namespace sub::Spooner
 			return (doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteProps).c_str()));
 		}
 
-		bool(*IsVehicleAFavourite)(GTAmodel::Model vehModel) = SpawnVehicle_IsVehicleModelAFavourite;
-		bool(*AddVehicleToFavourites)(GTAmodel::Model vehModel, const std::string& customName) = SpawnVehicle_AddVehicleModelToFavourites;
-		bool(*RemoveVehicleFromFavourites)(GTAmodel::Model vehModel) = SpawnVehicle_RemoveVehicleModelFromFavourites;
+		bool(*IsVehicleAFavourite)(GTAmodel::Model vehModel) = SpawnVehicleIsVehicleModelAFavourite;
+		bool(*AddVehicleToFavourites)(GTAmodel::Model vehModel, const std::string& customName) = SpawnVehicleAddVehicleModelToFavourites;
+		bool(*RemoveVehicleFromFavourites)(GTAmodel::Model vehModel) = SpawnVehicleRemoveVehicleModelFromFavourites;
 
 		std::string xmlFavouriteBlipIcons = "FavouriteBlipIcons.xml";
 

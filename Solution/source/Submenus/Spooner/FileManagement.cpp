@@ -1324,7 +1324,7 @@ namespace sub::Spooner
 				{
 					if (e.initHandle == initHandle)
 					{
-						b.EntityHandle = e.e.Handle.GetHandle();
+						b.EntityHandle = e.e.handle.GetHandle();
 						b.bAttached = true;
 						found = true;
 						break;

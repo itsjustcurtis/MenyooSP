@@ -22,8 +22,6 @@ typedef unsigned long DWORD, Hash;
 
 class GTAentity;
 
-#include "../../Scripting/GTAblip.h"
-
 namespace sub
 {
 	namespace Spooner::Submenus
@@ -31,7 +29,6 @@ namespace sub
 		extern std::string& _searchStr;
 		extern std::tuple<GTAentity, Vector3*, Vector3*> SpoonerVector3ManualEditingPtrs;
 		extern UINT8 _copyEntTexterValue;
-		extern GTAblip SelectedBlip;
 		struct EntityScaleState {
 			int handle = 0;
 			Vector3 scale{ 1.0f, 1.0f, 1.0f };

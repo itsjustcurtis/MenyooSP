@@ -114,7 +114,7 @@ namespace sub::BodyguardMenu::BodyguardManagement
 		ent.Handle = GTAentity(ped);
 		ent.Type = EntityType::PED;
 		ent.Name = text;
-		ent.HashName = IntToHexString(model.hash, true);
+		ent.hashName = IntToHexString(model.hash, true);
 
 		sub::BodyguardMenu::BodyguardManagement::AddBodyguardToDb(ent);
 		for (auto& bg : sub::BodyguardMenu::BodyguardDb)
