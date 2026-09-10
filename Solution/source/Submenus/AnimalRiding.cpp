@@ -220,7 +220,7 @@ namespace sub
 			GTAped myPed = PLAYER_PED_ID();
 			const auto& myPos = myPed.GetPosition();
 			auto myHeading = myPed.GetHeading();
-			const auto& myRot = myPed.Rotation_get();
+			const auto& myRot = myPed.GetRotation();
 			const auto& myDir = Vector3::RotationToDirection(myRot);
 
 			auto animalRide = World::CreatePed(model, myPos + myDir * 3.0f, myHeading, false);

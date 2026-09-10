@@ -34,9 +34,9 @@ namespace sub::BodyguardMenu
                     title = SelectedBodyguard->Name;
                 }
                 // Otherwise use a stored hash-name (if present)
-                else if (!SelectedBodyguard->HashName.empty())
+                else if (!SelectedBodyguard->hashName.empty())
                 {
-                    title = SelectedBodyguard->HashName;
+                    title = SelectedBodyguard->hashName;
                 }
                 // Fallback: use the model hash as hex string
                 else

@@ -36,7 +36,7 @@ namespace BlipIcon {
 		{ BlipIcon::Enemy, "Enemy" },
 		{ BlipIcon::Friend, "Friend" },
 		{ BlipIcon::VIP, "VIP" },
-		{ BlipIcon::BigBlip, "BigBlip" },
+		//{ BlipIcon::BigBlip, "BigBlip" },
 		{ BlipIcon::PoliceOfficer, "PoliceOfficer" },
 		{ BlipIcon::PoliceArea, "PoliceArea" },
 		{ BlipIcon::Square, "Square" },
@@ -899,16 +899,22 @@ void GTAblip::SetSelectableOnMap(bool selectable)
     SET_BLIP_DISPLAY(this->mHandle, selectable ? 2 : 8);
 }
 
-// New Blip functions end here.
-void GTAblip::SetRotationWithFloat(float heading)
+void GTAblip::SetPriority(int priority)
 {
-    SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, heading);
+    SET_BLIP_PRIORITY(this->mHandle, priority);
 }
+// New Blip functions
 
-void GTAblip::AddBlipForArea(float x, float y, float z, float width, float height)
+int GTAblip::GetPriority() const
 {
-    this->mHandle = ADD_BLIP_FOR_AREA(x, y, z, width, height);
+	return mPriority;
 }
+void GTAblip::SetDisplayMode(int value)
+{
+	SET_BLIP_DISPLAY(this->mHandle, value);
+}
+// New Blip functions end here.
+
 // New Blip functions end here.
 int GTAblip::Icon() const
 {
@@ -965,12 +971,4 @@ void GTAblip::Remove()
 		this->mHandle = id;
 	}
 }
-//New code to add rotational sync with attached entity.
-void GTAblip::SyncRotationWithEntity(int entityHandle)
-{
-    if (DOES_BLIP_EXIST(this->mHandle) && DOES_ENTITY_EXIST(entityHandle))
-    {
-        float entityHeading = GET_ENTITY_HEADING(entityHandle); // Get entity rotation
-        SET_BLIP_ROTATION_WITH_FLOAT(this->mHandle, entityHeading); // Set blip rotation
-    }
-}
+

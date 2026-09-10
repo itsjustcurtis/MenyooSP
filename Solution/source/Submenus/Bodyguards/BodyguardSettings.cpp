@@ -34,7 +34,7 @@ namespace sub::BodyguardMenu
 
             bool bPressed = false;
 
-            std::string label = !bg.Name.empty() ? bg.Name : bg.HashName;
+            std::string label = !bg.Name.empty() ? bg.Name : bg.hashName;
 
             AddOption(label, bPressed, nullFunc, SUB::BODYGUARD_ENTITYOPS);
 

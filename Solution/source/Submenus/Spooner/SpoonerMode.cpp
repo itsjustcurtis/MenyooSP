@@ -31,6 +31,7 @@
 #include "..\..\Util\StringManip.h"
 #include "..\..\Scripting\enums.h"
 #include "..\..\Scripting\Game.h"
+#include "BlipCustoms.h"
 
 #include "SpoonerSettings.h"
 #include "EntityManagement.h"
@@ -375,7 +376,7 @@ namespace sub::Spooner
 				if (!freeCam.Exists())
 				{
 					const Vector3& myPos = myPed.GetPosition();
-					freeCam = World::CreateCamera(myPos + Vector3(0, 0, 2.8f), Vector3(0, 0, myPed.Rotation_get().z), 73.f);
+					freeCam = World::CreateCamera(myPos + Vector3(0, 0, 2.8f), Vector3(0, 0, myPed.GetRotation().z), 73.f);
 					freeCam.SetActive(false);
 				}
 				if (!freeCam.IsActive())
@@ -523,7 +524,7 @@ namespace sub::Spooner
 									break;
 								case eSpoonerModeMode::Precision:
 									bHeldEntityHasCollision = selectedEntity.handle.GetIsCollisionEnabled();
-									freeCam.SetRotation(selectedEntity.handle.Rotation_get());
+									freeCam.SetRotation(selectedEntity.handle.GetRotation());
 									break;
 								}
 							}
@@ -531,7 +532,7 @@ namespace sub::Spooner
 							DRAW_RECT(0.5f, 0.5f, 0.004f, 0.008f, 255, 128, 0, 255, false);
 
 							selectedEntity.handle.RequestControl();
-							Vector3 rotSelected = selectedEntity.handle.Rotation_get();
+							Vector3 rotSelected = selectedEntity.handle.GetRotation();
 							Vector3 rotFreeCam = freeCam.GetRotation();
 							switch (spoonerModeMode)
 							{
@@ -548,14 +549,14 @@ namespace sub::Spooner
 								selectedEntity.handle.SetRotation(rotFreeCam);
 								break;
 							}
-							rotSelected = selectedEntity.handle.Rotation_get(); // To get -180 to 180 values
+							rotSelected = selectedEntity.handle.GetRotation(); // To get -180 to 180 values
 
 							const ModelDimensions& mdSelectedEntity = selectedEntity.handle.ModelDimensions();
 							switch (spoonerModeMode)
 							{
 							case eSpoonerModeMode::GroundEase:
 							{
-								//Vector3& geSep = selectedEntity.handle.Position_get();
+								//Vector3& geSep = selectedEntity.handle.GetPosition();
 								//auto& geGroundRay = RaycastResult::Raycast(geSep, Vector3::WorldDown(), max(max(mdSelectedEntity.Dim1.x, mdSelectedEntity.Dim2.x), max(max(mdSelectedEntity.Dim1.y, mdSelectedEntity.Dim2.y), max(mdSelectedEntity.Dim1.z, mdSelectedEntity.Dim2.z))) + 2.0f, IntersectOptions::Everything, selectedEntity.handle);
 								float geGroundZ = mdSelectedEntity.Dim1.z;
 								//if (geGroundRay.DidHitAnything())
@@ -833,7 +834,7 @@ namespace sub::Spooner
 									break;
 								case eSpoonerModeMode::Precision:
 									bHeldEntityHasCollision = selectedEntity.handle.GetIsCollisionEnabled();
-									freeCam.SetRotation(selectedEntity.handle.Rotation_get());
+									freeCam.SetRotation(selectedEntity.handle.GetRotation());
 									break;
 								}
 							}
@@ -841,7 +842,7 @@ namespace sub::Spooner
 							DRAW_RECT(0.5f, 0.5f, 0.004f, 0.008f, 255, 128, 0, 255, false);
 
 							selectedEntity.handle.RequestControl();
-							Vector3 rotSelected = selectedEntity.handle.Rotation_get();
+							Vector3 rotSelected = selectedEntity.handle.GetRotation();
 							Vector3 rotFreeCam = freeCam.GetRotation();
 							switch (spoonerModeMode)
 							{
@@ -858,14 +859,14 @@ namespace sub::Spooner
 								selectedEntity.handle.SetRotation(rotFreeCam);
 								break;
 							}
-							rotSelected = selectedEntity.handle.Rotation_get(); // To get -180 to 180 values
+							rotSelected = selectedEntity.handle.GetRotation(); // To get -180 to 180 values
 
 							const ModelDimensions& mdSelectedEntity = selectedEntity.handle.ModelDimensions();
 							switch (spoonerModeMode)
 							{
 							case eSpoonerModeMode::GroundEase:
 							{
-								//Vector3& geSep = selectedEntity.handle.Position_get();
+								//Vector3& geSep = selectedEntity.handle.GetPosition();
 								//auto& geGroundRay = RaycastResult::Raycast(geSep, Vector3::WorldDown(), max(max(mdSelectedEntity.Dim1.x, mdSelectedEntity.Dim2.x), max(max(mdSelectedEntity.Dim1.y, mdSelectedEntity.Dim2.y), max(mdSelectedEntity.Dim1.z, mdSelectedEntity.Dim2.z))) + 2.0f, IntersectOptions::Everything, selectedEntity.handle);
 								float geGroundZ = mdSelectedEntity.Dim1.z;
 								//if (geGroundRay.DidHitAnything())
@@ -1075,6 +1076,24 @@ namespace sub::Spooner
 			applyScaleTick(Submenus::_vehScale);
 			applyScaleTick(Submenus::_pedScale);
 			applyScaleTick(Submenus::_objScale);
+
+			if (!Databases::BlipDb.empty())
+			{
+				auto sub = Menu::activeSubmenu;
+				bool bInBlipSub =
+					sub == SUB::SPOONER_BLIPS ||
+					sub == SUB::SPOONER_BLIPS_ADD_SELECT ||
+					sub == SUB::SPOONER_BLIPS_RADIALINBLIP ||
+					sub == SUB::SPOONER_BLIPS_COORDINBLIP ||
+					sub == SUB::SPOONER_BLIPS_ENTITYINBLIP ||
+					sub == SUB::SPOONER_BLIPS_ATTACH ||
+					sub == SUB::SPOONER_BLIPS_ENTITY_SELECT ||
+					sub == SUB::SPOONER_BLIPS_ICONS;
+
+				if (bInBlipSub)
+					BlipCustoms::DrawAll();
+				BlipCustoms::UpdateAttachedBlips();
+			}
 		}
 
 		void TurnOn()

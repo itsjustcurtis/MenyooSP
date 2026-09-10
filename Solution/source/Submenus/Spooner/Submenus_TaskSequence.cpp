@@ -171,22 +171,22 @@ namespace sub::Spooner
 				if (number_plus) { if (tskPtr->showNumber < INT_MAX) tskPtr->showNumber++; }
 				if (number_minus) { if (tskPtr->showNumber > INT_MIN) tskPtr->showNumber--; }
 
-				AddToggle("Show Cone", tskPtr->showCone);
+				//AddToggle("Show Cone (Peds only)", tskPtr->showCone);
 				
     				bool displayId_plus = false, displayId_minus = false;
-   				AddNumber("Display ID", tskPtr->displayId, 1, null, displayId_plus, displayId_minus);
-    				if (displayId_plus) { if (tskPtr->displayId < INT_MAX) tskPtr->displayId++; }
-    				if (displayId_minus) { if (tskPtr->displayId > 0) tskPtr->displayId--; }
+   				//AddNumber("Display ID", tskPtr->displayId, 1, null, displayId_plus, displayId_minus);
+    				//if (displayId_plus) { if (tskPtr->displayId < INT_MAX) tskPtr->displayId++; }
+    				//if (displayId_minus) { if (tskPtr->displayId > 0) tskPtr->displayId--; }
 
-    				bool priority_plus = false, priority_minus = false;
-    				AddNumber("Priority", tskPtr->priority, 1, null, priority_plus, priority_minus);
-    				if (priority_plus) { if (tskPtr->priority < INT_MAX) tskPtr->priority++; }
-    				if (priority_minus) { if (tskPtr->priority > 0) tskPtr->priority--; }
+    				//bool priority_plus = false, priority_minus = false;
+    				//AddNumber("Priority", tskPtr->priority, 1, null, priority_plus, priority_minus);
+    				//if (priority_plus) { if (tskPtr->priority < INT_MAX) tskPtr->priority++; }
+    				//if (priority_minus) { if (tskPtr->priority > 0) tskPtr->priority--; }
 
-				AddToggle("Sync Rotation With Entity", tskPtr->syncRotation);
+				//AddToggle("Sync Rotation With Entity", tskPtr->syncRotation);
 
 				bool nonSelectable = (tskPtr->displayMode == 8);
-				AddToggle("Non-Selectable", nonSelectable);
+				//AddToggle("Non-Selectable", nonSelectable);
 				tskPtr->displayMode = nonSelectable ? 8 : 2;
 			}
 			void RemoveBlip()
@@ -1203,7 +1203,7 @@ namespace sub::Spooner
 
 				const GTAentity& thisEntity = selectedEntity.handle;
 				const Vector3& entityPos = thisEntity.GetPosition();
-				const Vector3& entityRot = thisEntity.Rotation_get();
+				const Vector3& entityRot = thisEntity.GetRotation();
 				const Vector3& rotForVel = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + Vector3(tskPtr->pitch, 0.0f, tskPtr->heading);
 				const Vector3& dirForVel = Vector3::RotationToDirection(rotForVel);
 
@@ -1239,7 +1239,7 @@ namespace sub::Spooner
 
 				const GTAentity& thisEntity = selectedEntity.handle;
 				const Vector3& entityPos = thisEntity.GetPosition();
-				const Vector3& entityRot = thisEntity.Rotation_get();
+				const Vector3& entityRot = thisEntity.GetRotation();
 				const Vector3& rotForFrc = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + Vector3(tskPtr->pitch, 0.0f, tskPtr->heading);
 				const Vector3& dirForFrc = Vector3::RotationToDirection(rotForFrc);
 
@@ -1388,7 +1388,7 @@ namespace sub::Spooner
 
 				const GTAentity& thisEntity = selectedEntity.handle;
 				const Vector3& entityPos = thisEntity.GetPosition();
-				const Vector3& entityRot = thisEntity.Rotation_get();
+				const Vector3& entityRot = thisEntity.GetRotation();
 				const Vector3& rotForRot = (tskPtr->isRelative ? entityRot : Vector3::Zero()) + tskPtr->rotationValue;
 				const Vector3& dirForRot = Vector3::RotationToDirection(rotForRot);
 				const Vector3& rotForRoll = Vector3(rotForRot.y + 90.0f, 0.0f, rotForRot.y > 0 ? rotForRot.z - 90.0f : rotForRot.z + 90.0f);

@@ -66,8 +66,8 @@ namespace VehicleFly
 		if (!control)
 			return;
 
-		PTFX::TriggerPTFX("scr_carsteal4", "scr_carsteal4_wheel_burnout", vehicle, Vector3(-vehicle_md.Dim1.x, -vehicle_md.Dim1.y, -0.2f), vehicle.Rotation_get() * Vector3(1, 1, -1), 0.08f);
-		PTFX::TriggerPTFX("scr_carsteal4", "scr_carsteal4_wheel_burnout", vehicle, Vector3(vehicle_md.Dim2.x, -vehicle_md.Dim1.y, -0.2f), vehicle.Rotation_get() * Vector3(1, 1, -1), 0.08f);
+		PTFX::TriggerPTFX("scr_carsteal4", "scr_carsteal4_wheel_burnout", vehicle, Vector3(-vehicle_md.Dim1.x, -vehicle_md.Dim1.y, -0.2f), vehicle.GetRotation() * Vector3(1, 1, -1), 0.08f);
+		PTFX::TriggerPTFX("scr_carsteal4", "scr_carsteal4_wheel_burnout", vehicle, Vector3(vehicle_md.Dim2.x, -vehicle_md.Dim1.y, -0.2f), vehicle.GetRotation() * Vector3(1, 1, -1), 0.08f);
 
 		vehicle.ApplyForceRelative(Vector3(0, 1.0f * control, 0));
 	}

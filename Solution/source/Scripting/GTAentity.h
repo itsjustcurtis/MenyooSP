@@ -145,7 +145,7 @@ public:
 	Vector3 GetPosition() const;
 	void SetPosition(Vector3 value);
 
-	Vector3 Rotation_get() const;
+	Vector3 GetRotation() const;
 	void SetRotation(Vector3 value);
 	Vector3 GetScale() const;
 	void SetScale(Vector3 value);

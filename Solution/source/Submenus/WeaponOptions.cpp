@@ -333,7 +333,7 @@ namespace sub
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(0, INPUT_ATTACK))
 						{
 							PLAY_SOUND_FROM_ENTITY(-1, "Chopper_Destroyed", ped.Handle(), "FBI_HEIST_FIGHT_CHOPPER_SOUNDS", 0, 0);
-							//PTFX::trigger_ptfx_1("scr_carsteal4", "scr_carsteal4_wheel_burnout", 0, entityArray.front().Position_get(), Vector3(), 0.66f);
+							//PTFX::trigger_ptfx_1("scr_carsteal4", "scr_carsteal4_wheel_burnout", 0, entityArray.front().GetPosition(), Vector3(), 0.66f);
 
 							Vector3 force = GameplayCamera::GetDirection() * shootForce;
 

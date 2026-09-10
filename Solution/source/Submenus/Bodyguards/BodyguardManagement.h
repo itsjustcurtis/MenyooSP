@@ -13,7 +13,7 @@ namespace sub::BodyguardMenu
     public:
         EntityType Type{};
         std::string Name;
-        std::string HashName;
+        std::string hashName;
         GTAentity Handle;
     };
 

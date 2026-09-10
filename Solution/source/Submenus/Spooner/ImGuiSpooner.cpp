@@ -443,7 +443,7 @@ namespace sub::Spooner::ImGuiSpooner
 				if (s.pending.rotationDirty)
 				{
 					float oldWorldM[16], newWorldM[16], oldLocalM[16];
-					Vector3 curWorldRot = sel.handle.Rotation_get();
+					Vector3 curWorldRot = sel.handle.GetRotation();
 					BuildTransformMatrix(Vector3(), curWorldRot, Vector3(1.0f, 1.0f, 1.0f), oldWorldM);
 					BuildTransformMatrix(Vector3(), s.pending.rotationVal, Vector3(1.0f, 1.0f, 1.0f), newWorldM);
 					BuildTransformMatrix(Vector3(), sel.attachmentArgs.rotation, Vector3(1.0f, 1.0f, 1.0f), oldLocalM);
@@ -521,7 +521,7 @@ namespace sub::Spooner::ImGuiSpooner
 		}
 
 		s.position = sel.handle.GetPosition();
-		s.rotation = sel.handle.Rotation_get();
+		s.rotation = sel.handle.GetRotation();
 		s.scale = sel.handle.GetScale();
 	}
 

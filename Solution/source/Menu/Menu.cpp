@@ -1230,7 +1230,7 @@ void AddOption(std::string text, bool& option_code_bool, void(&callback)(), int 
 
 	if (show_arrow || submenu_index != -1)
 	{
-		//Menu::possibleNameOfCurrentSubmenu = text;
+		//Menu::possibleNameOfactiveSubmenumenu = text;
 		if (!gxt)
 			text += tempChar;
 	}

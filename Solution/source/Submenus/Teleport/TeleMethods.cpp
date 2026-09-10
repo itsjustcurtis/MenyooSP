@@ -123,7 +123,7 @@ void TeleportToMissionBlip(GTAped ped)
 				(colour == BlipColour::Blue && icon == BlipIcon::Standard))
 
 			{
-				//Vector3 coord = blip.Position_get();
+				//Vector3 coord = blip.GetPosition();
 				Vector3 coord = Vector3(blip->x, blip->y, blip->z);
 				addlog(ige::LogType::LOG_DEBUG, "Mission Blip Found - Co-ord: " + std::to_string(coord.x)+"," + std::to_string(coord.y) + "," + std::to_string(coord.z));
 				if (ped.IsInVehicle())

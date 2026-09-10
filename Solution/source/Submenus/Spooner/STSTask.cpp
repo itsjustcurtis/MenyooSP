@@ -32,7 +32,7 @@ namespace sub::Spooner
 	{
 		{ STSTaskType::Nothing,{ "Nothing", EntityType::ALL } },
 		{ STSTaskType::SetHealth,{ "Set Health", EntityType::ALL } },
-		{ STSTaskType::AddBlip,{ "Add Blip (If None Present)", EntityType::ALL } },
+		{ STSTaskType::AddBlip,{ "Add Blip (If None Present) (Obsolete)", EntityType::ALL } },
 		{ STSTaskType::RemoveBlip,{ "Remove Blip", EntityType::ALL } },
 
 		{ STSTaskType::Pause,{ "Pause", EntityType::PED } },
