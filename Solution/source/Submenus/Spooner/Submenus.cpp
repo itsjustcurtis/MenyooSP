@@ -143,6 +143,15 @@ namespace sub
 				return false;
 			}
 
+			void SelectAll()
+			{
+				for (auto& e : Databases::EntityDb)
+				{
+					if (e.handle.Exists())
+						Add(e);
+				}
+			}
+
 			void Clear()
 			{
 				MultiSelect::g_selectedEntities.clear();
@@ -2126,19 +2135,37 @@ namespace sub
 			}
 
 			AddTitle("Multi-Select");
-
-			bool bClearAll = false;
-			AddOption("Clear Selection (" + std::to_string(MultiSelect::g_selectedEntities.size()) + ")", bClearAll); if (bClearAll)
+			
+			bool bSelectAll = false, bClearAll = false;
+			//if (MultiSelect::g_selectedEntities.size() < Databases::EntityDb.size()) //Commented out these statements as it causes the selection to move up and down when selecting/deselecting entities in the list
 			{
-				MultiSelect::DestroyPivot();
-				MultiSelect::Clear();
-				if (g_multiSelectEditActive)
+				AddOption("Select All (" + std::to_string(Databases::EntityDb.size()) + ")", bSelectAll); if (bSelectAll)
 				{
-					selectedEntity = g_multiSelectPrevSelected;
-					g_multiSelectEditActive = false;
-				}
+					MultiSelect::DestroyPivot();
+					MultiSelect::SelectAll();
+					if (g_multiSelectEditActive)
+					{
+						selectedEntity = g_multiSelectPrevSelected;
+						g_multiSelectEditActive = false;
+					}
 					*Menu::activeOptionIndex = 1;
-				return;
+					return;
+				}
+			}
+			//if (!MultiSelect::g_selectedEntities.empty()) //Commented out these statements as it causes the selection to move up and down when selecting/deselecting entities in the list
+			{
+				AddOption("Clear Selection (" + std::to_string(MultiSelect::g_selectedEntities.size()) + ")", bClearAll); if (bClearAll)
+				{
+					MultiSelect::DestroyPivot();
+					MultiSelect::Clear();
+					if (g_multiSelectEditActive)
+					{
+						selectedEntity = g_multiSelectPrevSelected;
+						g_multiSelectEditActive = false;
+					}
+					*Menu::activeOptionIndex = 1;
+					return;
+				}
 			}
 			if (!Databases::EntityDb.empty())
 			{
@@ -2174,7 +2201,7 @@ namespace sub
 			if (!MultiSelect::g_selectedEntities.empty() && g_multiSelectPivot.Exists())
 			{
 				bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
-
+				bool bDelete = false;
 				Vector3 pivotPos = g_multiSelectPivot.GetPosition();
 				Vector3 pivotRot = g_multiSelectPivot.Rotation_get();
 				Vector3 basePos = pivotPos;
@@ -2188,6 +2215,7 @@ namespace sub
 
 				AddBreak("---Bulk Edit---");
 
+				AddOption("Delete", bDelete);
 				AddNumberMultiplier("Scroll Sensitivity (Position)", precisionPos, 4, 10.0, 0.0001, 10.0);
 				AddNumberMultiplier("Scroll Sensitivity (Rotation)", precisionRot, 4, 10.0, 0.0001, 10.0);
 
@@ -2198,6 +2226,18 @@ namespace sub
 				AddNumberStepper("Roll", pivotRot.y, 4, (double)precisionRot);
 				AddNumberStepper("Yaw", pivotRot.z, 4, (double)precisionRot);
 				AddNumberStepper("Opacity (Local)", opacityDelta, 0, 1.0);
+
+				if (bDelete)
+				{
+					for (auto& e : MultiSelect::g_selectedEntities)
+					{
+						if (!e.handle.Exists())
+							continue;
+						if (isOnTheLine) e.handle.RequestControl();
+						EntityManagement::DeleteEntity(e);
+					}
+					MultiSelect::Clear();
+				}
 
 				// Apply pivot pos/rot to pivot itself
 				if (pivotPos.x != basePos.x || pivotPos.y != basePos.y || pivotPos.z != basePos.z)
