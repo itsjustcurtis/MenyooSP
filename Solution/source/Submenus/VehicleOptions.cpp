@@ -918,7 +918,7 @@ namespace sub
 			{
 				const auto& md = vehicleModel.Dimensions();
 				const auto& pos = vehicle.GetPosition();
-				const auto& rot = vehicle.Rotation_get();
+				const auto& rot = vehicle.GetRotation();
 				const auto& dir = Vector3::RotationToDirection(rot);
 
 				auto ray = RaycastResult::RaycastCapsule(pos, dir, 3.2f + md.Dim1.y, 2.3f, IntersectOptions::Everything, vehicle);

@@ -225,7 +225,6 @@ namespace sub
             }
         }
 
-
         AddTexter("Bodyguard Blip", 0, { blipOptions[blipIndex].second }, bBlipInput, bIcon_Plus, bIcon_Minus);
 
         if (bIcon_Plus) 

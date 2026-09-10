@@ -326,7 +326,7 @@ namespace sub::TeleportLocations_catind
 				DO_SCREEN_FADE_OUT(50);
 				CreateHangar(currentHangarInfo);
 				TeleportPedToHangar(ped, currentHangarInfo);
-				//Menu::SetSub_previous();
+				//Menu::SetPreviousMenu();
 				DO_SCREEN_FADE_IN(200);
 				return;
 			}

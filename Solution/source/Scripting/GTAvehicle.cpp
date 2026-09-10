@@ -3615,7 +3615,7 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 		return GTAvehicle();
 
 	Vector3 Pos = vehicle.GetPosition();
-	Vector3 Rot = vehicle.Rotation_get();
+	Vector3 Rot = vehicle.GetRotation();
 
 	Model vehicleModel = vehicle.Model();
 

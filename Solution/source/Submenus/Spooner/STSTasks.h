@@ -85,9 +85,9 @@ namespace sub::Spooner
     		int priority = 2;               
     		int displayId;   
     		bool syncRotation;  
-			// New functions
+			 //New functions
 			int displayMode = 2;
-			// New functions end here
+			 //New functions end here
 			AddBlip();
 			void Run(void* ve) override;
 		};

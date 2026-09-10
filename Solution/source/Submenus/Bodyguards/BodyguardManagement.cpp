@@ -68,8 +68,8 @@ namespace sub::BodyguardMenu
 			if (!ent.Handle.Exists())
 				return;
 
-			if (ent.HashName.empty())
-				ent.HashName = IntToHexString(ent.Handle.Model().hash, true);
+			if (ent.hashName.empty())
+				ent.hashName = IntToHexString(ent.Handle.Model().hash, true);
 
 			BodyguardDb.push_back(std::move(ent));
 		}

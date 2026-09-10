@@ -109,11 +109,11 @@ namespace sub::Spooner
 			nodeTask.append_child("ShowNumber").text() = this->showNumber;
 			// New Functions
 			nodeTask.append_child("ShowCone").text() = this->showCone;
-    	nodeTask.append_child("HudColorIndex").text() = this->hudColorIndex;
+    	//nodeTask.append_child("HudColorIndex").text() = this->hudColorIndex;
 			nodeTask.append_child("IsSelectableOnMap").text() = this->isSelectableOnMap;
-    	nodeTask.append_child("DisplayId").text() = this->displayId;
-    	nodeTask.append_child("Priority").text() = this->priority;
-    	nodeTask.append_child("SyncRotation").text() = this->syncRotation;
+    	//nodeTask.append_child("DisplayId").text() = this->displayId;
+    	//nodeTask.append_child("Priority").text() = this->priority;
+    	//nodeTask.append_child("SyncRotation").text() = this->syncRotation;
 
 		}
 		void AddBlip::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
@@ -130,11 +130,11 @@ namespace sub::Spooner
 			this->showNumber = nodeTask.child("ShowNumber").text().as_int();
 			// New Functions
 			this->showCone = nodeTask.child("ShowCone").text().as_bool();
-    	this->hudColorIndex = nodeTask.child("HudColorIndex").text().as_int();
+    	//this->hudColorIndex = nodeTask.child("HudColorIndex").text().as_int();
 			this->isSelectableOnMap = nodeTask.child("IsSelectableOnMap").text().as_bool();
-    	this->displayId = nodeTask.child("DisplayId").text().as_int();
-    	this->priority = nodeTask.child("Priority").text().as_int();
-    	this->syncRotation = nodeTask.child("SyncRotation").text().as_bool();
+    	//this->displayId = nodeTask.child("DisplayId").text().as_int();
+    	//this->priority = nodeTask.child("Priority").text().as_int();
+    	//this->syncRotation = nodeTask.child("SyncRotation").text().as_bool();
 		}
 		void AddBlip::ImportTaskDataSpecific(STSTask* otherTsk)
 		{
@@ -174,7 +174,7 @@ namespace sub::Spooner
 			this->showNumber = 0;
 			this->isSelectableOnMap = true;
 			// New functions
-			this->priority = 2;
+			//this->priority = 2;
 			this->displayMode = 2;
 		}
 		void AddBlip::Run(void* ve)
@@ -202,13 +202,13 @@ namespace sub::Spooner
 				this->blip.SetSelectableOnMap(this->isSelectableOnMap ? 2 : 8);
 				//this->blip.SetPriority(this->priority);
 
-        			if (this->syncRotation)
-        			{
-            			this->blip.SyncRotationWithEntity(e.handle.GetHandle());
-        			}
-    			}
+        			//if (this->syncRotation)
+        			//{
+            			//this->blip.SyncRotationWithEntity(e.Handle.GetHandle());
+        			//}
+    		}
 				// New Functions
-				//this->blip.SetDisplayMode(this->displayMode);
+				this->blip.SetDisplayMode(this->displayMode);
 
 		}
 
@@ -1243,7 +1243,7 @@ namespace sub::Spooner
 		void FightHatedTargets::RunP(GTAped& ep)
 		{
 			std::vector<GTAped> pedHandles;
-			//GTAmemory::GetPedHandles(pedHandles, ep.Position_get(), this->radius);
+			//GTAmemory::GetPedHandles(pedHandles, ep.GetPosition(), this->radius);
 			World::GetNearbyPeds(pedHandles, ep.GetPosition(), this->radius);
 
 			TaskSequence squ;
@@ -1788,7 +1788,7 @@ namespace sub::Spooner
 		}
 		void AchieveVelocity::RunP(GTAped& ep)
 		{
-			ep.SetVelocity(Vector3::RotationToDirection((this->isRelative ? ep.Rotation_get() : Vector3::Zero()) + Vector3(this->pitch, 0.0f, this->heading)) * this->magnitude);
+			ep.SetVelocity(Vector3::RotationToDirection((this->isRelative ? ep.GetRotation() : Vector3::Zero()) + Vector3(this->pitch, 0.0f, this->heading)) * this->magnitude);
 		}
 
 		void AchievePushForce::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -2023,7 +2023,7 @@ namespace sub::Spooner
 			if (e.attachmentArgs.isAttached && sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.handle, att))
 				EntityManagement::AttachEntity(e, att, e.attachmentArgs.boneIndex, e.attachmentArgs.offset, (this->isRelative ? e.attachmentArgs.rotation : Vector3()) + rotationValue);
 			else
-				e.handle.SetRotation((this->isRelative ? e.handle.Rotation_get() : Vector3()) + rotationValue);
+				e.handle.SetRotation((this->isRelative ? e.handle.GetRotation() : Vector3()) + rotationValue);
 		}
 
 		void ChangeOpacity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
