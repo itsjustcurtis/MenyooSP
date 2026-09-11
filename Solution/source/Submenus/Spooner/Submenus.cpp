@@ -75,6 +75,7 @@
 #include <pugixml/src/pugixml.hpp>
 #include <dirent\include\dirent.h>
 #include "../../BlipMapping.h"
+#include "../../SpoonerInteractables.h"
 
 namespace sub
 {
@@ -5246,14 +5247,34 @@ namespace sub
 			AddVehicleCategoryOption("Trains", Indices::TRAIN);
 
 			AddBreak("---Others---");
-			AddVehicleCategoryOption("Emergency", Indices::EMERGENCY);
-			AddVehicleCategoryOption("Military", Indices::MILITARY);
-			AddVehicleCategoryOption("Motorcycles", Indices::MOTORCYCLE);
-			AddVehicleCategoryOption("Bicycles", Indices::BICYCLE);
-			AddVehicleCategoryOption("Planes", Indices::PLANE);
-			AddVehicleCategoryOption("Helicopters", Indices::HELICOPTER);
-			AddVehicleCategoryOption("Boats", Indices::BOAT);
-			AddVehicleCategoryOption("Others", Indices::OTHER);
+			AddvcatOption_("Emergency", Indices::EMERGENCY);
+			AddvcatOption_("Military", Indices::MILITARY);
+			AddvcatOption_("Motorcycles", Indices::MOTORCYCLE);
+			AddvcatOption_("Bicycles", Indices::BICYCLE);
+			AddvcatOption_("Planes", Indices::PLANE);
+			AddvcatOption_("Helicopters", Indices::HELICOPTER);
+			AddvcatOption_("Boats", Indices::BOAT);
+			AddvcatOption_("Others", Indices::OTHER);
+
+			bool bInputPressed = false;
+			AddOption("INPUT MODEL", bInputPressed); if (bInputPressed)
+			{
+				EntityManagement::InputEntityIntoDb(EntityType::VEHICLE);
+			}
+		}
+
+		void Sub_SpawnInteractables()
+		{
+			AddTitle("Spawn Interactable");
+
+			for (auto& def : sub::Spooner::Interactables::vInteractables)
+			{
+				bool bPressed = false;
+				AddOption(def.Label, bPressed); if (bPressed)
+				{
+					sub::Spooner::Interactables::SpawnInteractable(def);
+				}
+			}
 		}
 	}
 

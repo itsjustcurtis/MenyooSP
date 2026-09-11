@@ -32,6 +32,7 @@
 #include "..\..\Scripting\enums.h"
 #include "..\..\Scripting\Game.h"
 #include "BlipCustoms.h"
+#include "..\..\SpoonerInteractables.h"
 
 #include "SpoonerSettings.h"
 #include "EntityManagement.h"
@@ -1094,6 +1095,7 @@ namespace sub::Spooner
 					BlipCustoms::DrawAll();
 				BlipCustoms::UpdateAttachedBlips();
 			}
+			Interactables::Tick();
 		}
 
 		void TurnOn()

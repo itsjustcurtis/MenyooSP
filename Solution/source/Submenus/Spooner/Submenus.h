@@ -96,6 +96,7 @@ namespace sub
 		void Sub_SpawnProp_Favourites_CatSelect();
 		void Sub_SpawnPed();
 		void Sub_SpawnVehicle();
+		void Sub_SpawnInteractables();
 
 		void Sub_Blip_Management();
 		void Sub_Blip_Radial();
