@@ -56,6 +56,7 @@ project "Menyoo"
 
     defines {
         "WIN32",
+        "_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR",
         "_WINDOWS",
         "_USRDLL",
         "NativeTrainer_EXPORTS",
