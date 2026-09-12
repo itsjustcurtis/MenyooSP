@@ -38,7 +38,7 @@ public:
 
 	int& Handle();
 
-	int GetHandle() const;
+	int GetHandle() const noexcept;
 
 	bool HasLoaded() const;
 

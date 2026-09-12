@@ -148,7 +148,7 @@ namespace sub::TeleportLocations_catind
 			{
 				if (info.location != nullptr)
 				{
-					teleport_net_ped(ped, info.location->pos);
+					TeleportNetPed(ped, info.location->pos);
 				}
 			}
 
@@ -169,10 +169,10 @@ namespace sub::TeleportLocations_catind
 			{
 				if (currentClubhouseInfo.location == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
-				GTAped ped = Static_241;
+				GTAped ped = g_activePedHandle;
 				AddTitle(currentClubhouseInfo.location->name);
 
 				for (auto& o : vOptionArrays)
@@ -189,7 +189,7 @@ namespace sub::TeleportLocations_catind
 					DO_SCREEN_FADE_OUT(50);
 					CreateClubhouse(currentClubhouseInfo);
 					TeleportPedToClubhouse(ped, currentClubhouseInfo);
-					//Menu::SetSub_previous();
+					//Menu::SetPreviousMenu();
 					DO_SCREEN_FADE_IN(200);
 					return;
 				}
@@ -303,7 +303,7 @@ namespace sub::TeleportLocations_catind
 			{
 				if (info.location != nullptr)
 				{
-					teleport_net_ped(ped, info.location->pos);
+					TeleportNetPed(ped, info.location->pos);
 				}
 			}
 
@@ -325,10 +325,10 @@ namespace sub::TeleportLocations_catind
 			{
 				if (currentBusinessInfo.location == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
-				GTAped ped = Static_241;
+				GTAped ped = g_activePedHandle;
 				AddTitle(currentBusinessInfo.location->name);
 
 				bool bOption_plus = false, bOption_minus = false;
@@ -342,7 +342,7 @@ namespace sub::TeleportLocations_catind
 					DO_SCREEN_FADE_OUT(50);
 					CreateBusiness(currentBusinessInfo);
 					TeleportPedToBusiness(ped, currentBusinessInfo);
-					//Menu::SetSub_previous();
+					//Menu::SetPreviousMenu();
 					DO_SCREEN_FADE_IN(200);
 					return;
 				}
@@ -353,5 +353,9 @@ namespace sub::TeleportLocations_catind
 
 }
 
-
-
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TELEPORTOPS_BIKERCLUBHOUSES,           sub::TeleportLocations_catind::BikerInteriors::Clubhouses::Sub_Clubhouses)
+REGISTER_SUBMENU(TELEPORTOPS_BIKERCLUBHOUSES_INLOC,     sub::TeleportLocations_catind::BikerInteriors::Clubhouses::Sub_Clubhouses_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_BUSINESSES,                sub::TeleportLocations_catind::BikerInteriors::Businesses::Sub_Businesses)
+REGISTER_SUBMENU(TELEPORTOPS_BUSINESSES_INLOC,          sub::TeleportLocations_catind::BikerInteriors::Businesses::Sub_Businesses_InLoc)

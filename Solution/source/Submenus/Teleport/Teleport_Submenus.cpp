@@ -39,6 +39,41 @@ namespace sub::TeleportLocations_catind
 
 	Vector3 _customTeleLoc(Locations::vApartmentInteriors[0].x, Locations::vApartmentInteriors[0].y, Locations::vApartmentInteriors[0].z);
 
+	void LoadIpl()
+	{
+		std::string inputStr = Game::InputBox("", 64U, "Enter IPL name:");
+
+		if (inputStr.length() == 0)
+			return;
+
+		if (IS_IPL_ACTIVE(inputStr.c_str()))
+		{
+			Game::Print::PrintBottomLeft("IPL ~b~already loaded~s~: " + inputStr);
+		}
+		else
+		{
+			REQUEST_IPL(inputStr.c_str());
+			Game::Print::PrintBottomLeft("IPL ~g~loaded~s~: " + inputStr);
+		}
+	}
+	void UnloadIpl()
+	{
+		std::string inputStr = Game::InputBox("", 64U, "Enter IPL name:");
+		
+		if (inputStr.length() == 0)
+			return;
+
+		if (IS_IPL_ACTIVE(inputStr.c_str()))
+		{
+			REMOVE_IPL(inputStr.c_str());
+			Game::Print::PrintBottomLeft("IPL ~r~unloaded~s~: " + inputStr);
+		}
+		else
+		{
+			Game::Print::PrintBottomLeft("IPL ~y~already unloaded~s~: " + inputStr);
+		}
+	}
+
 	namespace Submenus
 	{
 		void Sub_TeleportMain()
@@ -59,11 +94,11 @@ namespace sub::TeleportLocations_catind
 					_selectedCategory = &cat;
 					if (reinterpret_cast<DWORD64>(cat.nextNamedLocListList) < SUB::MAX_SUBS && cat.nextNamedLocListList != nullptr)
 					{
-						Menu::SetSub_delayed = reinterpret_cast<DWORD64>(cat.nextNamedLocListList);
+						Menu::pendingSubmenu = reinterpret_cast<DWORD64>(cat.nextNamedLocListList);
 					}
 					else
 					{
-						Menu::SetSub_delayed = SUB::TELEPORTOPS_SELECTEDCATEGORY;
+						Menu::pendingSubmenu = SUB::TELEPORTOPS_SELECTEDCATEGORY;
 					}
 				}
 			}
@@ -71,10 +106,14 @@ namespace sub::TeleportLocations_catind
 			AddBreak("---Custom---");
 			AddOption("Custom Coordinates", null, nullFunc, SUB::TELEPORTOPS_CUSTOMCOORDS);
 			AddOption("Favourites", null, nullFunc, SUB::TELEPORTOPS_SAVEDLOCATIONS);
+
+			AddBreak("---IPLs---");
+			AddOption("Load IPL", null, LoadIpl);
+			AddOption("Unload IPL", null, UnloadIpl);
 		}
 		void Sub_CustomCoords()
 		{
-			GTAentity thisEntity = Static_241;
+			GTAentity thisEntity = g_activePedHandle;
 
 			if (!GrabbedCoords)
 			{
@@ -140,7 +179,7 @@ namespace sub::TeleportLocations_catind
 			if (apply)
 			{
 				GrabbedCoords = false;
-				teleport_net_ped(thisEntity, _customTeleLoc.x, _customTeleLoc.y, _customTeleLoc.z);
+				TeleportNetPed(thisEntity, _customTeleLoc.x, _customTeleLoc.y, _customTeleLoc.z);
 			}
 
 			if (update)
@@ -212,13 +251,13 @@ namespace sub::TeleportLocations_catind
 			/*for (auto& blip : vBlips)
 			{
 			bool bPressedBlip = false;
-			AddOption(blip.IconName() + " (" + World::GetZoneName(blip.Position_get(), true) + ")", bPressedBlip); if (bPressedBlip)
+			AddOption(blip.IconName() + " (" + World::GetZoneName(blip.GetPosition(), true) + ")", bPressedBlip); if (bPressedBlip)
 			{
-			TeleMethods::ToCoordinates241(blip.Position_get());
+			TeleMethods::ToCoordinates241(blip.GetPosition());
 			}
 			}*/
 
-			//if (Menu::currentop > Menu::printingop && !vBlips.empty()) Menu::Up();
+			//if (Menu::selectedOptionIndex > Menu::currentOptionCount && !vBlips.empty()) Menu::Up();
 		}
 		void Sub_SavedLocations()
 		{
@@ -229,7 +268,7 @@ namespace sub::TeleportLocations_catind
 			if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str()).status != pugi::status_ok)
 			{
 				//Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load " + xmlSavedMapLocations);
-				//Menu::SetSub_previous();
+				//Menu::SetPreviousMenu();
 				doc.reset();
 				auto nodeDecleration = doc.append_child(pugi::node_declaration);
 				nodeDecleration.append_attribute("version") = "1.0";
@@ -246,9 +285,9 @@ namespace sub::TeleportLocations_catind
 				std::string inputStr = Game::InputBox("", 28U, "Enter name:");
 				if (inputStr.length() > 0)
 				{
-					GTAentity ent = Static_241;
-					const Vector3& myPos = ent.Position_get();
-					const Vector3& myRot = ent.Rotation_get();
+					GTAentity ent = g_activePedHandle;
+					const Vector3& myPos = ent.GetPosition();
+					const Vector3& myRot = ent.GetRotation();
 					auto nodeOldLoc = nodeRoot.find_child_by_attribute("name", inputStr.c_str());
 					if (nodeOldLoc) // If not null
 					{
@@ -265,7 +304,7 @@ namespace sub::TeleportLocations_catind
 						Game::Print::PrintBottomLeft("Location ~b~saved~s~.");
 					}
 				}
-				else Game::Print::PrintError_InvalidInput(inputStr);
+				else Game::Print::PrintErrorInvalidInput(inputStr);
 				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SaveEntityLocation, std::string(), 28U, "Enter name:");
 				//OnscreenKeyboard::State::arg1._int = Static_241;
 			}
@@ -303,9 +342,9 @@ namespace sub::TeleportLocations_catind
 						TeleMethods::ToCoordinates241(locPos);
 					}
 
-					if (Menu::printingop == *Menu::currentopATM)
+					if (Menu::IsLastDrawnOptionSelected())
 					{
-						if (Menu::bit_controller)
+						if (Menu::usingControllerInput)
 						{
 							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 
@@ -313,7 +352,7 @@ namespace sub::TeleportLocations_catind
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (*Menu::currentopATM >= Menu::totalop)
+								if (Menu::IsSelectionAtBottom())
 									Menu::Up();
 								return; // Yeah
 							}
@@ -326,7 +365,7 @@ namespace sub::TeleportLocations_catind
 							{
 								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (*Menu::currentopATM >= Menu::totalop)
+								if (Menu::IsSelectionAtBottom())
 									Menu::Up();
 								return; // Yeah
 							}
@@ -335,7 +374,7 @@ namespace sub::TeleportLocations_catind
 
 				}
 			}
-			//if (Menu::currentop > Menu::printingop) Menu::Up();
+			//if (Menu::selectedOptionIndex > Menu::currentOptionCount) Menu::Up();
 		}
 
 	}
@@ -343,4 +382,10 @@ namespace sub::TeleportLocations_catind
 }
 
 
-
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TELEPORTOPS,                           sub::TeleportLocations_catind::Submenus::Sub_TeleportMain)
+REGISTER_SUBMENU(TELEPORTOPS_CUSTOMCOORDS,              sub::TeleportLocations_catind::Submenus::Sub_CustomCoords)
+REGISTER_SUBMENU(TELEPORTOPS_SELECTEDCATEGORY,          sub::TeleportLocations_catind::Submenus::Sub_SelectedCategory)
+REGISTER_SUBMENU(TELEPORTOPS_BLIPLIST,                  sub::TeleportLocations_catind::Submenus::Sub_BlipList)
+REGISTER_SUBMENU(TELEPORTOPS_SAVEDLOCATIONS,            sub::TeleportLocations_catind::Submenus::Sub_SavedLocations)

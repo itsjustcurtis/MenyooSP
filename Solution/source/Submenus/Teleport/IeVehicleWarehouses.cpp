@@ -110,7 +110,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (info.location != nullptr)
 			{
-				teleport_net_ped(ped, info.location->pos);
+				TeleportNetPed(ped, info.location->pos);
 			}
 		}
 
@@ -131,10 +131,10 @@ namespace sub::TeleportLocations_catind
 		{
 			if (currentWarehouseInfo.location == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
-			GTAped ped = Static_241;
+			GTAped ped = g_activePedHandle;
 			AddTitle(currentWarehouseInfo.location->name);
 
 			for (auto& o : vOptionArrays)
@@ -151,7 +151,7 @@ namespace sub::TeleportLocations_catind
 				DO_SCREEN_FADE_OUT(50);
 				CreateWarehouse(currentWarehouseInfo);
 				TeleportPedToWarehouse(ped, currentWarehouseInfo);
-				//Menu::SetSub_previous();
+				//Menu::SetPreviousMenu();
 				DO_SCREEN_FADE_IN(200);
 				return;
 			}
@@ -161,4 +161,7 @@ namespace sub::TeleportLocations_catind
 }
 
 
-
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TELEPORTOPS_IEVEHICLEWAREHOUSES,       	sub::TeleportLocations_catind::IeVehicleWarehouses::Sub_IeVehicleWarehouses)
+REGISTER_SUBMENU(TELEPORTOPS_IEVEHICLEWAREHOUSES_INLOC, 	sub::TeleportLocations_catind::IeVehicleWarehouses::Sub_IeVehicleWarehouses_InLoc)

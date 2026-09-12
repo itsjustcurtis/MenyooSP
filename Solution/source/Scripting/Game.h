@@ -14,6 +14,7 @@
 
 #include <string>
 #include <sstream>
+#include <optional>
 
 typedef unsigned long DWORD, Hash;
 typedef signed char INT8;
@@ -34,6 +35,7 @@ std::wostream& operator<<(std::wostream& stream, std::string& text);
 namespace Game
 {
 	extern const std::pair<int, int> defaultScreenRes;
+	inline constexpr float defaultNotificationDuration = 2.5f;
 
 	// Request asset
 	bool RequestControlOfId(int netid);
@@ -77,24 +79,31 @@ namespace Game
 
 	namespace Print
 	{
+		void ShowNotification(const std::string& title, const std::string& description, float displayTimeInSeconds = defaultNotificationDuration);
+		void ShowNotification(const std::string& description, float displayTimeInSeconds = defaultNotificationDuration);
+		void ShowNotification(std::ostream& description, float displayTimeInSeconds = defaultNotificationDuration);
+		void ShowNotification(std::wostream& description, float displayTimeInSeconds = defaultNotificationDuration);
+		void TickNotifications();
+		void TickPrintBottomCentre();
+
 		// Game - Print/draw
 		void setupdraw();
-		void setupdraw(INT8 font, const Vector2& scale, bool centred, bool right_justified, bool outline, RGBA colour = { 255, 255, 255, 255 }, Vector2 wrap = { 0, 1 });
+		void SetupDraw(INT8 font, const Vector2& scale, bool centred, bool right_justified, bool outline, RGBA colour = { 255, 255, 255, 255 }, Vector2 wrap = { 0, 1 });
 		void drawstring(const std::string& s, float X, float Y);
-		void drawstring(std::ostream& os, float X, float Y);
+		void DrawString(std::ostream& os, float X, float Y);
 		void drawstringGXT(const std::string& s, float X, float Y);
 		void drawstringGXT(std::ostream& os, float X, float Y);
 		void drawinteger(int text, float X, float Y);
-		void drawfloat(float text, UINT8 decimal_places, float X, float Y);
+		void drawfloat(double text, UINT8 decimal_places, float X, float Y);
 		
 		void PrintBottomCentre(std::string s, int time = 2500);
 		void PrintBottomCentre(std::ostream& s, int time = 2500);
 		void PrintBottomCentre(std::wostream& s, int time = 2500);
 
-		class Notification
+		class GameFeedNotification
 		{
 		public:
-			Notification(int newHandle) : mHandle(newHandle)
+			GameFeedNotification(int newHandle) : mHandle(newHandle)
 			{
 			}
 			int& Handle()
@@ -107,16 +116,16 @@ namespace Game
 		private:
 			int mHandle;
 		};
-		Notification PrintBottomLeft(std::string s, bool gxt = false);
-		Notification PrintBottomLeft(std::ostream& s, bool gxt = 0);
-		Notification PrintBottomLeft(std::wostream& s, bool gxt = 0);
-		Notification PrintBottomLeft(std::string s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
-		Notification PrintBottomLeft(std::ostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
-		Notification PrintBottomLeft(std::wostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
+		GameFeedNotification PrintBottomLeft(std::string s, bool gxt = false);
+		GameFeedNotification PrintBottomLeft(std::ostream& s, bool gxt = 0);
+		GameFeedNotification PrintBottomLeft(std::wostream& s, bool gxt = 0);
+		GameFeedNotification PrintBottomLeft(std::string s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
+		GameFeedNotification PrintBottomLeft(std::ostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
+		GameFeedNotification PrintBottomLeft(std::wostream& s, const std::string& sender, const std::string& subject, const std::string& picName, int iconType, bool flash, bool gxt);
 
 		// Messages - Errors
-		void PrintError_InvalidInput(std::string inputStr);
-		void PrintError_InvalidModel(std::string inputStr);
+		void PrintErrorInvalidInput(std::string inputStr);
+		void PrintErrorInvalidModel(std::string inputStr);
 
 		// Text width
 		float GetTextWidth(const std::string& s, bool gxt = false);

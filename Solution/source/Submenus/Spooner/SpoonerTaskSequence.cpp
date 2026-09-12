@@ -30,13 +30,27 @@ namespace sub::Spooner
 		this->progress = -1;
 		this->timer = GetTickCount();
 	}
+	SpoonerTaskSequence::~SpoonerTaskSequence()
+	{
+		this->Reset(true);
+	}
 
 	void SpoonerTaskSequence::operator = (const SpoonerTaskSequence& right)
 	{
+		this->Reset(true);
 		this->bJustJumpedToNext = right.bJustJumpedToNext;
 		this->progress = right.progress;
 		this->timer = right.timer;
-		this->tasks = right.tasks;
+		this->tasks.reserve(right.tasks.size());
+		for (auto* tsk : right.tasks)
+		{
+			if (tsk != nullptr)
+			{
+				STSTask* copy = this->AddTask(tsk->type);
+				if (copy != nullptr)
+					copy->Assign(tsk);
+			}
+		}
 	}
 
 	bool SpoonerTaskSequence::ContainsType(const STSTaskType& value)
@@ -82,6 +96,8 @@ namespace sub::Spooner
 		case STSTaskType::FaceEntity: tskPtr = (new STSTasks::FaceEntity); break;
 		case STSTaskType::LookAtCoord: tskPtr = (new STSTasks::LookAtCoord); break;
 		case STSTaskType::LookAtEntity: tskPtr = (new STSTasks::LookAtEntity); break;
+		case STSTaskType::LookAtCoordEyesOnly: tskPtr = (new STSTasks::LookAtCoordEyesOnly); break;
+		case STSTaskType::LookAtEntityEyesOnly: tskPtr = (new STSTasks::LookAtEntityEyesOnly); break;
 		case STSTaskType::TeleportToCoord: tskPtr = (new STSTasks::TeleportToCoord); break;
 		case STSTaskType::SeekCoverAtCoord: tskPtr = (new STSTasks::SeekCoverAtCoord); break;
 		case STSTaskType::SlideToCoord: tskPtr = (new STSTasks::SlideToCoord); break;
@@ -128,6 +144,9 @@ namespace sub::Spooner
 
 		case STSTaskType::SnapTasks: tskPtr = (new STSTasks::SnapTasks); break;
 		case STSTaskType::EndSequence: tskPtr = (new STSTasks::EndSequence); break;
+
+		case STSTaskType::LightMoveWithEntity: tskPtr = (new STSTasks::LightMoveWithEntity); break;
+		case STSTaskType::LightPointAtEntity: tskPtr = (new STSTasks::LightPointAtEntity); break;
 		}
 
 		if (tskPtr != nullptr)

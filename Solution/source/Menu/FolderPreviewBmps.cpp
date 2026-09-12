@@ -29,7 +29,7 @@ namespace sub
 {
 	namespace FolderPreviewBmps_catind
 	{
-		bool& bFolderBmpsEnabled = _globalSpawnVehicle_drawBmps;
+		bool& bFolderBmpsEnabled = g_spawnVehicleDrawBMPs;
 		std::string previewPng = "preview.png";
 		std::vector<std::pair<std::string, DxHookIMG::DxTexture>> vFolderBmps;
 
@@ -46,16 +46,16 @@ namespace sub
 
 		void GetThisFolderBmpPaths(const std::string& path, decltype(vFolderBmps)& newBmps)
 		{
-			//addlog(ige::LogType::LOG_INFO,  "GetThisFolderBmpPaths in " + path, __FILENAME__);
+			//addlog(ige::LogType::LOG_INFO,  "GetThisFolderBmpPaths in " + path);
 			std::vector<std::string> fileNames;
 			get_all_filenames_with_extension(path, std::string(), fileNames, false);
 
-			//for(auto& s : fileNames) addlog(ige::LogType::LOG_INFO,  "In " + path + ", found " +  s, __FILENAME__);
+			//for(auto& s : fileNames) addlog(ige::LogType::LOG_INFO,  "In " + path + ", found " +  s);
 
 			if (std::find(fileNames.begin(), fileNames.end(), previewPng) != fileNames.end())
 			{
 				std::string pathBmp = path + "\\" + previewPng;
-				//addlog(ige::LogType::LOG_INFO,  "Registering " + previewPng + " in " + pathBmp, __FILENAME__);
+				//addlog(ige::LogType::LOG_INFO,  "Registering " + previewPng + " in " + pathBmp);
 				newBmps.push_back(std::make_pair(pathBmp, DxHookIMG::DxTexture()));
 			}
 
@@ -115,7 +115,7 @@ namespace sub
 				Vector2 res = { 0.1f, 0.0889f };
 
 				FLOAT x_coord = 0.324f + menuPos.x;
-				FLOAT y_coord = OptionY + 0.044f + menuPos.y;
+				FLOAT y_coord = currentOptionY + 0.044f + menuPos.y;
 
 				if (menuPos.x > 0.45f) x_coord = menuPos.x - 0.003f;
 

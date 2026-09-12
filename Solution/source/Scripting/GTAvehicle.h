@@ -21,6 +21,7 @@
 #pragma once
 
 #include "GTAentity.h"
+#include "GTAvehicleData.h"
 
 #include <vector>
 #include <string>
@@ -45,10 +46,8 @@ namespace GTAmodel {
 }
 class RgbS;
 
-extern const std::vector<std::string> vValues_HornNames;
-extern const std::vector<std::string> vValues_ModSlotNames;
-std::string get_mod_slot_name(Vehicle vehicle, INT modType, bool gxt);
-std::string get_mod_text_label(Vehicle vehicle, INT modType, INT modValue, bool gxt);
+std::string GetModSlotName(Vehicle vehicle, INT modType, bool gxt);
+std::string GetModTextLabel(Vehicle vehicle, INT modType, INT modValue, bool gxt);
 
 
 class GTAvehicle : public GTAentity
@@ -69,7 +68,7 @@ public:
 	void Fix();
 	void Repair(bool checkIfDamaged = true);
 
-	void EngineSound_set(const std::string& vehName);
+	void SetEngineSound(const std::string& vehName);
 
 	void SetFrictionOverride(float value);
 
@@ -79,192 +78,192 @@ public:
 
 	GTAentity GetPedOnSeat(VehicleSeat seat) const;
 	bool IsSeatFree(VehicleSeat seat) const;
-	GTAentity Driver_get() const;
-	std::vector<GTAentity> Occupants_get(bool bIncludeDriver = true) const;
+	GTAentity GetDriver() const;
+	std::vector<GTAentity> GetOccupants(bool bIncludeDriver = true) const;
 	VehicleSeat FirstFreeSeat(VehicleSeat defaultReturn) const;
 
-	std::string NumberPlateText_get() const;
-	void NumberPlateText_set(const std::string& value);
-	int NumberPlateTextIndex_get() const;
-	void NumberPlateTextIndex_set(int value);
+	std::string GetNumberPlateText() const;
+	void SetNumberPlateText(const std::string& value);
+	int GetNumberPlateTextIndex() const;
+	void SetNumberPlateTextIndex(int value);
 
 	bool IsConvertible() const;
 
-	bool Stolen_get() const;
-	void Stolen_set(bool value);
+	bool GetStolen() const;
+	void SetStolen(bool value);
 
-	bool Driveable_get() const;
-	void Driveable_set(bool value);
+	bool GetDriveable() const;
+	void SetDriveable(bool value);
 
 	bool IsStopped() const;
 	bool IsStoppedAtTrafficLights() const;
 	void StopImmediately();
 
-	float MaxBraking_get() const;
-	float MaxTraction_get() const;
+	float GetMaxBraking() const;
+	float GetMaxTraction() const;
 
 	bool IsOnAllWheels() const;
 
-	void Speed_set(float value);
+	void SetSpeed(float value);
 	void SetForwardSpeed(float value);
 
-	void MaxSpeed_set(float value);
+	void SetMaxSpeed(float value);
 
-	float DirtLevel_get() const;
-	void DirtLevel_set(float value);
-	float PaintFade_get() const;
-	void PaintFade_set(float value);
+	float GetDirtLevel() const;
+	void SetDirtLevel(float value);
+	float GetPaintFade() const;
+	void SetPaintFade(float value);
 
-	VehicleRoofState RoofState_get() const;
-	void RoofState_set(VehicleRoofState value);
+	VehicleRoofState GetRoofState() const;
+	void SetRoofState(VehicleRoofState value);
 
-	float BodyHealth_get() const;
-	void BodyHealth_set(float value);
+	float GetBodyHealth() const;
+	void SetBodyHealth(float value);
 
-	float EngineHealth_get() const;
-	void EngineHealth_set(float value);
+	float GetEngineHealth() const;
+	void SetEngineHealth(float value);
 
-	float PetrolTankHealth_get() const;
-	void PetrolTankHealth_set(float value);
+	float GetPetrolTankHealth() const;
+	void SetPetrolTankHealth(float value);
 
-	bool SirenActive_get() const;
-	void SirenActive_set(bool value);
+	bool GetSirenActive() const;
+	void SetSirenActive(bool value);
 
-	bool LoudRadioActive_get() const;
-	void LoudRadioActive_set(bool value);
+	bool GetLoudRadioActive() const;
+	void SetLoudRadioActive(bool value);
 
-	int PrimaryColour_get() const;
-	void PrimaryColour_set(int value);
+	int GetPrimaryColour() const;
+	void SetPrimaryColour(int value);
 
-	int SecondaryColour_get() const;
-	void SecondaryColour_set(int value);
+	int GetSecondaryColour() const;
+	void SetSecondaryColour(int value);
 
-	int RimColour_get() const;
-	void RimColour_set(int value);
+	int GetRimColour() const;
+	void SetRimColour(int value);
 
-	int PearlescentColour_get() const;
-	void PearlescentColour_set(int value);
+	int GetPearlescentColour() const;
+	void SetPearlescentColour(int value);
 
 	// For Benny's supported vehicles
-	int InteriorColour_get() const;
-	void InteriorColour_set(int value);
-	int DashboardColour_get() const;
-	void DashboardColour_set(int value);
+	int GetInteriorColour() const;
+	void SetInteriorColour(int value);
+	int GetDashboardColour() const;
+	void SetDashboardColour(int value);
 	
 	// b1604
-	int HeadlightColour_get() const;
-	void HeadlightColour_set(int value);
+	int GetHeadlightColour() const;
+	void SetHeadlightColour(int value);
 
-	int WheelType_get() const;
-	void WheelType_set(int value);
+	int GetWheelType() const;
+	void SetWheelType(int value);
 
-	int WindowTint_get() const;
-	void WindowTint_set(int value);
+	int GetWindowTint() const;
+	void SetWindowTint(int value);
 	;
 	bool IsPrimaryColorCustom() const;
 	bool IsSecondaryColorCustom() const;
 
-	void Wanted_set(bool value);
+	void SetWanted(bool value);
 
-	void HasGravity_set(bool value) override;
+	void SetHasGravity(bool value) override;
 
-	bool EngineRunning_get() const;
-	void EngineRunning_set(bool value);
+	bool GetEngineRunning() const;
+	void SetEngineRunning(bool value);
 
-	void EnginePowerMultiplier_set(float value);
-	void EngineTorqueMultiplier_set(float value);
+	void SetEnginePowerMultiplier(float value);
+	void SetEngineTorqueMulitplier(float value);
 
-	void EngineCanDegrade_set(bool value);
+	void SetEngineCanDegrade(bool value);
 
-	bool LightsOn_get() const;
-	void LightsOn_set(bool value);
+	bool GetLightsOn() const;
+	void SetLightsOn(bool value);
 
-	bool HighBeamsOn_get() const;
+	bool GetHighBeamsOn() const;
 
-	void LightsMultiplier_set(float value);
+	void SetLightsMultiplier(float value);
 
-	bool LeftHeadLightBroken_get() const;
-	void LeftHeadLightBroken_set(bool value);
-	bool RightHeadLightBroken_get() const;
-	void RightHeadLightBroken_set(bool value);
+	bool GetLeftHeadlightBroken() const;
+	void SetLeftHeadlightBroken(bool value);
+	bool GetRightHeadlightBroken() const;
+	void SetRightHeadlightBroken(bool value);
 
-	bool IsFrontBumperBrokenOff_get() const;
-	bool IsRearBumperBrokenOff_get() const;
+	bool GetIsFrontBumperBrokenOff() const;
+	bool GetIsRearBumperBrokenOff() const;
 
-	void BrakeLightsOn_set(bool value);
+	void SetBrakeLightsOn(bool value);
 
-	void HandbrakeOn_set(bool value);
+	void SetHandBrakeOn(bool value);
 
-	void LeftIndicatorLightOn_set(bool value);
-	void RightIndicatorLightOn_set(bool value);
+	void SetLeftIndicatorLightOn(bool value);
+	void SetRightIndicatorLightOn(bool value);
 
-	void InteriorLightOn_set(bool value);
+	void SetInteriorLightOn(bool value);
 
-	bool TaxiLightOn_get() const;
-	void TaxiLightOn_set(bool value);
+	bool GetTaxiLightOn() const;
+	void SetTaxiLightOn(bool value);
 
-	bool SearchLightOn_get() const;
-	void SearchLightOn_set(bool value);
+	bool GetSearchLightOn() const;
+	void SetSearchLightOn(bool value);
 
-	bool NeedsToBeHotwired_get() const;
-	void NeedsToBeHotwired_set(bool value);
+	bool GetNeedsToBeHotwired() const;
+	void SetNeedsToBeHotwired(bool value);
 
-	bool CanTyresBurst_get() const;
-	void CanTyresBurst_set(bool value);
+	bool GetCanTyresBurst() const;
+	void SetCanTyresBurst(bool value);
 
-	bool CanTyresDrift_get() const;
-	void CanTyresDrift_set(bool value);
+	bool GetCanTyresDrift() const;
+	void SetCanTyresDrift(bool value);
 
-	void CanBeVisiblyDamaged_set(bool value);
+	void SetCanBeVisiblyDamaged(bool value);
 
-	bool PreviouslyOwnedByPlayer_get() const;
-	void PreviouslyOwnedByPlayer_set(bool value);
+	bool GetPreviouslyOwnedByPlayer() const;
+	void SetPreviouslyOwnedByPlayer(bool value);
 
-	RgbS CustomPrimaryColour_get() const;
-	void CustomPrimaryColour_set(RgbS value);
-	void CustomPrimaryColour_set(BYTE r, BYTE g, BYTE b);
+	RgbS GetCustomPrimaryColour() const;
+	void SetCustomPrimaryColour(RgbS value);
+	void SetCustomPrimaryColour(BYTE r, BYTE g, BYTE b);
 
-	RgbS CustomSecondaryColour_get() const;
-	void CustomSecondaryColour_set(RgbS value);
-	void CustomSecondaryColour_set(BYTE r, BYTE g, BYTE b);
+	RgbS GetCustomSecondaryColour() const;
+	void SetCustomSecondaryColour(RgbS value);
+	void SetCustomSecondaryColour(BYTE r, BYTE g, BYTE b);
 
-	RgbS NeonLightsColour_get() const;
-	void NeonLightsColour_set(RgbS value);
-	void NeonLightsColour_set(BYTE r, BYTE g, BYTE b);
+	RgbS GetNeonLightsColour() const;
+	void SetNeonLightsColour(RgbS value);
+	void SetNeonLightsColour(BYTE r, BYTE g, BYTE b);
 
-	RgbS TyreSmokeColour_get() const;
-	void TyreSmokeColour_set(RgbS value);
-	void TyreSmokeColour_set(BYTE r, BYTE g, BYTE b);
+	RgbS GetTyreSmokeColour() const;
+	void SetTyreSmokeColour(RgbS value);
+	void SetTyreSmokeColour(BYTE r, BYTE g, BYTE b);
 
-	int Livery_get() const;
-	void Livery_set(int liveryIndex);
+	int GetLivery() const;
+	void SetLivery(int liveryIndex);
 	int LiveryCount() const;
 
-	bool AlarmActive_get() const;
-	void AlarmActive_set(bool value);
+	bool GetAlarmActive() const;
+	void SetAlarmActive(bool value);
 
-	int CurrentGear_get() const;
-	int HighGear_get() const;
-	void HighGear_set(UINT8 value);
-	float FuelLevel_get() const;
-	void FuelLevel_set(float value);
-	float CurrentRPM_get() const;
-	void CurrentRPM_set(float value);
-	float Acceleration_get() const;
-	float WheelSpeed_get() const;
-	float SteeringAngle_get(bool inDegrees=true) const;
-	float SteeringScale_get() const;
-	void SteeringScale_set(float value);
+	int GetCurrentGear() const;
+	int GetHighGear() const;
+	void SetHighGear(UINT8 value);
+	float GetFuelLevel() const;
+	void SetFuelLevel(float value);
+	float GetCurrentRPM() const;
+	void SetCurrentRPM(float value);
+	float GetAcceleration() const;
+	float GetWheelSpeed() const;
+	float GetSteeringAngle(bool inDegrees=true) const;
+	float GetSteeringScale() const;
+	void SetSteeringScale(float value);
 
 	void FixDoor(VehicleDoor door);
 	void FixAllDoors();
 
-	void RadioStation_set(int value);
+	void SetRadioStation(int value);
 
 	VehicleClass ClassType_get();
 
-	VehicleLockStatus LockStatus_get() const;
-	void LockStatus_set(const VehicleLockStatus& value);
+	VehicleLockStatus GetLockStatus() const;
+	void SetLockStatus(const VehicleLockStatus& value);
 
 	int GetMod(int modType) const;
 	void SetMod(int modType, int modIndex, int variation);
@@ -288,7 +287,7 @@ public:
 	std::vector<VehicleDoor> Doors_get() const;
 	bool HasBombBay_get() const;
 	bool HasForks_get() const;
-	bool HasSiren_get() const;
+	bool GetHasSiren() const;
 	bool HasTowArm_get() const;
 
 	void OpenDoor(VehicleDoor door, bool loose, bool instantly, bool playSound = true);
@@ -317,8 +316,8 @@ public:
 	void SetNeonLightOn(VehicleNeonLight light, bool on);
 
 	bool DoesExtraExist(int extraId) const;
-	bool ExtraOn_get(int extraId) const;
-	void ExtraOn_set(int extraId, bool value);
+	bool GetExtraOn(int extraId) const;
+	void SetExtraOn(int extraId, bool value);
 
 	void SoundHorn(int duration);
 
@@ -339,7 +338,7 @@ public:
 	void BurstTyre(int wheel);
 	void FixTyre(int wheel);
 	bool IsInBurnout() const;
-	void ForceBurnout_set(bool value);
+	void SetForceBurnout(bool value);
 
 	void StartAlarm();
 
@@ -347,7 +346,6 @@ public:
 
 	GTAentity CreatePedOnSeat(VehicleSeat seat, GTAmodel::Model model);
 	GTAentity CreateRandomPedOnSeat(VehicleSeat seat);
-
 };
 
 
@@ -358,6 +356,10 @@ void add_emblem_to_vehicle(GTAvehicle vehicle, GTAentity playerPed);
 
 // Vehicle - clone
 GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem = GTAentity());
+
+
+
+
 
 
 

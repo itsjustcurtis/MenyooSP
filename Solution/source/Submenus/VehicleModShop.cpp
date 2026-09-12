@@ -8,34 +8,42 @@
 * (at your option) any later version.
 */
 #include "VehicleModShop.h"
+#include "..\Menu\MenuCategory.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Util\GTAmath.h"
-#include "..\Util\StringManip.h"
-#include "..\Util\FileLogger.h"
-#include "..\Scripting\enums.h"
-#include "..\main.h"
-#include "..\Scripting\GTAvehicle.h"
-#include "..\Scripting\Model.h"
-#include "..\Scripting\Game.h"
-#include "..\Memory\GTAmemory.h"
-#include "..\Scripting\World.h"
-
-#include "Settings.h"
-
-#include <string>
-#include <sstream>
-#include <iomanip>
-#include <vector>
-#include <array>
+#include <unordered_set>
 
 namespace sub
 {
+	static Vehicle s_selectedVehicleHandle = 0;
+	static INT s_selectedPaintPart = 1;
+	static INT s_selectedModSlot = 0;
+	static int s_selectedHudColour = 0;
+
+	void SetVehicleModShopTarget(Vehicle vehicle)
+	{
+		s_selectedVehicleHandle = vehicle;
+	}
+
+	Vehicle GetVehicleModShopTarget()
+	{
+		return s_selectedVehicleHandle;
+	}
+
+	void SelectSpawnPrimaryPaint()
+	{
+		s_selectedPaintPart = 10;
+	}
+
+	void SelectSpawnSecondaryPaint()
+	{
+		s_selectedPaintPart = 11;
+	}
+
+	void SetSelectedHudColour(int colour)
+	{
+		s_selectedHudColour = colour;
+	}
+
 	bool lowersuspension = 0;
 	int lastMod = -2;
 	bool selectmod = false;
@@ -44,28 +52,38 @@ namespace sub
 
 	// Paints
 
-	struct NamedVehiclePaint { std::string name; INT16 paint, pearl; };
+	struct NamedVehiclePaint 
+	{ 
+		std::string name; 
+		INT16 paint;
+		INT16 pearl; 
+	};
 
 #pragma region paintvectors
-	std::vector<NamedVehiclePaint> PAINTS_NORMAL{
+	std::vector<NamedVehiclePaint> PAINTS_NORMAL
+	{
 
 	};
 
-	std::vector<NamedVehiclePaint> PAINTS_METALLIC{
+	std::vector<NamedVehiclePaint> PAINTS_METALLIC
+	{
 
 	};
 
-	std::vector<NamedVehiclePaint> PAINTS_MATTE{
+	std::vector<NamedVehiclePaint> PAINTS_MATTE
+	{
 
 	};
 
-	std::vector<NamedVehiclePaint> PAINTS_METAL{
+	std::vector<NamedVehiclePaint> PAINTS_METAL
+	{
 
 	};
 
-	std::vector<NamedVehiclePaint> PAINTS_PEARL{
+	std::vector<NamedVehiclePaint> PAINTS_PEARL
+	{
 
-	}; 
+	};
 
 	const std::vector<NamedVehiclePaint> PAINTS_WHEELS
 	{
@@ -302,9 +320,12 @@ namespace sub
 	{
 
 	};
+
 	std::vector<NamedVehiclePaint> PAINTS_CHAMELEON
 	{
+
 	};
+
 #pragma endregion
 
 	INT paintIndex_maxValue = 0;
@@ -318,22 +339,25 @@ namespace sub
 		Model model = VEHICLE_ADDER;
 		model.Load(5000);
 
+		addlog(ige::LogType::LOG_TRACE, "Starting PopulateAllPaintIDs");
 		//spawn dummy vehicle
 		Vector3 coords = ENTITY::GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER::PLAYER_PED_ID(), 0.0, 0.0, -100.0);
 		float heading = ENTITY::GET_ENTITY_HEADING(PLAYER::PLAYER_PED_ID());
-		Vehicle veh =  CREATE_VEHICLE(model.hash, coords.x, coords.y, coords.z, heading, 1, 0, 0);
+		addlog(ige::LogType::LOG_TRACE, "Creating dummy vehicle for paint ID population");
+		Vehicle veh = CREATE_VEHICLE(model.hash, coords.x, coords.y, coords.z, heading, 1, 0, 0);
 		VEHICLE::SET_VEHICLE_ON_GROUND_PROPERLY(veh, 5.0f);
 		int painttype, colour, pearl, second;
-
+		addlog(ige::LogType::LOG_TRACE, "Dummy vehicle created, starting paint ID population");
 		//Loop paint types (normal, metallic, matte etc...)
 		for (painttype = 0; painttype < 7; painttype++)
 		{
 			int numcols = GET_NUM_MOD_COLORS(painttype, 0);
 			const char* colourname;
-
+			addlog(ige::LogType::LOG_TRACE, "Populating paint type " + std::to_string(painttype) + " with " + std::to_string(numcols) + " colours");
 			//loop colour options and assign to PAINTS_ vectors
 			for (int i = 0; i < numcols; i++)
 			{
+				addlog(ige::LogType::LOG_TRACE, "Populating colour " + std::to_string(i) + " of paint type " + std::to_string(painttype));
 				second = 0;
 				//set and get colour ID's and names
 				VEHICLE::SET_VEHICLE_MOD_KIT(veh, 0);
@@ -346,7 +370,7 @@ namespace sub
 					paintIndex_maxValue = colour;
 				if (pearl > paintIndex_maxValue)
 					paintIndex_maxValue = pearl;
-
+				addlog(ige::LogType::LOG_TRACE, "Colour ID: " + std::to_string(colour) + ", Pearl ID: " + std::to_string(pearl) + ", Colour Name: " + (colourname != nullptr ? colourname : "null"));
 				// write to relevant vector, depending on painttype
 				switch (painttype)
 				{
@@ -360,6 +384,7 @@ namespace sub
 
 					PAINTS_METALLIC[i].paint = colour;
 					PAINTS_METALLIC[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Metallic Colour: " + PAINTS_METALLIC[i].name + ", Paint ID: " + std::to_string(PAINTS_METALLIC[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_METALLIC[i].pearl));
 					break;
 				case 1:
 					PAINTS_NORMAL.resize(numcols);
@@ -371,6 +396,7 @@ namespace sub
 
 					PAINTS_NORMAL[i].paint = colour;
 					PAINTS_NORMAL[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Normal Colour: " + PAINTS_NORMAL[i].name + ", Paint ID: " + std::to_string(PAINTS_NORMAL[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_NORMAL[i].pearl));
 					break;
 				case 2:
 					PAINTS_PEARL.resize(numcols);
@@ -382,6 +408,7 @@ namespace sub
 
 					PAINTS_PEARL[i].paint = -1;
 					PAINTS_PEARL[i].pearl = colour;
+					addlog(ige::LogType::LOG_TRACE, "Added Pearl Colour: " + PAINTS_PEARL[i].name + ", Paint ID: " + std::to_string(PAINTS_PEARL[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_PEARL[i].pearl));
 					break;
 				case 3:
 					PAINTS_MATTE.resize(numcols);
@@ -393,6 +420,7 @@ namespace sub
 
 					PAINTS_MATTE[i].paint = colour;
 					PAINTS_MATTE[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Matte Colour: " + PAINTS_MATTE[i].name + ", Paint ID: " + std::to_string(PAINTS_MATTE[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_MATTE[i].pearl));	
 					break;
 				case 4:
 					PAINTS_METAL.resize(numcols);
@@ -404,6 +432,7 @@ namespace sub
 
 					PAINTS_METAL[i].paint = colour;
 					PAINTS_METAL[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Metal Colour: " + PAINTS_METAL[i].name + ", Paint ID: " + std::to_string(PAINTS_METAL[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_METAL[i].pearl));
 					break;
 				case 5:
 					PAINTS_CHROME.resize(numcols);
@@ -415,6 +444,7 @@ namespace sub
 
 					PAINTS_CHROME[i].paint = colour;
 					PAINTS_CHROME[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Chrome Colour: " + PAINTS_CHROME[i].name + ", Paint ID: " + std::to_string(PAINTS_CHROME[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_CHROME[i].pearl));
 					break;
 				case 6:
 					PAINTS_CHAMELEON.resize(numcols);
@@ -426,6 +456,7 @@ namespace sub
 
 					PAINTS_CHAMELEON[i].paint = colour;
 					PAINTS_CHAMELEON[i].pearl = pearl;
+					addlog(ige::LogType::LOG_TRACE, "Added Chameleon Colour: " + PAINTS_CHAMELEON[i].name + ", Paint ID: " + std::to_string(PAINTS_CHAMELEON[i].paint) + ", Pearl ID: " + std::to_string(PAINTS_CHAMELEON[i].pearl));
 					break;
 				}
 
@@ -435,38 +466,7 @@ namespace sub
 		ENTITY::SET_VEHICLE_AS_NO_LONGER_NEEDED(&veh);
 		VEHICLE::DELETE_VEHICLE(&veh);
 		model.Unload();
-
-
-		// Pearl, Wheels, Interior, Dashboard
-		/*const std::array<std::vector<int>, 7> indicesToOmitAll{ {
-				{}, //not used
-				{}, //Primary
-				{}, //Secondary
-				{11, 12, 15, 29, 30, 31, 32, 33, 40, 41, 57, 58, 59, 65, 79, 80, 82, 83, 84, 85, 86, 90, 91, 94, 101, 102, 103, 104}, //Pearl
-				{3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 22, 23, 25, 29, 31, 32, 33, 34, 35, 36, 37, 39, 41, 42, 43, 44, 45, 46, 48, 49, 50, 51, 52, 54, 55, 56, 57, 59, 65, 66, 68, 69, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 89, 90, 92, 93, 94, 100, 101, 103, 104, 105}, //Wheels
-				{4, 11, 12, 13, 15, 16, 17, 20, 28, 29, 30, 31, 32, 33, 40, 41, 42, 43, 47, 54, 57, 58, 59, 60, 65, 79, 80, 82, 83, 84, 85, 86, 87, 90, 91, 94, 101, 102, 103, 104, 105}, //Interior
-				{0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 24, 25, 29, 30, 31, 32, 33, 34, 35, 37, 40, 41, 42, 43, 44, 45, 55, 57, 58, 59, 60, 65, 66, 67, 68, 69, 73, 75, 79, 80, 82, 83, 84, 85, 86, 90, 91, 92, 93, 94, 96, 97, 99, 101, 102, 103, 104, 105}, //Dashboard
-			} };
-		const std::array<std::vector<NamedVehiclePaint>*, 4> pPaintsArr{ {
-				&PAINTS_PEARL, &PAINTS_WHEELS, &PAINTS_INTERIOR, &PAINTS_DASHBOARD
-		} };
-
-		for (int i = 0; i < pPaintsArr.size(); i++)
-		{
-			int paintVectorId = i + 3;
-			std::vector<NamedVehiclePaint>* pPaints = pPaintsArr[i];
-			for (int paintIt = 0; paintIt < PAINTS_STATIC.size(); paintIt++)
-			{
-				const auto& paintToInclude = PAINTS_STATIC[paintIt];
-				const auto& indicesToOmit = indicesToOmitAll[paintVectorId];
-				// Check if the current index is in the list of indices to omit
-				if (std::find(indicesToOmit.begin(), indicesToOmit.end(), paintToInclude.paint) == indicesToOmit.end())
-				{
-					pPaints->push_back(paintToInclude);
-				}
-			}
-		}*/
-
+		addlog(ige::LogType::LOG_TRACE, "Finished PopulateAllPaintIDs");
 	}
 
 	void AddMSPaintsPointOption_(const std::string& text, INT8 index, bool& extra_option_code = null)
@@ -475,7 +475,7 @@ namespace sub
 		AddOption(text, pressed, nullFunc, SUB::MSPAINTS2, true, false);
 		if (pressed)
 		{
-			ms_curr_paint_index = index;
+			s_selectedPaintPart = index;
 			extra_option_code = true;
 			getpaint = true;
 		}
@@ -488,28 +488,28 @@ namespace sub
 		switch (partIndex_CustomK)
 		{
 		case 1:
-			return vehicle.PrimaryColour_get();
+			return vehicle.GetPrimaryColour();
 			break;
 		case 2:
-			return vehicle.SecondaryColour_get();
+			return vehicle.GetSecondaryColour();
 			break;
 		case 3:
-			return vehicle.PearlescentColour_get();
+			return vehicle.GetPearlescentColour();
 			break;
 		case 4:
-			return vehicle.RimColour_get();
+			return vehicle.GetRimColour();
 			break;
 		case 5:
-			return vehicle.InteriorColour_get();
+			return vehicle.GetInteriorColour();
 			break;
 		case 6:
-			return vehicle.DashboardColour_get();
+			return vehicle.GetDashboardColour();
 			break;
 		case 10:
-			return _globalSpawnVehicle_PrimCol;
+			return g_spawnVehiclePrimaryColor;
 			break;
 		case 11:
-			return _globalSpawnVehicle_SecCol;
+			return g_spawnVehicleSecondaryColor;
 			break;
 		}
 
@@ -521,10 +521,10 @@ namespace sub
 		switch (partIndex_CustomK)
 		{
 		case 10:
-			_globalSpawnVehicle_PrimCol = colour_index;
+			g_spawnVehiclePrimaryColor = colour_index;
 			return;
 		case 11:
-			_globalSpawnVehicle_SecCol = colour_index;
+			g_spawnVehicleSecondaryColor = colour_index;
 			return;
 		}
 
@@ -536,25 +536,25 @@ namespace sub
 		{
 		case 1:
 			vehicle.ClearCustomPrimaryColour();
-			vehicle.PrimaryColour_set(colour_index);
+			vehicle.SetPrimaryColour(colour_index);
 			if (pearl_index != -1)
-				vehicle.PearlescentColour_set(pearl_index);
+				vehicle.SetPearlescentColour(pearl_index);
 			break;
 		case 2:
 			vehicle.ClearCustomSecondaryColour();
-			vehicle.SecondaryColour_set(colour_index);
+			vehicle.SetSecondaryColour(colour_index);
 			break;
 		case 3:
-			vehicle.PearlescentColour_set(colour_index);
+			vehicle.SetPearlescentColour(colour_index);
 			break;
 		case 4:
-			vehicle.RimColour_set(colour_index);
+			vehicle.SetRimColour(colour_index);
 			break;
 		case 5:
-			vehicle.InteriorColour_set(colour_index);
+			vehicle.SetInteriorColour(colour_index);
 			break;
 		case 6:
-			vehicle.DashboardColour_set(colour_index);
+			vehicle.SetDashboardColour(colour_index);
 			break;
 		}
 
@@ -564,18 +564,18 @@ namespace sub
 	{
 		bool pressed = false;
 
-		if (_globalLSC_Customs)
+		if (g_LSCCustoms)
 		{
 			if (getpaint)
 			{
-				lastpaint = getpaintCarUsing_index(vehicle, ms_curr_paint_index);
+				lastpaint = getpaintCarUsing_index(vehicle, s_selectedPaintPart);
 				lastpearl = getpaintCarUsing_index(vehicle, 3);
-				if (ms_curr_paint_index == 1 && GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(vehicle))
+				if (s_selectedPaintPart == 1 && GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(vehicle))
 				{
 					iscustompaint = true;
 					GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(vehicle, &lastr, &lastg, &lastb);
 				}
-				if (ms_curr_paint_index == 2 && GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(vehicle))
+				if (s_selectedPaintPart == 2 && GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(vehicle))
 				{
 					iscustompaint = true;
 					GET_VEHICLE_CUSTOM_SECONDARY_COLOUR(vehicle, &lastr, &lastg, &lastb);
@@ -584,14 +584,14 @@ namespace sub
 			}
 			AddTickol(text, lastpaint == colour_index, pressed, pressed,
 				IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING);
-			if (*Menu::currentopATM == Menu::printingop && getpaintCarUsing_index(vehicle, ms_curr_paint_index) != colour_index)
-				paintCarUsing_index(vehicle, ms_curr_paint_index, colour_index, pearl_index_ifPrimary);
+			if (Menu::IsLastDrawnOptionSelected() && getpaintCarUsing_index(vehicle, s_selectedPaintPart) != colour_index)
+				paintCarUsing_index(vehicle, s_selectedPaintPart, colour_index, pearl_index_ifPrimary);
 			if (pressed)
 			{
-				lastpaint = getpaintCarUsing_index(vehicle, ms_curr_paint_index);
+				lastpaint = getpaintCarUsing_index(vehicle, s_selectedPaintPart);
 				lastpearl = getpaintCarUsing_index(vehicle, 3);
 				iscustompaint = false;
-				//Menu::SetSub_previous();
+				//Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -599,12 +599,12 @@ namespace sub
 			{
 				Menu::OnSubBack = [vehicle]()
 				{
-					paintCarUsing_index(vehicle, ms_curr_paint_index, lastpaint, lastpearl);
+					paintCarUsing_index(vehicle, s_selectedPaintPart, lastpaint, lastpearl);
 					if (iscustompaint)
 					{
-						if (ms_curr_paint_index == 1)
+						if (s_selectedPaintPart == 1)
 							SET_VEHICLE_CUSTOM_PRIMARY_COLOUR(vehicle, lastr, lastg, lastb);
-						else if (ms_curr_paint_index == 2)
+						else if (s_selectedPaintPart == 2)
 							SET_VEHICLE_CUSTOM_SECONDARY_COLOUR(vehicle, lastr, lastg, lastb);
 					}
 				};
@@ -612,25 +612,25 @@ namespace sub
 		}
 		else
 		{
-			AddTickol(text, colour_index == getpaintCarUsing_index(vehicle, ms_curr_paint_index), pressed, pressed,
+			AddTickol(text, colour_index == getpaintCarUsing_index(vehicle, s_selectedPaintPart), pressed, pressed,
 				IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING); if (pressed)
 			{
-				paintCarUsing_index(vehicle, ms_curr_paint_index, colour_index, pearl_index_ifPrimary);
+				paintCarUsing_index(vehicle, s_selectedPaintPart, colour_index, pearl_index_ifPrimary);
 			}
 		}
 	}
 
 	void MSPaints_()
 	{
-		if (!DOES_ENTITY_EXIST(Static_12))
+		if (!DOES_ENTITY_EXIST(s_selectedVehicleHandle))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
-		float paintFade = GET_VEHICLE_ENVEFF_SCALE(Static_12);
-		float dirtLevel = GET_VEHICLE_DIRT_LEVEL(Static_12);
-		float carvarcol = GET_VEHICLE_COLOUR_COMBINATION(Static_12) + 1;
+		float paintFade = GET_VEHICLE_ENVEFF_SCALE(s_selectedVehicleHandle);
+		float dirtLevel = GET_VEHICLE_DIRT_LEVEL(s_selectedVehicleHandle);
+		float carvarcol = GET_VEHICLE_COLOUR_COMBINATION(s_selectedVehicleHandle) + 1;
 		bool set_mspaints_index_4 = 0, set_mspaints_index_3 = 0,
 			set_mspaints_index_5 = 0, set_mspaints_index_6 = 0,
 			paintFade_plus = 0, paintFade_minus = 0,
@@ -655,25 +655,25 @@ namespace sub
 
 
 		if (set_mspaints_index_3) {
-			ms_curr_paint_index = 3;
+			s_selectedPaintPart = 3;
 			return;
 		}
 
 		if (set_mspaints_index_4) {
-			ms_curr_paint_index = 4;
-			if (GET_VEHICLE_MOD(Static_12, VehicleMod::FrontWheels) < 0)
-				Game::Print::PrintBottomCentre("~b~Note:~s~ Colours cannot always be applied to stock wheels.");
-			Menu::SetSub_new(SUB::MSPAINTS2_SHARED);
+			s_selectedPaintPart = 4;
+			if (GET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::FrontWheels) < 0)
+				Game::Print::ShowNotification("~b~Note:", "Colours cannot always be applied to stock wheels.");
+			Menu::NewSetMenu(SUB::MSPAINTS2_SHARED);
 			return;
 		}
 
 		if (set_mspaints_index_5) {
-			ms_curr_paint_index = 5;
+			s_selectedPaintPart = 5;
 			return;
 		}
 
 		if (set_mspaints_index_6) {
-			ms_curr_paint_index = 6;
+			s_selectedPaintPart = 6;
 			return;
 		}
 
@@ -681,26 +681,26 @@ namespace sub
 		{
 			paintFade += 0.02f;
 			if (paintFade > 1.0f) paintFade = 1.0f;
-			SET_VEHICLE_ENVEFF_SCALE(Static_12, paintFade);
+			SET_VEHICLE_ENVEFF_SCALE(s_selectedVehicleHandle, paintFade);
 		}
 		if (paintFade_minus)
 		{
 			paintFade -= 0.02f;
 			if (paintFade < 0.0f) paintFade = 0.0f;
-			SET_VEHICLE_ENVEFF_SCALE(Static_12, paintFade);
+			SET_VEHICLE_ENVEFF_SCALE(s_selectedVehicleHandle, paintFade);
 		}
 
 		if (dirtLevel_plus)
 		{
 			dirtLevel += 0.1f;
 			if (dirtLevel > 15.0f) dirtLevel = 15.0f;
-			SET_VEHICLE_DIRT_LEVEL(Static_12, dirtLevel);
+			SET_VEHICLE_DIRT_LEVEL(s_selectedVehicleHandle, dirtLevel);
 		}
 		if (dirtLevel_minus)
 		{
 			dirtLevel -= 0.1f;
 			if (dirtLevel < 0.0f) dirtLevel = 0.0f;
-			SET_VEHICLE_DIRT_LEVEL(Static_12, dirtLevel);
+			SET_VEHICLE_DIRT_LEVEL(s_selectedVehicleHandle, dirtLevel);
 		}
 
 		if (carvarcol_input) {
@@ -710,18 +710,18 @@ namespace sub
 				try
 				{
 					carvarcol = stoi(inputStr);
-					CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(Static_12);
-					CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(Static_12);
-					SET_VEHICLE_COLOUR_COMBINATION(Static_12, carvarcol - 1);
-					if (_globalLSC_Customs)
+					CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(s_selectedVehicleHandle);
+					CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(s_selectedVehicleHandle);
+					SET_VEHICLE_COLOUR_COMBINATION(s_selectedVehicleHandle, carvarcol - 1);
+					if (g_LSCCustoms)
 					{
-						lastpaint = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
-						lastpearl = getpaintCarUsing_index(Static_12, 3);
+						lastpaint = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
+						lastpearl = getpaintCarUsing_index(s_selectedVehicleHandle, 3);
 					}
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			return;
@@ -732,24 +732,24 @@ namespace sub
 
 		if (carvarcol_plus)
 		{
-			if (carvarcol < GET_NUMBER_OF_VEHICLE_COLOURS(Static_12))
+			if (carvarcol < GET_NUMBER_OF_VEHICLE_COLOURS(s_selectedVehicleHandle))
 			{
 				carvarcol += 1;
-				CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(Static_12);
-				CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(Static_12);
-				SET_VEHICLE_COLOUR_COMBINATION(Static_12, carvarcol - 1);
+				CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(s_selectedVehicleHandle);
+				CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(s_selectedVehicleHandle);
+				SET_VEHICLE_COLOUR_COMBINATION(s_selectedVehicleHandle, carvarcol - 1);
 			}
 			else
 			{
 				carvarcol = 1;
-				CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(Static_12);
-				CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(Static_12);
-				SET_VEHICLE_COLOUR_COMBINATION(Static_12, carvarcol - 1);
+				CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(s_selectedVehicleHandle);
+				CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(s_selectedVehicleHandle);
+				SET_VEHICLE_COLOUR_COMBINATION(s_selectedVehicleHandle, carvarcol - 1);
 			}
-			if (_globalLSC_Customs)
+			if (g_LSCCustoms)
 			{
-				lastpaint = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
-				lastpearl = getpaintCarUsing_index(Static_12, 3);
+				lastpaint = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
+				lastpearl = getpaintCarUsing_index(s_selectedVehicleHandle, 3);
 			}
 		}
 		if (carvarcol_minus)
@@ -757,26 +757,26 @@ namespace sub
 			if (carvarcol > 1)
 			{
 				carvarcol -= 1;
-				CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(Static_12);
-				CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(Static_12);
-				SET_VEHICLE_COLOUR_COMBINATION(Static_12, carvarcol - 1);
+				CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(s_selectedVehicleHandle);
+				CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(s_selectedVehicleHandle);
+				SET_VEHICLE_COLOUR_COMBINATION(s_selectedVehicleHandle, carvarcol - 1);
 			}
 			else
 			{
-				carvarcol = GET_NUMBER_OF_VEHICLE_COLOURS(Static_12);
-				CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(Static_12);
-				CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(Static_12);
-				SET_VEHICLE_COLOUR_COMBINATION(Static_12, carvarcol - 1);
+				carvarcol = GET_NUMBER_OF_VEHICLE_COLOURS(s_selectedVehicleHandle);
+				CLEAR_VEHICLE_CUSTOM_PRIMARY_COLOUR(s_selectedVehicleHandle);
+				CLEAR_VEHICLE_CUSTOM_SECONDARY_COLOUR(s_selectedVehicleHandle);
+				SET_VEHICLE_COLOUR_COMBINATION(s_selectedVehicleHandle, carvarcol - 1);
 			}
-			if (_globalLSC_Customs)
+			if (g_LSCCustoms)
 			{
-				lastpaint = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
-				lastpearl = getpaintCarUsing_index(Static_12, 3);
+				lastpaint = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
+				lastpearl = getpaintCarUsing_index(s_selectedVehicleHandle, 3);
 			}
 		}
 
 	}
-	
+
 	void MSPaints2_()
 	{
 		bool paintIndex_plus = 0, paintIndex_minus = 0, paintIndex_input = 0,
@@ -786,10 +786,10 @@ namespace sub
 			copypaint = 0;
 		
 		
-		GTAvehicle vehicle = Static_12;
+		GTAvehicle vehicle = s_selectedVehicleHandle;
 
 		INT paintIndex;
-		paintIndex = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
+		paintIndex = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
 
 		/*int totalpaints = 49;
 		for (int i = 0; i < 6; i++)
@@ -801,7 +801,7 @@ namespace sub
 		}
 		int extrapaints = totalpaints - 225;*/
 
-		switch (ms_curr_paint_index)
+		switch (s_selectedPaintPart)
 		{
 		case 1: case 10: AddTitle(Game::GetGXTEntry("CMOD_COL0_0", "Primary")); break;
 		case 2: case 11: AddTitle(Game::GetGXTEntry("CMOD_COL0_1", "Secondary")); break;
@@ -811,10 +811,10 @@ namespace sub
 		case 4: default: AddTitle(Game::GetGXTEntry("CMOD_MOD_WHEM", "Wheels")); break;
 		}
 
-		switch (Menu::currentsub_ar[Menu::currentsub_ar_index])
+		switch (Menu::submenuHistory[Menu::menuHistoryIndex])
 		{
 		case SUB::SPAWNVEHICLE_OPTIONS:
-			INT16* carColSettingPtr = (ms_curr_paint_index == 10 ? &_globalSpawnVehicle_PrimCol : &_globalSpawnVehicle_SecCol);
+			INT16* carColSettingPtr = (s_selectedPaintPart == 10 ? &g_spawnVehiclePrimaryColor : &g_spawnVehicleSecondaryColor);
 			bool bCarColSettingToNullPressed = false;
 			AddTickol("None (Default)", *carColSettingPtr == -3, bCarColSettingToNullPressed, bCarColSettingToNullPressed); if (bCarColSettingToNullPressed) *carColSettingPtr = -3;
 			break;
@@ -830,7 +830,7 @@ namespace sub
 		AddOption("Utility", null, nullFunc, SUB::MSPAINTS2_UTIL);
 		AddOption("Worn", null, nullFunc, SUB::MSPAINTS2_WORN);
 
-		if (ms_curr_paint_index < 10)
+		if (s_selectedPaintPart < 10)
 		{
 			AddNumber("Paint Index", paintIndex, 0, paintIndex_input, paintIndex_plus, paintIndex_minus);
 		}
@@ -838,13 +838,13 @@ namespace sub
 		AddOption("Random Index", MSPaints_RIndex);
 
 		std::string painttypeswitch;
-		if (ms_curr_paint_index == 1 || ms_curr_paint_index == 2)
+		if (s_selectedPaintPart == 1 || s_selectedPaintPart == 2)
 		{
 			AddOption("Random RGB", MSPaints_RColour);
 			AddOption("Set RGB", MSPaints_primRGB, nullFunc, SUB::MSPAINTS_RGB);
-			if (*Menu::currentopATM == Menu::printingop)
-				Add_preset_colour_options_previews(ms_curr_paint_index == 1 ? vehicle.CustomPrimaryColour_get() : ms_curr_paint_index == 2 ? vehicle.CustomSecondaryColour_get() : RgbS(0, 0, 0));
-			ms_curr_paint_index == 1 ? painttypeswitch = "Secondary" : painttypeswitch = "Primary";
+			if (Menu::IsLastDrawnOptionSelected())
+				AddPresetColourOptionsPreview(s_selectedPaintPart == 1 ? vehicle.GetCustomPrimaryColour() : s_selectedPaintPart == 2 ? vehicle.GetCustomSecondaryColour() : RgbS(0, 0, 0));
+			s_selectedPaintPart == 1 ? painttypeswitch = "Secondary" : painttypeswitch = "Primary";
 			AddOption("Copy to " + painttypeswitch, copypaint);
 		}
 
@@ -852,7 +852,7 @@ namespace sub
 			if (vehicle.IsVehicle())
 			{
 				int randindex = rand() % paintIndex_maxValue;
-				paintCarUsing_index(Static_12, ms_curr_paint_index, randindex, -1);
+				paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, randindex, -1);
 				getpaint = true;
 			}
 			return;
@@ -863,29 +863,29 @@ namespace sub
 				int randr = rand() % 255;
 				int randg = rand() % 255;
 				int randb = rand() % 255;
-				paintCarUsing_index(Static_12, ms_curr_paint_index, 0, -1);
-				if (ms_curr_paint_index == 1)
-					vehicle.CustomPrimaryColour_set(randr, randg, randb);
-				else if (ms_curr_paint_index == 2)
-					vehicle.CustomSecondaryColour_set(randr, randg, randb);
+				paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, 0, -1);
+				if (s_selectedPaintPart == 1)
+					vehicle.SetCustomPrimaryColour(randr, randg, randb);
+				else if (s_selectedPaintPart == 2)
+					vehicle.SetCustomSecondaryColour(randr, randg, randb);
 				getpaint = true;
 			}
 			return;
 		}
 
-		if (ms_curr_paint_index == 1) { if (MSPaints_primRGB) { bit_MSPaints_RGB_mode = 0; return; } }
-		else if (ms_curr_paint_index == 2) { if (MSPaints_primRGB) { bit_MSPaints_RGB_mode = 1; return; } }
+		if (s_selectedPaintPart == 1) { if (MSPaints_primRGB) { bitMSPaintsRGBMode = 0; return; } }
+		else if (s_selectedPaintPart == 2) { if (MSPaints_primRGB) { bitMSPaintsRGBMode = 1; return; } }
 
 
 
 		if (paintIndex_plus) {
 			if (paintIndex < paintIndex_maxValue) paintIndex++;
 			else paintIndex = 0;
-			paintCarUsing_index(Static_12, ms_curr_paint_index, paintIndex, -1);
-			if (_globalLSC_Customs)
+			paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, paintIndex, -1);
+			if (g_LSCCustoms)
 			{
-				lastpaint = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
-				lastpearl = getpaintCarUsing_index(Static_12, 3);
+				lastpaint = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
+				lastpearl = getpaintCarUsing_index(s_selectedVehicleHandle, 3);
 				iscustompaint = false;
 			}
 			return;
@@ -893,11 +893,11 @@ namespace sub
 		if (paintIndex_minus) {
 			if (paintIndex > 0) paintIndex--;
 			else paintIndex = paintIndex_maxValue;
-			paintCarUsing_index(Static_12, ms_curr_paint_index, paintIndex, -1);
-			if (_globalLSC_Customs)
+			paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, paintIndex, -1);
+			if (g_LSCCustoms)
 			{
-				lastpaint = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
-				lastpearl = getpaintCarUsing_index(Static_12, 3);
+				lastpaint = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
+				lastpearl = getpaintCarUsing_index(s_selectedVehicleHandle, 3);
 				iscustompaint = false;
 			}
 			return;
@@ -909,17 +909,17 @@ namespace sub
 				try
 				{
 					paintIndex = stoi(inputStr);
-					paintCarUsing_index(Static_12, ms_curr_paint_index, paintIndex, -1);
-					if (_globalLSC_Customs)
+					paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, paintIndex, -1);
+					if (g_LSCCustoms)
 					{
-						lastpaint = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
-						lastpearl = getpaintCarUsing_index(Static_12, 3);
+						lastpaint = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
+						lastpearl = getpaintCarUsing_index(s_selectedVehicleHandle, 3);
 						iscustompaint = false;
 					}
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			return;
@@ -930,21 +930,21 @@ namespace sub
 
 		if (copypaint)
 		{
-			paintCarUsing_index(Static_12, 3 - ms_curr_paint_index, getpaintCarUsing_index(Static_12, ms_curr_paint_index), -1);
-			switch (ms_curr_paint_index)
+			paintCarUsing_index(s_selectedVehicleHandle, 3 - s_selectedPaintPart, getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart), -1);
+			switch (s_selectedPaintPart)
 			{
 			case 1:
-				if (GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(Static_12))
+				if (GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(s_selectedVehicleHandle))
 				{
-					RgbS copy = vehicle.CustomPrimaryColour_get();
-					vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
+					RgbS copy = vehicle.GetCustomPrimaryColour();
+					vehicle.SetCustomSecondaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			case 2:
-				if (GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(Static_12))
+				if (GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(s_selectedVehicleHandle))
 				{
-					RgbS copy = vehicle.CustomSecondaryColour_get();
-					vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
+					RgbS copy = vehicle.GetCustomSecondaryColour();
+					vehicle.SetCustomPrimaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			}
@@ -957,7 +957,7 @@ namespace sub
 	{
 		void _AddPaintIndexSlider()
 		{
-			INT paintIndex = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
+			INT paintIndex = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
 
 			int totalpaints = 0;
 			for (int i = 0; i < 5; i++)
@@ -972,11 +972,11 @@ namespace sub
 			if (paintIndex_plus) {
 				if (paintIndex < paintIndex_maxValue) paintIndex++;
 				else paintIndex = 0;
-				paintCarUsing_index(Static_12, ms_curr_paint_index, paintIndex, -1);
-				if (_globalLSC_Customs)
+				paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, paintIndex, -1);
+				if (g_LSCCustoms)
 				{
-					lastpaint = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
-					lastpearl = getpaintCarUsing_index(Static_12, 3);
+					lastpaint = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
+					lastpearl = getpaintCarUsing_index(s_selectedVehicleHandle, 3);
 					iscustompaint = false;
 				}
 				return;
@@ -984,11 +984,11 @@ namespace sub
 			if (paintIndex_minus) {
 				if (paintIndex > 0) paintIndex--;
 				else paintIndex = paintIndex_maxValue;
-				paintCarUsing_index(Static_12, ms_curr_paint_index, paintIndex, -1);
-				if (_globalLSC_Customs)
+				paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, paintIndex, -1);
+				if (g_LSCCustoms)
 				{
-					lastpaint = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
-					lastpearl = getpaintCarUsing_index(Static_12, 3);
+					lastpaint = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
+					lastpearl = getpaintCarUsing_index(s_selectedVehicleHandle, 3);
 					iscustompaint = false;
 				}
 				return;
@@ -1000,17 +1000,17 @@ namespace sub
 					try
 					{
 						paintIndex = stoi(inputStr);
-						paintCarUsing_index(Static_12, ms_curr_paint_index, paintIndex, -1);
-						if (_globalLSC_Customs)
+						paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, paintIndex, -1);
+						if (g_LSCCustoms)
 						{
-							lastpaint = getpaintCarUsing_index(Static_12, ms_curr_paint_index);
-							lastpearl = getpaintCarUsing_index(Static_12, 3);
+							lastpaint = getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart);
+							lastpearl = getpaintCarUsing_index(s_selectedVehicleHandle, 3);
 							iscustompaint = false;
 						}
 					}
 					catch (...)
 					{
-						Game::Print::PrintError_InvalidInput(inputStr);
+						Game::Print::PrintErrorInvalidInput(inputStr);
 					}
 				}
 				return;
@@ -1024,7 +1024,7 @@ namespace sub
 		{
 			const std::vector<NamedVehiclePaint>* pPaints = &PAINTS_NORMAL;
 
-			switch (ms_curr_paint_index)
+			switch (s_selectedPaintPart)
 			{
 			case 1: case 10: AddTitle(Game::GetGXTEntry("CMOD_COL0_0", "Primary")); break;
 			case 2: case 11: AddTitle(Game::GetGXTEntry("CMOD_COL0_1", "Secondary")); break;
@@ -1047,12 +1047,12 @@ namespace sub
 			}
 
 			for (auto& p : *pPaints)
-				AddcarcolOption_(p.name, Static_12, p.paint, p.pearl);
+				AddcarcolOption_(p.name, s_selectedVehicleHandle, p.paint, p.pearl);
 
 			_AddPaintIndexSlider();
 
 		}
-		
+
 		void Sub_Chrome()
 		{
 			AddTitle("Chrome");
@@ -1060,10 +1060,10 @@ namespace sub
 			auto& vPaints = PAINTS_CHROME;
 
 			for (auto& p : vPaints)
-				AddcarcolOption_(p.name, Static_12, p.paint, p.pearl);
+				AddcarcolOption_(p.name, s_selectedVehicleHandle, p.paint, p.pearl);
 
 		}
-		
+
 		void Sub_Normal()
 		{
 			AddTitle("Classic");
@@ -1071,10 +1071,10 @@ namespace sub
 			auto& vPaints = PAINTS_NORMAL;
 
 			for (auto& p : vPaints)
-				AddcarcolOption_(p.name, Static_12, p.paint, p.pearl);
+				AddcarcolOption_(p.name, s_selectedVehicleHandle, p.paint, p.pearl);
 
 		}
-		
+
 		void Sub_Matte()
 		{
 			AddTitle("Matte");
@@ -1082,10 +1082,10 @@ namespace sub
 			auto& vPaints = PAINTS_MATTE;
 
 			for (auto& p : vPaints)
-				AddcarcolOption_(p.name, Static_12, p.paint, p.pearl);
+				AddcarcolOption_(p.name, s_selectedVehicleHandle, p.paint, p.pearl);
 
 		}
-		
+
 		void Sub_Metallic()
 		{
 			AddTitle("Metallic");
@@ -1093,9 +1093,9 @@ namespace sub
 			auto& vPaints = PAINTS_METALLIC;
 
 			for (auto& p : vPaints)
-				AddcarcolOption_(p.name, Static_12, p.paint, p.pearl);
+				AddcarcolOption_(p.name, s_selectedVehicleHandle, p.paint, p.pearl);
 		}
-		
+
 		void Sub_Metal()
 		{
 			AddTitle("Metal");
@@ -1103,9 +1103,9 @@ namespace sub
 			auto& vPaints = PAINTS_METAL;
 
 			for (auto& p : vPaints)
-				AddcarcolOption_(p.name, Static_12, p.paint, p.pearl);
+				AddcarcolOption_(p.name, s_selectedVehicleHandle, p.paint, p.pearl);
 		}
-		
+
 		void Sub_Chameleon()
 		{
 			AddTitle("Chameleon");
@@ -1113,10 +1113,10 @@ namespace sub
 			auto& vPaints = PAINTS_CHAMELEON;
 
 			for (auto& p : vPaints)
-				AddcarcolOption_(p.name, Static_12, p.paint, p.pearl);
+				AddcarcolOption_(p.name, s_selectedVehicleHandle, p.paint, p.pearl);
 
 		}
-		
+
 		void Sub_Pearl()
 		{
 			AddTitle("Pearlescent");
@@ -1124,12 +1124,12 @@ namespace sub
 			auto& vPaints = PAINTS_PEARL;
 
 			for (auto& p : vPaints)
-				AddcarcolOption_(p.name, Static_12, p.pearl, p.pearl);
+				AddcarcolOption_(p.name, s_selectedVehicleHandle, p.pearl, p.pearl);
 
 			_AddPaintIndexSlider();
 
 		}
-		
+
 		void Sub_Util()
 		{
 			AddTitle("Utility");
@@ -1137,9 +1137,9 @@ namespace sub
 			auto& vPaints = PAINTS_UTIL;
 
 			for (auto& p : vPaints)
-				AddcarcolOption_(p.name, Static_12, p.paint, p.pearl);
+				AddcarcolOption_(p.name, s_selectedVehicleHandle, p.paint, p.pearl);
 		}
-		
+
 		void Sub_Worn()
 		{
 			AddTitle("Worn");
@@ -1147,7 +1147,7 @@ namespace sub
 			auto& vPaints = PAINTS_WORN;
 
 			for (auto& p : vPaints)
-				AddcarcolOption_(p.name, Static_12, p.paint, p.pearl);
+				AddcarcolOption_(p.name, s_selectedVehicleHandle, p.paint, p.pearl);
 		}
 	}
 
@@ -1161,42 +1161,42 @@ namespace sub
 				SET_VEHICLE_MOD_KIT(vehicle.GetHandle(), 0);
 		}
 
-		switch (bit_MSPaints_RGB_mode)
+		switch (bitMSPaintsRGBMode)
 		{
-		case 0: vehicle.CustomPrimaryColour_set(R, G, B);
+		case 0: vehicle.SetCustomPrimaryColour(R, G, B);
 			break;
-		case 1: vehicle.CustomSecondaryColour_set(R, G, B);
+		case 1: vehicle.SetCustomSecondaryColour(R, G, B);
 			break;
-		case 2: vehicle.NeonLightsColour_set(R, G, B);
+		case 2: vehicle.SetNeonLightsColour(R, G, B);
 			break;
 		case 3:
-			_global_MultiPlatNeons_Col.R = R;
-			_global_MultiPlatNeons_Col.G = G;
-			_global_MultiPlatNeons_Col.B = B;
+			g_multiPlatNeonsColor.R = R;
+			g_multiPlatNeonsColor.G = G;
+			g_multiPlatNeonsColor.B = B;
 			break;
 		case 4:
 			vehicle.ToggleMod(VehicleMod::TireSmoke, true);
-			vehicle.TyreSmokeColour_set(R, G, B);
+			vehicle.SetTyreSmokeColour(R, G, B);
 			break;
 
 			/*case 7: GET_PLAYER_PARACHUTE_TINT_INDEX(Static_240, &inull); _SET_PLAYER_PARACHUTE_SMOKE_COLOUR(Static_240, R, G, B);
 			_SET_PLAYER_PARACHUTE_SMOKE_ENABLED(Static_240, 1); REMOVE_WEAPON_FROM_PED(GET_PLAYER_PED(Static_240), GADGET_PARACHUTE);
 			GIVE_WEAPON_TO_PED(GET_PLAYER_PED(Static_240), GADGET_PARACHUTE, 1, 0, 0); SET_PLAYER_PARACHUTE_TINT_INDEX(Static_240, inull); break;*/
 		case 7:
-			SET_PLAYER_PARACHUTE_SMOKE_TRAIL_COLOR(Static_240, R, G, B);
-			SET_PLAYER_CAN_LEAVE_PARACHUTE_SMOKE_TRAIL(Static_240, TRUE);
+			SET_PLAYER_PARACHUTE_SMOKE_TRAIL_COLOR(g_activePlayerId, R, G, B);
+			SET_PLAYER_CAN_LEAVE_PARACHUTE_SMOKE_TRAIL(g_activePlayerId, TRUE);
 			break;
 
 		case 9:
-			_globalSpawnVehicle_neonCol = RgbS(R, G, B);
+			g_spawnVehicleNeonColor = RgbS(R, G, B);
 			break;
 		case 10:
-			REPLACE_HUD_COLOUR_WITH_RGBA(Static_12, R, G, B, A);
+			REPLACE_HUD_COLOUR_WITH_RGBA(s_selectedHudColour, R, G, B, A);
 			break;
 		}
 
 	}
-	
+
 	void MSPaints_RGB()
 	{
 		int ms_paints_rgb_r = 0,
@@ -1224,7 +1224,7 @@ namespace sub
 			ms_paints_finish_minus = 0,
 			ms_paints_savergb = 0;
 
-		GTAvehicle vehicle = Static_12;
+		GTAvehicle vehicle = s_selectedVehicleHandle;
 
 		const std::vector<NamedVehiclePaint> PAINTS_FINISH
 		{
@@ -1254,9 +1254,9 @@ namespace sub
 			{ "Satin"},
 		};
 
-		if (bit_MSPaints_RGB_mode == 0 || bit_MSPaints_RGB_mode == 1)
+		if (bitMSPaintsRGBMode == 0 || bitMSPaintsRGBMode == 1)
 		{
-			switch (getpaintCarUsing_index(Static_12, ms_curr_paint_index))
+			switch (getpaintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart))
 			{
 			case 0:
 				ms_paints_finish = 1;
@@ -1291,51 +1291,51 @@ namespace sub
 			}
 		}
 
-		switch (bit_MSPaints_RGB_mode)
+		switch (bitMSPaintsRGBMode)
 		{
-		case 0: GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(Static_12, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b); break;
-		case 1: GET_VEHICLE_CUSTOM_SECONDARY_COLOUR(Static_12, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b); break;
-		case 2: GET_VEHICLE_NEON_COLOUR(Static_12, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b); break;
-		case 3: ms_paints_rgb_r = _global_MultiPlatNeons_Col.R; ms_paints_rgb_g = _global_MultiPlatNeons_Col.G; ms_paints_rgb_b = _global_MultiPlatNeons_Col.B; break;
-		case 4: GET_VEHICLE_TYRE_SMOKE_COLOR(Static_12, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b); break;
+		case 0: GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(s_selectedVehicleHandle, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b); break;
+		case 1: GET_VEHICLE_CUSTOM_SECONDARY_COLOUR(s_selectedVehicleHandle, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b); break;
+		case 2: GET_VEHICLE_NEON_COLOUR(s_selectedVehicleHandle, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b); break;
+		case 3: ms_paints_rgb_r = g_multiPlatNeonsColor.R; ms_paints_rgb_g = g_multiPlatNeonsColor.G; ms_paints_rgb_b = g_multiPlatNeonsColor.B; break;
+		case 4: GET_VEHICLE_TYRE_SMOKE_COLOR(s_selectedVehicleHandle, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b); break;
 
-		case 7: GET_PLAYER_PARACHUTE_SMOKE_TRAIL_COLOR(Static_240/*idk so ja*/, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b); break;
+		case 7: GET_PLAYER_PARACHUTE_SMOKE_TRAIL_COLOR(g_activePlayerId/*idk so ja*/, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b); break;
 
-		case 9: ms_paints_rgb_r = _globalSpawnVehicle_neonCol.R; ms_paints_rgb_g = _globalSpawnVehicle_neonCol.G; ms_paints_rgb_b = _globalSpawnVehicle_neonCol.B; break;
-		case 10: GET_HUD_COLOUR(Static_12, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b, &ms_paints_rgb_a); break;
+		case 9: ms_paints_rgb_r = g_spawnVehicleNeonColor.R; ms_paints_rgb_g = g_spawnVehicleNeonColor.G; ms_paints_rgb_b = g_spawnVehicleNeonColor.B; break;
+		case 10: GET_HUD_COLOUR(s_selectedVehicleHandle, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b, &ms_paints_rgb_a); break;
 		}
 		AddTitle("Set Colour");
-		if (bit_MSPaints_RGB_mode == 0 || bit_MSPaints_RGB_mode == 1)
+		if (bitMSPaintsRGBMode == 0 || bitMSPaintsRGBMode == 1)
 			AddTexter("Paint Finish", ms_paints_finish, PAINTS_FINISH_NAMES, null, ms_paints_finish_plus, ms_paints_finish_minus);
 		AddNumber("Red", ms_paints_rgb_r, 0, ms_paints_rgb_r_custom, ms_paints_rgb_r_plus, ms_paints_rgb_r_minus);
 
-		switch (*Menu::currentopATM)
+		switch (*Menu::activeOptionIndex)
 		{
 		case 2:case 3:case 4:
-			Add_preset_colour_options_previews(ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b);
+			AddPresetColourOptionsPreviews(ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b);
 			break;
 		}
 
 		AddNumber("Green", ms_paints_rgb_g, 0, ms_paints_rgb_g_custom, ms_paints_rgb_g_plus, ms_paints_rgb_g_minus);
 		AddNumber("Blue", ms_paints_rgb_b, 0, ms_paints_rgb_b_custom, ms_paints_rgb_b_plus, ms_paints_rgb_b_minus);
 		if (ms_paints_rgb_a != -1) AddNumber("Opacity", ms_paints_rgb_a, 0, ms_paints_rgb_a_custom, ms_paints_rgb_a_plus, ms_paints_rgb_a_minus);
-		AddTexter("HUD Colour", settings_hud_c, HudColour::vHudColours, settings_hud_c_custom, settings_hud_c_plus, settings_hud_c_minus);
+		AddTexter("HUD Colour", settingsHUDColor, HudColour::vHudColours, settings_hud_c_custom, settings_hud_c_plus, settings_hud_c_minus);
 		AddOption("~b~Input~s~ Hex Code", ms_paints_hexinput);
 
 		AddBreak("---Presets---");
-		if (Add_preset_colour_options(ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b))
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+		if (AddPresetColourOptions(ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b))
+			rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 
 		if (ms_paints_rgb_r_plus) {
 			if (ms_paints_rgb_r < 255) ms_paints_rgb_r++;
 			else ms_paints_rgb_r = 0;
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+			rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 			return;
 		}
 		if (ms_paints_rgb_r_minus) {
 			if (ms_paints_rgb_r > 0) ms_paints_rgb_r--;
 			else ms_paints_rgb_r = 255;
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+			rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 			return;
 		}
 		if (ms_paints_rgb_r_custom) {
@@ -1346,16 +1346,16 @@ namespace sub
 				{
 					int newVal = abs(stoi(inputStr));
 					if (newVal < 0 || newVal > 255)
-						Game::Print::PrintError_InvalidInput(inputStr);
+						Game::Print::PrintErrorInvalidInput(inputStr);
 					else
 					{
 						ms_paints_rgb_r = newVal;
-						rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+						rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 					}
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsRgbR, std::string(), 3U, std::string(), std::to_string(ms_paints_rgb_r));
@@ -1367,13 +1367,13 @@ namespace sub
 		if (ms_paints_rgb_g_plus) {
 			if (ms_paints_rgb_g < 255) ms_paints_rgb_g++;
 			else ms_paints_rgb_g = 0;
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+			rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 			return;
 		}
 		if (ms_paints_rgb_g_minus) {
 			if (ms_paints_rgb_g > 0) ms_paints_rgb_g--;
 			else ms_paints_rgb_g = 255;
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+			rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 			return;
 		}
 		if (ms_paints_rgb_g_custom) {
@@ -1384,16 +1384,16 @@ namespace sub
 				{
 					int newVal = abs(stoi(inputStr));
 					if (newVal < 0 || newVal > 255)
-						Game::Print::PrintError_InvalidInput(inputStr);
+						Game::Print::PrintErrorInvalidInput(inputStr);
 					else
 					{
 						ms_paints_rgb_g = newVal;
-						rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+						rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 					}
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsRgbG, std::string(), 3U, std::string(), std::to_string(ms_paints_rgb_g));
@@ -1405,13 +1405,13 @@ namespace sub
 		if (ms_paints_rgb_b_plus) {
 			if (ms_paints_rgb_b < 255) ms_paints_rgb_b++;
 			else ms_paints_rgb_b = 0;
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+			rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 			return;
 		}
 		if (ms_paints_rgb_b_minus) {
 			if (ms_paints_rgb_b > 0) ms_paints_rgb_b--;
 			else ms_paints_rgb_b = 255;
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+			rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 			return;
 		}
 		if (ms_paints_rgb_b_custom) {
@@ -1422,16 +1422,16 @@ namespace sub
 				{
 					int newVal = abs(stoi(inputStr));
 					if (newVal < 0 || newVal > 255)
-						Game::Print::PrintError_InvalidInput(inputStr);
+						Game::Print::PrintErrorInvalidInput(inputStr);
 					else
 					{
 						ms_paints_rgb_b = newVal;
-						rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+						rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 					}
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsRgbB, std::string(), 3U, std::string(), std::to_string(ms_paints_rgb_b));
@@ -1443,13 +1443,13 @@ namespace sub
 		if (ms_paints_rgb_a_plus) {
 			if (ms_paints_rgb_a < 255) ms_paints_rgb_b++;
 			else ms_paints_rgb_a = 0;
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+			rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 			return;
 		}
 		if (ms_paints_rgb_a_minus) {
 			if (ms_paints_rgb_a > 0) ms_paints_rgb_a--;
 			else ms_paints_rgb_a = 255;
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+			rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 			return;
 		}
 		if (ms_paints_rgb_a_custom) {
@@ -1460,16 +1460,16 @@ namespace sub
 				{
 					int newVal = abs(stoi(inputStr));
 					if (newVal < 0 || newVal > 255)
-						Game::Print::PrintError_InvalidInput(inputStr);
+						Game::Print::PrintErrorInvalidInput(inputStr);
 					else
 					{
 						ms_paints_rgb_a = newVal;
-						rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+						rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 					}
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsRgbA, std::string(), 3U, std::string(), std::to_string(ms_paints_rgb_a));
@@ -1482,9 +1482,9 @@ namespace sub
 		{
 			std::size_t hexcheck;
 			std::string titlestring;
-			std::string hexr = int_to_hexstring(ms_paints_rgb_r, false);
-			std::string hexg = int_to_hexstring(ms_paints_rgb_g, false);
-			std::string hexb = int_to_hexstring(ms_paints_rgb_b, false);
+			std::string hexr = IntToHexString(ms_paints_rgb_r, false);
+			std::string hexg = IntToHexString(ms_paints_rgb_g, false);
+			std::string hexb = IntToHexString(ms_paints_rgb_b, false);
 			if (hexr.length() == 1)
 				hexr = "0" + hexr;
 			if (hexg.length() == 1)
@@ -1503,28 +1503,28 @@ namespace sub
 						ms_paints_rgb_r = std::stoul(inputStr.substr(0, 2), nullptr, 16);
 						ms_paints_rgb_g = std::stoul(inputStr.substr(2, 2), nullptr, 16);
 						ms_paints_rgb_b = std::stoul(inputStr.substr(4, 2), nullptr, 16);
-						rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, 255);
+						rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, 255);
 					}
 					else
-						Game::Print::PrintError_InvalidInput(inputStr);
+						Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			else
-				Game::Print::PrintError_InvalidInput(inputStr);
+				Game::Print::PrintErrorInvalidInput(inputStr);
 		}
 
 		if (settings_hud_c_plus) {
-			if (settings_hud_c < HudColour::vHudColours.size() - 1) settings_hud_c++;
-			else settings_hud_c = 0;
+			if (settingsHUDColor < HudColour::vHudColours.size() - 1) settingsHUDColor++;
+			else settingsHUDColor = 0;
 			return;
 		}
 		if (settings_hud_c_minus) {
-			if (settings_hud_c > 0) settings_hud_c--;
-			else settings_hud_c = 180;
+			if (settingsHUDColor > 0) settingsHUDColor--;
+			else settingsHUDColor = 180;
 			return;
 		}
 		if (settings_hud_c_custom) {
@@ -1538,8 +1538,8 @@ namespace sub
 			GET_HUD_COLOUR(settings_hud_c, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b, &inull);
 			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b);
 			}*/
-			GET_HUD_COLOUR(settings_hud_c, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b, &inull);
-			rgb_mode_set_carcol(Static_12, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
+			GET_HUD_COLOUR(settingsHUDColor, &ms_paints_rgb_r, &ms_paints_rgb_g, &ms_paints_rgb_b, &inull);
+			rgb_mode_set_carcol(s_selectedVehicleHandle, ms_paints_rgb_r, ms_paints_rgb_g, ms_paints_rgb_b, ms_paints_rgb_a);
 			return;
 		}
 		if (ms_paints_finish_plus)
@@ -1548,20 +1548,20 @@ namespace sub
 				ms_paints_finish++;
 			else
 				ms_paints_finish = 0;
-			switch (ms_curr_paint_index)
+			switch (s_selectedPaintPart)
 			{
 			case 1:
 			{
-				RgbS copy = vehicle.CustomPrimaryColour_get();
-				paintCarUsing_index(Static_12, ms_curr_paint_index, PAINTS_FINISH[ms_paints_finish].paint, -1);
-				vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
+				RgbS copy = vehicle.GetCustomPrimaryColour();
+				paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, PAINTS_FINISH[ms_paints_finish].paint, -1);
+				vehicle.SetCustomPrimaryColour(copy.R, copy.G, copy.B);
 				break;
 			}
 			case 2:
 			{
-				RgbS copy = vehicle.CustomSecondaryColour_get();
-				paintCarUsing_index(Static_12, ms_curr_paint_index, PAINTS_FINISH[ms_paints_finish].paint, -1);
-				vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
+				RgbS copy = vehicle.GetCustomSecondaryColour();
+				paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, PAINTS_FINISH[ms_paints_finish].paint, -1);
+				vehicle.SetCustomSecondaryColour(copy.R, copy.G, copy.B);
 				break;
 			}
 			}
@@ -1572,22 +1572,22 @@ namespace sub
 				ms_paints_finish--;
 			else
 				ms_paints_finish = 9;
-			switch (ms_curr_paint_index)
+			switch (s_selectedPaintPart)
 			{
 			case 1:
-				if (GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(Static_12))
+				if (GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(s_selectedVehicleHandle))
 				{
-					RgbS copy = vehicle.CustomPrimaryColour_get();
-					paintCarUsing_index(Static_12, ms_curr_paint_index, PAINTS_FINISH[ms_paints_finish].paint, -1);
-					vehicle.CustomPrimaryColour_set(copy.R, copy.G, copy.B);
+					RgbS copy = vehicle.GetCustomPrimaryColour();
+					paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, PAINTS_FINISH[ms_paints_finish].paint, -1);
+					vehicle.SetCustomPrimaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			case 2:
-				if (GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(Static_12))
+				if (GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(s_selectedVehicleHandle))
 				{
-					RgbS copy = vehicle.CustomSecondaryColour_get();
-					paintCarUsing_index(Static_12, ms_curr_paint_index, PAINTS_FINISH[ms_paints_finish].paint, -1);
-					vehicle.CustomSecondaryColour_set(copy.R, copy.G, copy.B);
+					RgbS copy = vehicle.GetCustomSecondaryColour();
+					paintCarUsing_index(s_selectedVehicleHandle, s_selectedPaintPart, PAINTS_FINISH[ms_paints_finish].paint, -1);
+					vehicle.SetCustomSecondaryColour(copy.R, copy.G, copy.B);
 				}
 				break;
 			}
@@ -1595,7 +1595,7 @@ namespace sub
 	}
 
 	// vehicle - upgrades
-	void set_vehicle_max_upgrades(Vehicle vehicle, bool upgradeIt, bool invincible, INT8 plateType, std::string plateText,
+	void SetVehicleMaxUpgrades(Vehicle vehicle, bool upgradeIt, bool invincible, INT8 plateType, std::string plateText,
 		bool neonIt, UINT8 NeonR, UINT8 NeonG, UINT8 NeonB, INT16 prim_col_index, INT16 sec_col_index)
 	{
 		if (!DOES_ENTITY_EXIST(vehicle) || !IS_ENTITY_A_VEHICLE(vehicle))
@@ -1610,9 +1610,9 @@ namespace sub
 			SET_VEHICLE_MOD_KIT(vehicle, 0);
 
 		if (invincible)
-			set_vehicle_invincible_on(vehicle);
+			SetVehicleInvincibleOn(vehicle);
 		else
-			set_vehicle_invincible_off(vehicle);
+			SetVehicleInvincibleOff(vehicle);
 
 		if (plateText.length() > 0)
 			SET_VEHICLE_NUMBER_PLATE_TEXT(vehicle, (PCHAR)plateText.c_str());
@@ -1620,11 +1620,11 @@ namespace sub
 		SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(vehicle, plateType);
 
 
-		if (upgradeIt) // upgrade
+		//if (upgradeIt) // upgrade
 		{
-			TOGGLE_VEHICLE_MOD(vehicle, 18, 1);
-			TOGGLE_VEHICLE_MOD(vehicle, 20, 1);
-			TOGGLE_VEHICLE_MOD(vehicle, 22, 1);
+			TOGGLE_VEHICLE_MOD(vehicle, 18, 1*upgradeIt);
+			TOGGLE_VEHICLE_MOD(vehicle, 20, 1 * upgradeIt);
+			TOGGLE_VEHICLE_MOD(vehicle, 22, 1 * upgradeIt);
 
 			for (i = 0; i < vValues_ModSlotNames.size(); i++)
 			{
@@ -1633,7 +1633,7 @@ namespace sub
 				if (i == 24)
 				{
 					UINT8 modIndex = GET_VEHICLE_MOD(vehicle, 23);
-					SET_VEHICLE_MOD(vehicle, i, modIndex, 0);
+					SET_VEHICLE_MOD(vehicle, i, upgradeIt?modIndex:-1, 0);
 					continue;
 				}
 				UINT8 modIndex = GET_NUM_VEHICLE_MODS(vehicle, i) - 1;				
@@ -1641,9 +1641,9 @@ namespace sub
 					modIndex = std::rand() % (modIndex + 2) - 1;
 				if (11 <= i && 16 >= i)
 					modIndex = GET_NUM_VEHICLE_MODS(vehicle, i) - 1;
-				SET_VEHICLE_MOD(vehicle, i, modIndex, 0);
+				SET_VEHICLE_MOD(vehicle, i, upgradeIt ? modIndex : -1, 0);
 			}
-			SET_VEHICLE_WINDOW_TINT(vehicle, 1);
+			SET_VEHICLE_WINDOW_TINT(vehicle, 1 * upgradeIt);
 
 			SET_VEHICLE_TYRES_CAN_BURST(vehicle, false);
 		}
@@ -1693,16 +1693,17 @@ namespace sub
 
 	void ModShop_()
 	{
-		if (!(DOES_ENTITY_EXIST(Static_12) && IS_ENTITY_A_VEHICLE(Static_12)))
+		if (!(DOES_ENTITY_EXIST(s_selectedVehicleHandle) && IS_ENTITY_A_VEHICLE(s_selectedVehicleHandle)))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
 		bool veh_plate_plus = 0, veh_plate_minus = 0, veh_plate_text_set = 0;
-		INT i, veh_plate_current = GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(Static_12);
+		INT i, veh_plate_current = GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(s_selectedVehicleHandle);
 
 		bool veh_static12_autoUpgrade = 0,
+			veh_static12_stockParts = 0,
 			aileron_on = 0,
 			aileron_off = 0,
 			SubMS_Paints = 0,
@@ -1750,73 +1751,68 @@ namespace sub
 			MSLowerSuspension_ = 0;
 
 
-		Model Static_12_veh_model = GET_ENTITY_MODEL(Static_12);
-		GTAvehicle vehicle = Static_12;
+		Model Static_12_veh_model = GET_ENTITY_MODEL(s_selectedVehicleHandle);
+		GTAvehicle vehicle = s_selectedVehicleHandle;
 		Model& vehicleModel = Static_12_veh_model;
 		bool Static_12_is_bike = (vehicleModel.IsBike() || vehicleModel.IsBicycle() || vehicleModel.IsQuadbike());
 		bool Static_12_is_bicycle = Static_12_veh_model.IsBicycle();
 
 
-		INT ms_armour = GET_VEHICLE_MOD(Static_12, 16) + 1,
-			ms_fbumper = GET_VEHICLE_MOD(Static_12, 1) + 1,
-			ms_rbumper = GET_VEHICLE_MOD(Static_12, 2) + 1,
-			ms_sideskirts = GET_VEHICLE_MOD(Static_12, 3) + 1,
-			ms_chasis = GET_VEHICLE_MOD(Static_12, 5) + 1,
-			ms_hood = GET_VEHICLE_MOD(Static_12, 7) + 1,
-			ms_fenders = GET_VEHICLE_MOD(Static_12, 8) + 1,
-			ms_spoiler = GET_VEHICLE_MOD(Static_12, 0) + 1,
-			ms_grille = GET_VEHICLE_MOD(Static_12, 6) + 1,
+		INT ms_armour = GET_VEHICLE_MOD(s_selectedVehicleHandle, 16) + 1,
+			ms_fbumper = GET_VEHICLE_MOD(s_selectedVehicleHandle, 1) + 1,
+			ms_rbumper = GET_VEHICLE_MOD(s_selectedVehicleHandle, 2) + 1,
+			ms_sideskirts = GET_VEHICLE_MOD(s_selectedVehicleHandle, 3) + 1,
+			ms_chasis = GET_VEHICLE_MOD(s_selectedVehicleHandle, 5) + 1,
+			ms_hood = GET_VEHICLE_MOD(s_selectedVehicleHandle, 7) + 1,
+			ms_fenders = GET_VEHICLE_MOD(s_selectedVehicleHandle, 8) + 1,
+			ms_spoiler = GET_VEHICLE_MOD(s_selectedVehicleHandle, 0) + 1,
+			ms_grille = GET_VEHICLE_MOD(s_selectedVehicleHandle, 6) + 1,
 			// MOD 8 IS LEFT WING
 			// MOD 9 IS RIGHT WING
 			// MOD 10 IS ROOF
-			ms_engine = GET_VEHICLE_MOD(Static_12, 11) + 1,
-			ms_trans = GET_VEHICLE_MOD(Static_12, 13) + 1,
-			ms_brakes = GET_VEHICLE_MOD(Static_12, 12) + 1,
-			ms_susp = GET_VEHICLE_MOD(Static_12, 15) + 1,
-			ms_exh = GET_VEHICLE_MOD(Static_12, 4) + 1,
-			ms_livery = GET_VEHICLE_LIVERY(Static_12) + 1,
-			ms_livery2 = GET_VEHICLE_LIVERY2(Static_12) + 1;
+			ms_engine = GET_VEHICLE_MOD(s_selectedVehicleHandle, 11) + 1,
+			ms_trans = GET_VEHICLE_MOD(s_selectedVehicleHandle, 13) + 1,
+			ms_brakes = GET_VEHICLE_MOD(s_selectedVehicleHandle, 12) + 1,
+			ms_susp = GET_VEHICLE_MOD(s_selectedVehicleHandle, 15) + 1,
+			ms_exh = GET_VEHICLE_MOD(s_selectedVehicleHandle, 4) + 1,
+			ms_livery = GET_VEHICLE_LIVERY(s_selectedVehicleHandle) + 1,
+			ms_livery2 = GET_VEHICLE_LIVERY2(s_selectedVehicleHandle) + 1;
 
 		auto rpmMultVal = 1.0f;
-		const auto& rpmMultIt = g_multList_rpm.find(vehicle.Handle());
-		if (rpmMultIt != g_multList_rpm.end())
+		const auto& rpmMultIt = g_multListRPM.find(vehicle.Handle());
+		if (rpmMultIt != g_multListRPM.end())
 			rpmMultVal = rpmMultIt->second;
 
 		auto torqueMultVal = 1.0f;
-		const auto& torqueMultIt = g_multList_torque.find(vehicle.Handle());
-		if (torqueMultIt != g_multList_torque.end())
+		const auto& torqueMultIt = g_multListTorque.find(vehicle.Handle());
+		if (torqueMultIt != g_multListTorque.end())
 			torqueMultVal = torqueMultIt->second;
 
 		auto maxSpeedMultVal = GET_VEHICLE_MODEL_ESTIMATED_MAX_SPEED(vehicleModel.hash);
-		const auto& maxSpeedMultIt = g_multList_maxSpeed.find(vehicle.Handle());
-		if (maxSpeedMultIt != g_multList_maxSpeed.end())
+		const auto& maxSpeedMultIt = g_multListMaxSpeed.find(vehicle.Handle());
+		if (maxSpeedMultIt != g_multListMaxSpeed.end())
 			maxSpeedMultVal = maxSpeedMultIt->second;
 
 		auto headLightsMultVal = 1.0f;
-		const auto& headLightsMultIt = g_multList_headlights.find(vehicle.Handle());
-		if (headLightsMultIt != g_multList_headlights.end())
+		const auto& headLightsMultIt = g_multListHeadLights.find(vehicle.Handle());
+		if (headLightsMultIt != g_multListHeadLights.end())
 			headLightsMultVal = headLightsMultIt->second;
 
-		std::string ms_plateText = GET_VEHICLE_NUMBER_PLATE_TEXT(Static_12);
+		std::string ms_plateText = GET_VEHICLE_NUMBER_PLATE_TEXT(s_selectedVehicleHandle);
 
 		std::vector<std::string> ms_vPlateTypeNames{ "CMOD_PLA_0", "CMOD_PLA_4", "CMOD_PLA_3", "CMOD_PLA_1", "CMOD_PLA_2", "Yankton", "CMOD_PLA_6", "CMOD_PLA_7", "CMOD_PLA_8", "CMOD_PLA_9", "CMOD_PLA_10", "CMOD_PLA_11", "CMOD_PLA_12" }; // BOW1, YOBLA, YOBLU, BOW2, BOW3, YANKTON, ECOLA, LASVENTURAS, LIBERTYCITY, LSCARMEET, LSPOUNDERS, SPRUNK
 		if (veh_plate_current < 0) veh_plate_current = 0;
 
-		FLOAT ms_dirtLevel = GET_VEHICLE_DIRT_LEVEL(Static_12);
+		FLOAT ms_dirtLevel = GET_VEHICLE_DIRT_LEVEL(s_selectedVehicleHandle);
 
 		AddTitle("Menyoo Customs");
-
-		if (Static_12_veh_model.IsPlane()) {
-			AddOption("Plane Aileron On", aileron_on);
-			AddOption("Plane Aileron Off", aileron_off);
-		}
 
 		if (true) // Display Benny's sub ptr if veh is supported Static_12_veh_model.IsBennySupportedVehicle()
 		{
 			AddOption(Game::GetGXTEntry("S_MO_09", "Benny's Lowrider Mods"), null, nullFunc, SUB::MS_BENNYS); // Use 25 to 48 here.
 		}
 
-		if (Static_12_veh_model.IsWheelChangingSupportedVehicle() && 65535 != GET_VEHICLE_MOD_KIT(Static_12))
+		if (Static_12_veh_model.IsWheelChangingSupportedVehicle() && 65535 != GET_VEHICLE_MOD_KIT(s_selectedVehicleHandle))
 		{
 			AddOption(Game::GetGXTEntry("CMOD_MOD_WHEM", "Wheels"), null, nullFunc, SUB::MSWHEELS, true);
 		}
@@ -1846,12 +1842,12 @@ namespace sub
 			if (i >= 17 && i <= 24)
 				continue; // Toggleables and front/back wheels not needed here
 			//if (i == VehicleMod::Suspension && Static_12_veh_model.hash == VEHICLE_GLENDALE) continue;
-			if (GET_NUM_VEHICLE_MODS(Static_12, i) > 0)
+			if (GET_NUM_VEHICLE_MODS(s_selectedVehicleHandle, i) > 0)
 			{
 				lastMod = -2;
-				AddOption(get_mod_slot_name(Static_12, i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
+				AddOption(GetModSlotName(s_selectedVehicleHandle, i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
 				{
-					ms_curr_paint_index = i;
+					s_selectedModSlot = i;
 				}
 			}
 		}
@@ -1867,13 +1863,14 @@ namespace sub
 			AddOption(Game::GetGXTEntry("CMOD_MOD_WIN", "Windows"), null, nullFunc, SUB::MSWINDOWS, true, false); // Windows CMOD_MOD_WIN
 		}
 		AddOption(Game::GetGXTEntry("CMOD_COL0_3", "Emblem"), null, nullFunc, SUB::MS_EMBLEM, true, false); // Crew Emblems CMOD_COL0_3
-		AddOption(Game::GetGXTEntry("CMOD_MOD_GLD2", "Extras"), SubMS_Extra, nullFunc, -1, true, false); // Extras CMOD_MOD_GLD2
-		if (GET_VEHICLE_LIVERY_COUNT(Static_12) > 0)
+		AddOption("Remove Vehicle Components and Extras", null, nullFunc, SUB::MSREMOVABLECOMPONENTS, true);
+		//AddOption(Game::GetGXTEntry("CMOD_MOD_GLD2", "Extras"), SubMS_Extra, nullFunc, -1, true, false); // Extras CMOD_MOD_GLD2  //Removed to make way for Remove Vehicle Components
+		if (GET_VEHICLE_LIVERY_COUNT(s_selectedVehicleHandle) > 0)
 			AddNumber(Game::GetGXTEntry("CMOD_COL0_4", "Livery"), ms_livery, 0, null, ms_livery_plus, ms_livery_minus);
-		if (GET_VEHICLE_LIVERY2_COUNT(Static_12) > 0)
+		if (GET_VEHICLE_LIVERY2_COUNT(s_selectedVehicleHandle) > 0)
 			AddNumber(Game::GetGXTEntry("Roof Livery", "Roof Livery"), ms_livery2, 0, null, ms_livery2_plus, ms_livery2_minus);
-		AddLocal(Game::GetGXTEntry("CMOD_MOD_TUR", "Turbo"), IS_TOGGLE_MOD_ON(Static_12, VehicleMod::Turbo), ms_turbo_toggle, ms_turbo_toggle); // Turbo
-		AddLocal(Game::GetGXTEntry("CMOD_LGT_1", "Xenon Lights"), IS_TOGGLE_MOD_ON(Static_12, VehicleMod::XenonHeadlights), ms_lights_toggle, ms_lights_toggle); // Xenon lights
+		AddLocal(Game::GetGXTEntry("CMOD_MOD_TUR", "Turbo"), IS_TOGGLE_MOD_ON(s_selectedVehicleHandle, VehicleMod::Turbo), ms_turbo_toggle, ms_turbo_toggle); // Turbo
+		AddLocal(Game::GetGXTEntry("CMOD_LGT_1", "Xenon Lights"), IS_TOGGLE_MOD_ON(s_selectedVehicleHandle, VehicleMod::XenonHeadlights), ms_lights_toggle, ms_lights_toggle); // Xenon lights
 		AddLocal("Lower Suspension", lowersuspension, MSLowerSuspension_, MSLowerSuspension_); // Tuners Lower Suspension
 
 		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1604_0_STEAM && vehicle.IsToggleModOn(VehicleMod::XenonHeadlights))
@@ -1895,7 +1892,7 @@ namespace sub
 				{ "Light Purple" }
 			};
 
-			int hlColour = vehicle.HeadlightColour_get();
+			int hlColour = vehicle.GetHeadlightColour();
 
 			bool bHlColourPlus = false, bHlColourMinus = false;
 			AddTexter(Game::GetGXTEntry("CMOD_LGT_1", "Xenon Lights") + " Colour", hlColour == 255 ? 0 : hlColour,
@@ -1907,7 +1904,7 @@ namespace sub
 					hlColour = 0;
 				else if (hlColour < vHlColours.size() - 1)
 					hlColour++;
-				vehicle.HeadlightColour_set(hlColour);
+				vehicle.SetHeadlightColour(hlColour);
 			}
 			else if (bHlColourMinus)
 			{
@@ -1915,7 +1912,7 @@ namespace sub
 					hlColour = 255;
 				else if (hlColour != 255 && hlColour > 0)
 					hlColour--;
-				vehicle.HeadlightColour_set(hlColour);
+				vehicle.SetHeadlightColour(hlColour);
 			}
 		}
 
@@ -1927,19 +1924,22 @@ namespace sub
 		AddNumber("Torque Multiplier", torqueMultVal, 2, torque_input, torque_plus, torque_minus);
 		AddNumber(Game::GetGXTEntry("FMMC_VEHST_0", "Top Speed") + " (Kmph)", maxSpeedMultVal * 3.6f, 0, maxSpeed_input, maxSpeed_plus, maxSpeed_minus);
 		AddOption(Game::GetGXTEntry("CMOD_MOD_LGT", "Lights"), null, nullFunc, SUB::MSLIGHTS);
-		//bool bLightsOnTogglePressed = false; AddTickol(Game::GetGXTEntry("CMOD_MOD_LGT", "Lights"), vehicle.LightsOn_get(), bLightsOnTogglePressed, bLightsOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bLightsOnTogglePressed) vehicle.LightsOn_set(!vehicle.LightsOn_get());
-		bool bEngineOnTogglePressed = false; AddTickol(Game::GetGXTEntry("CMM_MOD_G3", "Engine"), vehicle.EngineRunning_get(), bEngineOnTogglePressed, bEngineOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bEngineOnTogglePressed) vehicle.EngineRunning_set(!vehicle.EngineRunning_get());
-		//bool bLoudRadioTogglePressed = false; AddTickol("Loud Radio", vehicle.LoudRadioActive_get(), bLoudRadioTogglePressed, bLoudRadioTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bLoudRadioTogglePressed) vehicle.LoudRadioActive_set(!vehicle.LoudRadioActive_get());
+		bool bEngineOnTogglePressed = false; AddTickol(Game::GetGXTEntry("CMM_MOD_G3", "Engine"), vehicle.GetEngineRunning(), bEngineOnTogglePressed, bEngineOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bEngineOnTogglePressed) vehicle.SetEngineRunning(!vehicle.GetEngineRunning());
 
-		if (vehicle.HasSiren_get())
-		{
-			bool bSirenOnTogglePressed = false;
-			AddTickol("Sirens", vehicle.SirenActive_get(), bSirenOnTogglePressed, bSirenOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bSirenOnTogglePressed)
-				vehicle.SirenActive_set(!vehicle.SirenActive_get());
+		if (Static_12_veh_model.IsPlane()) {
+			AddOption("Plane Aileron On", aileron_on);
+			AddOption("Plane Aileron Off", aileron_off);
 		}
 
-		AddOption("AUTO UPGRADE", veh_static12_autoUpgrade);
-		AddToggle("LSC Style Part Selection", _globalLSC_Customs);
+		if (vehicle.GetHasSiren())
+		{
+			bool bSirenOnTogglePressed = false;
+			AddTickol("Sirens", vehicle.GetSirenActive(), bSirenOnTogglePressed, bSirenOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bSirenOnTogglePressed)
+				vehicle.SetSirenActive(!vehicle.GetSirenActive());
+		}
+
+		AddOption("Random Upgrades", veh_static12_autoUpgrade);
+		AddOption("Return to Stock", veh_static12_stockParts);
 
 		if (GET_VEHICLE_MOD_KIT != 0)
 		{
@@ -1947,8 +1947,8 @@ namespace sub
 			SET_VEHICLE_MOD_KIT(vehicle.GetHandle(), 0);
 		}
 
-		if (aileron_on) DISABLE_PLANE_AILERON(Static_12, 0, 0);
-		if (aileron_off) DISABLE_PLANE_AILERON(Static_12, 0, 1);
+		if (aileron_on) DISABLE_PLANE_AILERON(s_selectedVehicleHandle, 0, 0);
+		if (aileron_off) DISABLE_PLANE_AILERON(s_selectedVehicleHandle, 0, 1);
 
 		/*if (ms_armour_plus){
 		if (ms_armour < GET_NUM_VEHICLE_MODS(Static_12, 16)) ms_armour++;
@@ -2119,50 +2119,50 @@ namespace sub
 		}*/
 
 		if (ms_livery_plus) {
-			if (ms_livery < GET_VEHICLE_LIVERY_COUNT(Static_12)) ms_livery++;
-			SET_VEHICLE_LIVERY(Static_12, ms_livery - 1);
+			if (ms_livery < GET_VEHICLE_LIVERY_COUNT(s_selectedVehicleHandle)) ms_livery++;
+			SET_VEHICLE_LIVERY(s_selectedVehicleHandle, ms_livery - 1);
 			return;
 		}
 		if (ms_livery_minus) {
 			if (ms_livery > 1) ms_livery--;
-			SET_VEHICLE_LIVERY(Static_12, ms_livery - 1);
+			SET_VEHICLE_LIVERY(s_selectedVehicleHandle, ms_livery - 1);
 			return;
 		}
 
 		if (ms_livery2_plus) {
-			if (ms_livery2 < GET_VEHICLE_LIVERY2_COUNT(Static_12)) ms_livery2++;
-			SET_VEHICLE_LIVERY2(Static_12, ms_livery2 - 1);
+			if (ms_livery2 < GET_VEHICLE_LIVERY2_COUNT(s_selectedVehicleHandle)) ms_livery2++;
+			SET_VEHICLE_LIVERY2(s_selectedVehicleHandle, ms_livery2 - 1);
 			return;
 		}
 		if (ms_livery2_minus) {
 			if (ms_livery2 > 1) ms_livery2--;
-			SET_VEHICLE_LIVERY2(Static_12, ms_livery2 - 1);
+			SET_VEHICLE_LIVERY2(s_selectedVehicleHandle, ms_livery2 - 1);
 			return;
 		}
 
 		if (ms_lights_toggle) {
-			if (IS_TOGGLE_MOD_ON(Static_12, 22)) TOGGLE_VEHICLE_MOD(Static_12, 22, 0);
-			else TOGGLE_VEHICLE_MOD(Static_12, 22, 1);
+			if (IS_TOGGLE_MOD_ON(s_selectedVehicleHandle, 22)) TOGGLE_VEHICLE_MOD(s_selectedVehicleHandle, 22, 0);
+			else TOGGLE_VEHICLE_MOD(s_selectedVehicleHandle, 22, 1);
 			return;
 		}
 		if (ms_turbo_toggle) {
-			if (IS_TOGGLE_MOD_ON(Static_12, 18)) TOGGLE_VEHICLE_MOD(Static_12, 18, 0);
-			else TOGGLE_VEHICLE_MOD(Static_12, 18, 1);
+			if (IS_TOGGLE_MOD_ON(s_selectedVehicleHandle, 18)) TOGGLE_VEHICLE_MOD(s_selectedVehicleHandle, 18, 0);
+			else TOGGLE_VEHICLE_MOD(s_selectedVehicleHandle, 18, 1);
 			return;
 		}
 
 		if (MSLowerSuspension_) {
 			vehicle.RequestControlOnce();
 			lowersuspension = !lowersuspension;
-			SET_REDUCED_SUSPENSION_FORCE(Static_12, lowersuspension);
+			SET_REDUCED_SUSPENSION_FORCE(s_selectedVehicleHandle, lowersuspension);
 			return;
 		}
 
 		if (SubMS_Extra) {
 			for (i = 0; i <= 12; i++)
-				if (DOES_EXTRA_EXIST(Static_12, i)) { Menu::SetSub_new(SUB::MSEXTRA); break; }
-			if (Menu::currentsub != SUB::MSEXTRA)
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Vehicle has no extras.");
+				if (DOES_EXTRA_EXIST(s_selectedVehicleHandle, i)) { Menu::NewSetMenu(SUB::MSEXTRA); break; }
+			if (Menu::activeSubmenu != SUB::MSEXTRA)
+				Game::Print::ShowNotification("~r~Error:", "Vehicle has no extras.");
 			return;
 		}
 
@@ -2172,7 +2172,7 @@ namespace sub
 			{
 				veh_plate_current++;
 				vehicle.RequestControl();
-				SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(Static_12, veh_plate_current);
+				SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(s_selectedVehicleHandle, veh_plate_current);
 			}
 			return;
 		}
@@ -2181,7 +2181,7 @@ namespace sub
 			{
 				veh_plate_current--;
 				vehicle.RequestControl();
-				SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(Static_12, veh_plate_current);
+				SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(s_selectedVehicleHandle, veh_plate_current);
 			}
 			return;
 		}
@@ -2192,10 +2192,10 @@ namespace sub
 			if (inputStr.length() > 0 && inputStr.length() <= 8)
 			{
 				vehicle.RequestControl(400);
-				vehicle.NumberPlateText_set(inputStr);
+				vehicle.SetNumberPlateText(inputStr);
 				Game::Print::PrintBottomLeft("CMOD_PLATEFIT", true);
 			}
-			else Game::Print::PrintError_InvalidInput(inputStr);
+			else Game::Print::PrintErrorInvalidInput(inputStr);
 			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsPlateText, std::string(), 8U, "CMOD_MOD_18_D", ms_plateText);
 			//OnscreenKeyboard::State::arg1._int = vehicle.Handle();
 			return;
@@ -2214,15 +2214,15 @@ namespace sub
 				{
 					headLightsMultVal = stof(inputStr);
 					vehicle.RequestControl();
-					vehicle.LightsMultiplier_set(headLightsMultVal);
-					if (headLightsMultIt != g_multList_headlights.end())
+					vehicle.SetLightsMultiplier(headLightsMultVal);
+					if (headLightsMultIt != g_multListHeadLights.end())
 						headLightsMultIt->second = headLightsMultVal;
 					else
-						g_multList_headlights[vehicle.Handle()] = headLightsMultVal;
+						g_multListHeadLights[vehicle.Handle()] = headLightsMultVal;
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			return;
@@ -2235,11 +2235,11 @@ namespace sub
 			{
 				headLightsMultVal += 0.1f;
 				vehicle.RequestControl();
-				vehicle.LightsMultiplier_set(headLightsMultVal);
-				if (headLightsMultIt != g_multList_headlights.end())
+				vehicle.SetLightsMultiplier(headLightsMultVal);
+				if (headLightsMultIt != g_multListHeadLights.end())
 					headLightsMultIt->second = headLightsMultVal;
 				else
-					g_multList_headlights[vehicle.Handle()] = headLightsMultVal;
+					g_multListHeadLights[vehicle.Handle()] = headLightsMultVal;
 			}
 			return;
 		}
@@ -2249,11 +2249,11 @@ namespace sub
 			{
 				headLightsMultVal -= 0.1f;
 				vehicle.RequestControl();
-				vehicle.LightsMultiplier_set(headLightsMultVal);
-				if (headLightsMultIt != g_multList_headlights.end())
+				vehicle.SetLightsMultiplier(headLightsMultVal);
+				if (headLightsMultIt != g_multListHeadLights.end())
 					headLightsMultIt->second = headLightsMultVal;
 				else
-					g_multList_headlights[vehicle.Handle()] = headLightsMultVal;
+					g_multListHeadLights[vehicle.Handle()] = headLightsMultVal;
 			}
 			return;
 		}
@@ -2271,15 +2271,15 @@ namespace sub
 				{
 					rpmMultVal = stof(inputStr);
 					vehicle.RequestControl(400);
-					vehicle.EnginePowerMultiplier_set(rpmMultVal);
-					if (rpmMultIt != g_multList_rpm.end())
+					vehicle.SetEnginePowerMultiplier(rpmMultVal);
+					if (rpmMultIt != g_multListRPM.end())
 						rpmMultIt->second = rpmMultVal;
 					else
-						g_multList_rpm[vehicle.Handle()] = rpmMultVal;
+						g_multListRPM[vehicle.Handle()] = rpmMultVal;
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			return;
@@ -2292,11 +2292,11 @@ namespace sub
 			{
 				rpmMultVal += 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EnginePowerMultiplier_set(rpmMultVal);
-				if (rpmMultIt != g_multList_rpm.end())
+				vehicle.SetEnginePowerMultiplier(rpmMultVal);
+				if (rpmMultIt != g_multListRPM.end())
 					rpmMultIt->second = rpmMultVal;
 				else
-					g_multList_rpm[vehicle.Handle()] = rpmMultVal;
+					g_multListRPM[vehicle.Handle()] = rpmMultVal;
 			}
 			return;
 		}
@@ -2306,11 +2306,11 @@ namespace sub
 			{
 				rpmMultVal -= 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EnginePowerMultiplier_set(rpmMultVal);
-				if (rpmMultIt != g_multList_rpm.end())
+				vehicle.SetEnginePowerMultiplier(rpmMultVal);
+				if (rpmMultIt != g_multListRPM.end())
 					rpmMultIt->second = rpmMultVal;
 				else
-					g_multList_rpm[vehicle.Handle()] = rpmMultVal;
+					g_multListRPM[vehicle.Handle()] = rpmMultVal;
 			}
 			return;
 		}
@@ -2328,15 +2328,15 @@ namespace sub
 				{
 					torqueMultVal = stof(inputStr);
 					vehicle.RequestControl(400);
-					vehicle.EngineTorqueMultiplier_set(torqueMultVal);
-					if (torqueMultIt != g_multList_torque.end())
+					vehicle.SetEngineTorqueMulitplier(torqueMultVal);
+					if (torqueMultIt != g_multListTorque.end())
 						torqueMultIt->second = torqueMultVal;
 					else
-						g_multList_torque[vehicle.Handle()] = torqueMultVal;
+						g_multListTorque[vehicle.Handle()] = torqueMultVal;
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			return;
@@ -2349,11 +2349,11 @@ namespace sub
 			{
 				torqueMultVal += 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EngineTorqueMultiplier_set(torqueMultVal);
-				if (torqueMultIt != g_multList_torque.end())
+				vehicle.SetEngineTorqueMulitplier(torqueMultVal);
+				if (torqueMultIt != g_multListTorque.end())
 					torqueMultIt->second = torqueMultVal;
 				else
-					g_multList_torque[vehicle.Handle()] = torqueMultVal;
+					g_multListTorque[vehicle.Handle()] = torqueMultVal;
 			}
 			return;
 		}
@@ -2363,11 +2363,11 @@ namespace sub
 			{
 				torqueMultVal -= 0.1f;
 				vehicle.RequestControl(400);
-				vehicle.EngineTorqueMultiplier_set(torqueMultVal);
-				if (torqueMultIt != g_multList_torque.end())
+				vehicle.SetEngineTorqueMulitplier(torqueMultVal);
+				if (torqueMultIt != g_multListTorque.end())
 					torqueMultIt->second = torqueMultVal;
 				else
-					g_multList_torque[vehicle.Handle()] = torqueMultVal;
+					g_multListTorque[vehicle.Handle()] = torqueMultVal;
 			}
 			return;
 		}
@@ -2385,15 +2385,15 @@ namespace sub
 				{
 					maxSpeedMultVal = stof(inputStr) / 3.6f;
 					vehicle.RequestControl(400);
-					vehicle.MaxSpeed_set(maxSpeedMultVal);
-					if (maxSpeedMultIt != g_multList_maxSpeed.end())
+					vehicle.SetMaxSpeed(maxSpeedMultVal);
+					if (maxSpeedMultIt != g_multListMaxSpeed.end())
 						maxSpeedMultIt->second = maxSpeedMultVal;
 					else
-						g_multList_maxSpeed[vehicle.Handle()] = maxSpeedMultVal;
+						g_multListMaxSpeed[vehicle.Handle()] = maxSpeedMultVal;
 				}
 				catch (...)
 				{
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				}
 			}
 			return;
@@ -2405,11 +2405,11 @@ namespace sub
 			{
 				maxSpeedMultVal += 1.0f / 3.6f;
 				vehicle.RequestControl(400);
-				vehicle.MaxSpeed_set(maxSpeedMultVal);
-				if (maxSpeedMultIt != g_multList_maxSpeed.end())
+				vehicle.SetMaxSpeed(maxSpeedMultVal);
+				if (maxSpeedMultIt != g_multListMaxSpeed.end())
 					maxSpeedMultIt->second = maxSpeedMultVal;
 				else
-					g_multList_maxSpeed[vehicle.Handle()] = maxSpeedMultVal;
+					g_multListMaxSpeed[vehicle.Handle()] = maxSpeedMultVal;
 			}
 			return;
 		}
@@ -2419,11 +2419,11 @@ namespace sub
 			{
 				maxSpeedMultVal -= 1.0f / 3.6f;
 				vehicle.RequestControl(400);
-				vehicle.MaxSpeed_set(maxSpeedMultVal);
-				if (maxSpeedMultIt != g_multList_maxSpeed.end())
+				vehicle.SetMaxSpeed(maxSpeedMultVal);
+				if (maxSpeedMultIt != g_multListMaxSpeed.end())
 					maxSpeedMultIt->second = maxSpeedMultVal;
 				else
-					g_multList_maxSpeed[vehicle.Handle()] = maxSpeedMultVal;
+					g_multListMaxSpeed[vehicle.Handle()] = maxSpeedMultVal;
 			}
 			return;
 		}
@@ -2431,8 +2431,15 @@ namespace sub
 		if (veh_static12_autoUpgrade)
 		{
 			vehicle.RequestControl(400);
-			set_vehicle_max_upgrades(Static_12, true, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(Static_12));
-			SET_VEHICLE_TYRES_CAN_BURST(Static_12, false);
+			SetVehicleMaxUpgrades(s_selectedVehicleHandle, true, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(s_selectedVehicleHandle));
+			SET_VEHICLE_TYRES_CAN_BURST(s_selectedVehicleHandle, false);
+		}
+
+		if (veh_static12_stockParts)
+		{
+			vehicle.RequestControl(400);
+			SetVehicleMaxUpgrades(s_selectedVehicleHandle, false, false, GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(s_selectedVehicleHandle));
+			SET_VEHICLE_TYRES_CAN_BURST(s_selectedVehicleHandle, true);
 		}
 	}
 
@@ -2442,12 +2449,12 @@ namespace sub
 	{
 		void Sub_BennysMain()
 		{
-			GTAvehicle vehicle = Static_12;
+			GTAvehicle vehicle = s_selectedVehicleHandle;
 			const auto& vehModel = vehicle.Model();
 
 			if (!vehicle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
@@ -2458,13 +2465,13 @@ namespace sub
 			bool goToInteriorColour = 0;
 			AddOption("Interior Colour", goToInteriorColour, nullFunc, SUB::MSPAINTS2_SHARED); if (goToInteriorColour)
 			{
-				ms_curr_paint_index = 5;
+				s_selectedPaintPart = 5;
 			}
 
 			bool goToDashboardColour = 0;
 			AddOption("Dashboard Colour", goToDashboardColour, nullFunc, SUB::MSPAINTS2_SHARED); if (goToDashboardColour)
 			{
-				ms_curr_paint_index = 6;
+				s_selectedPaintPart = 6;
 			}
 
 			selectmod = true;
@@ -2476,9 +2483,9 @@ namespace sub
 				if (GET_NUM_VEHICLE_MODS(vehicle.Handle(), i) > 0)
 				{
 					lastMod = -2;
-					AddOption(get_mod_slot_name(vehicle.Handle(), i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
+					AddOption(GetModSlotName(vehicle.Handle(), i, true), pressed, nullFunc, SUB::MSCATALL, true, false); if (pressed)
 					{
-						ms_curr_paint_index = i;
+					s_selectedModSlot = i;
 					}
 				}
 			}
@@ -2488,16 +2495,16 @@ namespace sub
 
 	void MSCatall_()
 	{
-		Vehicle& vehicle = Static_12;
+		Vehicle& vehicle = s_selectedVehicleHandle;
 
 		if (!DOES_ENTITY_EXIST(vehicle))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
 
-		INT& modType = ms_curr_paint_index,
+		INT& modType = s_selectedModSlot,
 			maxMod = GET_NUM_VEHICLE_MODS(vehicle, modType) - 1,
 			currMod = GET_VEHICLE_MOD(vehicle, modType);
 
@@ -2507,21 +2514,21 @@ namespace sub
 			selectmod = false;
 		}
 
-		AddTitle(get_mod_slot_name(vehicle, modType, true));
+		AddTitle(GetModSlotName(vehicle, modType, true));
 
-		if (_globalLSC_Customs) //to allow toggleable LSC style menu nav
+		if (g_LSCCustoms) //to allow toggleable LSC style menu nav
 		{
 			for (INT i = -1; i <= maxMod; i++)
 			{
 				bool pressed = false;
-				AddTickol(get_mod_text_label(vehicle, modType, i, true), lastMod == i, pressed, pressed,
+				AddTickol(GetModTextLabel(vehicle, modType, i, true), lastMod == i, pressed, pressed,
 					IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING, TICKOL::NONE, false);
-				if (*Menu::currentopATM == Menu::printingop && currMod != i)
+				if (Menu::IsLastDrawnOptionSelected() && currMod != i)
 					SET_VEHICLE_MOD(vehicle, modType, i, GET_VEHICLE_MOD_VARIATION(vehicle, modType));
 				if (pressed)
 				{
 					lastMod = i;
-					//Menu::SetSub_previous();
+					//Menu::SetPreviousMenu();
 				}
 				if (Menu::OnSubBack == nullptr)
 				{
@@ -2537,7 +2544,7 @@ namespace sub
 			for (INT i = -1; i <= maxMod; i++)
 			{
 				bool pressed = false;
-				AddTickol(get_mod_text_label(vehicle, modType, i, true), currMod == i, pressed, pressed,
+				AddTickol(GetModTextLabel(vehicle, modType, i, true), currMod == i, pressed, pressed,
 					IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING, TICKOL::NONE, false); if (pressed)
 				{
 					SET_VEHICLE_MOD(vehicle, modType, i, GET_VEHICLE_MOD_VARIATION(vehicle, modType));
@@ -2550,11 +2557,11 @@ namespace sub
 
 	void MSEmblem_()
 	{
-		GTAvehicle vehicle = Static_12;
+		GTAvehicle vehicle = s_selectedVehicleHandle;
 
 		if (!vehicle.Exists())
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -2608,70 +2615,70 @@ namespace sub
 
 		void __AddpointOption(const std::string& text, INT8 wheelType)
 		{
-			int& wtype = ms_curr_paint_index, & chrtype = bit_MSPaints_RGB_mode;
+			int& wtype = s_selectedPaintPart, & chrtype = bitMSPaintsRGBMode;
 			bool pressed = false;
 			AddOption(text, pressed, nullFunc, -1, true, true); if (pressed)
 			{
-				ms_curr_paint_index = wheelType;
+				s_selectedPaintPart = wheelType;
 				if (wheelType == WheelType::BikeWheels)
 				{
 					ms_bit_bike_back = true;
-					Menu::SetSub_delayed = SUB::MSWHEELS2;
+					Menu::pendingSubmenu = SUB::MSWHEELS2;
 				}
 				else
 				{
 					ms_bit_bike_back = false;
 					chrtype = 0;
-					SET_VEHICLE_WHEEL_TYPE(Static_12, wtype);
-					ms_max_windices = GET_NUM_VEHICLE_MODS(Static_12, VehicleMod::FrontWheels);
-					Menu::SetSub_delayed = SUB::MSWHEELS3;
+					SET_VEHICLE_WHEEL_TYPE(s_selectedVehicleHandle, wtype);
+					ms_max_windices = GET_NUM_VEHICLE_MODS(s_selectedVehicleHandle, VehicleMod::FrontWheels);
+					Menu::pendingSubmenu = SUB::MSWHEELS3;
 				}
 			}
 		}
 		void __AddOption(const std::string& text, Vehicle vehicle, INT8 wheelType, INT16 wheelIndex, bool isBikeBack)
 		{
-			addlog(ige::LogType::LOG_TRACE, "Starting Addoption", __FILENAME__);
-			if (_globalLSC_Customs)
+			addlog(ige::LogType::LOG_TRACE, "Starting Addoption");
+			if (g_LSCCustoms)
 			{
 				auto& lastwheelRelevant = isBikeBack ? lastbwheel : lastfwheel;
 				bool pressed = false;
-				addlog(ige::LogType::LOG_TRACE, "Got lastwheelRelevant: " + std::to_string(lastwheelRelevant),__FILENAME__);
+				addlog(ige::LogType::LOG_TRACE, "Got lastwheelRelevant: " + std::to_string(lastwheelRelevant));
 				AddTickol(text, lastwheelRelevant == wheelIndex && lastwheeltype == wheelType, pressed, pressed,
 					IS_THIS_MODEL_A_BIKE(GET_ENTITY_MODEL(vehicle)) ? TICKOL::BIKETHING : TICKOL::CARTHING, TICKOL::NONE, true);
 
 				bool allowSettingWheelPreview = GET_VEHICLE_WHEEL_TYPE(vehicle) != wheelType ||
 					(wheelType == WheelType::BikeWheels && isBikeBack ? GET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels) != wheelIndex
 						: GET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels) != wheelIndex);
-				addlog(ige::LogType::LOG_TRACE, "allowSettingWheelPreview: " + std::to_string(allowSettingWheelPreview), __FILENAME__);
+				addlog(ige::LogType::LOG_TRACE, "allowSettingWheelPreview: " + std::to_string(allowSettingWheelPreview));
 
-				addlog(ige::LogType::LOG_TRACE, "Comparing currrentopATM: " + std::to_string((int)(*Menu::currentopATM)) + " to printingop: " + std::to_string((int)(Menu::printingop)), __FILENAME__);
-				if (*Menu::currentopATM == Menu::printingop && allowSettingWheelPreview)
+				addlog(ige::LogType::LOG_TRACE, "Comparing active option index to current option count: " + std::to_string((int)(*Menu::activeOptionIndex)) + " / " + std::to_string((int)(Menu::currentOptionCount)));
+				if (Menu::IsLastDrawnOptionSelected() && allowSettingWheelPreview)
 				{
-					addlog(ige::LogType::LOG_TRACE, "Setting wheel preview: type " + std::to_string(wheelType) + ", index " + std::to_string(wheelIndex), __FILENAME__);
+					addlog(ige::LogType::LOG_TRACE, "Setting wheel preview: type " + std::to_string(wheelType) + ", index " + std::to_string(wheelIndex));
 					GTAvehicle(vehicle).RequestControlOnce();
 					SET_VEHICLE_WHEEL_TYPE(vehicle, wheelType);
 					if (wheelType == WheelType::BikeWheels)
 					{
-						addlog(ige::LogType::LOG_TRACE, "Setting Bike Wheels", __FILENAME__);
+						addlog(ige::LogType::LOG_TRACE, "Setting Bike Wheels");
 						isBikeBack ? SET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::BackWheels))
 							: SET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::FrontWheels));
 					}
 					else
 					{
-						addlog(ige::LogType::LOG_TRACE, "Setting Car Wheels", __FILENAME__);
+						addlog(ige::LogType::LOG_TRACE, "Setting Car Wheels");
 						SET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::FrontWheels));
 						//SET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels, wheelIndex, GET_VEHICLE_MOD_VARIATION(vehicle, VehicleMod::BackWheels)); //redundant on non-bike tuning
 					}
 				}
-				addlog(ige::LogType::LOG_TRACE, "ended comparison, waiting for selection", __FILENAME__);
+				addlog(ige::LogType::LOG_TRACE, "ended comparison, waiting for selection");
 				if (pressed)
 				{
-					addlog(ige::LogType::LOG_TRACE, "Selection made", __FILENAME__);
+					addlog(ige::LogType::LOG_TRACE, "Selection made");
 					lastwheeltype = wheelType;
 					lastfwheel = GET_VEHICLE_MOD(vehicle, VehicleMod::FrontWheels);
 					lastbwheel = GET_VEHICLE_MOD(vehicle, VehicleMod::BackWheels);
-					addlog(ige::LogType::LOG_DEBUG, "Wheels Set, lastwheeltype = " + std::to_string(lastwheeltype) + ", lastfwheel = " + std::to_string(lastfwheel) + ", lastbwheel = " + std::to_string(lastbwheel), __FILENAME__);
-					//Menu::SetSub_previous();
+					addlog(ige::LogType::LOG_DEBUG, "Wheels Set, lastwheeltype = " + std::to_string(lastwheeltype) + ", lastfwheel = " + std::to_string(lastfwheel) + ", lastbwheel = " + std::to_string(lastbwheel));
+					//Menu::SetPreviousMenu();
 					return;
 				}
 			}
@@ -2704,21 +2711,21 @@ namespace sub
 					//ms_wheel_windice_pressed = true;
 				}
 			}
-			addlog(ige::LogType::LOG_TRACE, "Looping Addoption", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Looping Addoption");
 		}
 	}
 
 	void MSWheels_()
 	{
-		if (!DOES_ENTITY_EXIST(Static_12))
+		if (!DOES_ENTITY_EXIST(s_selectedVehicleHandle))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
 		using namespace MSWheels_catind;
 
-		GTAvehicle vehicle = Static_12;
+		GTAvehicle vehicle = s_selectedVehicleHandle;
 		bool set_mspaints_index_4 = 0,
 			set_msrgb_index_4 = 0,
 			MSWheelsCustomTyres_ = 0,
@@ -2729,21 +2736,21 @@ namespace sub
 		UINT i;
 
 
-		Model Static_12_veh_model = GET_ENTITY_MODEL(Static_12);
+		Model Static_12_veh_model = GET_ENTITY_MODEL(s_selectedVehicleHandle);
 		bool isBike = Static_12_veh_model.IsBike();
-		INT wheel_no = GET_VEHICLE_MOD(Static_12, 23);
-		INT ms_custom_tyres = GET_VEHICLE_MOD_VARIATION(Static_12, 23);
-		BOOL ms_drift_tyres = GET_DRIFT_TYRES_SET(Static_12);
+		INT wheel_no = GET_VEHICLE_MOD(s_selectedVehicleHandle, 23);
+		INT ms_custom_tyres = GET_VEHICLE_MOD_VARIATION(s_selectedVehicleHandle, 23);
+		BOOL ms_drift_tyres = GET_DRIFT_TYRES_SET(s_selectedVehicleHandle);
 
-		lastwheeltype = GET_VEHICLE_WHEEL_TYPE(Static_12);
-		lastfwheel = GET_VEHICLE_MOD(Static_12, VehicleMod::FrontWheels);
-		lastbwheel = GET_VEHICLE_MOD(Static_12, VehicleMod::BackWheels);
+		lastwheeltype = GET_VEHICLE_WHEEL_TYPE(s_selectedVehicleHandle);
+		lastfwheel = GET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::FrontWheels);
+		lastbwheel = GET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::BackWheels);
 
 		AddTitle(Game::GetGXTEntry("CMOD_MOD_WHEM", "Wheels"));
 
 		AddOption(Game::GetGXTEntry("CMOD_MOD_WCL", "Rim Colour"), set_mspaints_index_4, nullFunc, -1, true); // Wheel Colour CMOD_MOD_WCL
 
-		AddTickol(Game::GetGXTEntry("CMOD_TYR_0", "Stock Wheels"), GET_VEHICLE_MOD(Static_12, VehicleMod::FrontWheels) < 0, MSWheelsStockWheels_, MSWheelsStockWheels_);
+		AddTickol(Game::GetGXTEntry("CMOD_TYR_0", "Stock Wheels"), GET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::FrontWheels) < 0, MSWheelsStockWheels_, MSWheelsStockWheels_);
 
 		for (i = 0; i < vWheelTNames.size(); i++)
 		{
@@ -2753,28 +2760,27 @@ namespace sub
 		}
 
 		AddLocal("CMOD_TYR_1", ms_custom_tyres, MSWheelsCustomTyres_, MSWheelsCustomTyres_, true); // Custom Tyres
-		AddLocal("CMOD_TYR_2", GET_VEHICLE_TYRES_CAN_BURST(Static_12) == FALSE, MSWheelsBPTyresOn_, MSWheelsBPTyresOn_, true); // Bulletproof Tyres
-		AddLocal("Drift Tyres", GET_DRIFT_TYRES_SET(Static_12), MSWheelsDriftTyresOn_, MSWheelsDriftTyresOn_, true); // Drift Tyres
-		AddOption("Remove Tires", null, nullFunc, SUB::MS_TYRESBURST);
+		AddLocal("CMOD_TYR_2", GET_VEHICLE_TYRES_CAN_BURST(s_selectedVehicleHandle) == FALSE, MSWheelsBPTyresOn_, MSWheelsBPTyresOn_, true); // Bulletproof Tyres
+		AddLocal("Drift Tyres", GET_DRIFT_TYRES_SET(s_selectedVehicleHandle), MSWheelsDriftTyresOn_, MSWheelsDriftTyresOn_, true); // Drift Tyres
 
 		AddOption(Game::GetGXTEntry("CMOD_MOD_TYR3", "Tire Smoke Colour"), set_msrgb_index_4, nullFunc, SUB::MSPAINTS_RGB);
-		if (*Menu::currentopATM == Menu::printingop)
-			Add_preset_colour_options_previews(vehicle.TyreSmokeColour_get());
+		if (Menu::IsLastDrawnOptionSelected())
+			AddPresetColourOptionsPreview(vehicle.GetTyreSmokeColour());
 
 
 
 		if (set_mspaints_index_4) {
-			ms_curr_paint_index = 4;
+			s_selectedPaintPart = 4;
 			//if (GET_VEHICLE_MOD(Static_12, 23) > -1) Menu::SetSub_new(SUB::MSPAINTS2_SHARED);
 			//else Game::Print::PrintBottomCentre("~r~Error:~s~ Colours cannot be applied to stock wheels.");
-			if (GET_VEHICLE_MOD(Static_12, VehicleMod::FrontWheels) < 0)
-				Game::Print::PrintBottomCentre("~b~Note:~s~ Colours cannot always be applied to stock wheels.");
-			Menu::SetSub_new(SUB::MSPAINTS2_SHARED);
+			if (GET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::FrontWheels) < 0)
+				Game::Print::ShowNotification("~b~Note:", "Colours cannot always be applied to stock wheels.");
+			Menu::NewSetMenu(SUB::MSPAINTS2_SHARED);
 			return;
 		}
 
 
-		if (set_msrgb_index_4) { bit_MSPaints_RGB_mode = 4; return; }
+		if (set_msrgb_index_4) { bitMSPaintsRGBMode = 4; return; }
 
 
 		if (MSWheelsStockWheels_) {
@@ -2793,30 +2799,30 @@ namespace sub
 
 		if (MSWheelsBPTyresOn_) {
 			vehicle.RequestControlOnce();
-			vehicle.CanTyresBurst_set(!vehicle.CanTyresBurst_get());
+			vehicle.SetCanTyresBurst(!vehicle.GetCanTyresBurst());
 			return;
 		}
 
 		if (MSWheelsDriftTyresOn_) {
 			vehicle.RequestControlOnce();
-			vehicle.CanTyresDrift_set(!vehicle.CanTyresDrift_get());
+			vehicle.SetCanTyresDrift(!vehicle.GetCanTyresDrift());
 			return;
 		}
 	}
 	void MSWheels2_()
 	{
-		if (!DOES_ENTITY_EXIST(Static_12))
+		if (!DOES_ENTITY_EXIST(s_selectedVehicleHandle))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
 		using namespace MSWheels_catind;
-		int& wtype = ms_curr_paint_index, & chrtype = bit_MSPaints_RGB_mode;
+		int& wtype = s_selectedPaintPart, & chrtype = bitMSPaintsRGBMode;
 
 		lastwheeltype = 6;
-		lastfwheel = GET_VEHICLE_MOD(Static_12, VehicleMod::FrontWheels);
-		lastbwheel = GET_VEHICLE_MOD(Static_12, VehicleMod::BackWheels);
+		lastfwheel = GET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::FrontWheels);
+		lastbwheel = GET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::BackWheels);
 
 		AddTitle(vWheelTNames[wtype]);
 
@@ -2836,14 +2842,14 @@ namespace sub
 		AddOption("Front", bFrontPressed, nullFunc, SUB::MSWHEELS3); if (bFrontPressed)
 		{
 			chrtype = 0;
-			SET_VEHICLE_WHEEL_TYPE(Static_12, wtype);
-			ms_max_windices = GET_NUM_VEHICLE_MODS(Static_12, VehicleMod::FrontWheels);
+			SET_VEHICLE_WHEEL_TYPE(s_selectedVehicleHandle, wtype);
+			ms_max_windices = GET_NUM_VEHICLE_MODS(s_selectedVehicleHandle, VehicleMod::FrontWheels);
 		}
 		AddOption("Rear", bBackPressed, nullFunc, SUB::MSWHEELS3); if (bBackPressed)
 		{
 			chrtype = 2;
-			SET_VEHICLE_WHEEL_TYPE(Static_12, wtype);
-			ms_max_windices = GET_NUM_VEHICLE_MODS(Static_12, VehicleMod::BackWheels);
+			SET_VEHICLE_WHEEL_TYPE(s_selectedVehicleHandle, wtype);
+			ms_max_windices = GET_NUM_VEHICLE_MODS(s_selectedVehicleHandle, VehicleMod::BackWheels);
 		}
 		//}
 		/*else // Not a bike.
@@ -2854,7 +2860,7 @@ namespace sub
 				chrtype = 0;
 				SET_VEHICLE_WHEEL_TYPE(Static_12, wtype);
 				ms_max_windices = GET_NUM_VEHICLE_MODS(Static_12, VehicleMod::FrontWheels);
-				Menu::SetSub_delayed = SUB::MSWHEELS3;
+				Menu::pendingSubmenu = SUB::MSWHEELS3;
 				return;
 			}
 		}*/
@@ -2916,14 +2922,14 @@ namespace sub
 	}
 	void MSWheels3_()
 	{
-		if (!DOES_ENTITY_EXIST(Static_12))
+		if (!DOES_ENTITY_EXIST(s_selectedVehicleHandle))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
 		using namespace MSWheels_catind;
-		int& wtype = ms_curr_paint_index, & chrtype = bit_MSPaints_RGB_mode, i;
+		int& wtype = s_selectedPaintPart, & chrtype = bitMSPaintsRGBMode, i;
 		//switch (wtype)
 		//{
 		//case SPORT: max = 20; break;
@@ -2945,30 +2951,30 @@ namespace sub
 		int windices2;
 		if (wtype == WheelType::BikeWheels) // Bike Normal/Chrome
 		{
-			addlog(ige::LogType::LOG_TRACE, "Entering Bike Wheels section MSWheels3_ with vehicle handle: {}" + std::to_string(Static_12), __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Entering Bike Wheels section MSWheels3_ with vehicle handle: {}" + std::to_string(s_selectedVehicleHandle));
 			bool bIsChromeSelected = chrtype == 1 || chrtype == 3;
 
 			AddTitle(bIsChromeSelected ? "Chrome Wheels" : "Bike Wheels");
 
 			std::array<int, 5> ids{ 0, 13, 26, 48, ms_max_windices };
-			addlog(ige::LogType::LOG_TRACE, "Adding " + std::to_string(ms_max_windices) + " Wheel Options", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Adding " + std::to_string(ms_max_windices) + " Wheel Options");
 			for (int j = bIsChromeSelected ? 0 : 0; j < ids.size() - 1; j += 1)
 			{
 				for (i = ids[j]; i < ids[j + 1]; i++)
 				{
-					__AddOption(get_mod_text_label(Static_12, VehicleMod::FrontWheels, i, false), Static_12, wtype, i, chrtype == 2);
+					__AddOption(GetModTextLabel(s_selectedVehicleHandle, VehicleMod::FrontWheels, i, false), s_selectedVehicleHandle, wtype, i, chrtype == 2);
 				}
 			}
-			addlog(ige::LogType::LOG_TRACE, "Finished Adding Wheel Options", __FILENAME__);
-			if (_globalLSC_Customs && Menu::OnSubBack == nullptr) // this has been split out for bikes, see further comments on the original section below (line 2575)
+			addlog(ige::LogType::LOG_TRACE, "Finished Adding Wheel Options");
+			if (g_LSCCustoms && Menu::OnSubBack == nullptr) // this has been split out for bikes, see further comments on the original section below (line 2575)
 			{
 				Menu::OnSubBack = [&]()
 				{
-					(chrtype == 2) ? SET_VEHICLE_MOD(Static_12, VehicleMod::BackWheels, lastbwheel, GET_VEHICLE_MOD_VARIATION(Static_12, VehicleMod::BackWheels))
-						: SET_VEHICLE_MOD(Static_12, VehicleMod::FrontWheels, lastfwheel, GET_VEHICLE_MOD_VARIATION(Static_12, VehicleMod::FrontWheels));
+					(chrtype == 2) ? SET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::BackWheels, lastbwheel, GET_VEHICLE_MOD_VARIATION(s_selectedVehicleHandle, VehicleMod::BackWheels))
+						: SET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::FrontWheels, lastfwheel, GET_VEHICLE_MOD_VARIATION(s_selectedVehicleHandle, VehicleMod::FrontWheels));
 				};
 			}
-			addlog(ige::LogType::LOG_TRACE, "Exiting Bike Wheels section MSWheels3_", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Exiting Bike Wheels section MSWheels3_");
 			return;
 		}
 		else //if (wtype == WheelType::Bennys || wtype == WheelType::BennysBespoke) // Benny's
@@ -2990,74 +2996,222 @@ namespace sub
 		AddTitle(bIsChromeSelected ? "Chrome Wheels" : "Normal Wheels");
 		for (; i < windices2; i++)
 		{
-			__AddOption(get_mod_text_label(Static_12, VehicleMod::FrontWheels, i, false), Static_12, wtype, i, chrtype == 2);
+			__AddOption(GetModTextLabel(s_selectedVehicleHandle, VehicleMod::FrontWheels, i, false), s_selectedVehicleHandle, wtype, i, chrtype == 2);
 		}
 
-		if (_globalLSC_Customs)
+		if (g_LSCCustoms)
 		{
 			if (wtype != WheelType::BikeWheels && Menu::OnSubBack == nullptr)
 			{
 				Menu::OnSubBack = []()
 				{
-					SET_VEHICLE_WHEEL_TYPE(Static_12, lastwheeltype);
-					SET_VEHICLE_MOD(Static_12, VehicleMod::FrontWheels, lastfwheel, GET_VEHICLE_MOD_VARIATION(Static_12, VehicleMod::FrontWheels));
+					SET_VEHICLE_WHEEL_TYPE(s_selectedVehicleHandle, lastwheeltype);
+					SET_VEHICLE_MOD(s_selectedVehicleHandle, VehicleMod::FrontWheels, lastfwheel, GET_VEHICLE_MOD_VARIATION(s_selectedVehicleHandle, VehicleMod::FrontWheels));
 					//SET_VEHICLE_MOD(Static_12, VehicleMod::BackWheels, lastbwheel, GET_VEHICLE_MOD_VARIATION(Static_12, VehicleMod::BackWheels));
 				};
 			}
 		}
 	}
-	void MSTyresBurst_()
+
+	namespace RemovableComponents
 	{
-		GTAvehicle vehicle = Static_12;
+		static const std::vector<std::string> kStates{ "Attached", "Detached" };
+		static const std::vector<std::string> kTyreStates{ "Intact", "Deflated" };
 
-		AddTitle("Remove Tyres");
-
-		std::vector<std::string> vCaptions_tyres{ "FrontLeft", "FrontRight", "2", "3", "BackLeft", "BackRight", "6", "7", "8" };
-		for (int i = 0; i < vCaptions_tyres.size(); i++)
+		struct WheelSlot
 		{
-			bool bBurstPressed = false, bUnburstPressed = false;
-			AddTickol(vCaptions_tyres[i], vehicle.IsTyreBursted(i), bBurstPressed, bUnburstPressed, TICKOL::CROSS);
-			if (bBurstPressed)
+			int id;
+			const char* name;
+			const char* bone;
+		};
+
+		static const std::array<WheelSlot, 6> kWheelSlots
+		{
+			WheelSlot{ 0, "Front Left", "wheel_lf" },
+			WheelSlot{ 1, "Front Right", "wheel_rf" },
+			WheelSlot{ 2, "Middle Left", "wheel_lm1" },
+			WheelSlot{ 3, "Middle Right", "wheel_rm1" },
+			WheelSlot{ 4, "Back Left", "wheel_lr" },
+			WheelSlot{ 5, "Back Right", "wheel_rr" }
+		};
+
+		struct VehicleRemovableComponentCache
+		{
+			Vehicle handle = 0;
+			std::unordered_set<int> doors;
+			std::unordered_set<int> tyres;
+		};
+
+		static VehicleRemovableComponentCache s_cache;
+
+		static VehicleRemovableComponentCache& GetCache(GTAvehicle vehicle)
+		{
+			const Vehicle handle = vehicle.Handle();
+			if (s_cache.handle == handle)
+				return s_cache;
+
+			s_cache = VehicleRemovableComponentCache{};
+			s_cache.handle = handle;
+			for (const auto door : vehicle.Doors_get())
+				if (vehicle.IsDoorBroken(door))
+					s_cache.doors.insert(static_cast<int>(door));
+			for (const auto& wheel : kWheelSlots)
+				if (vehicle.HasBone(wheel.bone) && vehicle.IsTyreBursted(wheel.id))
+					s_cache.tyres.insert(wheel.id);
+			return s_cache;
+		}
+
+		static void ReapplyCachedParts(GTAvehicle vehicle, VehicleRemovableComponentCache& cache)
+		{
+			for (const int door : cache.doors)
 			{
-				vehicle.RequestControl(800);
-				vehicle.CanTyresBurst_set(true);
-				vehicle.BurstTyre(i);
-			}
-			else if (bUnburstPressed)
-			{
-				std::vector<int> vTyresBurstedAlready;
-				for (int j = 0; j < vCaptions_tyres.size(); j++)
+				const auto doorType = static_cast<VehicleDoor>(door);
+				if (!vehicle.IsDoorBroken(doorType))
 				{
-					if (j != i)
-					{
-						if (vehicle.IsTyreBursted(j))
-							vTyresBurstedAlready.push_back(j);
-					}
+					vehicle.RequestControl(800);
+					vehicle.BreakDoor(doorType, true);
 				}
-				vehicle.RequestControl(600);
-				for (int j = 0; j < vCaptions_tyres.size(); j++)
-					vehicle.FixTyre(j);
-				vehicle.Repair(false);
-				for (auto& ttb : vTyresBurstedAlready)
-					vehicle.BurstTyre(ttb);
+			}
+
+			for (const auto& wheel : kWheelSlots)
+			{
+				if (vehicle.HasBone(wheel.bone) && cache.tyres.find(wheel.id) != cache.tyres.end() && !vehicle.IsTyreBursted(wheel.id))
+				{
+					vehicle.RequestControl(800);
+					vehicle.SetCanTyresBurst(true);
+					vehicle.BurstTyre(wheel.id);
+				}
 			}
 		}
 
-		bool bMakeAllWheelsInvis = false;
-		AddLocal("Make All Wheels Invisible", are_vehicle_wheels_invisible(vehicle), bMakeAllWheelsInvis, bMakeAllWheelsInvis); if (bMakeAllWheelsInvis)
+		static void AddDoorOptions(GTAvehicle vehicle)
 		{
-			vehicle.RequestControl(600);
-			if (!are_vehicle_wheels_invisible(vehicle))
+			auto& cache = GetCache(vehicle);
+			static const std::array<const char*, 7> names{ "Front Left Door", "Front Right Door", "Back Left Door", "Back Right Door", "Hood", "Trunk", "Trunk 2" };
+			for (const auto door : vehicle.Doors_get())
 			{
-				set_vehicle_wheels_invisible(vehicle, true);
-			}
-			else
-			{
-				set_vehicle_wheels_invisible(vehicle, false);
-				Game::Print::PrintBottomCentre("~b~Note:~s~ It may take a while for the wheels to come back.");
+				const int id = static_cast<int>(door);
+				const bool broken = cache.doors.find(id) != cache.doors.end();
+				const int state = AddTexterCycler(names[id], broken ? 1 : 0, kStates);
+				if (state == (broken ? 1 : 0))
+					continue;
+
+				vehicle.RequestControl(800);
+				if (state == 0)
+				{
+					vehicle.FixDoor(door);
+					cache.doors.erase(id);
+				}
+				else
+				{
+					vehicle.BreakDoor(door, true);
+					cache.doors.insert(id);
+				}
 			}
 		}
 
+		static void AddTyreOptions(GTAvehicle vehicle)
+		{
+			auto& cache = GetCache(vehicle);
+			for (const auto& wheel : kWheelSlots)
+			{
+				if (!vehicle.HasBone(wheel.bone))
+					continue;
+
+				const bool burst = cache.tyres.find(wheel.id) != cache.tyres.end();
+				const int state = AddTexterCycler(wheel.name, burst ? 1 : 0, kTyreStates);
+				if (state == (burst ? 1 : 0))
+					continue;
+
+				vehicle.RequestControl(800);
+				if (state == 0)
+				{
+					vehicle.FixTyre(wheel.id);
+					vehicle.Repair(false);
+					cache.tyres.erase(wheel.id);
+				}
+				else
+				{
+					vehicle.SetCanTyresBurst(true);
+					vehicle.BurstTyre(wheel.id);
+					cache.tyres.insert(wheel.id);
+				}
+			}
+
+			const bool hidden = AreVehicleWheelsInvisible(vehicle);
+			const int visibility = AddTexterCycler("All Wheels", hidden ? 1 : 0, { "Visible", "Hidden" });
+			if (visibility != (hidden ? 1 : 0))
+			{
+				vehicle.RequestControl(600);
+				SetVehicleWheelsInvisible(vehicle, visibility == 1);
+				if (visibility == 0)
+					Game::Print::ShowNotification("~b~Note:", "It may take a while for the wheels to come back.");
+			}
+		}
+
+		static void AddExtraOptions(GTAvehicle vehicle)
+		{
+			for (int id = 0; id <= 20; ++id)
+			{
+				if (!vehicle.DoesExtraExist(id))
+					continue;
+
+				bool pressed = false;
+				AddTickol("Extra " + std::to_string(id), vehicle.GetExtraOn(id), pressed, pressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				if (pressed)
+				{
+					vehicle.RequestControl(800);
+					vehicle.SetExtraOn(id, !vehicle.GetExtraOn(id));
+				}
+			}
+		}
+
+		static bool HasExtras(GTAvehicle vehicle)
+		{
+			for (int id = 0; id <= 20; ++id)
+				if (vehicle.DoesExtraExist(id))
+					return true;
+			return false;
+		}
+
+		void Menu()
+		{
+			if (vehicleFixLoop)
+			{
+				Game::Print::PrintBottomLeft("~y~Removable Vehicle Components menu unavailable while Auto-Repair is enabled.");
+				Menu::SetPreviousMenu();
+				return;
+			}
+
+			GTAvehicle vehicle = s_selectedVehicleHandle;
+			if (!vehicle.Exists())
+			{
+				Menu::SetPreviousMenu();
+				return;
+			}
+
+			AddTitle("Removable Components");
+			auto& cache = GetCache(vehicle);
+			ReapplyCachedParts(vehicle, cache);
+			const bool hasDoors = !vehicle.Doors_get().empty();
+
+			if (hasDoors && MenuCategory::AddCategory("� ~b~Doors~s~"))
+				AddDoorOptions(vehicle);
+			if (HasExtras(vehicle) && MenuCategory::AddCategory("� ~b~Extras~s~"))
+				AddExtraOptions(vehicle);
+			if (vehicle.Model().IsHeli() && MenuCategory::AddCategory("� ~b~Helicopter Parts~s~"))
+			{
+				bool pressed = false;
+				AddTickol("Break Rudder", false, pressed, pressed, TICKOL::CROSS);
+				if (pressed)
+				{
+					vehicle.RequestControl(800);
+					SET_VEHICLE_RUDDER_BROKEN(vehicle.Handle(), true);
+				}
+			}
+			if (MenuCategory::AddCategory("� ~b~Tyres~s~"))
+				AddTyreOptions(vehicle);
+		}
 	}
 
 	// Windows
@@ -3098,14 +3252,14 @@ namespace sub
 
 		void MSWindows_()
 		{
-			GTAvehicle vehicle = Static_12;
+			GTAvehicle vehicle = s_selectedVehicleHandle;
 			if (!vehicle.Exists())
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 
-			int ms_wintint = vehicle.WindowTint_get();
+			int ms_wintint = vehicle.GetWindowTint();
 			if (ms_wintint < 0 || ms_wintint >= msWindows_wintint_names.size()) ms_wintint = 0;
 			//vehicle.RequestControlOnce();
 
@@ -3113,8 +3267,8 @@ namespace sub
 
 			bool ms_wintint_plus = false, ms_wintint_minus = false;
 			AddTexter("CMOD_GLD2_2", ms_wintint, msWindows_wintint_names, null, ms_wintint_plus, ms_wintint_minus, true); // Window Tint
-			if (ms_wintint_plus) { if (ms_wintint < msWindows_wintint_names.size() - 1) ms_wintint++; vehicle.WindowTint_set(ms_wintint); }
-			if (ms_wintint_minus) { if (ms_wintint > 0) ms_wintint--; vehicle.WindowTint_set(ms_wintint); }
+			if (ms_wintint_plus) { if (ms_wintint < msWindows_wintint_names.size() - 1) ms_wintint++; vehicle.SetWindowTint(ms_wintint); }
+			if (ms_wintint_minus) { if (ms_wintint > 0) ms_wintint--; vehicle.SetWindowTint(ms_wintint); }
 
 			AddBreak("---Status---");
 
@@ -3213,13 +3367,13 @@ namespace sub
 	}
 	void MSDoors_()
 	{
-		if (!DOES_ENTITY_EXIST(Static_12))
+		if (!DOES_ENTITY_EXIST(s_selectedVehicleHandle))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
-		GTAvehicle vehicle = Static_12;
+		GTAvehicle vehicle = s_selectedVehicleHandle;
 
 		AddTitle("Doors");
 
@@ -3237,11 +3391,11 @@ namespace sub
 			"Unknown 9",
 			"CannotBeTriedToBeEntered"
 		};
-		int lockStatus = static_cast<int>(vehicle.LockStatus_get());
+		int lockStatus = static_cast<int>(vehicle.GetLockStatus());
 		bool bLockStatus_plus = false, bLockStatus_minus = false;
 		AddTexter("Lock Status", lockStatus, vDoorLockNames, null, bLockStatus_plus, bLockStatus_minus);
-		if (bLockStatus_plus) { if (lockStatus < vDoorLockNames.size() - 1) { lockStatus++; vehicle.LockStatus_set(static_cast<VehicleLockStatus>(lockStatus)); } }
-		if (bLockStatus_minus) { if (lockStatus > 0) { lockStatus--; vehicle.LockStatus_set(static_cast<VehicleLockStatus>(lockStatus)); } }
+		if (bLockStatus_plus) { if (lockStatus < vDoorLockNames.size() - 1) { lockStatus++; vehicle.SetLockStatus(static_cast<VehicleLockStatus>(lockStatus)); } }
+		if (bLockStatus_minus) { if (lockStatus > 0) { lockStatus--; vehicle.SetLockStatus(static_cast<VehicleLockStatus>(lockStatus)); } }
 
 		static UINT8 ____ms_doors_action_index = 0;
 		auto& action = ____ms_doors_action_index;
@@ -3278,18 +3432,18 @@ namespace sub
 	bool hazard = 0;
 	void MSLights_()
 	{
-		GTAvehicle vehicle = Static_12;
+		GTAvehicle vehicle = s_selectedVehicleHandle;
 		bool bHLightsOnTogglePressed = false;
-		AddTickol("Headlights", vehicle.LightsOn_get(), bHLightsOnTogglePressed, bHLightsOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
-		if (bHLightsOnTogglePressed) vehicle.LightsOn_set(!vehicle.LightsOn_get());
+		AddTickol("Headlights", vehicle.GetLightsOn(), bHLightsOnTogglePressed, bHLightsOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+		if (bHLightsOnTogglePressed) vehicle.SetLightsOn(!vehicle.GetLightsOn());
 		bool bLindOnTogglePressed = false;
 		AddTickol("Left Indicator", leftind, bLindOnTogglePressed, bLindOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 		if (bLindOnTogglePressed)
 		{
 			rightind = false;
 			hazard = false;
-			vehicle.LeftIndicatorLightOn_set(!leftind);
-			vehicle.RightIndicatorLightOn_set(false);
+			vehicle.SetLeftIndicatorLightOn(!leftind);
+			vehicle.SetRightIndicatorLightOn(false);
 			leftind = !leftind;
 		}
 		bool bRindOnTogglePressed = false;
@@ -3298,8 +3452,8 @@ namespace sub
 		{
 			leftind = false;
 			hazard = false;
-			vehicle.RightIndicatorLightOn_set(!rightind);
-			vehicle.LeftIndicatorLightOn_set(false);
+			vehicle.SetRightIndicatorLightOn(!rightind);
+			vehicle.SetLeftIndicatorLightOn(false);
 			rightind = !rightind;
 		}
 		bool bHzdOnTogglePressed = false;
@@ -3310,16 +3464,16 @@ namespace sub
 			{
 				rightind = false;
 				leftind = false;
-				vehicle.RightIndicatorLightOn_set(!hazard);
-				vehicle.LeftIndicatorLightOn_set(!hazard);
+				vehicle.SetRightIndicatorLightOn(!hazard);
+				vehicle.SetLeftIndicatorLightOn(!hazard);
 				hazard = !hazard;
 			}
 			else
 			{
 				rightind = false;
 				leftind = false;
-				vehicle.RightIndicatorLightOn_set(true);
-				vehicle.LeftIndicatorLightOn_set(true);
+				vehicle.SetRightIndicatorLightOn(true);
+				vehicle.SetLeftIndicatorLightOn(true);
 				hazard = true;
 			}
 
@@ -3330,13 +3484,13 @@ namespace sub
 
 	void MSExtra_()
 	{
-		if (!DOES_ENTITY_EXIST(Static_12))
+		if (!DOES_ENTITY_EXIST(s_selectedVehicleHandle))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
-		GTAvehicle thisVehicle = Static_12;
+		GTAvehicle thisVehicle = s_selectedVehicleHandle;
 
 		AddTitle("Extras"); // CMOD_MOD_GLD2
 		for (UINT8 i = 0; i <= 60; i++)
@@ -3344,9 +3498,9 @@ namespace sub
 			if (!thisVehicle.DoesExtraExist(i))
 				continue;
 			bool bExtraPressed = false;
-			AddTickol("Extra " + std::to_string(i), thisVehicle.ExtraOn_get(i), bExtraPressed, bExtraPressed, TICKOL::CARTHING); if (bExtraPressed)
+			AddTickol("Extra " + std::to_string(i), thisVehicle.GetExtraOn(i), bExtraPressed, bExtraPressed, TICKOL::CARTHING); if (bExtraPressed)
 			{
-				thisVehicle.ExtraOn_set(i, !thisVehicle.ExtraOn_get(i));
+				thisVehicle.SetExtraOn(i, !thisVehicle.GetExtraOn(i));
 			}
 		}
 
@@ -3356,15 +3510,19 @@ namespace sub
 
 	void MSNeons_()
 	{
-		if (!DOES_ENTITY_EXIST(Static_12))
+		if (!DOES_ENTITY_EXIST(s_selectedVehicleHandle))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
-		GTAvehicle vehicle = Static_12;
+		GTAvehicle vehicle = s_selectedVehicleHandle;
+		std::vector<std::string> NEON_FLASH{ "None","Simple","Spin","SpinBack", "Firework"};
+		std::vector<std::string> NEON_FADE{ "None","Simple","Heartbeat","Shift","Slide"};
 
 		AddTitle(Game::GetGXTEntry("PIM_PVEO_004", "Neons Lights"));
+
+		bool neon_delay_plus = 0, neon_delay_minus = 0, neon_delay_input = 0, neon_flash_plus = 0, neon_flash_minus = 0, neon_fade_plus = 0, neon_fade_minus = 0, neon_rgb_toggle = 0;
 
 		for (auto& i : std::map<VehicleNeonLight, std::pair<Hash, std::string>>{
 			{ VehicleNeonLight::Left,{ 0xCE8DADF3, "Left" } },
@@ -3374,31 +3532,83 @@ namespace sub
 			})
 		{
 			bool bPressed_on = false, bPressed_off = false;
-			AddTickol(i.second.second, vehicle.IsNeonLightOn(i.first), bPressed_on, bPressed_off, TICKOL::CARTHING);
+			AddTickol(i.second.second, neonstate[static_cast<int>(i.first)], bPressed_on, bPressed_off, TICKOL::CARTHING);
 			if (bPressed_on || bPressed_off)
 			{
 				vehicle.RequestControl(300);
 				vehicle.SetNeonLightOn(i.first, bPressed_on);
+				neonstate[static_cast<int>(i.first)] = bPressed_on;
 			}
 		}
 
 		bool rgbmode2 = false;
 		AddOption("Set Colour", rgbmode2, nullFunc, SUB::MSPAINTS_RGB); if (rgbmode2)
 		{
-			bit_MSPaints_RGB_mode = 2;
+			bitMSPaintsRGBMode = 2;
 		}
-		if (*Menu::currentopATM == Menu::printingop)
-			Add_preset_colour_options_previews(vehicle.NeonLightsColour_get());
+		if (Menu::IsLastDrawnOptionSelected())
+			AddPresetColourOptionsPreview(vehicle.GetNeonLightsColour());
 
+
+		AddToggle("Neon RGB", loop_neon_rgb);
+
+		AddTexter("Neon Fade", loop_neon_fade, NEON_FADE, null, neon_fade_plus, neon_fade_minus);
+		AddTexter("Neon Flash", loop_neon_flash, NEON_FLASH, null, neon_flash_plus, neon_flash_minus);
+
+
+		if (neon_fade_plus)
+		{
+			if (loop_neon_fade == NEON_FADE.size()-1)
+				loop_neon_fade = 0;
+			else
+				loop_neon_fade++;
+		}
+		if (neon_fade_minus)
+		{
+			if (loop_neon_fade == 0)
+				loop_neon_fade = static_cast<int>(NEON_FADE.size())-1;
+			else
+				loop_neon_fade--;
+		}
+		if (neon_flash_plus)
+		{
+			if (loop_neon_flash == NEON_FLASH.size()-1)
+				loop_neon_flash = 0;
+			else
+				loop_neon_flash++;
+		}
+		if (neon_flash_minus)
+		{
+			if (loop_neon_flash == 0)
+				loop_neon_flash = static_cast<int>(NEON_FLASH.size())-1;
+			else
+				loop_neon_flash--;
+		}
+
+
+		if (loop_neon_flash > 0 || loop_neon_fade > 0)
+			AddNumber("Animation Speed (ms)", loop_neon_delay, 0, neon_delay_input, neon_delay_plus, neon_delay_minus);
+
+		if (neon_delay_plus && loop_neon_delay < 10000) loop_neon_delay += 50;
+		if (neon_delay_minus && loop_neon_delay > 50) loop_neon_delay -= 50;
+		if (neon_delay_input)
+		{
+			std::string inputStr = Game::InputBox("", 4U, "", std::to_string(loop_neon_delay));
+			if (inputStr.length() > 0 && std::stoi(inputStr) >= 50 && std::stoi(inputStr) <= 10000)
+			{
+				try { loop_neon_delay = std::stoi(inputStr); }
+				catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
+			}
+		}	
 	}
 
 	// Engine sound
 
 	void MSEngineSound_()
 	{
-		if (!DOES_ENTITY_EXIST(Static_12))
+		if (!DOES_ENTITY_EXIST(s_selectedVehicleHandle))
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
@@ -3411,18 +3621,44 @@ namespace sub
 			if (inputStr.length())
 			{
 				if (!Model(inputStr).IsVehicle())
-					Game::Print::PrintError_InvalidInput(inputStr);
+					Game::Print::PrintErrorInvalidInput(inputStr);
 				else
 				{
-					GTAvehicle vehicle = Static_12;
+					GTAvehicle vehicle = s_selectedVehicleHandle;
 					vehicle.RequestControl(300);
-					set_vehicle_engine_sound_name(vehicle, inputStr);
+					SetVehicleEngineSoundName(vehicle, inputStr);
 				}
 			}
-			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::CustomsEngineSoundModelName, std::string(), 28U, "Enter vehicle model name:");
-			//OnscreenKeyboard::State::arg1._int = Static_12;
 		}
-
 	}
-
 }
+
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(MODSHOP,              sub::ModShop_)
+REGISTER_SUBMENU(MS_BENNYS,            sub::Bennys_catind::Sub_BennysMain)
+REGISTER_SUBMENU(MS_EMBLEM,            sub::MSEmblem_)
+REGISTER_SUBMENU(MSWHEELS,             sub::MSWheels_)
+REGISTER_SUBMENU(MSWHEELS2,            sub::MSWheels2_)
+REGISTER_SUBMENU(MSWHEELS3,            sub::MSWheels3_)
+REGISTER_SUBMENU(MSREMOVABLECOMPONENTS,     sub::RemovableComponents::Menu)
+REGISTER_SUBMENU(MSPAINTS,             sub::MSPaints_)
+REGISTER_SUBMENU(MSPAINTS2,            sub::MSPaints2_)
+REGISTER_SUBMENU(MSPAINTS2_CHROME,     sub::MSPaints_catind::Sub_Chrome)
+REGISTER_SUBMENU(MSPAINTS2_MATTE,      sub::MSPaints_catind::Sub_Matte)
+REGISTER_SUBMENU(MSPAINTS2_METAL,      sub::MSPaints_catind::Sub_Metal)
+REGISTER_SUBMENU(MSPAINTS2_CHAMELEON,  sub::MSPaints_catind::Sub_Chameleon)
+REGISTER_SUBMENU(MSPAINTS2_PEARL,      sub::MSPaints_catind::Sub_Pearl)
+REGISTER_SUBMENU(MSPAINTS2_METALLIC,   sub::MSPaints_catind::Sub_Metallic)
+REGISTER_SUBMENU(MSPAINTS2_NORMAL,     sub::MSPaints_catind::Sub_Normal)
+REGISTER_SUBMENU(MSPAINTS2_UTIL,       sub::MSPaints_catind::Sub_Util)
+REGISTER_SUBMENU(MSPAINTS2_WORN,       sub::MSPaints_catind::Sub_Worn)
+REGISTER_SUBMENU(MSPAINTS2_SHARED,     sub::MSPaints_catind::Sub_Shared)
+REGISTER_SUBMENU(MSPAINTS_RGB,         sub::MSPaints_RGB)
+REGISTER_SUBMENU(MSCATALL,             sub::MSCatall_)
+REGISTER_SUBMENU(MSWINDOWS,            sub::MSWindows_catind::MSWindows_)
+REGISTER_SUBMENU(MSENGINESOUND,        sub::MSEngineSound_)
+REGISTER_SUBMENU(MSLIGHTS,             sub::MSLights_)
+REGISTER_SUBMENU(MSDOORS,              sub::MSDoors_)
+REGISTER_SUBMENU(MSNEONS,              sub::MSNeons_)
+REGISTER_SUBMENU(MSEXTRA,              sub::MSExtra_)

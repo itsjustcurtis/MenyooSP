@@ -12,7 +12,11 @@
 #include "..\macros.h"
 
 #include "..\Menu\Menu.h"
+#include "..\Menu\MenuCategory.h"
+#include "..\Menu\submenu_enum.h"
 #include "..\Menu\Routine.h"
+
+#include <iterator>
 
 #include "..\Natives\natives2.h"
 #include "..\Scripting\enums.h"
@@ -31,25 +35,204 @@
 #include <vector>
 #include <string>
 #include <map>
-//#include <utility>
+#include <set>
+#include <algorithm>
 #include <fstream>
 #include <pugixml\src\pugixml.hpp>
 
 namespace sub
 {
-	// Old animation subs declare
+	FavMenuCache s_favCache;
+	AnimationSettings g_customAnimSettings;
 
-	void AddanimOption_(const std::string& text, const std::string& anim_dict, std::string anim_name = "", bool &extra_option_code = null);
-
-	// All animations subs
-
-	namespace AnimationSub_catind
+	bool RebuildFavCache(const std::string& searchStr)
 	{
-		std::string  _searchStr = std::string();
-		void ClearSearchStr() { _searchStr.clear(); }
+		pugi::xml_document doc;
+		if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml").c_str()).status != pugi::status_ok)
+			return false;
 
-		//struct NamedAnimation { std::string caption; std::string animDict, animName; };
-		const std::vector<AnimationSub_catind::NamedAnimation> vPresetPedAnims
+		auto nodeAnims = doc.child("PedAnims");
+		s_favCache.animationsByCategory.clear();
+		s_favCache.sortedCategoryNames.clear();
+
+		for (auto node = nodeAnims.first_child(); node; node = node.next_sibling())
+		{
+			FavouriteAnimation fav;
+			fav.dict = node.attribute("dict").as_string();
+			fav.name = node.attribute("name").as_string();
+			fav.category = node.attribute("category").as_string("");
+
+			if (!searchStr.empty())
+			{
+				std::string dictLower = fav.dict, nameLower = fav.name;
+				boost::to_lower(dictLower);
+				boost::to_lower(nameLower);
+				if (dictLower.find(searchStr) == std::string::npos && nameLower.find(searchStr) == std::string::npos)
+					continue;
+			}
+
+			s_favCache.animationsByCategory[fav.category].push_back(fav);
+		}
+
+		for (auto& kv : s_favCache.animationsByCategory)
+			s_favCache.sortedCategoryNames.push_back(kv.first);
+		std::sort(s_favCache.sortedCategoryNames.begin(), s_favCache.sortedCategoryNames.end(), [](const std::string& a, const std::string& b)
+		{
+			if (a.empty()) return false;
+			if (b.empty()) return true;
+			return a < b;
+		});
+
+		s_favCache.needsRebuild = false;
+		return true;
+	}
+	// state for returning to the last menu option after changing a favourite anim category
+	static struct {
+		std::string animDict;
+		std::string animName;
+		INT returnCursor = 1;
+	} s_recatState;
+
+	struct EntityAnimContext {
+		GTAentity entity;
+		GTAentity attachedTo;
+		int dbIndex;
+	};
+
+	static std::string g_lastAnimDict;
+	static std::string g_lastAnimName;
+
+	EntityAnimContext GetAnimContext(GTAentity entity)
+	{
+		EntityAnimContext ctx;
+		ctx.entity = entity;
+		ctx.dbIndex = sub::Spooner::EntityManagement::GetEntityIndexInDb(entity);
+		if (ctx.dbIndex >= 0)
+		{
+			auto& spoonerEntity = sub::Spooner::Databases::EntityDb[ctx.dbIndex];
+			Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spoonerEntity.handle, ctx.attachedTo);
+		}
+		return ctx;
+	}
+
+	void StopAnimation(GTAentity entity, bool clearScenario = false)
+	{
+		auto ctx = GetAnimContext(entity);
+
+		if (entity.IsPed())
+		{
+			GTAped ped(entity);
+			GTAvehicle veh = ped.CurrentVehicle();
+			bool isInVehicle = veh.Exists();
+			VehicleSeat vehSeat;
+			if (isInVehicle)
+				vehSeat = ped.GetCurrentVehicleSeat();
+			// being in a vehicle is a "task", so we need to put the ped back in the vehicle after clearing tasks
+			Tasks(entity).ClearAllImmediately();
+			if (isInVehicle)
+				ped.SetIntoVehicle(veh, vehSeat);
+		}
+		else
+		{
+			Tasks(entity).ClearAllImmediately();
+			STOP_ENTITY_ANIM(entity.Handle(), g_lastAnimName.c_str(), g_lastAnimDict.c_str(), 0.0f);
+		}
+
+		if (ctx.dbIndex >= 0)
+		{
+			auto& spoonerEntity = sub::Spooner::Databases::EntityDb[ctx.dbIndex];
+			spoonerEntity.ClearLastAnimations();
+
+			if (clearScenario) spoonerEntity.currentScenario.clear();
+
+			if (ctx.attachedTo.Exists() && spoonerEntity.attachmentArgs.isAttached)
+			{
+				spoonerEntity.handle.AttachTo(ctx.attachedTo, spoonerEntity.attachmentArgs.boneIndex,
+					spoonerEntity.handle.GetIsCollisionEnabled(),
+					spoonerEntity.attachmentArgs.offset, spoonerEntity.attachmentArgs.rotation);
+			}
+
+			spoonerEntity.taskSequence.Reset();
+
+			if (sub::Spooner::selectedEntity.handle.Equals(spoonerEntity.handle))
+			{
+				sub::Spooner::selectedEntity.lastAnimations = spoonerEntity.lastAnimations;
+				if (clearScenario) sub::Spooner::selectedEntity.currentScenario = spoonerEntity.currentScenario;
+				sub::Spooner::selectedEntity.taskSequence = spoonerEntity.taskSequence;
+			}
+		}
+	}
+
+	void PlayAnimation(GTAentity entity, const std::string& animDict, const std::string& animName)
+	{
+		auto ctx = GetAnimContext(entity);
+
+		g_lastAnimDict = animDict;
+		g_lastAnimName = animName;
+
+		entity.RequestControl();
+
+		REQUEST_ANIM_DICT(animDict.c_str());
+		for (DWORD timeOut = GetTickCount() + 1750; GetTickCount() < timeOut;)
+		{
+			if (HAS_ANIM_DICT_LOADED(animDict.c_str())) break;
+			WAIT(0);
+		}
+
+		if (entity.IsPed())
+		{
+			TASK_PLAY_ANIM(entity.Handle(), animDict.c_str(), animName.c_str(),
+				g_customAnimSettings.speed, g_customAnimSettings.speedMult, g_customAnimSettings.duration,
+				g_customAnimSettings.flag, g_customAnimSettings.playbackRate,
+				g_customAnimSettings.lockPos, g_customAnimSettings.lockPos, g_customAnimSettings.lockPos);
+		}
+		else
+		{
+			PLAY_ENTITY_ANIM(entity.Handle(), animName.c_str(), animDict.c_str(),
+				8.0f, static_cast<BOOL>(g_customAnimSettings.flag & 1), static_cast<BOOL>(g_customAnimSettings.flag & 2), 0, 0.0f, 0);
+		}
+
+		if (ctx.dbIndex >= 0)
+		{
+			auto& spoonerEntity = sub::Spooner::Databases::EntityDb[ctx.dbIndex];
+			sub::Spooner::SpoonerEntity::Animation animData;
+			animData.dict = animDict;
+			animData.name = animName;
+			animData.speed = g_customAnimSettings.speed;
+			animData.speedMultiplier = g_customAnimSettings.speedMult;
+			animData.playbackRate = g_customAnimSettings.playbackRate;
+			animData.duration = g_customAnimSettings.duration;
+			animData.flag = g_customAnimSettings.flag;
+			animData.lockPos = g_customAnimSettings.lockPos;
+			spoonerEntity.AddOrUpdateLastAnimation(animData);
+
+			if (ctx.attachedTo.Exists() && spoonerEntity.attachmentArgs.isAttached)
+			{
+				spoonerEntity.handle.AttachTo(ctx.attachedTo, spoonerEntity.attachmentArgs.boneIndex,
+					spoonerEntity.handle.GetIsCollisionEnabled(),
+					spoonerEntity.attachmentArgs.offset, spoonerEntity.attachmentArgs.rotation);
+			}
+			spoonerEntity.taskSequence.Reset();
+			if (sub::Spooner::selectedEntity.handle.Equals(spoonerEntity.handle))
+			{
+				sub::Spooner::selectedEntity.lastAnimations = spoonerEntity.lastAnimations;
+				sub::Spooner::selectedEntity.taskSequence = spoonerEntity.taskSequence;
+			}
+		}
+	}
+
+	void AddAnimOption(const std::string& text, const std::string& animDict, std::string animName = "", bool &extraOptionCode = null, const std::string& category = "");
+
+	namespace AnimationMenu
+	{
+		std::string  searchStr = std::string();
+
+		void ClearSearchStr()
+		{ 
+			searchStr.clear(); 
+		}
+
+		const std::vector<AnimationMenu::NamedAnimation> presetPedAnims
 		{
 			{ "Idle - Conceal Weapon 1", "anim@miss@low@fin@vagos@", "idle_ped01" },
 			{ "Idle - Conceal Weapon 2", "anim@miss@low@fin@vagos@", "idle_ped02" },
@@ -122,7 +305,7 @@ namespace sub
 			{ "Monkey - Freakout 3", "missfbi5ig_30monkeys", "monkey_c_freakout_loop" }
 		};
 
-		std::map<std::string, std::vector<std::string>> vAllPedAnims;
+		std::map<std::string, std::vector<std::string>> allPedAnims;
 		std::pair<const std::string, std::vector<std::string>>* selectedAnimDictPtr = nullptr;
 
 		void PopulateAllPedAnimsList()
@@ -131,11 +314,11 @@ namespace sub
 
 			if (fin.is_open())
 			{
-				vAllPedAnims.clear();
+				allPedAnims.clear();
 
 				size_t space;
-				std::string lineLeft, lineRight;
-				//std::vector<std::string> newFileLines;
+				std::string lineLeft;
+				std::string lineRight;
 
 				for (std::string line; std::getline(fin, line);)
 				{
@@ -145,73 +328,63 @@ namespace sub
 						if (space != std::string::npos)
 						{
 							lineLeft = line.substr(0, space);
-							//lineLeft = lineLeft.substr(0, lineLeft.find('-'));
 							lineRight = line.substr(space + 1);
-							//lineRight = lineRight.substr(0, lineRight.find('-'));
-							vAllPedAnims[lineLeft].push_back(lineRight);
-							//newFileLines.push_back(line);
+							allPedAnims[lineLeft].push_back(lineRight);
 						}
 					}
 				}
 				fin.close();
-
-				//std::sort(vAllAnims.begin(), vAllAnims.end());
-				/*std::ofstream fout(GetPathffA(Pathff::Main, true) + "PedAnimList.txt");
-				for (auto& line : newFileLines)
-				{
-				fout << line << std::endl;
-				}
-				fout.close();*/
 			}
 		}
 
-		void Sub_AllPedAnims()
+		void AllPedAnimsMenu()
 		{
-			auto& _searchStr = dict;
+			auto& searchStr = dict;
 			selectedAnimDictPtr = nullptr;
-			bool searchobj = false;
-			bool bCurrentPressed;
+			bool searchObj = false;
+			bool currentPressed;
 			bool notFoundInDict;
 
 			AddTitle("All Animations");
 
-			AddOption(_searchStr.empty() ? "SEARCH" : boost::to_upper_copy(_searchStr), searchobj, nullFunc, -1, true); if (searchobj)
+			AddOption(searchStr.empty() ? "SEARCH" : boost::to_upper_copy(searchStr), searchObj, nullFunc, -1, true); 
+			if (searchObj)
 			{
-				_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", _searchStr);
-				boost::to_lower(_searchStr);
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToLower, _searchStr, 126U, std::string(), _searchStr);
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
+				searchStr = Game::InputBox(searchStr, 126U, "SEARCH", searchStr);
+				boost::to_lower(searchStr);
 			}
 
-			AddTickol("Stop Animation", true, AnimationSub_StopAnimationCallback, AnimationSub_StopAnimationCallback, TICKOL::CROSS);
+			AddTickol("Stop Animation", true, AnimationStopAnimationCallback, AnimationStopAnimationCallback, TICKOL::CROSS);
 
-			for (auto& current : vAllPedAnims)
+			for (auto& current : allPedAnims)
 			{
 				if (!current.second.empty())
 				{
-					if (!_searchStr.empty())
+					if (!searchStr.empty())
 					{
-						if (current.first.find(_searchStr) == std::string::npos)
+						if (current.first.find(searchStr) == std::string::npos)
 						{
 							notFoundInDict = true;
 							for (auto& current2 : current.second)
 							{
-								if (current2.find(_searchStr) != std::string::npos)
+								if (current2.find(searchStr) != std::string::npos)
 								{
 									notFoundInDict = false;
 									break;
 								}
 							}
 							if (notFoundInDict)
+							{
 								continue;
+							}
 						}
 					}
 
-					bCurrentPressed = false;
-					AddOption(current.first, bCurrentPressed); if (bCurrentPressed)
+					currentPressed = false;
+					AddOption(current.first, currentPressed); if (currentPressed)
 					{
 						selectedAnimDictPtr = &current;
-						Menu::SetSub_delayed = SUB::ANIMATIONSUB_ALLPEDANIMS_INDICT;
+						Menu::pendingSubmenu = SUB::ANIMATIONSUB_ALLPEDANIMS_INDICT;
 					}
 				}
 			}
@@ -220,33 +393,22 @@ namespace sub
 		{
 			if (selectedAnimDictPtr == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 			auto& selectedDict = *selectedAnimDictPtr;
-			//auto& _searchStr = dict;
-
 			AddTitle(selectedDict.first);
 
 			for (auto& current : selectedDict.second)
 			{
-				AddanimOption_(current, selectedDict.first, current);
+				AddAnimOption(current, selectedDict.first, current);
 			}
 
 			AddOption("Settings", null, nullFunc, SUB::ANIMATIONSUB_SETTINGS);
 		}
 	}
 
-	// Animation settings
-
-	std::string _globalCustomAnim_dict = "Enter Dictionary", _globalCustomAnim_name = "Enter Name";
-	float _globalCustomAnim_speed = 4, _globalCustomAnim_speedMult = -4, _globalCustomAnim_rate = 0;
-	int _globalCustomAnim_duration = -1, _globalCustomAnim_flag = AnimFlag::Loop;
-	bool _globalCustomAnim_lockPos = false;
-
-	// Animation Favourites
-
-	void GetFavouriteAnimations(std::vector<std::pair<std::string, std::string>>& result)
+	void GetFavouriteAnimations(std::vector<FavouriteAnimation>& result)
 	{
 		result.clear();
 		pugi::xml_document doc;
@@ -257,29 +419,34 @@ namespace sub
 			{
 				std::string dict = nodeAnim.attribute("dict").as_string();
 				std::string name = nodeAnim.attribute("name").as_string();
-
-				result.push_back(std::make_pair(dict, name));
+				std::string category = nodeAnim.attribute("category").as_string("");
+				result.push_back({ dict, name, category });
 			}
 		}
 	}
+
 	bool IsAnimationAFavourite(const std::string animDict, const std::string& animName)
 	{
 		pugi::xml_document doc;
 		if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml").c_str()).status != pugi::status_ok)
+		{
 			return false;
+		}
 
 		auto nodeAnims = doc.child("PedAnims");
-
 		for (auto nodeAnim = nodeAnims.first_child(); nodeAnim; nodeAnim = nodeAnim.next_sibling())
 		{
 			std::string dict = nodeAnim.attribute("dict").as_string();
 			std::string name = nodeAnim.attribute("name").as_string();
 			if (animDict == dict && animName == name)
+			{
 				return true;
+			}
 		}
 		return false;
 	}
-	void AddAnimationToFavourites(const std::string animDict, const std::string& animName)
+
+	void AddAnimationToFavourites(const std::string animDict, const std::string& animName, const std::string& category)
 	{
 		pugi::xml_document doc;
 		std::string filePath = GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml";
@@ -293,21 +460,25 @@ namespace sub
 		}
 
 		auto nodeAnims = doc.child("PedAnims");
-
 		auto nodeAnim = nodeAnims.append_child("Anim");
 		nodeAnim.append_attribute("dict") = animDict.c_str();
 		nodeAnim.append_attribute("name") = animName.c_str();
+		if (!category.empty())
+			nodeAnim.append_attribute("category") = category.c_str();
 
 		doc.save_file((const char*)filePath.c_str());
+		s_favCache.needsRebuild = true;
 	}
+
 	void RemoveAnimationFromFavourites(const std::string animDict, const std::string& animName)
 	{
 		pugi::xml_document doc;
 		if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml").c_str()).status != pugi::status_ok)
+		{
 			return;
+		}
 
 		auto nodeAnims = doc.child("PedAnims");
-
 		for (auto nodeAnim = nodeAnims.first_child(); nodeAnim; nodeAnim = nodeAnim.next_sibling())
 		{
 			std::string dict = nodeAnim.attribute("dict").as_string();
@@ -319,297 +490,405 @@ namespace sub
 		}
 
 		doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml").c_str());
+		s_favCache.needsRebuild = true;
 	}
 
-	// Old animation subs
-
-	void AddanimOption_(const std::string& text, const std::string& anim_dict, std::string anim_name, bool &extra_option_code)
+	void SetAnimationCategory(const std::string& animDict, const std::string& animName, const std::string& category)
 	{
-		if (anim_name.length() == 0)
-			anim_name = text;
-		bool pressed = false;
-		AddTickol(text, IS_ENTITY_PLAYING_ANIM(Static_241, anim_dict.c_str(), anim_name.c_str(), 3), pressed, pressed, TICKOL::MANWON); if (pressed)
+		pugi::xml_document doc;
+		std::string filePath = GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml";
+		if (doc.load_file((const char*)filePath.c_str()).status != pugi::status_ok)
+			return;
+
+		auto nodeAnims = doc.child("PedAnims");
+		for (auto nodeAnim = nodeAnims.first_child(); nodeAnim; nodeAnim = nodeAnim.next_sibling())
 		{
-			GTAped ped = Static_241;
-			GTAentity att;
-			auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
-			if (spi >= 0)
+			std::string dict = nodeAnim.attribute("dict").as_string();
+			std::string name = nodeAnim.attribute("name").as_string();
+			if (animDict == dict && animName == name)
 			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.Handle, att);
+				nodeAnim.remove_attribute("category");
+				if (!category.empty())
+					nodeAnim.append_attribute("category") = category.c_str();
+				break;
 			}
-
-			ped.RequestControl();
-			ped.Task().PlayAnimation(anim_dict, anim_name, _globalCustomAnim_speed, _globalCustomAnim_speedMult, _globalCustomAnim_duration,
-				_globalCustomAnim_flag, _globalCustomAnim_rate, _globalCustomAnim_lockPos);
-
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				spe.LastAnimation.dict = anim_dict;
-				spe.LastAnimation.name = anim_name;
-				if (att.Exists() && spe.AttachmentArgs.isAttached)
-					spe.Handle.AttachTo(att, spe.AttachmentArgs.boneIndex, spe.Handle.IsCollisionEnabled_get(), spe.AttachmentArgs.offset, spe.AttachmentArgs.rotation);
-				spe.TaskSequence.Reset();
-				if (sub::Spooner::SelectedEntity.Handle.Equals(spe.Handle))
-				{
-					sub::Spooner::SelectedEntity.LastAnimation.dict = spe.LastAnimation.dict;
-					sub::Spooner::SelectedEntity.LastAnimation.name = spe.LastAnimation.name;
-					sub::Spooner::SelectedEntity.TaskSequence = spe.TaskSequence;
-				}
-			}
-
-			extra_option_code = true;
 		}
 
-		if (Menu::printingop == *Menu::currentopATM)
-		{
-			bool bIsAFav = IsAnimationAFavourite(anim_dict, anim_name);
-			if (Menu::bit_controller)
-			{
-				Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+		doc.save_file((const char*)filePath.c_str());
+		s_favCache.needsRebuild = true;
+	}
 
+	void AddAnimOption(const std::string& text, const std::string& animDict, std::string animName, bool &extraOptionCode, const std::string& category)
+	{
+		if (animName.length() == 0)
+		{
+			animName = text;
+		}
+		bool pressed = false;
+		AddTickol(text, IS_ENTITY_PLAYING_ANIM(g_activePedHandle, animDict.c_str(), animName.c_str(), 3), pressed, pressed, TICKOL::MANWON);
+		if (pressed)
+		{
+			PlayAnimation(g_activePedHandle, animDict, animName);
+			extraOptionCode = true;
+		}
+
+		if (Menu::IsLastDrawnOptionSelected())
+		{
+			bool isAFavourite = IsAnimationAFavourite(animDict, animName);
+			if (Menu::usingControllerInput)
+			{
+				Menu::add_IB(INPUT_SCRIPT_RLEFT, (!isAFavourite ? "Add to" : "Remove from") + (std::string)" favourites");
 				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
 				{
-					!bIsAFav ? AddAnimationToFavourites(anim_dict, anim_name) : RemoveAnimationFromFavourites(anim_dict, anim_name);
+					!isAFavourite ? AddAnimationToFavourites(animDict, animName) : RemoveAnimationFromFavourites(animDict, animName);
+				}
+
+				if (isAFavourite)
+				{
+					Menu::add_IB(INPUT_SCRIPT_RUP, "Change category");
+					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RUP))
+					{
+						s_recatState.returnCursor = *Menu::activeOptionIndex;
+						s_recatState.animDict = animDict;
+						s_recatState.animName = animName;
+						Menu::pendingSubmenu = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
+					}
 				}
 			}
 			else
 			{
-				Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-
+				Menu::add_IB(VirtualKey::B, (!isAFavourite ? "Add to" : "Remove from") + (std::string)" favourites");
 				if (IsKeyJustUp(VirtualKey::B))
 				{
-					!bIsAFav ? AddAnimationToFavourites(anim_dict, anim_name) : RemoveAnimationFromFavourites(anim_dict, anim_name);
+					!isAFavourite ? AddAnimationToFavourites(animDict, animName) : RemoveAnimationFromFavourites(animDict, animName);
+				}
+
+				if (isAFavourite)
+				{
+					Menu::add_IB(VirtualKey::C, "Change category");
+					if (IsKeyJustUp(VirtualKey::C))
+					{
+						s_recatState.returnCursor = *Menu::activeOptionIndex;
+						s_recatState.animDict = animDict;
+						s_recatState.animName = animName;
+						Menu::pendingSubmenu = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
+					}
 				}
 			}
 		}
-
 	}
 
-	void AnimationSub_StopAnimationCallback()
+	void AnimationStopAnimationCallback()
 	{
-		GTAped ped = Static_241;
-		GTAentity att;
-		auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
-		if (spi >= 0)
-		{
-			auto& spe = sub::Spooner::Databases::EntityDb[spi];
-			Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.Handle, att);
-		}
-
-		GTAvehicle veh = ped.CurrentVehicle();
-		bool isInVehicle = veh.Exists();
-		VehicleSeat vehSeat;
-		if (isInVehicle)
-		{
-			vehSeat = ped.CurrentVehicleSeat_get();
-		}
-		ped.Task().ClearAllImmediately();
-		if (isInVehicle)
-		{
-			ped.SetIntoVehicle(veh, vehSeat);
-		}
-
-		if (spi >= 0)
-		{
-			auto& spe = sub::Spooner::Databases::EntityDb[spi];
-			spe.LastAnimation.dict.clear();
-			spe.LastAnimation.name.clear();
-			if (att.Exists() && spe.AttachmentArgs.isAttached)
-				spe.Handle.AttachTo(att, spe.AttachmentArgs.boneIndex, spe.Handle.IsCollisionEnabled_get(), spe.AttachmentArgs.offset, spe.AttachmentArgs.rotation);
-			spe.TaskSequence.Reset();
-			if (sub::Spooner::SelectedEntity.Handle.Equals(spe.Handle))
-			{
-				sub::Spooner::SelectedEntity.LastAnimation.dict = spe.LastAnimation.dict;
-				sub::Spooner::SelectedEntity.LastAnimation.name = spe.LastAnimation.name;
-				sub::Spooner::SelectedEntity.TaskSequence = spe.TaskSequence;
-			}
-		}
+		StopAnimation(g_activePedHandle);
 	}
 
-	void AnimationSub_()
+	void PedAnimationMenu()
 	{
-		//sub::Spooner::SpoonerEntity uselessSpoonerEntity;
-		//sub::Spooner::SpoonerEntity* spoonerCurrentPed = Static_241 == sub::Spooner::SelectedEntity.Handle.Handle() ? &sub::Spooner::SelectedEntity : &uselessSpoonerEntity;
-		auto& _searchStr = dict;
+		auto& searchStr = dict;
 		dict.clear();
 
-		bool dictset_deer = 0, dictset_cow = 0, dictset_shark = 0, dictset_guard_reac = 0, dictset_randarrests = 0,
-			dictset_swat = 0, dictset_missrappel = 0, dictset_gestures_sitting = 0;
+		bool dictSetDeer = false; 
+		bool dictSetCow = false;
+		bool dictSetShark = false;
+		bool dictSetGuardReact = false;
+		bool dictSetRandomArrests = false;
+		bool dictSetSwat = false;
+		bool dictSetMissionRappel = false;
+		bool dictSetGesturesSitting = false;
 
-		SET_PED_CAN_PLAY_AMBIENT_ANIMS(Static_241, TRUE);
-		SET_PED_CAN_PLAY_AMBIENT_BASE_ANIMS(Static_241, TRUE);
-		SET_PED_CAN_PLAY_GESTURE_ANIMS(Static_241, TRUE);
-		SET_PED_CAN_PLAY_VISEME_ANIMS(Static_241, TRUE, TRUE);
-		SET_PED_IS_IGNORED_BY_AUTO_OPEN_DOORS(Static_241, TRUE);
+		if (IS_ENTITY_A_PED(g_activePedHandle))
+		{
+			SET_PED_CAN_PLAY_AMBIENT_ANIMS(g_activePedHandle, TRUE);
+			SET_PED_CAN_PLAY_AMBIENT_BASE_ANIMS(g_activePedHandle, TRUE);
+			SET_PED_CAN_PLAY_GESTURE_ANIMS(g_activePedHandle, TRUE);
+			SET_PED_CAN_PLAY_VISEME_ANIMS(g_activePedHandle, TRUE, TRUE);
+			SET_PED_IS_IGNORED_BY_AUTO_OPEN_DOORS(g_activePedHandle, TRUE);
+		}
 
 		AddTitle("Animations");
-		AddTickol("Stop Animation", true, AnimationSub_StopAnimationCallback, AnimationSub_StopAnimationCallback, TICKOL::CROSS);
-		AddanimOption_("Pole Dance", "mini@strip_club@pole_dance@pole_dance3", "pd_dance_03");
-		AddanimOption_("Hood Dance", "missfbi3_sniping", "dance_m_default");
-		AddanimOption_("Burning", "ragdoll@human", "on_fire");
-		AddanimOption_("Getting Stunned", "ragdoll@human", "electrocute");
-		AddanimOption_("Private Dance", "mini@strip_club@private_dance@part1", "priv_dance_p1");
-		AddanimOption_("The Rear Abundance", "rcmpaparazzo_2", "shag_loop_poppy");
-		AddanimOption_("The Invisible Man", "rcmpaparazzo_2", "shag_loop_a");
-		AddanimOption_("Push ups", "amb@world_human_push_ups@male@base", "base");
-		AddanimOption_("Sit ups", "amb@world_human_sit_ups@male@base", "base");
-		AddanimOption_("Wave Yo' Arms", "random@car_thief@victimpoints_ig_3", "arms_waving");
-		AddanimOption_("Give BJ to Driver", "mini@prostitutes@sexnorm_veh", "bj_loop_prostitute");
-		AddanimOption_("Pleasure Driver", "mini@prostitutes@sexnorm_veh", "sex_loop_prostitute");
-		AddanimOption_("Mime", "special_ped@mime@monologue_8@monologue_8a", "08_ig_1_wall_ba_0");
-		AddanimOption_("Mime 2", "special_ped@mime@monologue_7@monologue_7a", "11_ig_1_run_aw_0");
-		AddanimOption_("Throw", "switch@franklin@throw_cup", "throw_cup_loop");
-		AddanimOption_("Smoke Coughing", "timetable@gardener@smoking_joint", "idle_cough");
-		AddanimOption_("Chilling with Friends", "friends@laf@ig_1@base", "base");
-		AddanimOption_("They Think We Dumb", "timetable@ron@they_think_were_stupid", "they_think_were_stupid");
-		AddanimOption_("Come Here", "gestures@m@standing@fat", "gesture_come_here_hard");
-		AddanimOption_("No Way", "gestures@m@standing@fat", "gesture_no_way");
-		AddanimOption_("They're Gonna Kill Me", "random@bicycle_thief@ask_help", "my_dads_going_to_kill_me");
-		AddanimOption_("You Gotta Help Me", "random@bicycle_thief@ask_help", "please_man_you_gotta_help_me");
-		AddanimOption_("Sleep", "savecouch@", "t_sleep_loop_couch");
-		AddanimOption_("Sleep 2", "savem_default@", "m_sleep_r_loop");
-		AddanimOption_("Sleep 3", "timetable@tracy@sleep@", "idle_c");
-		AddanimOption_("Meditate", "rcmcollect_paperleadinout@", "meditiate_idle");
-		AddanimOption_("Fap", "switch@trevor@jerking_off", "trev_jerking_off_loop");
-		AddanimOption_("Yeah Yeah Yeah", "special_ped@jessie@michael_1@michael_1b", "jessie_ig_2_yeahyeahyeah_1");
-		AddanimOption_("Idle On Laptop", "switch@franklin@on_laptop", "001927_01_fras_v2_4_on_laptop_idle");
-		AddanimOption_("Hands Up", "random@arrests", "idle_2_hands_up");
-		AddanimOption_("Stand Still, Arms Spread", "mp_sleep", "bind_pose_180");
+		AddTickol("Stop Animation", true, AnimationStopAnimationCallback, AnimationStopAnimationCallback, TICKOL::CROSS);
+		AddAnimOption("Pole Dance", "mini@strip_club@pole_dance@pole_dance3", "pd_dance_03");
+		AddAnimOption("Hood Dance", "missfbi3_sniping", "dance_m_default");
+		AddAnimOption("Burning", "ragdoll@human", "on_fire");
+		AddAnimOption("Getting Stunned", "ragdoll@human", "electrocute");
+		AddAnimOption("Private Dance", "mini@strip_club@private_dance@part1", "priv_dance_p1");
+		AddAnimOption("The Rear Abundance", "rcmpaparazzo_2", "shag_loop_poppy");
+		AddAnimOption("The Invisible Man", "rcmpaparazzo_2", "shag_loop_a");
+		AddAnimOption("Push ups", "amb@world_human_push_ups@male@base", "base");
+		AddAnimOption("Sit ups", "amb@world_human_sit_ups@male@base", "base");
+		AddAnimOption("Wave Yo' Arms", "random@car_thief@victimpoints_ig_3", "arms_waving");
+		AddAnimOption("Give BJ to Driver", "mini@prostitutes@sexnorm_veh", "bj_loop_prostitute");
+		AddAnimOption("Pleasure Driver", "mini@prostitutes@sexnorm_veh", "sex_loop_prostitute");
+		AddAnimOption("Mime", "special_ped@mime@monologue_8@monologue_8a", "08_ig_1_wall_ba_0");
+		AddAnimOption("Mime 2", "special_ped@mime@monologue_7@monologue_7a", "11_ig_1_run_aw_0");
+		AddAnimOption("Throw", "switch@franklin@throw_cup", "throw_cup_loop");
+		AddAnimOption("Smoke Coughing", "timetable@gardener@smoking_joint", "idle_cough");
+		AddAnimOption("Chilling with Friends", "friends@laf@ig_1@base", "base");
+		AddAnimOption("They Think We Dumb", "timetable@ron@they_think_were_stupid", "they_think_were_stupid");
+		AddAnimOption("Come Here", "gestures@m@standing@fat", "gesture_come_here_hard");
+		AddAnimOption("No Way", "gestures@m@standing@fat", "gesture_no_way");
+		AddAnimOption("They're Gonna Kill Me", "random@bicycle_thief@ask_help", "my_dads_going_to_kill_me");
+		AddAnimOption("You Gotta Help Me", "random@bicycle_thief@ask_help", "please_man_you_gotta_help_me");
+		AddAnimOption("Sleep", "savecouch@", "t_sleep_loop_couch");
+		AddAnimOption("Sleep 2", "savem_default@", "m_sleep_r_loop");
+		AddAnimOption("Sleep 3", "timetable@tracy@sleep@", "idle_c");
+		AddAnimOption("Meditate", "rcmcollect_paperleadinout@", "meditiate_idle");
+		AddAnimOption("Fap", "switch@trevor@jerking_off", "trev_jerking_off_loop");
+		AddAnimOption("Yeah Yeah Yeah", "special_ped@jessie@michael_1@michael_1b", "jessie_ig_2_yeahyeahyeah_1");
+		AddAnimOption("Idle On Laptop", "switch@franklin@on_laptop", "001927_01_fras_v2_4_on_laptop_idle");
+		AddAnimOption("Hands Up", "random@arrests", "idle_2_hands_up");
+		AddAnimOption("Stand Still, Arms Spread", "mp_sleep", "bind_pose_180");
 
-		AddOption("Sitting Animations", dictset_gestures_sitting, nullFunc, SUB::ANIMATIONSUB_GESTSIT);
-		AddOption("Rappel Movements", dictset_missrappel, nullFunc, SUB::ANIMATIONSUB_MISSRAPPEL);
-		AddOption("Arrest Movements", dictset_randarrests, nullFunc, SUB::ANIMATIONSUB_RANDARREST);
-		AddOption("Swat Movements", dictset_swat, nullFunc, SUB::ANIMATIONSUB_SWAT);
-		AddOption("Guard Movements", dictset_guard_reac, nullFunc, SUB::ANIMATIONSUB_GUARDREAC);
-		AddOption("Deer Movements", dictset_deer, nullFunc, SUB::ANIMATIONSUB_DEER);
-		AddOption("Cow Movements", dictset_cow, nullFunc, SUB::ANIMATIONSUB_DEER);
-		AddOption("Shark Movements", dictset_shark, nullFunc, SUB::ANIMATIONSUB_SHARK);
+		AddOption("Sitting Animations", dictSetGesturesSitting, nullFunc, SUB::ANIMATIONSUB_GESTSIT);
+		AddOption("Rappel Movements", dictSetMissionRappel, nullFunc, SUB::ANIMATIONSUB_MISSRAPPEL);
+		AddOption("Arrest Movements", dictSetRandomArrests, nullFunc, SUB::ANIMATIONSUB_RANDARREST);
+		AddOption("Swat Movements", dictSetSwat, nullFunc, SUB::ANIMATIONSUB_SWAT);
+		AddOption("Guard Movements", dictSetGuardReact, nullFunc, SUB::ANIMATIONSUB_GUARDREAC);
+		AddOption("Deer Movements", dictSetDeer, nullFunc, SUB::ANIMATIONSUB_DEER);
+		AddOption("Cow Movements", dictSetCow, nullFunc, SUB::ANIMATIONSUB_DEER);
+		AddOption("Shark Movements", dictSetShark, nullFunc, SUB::ANIMATIONSUB_SHARK);
 		AddOption("All Animations", null, nullFunc, SUB::ANIMATIONSUB_ALLPEDANIMS);
 		AddOption("Custom Input", null, nullFunc, SUB::ANIMATIONSUB_CUSTOM);
 		AddOption("Favourites", null, nullFunc, SUB::ANIMATIONSUB_FAVOURITES);
 		AddOption("Settings", null, nullFunc, SUB::ANIMATIONSUB_SETTINGS);
 
 
-		if (dictset_deer) { dict = "creatures@deer@move"; return; }
-		if (dictset_cow) { dict = "creatures@cow@move"; return; }
-		if (dictset_shark) { dict = "creatures@shark@move"; return; }
-		if (dictset_guard_reac) { dict = "guard_reactions"; return; }
-		if (dictset_randarrests) { dict = "random@arrests"; return; }
-		if (dictset_swat) { dict = "swat"; return; }
-		if (dictset_missrappel) { dict = "missrappel"; return; }
-		if (dictset_gestures_sitting) { dict = "gestures@m@sitting@generic@casual"; return; }
+		if (dictSetDeer) 
+		{ 
+			dict = "creatures@deer@move"; 
+			return; 
+		}
+		if (dictSetCow) 
+		{
+			dict = "creatures@cow@move"; 
+			return; 
+		}
+		if (dictSetShark) 
+		{ 
+			dict = "creatures@shark@move"; 
+			return; 
+		}
+		if (dictSetGuardReact) 
+		{ 
+			dict = "guard_reactions"; 
+			return; 
+		}
+		if (dictSetRandomArrests) 
+		{ 
+			dict = "random@arrests"; 
+			return; 
+		}
+		if (dictSetSwat) 
+		{ 
+			dict = "swat"; 
+			return; 
+		}
+		if (dictSetMissionRappel) 
+		{ 
+			dict = "missrappel"; 
+			return;
+		}
+		if (dictSetGesturesSitting) 
+		{ 
+			dict = "gestures@m@sitting@generic@casual"; 
+			return; 
+		}
 
 	}
 	void AnimationSub_Settings()
 	{
-		bool speed_plus = 0, speed_minus = 0, speedMult_plus = 0, speedMult_minus = 0, duration_plus = 0, duration_minus = 0, rate_plus = 0, rate_minus = 0,
-			flag_plus = 0, flag_minus = 0,
-			bToggleLockPos = 0;
-
 		AddTitle("Settings");
-		AddNumber("Blend-In Speed", _globalCustomAnim_speed, 2, null, speed_plus, speed_minus);
-		AddNumber("Blend-Out Speed", _globalCustomAnim_speedMult, 2, null, speedMult_plus, speedMult_minus);
-		AddNumber("Duration (ms)", _globalCustomAnim_duration, 0, null, duration_plus, duration_minus);
-		AddTexter("Flag", 0, std::vector<std::string>{ AnimFlag::vFlagNames[_globalCustomAnim_flag] }, null, flag_plus, flag_minus);
-		AddNumber("Playback Rate", _globalCustomAnim_rate, 2, null, rate_plus, rate_minus);
-		AddTickol("Lock Position", _globalCustomAnim_lockPos, bToggleLockPos, bToggleLockPos, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleLockPos)
-			_globalCustomAnim_lockPos = !_globalCustomAnim_lockPos;
-
-		/*AddToggle("Lock X", _globalCustomAnim_lockX);
-		AddToggle("Lock Y", _globalCustomAnim_lockY);
-		AddToggle("Lock Z", _globalCustomAnim_lockZ);*/
-
-
-		if (speed_plus) { if (_globalCustomAnim_speed < FLT_MAX) _globalCustomAnim_speed += 0.1f; return; };
-		if (speed_minus) { if (_globalCustomAnim_speed > 0) _globalCustomAnim_speed -= 0.1f; return; }
-		if (speedMult_plus) { if (_globalCustomAnim_speedMult < FLT_MAX) _globalCustomAnim_speedMult += 0.1f; return; };
-		if (speedMult_minus) { if (_globalCustomAnim_speedMult > 0 - FLT_MAX) _globalCustomAnim_speedMult -= 0.1f; return; }
-		if (duration_plus) { if (_globalCustomAnim_duration < INT_MAX) _globalCustomAnim_duration += 100; return; };
-		if (duration_minus) { if (_globalCustomAnim_duration > -1) _globalCustomAnim_duration -= 100; return; }
-		if (flag_plus)
-		{
-			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
-			{
-				if (it->first == _globalCustomAnim_flag)
-				{
-					++it;
-					if (it != AnimFlag::vFlagNames.end())
-						_globalCustomAnim_flag = it->first;
-					break;
-				}
-			}
-			return;
-		};
-		if (flag_minus)
-		{
-			for (auto it = AnimFlag::vFlagNames.rbegin(); it != AnimFlag::vFlagNames.rend(); ++it)
-			{
-				if (it->first == _globalCustomAnim_flag)
-				{
-					++it;
-					if (it != AnimFlag::vFlagNames.rend())
-						_globalCustomAnim_flag = it->first;
-					break;
-				}
-			}
-			return;
-		};
-		if (rate_plus) { if (_globalCustomAnim_rate < FLT_MAX) _globalCustomAnim_rate += 0.1f; return; };
-		if (rate_minus) { if (_globalCustomAnim_rate > 0) _globalCustomAnim_rate -= 0.1f; return; }
-
+		AddNumberStepper("Blend-In Speed", g_customAnimSettings.speed, 2, 0.1, 0.0);
+		AddNumberStepper("Blend-Out Speed", g_customAnimSettings.speedMult, 2, 0.1);
+		AddNumberStepper("Duration (ms)", g_customAnimSettings.duration, 0, 100.0, -1.0);
+		AddOption("Flag Options", null, nullFunc, SUB::ANIMATIONSUB_FLAGS);
+		AddNumberStepper("Playback Rate", g_customAnimSettings.playbackRate, 2, 0.1, 0.0);
+		bool toggleLockPosition = false;
+		AddTickol("Lock Position", g_customAnimSettings.lockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+		if (toggleLockPosition)
+			g_customAnimSettings.lockPos = !g_customAnimSettings.lockPos;
 	}
-	void AnimationSub_Favourites()
-	{
-		pugi::xml_document doc;
-		if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + "FavouriteAnims.xml").c_str()).status != pugi::status_ok)
-		{
-			Game::Print::PrintBottomCentre("~r~Error~s~: No favourites found. Go to ~b~Custom Input~s~ and add an animation to the favourites.");
-			Menu::SetSub_previous();
-			return;
-		}
-		auto nodeAnims = doc.child("PedAnims");
 
-		Menu::OnSubBack = AnimationSub_catind::ClearSearchStr;
-		auto& _searchStr = AnimationSub_catind::_searchStr;
+	void AnimationSub_Flags()
+	{
+		AddTitle("Animation Flags");
+
+		// Find current preset index (or "Custom")
+		const int numPresets = static_cast<int>(std::size(AnimFlag::kFlagPresets));
+		int currentPresetIdx = numPresets; // default to "Custom"
+		for (int i = 0; i < numPresets; i++)
+		{
+			if (AnimFlag::kFlagPresets[i].value == g_customAnimSettings.flag)
+			{
+				currentPresetIdx = i;
+				break;
+			}
+		}
+		
+		std::vector<std::string> presetLabels;
+		presetLabels.reserve(numPresets + 1);
+		for (int i = 0; i < numPresets; i++)
+			presetLabels.push_back(AnimFlag::kFlagPresets[i].name);
+		presetLabels.push_back("Custom");
+
+		int newPresetIdx = AddTexterCycler("Preset", currentPresetIdx, presetLabels);
+		if (newPresetIdx != currentPresetIdx && newPresetIdx < numPresets)
+			g_customAnimSettings.flag = AnimFlag::kFlagPresets[newPresetIdx].value;
+
+		AddBreak("--- Animation Flags ---");
+
+		// Individual flag checkboxes
+		for (auto& f : AnimFlag::kAnimFlags)
+		{
+			bool isSet = (g_customAnimSettings.flag & f.value) != 0;
+			bool pressed = false;
+			AddTickol(f.name, isSet, pressed, pressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			if (pressed)
+				g_customAnimSettings.flag ^= f.value;
+		}
+	}
+
+	void AnimationFavouritesMenu()
+	{
+		auto& searchStr = AnimationMenu::searchStr;
+		bool searchActive = !searchStr.empty();
+
+		Menu::OnSubBack = []()
+		{
+			AnimationMenu::ClearSearchStr();
+			*Menu::activeOptionIndex = s_recatState.returnCursor;
+			s_favCache.needsRebuild = true;
+		};
+
+		if (s_favCache.needsRebuild)
+		{
+			if (!RebuildFavCache(searchStr))
+			{
+				Game::Print::ShowNotification("~r~Error:", "No favourites found. Go to ~b~Custom Input~s~ and add an animation to the favourites.");
+				Menu::SetPreviousMenu();
+				return;
+			}
+		}
+
+		// handle search auto-expand / restore
+		if (searchActive && MenuCategory::GetCategoryLabels().size() > 1)
+			MenuCategory::ExpandAll();
+		else if (!searchActive)
+			MenuCategory::RestoreExpandedState();
 
 		AddTitle("Favourites");
 
-		bool bSearchPressed = false;
-		AddOption(_searchStr.empty() ? "SEARCH" : boost::to_upper_copy(_searchStr), bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
+		bool searchPressed = false;
+		AddOption(searchStr.empty() ? "SEARCH" : boost::to_upper_copy(searchStr), searchPressed, nullFunc, -1, true);
+		if (searchPressed)
 		{
-			_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", _searchStr);
-			boost::to_lower(_searchStr);
-			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToUpper, _searchStr, 126U, std::string(), _searchStr);
-			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
+			std::string newSearch = Game::InputBox(searchStr, 126U, "SEARCH", searchStr);
+			boost::to_lower(newSearch);
+			if (newSearch != searchStr)
+			{
+				searchStr = newSearch;
+				s_favCache.needsRebuild = true;
+			}
 		}
 
-		for (auto nodeAnim = nodeAnims.first_child(); nodeAnim; nodeAnim = nodeAnim.next_sibling())
+		AddBreak("---");
+
+		MenuCategory::ResetCategoryState();
+		for (auto& cat : s_favCache.sortedCategoryNames)
 		{
-			std::string dict = nodeAnim.attribute("dict").as_string();
-			std::string name = nodeAnim.attribute("name").as_string();
+			auto it = s_favCache.animationsByCategory.find(cat);
+			if (it == s_favCache.animationsByCategory.end())
+				continue;
 
-			if (!_searchStr.empty())
+			auto& anims = it->second;
+			std::string catName = cat.empty() ? "UNORDERED" : cat;
+			std::string catLabel = "— ~b~" + catName + "~s~ ~c~(" + std::to_string(anims.size()) + " anims)~s~";
+
+			if (MenuCategory::AddCategory(catLabel))
 			{
-				if (dict.find(_searchStr) == std::string::npos &&
-					name.find(_searchStr) == std::string::npos)
-					continue;
+				for (auto& fav : anims)
+					AddAnimOption(fav.dict + ", " + fav.name, fav.dict, fav.name, null, fav.category);
 			}
-
-			AddanimOption_(dict + ", " + name, dict, name);
 		}
 	}
+
+	void AnimationFavouritesMenu_CategorySelect()
+	{
+		if (s_recatState.animDict.empty())
+		{
+			Menu::SetPreviousMenu();
+			return;
+		}
+
+		std::string currentCategory;
+		std::set<std::string> allCategories;
+		{
+			std::vector<FavouriteAnimation> favs;
+			GetFavouriteAnimations(favs);
+			for (auto& f : favs)
+			{
+				if (f.dict == s_recatState.animDict && f.name == s_recatState.animName)
+					currentCategory = f.category;
+				if (!f.category.empty())
+					allCategories.insert(f.category);
+			}
+		}
+
+		AddTitle("Select Category");
+
+		for (auto& cat : allCategories)
+		{
+			bool isSelected = (cat == currentCategory);
+			bool pressed = false;
+			AddTickol(cat, isSelected, pressed, pressed, TICKOL::TICK, TICKOL::NONE);
+			if (pressed)
+			{
+				SetAnimationCategory(s_recatState.animDict, s_recatState.animName, cat);
+				Menu::SetPreviousMenu();
+				return;
+			}
+		}
+
+		if (!allCategories.empty())
+			AddBreak("---");
+
+		bool newCatPressed = false;
+		AddOption("New Category", newCatPressed);
+		if (newCatPressed)
+		{
+			std::string newCat = Game::InputBox("", 64U, "NEW CATEGORY", "");
+			if (!newCat.empty())
+			{
+				SetAnimationCategory(s_recatState.animDict, s_recatState.animName, newCat);
+				Menu::SetPreviousMenu();
+			}
+		}
+
+		// option to remove from category (set to Unordered)
+		if (!currentCategory.empty())
+		{
+			bool removeCatPressed = false;
+			AddOption("Remove from Category", removeCatPressed);
+			if (removeCatPressed)
+			{
+				SetAnimationCategory(s_recatState.animDict, s_recatState.animName, "");
+				Menu::SetPreviousMenu();
+			}
+		}
+	}
+
 	void AnimationSub_Custom()
 	{
-		//PCHAR sub_animDict = (PCHAR)_globalCustomAnim_dict.c_str(), sub_animName = (PCHAR)_globalCustomAnim_name.c_str();
-		auto& sub_animDict = _globalCustomAnim_dict;
-		auto& sub_animName = _globalCustomAnim_name;
-		bool inputDict = 0, inputName = 0, apply = 0, stop = 0, bAddToFavourites = 0, bRemoveFromFavourites = 0,
-			flag_plus = 0, flag_minus = 0,
-			speed_plus = 0, speed_minus = 0, speedMult_plus = 0, speedMult_minus = 0, duration_plus = 0, duration_minus = 0, rate_plus = 0, rate_minus = 0,
-			bToggleLockPos = 0;
-
+		auto& sub_animDict = g_customAnimSettings.dict;
+		auto& sub_animName = g_customAnimSettings.name;
+		bool inputDict = false;
+		bool inputName = false;
+		bool apply = false;
+		bool stop = false;
+		bool addToFavourites = false;
+		bool removeFromFavourites = false;
+		bool toggleLockPosition = false;
 		bool bIsAFavourite = IsAnimationAFavourite(sub_animDict, sub_animName);
 
 		AddTitle("Custom Animation");
@@ -617,363 +896,248 @@ namespace sub
 		AddOption(sub_animName, inputName);
 		AddOption("Apply", apply);
 		AddOption("Stop", stop);
-		AddTickol("Favourite", bIsAFavourite, bAddToFavourites, bRemoveFromFavourites, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+		AddTickol("Favourite", bIsAFavourite, addToFavourites, removeFromFavourites, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 		AddBreak("---Settings---");
-		AddNumber("Blend-In Speed", _globalCustomAnim_speed, 2, null, speed_plus, speed_minus);
-		AddNumber("Blend-Out Speed", _globalCustomAnim_speedMult, 2, null, speedMult_plus, speedMult_minus);
-		AddNumber("Duration (ms)", _globalCustomAnim_duration, 0, null, duration_plus, duration_minus);
-		AddTexter("Flag", 0, std::vector<std::string>{ AnimFlag::vFlagNames[_globalCustomAnim_flag] }, null, flag_plus, flag_minus);
-		AddNumber("Playback Rate", _globalCustomAnim_rate, 2, null, rate_plus, rate_minus);
-		AddTickol("Lock Position", _globalCustomAnim_lockPos, bToggleLockPos, bToggleLockPos, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleLockPos)
-			_globalCustomAnim_lockPos = !_globalCustomAnim_lockPos;
+		AddNumberStepper("Blend-In Speed", g_customAnimSettings.speed, 2, 0.1, 0.0);
+		AddNumberStepper("Blend-Out Speed", g_customAnimSettings.speedMult, 2, 0.1);
+		AddNumberStepper("Duration (ms)", g_customAnimSettings.duration, 0, 100.0, -1.0);
+		AddOption("Flag Options", null, nullFunc, SUB::ANIMATIONSUB_FLAGS);
+		AddNumberStepper("Playback Rate", g_customAnimSettings.playbackRate, 2, 0.1, 0.0);
+		AddTickol("Lock Position", g_customAnimSettings.lockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+		if (toggleLockPosition)
+			g_customAnimSettings.lockPos = !g_customAnimSettings.lockPos;
 
-		/*AddToggle("Lock X", _globalCustomAnim_lockX);
-		AddToggle("Lock Y", _globalCustomAnim_lockY);
-		AddToggle("Lock Z", _globalCustomAnim_lockZ);*/
-
-
-		if (speed_plus) { if (_globalCustomAnim_speed < FLT_MAX) _globalCustomAnim_speed += 0.1f; return; };
-		if (speed_minus) { if (_globalCustomAnim_speed > 0) _globalCustomAnim_speed -= 0.1f; return; }
-		if (speedMult_plus) { if (_globalCustomAnim_speedMult < FLT_MAX) _globalCustomAnim_speedMult += 0.1f; return; };
-		if (speedMult_minus) { if (_globalCustomAnim_speedMult > 0 - FLT_MAX) _globalCustomAnim_speedMult -= 0.1f; return; }
-		if (duration_plus) { if (_globalCustomAnim_duration < INT_MAX) _globalCustomAnim_duration += 100; return; };
-		if (duration_minus) { if (_globalCustomAnim_duration > -1) _globalCustomAnim_duration -= 100; return; }
-		if (flag_plus)
-		{
-			for (auto it = AnimFlag::vFlagNames.begin(); it != AnimFlag::vFlagNames.end(); ++it)
-			{
-				if (it->first == _globalCustomAnim_flag)
-				{
-					++it;
-					if (it != AnimFlag::vFlagNames.end())
-						_globalCustomAnim_flag = it->first;
-					break;
-				}
-			}
-			return;
-		};
-		if (flag_minus)
-		{
-			for (auto it = AnimFlag::vFlagNames.rbegin(); it != AnimFlag::vFlagNames.rend(); ++it)
-			{
-				if (it->first == _globalCustomAnim_flag)
-				{
-					++it;
-					if (it != AnimFlag::vFlagNames.rend())
-						_globalCustomAnim_flag = it->first;
-					break;
-				}
-			}
-			return;
-		};
-		if (rate_plus) { if (_globalCustomAnim_rate < FLT_MAX) _globalCustomAnim_rate += 0.1f; return; };
-		if (rate_minus) { if (_globalCustomAnim_rate > 0) _globalCustomAnim_rate -= 0.1f; return; }
-
-
-		if (bAddToFavourites)
+		if (addToFavourites)
 		{
 			AddAnimationToFavourites(sub_animDict, sub_animName);
 		}
-		if (bRemoveFromFavourites)
+		if (removeFromFavourites)
 		{
 			RemoveAnimationFromFavourites(sub_animDict, sub_animName);
 		}
 
 		if (apply)
 		{
-			GTAped ped = Static_241;
-			GTAentity att;
-			auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.Handle, att);
-			}
-
-			ped.RequestControl();
-			ped.Task().PlayAnimation(sub_animDict, sub_animName, _globalCustomAnim_speed, _globalCustomAnim_speedMult, _globalCustomAnim_duration,
-				_globalCustomAnim_flag, _globalCustomAnim_rate, _globalCustomAnim_lockPos);
-
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				spe.LastAnimation.dict = sub_animDict;
-				spe.LastAnimation.name = sub_animName;
-				if (att.Exists() && spe.AttachmentArgs.isAttached)
-					spe.Handle.AttachTo(att, spe.AttachmentArgs.boneIndex, spe.Handle.IsCollisionEnabled_get(), spe.AttachmentArgs.offset, spe.AttachmentArgs.rotation);
-				spe.TaskSequence.Reset();
-				if (sub::Spooner::SelectedEntity.Handle.Equals(spe.Handle))
-				{
-					sub::Spooner::SelectedEntity.LastAnimation.dict = spe.LastAnimation.dict;
-					sub::Spooner::SelectedEntity.LastAnimation.name = spe.LastAnimation.name;
-					sub::Spooner::SelectedEntity.TaskSequence = spe.TaskSequence;
-				}
-			}
+			PlayAnimation(g_activePedHandle, sub_animDict, sub_animName);
 			return;
 		}
 
 		if (stop)
 		{
-			GTAped ped = Static_241;
-			GTAentity att;
-			auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.Handle, att);
-			}
-
-			GTAvehicle veh = ped.CurrentVehicle();
-			bool isInVehicle = veh.Exists();
-			VehicleSeat vehSeat;
-			if (isInVehicle)
-			{
-				vehSeat = ped.CurrentVehicleSeat_get();
-			}
-			ped.Task().ClearAllImmediately();
-			if (isInVehicle)
-			{
-				ped.SetIntoVehicle(veh, vehSeat);
-			}
-
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				spe.LastAnimation.dict.clear();
-				spe.LastAnimation.name.clear();
-				if (att.Exists() && spe.AttachmentArgs.isAttached)
-					spe.Handle.AttachTo(att, spe.AttachmentArgs.boneIndex, spe.Handle.IsCollisionEnabled_get(), spe.AttachmentArgs.offset, spe.AttachmentArgs.rotation);
-				spe.TaskSequence.Reset();
-				if (sub::Spooner::SelectedEntity.Handle.Equals(spe.Handle))
-				{
-					sub::Spooner::SelectedEntity.LastAnimation.dict = spe.LastAnimation.dict;
-					sub::Spooner::SelectedEntity.LastAnimation.name = spe.LastAnimation.name;
-					sub::Spooner::SelectedEntity.TaskSequence = spe.TaskSequence;
-				}
-			}
+			StopAnimation(g_activePedHandle);
 			return;
 		}
 
 		if (inputDict)
 		{
-			std::string inputStr = Game::InputBox(_globalCustomAnim_dict, 126U, "Enter dict:", _globalCustomAnim_dict);
+			std::string inputStr = Game::InputBox(g_customAnimSettings.dict, 126U, "Enter dict:", g_customAnimSettings.dict);
 			if (inputStr.length() > 0)
-				_globalCustomAnim_dict = inputStr;
-			else Game::Print::PrintError_InvalidInput(inputStr);
-			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1String, _globalCustomAnim_dict, 126U, "Enter dict:", _globalCustomAnim_dict);
-			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_globalCustomAnim_dict);
+			{
+				g_customAnimSettings.dict = inputStr;
+			}
+			else 
+			{
+				Game::Print::PrintErrorInvalidInput(inputStr);
+			}
 			return;
 		}
 
 		if (inputName)
 		{
-			std::string inputStr = Game::InputBox(_globalCustomAnim_name, 126U, "Enter name:", _globalCustomAnim_name);
+			std::string inputStr = Game::InputBox(g_customAnimSettings.name, 126U, "Enter name:", g_customAnimSettings.name);
 			if (inputStr.length() > 0)
-				_globalCustomAnim_name = inputStr;
-			else Game::Print::PrintError_InvalidInput(inputStr);
-			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1String, _globalCustomAnim_name, 126U, "Enter name:", _globalCustomAnim_name);
-			//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_globalCustomAnim_name);
+			{
+				g_customAnimSettings.name = inputStr;
+			}
+			else 
+			{
+				Game::Print::PrintErrorInvalidInput(inputStr);
+			}
 			return;
 		}
-
-
 	}
-	void AnimationSub_Deer()
+
+	void DeerAnimationMenu()
 	{
 		const std::string& tempDict = dict;
 
 		AddTitle("Animalations");
-		AddanimOption_("Idle Turn Left", tempDict, "idle_turn_l");
-		AddanimOption_("Idle Turn Right", tempDict, "idle_turn_r");
-		AddanimOption_("gallop_turn_l", tempDict);
-		AddanimOption_("gallop_turn_r", tempDict);
-		AddanimOption_("walk_turn_l", tempDict);
-		AddanimOption_("walk_turn_r", tempDict);
-		AddanimOption_("walk_start_0_l", tempDict);
-		AddanimOption_("walk_start_0_r", tempDict);
-		AddanimOption_("walk_start_90_l", tempDict);
-		AddanimOption_("walk_start_90_r", tempDict);
-		AddanimOption_("walk_backwards", tempDict);
-		AddanimOption_("gallop", tempDict);
-		AddanimOption_("canter", tempDict);
-		AddanimOption_("trot", tempDict);
-		AddanimOption_("dead_left", tempDict);
-		AddanimOption_("dying", tempDict);
-
-
+		AddAnimOption("Idle Turn Left", tempDict, "idle_turn_l");
+		AddAnimOption("Idle Turn Right", tempDict, "idle_turn_r");
+		AddAnimOption("gallop_turn_l", tempDict);
+		AddAnimOption("gallop_turn_r", tempDict);
+		AddAnimOption("walk_turn_l", tempDict);
+		AddAnimOption("walk_turn_r", tempDict);
+		AddAnimOption("walk_start_0_l", tempDict);
+		AddAnimOption("walk_start_0_r", tempDict);
+		AddAnimOption("walk_start_90_l", tempDict);
+		AddAnimOption("walk_start_90_r", tempDict);
+		AddAnimOption("walk_backwards", tempDict);
+		AddAnimOption("gallop", tempDict);
+		AddAnimOption("canter", tempDict);
+		AddAnimOption("trot", tempDict);
+		AddAnimOption("dead_left", tempDict);
+		AddAnimOption("dying", tempDict);
 	}
-	void AnimationSub_Shark()
+	
+	void SharkAnimationMenu()
 	{
 		const std::string& tempDict = dict;
 
 		AddTitle("Animalations");
-		AddanimOption_("attack_player", tempDict, "attack_player");
-		AddanimOption_("swim_turn_r", tempDict, "swim_turn_r");
-		AddanimOption_("swim_turn_l", tempDict, "swim_turn_l");
-		AddanimOption_("dead_left", tempDict, "dead_left");
-		AddanimOption_("dead_right", tempDict, "dead_right");
-		AddanimOption_("dead_up", tempDict, "dead_up");
-		AddanimOption_("dying", tempDict, "dying");
-		AddanimOption_("attack_cam", tempDict, "attack_cam");
-		AddanimOption_("attack", tempDict, "attack");
-		AddanimOption_("attack_onspot", tempDict, "attack_onspot");
-		AddanimOption_("attack_jump", tempDict, "attack_jump");
-		AddanimOption_("swim", tempDict, "swim");
-		AddanimOption_("accelerate", tempDict, "accelerate");
-
-
+		AddAnimOption("attack_player", tempDict, "attack_player");
+		AddAnimOption("swim_turn_r", tempDict, "swim_turn_r");
+		AddAnimOption("swim_turn_l", tempDict, "swim_turn_l");
+		AddAnimOption("dead_left", tempDict, "dead_left");
+		AddAnimOption("dead_right", tempDict, "dead_right");
+		AddAnimOption("dead_up", tempDict, "dead_up");
+		AddAnimOption("dying", tempDict, "dying");
+		AddAnimOption("attack_cam", tempDict, "attack_cam");
+		AddAnimOption("attack", tempDict, "attack");
+		AddAnimOption("attack_onspot", tempDict, "attack_onspot");
+		AddAnimOption("attack_jump", tempDict, "attack_jump");
+		AddAnimOption("swim", tempDict, "swim");
+		AddAnimOption("accelerate", tempDict, "accelerate");
 	}
-	void AnimationSub_MissRappel()
+
+	void MissionRappelAnimationMenu()
 	{
 		const std::string& tempDict = dict;
 
 		AddTitle("Swat Animations");
-		AddanimOption_("rappel_to_free_rope_prop", tempDict);
-		AddanimOption_("rope_slide", tempDict);
-		AddanimOption_("rappel_jump_a_prop", tempDict);
-		AddanimOption_("rappel_jump_c", tempDict);
-		AddanimOption_("rappel_walk", tempDict);
-		AddanimOption_("rappel_jump_c_prop", tempDict);
-		AddanimOption_("rappel_loop", tempDict);
-		AddanimOption_("rappel_to_free_rope", tempDict);
-		AddanimOption_("rope_idle", tempDict);
-		AddanimOption_("rappel_walk_prop", tempDict);
-		AddanimOption_("rappel_idle", tempDict);
-		AddanimOption_("rappel_idle_prop", tempDict);
-		AddanimOption_("rappel_intro_player", tempDict);
-		AddanimOption_("land_action", tempDict);
-		AddanimOption_("land_crouched", tempDict);
-		AddanimOption_("rappel_jump_a", tempDict);
-		AddanimOption_("land", tempDict);
-
-
+		AddAnimOption("rappel_to_free_rope_prop", tempDict);
+		AddAnimOption("rope_slide", tempDict);
+		AddAnimOption("rappel_jump_a_prop", tempDict);
+		AddAnimOption("rappel_jump_c", tempDict);
+		AddAnimOption("rappel_walk", tempDict);
+		AddAnimOption("rappel_jump_c_prop", tempDict);
+		AddAnimOption("rappel_loop", tempDict);
+		AddAnimOption("rappel_to_free_rope", tempDict);
+		AddAnimOption("rope_idle", tempDict);
+		AddAnimOption("rappel_walk_prop", tempDict);
+		AddAnimOption("rappel_idle", tempDict);
+		AddAnimOption("rappel_idle_prop", tempDict);
+		AddAnimOption("rappel_intro_player", tempDict);
+		AddAnimOption("land_action", tempDict);
+		AddAnimOption("land_crouched", tempDict);
+		AddAnimOption("rappel_jump_a", tempDict);
+		AddAnimOption("land", tempDict);
 	}
-	void AnimationSub_GestSit()
+
+	void GestureSitAnimationMenu()
 	{
 		const std::string& tempDict = dict;
 
 		AddTitle("Sitting Animations");
-		AddanimOption_("Sit n Shit", "timetable@trevor@on_the_toilet", "trevonlav_struggleloop");
-		AddanimOption_("Smoke Meth", "timetable@trevor@smoking_meth@base", "base");
-		AddanimOption_("Michael Exit Chair", "switch@michael@sitting", "exit_forward_chair");
-		AddanimOption_("Michael Exit Chair 2", "switch@michael@sitting", "exit_forward");
-		AddanimOption_("Michael Idle", "switch@michael@sitting", "idle_chair");
-		AddanimOption_("Michael Idle 2", "switch@michael@sitting", "idle");
-		AddanimOption_("Sitting On Car Bonnet", "switch@michael@sitting_on_car_bonnet", "sitting_on_car_bonnet_loop");
-		AddanimOption_("Sitting On Car Premiere", "switch@michael@sitting_on_car_premiere", "sitting_on_car_premiere_loop_player");
-		AddanimOption_("sitting_stungun_idk", "stungun@sitting", "damage_vehicle");
-		AddanimOption_("gesture_come_here_hard", tempDict);
-		AddanimOption_("gesture_come_here_soft", tempDict);
-		AddanimOption_("gesture_me_hard", tempDict);
-		AddanimOption_("gesture_you_hard", tempDict);
-		AddanimOption_("gesture_no_way", tempDict);
-		AddanimOption_("gesture_why_left", tempDict);
-		AddanimOption_("gesture_nod_no_hard", tempDict);
-		AddanimOption_("gesture_hello", tempDict);
-		AddanimOption_("gesture_i_will", tempDict);
-		AddanimOption_("getsure_its_mine", tempDict);
-		AddanimOption_("gesture_me", tempDict);
-		AddanimOption_("gesture_you_soft", tempDict);
-		AddanimOption_("gesture_what_hard", tempDict);
-		AddanimOption_("gesture_pleased", tempDict);
-		AddanimOption_("gesture_shrug_soft", tempDict);
-		AddanimOption_("gesture_point", tempDict);
-		AddanimOption_("gesture_shrug_hard", tempDict);
-		AddanimOption_("gesture_why", tempDict);
-		AddanimOption_("gesture_nod_no_soft", tempDict);
-		AddanimOption_("gesture_nod_yes_hard", tempDict);
-		AddanimOption_("gesture_what_soft", tempDict);
-		AddanimOption_("gesture_nod_yes_soft", tempDict);
-		AddanimOption_("gesture_damn", tempDict);
-		AddanimOption_("gesture_displeased", tempDict);
-		AddanimOption_("gesture_easy_now", tempDict);
-		AddanimOption_("gesture_hand_down", tempDict);
-		AddanimOption_("gesture_hand_left", tempDict);
-		AddanimOption_("gesture_bring_it_on", tempDict);
-		AddanimOption_("gesture_bye_hard", tempDict);
-		AddanimOption_("gesture_bye_soft", tempDict);
-		AddanimOption_("gesture_head_no", tempDict);
-		AddanimOption_("gesture_hand_right", tempDict);
-
-
-
-
+		AddAnimOption("Sit n Shit", "timetable@trevor@on_the_toilet", "trevonlav_struggleloop");
+		AddAnimOption("Smoke Meth", "timetable@trevor@smoking_meth@base", "base");
+		AddAnimOption("Michael Exit Chair", "switch@michael@sitting", "exit_forward_chair");
+		AddAnimOption("Michael Exit Chair 2", "switch@michael@sitting", "exit_forward");
+		AddAnimOption("Michael Idle", "switch@michael@sitting", "idle_chair");
+		AddAnimOption("Michael Idle 2", "switch@michael@sitting", "idle");
+		AddAnimOption("Sitting On Car Bonnet", "switch@michael@sitting_on_car_bonnet", "sitting_on_car_bonnet_loop");
+		AddAnimOption("Sitting On Car Premiere", "switch@michael@sitting_on_car_premiere", "sitting_on_car_premiere_loop_player");
+		AddAnimOption("sitting_stungun_idk", "stungun@sitting", "damage_vehicle");
+		AddAnimOption("gesture_come_here_hard", tempDict);
+		AddAnimOption("gesture_come_here_soft", tempDict);
+		AddAnimOption("gesture_me_hard", tempDict);
+		AddAnimOption("gesture_you_hard", tempDict);
+		AddAnimOption("gesture_no_way", tempDict);
+		AddAnimOption("gesture_why_left", tempDict);
+		AddAnimOption("gesture_nod_no_hard", tempDict);
+		AddAnimOption("gesture_hello", tempDict);
+		AddAnimOption("gesture_i_will", tempDict);
+		AddAnimOption("getsure_its_mine", tempDict);
+		AddAnimOption("gesture_me", tempDict);
+		AddAnimOption("gesture_you_soft", tempDict);
+		AddAnimOption("gesture_what_hard", tempDict);
+		AddAnimOption("gesture_pleased", tempDict);
+		AddAnimOption("gesture_shrug_soft", tempDict);
+		AddAnimOption("gesture_point", tempDict);
+		AddAnimOption("gesture_shrug_hard", tempDict);
+		AddAnimOption("gesture_why", tempDict);
+		AddAnimOption("gesture_nod_no_soft", tempDict);
+		AddAnimOption("gesture_nod_yes_hard", tempDict);
+		AddAnimOption("gesture_what_soft", tempDict);
+		AddAnimOption("gesture_nod_yes_soft", tempDict);
+		AddAnimOption("gesture_damn", tempDict);
+		AddAnimOption("gesture_displeased", tempDict);
+		AddAnimOption("gesture_easy_now", tempDict);
+		AddAnimOption("gesture_hand_down", tempDict);
+		AddAnimOption("gesture_hand_left", tempDict);
+		AddAnimOption("gesture_bring_it_on", tempDict);
+		AddAnimOption("gesture_bye_hard", tempDict);
+		AddAnimOption("gesture_bye_soft", tempDict);
+		AddAnimOption("gesture_head_no", tempDict);
+		AddAnimOption("gesture_hand_right", tempDict);
 	}
-	void AnimationSub_Swat()
+
+	void SwatAnimationMenu()
 	{
 		const std::string& tempDict = dict;
 
 		AddTitle("Swat Animations");
-		AddanimOption_("understood", tempDict);
-		AddanimOption_("you_back", tempDict);
-		AddanimOption_("rally_point", tempDict);
-		AddanimOption_("you_fwd", tempDict);
-		AddanimOption_("you_left", tempDict);
-		AddanimOption_("you_right", tempDict);
-		AddanimOption_("freeze", tempDict);
-		AddanimOption_("go_fwd", tempDict);
-		AddanimOption_("come", tempDict);
-
-
+		AddAnimOption("understood", tempDict);
+		AddAnimOption("you_back", tempDict);
+		AddAnimOption("rally_point", tempDict);
+		AddAnimOption("you_fwd", tempDict);
+		AddAnimOption("you_left", tempDict);
+		AddAnimOption("you_right", tempDict);
+		AddAnimOption("freeze", tempDict);
+		AddAnimOption("go_fwd", tempDict);
+		AddAnimOption("come", tempDict);
 	}
-	void AnimationSub_GuardReac()
+
+	void GuardReactAnimationMenu()
 	{
 		const std::string& tempDict = dict;
 
 		AddTitle("Guard Animations");
-		AddanimOption_("1hand_fwd_fire_additive", tempDict);
-		AddanimOption_("1hand_turn0r", tempDict);
-		AddanimOption_("1hand_turn90r", tempDict);
-		AddanimOption_("1hand_turn180r", tempDict);
-		AddanimOption_("1hand_turn0l", tempDict);
-		AddanimOption_("1hand_turn90l", tempDict);
-		AddanimOption_("1hand_turn180l", tempDict);
-		AddanimOption_("1hand_aim_med_sweep", tempDict);
-		AddanimOption_("1hand_aiming_cycle", tempDict);
-		AddanimOption_("1hand_aiming_to_idle", tempDict);
-		AddanimOption_("med_down", tempDict);
-		AddanimOption_("1hand_aim_additive", tempDict);
-		AddanimOption_("1hand_aim_high_sweep", tempDict);
-		AddanimOption_("1hand_aim_low_sweep", tempDict);
-		AddanimOption_("1hand_right_trans", tempDict);
-		AddanimOption_("1hand_left_trans", tempDict);
-
-
+		AddAnimOption("1hand_fwd_fire_additive", tempDict);
+		AddAnimOption("1hand_turn0r", tempDict);
+		AddAnimOption("1hand_turn90r", tempDict);
+		AddAnimOption("1hand_turn180r", tempDict);
+		AddAnimOption("1hand_turn0l", tempDict);
+		AddAnimOption("1hand_turn90l", tempDict);
+		AddAnimOption("1hand_turn180l", tempDict);
+		AddAnimOption("1hand_aim_med_sweep", tempDict);
+		AddAnimOption("1hand_aiming_cycle", tempDict);
+		AddAnimOption("1hand_aiming_to_idle", tempDict);
+		AddAnimOption("med_down", tempDict);
+		AddAnimOption("1hand_aim_additive", tempDict);
+		AddAnimOption("1hand_aim_high_sweep", tempDict);
+		AddAnimOption("1hand_aim_low_sweep", tempDict);
+		AddAnimOption("1hand_right_trans", tempDict);
+		AddAnimOption("1hand_left_trans", tempDict);
 	}
-	void AnimationSub_RandArrest()
+
+	void RandomArrestAnimationMenu()
 	{
 		const std::string& tempDict = dict;
 
 		AddTitle("Arrest Animations");
-		AddanimOption_("kneeling_arrest_get_up", tempDict);
-		AddanimOption_("generic_radio_enter", tempDict);
-		AddanimOption_("kneeling_arrest_escape", tempDict);
-		AddanimOption_("generic_radio_chatter", tempDict);
-		AddanimOption_("cop_gunaimed_door_open_idle", tempDict);
-		AddanimOption_("generic_radio_exit", tempDict);
-		AddanimOption_("thanks_male_05", tempDict);
-		AddanimOption_("radio_exit", tempDict);
-		AddanimOption_("radio_enter", tempDict);
-		AddanimOption_("radio_chatter", tempDict);
-		AddanimOption_("kneeling_arrest_idle", tempDict);
-		AddanimOption_("idle_c", tempDict);
-		AddanimOption_("idle_2_hands_up", tempDict);
-		AddanimOption_("arrest_walk", tempDict);
-		AddanimOption_("idle_a", "random@arrests@busted", "idle_a");
-		AddanimOption_("idle_b", "random@arrests@busted", "idle_b");
-		AddanimOption_("enter", "random@arrests@busted", "enter");
-		AddanimOption_("idle_c", "random@arrests@busted", "idle_c");
-		AddanimOption_("exit", "random@arrests@busted", "exit");
-
-
-
-
-
+		AddAnimOption("kneeling_arrest_get_up", tempDict);
+		AddAnimOption("generic_radio_enter", tempDict);
+		AddAnimOption("kneeling_arrest_escape", tempDict);
+		AddAnimOption("generic_radio_chatter", tempDict);
+		AddAnimOption("cop_gunaimed_door_open_idle", tempDict);
+		AddAnimOption("generic_radio_exit", tempDict);
+		AddAnimOption("thanks_male_05", tempDict);
+		AddAnimOption("radio_exit", tempDict);
+		AddAnimOption("radio_enter", tempDict);
+		AddAnimOption("radio_chatter", tempDict);
+		AddAnimOption("kneeling_arrest_idle", tempDict);
+		AddAnimOption("idle_c", tempDict);
+		AddAnimOption("idle_2_hands_up", tempDict);
+		AddAnimOption("arrest_walk", tempDict);
+		AddAnimOption("idle_a", "random@arrests@busted", "idle_a");
+		AddAnimOption("idle_b", "random@arrests@busted", "idle_b");
+		AddAnimOption("enter", "random@arrests@busted", "enter");
+		AddAnimOption("idle_c", "random@arrests@busted", "idle_c");
+		AddAnimOption("exit", "random@arrests@busted", "exit");
 	}
-	
-	// Scenario animations
 
-	namespace AnimationSub_TaskScenarios
+	namespace AnimationTaskScenarios
 	{
 #pragma region scenariovector
 		std::vector<std::string> vValues_TaskScenarios{ "bbq_registered", "bum_wash_mist_triggered", "bum_wash_scoop_triggered", "chaining_entry", "chaining_exit", "cigarette", "code_human_cower", "code_human_cower_female", "code_human_cower_male", "code_human_cower_stand",
@@ -1019,7 +1183,6 @@ namespace sub
 			"world_vehicle_park_perpendicular_nose_in", "world_vehicle_passenger_exit", "world_vehicle_police", "world_vehicle_police_bike", "world_vehicle_police_car", "world_vehicle_police_next_to_car", "world_vehicle_quarry", "world_vehicle_salton", "world_vehicle_salton_dirt_bike", "world_vehicle_security_car", "world_vehicle_streetrace",
 			"world_vehicle_tandl", "world_vehicle_tourbus", "world_vehicle_tourist", "world_vehicle_tractor", "world_vehicle_tractor_beach", "world_vehicle_truck_logs", "world_vehicle_trucks_trailers", "world_whale_swim" };
 #pragma endregion
-		//struct NamedScenario { std::string name; std::string label; };
 #pragma region named scenariovector
 		std::vector<NamedScenario> vNamedScenarios
 		{
@@ -1082,327 +1245,297 @@ namespace sub
 		};
 #pragma endregion
 
-		auto& _searchStr = dict;
+		auto& searchStr = dict;
 
-		void __AddOption(const std::string& text, const std::string& scenarioLabel, int delay = -1, bool playEnterAnim = true)
+		void AddScenarioOption(const std::string& text, const std::string& scenarioLabel, int delay = -1, bool playEnterAnim = true)
 		{
 			bool pressed = false;
-			AddTickol(text, IS_PED_USING_SCENARIO(Static_241, scenarioLabel.c_str()), pressed, pressed, TICKOL::MANWON);
+			AddTickol(text, IS_PED_USING_SCENARIO(g_activePedHandle, scenarioLabel.c_str()), pressed, pressed, TICKOL::MANWON);
 			if (pressed)
 			{
-				GTAped ped = Static_241;
+				GTAped ped = g_activePedHandle;
 				GTAentity att;
 				auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
 				if (spi >= 0)
 				{
 					auto& spe = sub::Spooner::Databases::EntityDb[spi];
-					Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.Handle, att);
+					Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.handle, att);
 				}
 
-				//if (animDict.length() > 0) Game::RequestAnimDict((PCHAR)animDict.c_str());
 				ped.Task().ClearAllImmediately();
 				if (!ped.Task().IsUsingScenario(scenarioLabel))
 				{
-					//ped.Task().StartScenario(scenarioLabel, delay, playEnterAnim);
-					TASK_START_SCENARIO_IN_PLACE(Static_241, scenarioLabel.c_str(), delay, playEnterAnim);
+					TASK_START_SCENARIO_IN_PLACE(g_activePedHandle, scenarioLabel.c_str(), delay, playEnterAnim);
 				}
 
 				if (scenarioLabel.find("MUSICIAN") != std::string::npos)
 				{
 					ped.Task().ClearAllImmediately();
-					TASK_START_SCENARIO_IN_PLACE(Static_241, "WORLD_HUMAN_MUSICIAN", delay, playEnterAnim);
+					TASK_START_SCENARIO_IN_PLACE(g_activePedHandle, "WORLD_HUMAN_MUSICIAN", delay, playEnterAnim);
 				}
 
 				if (spi >= 0)
 				{
 					auto& spe = sub::Spooner::Databases::EntityDb[spi];
-					spe.LastAnimation.dict.clear();
-					spe.LastAnimation.name = scenarioLabel;
-					if (att.Exists() && spe.AttachmentArgs.isAttached)
-						spe.Handle.AttachTo(att, spe.AttachmentArgs.boneIndex, spe.Handle.IsCollisionEnabled_get(), spe.AttachmentArgs.offset, spe.AttachmentArgs.rotation);
-					spe.TaskSequence.Reset();
-					if (sub::Spooner::SelectedEntity.Handle.Equals(spe.Handle))
+					spe.ClearLastAnimations();
+					spe.currentScenario = scenarioLabel;
+					if (att.Exists() && spe.attachmentArgs.isAttached)
 					{
-						sub::Spooner::SelectedEntity.LastAnimation.dict = spe.LastAnimation.dict;
-						sub::Spooner::SelectedEntity.LastAnimation.name = spe.LastAnimation.name;
-						sub::Spooner::SelectedEntity.TaskSequence = spe.TaskSequence;
+						spe.handle.AttachTo(att, spe.attachmentArgs.boneIndex, spe.handle.GetIsCollisionEnabled(), spe.attachmentArgs.offset, spe.attachmentArgs.rotation);
+					}
+					spe.taskSequence.Reset();
+					if (sub::Spooner::selectedEntity.handle.Equals(spe.handle))
+					{
+						sub::Spooner::selectedEntity.lastAnimations = spe.lastAnimations;
+						sub::Spooner::selectedEntity.currentScenario = spe.currentScenario;
+						sub::Spooner::selectedEntity.taskSequence = spe.taskSequence;
 					}
 				}
 
 			}
 		}
-		void stopScenarioPls()
+
+		void StopScenario()
 		{
-			GTAped ped = Static_241;
-			GTAentity att;
-			auto spi = sub::Spooner::EntityManagement::GetEntityIndexInDb(ped);
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(spe.Handle, att);
-			}
-
-			GTAvehicle veh = ped.CurrentVehicle();
-			bool isInVehicle = veh.Exists();
-			VehicleSeat vehSeat;
-			if (isInVehicle)
-			{
-				vehSeat = ped.CurrentVehicleSeat_get();
-			}
-			ped.Task().ClearAllImmediately();
-			if (isInVehicle)
-			{
-				ped.SetIntoVehicle(veh, vehSeat);
-			}
-
-			if (spi >= 0)
-			{
-				auto& spe = sub::Spooner::Databases::EntityDb[spi];
-				spe.LastAnimation.dict.clear();
-				spe.LastAnimation.name.clear();
-				if (att.Exists() && spe.AttachmentArgs.isAttached)
-					spe.Handle.AttachTo(att, spe.AttachmentArgs.boneIndex, spe.Handle.IsCollisionEnabled_get(), spe.AttachmentArgs.offset, spe.AttachmentArgs.rotation);
-				spe.TaskSequence.Reset();
-				if (sub::Spooner::SelectedEntity.Handle.Equals(spe.Handle))
-				{
-					sub::Spooner::SelectedEntity.LastAnimation.dict = spe.LastAnimation.dict;
-					sub::Spooner::SelectedEntity.LastAnimation.name = spe.LastAnimation.name;
-					sub::Spooner::SelectedEntity.TaskSequence = spe.TaskSequence;
-				}
-			}
+			StopAnimation(g_activePedHandle, true);
 		}
 
-		void AnimationSub_TaskScenarios()
+		void AnimationTaskScenarios1()
 		{
 			bool clearSearchStr = false;
-			bool musician_on = false;
+			bool musicianOn = false;
 
 			AddTitle("Scenarios");
+			AddOption("ALL SCENARIOS", clearSearchStr, nullFunc, SUB::AnimationTaskScenarios2);
+			if (clearSearchStr)
+			{
+				searchStr.clear();
+			}
 
-			AddOption("ALL SCENARIOS", clearSearchStr, nullFunc, SUB::ANIMATIONSUB_TASKSCENARIOS2); if (clearSearchStr)
-				_searchStr.clear();
-
-			AddTickol("End Scenarios", true, stopScenarioPls, stopScenarioPls, TICKOL::CROSS);
+			AddTickol("End Scenarios", true, StopScenario, StopScenario, TICKOL::CROSS);
 
 			for (auto& scen : vNamedScenarios)
 			{
-				__AddOption(scen.name, scen.label);
+				AddScenarioOption(scen.name, scen.label);
 			}
 		}
-		void AnimationSub_TaskScenarios2()
+
+		void AnimationTaskScenarios2()
 		{
-			bool searchobj = 0;
+			bool searchObj = false;
 
 			AddTitle("All Scenarios");
-
-			AddOption(_searchStr.empty() ? "SEARCH" : boost::to_upper_copy(_searchStr), searchobj, nullFunc, -1, true); if (searchobj)
+			AddOption(searchStr.empty() ? "SEARCH" : boost::to_upper_copy(searchStr), searchObj, nullFunc, -1, true); 
+			if (searchObj)
 			{
-				_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", _searchStr);
-				boost::to_lower(_searchStr);
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToLower, _searchStr, 126U, std::string(), _searchStr);
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
+				searchStr = Game::InputBox(searchStr, 126U, "SEARCH", searchStr);
+				boost::to_lower(searchStr);
 			}
 
-			AddTickol("End Scenarios", true, stopScenarioPls, stopScenarioPls, TICKOL::CROSS);
+			AddTickol("End Scenarios", true, StopScenario, StopScenario, TICKOL::CROSS);
 
 			for (auto& current : vValues_TaskScenarios)
 			{
-				if (!_searchStr.empty()) { if (current.find(_searchStr) == std::string::npos) continue; }
-
-				__AddOption(current, current);
+				if (!searchStr.empty()) 
+				{ 
+					if (current.find(searchStr) == std::string::npos) 
+					continue; 
+				}
+				AddScenarioOption(current, current);
 			}
-
 		}
-
 	}
 
-	// Movement clipsets
-
-	std::string get_ped_movement_clipset(const GTAentity& ped)
+	std::string GetPedMovementClipSet(const GTAentity& ped)
 	{
-		auto it = g_pedList_movGrp.find(ped.GetHandle());
-		if (it != g_pedList_movGrp.end())
+		auto it = g_pedListMovGroup.find(ped.GetHandle());
+		if (it != g_pedListMovGroup.end())
 		{
 			return it->second;
 		}
 		return std::string();
 	}
-	void set_ped_movement_clipset(GTAentity ped, const std::string& setName)
+
+	void SetPedMovementClipSet(GTAentity ped, const std::string& setName)
 	{
 		Game::RequestAnimSet(setName);
 		SET_PED_MOVEMENT_CLIPSET(ped.Handle(), setName.c_str(), 0x3E800000);
 		WAIT(30);
 		Vector3 coord = GET_ENTITY_COORDS(ped.Handle(), 1);
-		SET_ENTITY_COORDS(Static_241, coord.x, coord.y, coord.z + 0.05f, 0, 0, 0, 1);
+		SET_ENTITY_COORDS(g_activePedHandle, coord.x, coord.y, coord.z + 0.05f, 0, 0, 0, 1);
 		FREEZE_ENTITY_POSITION(ped.Handle(), 0);
-		g_pedList_movGrp[ped.Handle()] = setName;
+		g_pedListMovGroup[ped.Handle()] = setName;
 	}
-	std::string get_ped_weapon_movement_clipset(const GTAentity& ped)
+
+	std::string GetPedWeaponMovementClipSet(const GTAentity& ped)
 	{
-		auto it = g_pedList_wmovGrp.find(ped.GetHandle());
-		if (it != g_pedList_wmovGrp.end())
+		auto it = g_pedListWMovGroup.find(ped.GetHandle());
+		if (it != g_pedListWMovGroup.end())
 		{
 			return it->second;
 		}
 		return std::string();
 	}
-	void set_ped_weapon_movement_clipset(GTAentity ped, const std::string& setName)
+
+	void SetPedWeaponMovementClipSet(GTAentity ped, const std::string& setName)
 	{
 		Game::RequestAnimSet(setName);
 		SET_PED_WEAPON_MOVEMENT_CLIPSET(ped.Handle(), setName.c_str());
 		WAIT(30);
 		const Vector3& coord = GET_ENTITY_COORDS(ped.Handle(), 1);
-		SET_ENTITY_COORDS(Static_241, coord.x, coord.y, coord.z + 0.05f, 0, 0, 0, 1);
+		SET_ENTITY_COORDS(g_activePedHandle, coord.x, coord.y, coord.z + 0.05f, 0, 0, 0, 1);
 		FREEZE_ENTITY_POSITION(ped.Handle(), 0);
-		g_pedList_wmovGrp[ped.Handle()] = setName;
+		g_pedListWMovGroup[ped.Handle()] = setName;
 	}
 
-	void AddmovgrpOption_(const std::string& text, std::string movgrp = "", bool &extra_option_code = null)
+	void AddMoveGroupOption(const std::string& text, std::string moveGroup = "", bool &extraOptionCode = null)
 	{
-		if (movgrp.length() == 0)
-			movgrp = text;
+		if (moveGroup.length() == 0)
+		{
+			moveGroup = text;
+		}
 
-		bool bMovGrpIsActive = get_ped_movement_clipset(Static_241) == movgrp;
+		bool moveGroupIsActive = GetPedMovementClipSet(g_activePedHandle) == moveGroup;
+		bool pressed = false;
+		AddTickol(text, moveGroupIsActive, pressed, pressed); if (pressed)
+		{
+			SetPedMovementClipSet(g_activePedHandle, moveGroup);
+			extraOptionCode = true;
+		}
+	}
+
+	void AddWMoveGroupOption(const std::string& text, std::string moveGroup = "", bool &extraOptionCode = null)
+	{
+		if (moveGroup.length() == 0)
+		{
+			moveGroup = text;
+		}
+
+		bool bMovGrpIsActive = GetPedWeaponMovementClipSet(g_activePedHandle) == moveGroup;
 
 		bool pressed = false;
 		AddTickol(text, bMovGrpIsActive, pressed, pressed); if (pressed)
 		{
-			set_ped_movement_clipset(Static_241, movgrp);
-			extra_option_code = true;
+			SetPedWeaponMovementClipSet(g_activePedHandle, moveGroup);
+			extraOptionCode = true;
 		}
 	}
-	void AddwmovgrpOption_(const std::string& text, std::string movgrp = "", bool &extra_option_code = null)
+
+	void MovementGroupMenu()
 	{
-		if (movgrp.length() == 0)
-			movgrp = text;
+		auto mgit = g_pedListMovGroup.find(g_activePedHandle);
+		bool mgitIsValid = mgit != g_pedListMovGroup.end();
 
-		bool bMovGrpIsActive = get_ped_weapon_movement_clipset(Static_241) == movgrp;
+		auto wmgit = g_pedListWMovGroup.find(g_activePedHandle);
+		bool wmgitIsValid = mgit != g_pedListWMovGroup.end();
 
-		bool pressed = false;
-		AddTickol(text, bMovGrpIsActive, pressed, pressed); if (pressed)
-		{
-			set_ped_weapon_movement_clipset(Static_241, movgrp);
-			extra_option_code = true;
-		}
-	}
-	void MovementGroup_()
-	{
-		auto mgit = g_pedList_movGrp.find(Static_241);
-		bool mgitIsValid = mgit != g_pedList_movGrp.end();
-
-		auto wmgit = g_pedList_wmovGrp.find(Static_241);
-		bool wmgitIsValid = mgit != g_pedList_wmovGrp.end();
-
-		bool MovementGroupReset_ = 0, MovementGroupResetW_ = 0;
+		bool movementGroupReset = 0;
+		bool movementGroupResetW = 0;
 
 		AddTitle("Movement Styles");
-		AddTickol("Default", !mgitIsValid, MovementGroupReset_, MovementGroupReset_);
-		AddmovgrpOption_("Generic Male", "move_m@generic");
-		AddmovgrpOption_("Generic Female", "move_f@generic");
-		AddmovgrpOption_("Policeman", "move_cop@action");
-		AddmovgrpOption_("Drunk", "move_m@drunk@a");
-		AddmovgrpOption_("Moderate Drunk", "move_m@drunk@moderatedrunk");
-		AddmovgrpOption_("Moderate Drunk 2", "move_m@drunk@moderatedrunk_head_up");
-		AddmovgrpOption_("Slightly Drunk", "move_m@drunk@slightlydrunk");
-		AddmovgrpOption_("Very Drunk", "move_m@drunk@verydrunk");
-		//	AddmovgrpOption_("Very Drunk Idle", "move_m@drunk@verydrunk_idles@");
-		AddmovgrpOption_("Gangster", "move_m@gangster@generic");
-		AddmovgrpOption_("Hipster", "move_m@hipster@a");
-		AddmovgrpOption_("Hobo", "move_m@hobo@a");
-		AddmovgrpOption_("Hobo2", "move_m@hobo@b");
-		AddmovgrpOption_("Obese", "move_m@fat@a");
-		AddmovgrpOption_("Obese2", "move_f@fat@a");
-		AddmovgrpOption_("Lester", "move_lester_CaneUp");
-		AddmovgrpOption_("Film Female", "move_f@film_reel");
-		AddmovgrpOption_("Cool Jog", "move_m@jog@");
-		AddmovgrpOption_("Leaf Blower", "move_m@leaf_blower");
-		AddmovgrpOption_("Tool Belt Walk", "move_m@tool_belt@a");
-		AddmovgrpOption_("Tool Belt Walk 2", "move_f@tool_belt@a");
-		AddmovgrpOption_("Appealing", "move_f@sexy@a");
-		AddmovgrpOption_("Amanda - Bag", "move_characters@amanda@bag");
-		AddmovgrpOption_("Michael - Fire", "move_characters@michael@fire");
-		AddmovgrpOption_("Franklin - Fire", "move_characters@franklin@fire");
-		AddmovgrpOption_("Jimmy - Nervous", "move_characters@jimmy@nervous@");
-		AddmovgrpOption_("Jimmy - Slow", "move_characters@jimmy@slow@");
-		AddmovgrpOption_("Alien", "move_m@alien");
-		AddmovgrpOption_("Brave", "move_m@brave");
-		AddmovgrpOption_("Brave2", "move_m@brave@a");
-		AddmovgrpOption_("Brave3", "move_m@brave@b");
-		AddmovgrpOption_("Brave4", "move_m@brave@fallback");
-		AddmovgrpOption_("BraveStill", "move_m@brave@idle_a");
-		AddmovgrpOption_("BraveStill2", "move_m@brave@idle_b");
-		AddmovgrpOption_("Business", "move_m@business@a");
-		AddmovgrpOption_("Business2", "move_m@business@b");
-		AddmovgrpOption_("Business3", "move_m@business@c");
-		AddmovgrpOption_("Casual", "move_m@casual@a");
-		AddmovgrpOption_("Casual2", "move_m@casual@b");
-		AddmovgrpOption_("Casual3", "move_m@casual@c");
-		AddmovgrpOption_("Casual4", "move_m@casual@d");
-		AddmovgrpOption_("Casual5", "move_m@casual@e");
-		AddmovgrpOption_("Casual6", "move_m@casual@f");
-		AddmovgrpOption_("Clipboard", "move_m@clipboard");
-		AddmovgrpOption_("Coward", "move_m@coward");
-		AddmovgrpOption_("Burning", "move_m@fire");
-		AddmovgrpOption_("Flee", "move_m@flee@a");
-		AddmovgrpOption_("Flee2", "move_m@flee@b");
-		AddmovgrpOption_("Flee3", "move_m@flee@c");
-		AddmovgrpOption_("Flee4", "move_f@flee@a");
-		AddmovgrpOption_("Flee5", "move_f@flee@b");
-		AddmovgrpOption_("Flee6", "move_f@flee@c");
-		AddmovgrpOption_("Hiking", "move_m@hiking");
-		AddmovgrpOption_("Hiking2", "move_f@hiking");
-		AddmovgrpOption_("Hurry", "move_m@hurry@a");
-		AddmovgrpOption_("Hurry2", "move_m@hurry@b");
-		AddmovgrpOption_("Hurry3", "move_m@hurry@c");
-		AddmovgrpOption_("Hurry4", "move_f@hurry@a");
-		AddmovgrpOption_("Hurry5", "move_f@hurry@b");
-		AddmovgrpOption_("Injured", "move_m@injured");
-		AddmovgrpOption_("Injured2", "move_injured_generic");
-		AddmovgrpOption_("Injured3", "move_f@injured");
-		AddmovgrpOption_("Intimidation", "move_m@intimidation@1h");
-		AddmovgrpOption_("Intimidation2", "move_m@intimidation@cop@unarmed");
-		AddmovgrpOption_("Intimidation3", "move_m@intimidation@unarmed");
-		AddmovgrpOption_("Muscular", "move_m@muscle@a");
-		AddmovgrpOption_("Quick", "move_m@quick");
-		AddmovgrpOption_("Sad", "move_m@sad@a");
-		AddmovgrpOption_("Sad2", "move_m@sad@b");
-		AddmovgrpOption_("Sad3", "move_m@sad@c");
-		AddmovgrpOption_("Sad4", "move_f@sad@a");
-		AddmovgrpOption_("Sad5", "move_f@sad@b");
-		AddmovgrpOption_("Shady", "move_m@shadyped@a");
-		AddmovgrpOption_("Shocked", "move_m@shocked@a");
-		AddmovgrpOption_("Arrogant", "move_f@arrogant@a");
-		AddmovgrpOption_("Chubby", "move_f@chubby@a");
-		AddmovgrpOption_("Handbag Walk", "move_f@handbag");
-		AddmovgrpOption_("Heels", "move_f@heels@c");
-		//	AddmovgrpOption_("Runner", "move_f@runner");
-		AddmovgrpOption_("move_p_m_one");
-		AddmovgrpOption_("move_p_m_one_briefcase");
-		AddmovgrpOption_("move_p_m_two");
-		AddmovgrpOption_("move_p_m_zero");
-		AddmovgrpOption_("move_p_m_zero_slow");
-		AddmovgrpOption_("Ballistic", "anim_group_move_ballistic");
-		//AddmovgrpOption_("Buggy", "move_crawl");
+		AddTickol("Default", !mgitIsValid, movementGroupReset, movementGroupReset);
+		AddMoveGroupOption("Generic Male", "move_m@generic");
+		AddMoveGroupOption("Generic Female", "move_f@generic");
+		AddMoveGroupOption("Policeman", "move_cop@action");
+		AddMoveGroupOption("Drunk", "move_m@drunk@a");
+		AddMoveGroupOption("Moderate Drunk", "move_m@drunk@moderatedrunk");
+		AddMoveGroupOption("Moderate Drunk 2", "move_m@drunk@moderatedrunk_head_up");
+		AddMoveGroupOption("Slightly Drunk", "move_m@drunk@slightlydrunk");
+		AddMoveGroupOption("Very Drunk", "move_m@drunk@verydrunk");
+		AddMoveGroupOption("Gangster", "move_m@gangster@generic");
+		AddMoveGroupOption("Hipster", "move_m@hipster@a");
+		AddMoveGroupOption("Hobo", "move_m@hobo@a");
+		AddMoveGroupOption("Hobo2", "move_m@hobo@b");
+		AddMoveGroupOption("Obese", "move_m@fat@a");
+		AddMoveGroupOption("Obese2", "move_f@fat@a");
+		AddMoveGroupOption("Lester", "move_lester_CaneUp");
+		AddMoveGroupOption("Film Female", "move_f@film_reel");
+		AddMoveGroupOption("Cool Jog", "move_m@jog@");
+		AddMoveGroupOption("Leaf Blower", "move_m@leaf_blower");
+		AddMoveGroupOption("Tool Belt Walk", "move_m@tool_belt@a");
+		AddMoveGroupOption("Tool Belt Walk 2", "move_f@tool_belt@a");
+		AddMoveGroupOption("Appealing", "move_f@sexy@a");
+		AddMoveGroupOption("Amanda - Bag", "move_characters@amanda@bag");
+		AddMoveGroupOption("Michael - Fire", "move_characters@michael@fire");
+		AddMoveGroupOption("Franklin - Fire", "move_characters@franklin@fire");
+		AddMoveGroupOption("Jimmy - Nervous", "move_characters@jimmy@nervous@");
+		AddMoveGroupOption("Jimmy - Slow", "move_characters@jimmy@slow@");
+		AddMoveGroupOption("Alien", "move_m@alien");
+		AddMoveGroupOption("Brave", "move_m@brave");
+		AddMoveGroupOption("Brave2", "move_m@brave@a");
+		AddMoveGroupOption("Brave3", "move_m@brave@b");
+		AddMoveGroupOption("Brave4", "move_m@brave@fallback");
+		AddMoveGroupOption("BraveStill", "move_m@brave@idle_a");
+		AddMoveGroupOption("BraveStill2", "move_m@brave@idle_b");
+		AddMoveGroupOption("Business", "move_m@business@a");
+		AddMoveGroupOption("Business2", "move_m@business@b");
+		AddMoveGroupOption("Business3", "move_m@business@c");
+		AddMoveGroupOption("Casual", "move_m@casual@a");
+		AddMoveGroupOption("Casual2", "move_m@casual@b");
+		AddMoveGroupOption("Casual3", "move_m@casual@c");
+		AddMoveGroupOption("Casual4", "move_m@casual@d");
+		AddMoveGroupOption("Casual5", "move_m@casual@e");
+		AddMoveGroupOption("Casual6", "move_m@casual@f");
+		AddMoveGroupOption("Clipboard", "move_m@clipboard");
+		AddMoveGroupOption("Coward", "move_m@coward");
+		AddMoveGroupOption("Burning", "move_m@fire");
+		AddMoveGroupOption("Flee", "move_m@flee@a");
+		AddMoveGroupOption("Flee2", "move_m@flee@b");
+		AddMoveGroupOption("Flee3", "move_m@flee@c");
+		AddMoveGroupOption("Flee4", "move_f@flee@a");
+		AddMoveGroupOption("Flee5", "move_f@flee@b");
+		AddMoveGroupOption("Flee6", "move_f@flee@c");
+		AddMoveGroupOption("Hiking", "move_m@hiking");
+		AddMoveGroupOption("Hiking2", "move_f@hiking");
+		AddMoveGroupOption("Hurry", "move_m@hurry@a");
+		AddMoveGroupOption("Hurry2", "move_m@hurry@b");
+		AddMoveGroupOption("Hurry3", "move_m@hurry@c");
+		AddMoveGroupOption("Hurry4", "move_f@hurry@a");
+		AddMoveGroupOption("Hurry5", "move_f@hurry@b");
+		AddMoveGroupOption("Injured", "move_m@injured");
+		AddMoveGroupOption("Injured2", "move_injured_generic");
+		AddMoveGroupOption("Injured3", "move_f@injured");
+		AddMoveGroupOption("Intimidation", "move_m@intimidation@1h");
+		AddMoveGroupOption("Intimidation2", "move_m@intimidation@cop@unarmed");
+		AddMoveGroupOption("Intimidation3", "move_m@intimidation@unarmed");
+		AddMoveGroupOption("Muscular", "move_m@muscle@a");
+		AddMoveGroupOption("Quick", "move_m@quick");
+		AddMoveGroupOption("Sad", "move_m@sad@a");
+		AddMoveGroupOption("Sad2", "move_m@sad@b");
+		AddMoveGroupOption("Sad3", "move_m@sad@c");
+		AddMoveGroupOption("Sad4", "move_f@sad@a");
+		AddMoveGroupOption("Sad5", "move_f@sad@b");
+		AddMoveGroupOption("Shady", "move_m@shadyped@a");
+		AddMoveGroupOption("Shocked", "move_m@shocked@a");
+		AddMoveGroupOption("Arrogant", "move_f@arrogant@a");
+		AddMoveGroupOption("Chubby", "move_f@chubby@a");
+		AddMoveGroupOption("Handbag Walk", "move_f@handbag");
+		AddMoveGroupOption("Heels", "move_f@heels@c");
+		AddMoveGroupOption("move_p_m_one");
+		AddMoveGroupOption("move_p_m_one_briefcase");
+		AddMoveGroupOption("move_p_m_two");
+		AddMoveGroupOption("move_p_m_zero");
+		AddMoveGroupOption("move_p_m_zero_slow");
+		AddMoveGroupOption("Ballistic", "anim_group_move_ballistic");
 
 		AddBreak("Weapon Handling");
-		AddTickol("Default", !wmgitIsValid, MovementGroupResetW_, MovementGroupResetW_);
-		AddwmovgrpOption_("Lester's Cane", "move_lester_CaneUp");
-		AddwmovgrpOption_("Crouched", "move_ped_crouched");
-		AddwmovgrpOption_("Bucket", "move_ped_wpn_bucket");
-		AddwmovgrpOption_("Mop", "move_ped_wpn_mop");
-		AddwmovgrpOption_("Assault Rifle (Crouched)", "Wpn_AssaultRifle_WeaponHoldingCrouched");
-		AddwmovgrpOption_("Garbageman", "missfbi4prepp1_garbageman");
-		AddwmovgrpOption_("Prison Guard", "MOVE_M@PRISON_GAURD");
-		AddwmovgrpOption_("Jerrycan (Generic)", "move_ped_wpn_jerrycan_generic");
-		AddwmovgrpOption_("Golfer", "move_m@golfer@");
-		AddwmovgrpOption_("Rucksack", "MOVE_P_M_ZERO_RUCKSACK");
-		AddwmovgrpOption_("Clipboard", "MOVE_M@CLIPBOARD");
-		AddwmovgrpOption_("Tennis (Male)", "weapons@tennis@male");
-		AddwmovgrpOption_("Tennis Locomotion (Female)", "TENNIS_LOCOMOTION_FEMALE");
-		AddwmovgrpOption_("Paparazzi (Standing)", "random@escape_paparazzi@standing@");
-		AddwmovgrpOption_("Paparazzi (In Car)", "random@escape_paparazzi@incar@");
-		//AddwmovgrpOption_("Paparazzo", "RCM_Paparazzo");
-		AddwmovgrpOption_("Leaf Blower", "MOVE_M@LEAF_BLOWER");
+		AddTickol("Default", !wmgitIsValid, movementGroupResetW, movementGroupResetW);
+		AddWMoveGroupOption("Lester's Cane", "move_lester_CaneUp");
+		AddWMoveGroupOption("Crouched", "move_ped_crouched");
+		AddWMoveGroupOption("Bucket", "move_ped_wpn_bucket");
+		AddWMoveGroupOption("Mop", "move_ped_wpn_mop");
+		AddWMoveGroupOption("Assault Rifle (Crouched)", "Wpn_AssaultRifle_WeaponHoldingCrouched");
+		AddWMoveGroupOption("Garbageman", "missfbi4prepp1_garbageman");
+		AddWMoveGroupOption("Prison Guard", "MOVE_M@PRISON_GAURD");
+		AddWMoveGroupOption("Jerrycan (Generic)", "move_ped_wpn_jerrycan_generic");
+		AddWMoveGroupOption("Golfer", "move_m@golfer@");
+		AddWMoveGroupOption("Rucksack", "MOVE_P_M_ZERO_RUCKSACK");
+		AddWMoveGroupOption("Clipboard", "MOVE_M@CLIPBOARD");
+		AddWMoveGroupOption("Tennis (Male)", "weapons@tennis@male");
+		AddWMoveGroupOption("Tennis Locomotion (Female)", "TENNIS_LOCOMOTION_FEMALE");
+		AddWMoveGroupOption("Paparazzi (Standing)", "random@escape_paparazzi@standing@");
+		AddWMoveGroupOption("Paparazzi (In Car)", "random@escape_paparazzi@incar@");
+		AddWMoveGroupOption("Leaf Blower", "MOVE_M@LEAF_BLOWER");
 
 		AddBreak("Weapon Animations (Doesn't Save)");
 		const std::vector<std::pair<std::string, Hash>> vWeaponAnimsOrWhatever
@@ -1416,40 +1549,43 @@ namespace sub
 		};
 		for (auto& wa : vWeaponAnimsOrWhatever)
 		{
-			bool bWeaponAnimPressed = false;
-			AddOption(wa.first, bWeaponAnimPressed); if (bWeaponAnimPressed)
+			bool weaponAnimPressed = false;
+			AddOption(wa.first, weaponAnimPressed); 
+			if (weaponAnimPressed)
 			{
-				WEAPON::SET_WEAPON_ANIMATION_OVERRIDE(Static_241, wa.second);
+				WEAPON::SET_WEAPON_ANIMATION_OVERRIDE(g_activePedHandle, wa.second);
 			}
 		}
 
 
-		if (MovementGroupReset_)
+		if (movementGroupReset)
 		{
-			RESET_PED_MOVEMENT_CLIPSET(Static_241, 0x3E800000);
+			RESET_PED_MOVEMENT_CLIPSET(g_activePedHandle, 0x3E800000);
 			WAIT(10);
-			Vector3 Coord = GET_ENTITY_COORDS(Static_241, 1);
-			SET_ENTITY_COORDS_NO_OFFSET(Static_241, Coord.x, Coord.y, Coord.z + 0.05f, 1, 1, 0);
-			FREEZE_ENTITY_POSITION(Static_241, 0);
-			if (mgitIsValid) g_pedList_movGrp.erase(mgit);
+			Vector3 Coord = GET_ENTITY_COORDS(g_activePedHandle, 1);
+			SET_ENTITY_COORDS_NO_OFFSET(g_activePedHandle, Coord.x, Coord.y, Coord.z + 0.05f, 1, 1, 0);
+			FREEZE_ENTITY_POSITION(g_activePedHandle, 0);
+			if (mgitIsValid) 
+			{
+				g_pedListMovGroup.erase(mgit);
+			}
 		}
-		if (MovementGroupResetW_)
+		if (movementGroupResetW)
 		{
-			RESET_PED_WEAPON_MOVEMENT_CLIPSET(Static_241);
+			RESET_PED_WEAPON_MOVEMENT_CLIPSET(g_activePedHandle);
 			WAIT(10);
-			Vector3 Coord = GET_ENTITY_COORDS(Static_241, 1);
-			SET_ENTITY_COORDS_NO_OFFSET(Static_241, Coord.x, Coord.y, Coord.z + 0.05f, 1, 1, 0);
-			FREEZE_ENTITY_POSITION(Static_241, 0);
-			if (wmgitIsValid) g_pedList_wmovGrp.erase(wmgit);
+			Vector3 Coord = GET_ENTITY_COORDS(g_activePedHandle, 1);
+			SET_ENTITY_COORDS_NO_OFFSET(g_activePedHandle, Coord.x, Coord.y, Coord.z + 0.05f, 1, 1, 0);
+			FREEZE_ENTITY_POSITION(g_activePedHandle, 0);
+			if (wmgitIsValid) 
+			{
+				g_pedListWMovGroup.erase(wmgit);
+			}
 		}
-
 	}
 
-	// Facial animations
-
-	namespace FacialAnims_catind
+	namespace FacialAnims
 	{
-		//struct NamedFacialAnim { std::string caption; std::string animName; };
 		const std::vector<NamedFacialAnim> vFacialAnims
 		{
 			{ "Normal", "mood_normal_1" },
@@ -1466,15 +1602,16 @@ namespace sub
 			{ "Dead", "dead_1" }
 		};
 
-		void Sub_FacialMood()
+		void FacialMoodMenu()
 		{
-			GTAentity ped = Static_241;
-			auto current = get_ped_facial_mood(ped);
+			GTAentity ped = g_activePedHandle;
+			auto current = GetPedFacialMood(ped);
 
 			AddTitle("Mood");
 
-			bool bClearPressed = false;
-			AddTickol("Default", current.empty(), bClearPressed, bClearPressed); if (bClearPressed)
+			bool clearPressed = false;
+			AddTickol("Default", current.empty(), clearPressed, clearPressed); 
+			if (clearPressed)
 			{
 				ped.RequestControl(400);
 				clear_ped_facial_mood(ped);
@@ -1486,15 +1623,34 @@ namespace sub
 				AddTickol(fa.caption, current == fa.animName, bFaPressed, bFaPressed); if (bFaPressed)
 				{
 					ped.RequestControl(400);
-					set_ped_facial_mood(ped, fa.animName);
+					SetPedFacialMood(ped, fa.animName);
 					current = fa.animName;
 				}
 			}
 
 		}
 	}
-
 }
 
 
-
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(ANIMATIONSUB,                     sub::PedAnimationMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_SETTINGS,            sub::AnimationSub_Settings)
+REGISTER_SUBMENU(ANIMATIONSUB_FAVOURITES,          sub::AnimationFavouritesMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_FAVOURITES_CATSELECT, sub::AnimationFavouritesMenu_CategorySelect)
+REGISTER_SUBMENU(ANIMATIONSUB_FLAGS,               sub::AnimationSub_Flags)
+REGISTER_SUBMENU(ANIMATIONSUB_CUSTOM,              sub::AnimationSub_Custom)
+REGISTER_SUBMENU(ANIMATIONSUB_DEER,                sub::DeerAnimationMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_SHARK,               sub::SharkAnimationMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_MISSRAPPEL,          sub::MissionRappelAnimationMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_GESTSIT,             sub::GestureSitAnimationMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_SWAT,                sub::SwatAnimationMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_GUARDREAC,           sub::GuardReactAnimationMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_RANDARREST,          sub::RandomArrestAnimationMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_ALLPEDANIMS,         sub::AnimationMenu::AllPedAnimsMenu)
+REGISTER_SUBMENU(ANIMATIONSUB_ALLPEDANIMS_INDICT,  sub::AnimationMenu::Sub_AllPedAnims_InDict)
+REGISTER_SUBMENU(AnimationTaskScenarios,		   sub::AnimationTaskScenarios::AnimationTaskScenarios1)
+REGISTER_SUBMENU(AnimationTaskScenarios2,		   sub::AnimationTaskScenarios::AnimationTaskScenarios2)
+REGISTER_SUBMENU(FACIALMOOD,                       sub::FacialAnims::FacialMoodMenu)
+REGISTER_SUBMENU(MOVEMENTGROUP,                    sub::MovementGroupMenu)

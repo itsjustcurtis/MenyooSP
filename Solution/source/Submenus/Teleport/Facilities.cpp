@@ -273,7 +273,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (info.location != nullptr)
 			{
-				teleport_net_ped(ped, info.location->pos);
+				TeleportNetPed(ped, info.location->pos);
 			}
 		}
 
@@ -305,10 +305,10 @@ namespace sub::TeleportLocations_catind
 		{
 			if (currentFacilityInfo.location == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
-			GTAped ped = Static_241;
+			GTAped ped = g_activePedHandle;
 			AddTitle(currentFacilityInfo.location->name);
 
 			for (auto& o : vOptionArrays)
@@ -322,7 +322,7 @@ namespace sub::TeleportLocations_catind
 					if (bOption_pressed)
 					{
 						selectedOptionArray = &o;
-						Menu::SetSub_delayed = SUB::TELEPORTOPS_FACILITIES_INOPTION;
+						Menu::pendingSubmenu = SUB::TELEPORTOPS_FACILITIES_INOPTION;
 					}
 				}
 			}
@@ -333,7 +333,7 @@ namespace sub::TeleportLocations_catind
 				DO_SCREEN_FADE_OUT(50);
 				CreateFacility(currentFacilityInfo);
 				TeleportPedToFacility(ped, currentFacilityInfo);
-				//Menu::SetSub_previous();
+				//Menu::SetPreviousMenu();
 				DO_SCREEN_FADE_IN(200);
 				return;
 			}
@@ -342,7 +342,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (currentFacilityInfo.location == nullptr || selectedOptionArray == nullptr || selectedOptionArray->ptr == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
 			AddTitle(selectedOptionArray->name.empty() ? "Option" : selectedOptionArray->name);
@@ -376,4 +376,8 @@ namespace sub::TeleportLocations_catind
 }
 
 
-
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TELEPORTOPS_FACILITIES,                sub::TeleportLocations_catind::Facilities::Sub_Facilities)
+REGISTER_SUBMENU(TELEPORTOPS_FACILITIES_INLOC,          sub::TeleportLocations_catind::Facilities::Sub_Facilities_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_FACILITIES_INOPTION,       sub::TeleportLocations_catind::Facilities::Sub_Facilities_InOption)

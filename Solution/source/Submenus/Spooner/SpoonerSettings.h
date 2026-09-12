@@ -11,26 +11,28 @@
 
 #include <string>
 #include <vector>
+#include <Windows.h>
 
 typedef unsigned char UINT8;
 
 namespace sub::Spooner
 {
 	enum class eSpoonerModeMode : UINT8 { GroundEase, Precision };
-	extern const std::vector<std::string> vSpoonerModeMode;
+	extern const std::vector<std::string> spoonerModeModeNames;
 
 	namespace Settings
 	{
 #define GTA_MAX_ENTITIES 2048
 
-		extern float CameraMovementSensitivityKeyboard;
-		extern float CameraRotationSensitivityMouse;
-		extern float CameraMovementSensitivityGamepad;
-		extern float CameraRotationSensitivityGamepad;
+		extern float cameraMovementSensitivityKeyboard;
+		extern float cameraRotationSensitivityMouse;
+		extern float cameraMovementSensitivityGamepad;
+		extern float cameraRotationSensitivityGamepad;
 
-		extern eSpoonerModeMode SpoonerModeMode;
+		extern eSpoonerModeMode spoonerModeMode;
 
 		extern bool bShowModelPreviews;
+		extern bool bDisplaySpoonerInfo;
 		extern bool bShowBoxAroundSelectedEntity;
 		extern bool bSpawnDynamicProps;
 		extern bool bSpawnDynamicPeds;
@@ -42,6 +44,16 @@ namespace sub::Spooner
 		extern bool bKeepPositionWhenAttaching;
 
 		extern bool bTeleportToReferenceWhenLoadingFile;
+
+		extern bool bGridSnapEnabled;
+		extern float gridSnapSize;
+		extern float rotationSnapDegrees;
+		extern bool bSnapToGround;
+		extern bool bDrawGrid;
+
+		extern bool bAutoSaveDb;
+		extern DWORD autoSaveIntervalMs;
+		extern int autoSaveMaxFiles;
 	}
 
 }

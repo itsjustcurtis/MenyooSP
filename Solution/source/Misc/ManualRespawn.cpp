@@ -29,10 +29,9 @@
 
 #include <vector>
 
-namespace _ManualRespawn_
+namespace ManualRespawn
 {
-	ManualRespawn::ManualRespawn()
-		: inRespawn(false)
+	ManualRespawn::ManualRespawn() : inRespawn(false)
 	{
 	}
 
@@ -53,20 +52,20 @@ namespace _ManualRespawn_
 
 	bool ManualRespawn::IsSkipPressed()
 	{
-		return IS_DISABLED_CONTROL_JUST_PRESSED(0, respawnbinds) != 0;
+		return IS_DISABLED_CONTROL_JUST_PRESSED(0, respawnKey) != 0;
 	}
 
 	inline void ManualRespawn::ShowRespawnHelpText()
 	{
 		std::string bindsname = "button";
-		try { bindsname = ControllerInputs::vNames.at(respawnbinds); }
-		catch (...) {
-			addlog(ige::LogType::LOG_ERROR, "Unable to set new bindsname, respawnbinds = " + std::to_string(respawnbinds), __FILENAME__);
+		try { bindsname = ControllerInputs::vNames.at(respawnKey); }
+		catch (...) 
+		{
+			addlog(ige::LogType::LOG_ERROR, "Unable to set new binding name, respawnKey = " + std::to_string(respawnKey));
 		}
 
-		Game::Print::setupdraw(GTAfont::Arial, Vector2(0, 0.4f), false, true, false, RGBA(255, 255, 255, 190));
+		Game::Print::SetupDraw(GTAfont::Arial, Vector2(0, 0.4f), false, true, false, RGBA(255, 255, 255, 190));
 		Game::Print::drawstring("Press ~b~[" + bindsname + "]~s~ to respawn.", NULL, 0.1f);
-		//Game::CustomHelpText::ShowTimedText(oss_ << "Press " << "~INPUT_LOOK_BEHIND~" << " to respawn.", 100);
 	}
 
 	void ManualRespawn::Tick()
@@ -80,7 +79,7 @@ namespace _ManualRespawn_
 	{
 		auto player = PLAYER_ID();
 
-		if (IS_PLAYER_DEAD(player))// || IS_PLAYER_BEING_ARRESTED(player, true))
+		if (IS_PLAYER_DEAD(player))
 		{
 			if (IsSkipPressed())
 			{
@@ -117,7 +116,7 @@ namespace _ManualRespawn_
 	}
 
 
-	void Check_self_death_model()
+	void CheckSelfDealthModel()
 	{
 		GTAped playerPed = PLAYER_PED_ID();
 		
@@ -129,7 +128,7 @@ namespace _ManualRespawn_
 		bool is_death = playerPed.IsDead();
 		bool is_arrest = IS_PLAYER_BEING_ARRESTED(player.Handle(), true) != 0;
 
-		if ((!is_death && !is_arrest) || _ManualRespawn_::g_manualRespawn.InRespawn())
+		if ((!is_death && !is_arrest) || g_manualRespawn.InRespawn())
 			return;
 		if (GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(0xCAC8014F) > 0)//director_mode.ysc
 			return;
@@ -143,20 +142,8 @@ namespace _ManualRespawn_
 			std::vector<s_Weapon_Components_Tint> weaponsBackup;
 			playerPed.StoreWeaponsInArray(weaponsBackup);
 
-			/*int did[12], tid[12], did2[10], tid2[10];
-			for (i = 0; i<12; i++)
-			{
-			did[i] = GET_PED_DRAWABLE_VARIATION(playerPed, i);
-			tid[i] = GET_PED_TEXTURE_VARIATION(playerPed, i);
-			}
-			for (i = 0; i<10; i++)
-			{
-			did2[i] = GET_PED_PROP_INDEX(playerPed, i);
-			tid2[i] = GET_PED_PROP_TEXTURE_INDEX(playerPed, i);
-			}*/
-
 			const std::string& ofn = GetPathffA(Pathff::Outfit, true) + "_reserved.xml";
-			sub::ComponentChanger_Outfit_catind::Create(PLAYER_PED_ID(), ofn);
+			sub::ComponentChangerOutfit::Create(PLAYER_PED_ID(), ofn);
 
 
 			if (is_death)
@@ -183,7 +170,7 @@ namespace _ManualRespawn_
 				WAIT(0);
 
 			// change back the model
-			sub::ComponentChanger_Outfit_catind::Apply(PLAYER_PED_ID(), ofn, true, true, true, true, true, false);
+			sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), ofn, true, true, true, true, true, false);
 
 			WAIT(0);
 

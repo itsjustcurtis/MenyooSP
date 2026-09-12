@@ -34,6 +34,7 @@
 
 #include "SpoonerEntity.h"
 #include "SpoonerMarker.h"
+#include "SpoonerLight.h"
 #include "RelationshipManagement.h"
 #include "EntityManagement.h"
 #include "SpoonerMode.h"
@@ -44,6 +45,8 @@
 #include "..\PtfxSubs.h"
 #include "..\PedAnimation.h"
 #include "..\Teleport\TeleMethods.h"
+#include "BlipCustoms.h"
+#include "SpoonerBlips.h"
 
 #include <string>
 #include <unordered_set>
@@ -56,6 +59,26 @@ namespace sub::Spooner
 	namespace FileManagement
 	{
 		std::string _oldAudioAlias;
+		const std::vector<std::string> drawableComponentSlotNames = {
+			"head", "berd", "hair", "uppr", "lowr", "hand", "feet", "teef", "accs", "task", "decl", "jbib"
+		};
+		const std::vector<std::string> drawablePropSlotNames = {
+			"p_head", "p_eyes", "p_ears", "p_mouth", "p_lhand", "p_rhand", "p_lwrist", "p_rwrist", "p_hip", "p_lfoot", "p_rfoot", "p_unk1", "p_unk2"
+		};
+		const std::vector<std::string> facialFeatureSlotNames = {
+			"NoseWidth", "NoseHeight", "NoseLength", "NoseBridge", "NoseTip", "NoseBridgeShaft",
+			"BrowHeight", "BrowWidth",
+			"CheekboneHeight", "CheekboneWidth", "CheekWidth", "Eyelids",
+			"Lips",
+			"JawWidth", "JawHeight",
+			"ChinLength", "ChinPosition", "ChinWidth", "ChinShape",
+			"NeckWidth"
+		};
+		const std::vector<std::string> overlaySlotNames = {
+			"SkinRash", "Beard", "Eyebrows", "Wrinkles", "Makeup", "Blush",
+			"Pigment1", "Pigment2", "Lipstick", "Spots", "ChestHair", "Chest1", "Chest2"
+		};
+
 
 		/*bool Exists(const std::string& fileName, std::string extension = ".xml")
 		{
@@ -79,29 +102,29 @@ namespace sub::Spooner
 			return false;
 		}*/
 
-		void AddEntityToXmlNode(SpoonerEntity& e, pugi::xml_node& nodeEntity)
+		void AddEntityToXmlNode(SpoonerEntity& e, pugi::xml_node& nodeEntity, bool legacyXMLFormat)
 		{
-			//addlog(ige::LogType::LOG_INFO,  "Adding entity " + e.HashName + " of type " + (int)e.Type + " to xml node.", __FILENAME__);
+			//addlog(ige::LogType::LOG_INFO,  "Adding entity " + e.hashName + " of type " + (int)e.type + " to xml node.");
 
 			GTAped myPed = PLAYER_PED_ID();
 
-			const Model& eModel = e.Handle.Model();
-			nodeEntity.append_child("ModelHash").text() = int_to_hexstring(eModel.hash, true).c_str();
-			nodeEntity.append_child("Type").text() = (int)e.Type;
-			nodeEntity.append_child("Dynamic").text() = e.Dynamic;
-			nodeEntity.append_child("FrozenPos").text() = e.Handle.IsPositionFrozen();
-			if (e.HashName.length() == 0)
-				e.HashName = int_to_hexstring(eModel.hash, true);
-			nodeEntity.append_child("HashName").text() = e.HashName.c_str();
-			nodeEntity.append_child("InitialHandle").text() = e.Handle.Handle();
+			const Model& eModel = e.handle.Model();
+			nodeEntity.append_child("ModelHash").text() = IntToHexString(eModel.hash, true).c_str();
+			nodeEntity.append_child("Type").text() = (int)e.type;
+			nodeEntity.append_child("Dynamic").text() = e.dynamic;
+			nodeEntity.append_child("FrozenPos").text() = e.handle.IsPositionFrozen();
+			if (e.hashName.length() == 0)
+				e.hashName = IntToHexString(eModel.hash, true);
+			nodeEntity.append_child("HashName").text() = e.hashName.c_str();
+			nodeEntity.append_child("InitialHandle").text() = e.handle.Handle();
 
 			// Task sequence for all entity types
-			bool bEntHasTaskSequence = !e.TaskSequence.empty();
-			bool bEntTaskSequenceIsActive = e.TaskSequence.IsActive();
+			bool bEntHasTaskSequence = !e.taskSequence.empty();
+			bool bEntTaskSequenceIsActive = e.taskSequence.IsActive();
 			if (bEntHasTaskSequence)
 			{
 				auto nodeEntTaskSeq = nodeEntity.append_child("TaskSequence");
-				const auto& vTasks = e.TaskSequence.AllTasks();
+				const auto& vTasks = e.taskSequence.AllTasks();
 				for (auto& task : vTasks)
 				{
 					auto nodeEntSTSTask = nodeEntTaskSeq.append_child("Task");
@@ -109,17 +132,17 @@ namespace sub::Spooner
 				}
 			}
 
-			if (e.Type == EntityType::PROP)
+			if (e.type == EntityType::PROP)
 			{
 				auto nodePropStuff = nodeEntity.append_child("ObjectProperties");
-				GTAprop eo = e.Handle;
+				GTAprop eo = e.handle;
 
-				nodePropStuff.append_child("TextureVariation").text() = e.TextureVariation;
+				nodePropStuff.append_child("TextureVariation").text() = e.textureVariation;
 			}
-			else if (e.Type == EntityType::PED)
+			else if (e.type == EntityType::PED)
 			{
 				auto nodePedStuff = nodeEntity.append_child("PedProperties");
-				GTAped ep = e.Handle;
+				GTAped ep = e.handle;
 
 				/*auto& nodePedConfigFlags = nodePedStuff.append_child("PedConfigFlags");
 				for (UINT16 i = 0; i <= 255; i++)
@@ -127,25 +150,27 @@ namespace sub::Spooner
 					nodePedConfigFlags.append_child(("_" + std::to_string(i)).c_str()).text() = (bool)GET_PED_CONFIG_FLAG(ep.Handle(), i, true);
 				}*/
 
-				nodePedStuff.append_child("IsStill").text() = e.IsStill;
+				nodePedStuff.append_child("IsStill").text() = e.isStill;
 
-				nodePedStuff.append_child("CanRagdoll").text() = ep.CanRagdoll_get();
+				nodePedStuff.append_child("CanRagdoll").text() = ep.GetCanRagdoll();
 
 				nodePedStuff.append_child("HasShortHeight").text() = GET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, false) != 0;
 
-				nodePedStuff.append_child("Armour").text() = ep.Armour_get();
+				nodePedStuff.append_child("Armour").text() = ep.GetArmour();
 
-				nodePedStuff.append_child("CurrentWeapon").text() = int_to_hexstring(ep.Weapon_get(), true).c_str();
+				nodePedStuff.append_child("CurrentWeapon").text() = IntToHexString(ep.GetWeapon(), true).c_str();
 
 				auto nodePedProps = nodePedStuff.append_child("PedProps");
 				auto nodePedComps = nodePedStuff.append_child("PedComps");
-				for (UINT8 i = 0; i <= 9; i++)
+				for (UINT8 i = 0; i <= drawablePropSlotNames.size() - 1; i++)
 				{
-					nodePedProps.append_child(("_" + std::to_string(i)).c_str()).text() = (std::to_string(GET_PED_PROP_INDEX(ep.Handle(), i, 0)) + "," + std::to_string(GET_PED_PROP_TEXTURE_INDEX(ep.Handle(), i))).c_str();
+					const std::string slotName = legacyXMLFormat ? ("_" + std::to_string(i)) : drawablePropSlotNames[i];
+					nodePedProps.append_child(slotName.c_str()).text() = (std::to_string(GET_PED_PROP_INDEX(ep.Handle(), i, 0)) + "," + std::to_string(GET_PED_PROP_TEXTURE_INDEX(ep.Handle(), i))).c_str();
 				}
-				for (UINT8 i = 0; i <= 11; i++)
+				for (UINT8 i = 0; i <= drawableComponentSlotNames.size() - 1; i++)
 				{
-					nodePedComps.append_child(("_" + std::to_string(i)).c_str()).text() = (std::to_string(GET_PED_DRAWABLE_VARIATION(ep.Handle(), i)) + "," + std::to_string(GET_PED_TEXTURE_VARIATION(ep.Handle(), i))).c_str();
+					const std::string slotName = legacyXMLFormat ? ("_" + std::to_string(i)) : drawableComponentSlotNames[i];
+					nodePedComps.append_child(slotName.c_str()).text() = (std::to_string(GET_PED_DRAWABLE_VARIATION(ep.Handle(), i)) + "," + std::to_string(GET_PED_TEXTURE_VARIATION(ep.Handle(), i))).c_str();
 				}
 
 				if (sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel))
@@ -153,7 +178,7 @@ namespace sub::Spooner
 					auto nodePedHeadFeatures = nodePedStuff.append_child("HeadFeatures");
 
 					auto nodePedHeadBlend = nodePedHeadFeatures.append_child("ShapeAndSkinTone");
-					const auto& headBlend = ep.HeadBlendData_get();
+					const auto& headBlend = ep.GetHeadBlendData();
 					nodePedHeadBlend.append_child("ShapeFatherId").text() = headBlend.shapeFirstID;
 					nodePedHeadBlend.append_child("ShapeMotherId").text() = headBlend.shapeSecondID;
 					nodePedHeadBlend.append_child("ShapeOverrideId").text() = headBlend.shapeThirdID;
@@ -176,19 +201,21 @@ namespace sub::Spooner
 						auto nodePedFacialFeatures = nodePedHeadFeatures.append_child("FacialFeatures"); //currently returning 0 to xml file for all values
 						for (int i = 0; i < pedHead.facialFeatureData.size(); i++)
 						{
-							addlog(ige::LogType::LOG_DEBUG, "Saving Facial feature " + std::to_string(i) + " as value " + std::to_string(pedHead.facialFeatureData[i]));
-							nodePedFacialFeatures.append_child(("_" + std::to_string(i)).c_str()).text() = std::to_string(pedHead.facialFeatureData[i]).c_str();
+							std::string facialFeatureName = legacyXMLFormat ? ("_" + std::to_string(i)) : facialFeatureSlotNames[i];
+							addlog(ige::LogType::LOG_DEBUG, "Saving Facial feature " + facialFeatureName + " (index " + std::to_string(i) + ") as value " + std::to_string(pedHead.facialFeatureData[i]));
+							nodePedFacialFeatures.append_child(facialFeatureName.c_str()).text() = std::to_string(pedHead.facialFeatureData[i]).c_str();
 						}
 
-						auto nodePedHeadOverlays = nodePedHeadFeatures.append_child("Overlays");
-						for (int i = 0; i < pedHead.overlayData.size(); i++)
-						{
-							auto nodePedHeadOverlay = nodePedHeadOverlays.append_child(("_" + std::to_string(i)).c_str());
-							nodePedHeadOverlay.append_attribute("index") = GET_PED_HEAD_OVERLAY(ep.Handle(), i);
-							nodePedHeadOverlay.append_attribute("colour") = pedHead.overlayData[i].colour;
-							nodePedHeadOverlay.append_attribute("colourSecondary") = pedHead.overlayData[i].colourSecondary;
-							nodePedHeadOverlay.append_attribute("opacity") = pedHead.overlayData[i].opacity;
-						}
+					auto nodePedHeadOverlays = nodePedHeadFeatures.append_child("Overlays");
+					for (int i = 0; i < pedHead.overlayData.size(); i++)
+					{
+						std::string overlayName = legacyXMLFormat ? ("_" + std::to_string(i)) : overlaySlotNames[i];
+						auto nodePedHeadOverlay = nodePedHeadOverlays.append_child(overlayName.c_str());
+						nodePedHeadOverlay.append_attribute("index") = GET_PED_HEAD_OVERLAY(ep.Handle(), i);
+						nodePedHeadOverlay.append_attribute("colour") = pedHead.overlayData[i].colour;
+						nodePedHeadOverlay.append_attribute("colourSecondary") = pedHead.overlayData[i].colourSecondary;
+						nodePedHeadOverlay.append_attribute("opacity") = pedHead.overlayData[i].opacity;
+					}
 					}
 					else
 					{
@@ -196,22 +223,25 @@ namespace sub::Spooner
 					}
 				}
 
-				if (sub::PedDecals_catind::vPedsAndDecals.count(ep.Handle()))
+				if (sub::PedDecals::vPedsAndDecals.count(ep.Handle()))
 				{
 					auto nodePedTattooLogoDecals = nodePedStuff.append_child("TattooLogoDecals");
-					auto& decalsApplied = sub::PedDecals_catind::vPedsAndDecals[ep.Handle()];
+					auto& decalsApplied = sub::PedDecals::vPedsAndDecals[ep.Handle()];
 					for (auto& decal : decalsApplied)
 					{
-						auto nodeDecal = nodePedTattooLogoDecals.append_child();
-						nodeDecal.append_attribute("collection") = int_to_hexstring(decal.collection, true).c_str();
-						nodeDecal.append_attribute("value") = int_to_hexstring(decal.value, true).c_str();
+					auto nodeDecal = nodePedTattooLogoDecals.append_child("Decal");
+					nodeDecal.append_attribute("collection") = IntToHexString(decal.collection, true).c_str();
+					nodeDecal.append_attribute("value") = IntToHexString(decal.value, true).c_str();
+					auto caption = sub::PedDecals::GetDecalCaption(decal.collection, decal.value);
+					if (!caption.empty())
+						nodeDecal.append_attribute("name") = caption.c_str();
 					}
 				}
 
-				if (sub::PedDamageTextures_catind::vPedsAndDamagePacks.count(ep.Handle()))
+				if (sub::PedDamageTextures::vPedsAndDamagePacks.count(ep.Handle()))
 				{
 					auto nodePedDamagePacks = nodePedStuff.append_child("DamagePacks");
-					auto& dmgPacksApplied = sub::PedDamageTextures_catind::vPedsAndDamagePacks[ep.Handle()];
+					auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
 					for (auto& dpna : dmgPacksApplied)
 					{
 						nodePedDamagePacks.append_child().text() = dpna.c_str();
@@ -221,53 +251,62 @@ namespace sub::Spooner
 				Hash relationshipGroupHash;
 				bool bRelationshipGroupAltered = RelationshipManagement::GetPedRelationshipGroup(ep, relationshipGroupHash);
 				nodePedStuff.append_child("RelationshipGroupAltered").text() = bRelationshipGroupAltered;
-				nodePedStuff.append_child("RelationshipGroup").text() = int_to_hexstring(relationshipGroupHash, true).c_str();
+				nodePedStuff.append_child("RelationshipGroup").text() = IntToHexString(relationshipGroupHash, true).c_str();
 
-				auto movGrpIter = g_pedList_movGrp.find(ep.Handle());
-				if (movGrpIter != g_pedList_movGrp.end())
+				auto movGrpIter = g_pedListMovGroup.find(ep.Handle());
+				if (movGrpIter != g_pedListMovGroup.end())
 				{
 					nodePedStuff.append_child("MovementGroupName").text() = movGrpIter->second.c_str();
 				}
-				auto wmovGrpIter = g_pedList_wmovGrp.find(ep.Handle());
-				if (wmovGrpIter != g_pedList_wmovGrp.end())
+				auto wmovGrpIter = g_pedListWMovGroup.find(ep.Handle());
+				if (wmovGrpIter != g_pedListWMovGroup.end())
 				{
 					nodePedStuff.append_child("WeaponMovementGroupName").text() = wmovGrpIter->second.c_str();
 				}
 
-				bool isUsingScenario = IS_PED_USING_SCENARIO(ep.Handle(), e.LastAnimation.name.c_str()) != 0;
-				bool isPlayingAnim = IS_ENTITY_PLAYING_ANIM(ep.Handle(), e.LastAnimation.dict.c_str(), e.LastAnimation.name.c_str(), 3) != 0;
+				bool isUsingScenario = !e.currentScenario.empty() && IS_PED_USING_SCENARIO(ep.Handle(), e.currentScenario.c_str()) != 0;
 
-				if (isUsingScenario && !(bEntTaskSequenceIsActive && e.TaskSequence.ContainsType(STSTaskType::ScenarioAction)))
+				if (isUsingScenario && !(bEntTaskSequenceIsActive && e.taskSequence.ContainsType(STSTaskType::ScenarioAction)))
 				{
 					nodePedStuff.append_child("ScenarioActive").text() = true;
-					nodePedStuff.append_child("ScenarioName").text() = e.LastAnimation.name.c_str();
+					nodePedStuff.append_child("ScenarioName").text() = e.currentScenario.c_str();
 				}
 				else
 				{
 					nodePedStuff.append_child("ScenarioActive").text() = false;
 				}
-				if (isPlayingAnim && !(bEntTaskSequenceIsActive && e.TaskSequence.ContainsType(STSTaskType::PlayAnimation)))
+
+				if (!(bEntTaskSequenceIsActive && e.taskSequence.ContainsType(STSTaskType::PlayAnimation)))
 				{
-					nodePedStuff.append_child("AnimActive").text() = true;
-					nodePedStuff.append_child("AnimDict").text() = e.LastAnimation.dict.c_str();
-					nodePedStuff.append_child("AnimName").text() = e.LastAnimation.name.c_str();
-				}
-				else
-				{
-					nodePedStuff.append_child("AnimActive").text() = false;
+					auto nodeAnimations = nodePedStuff.append_child("Animations");
+					for (const auto& anim : e.lastAnimations)
+					{
+						if (IS_ENTITY_PLAYING_ANIM(ep.Handle(), anim.dict.c_str(), anim.name.c_str(), 3))
+						{
+							auto nodeAnim = nodeAnimations.append_child("Animation");
+							nodeAnim.append_child("Dict").text() = anim.dict.c_str();
+							nodeAnim.append_child("Name").text() = anim.name.c_str();
+							nodeAnim.append_child("Speed").text() = anim.speed;
+							nodeAnim.append_child("SpeedMultiplier").text() = anim.speedMultiplier;
+							nodeAnim.append_child("PlaybackRate").text() = anim.playbackRate;
+							nodeAnim.append_child("Duration").text() = anim.duration;
+							nodeAnim.append_child("Flag").text() = anim.flag;
+							nodeAnim.append_child("LockPos").text() = anim.lockPos;
+						}
+					}
 				}
 
-				const auto& facialMoodStr = get_ped_facial_mood(ep);
+				const auto& facialMoodStr = GetPedFacialMood(ep);
 				if (!facialMoodStr.empty())
 				{
 					nodePedStuff.append_child("FacialMood").text() = facialMoodStr.c_str();
 				}
 
 			}
-			else if (e.Type == EntityType::VEHICLE)
+			else if (e.type == EntityType::VEHICLE)
 			{
 				auto nodeVehicleStuff = nodeEntity.append_child("VehicleProperties");
-				GTAvehicle ev = e.Handle;
+				GTAvehicle ev = e.handle;
 
 				// Colours
 				auto nodeVehicleColours = nodeVehicleStuff.append_child("Colours");
@@ -277,13 +316,13 @@ namespace sub::Spooner
 				GET_VEHICLE_MOD_COLOR_2(ev.Handle(), &mod2a, &mod2b);
 				bool isPrimaryColourCustom = ev.IsPrimaryColorCustom();
 				bool isSecondaryColourCustom = ev.IsSecondaryColorCustom();
-				const auto& cust1 = ev.CustomPrimaryColour_get();
-				const auto& cust2 = ev.CustomSecondaryColour_get();
-				const auto& tyreSmokeRgb = ev.TyreSmokeColour_get();
-				nodeVehicleColours.append_child("Primary").text() = ev.PrimaryColour_get();
-				nodeVehicleColours.append_child("Secondary").text() = ev.SecondaryColour_get();
-				nodeVehicleColours.append_child("Pearl").text() = ev.PearlescentColour_get();
-				nodeVehicleColours.append_child("Rim").text() = ev.RimColour_get();
+				const auto& cust1 = ev.GetCustomPrimaryColour();
+				const auto& cust2 = ev.GetCustomSecondaryColour();
+				const auto& tyreSmokeRgb = ev.GetTyreSmokeColour();
+				nodeVehicleColours.append_child("Primary").text() = ev.GetPrimaryColour();
+				nodeVehicleColours.append_child("Secondary").text() = ev.GetSecondaryColour();
+				nodeVehicleColours.append_child("Pearl").text() = ev.GetPearlescentColour();
+				nodeVehicleColours.append_child("Rim").text() = ev.GetRimColour();
 				nodeVehicleColours.append_child("Mod1_a").text() = mod1a;
 				nodeVehicleColours.append_child("Mod1_b").text() = mod1b;
 				nodeVehicleColours.append_child("Mod1_c").text() = mod1c;
@@ -307,32 +346,32 @@ namespace sub::Spooner
 				nodeVehicleColours.append_child("tyreSmoke_G").text() = tyreSmokeRgb.G;
 				nodeVehicleColours.append_child("tyreSmoke_B").text() = tyreSmokeRgb.B;
 				//if (eModel.IsBennySupportedVehicle()) {
-				nodeVehicleColours.append_child("LrInterior").text() = ev.InteriorColour_get();
-				nodeVehicleColours.append_child("LrDashboard").text() = ev.DashboardColour_get();
-				nodeVehicleColours.append_child("LrXenonHeadlights").text() = ev.HeadlightColour_get();
+				nodeVehicleColours.append_child("LrInterior").text() = ev.GetInteriorColour();
+				nodeVehicleColours.append_child("LrDashboard").text() = ev.GetDashboardColour();
+				nodeVehicleColours.append_child("LrXenonHeadlights").text() = ev.GetHeadlightColour();
 
 				// Other stuff
-				nodeVehicleStuff.append_child("Livery").text() = ev.Livery_get(); // Livery should be applied before paint is applied
-				nodeVehicleStuff.append_child("NumberPlateText").text() = ev.NumberPlateText_get().c_str();
-				nodeVehicleStuff.append_child("NumberPlateIndex").text() = ev.NumberPlateTextIndex_get();
-				nodeVehicleStuff.append_child("WheelType").text() = ev.WheelType_get();
-				nodeVehicleStuff.append_child("WheelsInvisible").text() = are_vehicle_wheels_invisible(ev);
-				nodeVehicleStuff.append_child("EngineSoundName").text() = get_vehicle_engine_sound_name(ev).c_str();
-				nodeVehicleStuff.append_child("WindowTint").text() = ev.WindowTint_get();
-				nodeVehicleStuff.append_child("BulletProofTyres").text() = !ev.CanTyresBurst_get();
-				nodeVehicleStuff.append_child("DirtLevel").text() = ev.DirtLevel_get();
-				nodeVehicleStuff.append_child("PaintFade").text() = ev.PaintFade_get();
-				nodeVehicleStuff.append_child("RoofState").text() = (int)ev.RoofState_get();
-				nodeVehicleStuff.append_child("SirenActive").text() = ev.SirenActive_get();
-				nodeVehicleStuff.append_child("EngineOn").text() = ev.EngineRunning_get();
-				nodeVehicleStuff.append_child("EngineHealth").text() = ev.EngineHealth_get();
-				nodeVehicleStuff.append_child("LightsOn").text() = ev.LightsOn_get();
+				nodeVehicleStuff.append_child("Livery").text() = ev.GetLivery(); // Livery should be applied before paint is applied
+				nodeVehicleStuff.append_child("NumberPlateText").text() = ev.GetNumberPlateText().c_str();
+				nodeVehicleStuff.append_child("NumberPlateIndex").text() = ev.GetNumberPlateTextIndex();
+				nodeVehicleStuff.append_child("WheelType").text() = ev.GetWheelType();
+				nodeVehicleStuff.append_child("WheelsInvisible").text() = AreVehicleWheelsInvisible(ev);
+				nodeVehicleStuff.append_child("EngineSoundName").text() = GetVehicleEngineSoundName(ev).c_str();
+				nodeVehicleStuff.append_child("WindowTint").text() = ev.GetWindowTint();
+				nodeVehicleStuff.append_child("BulletProofTyres").text() = !ev.GetCanTyresBurst();
+				nodeVehicleStuff.append_child("DirtLevel").text() = ev.GetDirtLevel();
+				nodeVehicleStuff.append_child("PaintFade").text() = ev.GetPaintFade();
+				nodeVehicleStuff.append_child("RoofState").text() = (int)ev.GetRoofState();
+				nodeVehicleStuff.append_child("SirenActive").text() = ev.GetSirenActive();
+				nodeVehicleStuff.append_child("EngineOn").text() = ev.GetEngineRunning();
+				nodeVehicleStuff.append_child("EngineHealth").text() = ev.GetEngineHealth();
+				nodeVehicleStuff.append_child("LightsOn").text() = ev.GetLightsOn();
 				nodeVehicleStuff.append_child("IsRadioLoud").text() = CAN_VEHICLE_RECEIVE_CB_RADIO(ev.Handle());// != 0;
-				nodeVehicleStuff.append_child("LockStatus").text() = (int)ev.LockStatus_get();
+				nodeVehicleStuff.append_child("LockStatus").text() = (int)ev.GetLockStatus();
 
 				// Neons
 				auto nodeVehicleNeons = nodeVehicleStuff.append_child("Neons");
-				const auto& neonLightsRgb = ev.NeonLightsColour_get();
+				const auto& neonLightsRgb = ev.GetNeonLightsColour();
 				nodeVehicleNeons.append_child("Left").text() = ev.IsNeonLightOn(VehicleNeonLight::Left);
 				nodeVehicleNeons.append_child("Right").text() = ev.IsNeonLightOn(VehicleNeonLight::Right);
 				nodeVehicleNeons.append_child("Front").text() = ev.IsNeonLightOn(VehicleNeonLight::Front);
@@ -372,16 +411,16 @@ namespace sub::Spooner
 				nodeVehicleTyresBursted.append_child("_8").text() = ev.IsTyreBursted(8);
 
 				// Multipliers
-				if (g_multList_rpm.count(ev.Handle())) nodeVehicleStuff.append_child("RpmMultiplier").text() = g_multList_rpm[ev.Handle()];
-				if (g_multList_torque.count(ev.Handle())) nodeVehicleStuff.append_child("TorqueMultiplier").text() = g_multList_torque[ev.Handle()];
-				if (g_multList_maxSpeed.count(ev.Handle())) nodeVehicleStuff.append_child("MaxSpeed").text() = g_multList_maxSpeed[ev.Handle()];
-				if (g_multList_headlights.count(ev.Handle())) nodeVehicleStuff.append_child("HeadlightIntensity").text() = g_multList_headlights[ev.Handle()];
+				if (g_multListRPM.count(ev.Handle())) nodeVehicleStuff.append_child("RpmMultiplier").text() = g_multListRPM[ev.Handle()];
+				if (g_multListTorque.count(ev.Handle())) nodeVehicleStuff.append_child("TorqueMultiplier").text() = g_multListTorque[ev.Handle()];
+				if (g_multListMaxSpeed.count(ev.Handle())) nodeVehicleStuff.append_child("MaxSpeed").text() = g_multListMaxSpeed[ev.Handle()];
+				if (g_multListHeadLights.count(ev.Handle())) nodeVehicleStuff.append_child("HeadlightIntensity").text() = g_multListHeadLights[ev.Handle()];
 
 				// Extras (modExtras)
 				auto nodeVehicleModExtras = nodeVehicleStuff.append_child("ModExtras");
 				for (UINT8 i = 0; i < 60; i++)
 				{
-					if (ev.DoesExtraExist(i)) nodeVehicleModExtras.append_child(("_" + std::to_string(i)).c_str()).text() = ev.ExtraOn_get(i);
+					if (ev.DoesExtraExist(i)) nodeVehicleModExtras.append_child(("_" + std::to_string(i)).c_str()).text() = ev.GetExtraOn(i);
 				}
 
 				// Mods (customisations)
@@ -396,9 +435,9 @@ namespace sub::Spooner
 			}
 
 			// fx lops
-			for (auto& ptfxlop : sub::Ptfx_catind::_fxlops)
+			for (auto& ptfxlop : sub::PtfxSubs::fxLoops)
 			{
-				if (ptfxlop.entity == e.Handle)
+				if (ptfxlop.entity == e.handle)
 				{
 					nodeEntity.append_child("PtfxLopAsset").text() = ptfxlop.asset.c_str();
 					nodeEntity.append_child("PtfxLopEffect").text() = ptfxlop.fx.c_str();
@@ -406,26 +445,26 @@ namespace sub::Spooner
 				}
 			}
 
-			nodeEntity.append_child("OpacityLevel").text() = e.Handle.Alpha_get();
-			nodeEntity.append_child("LodDistance").text() = e.Handle.LodDistance_get();
-			nodeEntity.append_child("IsVisible").text() = e.Handle.IsVisible();
-			//nodeEntity.append_child("IsDead").text() = e.Handle.IsDead();
-			nodeEntity.append_child("MaxHealth").text() = e.Handle.MaxHealth_get();
-			nodeEntity.append_child("Health").text() = e.Handle.Health_get();
+			nodeEntity.append_child("OpacityLevel").text() = e.handle.GetAlpha();
+			nodeEntity.append_child("LodDistance").text() = e.handle.GetLODDistance();
+			nodeEntity.append_child("IsVisible").text() = e.handle.IsVisible();
+			//nodeEntity.append_child("IsDead").text() = e.handle.IsDead();
+			nodeEntity.append_child("MaxHealth").text() = e.handle.GetMaxHealth();
+			nodeEntity.append_child("Health").text() = e.handle.GetHealth();
 
-			nodeEntity.append_child("HasGravity").text() = e.Handle.HasGravity_get();
-			nodeEntity.append_child("IsOnFire").text() = e.Handle.IsOnFire();
-			nodeEntity.append_child("IsInvincible").text() = e.Handle.IsInvincible();
-			nodeEntity.append_child("IsBulletProof").text() = e.Handle.IsBulletProof();
-			nodeEntity.append_child("IsCollisionProof").text() = !e.Handle.IsCollisionEnabled_get();
-			nodeEntity.append_child("IsExplosionProof").text() = e.Handle.IsExplosionProof();
-			nodeEntity.append_child("IsFireProof").text() = e.Handle.IsFireProof();
-			nodeEntity.append_child("IsMeleeProof").text() = e.Handle.IsMeleeProof();
-			nodeEntity.append_child("IsOnlyDamagedByPlayer").text() = e.Handle.IsOnlyDamagedByPlayer();
+			nodeEntity.append_child("HasGravity").text() = e.handle.GetHasGravity();
+			nodeEntity.append_child("IsOnFire").text() = e.handle.IsOnFire();
+			nodeEntity.append_child("IsInvincible").text() = e.handle.IsInvincible();
+			nodeEntity.append_child("IsBulletProof").text() = e.handle.IsBulletProof();
+			nodeEntity.append_child("IsCollisionProof").text() = !e.handle.GetIsCollisionEnabled();
+			nodeEntity.append_child("IsExplosionProof").text() = e.handle.IsExplosionProof();
+			nodeEntity.append_child("IsFireProof").text() = e.handle.IsFireProof();
+			nodeEntity.append_child("IsMeleeProof").text() = e.handle.IsMeleeProof();
+			nodeEntity.append_child("IsOnlyDamagedByPlayer").text() = e.handle.IsOnlyDamagedByPlayer();
 
 			auto nodeEntityPosRot = nodeEntity.append_child("PositionRotation");
-			const Vector3& epos = e.Handle.Position_get();
-			const Vector3& erot = e.Handle.Rotation_get();
+			const Vector3& epos = e.handle.GetPosition();
+			const Vector3& erot = e.handle.GetRotation();
 			nodeEntityPosRot.append_child("X").text() = epos.x;
 			nodeEntityPosRot.append_child("Y").text() = epos.y;
 			nodeEntityPosRot.append_child("Z").text() = epos.z;
@@ -435,9 +474,9 @@ namespace sub::Spooner
 
 			auto nodeEntityAttachment = nodeEntity.append_child("Attachment");
 			GTAentity attBaseEnt;
-			e.AttachmentArgs.isAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(e.Handle, attBaseEnt);
-			nodeEntityAttachment.append_attribute("isAttached") = e.AttachmentArgs.isAttached;
-			if (e.AttachmentArgs.isAttached)
+			e.attachmentArgs.isAttached = EntityManagement::GetEntityThisEntityIsAttachedTo(e.handle, attBaseEnt);
+			nodeEntityAttachment.append_attribute("isAttached") = e.attachmentArgs.isAttached;
+			if (e.attachmentArgs.isAttached)
 			{
 				/*if (attBaseEnt.Handle() == myPed.Handle())
 				{
@@ -451,15 +490,132 @@ namespace sub::Spooner
 				{
 					nodeEntityAttachment.append_child("AttachedTo").text() = attBaseEnt.Handle();
 				}
-				nodeEntityAttachment.append_child("BoneIndex").text() = e.AttachmentArgs.boneIndex;
-				nodeEntityAttachment.append_child("X").text() = e.AttachmentArgs.offset.x;
-				nodeEntityAttachment.append_child("Y").text() = e.AttachmentArgs.offset.y;
-				nodeEntityAttachment.append_child("Z").text() = e.AttachmentArgs.offset.z;
-				nodeEntityAttachment.append_child("Pitch").text() = e.AttachmentArgs.rotation.x;
-				nodeEntityAttachment.append_child("Roll").text() = e.AttachmentArgs.rotation.y;
-				nodeEntityAttachment.append_child("Yaw").text() = e.AttachmentArgs.rotation.z;
+				nodeEntityAttachment.append_child("BoneIndex").text() = e.attachmentArgs.boneIndex;
+				nodeEntityAttachment.append_child("X").text() = e.attachmentArgs.offset.x;
+				nodeEntityAttachment.append_child("Y").text() = e.attachmentArgs.offset.y;
+				nodeEntityAttachment.append_child("Z").text() = e.attachmentArgs.offset.z;
+				nodeEntityAttachment.append_child("Pitch").text() = e.attachmentArgs.rotation.x;
+				nodeEntityAttachment.append_child("Roll").text() = e.attachmentArgs.rotation.y;
+				nodeEntityAttachment.append_child("Yaw").text() = e.attachmentArgs.rotation.z;
 			}
 		}
+		void LoadPedCompsFromXml(GTAped ep, const pugi::xml_node& nodePedComps)
+		{
+			int slot = 0;
+			for (auto node = nodePedComps.first_child(); node; node = node.next_sibling(), slot++)
+			{
+				std::string v = node.text().as_string();
+				int drawable = stoi(v.substr(0, v.find(",")));
+				int texture = stoi(v.substr(v.find(",") + 1));
+				if (drawable < 0) drawable = 0; // 0 is an empty slot for components
+				if (texture < 0) texture = 0;
+				if (GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(ep.Handle(), slot) > drawable && GET_NUMBER_OF_PED_TEXTURE_VARIATIONS(ep.Handle(), slot, drawable) > texture)
+				{
+					SET_PED_COMPONENT_VARIATION(ep.Handle(), slot, drawable, texture, 0);
+				}
+			}
+		}
+		void LoadPedPropsFromXml(GTAped ep, const pugi::xml_node& nodePedProps, bool bNetworkIsGameInProgress)
+		{
+			int slot = 0;
+			for (auto node = nodePedProps.first_child(); node; node = node.next_sibling(), slot++)
+			{
+				if (slot > 9) break;
+				std::string v = node.text().as_string();
+				int drawable = stoi(v.substr(0, v.find(",")));
+				int texture = stoi(v.substr(v.find(",") + 1));
+				if (drawable < -1) drawable = 0; // -1 is an empty slot for props
+				if (texture < 0) texture = 0;
+				SET_PED_PROP_INDEX(ep.Handle(), slot, drawable, texture, bNetworkIsGameInProgress, 0);
+			}
+		}
+		void LoadPedHeadFeaturesFromXml(GTAped ep, const pugi::xml_node& nodePedHeadFeatures, const GTAmodel::Model& eModel)
+		{
+			if (!sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel) || !nodePedHeadFeatures)
+				return;
+
+			auto nodePedHeadBlend = nodePedHeadFeatures.child("ShapeAndSkinTone");
+			PED::SET_PED_HEAD_BLEND_DATA(ep.Handle(), 0, 0, 0, 1, 1, 1, 0.0f, 0.0f, 0.0f, false);
+			PedHeadBlendData headBlend;
+			headBlend.shapeFirstID = nodePedHeadBlend.child("ShapeFatherId").text().as_int();
+			headBlend.shapeSecondID = nodePedHeadBlend.child("ShapeMotherId").text().as_int();
+			headBlend.shapeThirdID = nodePedHeadBlend.child("ShapeOverrideId").text().as_int();
+			headBlend.skinFirstID = nodePedHeadBlend.child("ToneFatherId").text().as_int();
+			headBlend.skinSecondID = nodePedHeadBlend.child("ToneMotherId").text().as_int();
+			headBlend.skinThirdID = nodePedHeadBlend.child("ToneOverrideId").text().as_int();
+			headBlend.shapeMix = nodePedHeadBlend.child("ShapeVal").text().as_float();
+			headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
+			headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
+			headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
+			if (!g_unlockMaxIDs && (headBlend.shapeFirstID > 45 || headBlend.shapeSecondID > 45 || headBlend.shapeThirdID > 45))
+			{
+				Game::Print::ShowNotification("~r~Warning:", "Parent Head Index outside normal range. Ensure Addon Heads are installed and Max Head IDs are unlocked");
+				addlog(ige::LogType::LOG_WARNING, "Ped Head Index " + std::to_string(max(headBlend.shapeFirstID, max(headBlend.shapeSecondID, headBlend.shapeThirdID))) + " outside normal range of 0-45. Ensure Matching Addon Heads are installed from XML Source and Max Head IDs are unlocked.");
+			}
+			ep.SetHeadBlendData(headBlend);
+
+			if (!nodePedHeadFeatures.attribute("WasInArray").as_bool())
+				return;
+
+			sub::PedHeadFeatures_catind::sPedHeadFeatures pedHead;
+			pedHead.hairColour = nodePedHeadFeatures.child("HairColour").text().as_int();
+			pedHead.hairColourStreaks = nodePedHeadFeatures.child("HairColourStreaks").text().as_int();
+			pedHead.eyeColour = nodePedHeadFeatures.child("EyeColour").text().as_int();
+
+			SET_PED_HAIR_TINT(ep.Handle(), pedHead.hairColour, pedHead.hairColourStreaks);
+			SET_HEAD_BLEND_EYE_COLOR(ep.Handle(), SYSTEM::ROUND((float)pedHead.eyeColour));
+
+			auto nodePedFacialFeatures = nodePedHeadFeatures.child("FacialFeatures");
+			int facialFeatureSlot = 0;
+			for (auto node = nodePedFacialFeatures.first_child(); node; node = node.next_sibling(), facialFeatureSlot++)
+			{
+				pedHead.facialFeatureData[facialFeatureSlot] = node.text().as_float();
+				SET_PED_MICRO_MORPH(ep.Handle(), facialFeatureSlot, pedHead.facialFeatureData[facialFeatureSlot]);
+			}
+
+			auto nodePedHeadOverlays = nodePedHeadFeatures.child("Overlays");
+			int overlayIndex = 0;
+			for (auto node = nodePedHeadOverlays.first_child(); node; node = node.next_sibling(), overlayIndex++)
+			{
+				auto overlayData_index = node.attribute("index").as_int();
+				pedHead.overlayData[overlayIndex].colour = node.attribute("colour").as_int();
+				pedHead.overlayData[overlayIndex].colourSecondary = node.attribute("colourSecondary").as_int();
+				pedHead.overlayData[overlayIndex].opacity = node.attribute("opacity").as_float();
+				SET_PED_HEAD_OVERLAY(ep.Handle(), overlayIndex, overlayData_index, pedHead.overlayData[overlayIndex].opacity);
+				SET_PED_HEAD_OVERLAY_TINT(ep.Handle(), overlayIndex, sub::PedHeadFeatures_catind::GetPedHeadOverlayColourType((PedHeadOverlay)overlayIndex), pedHead.overlayData[overlayIndex].colour, pedHead.overlayData[overlayIndex].colourSecondary);
+			}
+			sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = pedHead;
+		}
+		void LoadPedDecalsFromXml(GTAped ep, const pugi::xml_node& nodePedDecals)
+		{
+			if (!nodePedDecals)
+				return;
+
+			auto& decalsApplied = sub::PedDecals::vPedsAndDecals[ep.Handle()];
+			for (auto node = nodePedDecals.first_child(); node; node = node.next_sibling())
+			{
+				sub::PedDecals::PedDecalValue decal(
+					node.attribute("collection").as_uint(),
+					node.attribute("value").as_uint()
+				);
+				decalsApplied.push_back(decal);
+				ADD_PED_DECORATION_FROM_HASHES(ep.Handle(), decal.collection, decal.value);
+			}
+		}
+		void LoadPedDamagePacksFromXml(GTAped ep, const pugi::xml_node& nodePedDamagePacks)
+		{
+			if (!nodePedDamagePacks)
+				return;
+
+			auto& dmgPacksApplied = sub::PedDamageTextures::vPedsAndDamagePacks[ep.Handle()];
+			for (auto node = nodePedDamagePacks.first_child(); node; node = node.next_sibling())
+			{
+				const std::string dpnta = node.text().as_string();
+				ep.ApplyDamagePack(dpnta, 1.0f, 1.0f);
+				dmgPacksApplied.push_back(dpnta);
+			}
+		}
+
 		SpoonerEntityWithInitHandle SpawnEntityFromXmlNode(pugi::xml_node& nodeEntity, std::unordered_set<Hash>& vModelHashes)
 		{
 			bool isPtfxLopAdded = false;
@@ -467,12 +623,12 @@ namespace sub::Spooner
 			SpoonerEntityWithInitHandle e;
 			Model eModel = nodeEntity.child("ModelHash").text().as_uint();
 			vModelHashes.insert(eModel.hash);
-			e.e.Type = (EntityType)nodeEntity.child("Type").text().as_int();
-			e.e.Dynamic = nodeEntity.child("Dynamic").text().as_bool();
-			bool bFrozenPos = nodeEntity.child("FrozenPos").text().as_bool(!e.e.Dynamic);
-			e.e.HashName = nodeEntity.child("HashName").text().as_string();
-			if (e.e.HashName.length() == 0)
-				e.e.HashName = int_to_hexstring(eModel.hash, true);
+			e.e.type = (EntityType)nodeEntity.child("Type").text().as_int();
+			e.e.dynamic = nodeEntity.child("Dynamic").text().as_bool();
+			bool bFrozenPos = nodeEntity.child("FrozenPos").text().as_bool(!e.e.dynamic);
+			e.e.hashName = nodeEntity.child("HashName").text().as_string();
+			if (e.e.hashName.length() == 0)
+				e.e.hashName = IntToHexString(eModel.hash, true);
 			e.initHandle = nodeEntity.child("InitialHandle").text().as_int();
 
 			auto nodeEntityPosRot = nodeEntity.child("PositionRotation");
@@ -486,43 +642,43 @@ namespace sub::Spooner
 			placingErot.z = nodeEntityPosRot.child("Yaw").text().as_float();
 
 
-			if (e.e.Type == EntityType::PROP)
+			if (e.e.type == EntityType::PROP)
 			{
-				e.e.Handle = World::CreateProp(eModel, placingEpos, placingErot, e.e.Dynamic, false);
-				e.e.Handle.FreezePosition(true);
+				e.e.handle = World::CreateProp(eModel, placingEpos, placingErot, e.e.dynamic, false);
+				e.e.handle.FreezePosition(true);
 
-				GTAprop eo = e.e.Handle;
+				GTAprop eo = e.e.handle;
 
-				eo.HasGravity_set(nodeEntity.child("HasGravity").text().as_bool(true));
+				eo.SetHasGravity(nodeEntity.child("HasGravity").text().as_bool(true));
 
 				auto nodePropStuff = nodeEntity.child("ObjectProperties");
 
-				e.e.TextureVariation = nodePropStuff.child("TextureVariation").text().as_int(-1);
-				if (e.e.TextureVariation != -1)
-					SET_OBJECT_TINT_INDEX(eo.Handle(), e.e.TextureVariation);
+				e.e.textureVariation = nodePropStuff.child("TextureVariation").text().as_int(-1);
+				if (e.e.textureVariation != -1)
+					SET_OBJECT_TINT_INDEX(eo.Handle(), e.e.textureVariation);
 			}
-			else if (e.e.Type == EntityType::PED)
+			else if (e.e.type == EntityType::PED)
 			{
-				e.e.Handle = World::CreatePed(eModel, placingEpos, placingErot, false);
-				e.e.Handle.FreezePosition(true);
+				e.e.handle = World::CreatePed(eModel, placingEpos, placingErot, false);
+				e.e.handle.FreezePosition(true);
 
-				GTAped ep = e.e.Handle;
+				GTAped ep = e.e.handle;
 
-				ep.HasGravity_set(nodeEntity.child("HasGravity").text().as_bool(true));
+				ep.SetHasGravity(nodeEntity.child("HasGravity").text().as_bool(true));
 
 				auto nodePedStuff = nodeEntity.child("PedProperties");
 
-				e.e.IsStill = nodePedStuff.child("IsStill") ? nodePedStuff.child("IsStill").text().as_bool() : true;
-				ep.BlockPermanentEvents_set(e.e.IsStill);
+				e.e.isStill = nodePedStuff.child("IsStill") ? nodePedStuff.child("IsStill").text().as_bool() : true;
+				ep.SetBlockPermanentEvent(e.e.isStill);
 
-				ep.CanRagdoll_set(nodePedStuff.child("CanRagdoll").text().as_bool(true));
+				ep.SetCanRagdoll(nodePedStuff.child("CanRagdoll").text().as_bool(true));
 				SET_PED_RAGDOLL_ON_COLLISION(ep.Handle(), nodePedStuff.child("CanRagdoll").text().as_bool(false));
 
 				if (nodePedStuff.child("HasShortHeight").text().as_bool()) SET_PED_CONFIG_FLAG(ep.Handle(), ePedConfigFlags::_Shrink, 1);
 
-				ep.Armour_set(nodePedStuff.child("Armour").text().as_int());
-				ep.Weapon_set(nodePedStuff.child("CurrentWeapon").text().as_uint());
-				ep.CanSwitchWeapons_set(false);
+				ep.SetArmour(nodePedStuff.child("Armour").text().as_int());
+				ep.SetWeapon(nodePedStuff.child("CurrentWeapon").text().as_uint());
+				ep.SetCanSwitchWeapons(false);
 				SET_PED_PATH_CAN_USE_CLIMBOVERS(ep.Handle(), true);
 				SET_PED_PATH_CAN_USE_LADDERS(ep.Handle(), true);
 				SET_PED_PATH_CAN_DROP_FROM_HEIGHT(ep.Handle(), true);
@@ -537,108 +693,18 @@ namespace sub::Spooner
 				SET_PED_CAN_PLAY_VISEME_ANIMS(ep.Handle(), true, TRUE);
 				SET_PED_IS_IGNORED_BY_AUTO_OPEN_DOORS(ep.Handle(), true);
 
-				auto nodePedProps = nodePedStuff.child("PedProps");
-				auto nodePedComps = nodePedStuff.child("PedComps");
-				for (auto nodePedCompsObject = nodePedComps.first_child(); nodePedCompsObject; nodePedCompsObject = nodePedCompsObject.next_sibling())
-				{
-					int pedCompId = stoi(std::string(nodePedCompsObject.name()).substr(1));
-					std::string pedCompIdValueStr = nodePedCompsObject.text().as_string();
+				LoadPedCompsFromXml(ep, nodePedStuff.child("PedComps"));
+				LoadPedPropsFromXml(ep, nodePedStuff.child("PedProps"), bNetworkIsGameInProgress != 0);
 
-					SET_PED_COMPONENT_VARIATION(ep.Handle(), pedCompId, stoi(pedCompIdValueStr.substr(0, pedCompIdValueStr.find(","))), stoi(pedCompIdValueStr.substr(pedCompIdValueStr.find(",") + 1)), 0);
-				}
-				for (auto nodePedPropsObject = nodePedProps.first_child(); nodePedPropsObject; nodePedPropsObject = nodePedPropsObject.next_sibling())
+				auto nodePedConfigFlags = nodePedStuff.child("PedConfigFlags");
+				for (auto node = nodePedConfigFlags.first_child(); node; node = node.next_sibling())
 				{
-					int pedPropId = stoi(std::string(nodePedPropsObject.name()).substr(1));
-					std::string pedPropIdValueStr = nodePedPropsObject.text().as_string();
-
-					SET_PED_PROP_INDEX(ep.Handle(), pedPropId, stoi(pedPropIdValueStr.substr(0, pedPropIdValueStr.find(","))), stoi(pedPropIdValueStr.substr(pedPropIdValueStr.find(",") + 1)), bNetworkIsGameInProgress, 0);
+					SET_PED_CONFIG_FLAG(ep.Handle(), stoi(std::string(node.name()).substr(1)), node.text().as_bool());
 				}
 
-				auto nodePedConfigFlags = nodePedStuff.child("PedConfigFlags"); // Only if the node exists
-				for (auto nodePedConfigFlagsObject = nodePedConfigFlags.first_child(); nodePedConfigFlagsObject; nodePedConfigFlagsObject = nodePedConfigFlagsObject.next_sibling())
-				{
-					SET_PED_CONFIG_FLAG(ep.Handle(), stoi(std::string(nodePedConfigFlagsObject.name()).substr(1)), nodePedConfigFlagsObject.text().as_bool());
-				}
-
-				auto nodePedHeadFeatures = nodePedStuff.child("HeadFeatures");
-				if (sub::PedHeadFeatures_catind::DoesPedModelSupportHeadFeatures(eModel) && nodePedHeadFeatures)
-				{
-					auto nodePedHeadBlend = nodePedHeadFeatures.child("ShapeAndSkinTone");
-					PED::SET_PED_HEAD_BLEND_DATA(ep.Handle(), 0, 0, 0, 1, 1, 1, 0.0f, 0.0f, 0.0f, false);
-					PedHeadBlendData headBlend;
-					headBlend.shapeFirstID = nodePedHeadBlend.child("ShapeFatherId").text().as_int();
-					headBlend.shapeSecondID = nodePedHeadBlend.child("ShapeMotherId").text().as_int();
-					headBlend.shapeThirdID = nodePedHeadBlend.child("ShapeOverrideId").text().as_int();
-					headBlend.skinFirstID = nodePedHeadBlend.child("ToneFatherId").text().as_int();
-					headBlend.skinSecondID = nodePedHeadBlend.child("ToneMotherId").text().as_int();
-					headBlend.skinThirdID = nodePedHeadBlend.child("ToneOverrideId").text().as_int();
-					headBlend.shapeMix = nodePedHeadBlend.child("ShapeVal").text().as_float();
-					headBlend.skinMix = nodePedHeadBlend.child("ToneVal").text().as_float();
-					headBlend.thirdMix = nodePedHeadBlend.child("OverrideVal").text().as_float();
-					headBlend.isParent = nodePedHeadBlend.child("IsP").text().as_int();
-					ep.HeadBlendData_set(headBlend);
-
-					if (nodePedHeadFeatures.attribute("WasInArray").as_bool())
-					{
-						sub::PedHeadFeatures_catind::sPedHeadFeatures pedHead;
-						pedHead.hairColour = nodePedHeadFeatures.child("HairColour").text().as_int();
-						pedHead.hairColourStreaks = nodePedHeadFeatures.child("HairColourStreaks").text().as_int();
-						pedHead.eyeColour = nodePedHeadFeatures.child("EyeColour").text().as_int();
-
-						SET_PED_HAIR_TINT(ep.Handle(), pedHead.hairColour, pedHead.hairColourStreaks);
-						SET_HEAD_BLEND_EYE_COLOR(ep.Handle(), SYSTEM::ROUND((float)pedHead.eyeColour)); // Sjaak says so
-
-						auto nodePedFacialFeatures = nodePedHeadFeatures.child("FacialFeatures");
-						int ii = 0;
-						for (auto nodePedFacialFeature = nodePedFacialFeatures.first_child(); nodePedFacialFeature; nodePedFacialFeature = nodePedFacialFeature.next_sibling())
-						{
-							ii = stoi(std::string(nodePedFacialFeature.name()).substr(1));
-							pedHead.facialFeatureData[ii] = nodePedFacialFeature.text().as_float();
-							SET_PED_MICRO_MORPH(ep.Handle(), ii, pedHead.facialFeatureData[ii]);
-						}
-
-						auto nodePedHeadOverlays = nodePedHeadFeatures.child("Overlays");
-						ii = 0;
-						for (auto nodePedHeadOverlay = nodePedHeadOverlays.first_child(); nodePedHeadOverlay; nodePedHeadOverlay = nodePedHeadOverlay.next_sibling())
-						{
-							ii = stoi(std::string(nodePedHeadOverlay.name()).substr(1));
-							auto overlayData_index = nodePedHeadOverlay.attribute("index").as_int();
-							pedHead.overlayData[ii].colour = nodePedHeadOverlay.attribute("colour").as_int();
-							pedHead.overlayData[ii].colourSecondary = nodePedHeadOverlay.attribute("colourSecondary").as_int();
-							pedHead.overlayData[ii].opacity = nodePedHeadOverlay.attribute("opacity").as_float();
-							SET_PED_HEAD_OVERLAY(ep.Handle(), ii, overlayData_index, pedHead.overlayData[ii].opacity);
-							SET_PED_HEAD_OVERLAY_TINT(ep.Handle(), ii, sub::PedHeadFeatures_catind::GetPedHeadOverlayColourType((PedHeadOverlay)ii), pedHead.overlayData[ii].colour, pedHead.overlayData[ii].colourSecondary);
-						}
-						sub::PedHeadFeatures_catind::vPedHeads[ep.Handle()] = pedHead;
-					}
-				}
-
-				auto nodePedTattooLogoDecals = nodePedStuff.child("TattooLogoDecals");
-				if (nodePedTattooLogoDecals)
-				{
-					auto& decalsApplied = sub::PedDecals_catind::vPedsAndDecals[ep.Handle()];
-					for (auto nodeDecal = nodePedTattooLogoDecals.first_child(); nodeDecal; nodeDecal = nodeDecal.next_sibling())
-					{
-						sub::PedDecals_catind::PedDecalValue decal(
-							nodeDecal.attribute("collection").as_uint(),
-							nodeDecal.attribute("value").as_uint()
-						);
-						decalsApplied.push_back(decal);
-						ADD_PED_DECORATION_FROM_HASHES(ep.Handle(), decal.collection, decal.value);
-					}
-				}
-
-				auto nodePedDamagePacks = nodePedStuff.child("DamagePacks");
-				if (nodePedDamagePacks)
-				{
-					auto& dmgPacksApplied = sub::PedDamageTextures_catind::vPedsAndDamagePacks[ep.Handle()];
-					for (auto nodePedDamagePack = nodePedDamagePacks.first_child(); nodePedDamagePack; nodePedDamagePack = nodePedDamagePack.next_sibling())
-					{
-						const std::string dpnta = nodePedDamagePack.text().as_string();
-						ep.ApplyDamagePack(dpnta, 1.0f, 1.0f);
-						dmgPacksApplied.push_back(dpnta);
-					}
-				}
+				LoadPedHeadFeaturesFromXml(ep, nodePedStuff.child("HeadFeatures"), eModel);
+				LoadPedDecalsFromXml(ep, nodePedStuff.child("TattooLogoDecals"));
+				LoadPedDamagePacksFromXml(ep, nodePedStuff.child("DamagePacks"));
 
 				bool bRelationshipGroupAltered = nodePedStuff.child("RelationshipGroupAltered").text().as_bool();
 				Hash relationshipGroupHash = nodePedStuff.child("RelationshipGroup").text().as_uint();
@@ -651,7 +717,7 @@ namespace sub::Spooner
 					//set_ped_movement_clipset(ep, movGrpName);
 					Game::RequestAnimSet(movGrpName);
 					SET_PED_MOVEMENT_CLIPSET(ep.Handle(), movGrpName.c_str(), 0x3E800000);
-					g_pedList_movGrp[ep.Handle()] = movGrpName;
+					g_pedListMovGroup[ep.Handle()] = movGrpName;
 				}
 				auto nodeWmovGrpName = nodePedStuff.child("WeaponMovementGroupName");
 				if (nodeWmovGrpName)
@@ -660,36 +726,69 @@ namespace sub::Spooner
 					//set_ped_weapon_movement_clipset(ep, wmovGrpName);
 					Game::RequestAnimSet(wmovGrpName);
 					SET_PED_WEAPON_MOVEMENT_CLIPSET(ep.Handle(), wmovGrpName.c_str());
-					g_pedList_wmovGrp[ep.Handle()] = wmovGrpName;
+					g_pedListWMovGroup[ep.Handle()] = wmovGrpName;
 				}
 				if (nodeMovGrpName || nodeWmovGrpName)
 				{
 					WAIT(30);
-					const Vector3& coord = ep.Position_get();
+					const Vector3& coord = ep.GetPosition();
 					SET_ENTITY_COORDS(ep.Handle(), coord.x, coord.y, coord.z + 0.05f, 0, 0, 0, 1);
 					FREEZE_ENTITY_POSITION(ep.Handle(), !bFrozenPos);
 				}
 
+				// retained for backwards compatibility, old single-animation format
 				bool isUsingScenario = nodePedStuff.child("ScenarioActive").text().as_bool();
 				bool isUsingAnim = nodePedStuff.child("AnimActive").text().as_bool();
 
 				if (isUsingScenario)
 				{
-					e.e.LastAnimation.name = nodePedStuff.child("ScenarioName").text().as_string();
-					ep.Task().StartScenario(e.e.LastAnimation.name);
+					e.e.currentScenario = nodePedStuff.child("ScenarioName").text().as_string();
+					ep.Task().StartScenario(e.e.currentScenario);
 				}
-				if (isUsingAnim)
+
+				auto nodeAnimations = nodePedStuff.child("Animations");
+				// new format, multiple animations with full parameters
+				if (nodeAnimations)
 				{
-					e.e.LastAnimation.dict = nodePedStuff.child("AnimDict").text().as_string();
-					e.e.LastAnimation.name = nodePedStuff.child("AnimName").text().as_string();
-					Game::RequestAnimDict(e.e.LastAnimation.dict, 1800);
-					ep.Task().PlayAnimation(e.e.LastAnimation.dict, e.e.LastAnimation.name);
+					for (auto nodeAnim = nodeAnimations.first_child(); nodeAnim; nodeAnim = nodeAnim.next_sibling())
+					{
+						SpoonerEntity::Animation animData;
+						animData.dict = nodeAnim.child("Dict").text().as_string();
+						animData.name = nodeAnim.child("Name").text().as_string();
+						animData.speed = nodeAnim.child("Speed").text().as_float(4.0f);
+						animData.speedMultiplier = nodeAnim.child("SpeedMultiplier").text().as_float(-4.0f);
+						animData.playbackRate = nodeAnim.child("PlaybackRate").text().as_float(0.0f);
+						animData.duration = nodeAnim.child("Duration").text().as_int(-1);
+						animData.flag = nodeAnim.child("Flag").text().as_int(AnimFlag::Loop);
+						animData.lockPos = nodeAnim.child("LockPos").text().as_bool(false);
+
+						Game::RequestAnimDict(animData.dict, 1800);
+						ep.Task().PlayAnimation(animData.dict, animData.name, animData.speed, animData.speedMultiplier, animData.duration, animData.flag, animData.playbackRate, animData.lockPos);
+						e.e.AddOrUpdateLastAnimation(animData);
+					}
+				}
+				// old format, single animation with defaults
+				else if (isUsingAnim)
+				{
+					SpoonerEntity::Animation animData;
+					animData.dict = nodePedStuff.child("AnimDict").text().as_string();
+					animData.name = nodePedStuff.child("AnimName").text().as_string();
+					animData.speed = 4.0f;
+					animData.speedMultiplier = -4.0f;
+					animData.playbackRate = 0.0f;
+					animData.duration = -1;
+					animData.flag = AnimFlag::Loop;
+					animData.lockPos = false;
+
+					Game::RequestAnimDict(animData.dict, 1800);
+					ep.Task().PlayAnimation(animData.dict, animData.name);
+					e.e.AddOrUpdateLastAnimation(animData);
 				}
 
 				auto nodeFacialMood = nodePedStuff.child("FacialMood");
 				if (nodeFacialMood)
 				{
-					set_ped_facial_mood(ep, nodeFacialMood.text().as_string());
+					SetPedFacialMood(ep, nodeFacialMood.text().as_string());
 				}
 
 				if (!isPtfxLopAdded)
@@ -698,28 +797,28 @@ namespace sub::Spooner
 					auto nodePtfxLopEffect = nodePedStuff.child("PtfxLopEffect");
 					if (nodePtfxLopAsset || nodePtfxLopEffect)
 					{
-						sub::Ptfx_catind::PtfxS ptfxLopFx;
+						sub::PtfxSubs::PtfxS ptfxLopFx;
 						ptfxLopFx.asset = nodePtfxLopAsset.text().as_string();
 						ptfxLopFx.fx = nodePtfxLopEffect.text().as_string();
-						sub::Ptfx_catind::AddEntityToPtfxLops(ptfxLopFx, ep);
+						sub::PtfxSubs::AddEntityToPtfxLops(ptfxLopFx, ep);
 						isPtfxLopAdded = true;
 					}
 				}
 
 			}
-			else if (e.e.Type == EntityType::VEHICLE)
+			else if (e.e.type == EntityType::VEHICLE)
 			{
-				e.e.Handle = World::CreateVehicle(eModel, placingEpos, placingErot, false);
-				e.e.Handle.FreezePosition(true);
+				e.e.handle = World::CreateVehicle(eModel, placingEpos, placingErot, false);
+				e.e.handle.FreezePosition(true);
 
-				GTAvehicle ev = e.e.Handle;
+				GTAvehicle ev = e.e.handle;
 
-				ev.HasGravity_set(nodeEntity.child("HasGravity").text().as_bool(true));
+				ev.SetHasGravity(nodeEntity.child("HasGravity").text().as_bool(true));
 
 				auto nodeVehicleStuff = nodeEntity.child("VehicleProperties");
 
 				SET_VEHICLE_MOD_KIT(ev.Handle(), 0);
-				ev.Livery_set(nodeVehicleStuff.child("Livery").text().as_int()); // Livery should be applied before paint is applied
+				ev.SetLivery(nodeVehicleStuff.child("Livery").text().as_int()); // Livery should be applied before paint is applied
 				// Colours
 				auto nodeVehicleColours = nodeVehicleStuff.child("Colours");
 				int mod1a = nodeVehicleColours.child("Mod1_a").text().as_int();
@@ -729,10 +828,10 @@ namespace sub::Spooner
 				int mod2a = nodeVehicleColours.child("Mod2_a").text().as_int();
 				int mod2b = nodeVehicleColours.child("Mod2_b").text().as_int();
 				SET_VEHICLE_MOD_COLOR_2(ev.Handle(), mod2a, mod2b);
-				ev.PrimaryColour_set(nodeVehicleColours.child("Primary").text().as_int());
-				ev.SecondaryColour_set(nodeVehicleColours.child("Secondary").text().as_int());
-				ev.PearlescentColour_set(nodeVehicleColours.child("Pearl").text().as_int());
-				ev.RimColour_set(nodeVehicleColours.child("Rim").text().as_int());
+				ev.SetPrimaryColour(nodeVehicleColours.child("Primary").text().as_int());
+				ev.SetSecondaryColour(nodeVehicleColours.child("Secondary").text().as_int());
+				ev.SetPearlescentColour(nodeVehicleColours.child("Pearl").text().as_int());
+				ev.SetRimColour(nodeVehicleColours.child("Rim").text().as_int());
 				bool isPrimaryColourCustom = nodeVehicleColours.child("IsPrimaryColourCustom").text().as_bool();
 				bool isSecondaryColourCustom = nodeVehicleColours.child("IsSecondaryColourCustom").text().as_bool();
 				if (isPrimaryColourCustom)
@@ -741,7 +840,7 @@ namespace sub::Spooner
 					cust1.R = nodeVehicleColours.child("Cust1_R").text().as_int();
 					cust1.G = nodeVehicleColours.child("Cust1_G").text().as_int();
 					cust1.B = nodeVehicleColours.child("Cust1_B").text().as_int();
-					ev.CustomPrimaryColour_set(cust1);
+					ev.SetCustomPrimaryColour(cust1);
 				}
 				if (isSecondaryColourCustom)
 				{
@@ -749,32 +848,32 @@ namespace sub::Spooner
 					cust2.R = nodeVehicleColours.child("Cust2_R").text().as_int();
 					cust2.G = nodeVehicleColours.child("Cust2_G").text().as_int();
 					cust2.B = nodeVehicleColours.child("Cust2_B").text().as_int();
-					ev.CustomSecondaryColour_set(cust2);
+					ev.SetCustomSecondaryColour(cust2);
 				}
 				//if (eModel.IsBennySupportedVehicle()) {
-				ev.InteriorColour_set(nodeVehicleColours.child("LrInterior").text().as_int());
-				ev.DashboardColour_set(nodeVehicleColours.child("LrDashboard").text().as_int());
-				ev.HeadlightColour_set(nodeVehicleColours.child("LrXenonHeadlights").text().as_int());
+				ev.SetInteriorColour(nodeVehicleColours.child("LrInterior").text().as_int());
+				ev.SetDashboardColour(nodeVehicleColours.child("LrDashboard").text().as_int());
+				ev.SetHeadlightColour(nodeVehicleColours.child("LrXenonHeadlights").text().as_int());
 
 				// Other stuff
-				ev.NumberPlateText_set(nodeVehicleStuff.child("NumberPlateText").text().as_string());
-				ev.NumberPlateTextIndex_set(nodeVehicleStuff.child("NumberPlateIndex").text().as_int());
-				ev.WheelType_set(nodeVehicleStuff.child("WheelType").text().as_int());
-				ev.WindowTint_set(nodeVehicleStuff.child("WindowTint").text().as_int());
-				ev.CanTyresBurst_set(!nodeVehicleStuff.child("BulletProofTyres").text().as_bool());
-				ev.DirtLevel_set(nodeVehicleStuff.child("DirtLevel").text().as_float());
-				ev.PaintFade_set(nodeVehicleStuff.child("PaintFade").text().as_float());
-				ev.RoofState_set((VehicleRoofState)nodeVehicleStuff.child("RoofState").text().as_int());
-				ev.SirenActive_set(nodeVehicleStuff.child("SirenActive").text().as_bool());
-				if (nodeVehicleStuff.child("EngineOn")) ev.EngineRunning_set(nodeVehicleStuff.child("EngineOn").text().as_bool());
-				if (nodeVehicleStuff.child("EngineHealth")) ev.EngineHealth_set(nodeVehicleStuff.child("EngineHealth").text().as_int());
-				if (nodeVehicleStuff.child("LightsOn")) ev.LightsOn_set(nodeVehicleStuff.child("LightsOn").text().as_bool());
+				ev.SetNumberPlateText(nodeVehicleStuff.child("NumberPlateText").text().as_string());
+				ev.SetNumberPlateTextIndex(nodeVehicleStuff.child("NumberPlateIndex").text().as_int());
+				ev.SetWheelType(nodeVehicleStuff.child("WheelType").text().as_int());
+				ev.SetWindowTint(nodeVehicleStuff.child("WindowTint").text().as_int());
+				ev.SetCanTyresBurst(!nodeVehicleStuff.child("BulletProofTyres").text().as_bool());
+				ev.SetDirtLevel(nodeVehicleStuff.child("DirtLevel").text().as_float());
+				ev.SetPaintFade(nodeVehicleStuff.child("PaintFade").text().as_float());
+				ev.SetRoofState((VehicleRoofState)nodeVehicleStuff.child("RoofState").text().as_int());
+				ev.SetSirenActive(nodeVehicleStuff.child("SirenActive").text().as_bool());
+				if (nodeVehicleStuff.child("EngineOn")) ev.SetEngineRunning(nodeVehicleStuff.child("EngineOn").text().as_bool());
+				if (nodeVehicleStuff.child("EngineHealth")) ev.SetEngineHealth(nodeVehicleStuff.child("EngineHealth").text().as_int());
+				if (nodeVehicleStuff.child("LightsOn")) ev.SetLightsOn(nodeVehicleStuff.child("LightsOn").text().as_bool());
 				if (nodeVehicleStuff.child("IsRadioLoud").text().as_int(0))
 				{
 					SET_VEHICLE_RADIO_LOUD(ev.Handle(), nodeVehicleStuff.child("IsRadioLoud").text().as_int());
 					SET_VEHICLE_RADIO_ENABLED(ev.Handle(), true);
 				}
-				ev.LockStatus_set((VehicleLockStatus)nodeVehicleStuff.child("LockStatus").text().as_int());
+				ev.SetLockStatus((VehicleLockStatus)nodeVehicleStuff.child("LockStatus").text().as_int());
 
 				// Neons
 				auto nodeVehicleNeons = nodeVehicleStuff.child("Neons");
@@ -786,13 +885,13 @@ namespace sub::Spooner
 				neonLightsRgb.R = nodeVehicleNeons.child("R").text().as_int();
 				neonLightsRgb.G = nodeVehicleNeons.child("G").text().as_int();
 				neonLightsRgb.B = nodeVehicleNeons.child("B").text().as_int();
-				ev.NeonLightsColour_set(neonLightsRgb);
+				ev.SetNeonLightsColour(neonLightsRgb);
 
 				// Extras (modExtras)
 				auto nodeVehicleModExtras = nodeVehicleStuff.child("ModExtras");
 				for (auto nodeVehicleModExtrasObject = nodeVehicleModExtras.first_child(); nodeVehicleModExtrasObject; nodeVehicleModExtrasObject = nodeVehicleModExtrasObject.next_sibling())
 				{
-					ev.ExtraOn_set(stoi(std::string(nodeVehicleModExtrasObject.name()).substr(1)), nodeVehicleModExtrasObject.text().as_bool());
+					ev.SetExtraOn(stoi(std::string(nodeVehicleModExtrasObject.name()).substr(1)), nodeVehicleModExtrasObject.text().as_bool());
 				}
 
 				// Mods (customisations)
@@ -816,7 +915,7 @@ namespace sub::Spooner
 				tyreSmokeRgb.R = nodeVehicleColours.child("tyreSmoke_R").text().as_int();
 				tyreSmokeRgb.G = nodeVehicleColours.child("tyreSmoke_G").text().as_int();
 				tyreSmokeRgb.B = nodeVehicleColours.child("tyreSmoke_B").text().as_int();
-				ev.TyreSmokeColour_set(tyreSmokeRgb);
+				ev.SetTyreSmokeColour(tyreSmokeRgb);
 
 				auto nodeVehicleDoorsOpen = nodeVehicleStuff.child("DoorsOpen");
 				if (nodeVehicleDoorsOpen)
@@ -856,9 +955,9 @@ namespace sub::Spooner
 					if (nodeVehicleTyresBursted.child("_8").text().as_bool()) ev.BurstTyre(8);
 				}
 
-				if (nodeVehicleStuff.child("WheelsInvisible").text().as_bool()) set_vehicle_wheels_invisible(ev, true);
+				if (nodeVehicleStuff.child("WheelsInvisible").text().as_bool()) SetVehicleWheelsInvisible(ev, true);
 				std::string engSoundName = nodeVehicleStuff.child("EngineSoundName").text().as_string();
-				if (engSoundName.length()) set_vehicle_engine_sound_name(ev, engSoundName);
+				if (engSoundName.length()) SetVehicleEngineSoundName(ev, engSoundName);
 
 				// Multipliers
 				auto nodeVehicleRpmMultiplier = nodeVehicleStuff.child("RpmMultiplier");
@@ -868,22 +967,22 @@ namespace sub::Spooner
 				if (nodeVehicleRpmMultiplier)
 				{
 					MODIFY_VEHICLE_TOP_SPEED(ev.Handle(), nodeVehicleRpmMultiplier.text().as_float());
-					g_multList_rpm[ev.Handle()] = nodeVehicleRpmMultiplier.text().as_float();
+					g_multListRPM[ev.Handle()] = nodeVehicleRpmMultiplier.text().as_float();
 				}
 				if (nodeVehicleTorqueMultiplier)
 				{
 					SET_VEHICLE_CHEAT_POWER_INCREASE(ev.Handle(), nodeVehicleTorqueMultiplier.text().as_float());
-					g_multList_torque[ev.Handle()] = nodeVehicleTorqueMultiplier.text().as_float();
+					g_multListTorque[ev.Handle()] = nodeVehicleTorqueMultiplier.text().as_float();
 				}
 				if (nodeVehicleMaxSpeed)
 				{
 					SET_ENTITY_MAX_SPEED(ev.Handle(), nodeVehicleMaxSpeed.text().as_float());
-					g_multList_maxSpeed[ev.Handle()] = nodeVehicleMaxSpeed.text().as_float();
+					g_multListMaxSpeed[ev.Handle()] = nodeVehicleMaxSpeed.text().as_float();
 				}
 				if (nodeVehicleHeadlightIntensity)
 				{
 					SET_VEHICLE_LIGHT_MULTIPLIER(ev.Handle(), nodeVehicleHeadlightIntensity.text().as_float());
-					g_multList_headlights[ev.Handle()] = nodeVehicleHeadlightIntensity.text().as_float();
+					g_multListHeadLights[ev.Handle()] = nodeVehicleHeadlightIntensity.text().as_float();
 				}
 
 			}
@@ -894,7 +993,7 @@ namespace sub::Spooner
 			for (auto nodeEntSTSTask = nodeEntTaskSeq.first_child(); nodeEntSTSTask; nodeEntSTSTask = nodeEntSTSTask.next_sibling())
 			{
 				const STSTaskType& stsTaskType = (STSTaskType)nodeEntSTSTask.child("Type").text().as_uint();
-				STSTask* stsTaskPtr = e.e.TaskSequence.AddTask(stsTaskType);
+				STSTask* stsTaskPtr = e.e.taskSequence.AddTask(stsTaskType);
 				if (stsTaskPtr != nullptr)
 				{
 					stsTaskPtr->ImportXmlNode(nodeEntSTSTask);
@@ -907,41 +1006,41 @@ namespace sub::Spooner
 				auto nodePtfxLopEffect = nodeEntity.child("PtfxLopEffect");
 				if (nodePtfxLopAsset || nodePtfxLopEffect)
 				{
-					sub::Ptfx_catind::PtfxS ptfxLopFx;
+					sub::PtfxSubs::PtfxS ptfxLopFx;
 					ptfxLopFx.asset = nodePtfxLopAsset.text().as_string();
 					ptfxLopFx.fx = nodePtfxLopEffect.text().as_string();
-					sub::Ptfx_catind::AddEntityToPtfxLops(ptfxLopFx, e.e.Handle);
+					sub::PtfxSubs::AddEntityToPtfxLops(ptfxLopFx, e.e.handle);
 					isPtfxLopAdded = true;
 				}
 			}
 
 			int opacityLevel = nodeEntity.child("OpacityLevel").text().as_int(255);
-			if (opacityLevel < 255) e.e.Handle.Alpha_set(opacityLevel);
-			e.e.Handle.LodDistance_set(nodeEntity.child("LodDistance").text().as_int());
-			//e.e.Handle.SetVisible(nodeEntity.child("IsVisible").text().as_bool());
+			if (opacityLevel < 255) e.e.handle.SetAlpha(opacityLevel);
+			e.e.handle.SetLODDistance(nodeEntity.child("LodDistance").text().as_int());
+			//e.e.handle.SetVisible(nodeEntity.child("IsVisible").text().as_bool());
 			//nodeEntity.child("IsDead").text()
-			if (nodeEntity.child("MaxHealth")) e.e.Handle.MaxHealth_set(nodeEntity.child("MaxHealth").text().as_int());
-			if (nodeEntity.child("Health")) e.e.Handle.Health_set(nodeEntity.child("Health").text().as_int());
+			if (nodeEntity.child("MaxHealth")) e.e.handle.SetMaxHealth(nodeEntity.child("MaxHealth").text().as_int());
+			if (nodeEntity.child("Health")) e.e.handle.SetHealth(nodeEntity.child("Health").text().as_int());
 
-			e.e.Handle.SetOnFire(nodeEntity.child("IsOnFire").text().as_bool());
-			e.e.Handle.SetInvincible(nodeEntity.child("IsInvincible").text().as_bool());
-			e.e.Handle.SetBulletProof(nodeEntity.child("IsBulletProof").text().as_bool());
-			e.e.Handle.Dynamic_set(false);
-			e.e.Handle.FreezePosition(true);
-			e.e.Handle.Dynamic_set(e.e.Dynamic);
-			e.e.Handle.FreezePosition(bFrozenPos);
-			e.e.Handle.SetExplosionProof(nodeEntity.child("IsExplosionProof").text().as_bool());
-			e.e.Handle.SetFireProof(nodeEntity.child("IsFireProof").text().as_bool());
-			e.e.Handle.SetMeleeProof(nodeEntity.child("IsMeleeProof").text().as_bool());
-			e.e.Handle.SetOnlyDamagedByPlayer(nodeEntity.child("IsOnlyDamagedByPlayer").text().as_bool());
+			e.e.handle.SetOnFire(nodeEntity.child("IsOnFire").text().as_bool());
+			e.e.handle.SetInvincible(nodeEntity.child("IsInvincible").text().as_bool());
+			e.e.handle.SetBulletProof(nodeEntity.child("IsBulletProof").text().as_bool());
+			e.e.handle.SetDynamic(false);
+			e.e.handle.FreezePosition(true);
+			e.e.handle.SetDynamic(e.e.dynamic);
+			e.e.handle.FreezePosition(bFrozenPos);
+			e.e.handle.SetExplosionProof(nodeEntity.child("IsExplosionProof").text().as_bool());
+			e.e.handle.SetFireProof(nodeEntity.child("IsFireProof").text().as_bool());
+			e.e.handle.SetMeleeProof(nodeEntity.child("IsMeleeProof").text().as_bool());
+			e.e.handle.SetOnlyDamagedByPlayer(nodeEntity.child("IsOnlyDamagedByPlayer").text().as_bool());
 
 			eModel.LoadCollision(100);
-			e.e.Handle.IsCollisionEnabled_set(!nodeEntity.child("IsCollisionProof").text().as_bool());
-			e.e.Handle.SetVisible(nodeEntity.child("IsVisible").text().as_bool());
+			e.e.handle.SetIsCollisionEnabled(!nodeEntity.child("IsCollisionProof").text().as_bool());
+			e.e.handle.SetVisible(nodeEntity.child("IsVisible").text().as_bool());
 
 			auto nodeEntityAttachment = nodeEntity.child("Attachment");
-			e.e.AttachmentArgs.isAttached = nodeEntityAttachment.attribute("isAttached").as_bool();
-			if (e.e.AttachmentArgs.isAttached)
+			e.e.attachmentArgs.isAttached = nodeEntityAttachment.attribute("isAttached").as_bool();
+			if (e.e.attachmentArgs.isAttached)
 			{
 				std::string attachedToHandleStr = nodeEntityAttachment.child("AttachedTo").text().as_string();
 				if (attachedToHandleStr == "PLAYER")
@@ -951,29 +1050,29 @@ namespace sub::Spooner
 				else if (attachedToHandleStr == "VEHICLE")
 				{
 					if (DOES_ENTITY_EXIST(g_myVeh)) e.attachedToHandle = g_myVeh;
-					else e.e.AttachmentArgs.isAttached = false;
+					else e.e.attachmentArgs.isAttached = false;
 				}
 				else
 				{
 					e.attachedToHandle = nodeEntityAttachment.child("AttachedTo").text().as_int();//stoi(attachedToHandleStr);
 				}
-				e.e.AttachmentArgs.boneIndex = nodeEntityAttachment.child("BoneIndex").text().as_int();
-				e.e.AttachmentArgs.offset.x = nodeEntityAttachment.child("X").text().as_float();
-				e.e.AttachmentArgs.offset.y = nodeEntityAttachment.child("Y").text().as_float();
-				e.e.AttachmentArgs.offset.z = nodeEntityAttachment.child("Z").text().as_float();
-				e.e.AttachmentArgs.rotation.x = nodeEntityAttachment.child("Pitch").text().as_float();
-				e.e.AttachmentArgs.rotation.y = nodeEntityAttachment.child("Roll").text().as_float();
-				e.e.AttachmentArgs.rotation.z = nodeEntityAttachment.child("Yaw").text().as_float();
+				e.e.attachmentArgs.boneIndex = nodeEntityAttachment.child("BoneIndex").text().as_int();
+				e.e.attachmentArgs.offset.x = nodeEntityAttachment.child("X").text().as_float();
+				e.e.attachmentArgs.offset.y = nodeEntityAttachment.child("Y").text().as_float();
+				e.e.attachmentArgs.offset.z = nodeEntityAttachment.child("Z").text().as_float();
+				e.e.attachmentArgs.rotation.x = nodeEntityAttachment.child("Pitch").text().as_float();
+				e.e.attachmentArgs.rotation.y = nodeEntityAttachment.child("Roll").text().as_float();
+				e.e.attachmentArgs.rotation.z = nodeEntityAttachment.child("Yaw").text().as_float();
 			}
 
-			SET_ENTITY_LIGHTS(e.e.Handle.Handle(), 0); // Someone pls explan. 0 1 0 1 0 1 0 1
+			SET_ENTITY_LIGHTS(e.e.handle.Handle(), 0); // Someone pls explan. 0 1 0 1 0 1 0 1
 
 			return e;
 		}
 
 		void AddMarkerToXmlNode(SpoonerMarker& m, pugi::xml_node& nodeMarker)
 		{
-			addlog(ige::LogType::LOG_INFO,  "Adding marker " + m.m_name + " of type " + std::to_string(m.m_type) + "to xml node.", __FILENAME__);
+			addlog(ige::LogType::LOG_INFO,  "Adding marker " + m.m_name + " of type " + std::to_string(m.m_type) + "to xml node.");
 
 			nodeMarker.append_child("Name").text() = m.m_name.c_str();
 			nodeMarker.append_child("InitialHandle").text() = m.m_id;
@@ -1146,9 +1245,184 @@ namespace sub::Spooner
 			return mi;
 		}
 
+		void AddBlipToXmlNode(SpoonerBlip& b, pugi::xml_node& nodeBlip)
+		{
+			nodeBlip.append_child("Name").text() = b.Name.c_str();
+			nodeBlip.append_child("Label").text() = b.label.c_str();
+			nodeBlip.append_child("BlipType").text() = (int)b.BlipType;
+			nodeBlip.append_child("Icon").text() = b.Icon;
+			nodeBlip.append_child("Colour").text() = b.Colour;
+			nodeBlip.append_child("Alpha").text() = b.Alpha;
+			nodeBlip.append_child("Scale").text() = b.Scale;
+			nodeBlip.append_child("Priority").text() = b.Priority;
+			nodeBlip.append_child("ShowRoute").text() = b.bShowRoute;
+			nodeBlip.append_child("RouteColour").text() = b.RouteColour;
+			nodeBlip.append_child("ShortRange").text() = b.bShortRange;
+			nodeBlip.append_child("SelectableOnMap").text() = b.bSelectableOnMap;
+			nodeBlip.append_child("ShowCone").text() = b.bShowCone;
+			nodeBlip.append_child("ConeColour").text() = b.ConeColour;
+			nodeBlip.append_child("SyncRotation").text() = b.bSyncRotation;
+
+			if (b.BlipType == SpoonerBlip::Type::Radial)
+			{
+				nodeBlip.append_child("RadialShape").text() = (int)b.Shape;
+				nodeBlip.append_child("RadialSize").text() = b.RadialSize;
+				nodeBlip.append_child("AreaWidth").text() = b.AreaWidth;
+				nodeBlip.append_child("AreaHeight").text() = b.AreaHeight;
+				nodeBlip.append_child("Heading").text() = b.Heading;
+			}
+
+			if (b.BlipType == SpoonerBlip::Type::Entity)
+			{
+				nodeBlip.append_child("EntityInitHandle").text() = b.EntityHandle;
+			}
+
+			auto nodePos = nodeBlip.append_child("Position");
+			nodePos.append_attribute("X") = b.X;
+			nodePos.append_attribute("Y") = b.Y;
+			nodePos.append_attribute("Z") = b.Z;
+		}
+
+		SpoonerBlip SpawnBlipFromXmlNode(pugi::xml_node& nodeBlip, const std::vector<SpoonerEntityWithInitHandle>& newDb)
+		{
+			SpoonerBlip b;
+			b.Name = nodeBlip.child("Name").text().as_string();
+			b.label = nodeBlip.child("Label").text().as_string();
+			b.BlipType = (SpoonerBlip::Type)nodeBlip.child("BlipType").text().as_int();
+			b.Icon = nodeBlip.child("Icon").text().as_int();
+			b.Colour = nodeBlip.child("Colour").text().as_int();
+			b.Alpha = nodeBlip.child("Alpha").text().as_int(255);
+			b.Scale = nodeBlip.child("Scale").text().as_float(0.80f);
+			b.Priority = nodeBlip.child("Priority").text().as_int(2);
+			b.bShowRoute = nodeBlip.child("ShowRoute").text().as_bool();
+			b.RouteColour = nodeBlip.child("RouteColour").text().as_int();
+			b.bShortRange = nodeBlip.child("ShortRange").text().as_bool();
+			b.bSelectableOnMap = nodeBlip.child("SelectableOnMap").text().as_bool(true);
+			b.bShowCone = nodeBlip.child("ShowCone").text().as_bool();
+			b.ConeColour = nodeBlip.child("ConeColour").text().as_int(3);
+			b.bSyncRotation = nodeBlip.child("SyncRotation").text().as_bool();
+
+			if (b.BlipType == SpoonerBlip::Type::Radial)
+			{
+				b.Shape = (SpoonerBlip::RadialShape)nodeBlip.child("RadialShape").text().as_int();
+				b.RadialSize = nodeBlip.child("RadialSize").text().as_float(60.0f);
+				b.AreaWidth = nodeBlip.child("AreaWidth").text().as_float(60.0f);
+				b.AreaHeight = nodeBlip.child("AreaHeight").text().as_float(60.0f);
+				b.Heading = nodeBlip.child("Heading").text().as_float();
+			}
+
+			auto nodePos = nodeBlip.child("Position");
+			b.X = nodePos.attribute("X").as_float();
+			b.Y = nodePos.attribute("Y").as_float();
+			b.Z = nodePos.attribute("Z").as_float();
+
+			if (b.BlipType == SpoonerBlip::Type::Entity)
+			{
+				int initHandle = nodeBlip.child("EntityInitHandle").text().as_int();
+				bool found = false;
+				for (auto& e : newDb)
+				{
+					if (e.initHandle == initHandle)
+					{
+						b.EntityHandle = e.e.handle.GetHandle();
+						b.bAttached = true;
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					Game::Print::PrintBottomLeft("~r~Blip Error:~s~ Entity blip \"" + b.Name + "\" failed to load — host entity not found.");
+					return SpoonerBlip(); // Return empty blip to signal skip
+				}
+			}
+
+			return b;
+		}
+
+		void AddLightToXmlNode(SpoonerLight& l, pugi::xml_node& nodeLight)
+		{
+			nodeLight.append_child("Name").text() = l.m_name.c_str();
+			nodeLight.append_child("Type").text() = static_cast<UINT>(l.m_lightType);
+			nodeLight.append_child("Active").text() = l.m_active;
+
+			auto nodeColour = nodeLight.append_child("Colour");
+			nodeColour.append_attribute("R") = l.m_colour.R;
+			nodeColour.append_attribute("G") = l.m_colour.G;
+			nodeColour.append_attribute("B") = l.m_colour.B;
+			nodeColour.append_attribute("A") = l.m_colour.A;
+
+			auto nodePos = nodeLight.append_child("Position");
+			nodePos.append_attribute("X") = l.m_position.x;
+			nodePos.append_attribute("Y") = l.m_position.y;
+			nodePos.append_attribute("Z") = l.m_position.z;
+
+			nodeLight.append_child("Range").text() = l.m_range;
+			nodeLight.append_child("Intensity").text() = l.m_intensity;
+
+			auto nodeDir = nodeLight.append_child("Direction");
+			nodeDir.append_attribute("X") = l.m_direction.x;
+			nodeDir.append_attribute("Y") = l.m_direction.y;
+			nodeDir.append_attribute("Z") = l.m_direction.z;
+
+			nodeLight.append_child("SpotDistance").text() = l.m_spotDistance;
+			nodeLight.append_child("SpotBrightness").text() = l.m_spotBrightness;
+			nodeLight.append_child("SpotRoundness").text() = l.m_spotRoundness;
+			nodeLight.append_child("SpotRadius").text() = l.m_spotRadius;
+			nodeLight.append_child("SpotFalloff").text() = l.m_spotFalloff;
+			nodeLight.append_child("UseShadow").text() = l.m_useShadow;
+			nodeLight.append_child("ShadowId").text() = l.m_shadowId;
+		}
+
+		void SpawnLightFromXmlNode(pugi::xml_node& nodeLight)
+		{
+			SpoonerLight light;
+			light.m_name = nodeLight.child("Name").text().as_string();
+			light.m_lightType = static_cast<SpoonerLight::LightType>(nodeLight.child("Type").text().as_uint());
+			light.m_active = nodeLight.child("Active").text().as_bool(true);
+
+			auto nodeColour = nodeLight.child("Colour");
+			if (nodeColour)
+			{
+				light.m_colour.R = nodeColour.attribute("R").as_int(255);
+				light.m_colour.G = nodeColour.attribute("G").as_int(255);
+				light.m_colour.B = nodeColour.attribute("B").as_int(255);
+				light.m_colour.A = nodeColour.attribute("A").as_int(255);
+			}
+
+			auto nodePos = nodeLight.child("Position");
+			if (nodePos)
+			{
+				light.m_position.x = nodePos.attribute("X").as_float();
+				light.m_position.y = nodePos.attribute("Y").as_float();
+				light.m_position.z = nodePos.attribute("Z").as_float();
+			}
+
+			light.m_range = nodeLight.child("Range").text().as_float(10.0f);
+			light.m_intensity = nodeLight.child("Intensity").text().as_float(1.0f);
+
+			auto nodeDir = nodeLight.child("Direction");
+			if (nodeDir)
+			{
+				light.m_direction.x = nodeDir.attribute("X").as_float(0);
+				light.m_direction.y = nodeDir.attribute("Y").as_float(0);
+				light.m_direction.z = nodeDir.attribute("Z").as_float(-1);
+			}
+
+			light.m_spotDistance = nodeLight.child("SpotDistance").text().as_float(20.0f);
+			light.m_spotBrightness = nodeLight.child("SpotBrightness").text().as_float(1.0f);
+			light.m_spotRoundness = nodeLight.child("SpotRoundness").text().as_float(0.0f);
+			light.m_spotRadius = nodeLight.child("SpotRadius").text().as_float(1.0f);
+			light.m_spotFalloff = nodeLight.child("SpotFalloff").text().as_float(0.0f);
+			light.m_useShadow = nodeLight.child("UseShadow").text().as_bool(false);
+			light.m_shadowId = nodeLight.child("ShadowId").text().as_int(0);
+
+			Databases::LightDb.push_back(light);
+		}
+
 		bool SaveDbToFile(const std::string& filePath, bool bForceReferenceCoords)
 		{
-			addlog(ige::LogType::LOG_INFO,  "Saving Spooner database to xml file " + filePath, __FILENAME__);
+			addlog(ige::LogType::LOG_INFO,  "Saving Spooner database to xml file " + filePath);
 
 			auto& spoocam = SpoonerMode::spoonerModeCamera;
 			GTAentity myPed = PLAYER_PED_ID();
@@ -1335,7 +1609,7 @@ namespace sub::Spooner
 					SpoonerMode::Tick();
 					bSpoocamIsActive = spoocam.IsActive();
 
-					Game::Print::setupdraw(GTAfont::Caps, Vector2(0.9f, 0.9f), true, false, false);
+					Game::Print::SetupDraw(GTAfont::Caps, Vector2(0.9f, 0.9f), true, false, false);
 					Game::Print::drawstring("SET A WAYPOINT AS A MAP REFERENCE", 0.5f, 0.5f);
 
 					Game::CustomHelpText::ShowThisFrame(oss_ << "Press ~INPUT_LOOK_BEHIND~ to save " << (bSpoocamIsActive ? "the camera target position" : "your current position") << " as the map reference.");
@@ -1358,12 +1632,12 @@ namespace sub::Spooner
 							}
 							else
 							{
-								wpCoords = myPed.Position_get();
+								wpCoords = myPed.GetPosition();
 							}
 						}
 						else
 						{
-							wpCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).Position_get();
+							wpCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).GetPosition();
 							wpCoords.z = World::GetGroundHeight(wpCoords);
 						}
 						nodeReferenceCoords.append_child("X").text() = wpCoords.x;
@@ -1386,7 +1660,7 @@ namespace sub::Spooner
 
 			for (auto& e : Databases::EntityDb)
 			{
-				if (e.Handle.Exists())
+				if (e.handle.Exists())
 				{
 					auto nodeEntity = nodeRoot.append_child("Placement");
 					AddEntityToXmlNode(e, nodeEntity);
@@ -1399,6 +1673,18 @@ namespace sub::Spooner
 				AddMarkerToXmlNode(m, nodeMarker);
 			}
 
+			for (auto& b : Databases::BlipDb)
+			{
+				auto nodeBlip = nodeRoot.append_child("Blip");
+				AddBlipToXmlNode(b, nodeBlip);
+			}
+
+			for (auto& l : Databases::LightDb)
+			{
+				auto nodeLight = nodeRoot.append_child("Light");
+				AddLightToXmlNode(l, nodeLight);
+			}
+
 			//====================================================================================================================
 
 			bool saveSucceeded = doc.save_file((const char*)filePath.c_str());
@@ -1406,10 +1692,10 @@ namespace sub::Spooner
 		}
 		bool SaveWorldToFile(const std::string& filePath, std::vector<Entity>& vEntityHandles, std::vector<SpoonerMarker>& vMarkers)
 		{
-			addlog(ige::LogType::LOG_INFO,  "Saving World to xml file " + filePath, __FILENAME__);
+			addlog(ige::LogType::LOG_INFO,  "Saving World to xml file " + filePath);
 
 			//GTAentity myPed = PLAYER_PED_ID();
-			//auto& myPos = myPed.Position_get();
+			//auto& myPos = myPed.GetPosition();
 			//bool bCheckEntDistFromSelf = maxDistFromSelf < FLT_MAX;
 
 			pugi::xml_node nodeNote;
@@ -1592,11 +1878,11 @@ namespace sub::Spooner
 			for (auto& eHandle : vEntityHandles)
 			{
 				SpoonerEntity e;
-				e.Handle = eHandle;
-				if (e.Handle.Exists())
+				e.handle = eHandle;
+				if (e.handle.Exists())
 				{
 					//if (bCheckEntDistFromSelf)
-					//{if (myPos.DistanceTo(e.Handle.Position_get()) > maxDistFromSelf) continue;}
+					//{if (myPos.DistanceTo(e.handle.GetPosition()) > maxDistFromSelf) continue;}
 
 					auto indInDb = EntityManagement::GetEntityIndexInDb(e);
 					if (indInDb >= 0)
@@ -1605,34 +1891,42 @@ namespace sub::Spooner
 					}
 					else
 					{
-						const Model& eModel = e.Handle.Model();
-						e.Type = (EntityType)e.Handle.Type();
-						e.Dynamic = true;
-						switch (e.Type)
+						const Model& eModel = e.handle.Model();
+						e.type = (EntityType)e.handle.Type();
+						e.dynamic = true;
+						switch (e.type)
 						{
 						case EntityType::PROP:
 						{
-							e.HashName = get_prop_model_label(eModel);
+							e.hashName = get_prop_model_label(eModel);
 							break;
 						}
 						case EntityType::PED:
 						{
-							e.HashName = get_ped_model_label(eModel, true);
-							for (auto& anmnm : AnimationSub_catind::vPresetPedAnims)
+							e.hashName = GetPedModelLabel(eModel, true);
+							for (auto& anmnm : AnimationMenu::presetPedAnims)
 							{
-								if (IS_ENTITY_PLAYING_ANIM(e.Handle.Handle(), anmnm.animDict.c_str(), anmnm.animName.c_str(), 3))
+								if (IS_ENTITY_PLAYING_ANIM(e.handle.Handle(), anmnm.animDict.c_str(), anmnm.animName.c_str(), 3))
 								{
-									e.LastAnimation.dict = anmnm.animDict;
-									e.LastAnimation.name = anmnm.animName;
+									SpoonerEntity::Animation anim;
+									anim.dict = anmnm.animDict;
+									anim.name = anmnm.animName;
+									anim.flag = AnimFlag::Loop;
+									anim.speed = 4.0f;
+									anim.speedMultiplier = -4.0f;
+									anim.playbackRate = 0.0f;
+									anim.duration = -1;
+									anim.lockPos = false;
+									e.AddOrUpdateLastAnimation(anim);
 								}
 							}
-							if (e.LastAnimation.dict.empty() && IS_PED_USING_ANY_SCENARIO(e.Handle.Handle()))
+							if (IS_PED_USING_ANY_SCENARIO(e.handle.Handle()))
 							{
-								for (auto& scnnm : AnimationSub_TaskScenarios::vValues_TaskScenarios)
+								for (auto& scnnm : AnimationTaskScenarios::vValues_TaskScenarios)
 								{
-									if (IS_PED_USING_SCENARIO(e.Handle.Handle(), scnnm.c_str()))
+									if (IS_PED_USING_SCENARIO(e.handle.Handle(), scnnm.c_str()))
 									{
-										e.LastAnimation.name = scnnm;
+										e.currentScenario = scnnm;
 									}
 								}
 							}
@@ -1640,11 +1934,11 @@ namespace sub::Spooner
 						}
 						case EntityType::VEHICLE:
 						{
-							e.HashName = get_vehicle_model_label(eModel, true);
+							e.hashName = get_vehicle_model_label(eModel, true);
 							break;
 						}
 						}
-						//if (e.HashName.length() == 0) e.HashName = int_to_hexstring(eModel.hash, true);
+						//if (e.hashName.length() == 0) e.hashName = int_to_hexstring(eModel.hash, true);
 					}
 
 					auto nodeEntity = nodeRoot.append_child("Placement");
@@ -1656,6 +1950,12 @@ namespace sub::Spooner
 			{
 				auto nodeMarker = nodeRoot.append_child("Marker");
 				AddMarkerToXmlNode(m, nodeMarker);
+			}
+
+			for (auto& l : Databases::LightDb)
+			{
+				auto nodeLight = nodeRoot.append_child("Light");
+				AddLightToXmlNode(l, nodeLight);
 			}
 
 			//=================================================================
@@ -1671,7 +1971,7 @@ namespace sub::Spooner
 
 			GTAentity myPed = PLAYER_PED_ID();
 			GTAentity myVehicle = g_myVeh;
-			const Vector3& myPos = myPed.Position_get();
+			const Vector3& myPos = myPed.GetPosition();
 
 			pugi::xml_node nodeRoot = doc.child("SpoonerPlacements");
 
@@ -1850,7 +2150,7 @@ namespace sub::Spooner
 					float clearWorldRadius = nodeClearWorldSetting.text().as_float();
 					if (clearWorldRadius > 0.0f)
 					{
-						clear_area_of_entities(EntityType::ALL, refCoords, clearWorldRadius, { myPed, myVehicle });
+						ClearAreaOfEntities(EntityType::ALL, refCoords, clearWorldRadius, { myPed, myVehicle });
 						WAIT(0);
 						MarkerManagement::RemoveAllMarkersInRange(refCoords, clearWorldRadius);
 					}
@@ -1873,7 +2173,7 @@ namespace sub::Spooner
 			//teleport_net_ped(myPed.Handle(), 140.7751f, -1305.944f, 24.36);
 			if (nodeImgLoadingCoords)
 			{
-				teleport_net_ped(myPed.Handle(), imgLoadingCoords.x, imgLoadingCoords.y, imgLoadingCoords.z);
+				TeleportNetPed(myPed.Handle(), imgLoadingCoords.x, imgLoadingCoords.y, imgLoadingCoords.z);
 				WAIT(1400);
 			}
 
@@ -1913,19 +2213,24 @@ namespace sub::Spooner
 			}
 			markerDbToNewDbOffset = Databases::MarkerDb.size() - newMarkerDb.size();
 
+			for (auto nodeLight = nodeRoot.child("Light"); nodeLight; nodeLight = nodeLight.next_sibling("Light"))
+			{
+				SpawnLightFromXmlNode(nodeLight);
+			}
+
 			WAIT(1000);
 
 			for (auto& e : newDb)
 			{
-				if (e.e.AttachmentArgs.isAttached)
+				if (e.e.attachmentArgs.isAttached)
 				{
 					if (e.attachedToHandle == myPed.Handle())
 					{
-						EntityManagement::AttachEntity(e.e, myPed, e.e.AttachmentArgs.boneIndex, e.e.AttachmentArgs.offset, e.e.AttachmentArgs.rotation);
+						EntityManagement::AttachEntity(e.e, myPed, e.e.attachmentArgs.boneIndex, e.e.attachmentArgs.offset, e.e.attachmentArgs.rotation);
 					}
 					else if (e.attachedToHandle == myVehicle.Handle())
 					{
-						EntityManagement::AttachEntity(e.e, myVehicle, e.e.AttachmentArgs.boneIndex, e.e.AttachmentArgs.offset, e.e.AttachmentArgs.rotation);
+						EntityManagement::AttachEntity(e.e, myVehicle, e.e.attachmentArgs.boneIndex, e.e.attachmentArgs.offset, e.e.attachmentArgs.rotation);
 					}
 					else
 					{
@@ -1933,7 +2238,7 @@ namespace sub::Spooner
 						{
 							if (e.attachedToHandle == x.initHandle)
 							{
-								EntityManagement::AttachEntity(e.e, x.e.Handle, e.e.AttachmentArgs.boneIndex, e.e.AttachmentArgs.offset, e.e.AttachmentArgs.rotation);
+								EntityManagement::AttachEntity(e.e, x.e.handle, e.e.attachmentArgs.boneIndex, e.e.attachmentArgs.offset, e.e.attachmentArgs.rotation);
 								break;
 							}
 						}
@@ -1945,11 +2250,11 @@ namespace sub::Spooner
 					auto& m = Databases::MarkerDb[markerDbToNewDbOffset + i];
 					if (m.m_attachmentArgs.attachedTo == e.initHandle)
 					{
-						m.m_attachmentArgs.attachedTo = e.e.Handle;
+						m.m_attachmentArgs.attachedTo = e.e.handle;
 					}
 					if (m.m_destinationVal.m_attachmentArgs.attachedTo == e.initHandle)
 					{
-						m.m_destinationVal.m_attachmentArgs.attachedTo = e.e.Handle;
+						m.m_destinationVal.m_attachmentArgs.attachedTo = e.e.handle;
 					}
 					for (int j = 0; j < newMarkerDb.size(); j++)
 					{
@@ -1961,17 +2266,29 @@ namespace sub::Spooner
 					}
 				}
 
-				if (!e.e.TaskSequence.empty())
+				if (!e.e.taskSequence.empty())
 				{
-					auto& vTskPtrs = e.e.TaskSequence.AllTasks();
+					auto& vTskPtrs = e.e.taskSequence.AllTasks();
 					for (auto& u : newDb)
 					{
 						for (auto& tskPtr : vTskPtrs)
 						{
-							tskPtr->LoadTargetingDressing(u.initHandle, u.e.Handle.Handle());
+							tskPtr->LoadTargetingDressing(u.initHandle, u.e.handle.Handle());
 						}
 					}
-					if (bStartTaskSeqsOnLoad) e.e.TaskSequence.Start();
+					if (bStartTaskSeqsOnLoad) e.e.taskSequence.Start();
+				}
+
+				for (auto nodeBlip = nodeRoot.child("Blip"); nodeBlip; nodeBlip = nodeBlip.next_sibling("Blip"))
+				{
+					SpoonerBlip b = SpawnBlipFromXmlNode(nodeBlip, newDb);
+					if (b.BlipType == SpoonerBlip::Type::Entity && b.EntityHandle == 0 && !nodeBlip.child("EntityInitHandle").empty())
+						continue; // Skip failed entity blips
+
+					SpoonerBlip* newBlip = sub::Spooner::BlipCustoms::AddBlip(b.BlipType, b.Name);
+					*newBlip = b;
+					newBlip->BlipHandle = 0;
+					sub::Spooner::BlipCustoms::RefreshBlip(*newBlip);
 				}
 
 				Databases::EntityDb.push_back(e.e);
@@ -1984,8 +2301,8 @@ namespace sub::Spooner
 
 			//=================================================================
 
-			if (nodeReferenceCoords && Settings::bTeleportToReferenceWhenLoadingFile) teleport_net_ped(myPed.Handle(), refCoords.x, refCoords.y, refCoords.z);
-			else if (nodeImgLoadingCoords) teleport_net_ped(myPed.Handle(), myPos.x, myPos.y, myPos.z);
+			if (nodeReferenceCoords && Settings::bTeleportToReferenceWhenLoadingFile) TeleportNetPed(myPed.Handle(), refCoords.x, refCoords.y, refCoords.z);
+			else if (nodeImgLoadingCoords) TeleportNetPed(myPed.Handle(), myPos.x, myPos.y, myPos.z);
 			WAIT(200);
 			DO_SCREEN_FADE_IN(300);
 
@@ -2044,15 +2361,15 @@ namespace sub::Spooner
 				if (ini.GetValue(section.pItem, "Type", 0) == 0)
 					continue;
 				SpoonerEntity e;
-				e.Type = (EntityType)ini.GetLongValue(section.pItem, "Type", 0);
-				if (e.Type == EntityType(0))
+				e.type = (EntityType)ini.GetLongValue(section.pItem, "Type", 0);
+				if (e.type == EntityType(0))
 					continue;
 				Model eModel = strtoul(ini.GetValue(section.pItem, "Hash"), NULL, 16);
-				e.HashName = e.Type == EntityType::PROP ? get_prop_model_label(eModel)
-					: (e.Type == EntityType::PED ? get_ped_model_label(eModel, true)
+				e.hashName = e.type == EntityType::PROP ? get_prop_model_label(eModel)
+					: (e.type == EntityType::PED ? GetPedModelLabel(eModel, true)
 						: get_vehicle_model_label(eModel, true));
-				if (e.HashName.length() == 0) e.HashName = int_to_hexstring(eModel.hash, true);
-				e.IsStill = true;
+				if (e.hashName.length() == 0) e.hashName = IntToHexString(eModel.hash, true);
+				e.isStill = true;
 
 				Vector3 position, rotation;
 				position.x = ini.GetDoubleValue(section.pItem, "X");
@@ -2062,34 +2379,32 @@ namespace sub::Spooner
 				rotation.y = ini.GetDoubleValue(section.pItem, "Roll");
 				rotation.z = ini.GetDoubleValue(section.pItem, "Yaw");
 
-				if (e.Type == EntityType::PROP)
+				if (e.type == EntityType::PROP)
 				{
-					e.Dynamic = false;
-					e.Handle = World::CreateProp(eModel, position, rotation, e.Dynamic, false);
+					e.dynamic = false;
+					e.handle = World::CreateProp(eModel, position, rotation, e.dynamic, false);
 				}
-				else if (e.Type == EntityType::PED)
+				else if (e.type == EntityType::PED)
 				{
-					e.Dynamic = true;
+					e.dynamic = true;
 					auto ep = World::CreatePed(eModel, position, rotation, false);
-					e.Handle = ep;
-					ep.BlockPermanentEvents_set(e.IsStill);
+					e.handle = ep;
+					ep.SetBlockPermanentEvent(e.isStill);
 				}
-				else if (e.Type == EntityType::VEHICLE)
+				else if (e.type == EntityType::VEHICLE)
 				{
-					e.Dynamic = true;
+					e.dynamic = true;
 					auto ev = World::CreateVehicle(eModel, position, rotation, false);
-					e.Handle = ev;
+					e.handle = ev;
 				}
 
-				//e.Handle.Position_set(position);
-				//e.Handle.Rotation_set(rotation);
-				e.Handle.FreezePosition(!e.Dynamic);
-				e.Handle.MissionEntity_set(true);
+				e.handle.FreezePosition(!e.dynamic);
+				e.handle.SetMissionEntity(true);
 				int opacityLevel = ini.GetLongValue(section.pItem, "Opacity", 255);
-				if (opacityLevel < 255) e.Handle.Alpha_set(opacityLevel);
-				e.Handle.LodDistance_set(1000000);
+				if (opacityLevel < 255) e.handle.SetAlpha(opacityLevel);
+				e.handle.SetLODDistance(1000000);
 				eModel.LoadCollision(100);
-				e.Handle.IsCollisionEnabled_set(true);
+				e.handle.SetIsCollisionEnabled(true);
 
 				vModelHashes.insert(eModel.hash);
 				Databases::EntityDb.push_back(e);
@@ -2121,7 +2436,7 @@ namespace sub::Spooner
 			refCoords.y = nodeReferenceCoords.child("Y").text().as_float();
 			refCoords.z = nodeReferenceCoords.child("Z").text().as_float();
 
-			teleport_net_ped(PLAYER_PED_ID(), refCoords.x, refCoords.y, refCoords.z);
+			TeleportNetPed(PLAYER_PED_ID(), refCoords.x, refCoords.y, refCoords.z);
 
 			return true;
 		}

@@ -9,9 +9,33 @@
 */
 #pragma once
 
-#include "..\Scripting\DxHookIMG.h"
+#include "..\macros.h"
 
+#include "..\Menu\Menu.h"
+#include "..\Menu\Routine.h"
+
+#include "..\Natives\natives2.h"
+#include "..\Scripting\enums.h"
+#include "..\Scripting\GTAvehicle.h"
+#include "..\Scripting\GTAped.h"
+#include "..\Scripting\GTAprop.h"
+#include "..\Scripting\GTAplayer.h"
+#include "..\Scripting\Model.h"
+#include "..\Scripting\World.h"
+#include "..\Scripting\Game.h"
+#include "..\Scripting\GTAblip.h"
+#include "..\Util\GTAmath.h"
+#include "..\Scripting\Raycast.h"
+#include "..\Scripting\DxHookIMG.h"
+#include "..\Util\ExePath.h"
+
+#include "..\Misc\VehicleCruise.h"
+#include "..\Misc\VehicleTow.h"
+#include "..\Misc\VehicleFly.h"
+
+#include <math.h>
 #include <string>
+#include <vector>
 
 typedef unsigned __int8 UINT8;
 typedef int INT, Entity, Ped, Vehicle, Object, ScrHandle;
@@ -24,32 +48,32 @@ class Vector2;
 namespace sub
 {
 	
-	void VehicleOps();
+	void VehicleMenu();
 
-	void PVOpsSub_();
+	void PVMenu();
 
-	namespace VehicleAutoDrive_catind
+	namespace VehicleAutoDrive
 	{
 		void ToggleOnOff();
 		void Tick();
 
-		void Sub_AutoDrive();
+		void AutoDriveMenu();
 	}
 
-	namespace VehicleSlam_catind
+	namespace VehicleSlam
 	{
 		void InitSub(GTAvehicle veh, float* val);
 
-		void Sub_VehicleSlam();
+		void VehicleSlamMenu();
 	}
 
-	void VehicleWeapons_();
+	void VehicleWeaponsMenu();
 
-	void VehicleMultipliers_();
+	void VehicleMultipliersMenu();
 
-	void VehicleMultiPlatNeons_Sub();
+	void VehicleMultiPlatNeonsMenu();
 
-	namespace Speedo_catind
+	namespace Speedo
 	{
 		struct SpeedoImage
 		{
@@ -57,23 +81,23 @@ namespace sub
 			DxHookIMG::DxTexture id;
 		};
 
-		extern SpeedoImage _currentSpeedoBg;
-		extern SpeedoImage _currentSpeedoNeedle;
-		extern UINT8 _speedoAlpha;
-		extern Vector2 _speedoPosition;
+		extern SpeedoImage currentSpeedoBG;
+		extern SpeedoImage currentSpeedoNeedle;
+		extern UINT8 speedoAlpha;
+		extern Vector2 speedoPosition;
 
 		enum eSpeedoMode : UINT8 { SPEEDOMODE_OFF, SPEEDOMODE_DIGITAL, SPEEDOMODE_ANALOGUE };
-		extern UINT8 loop_speedo;
-		extern bool bit_speedo_mph;
+		extern UINT8 loopSpeedo;
+		extern bool speedoMPH;
 
 		void SetCurrentBgIdFromBgNameForConfig();
 		void LoadSpeedoImages();
 
 		void SpeedoTick();
 
-		void Sub_Main();
-		void Sub_Themes_Light();
-		void Sub_Themes_Dark();
+		void SpeedoMainMenu();
+		void SpeedoThemesLight();
+		void SpeedoThemesDark();
 	}
 
 }

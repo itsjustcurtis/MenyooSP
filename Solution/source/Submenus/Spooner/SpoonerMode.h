@@ -32,8 +32,35 @@ namespace sub::Spooner
 		extern bool bEnabled;
 		extern bool bIsSomethingHeld;
 		extern bool bHeldEntityHasCollision;
+
+		enum class eEditMode : UINT8 { Disabled, Keyboard, Gizmo };
+		enum class eTransformMode : UINT8 { Position, Rotation, Scale };
+
+		struct EditingState {
+			eEditMode mode = eEditMode::Disabled;
+			eTransformMode transformMode = eTransformMode::Position;
+			bool localSpace = false;
+			bool cameraLocked = false;
+			float precisionPos = 0.1f;
+			float precisionRot = 1.0f;
+			float precisionScale = 0.1f;
+		};
+		extern EditingState editingState;
+
+		void ProcessKeyboardManipulation(Vector3& position, Vector3& rotation);
+		void DrawEditingHUD();
+		void UpdateEntityEditingState(Vector3& position, Vector3& rotation);
 		extern Camera spoonerModeCamera;
 		extern float spoonerModeCameraCamDistance;
+		extern float spoonerModeCameraSpeed;
+
+		struct SpoonerStats {
+			int totalNumEntities;
+			int totalNumProps;
+			int totalNumPeds;
+			int totalNumVehicles;
+		};
+		SpoonerStats GetSpoonerStats();
 
 		bool IsHotkeyPressed();
 
@@ -45,13 +72,17 @@ namespace sub::Spooner
 			GTAentity entity;
 			std::set<GTAentity> previousEntities;
 		};
-		extern ModelPreviewInfoStructure ModelPreviewInfo;
+		extern ModelPreviewInfoStructure modelPreviewInfo;
+		extern float previewYawOffset;
 		void SpawnModelPreview();
 
 		void ResetSelectedEntity();
 		bool GetEntityPtr(GTAentity& inEntity, SpoonerEntity*& outEntity);
 		SpoonerEntity GetEntityPtrValue(GTAentity& entity);
 		inline void SetAsSelectedEntity(GTAentity& entity);
+		Vector3 SnapPos(Vector3 pos);
+		Vector3 SnapRot(Vector3 rot);
+		void DrawSnappingGrid();
 
 		inline void CamTick();
 		void Tick();
@@ -62,6 +93,3 @@ namespace sub::Spooner
 	}
 
 }
-
-
-

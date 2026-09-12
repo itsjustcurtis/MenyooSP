@@ -12,7 +12,7 @@
 #include <string>
 
 // Integer/String manipulation
-std::string int_to_hexstring(unsigned long i, bool zerox);
+std::string IntToHexString(unsigned long i, bool zerox);
 
 namespace boost
 {
@@ -23,6 +23,8 @@ namespace boost
 	void to_lower(std::string& str);
 	std::string to_lower_copy(std::string str);
 }
+
+bool IsSafePath(const std::string& path);
 
 
 

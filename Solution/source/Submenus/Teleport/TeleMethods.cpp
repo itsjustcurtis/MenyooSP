@@ -23,6 +23,7 @@
 #include "..\..\Scripting\Camera.h"
 #include "..\..\Memory\GTAmemory.h"
 #include "..\..\Scripting\GTAblip.h"
+#include <Util/FileLogger.h>
 
 #include "..\Spooner\SpoonerMode.h"
 #include "TeleLocation.h"
@@ -31,7 +32,7 @@
 #include <string>
 
 
-void teleport_net_ped(GTAentity ped, float X, float Y, float Z, bool bWait, bool bPtfx)
+void TeleportNetPed(GTAentity ped, float X, float Y, float Z, bool bWait, bool bPtfx)
 {
 	GTAped myPed = Game::PlayerPed();
 	GTAvehicle myVeh = myPed.CurrentVehicle();
@@ -49,7 +50,7 @@ void teleport_net_ped(GTAentity ped, float X, float Y, float Z, bool bWait, bool
 			ped.RequestControlOnce();
 		//if (NETWORK_HAS_CONTROL_OF_ENTITY(ped))
 		{
-			ped.Position_set(Vector3(X, Y, Z));
+			ped.SetPosition(Vector3(X, Y, Z));
 			if (bPtfx && ped.IsVisible())
 			{
 				const PTFX::sFxData ptfx = { "scr_rcbarry2", "scr_clown_death" };
@@ -71,13 +72,13 @@ void teleport_net_ped(GTAentity ped, float X, float Y, float Z, bool bWait, bool
 			vehicle.RequestControl(1000);
 		else
 			vehicle.RequestControlOnce();
-		vehicle.Position_set(Vector3(X, Y, Z));
+		vehicle.SetPosition(Vector3(X, Y, Z));
 	}
 
 	if (ped.Equals(myPed) || ped.Equals(myVeh))
 	{
 		if (sub::Spooner::SpoonerMode::spoonerModeCamera.Exists())
-			sub::Spooner::SpoonerMode::spoonerModeCamera.Position_set(X, Y, Z + 3.0f);
+			sub::Spooner::SpoonerMode::spoonerModeCamera.SetPosition(X, Y, Z + 3.0f);
 	}
 
 	//LOAD_ALL_OBJECTS_NOW();
@@ -85,19 +86,21 @@ void teleport_net_ped(GTAentity ped, float X, float Y, float Z, bool bWait, bool
 	//SET_STREAMING(TRUE);
 
 }
-void teleport_net_ped(GTAentity ped, const Vector3& pos, bool bWait, bool bPtfx)
+void TeleportNetPed(GTAentity ped, const Vector3& pos, bool bWait, bool bPtfx)
 {
-	teleport_net_ped(ped, pos.x, pos.y, pos.z, bWait, bPtfx);
+	TeleportNetPed(ped, pos.x, pos.y, pos.z, bWait, bPtfx);
 }
-void teleport_to_missionBlip(GTAped ped)
+void TeleportToMissionBlip(GTAped ped)
 {
 	//GTAblip blip;
-
+	addlog(ige::LogType::LOG_DEBUG, "Teleporting to Mission Objective");
 	//for (int i = 0; i <= 521; i++)
 	BlipList* blipList = GTAmemory::GetBlipList();
 	for (UINT16 i = 0; i <= 1000; i++)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Iterating Blip ID: " + std::to_string(i));
 		Blipx* blip = blipList->m_Blips[i];
+
 		if (blip)
 		{
 			/*blip.Handle() = GET_FIRST_BLIP_INFO_ID(i);
@@ -110,7 +113,7 @@ void teleport_to_missionBlip(GTAped ped)
 			auto icon = blip.Icon();*/
 			auto colour = blip->dwColor;
 			auto icon = blip->iIcon;
-
+			addlog(ige::LogType::LOG_TRACE, "Blip Found - Colour: " + std::to_string(colour) + ", Icon: " + std::to_string(icon));
 			if ((icon == BlipIcon::CrateDrop) ||
 				(colour == BlipColour::Yellow && icon == BlipIcon::Standard) ||
 				(colour == BlipColour::Yellow3 && icon == BlipIcon::Standard) ||
@@ -120,24 +123,27 @@ void teleport_to_missionBlip(GTAped ped)
 				(colour == BlipColour::Blue && icon == BlipIcon::Standard))
 
 			{
-				//Vector3 coord = blip.Position_get();
+				//Vector3 coord = blip.GetPosition();
 				Vector3 coord = Vector3(blip->x, blip->y, blip->z);
-
+				addlog(ige::LogType::LOG_DEBUG, "Mission Blip Found - Co-ord: " + std::to_string(coord.x)+"," + std::to_string(coord.y) + "," + std::to_string(coord.z));
 				if (ped.IsInVehicle())
 				{
+					addlog(ige::LogType::LOG_TRACE, "Teleporting Vehicle");
 					auto vehicle = ped.CurrentVehicle();
 					if (vehicle.RequestControl(1000))
-						vehicle.Position_set(coord);
+						vehicle.SetPosition(coord);
 				}
 				else
 				{
+					addlog(ige::LogType::LOG_TRACE, "Teleporting Ped");
 					if (ped.RequestControl(1000))
-						ped.Position_set(coord);
+						ped.SetPosition(coord);
 				}
 				break;
 			}
 		}
 	}
+	addlog(ige::LogType::LOG_DEBUG, "Teleported to Mission Objective");
 }
 
 namespace sub::TeleportLocations_catind
@@ -153,11 +159,17 @@ namespace sub::TeleportLocations_catind
 		{
 			if (IS_WAYPOINT_ACTIVE())
 			{
-				Vector3 blipCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).Position_get();
+				Vector3 blipCoords = GTAblip(GET_FIRST_BLIP_INFO_ID(BlipIcon::Waypoint)).GetPosition();
 
 				GTAentity e = ped;
 				if (ped.IsInVehicle())
 					e = ped.CurrentVehicle();
+
+				if (!e.Exists())
+				{
+					Game::Print::ShowNotification("~r~Error:", "Entity is no longer valid.");
+					return;
+				}
 
 				GET_GROUND_Z_FOR_3D_COORD(blipCoords.x, blipCoords.y, 810.0, &blipCoords.z, 0, 0);
 
@@ -174,30 +186,30 @@ namespace sub::TeleportLocations_catind
 				SET_ENTITY_COORDS(e.Handle(), blipCoords.x, blipCoords.y, blipCoords.z, 0, 0, 0, 1);
 			}
 			else {
-				Game::Print::PrintBottomCentre("~r~Error:~s~ No Waypoint set.");
+				Game::Print::ShowNotification("~r~Error:", "No Waypoint set.");
 			}
 		}
 		void ToWaypoint241()
 		{
-			TeleMethods::ToWaypoint(Static_241);
+			TeleMethods::ToWaypoint(PLAYER_PED_ID());
 		}
 		void ToMissionBlip241()
 		{
-			teleport_to_missionBlip(Static_241);
+			TeleportToMissionBlip(PLAYER_PED_ID());
 		}
 		void ToForward241()
 		{
-			auto& entityToTeleport = Static_241;
-			Vector3 yoffsetforward = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(entityToTeleport, 0.0f, 3.5f, 0.0f);
-			teleport_net_ped(entityToTeleport, yoffsetforward.x, yoffsetforward.y, yoffsetforward.z, true, false);
+			GTAentity entityToTeleport = PLAYER_PED_ID();
+			Vector3 yoffsetforward = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(entityToTeleport.Handle(), 0.0f, 3.5f, 0.0f);
+			TeleportNetPed(entityToTeleport, yoffsetforward.x, yoffsetforward.y, yoffsetforward.z, true, false);
 		}
 		void ToCoordinates241(const Vector3& coord)
 		{
-			teleport_net_ped(Static_241, coord.x, coord.y, coord.z);
+			TeleportNetPed(PLAYER_PED_ID(), coord.x, coord.y, coord.z);
 		}
 		void ToTeleLocation241(const TeleLocation& loc)
 		{
-			auto& entityToTeleport = Static_241;
+			GTAentity entityToTeleport = PLAYER_PED_ID();
 
 			bool isOnline = NETWORK_IS_IN_SESSION() != 0;
 			if (loc.bOnTheLine && loc.bOffTheLine)
@@ -265,7 +277,7 @@ namespace sub::TeleportLocations_catind
 				}
 			}
 
-			teleport_net_ped(entityToTeleport, loc.x, loc.y, loc.z);
+			TeleportNetPed(entityToTeleport, loc.x, loc.y, loc.z);
 
 			if (loc.bOnTheLine || loc.bOffTheLine)
 			{

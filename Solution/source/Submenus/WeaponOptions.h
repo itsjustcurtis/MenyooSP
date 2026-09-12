@@ -9,8 +9,6 @@
 */
 #pragma once
 
-#include "PtfxSubs.h" //PtfxS
-
 #include <string>
 #include "../Menu/Routine.h"
 
@@ -22,13 +20,22 @@ typedef char *PCHAR;
 
 class RGBA;
 class GTAped;
-namespace GTAmodel {
+namespace GTAmodel 
+{
 	class Model;
 }
 
 extern Ped g_WeaponOpsPedOverride;
 extern Player g_WeaponOpsPlayerOverride;
 extern Ped g_WeaponMenuPedOverride;
+
+namespace sub 
+{ 
+	namespace PtfxSubs 
+	{ 
+		struct PtfxS; 
+	}
+}
 
 namespace sub
 {
@@ -48,31 +55,30 @@ namespace sub
 
 	}
 
-	namespace TriggerFxGun_catind
+	namespace TriggerFxGun
 	{
-		void __AddOption_GunFx(const sub::Ptfx_catind::PtfxS& fx);
+		void AddOptionGunFX(const sub::PtfxSubs::PtfxS& fx);
 
 		void Sub_GunMain();
 	}
 
-	void AddkgunOption_(const std::string& text, Hash newHash, bool *extra_option_code = nullptr, bool gxt = false);
+	void AddKaboomGunOption(const std::string& text, Hash newHash, bool *extra_option_code = nullptr, bool gxt = false);
 	void KaboomGun_();
 
 	void AddbgunOption_(const std::string& text, Hash hash, bool *extra_option_code = nullptr);
 	void BulletGun_();
 
-	void AddpgunOption_(const std::string& text, GTAmodel::Model newModel, bool *extra_option_code = nullptr);
+	void AddPedGunOption(const std::string& text, GTAmodel::Model newModel, bool *extra_option_code = nullptr);
 	void PedGun_();
 	void PedGun_AllPeds();
 
-	void AddogunOption_(const std::string& text, GTAmodel::Model newModel, bool *extra_option_code = nullptr, bool gxt = false);
+	void AddObjectGunOption(const std::string& text, GTAmodel::Model newModel, bool *extra_option_code = nullptr, bool gxt = false);
 	void ObjectGun_();
 
 	void List_VehicleCats_Sub();
 
 	namespace WeaponFavourites_catind
 	{
-		//extern std::string xmlFavouriteWeapons;
 		bool PopulateFavouritesInfo();
 		bool IsWeaponAFavourite(Hash whash);
 		bool AddWeaponToFavourites(Hash whash, const std::string& customName);

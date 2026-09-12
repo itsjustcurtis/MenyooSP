@@ -49,8 +49,8 @@ enum ControllerInput : UINT16
 	INPUT_AIM = 25,
 	INPUT_LOOK_BEHIND = 26,
 	INPUT_PHONE = 27,
-	INPUT_SPECIAL_ABILITY = 28,
-	INPUT_SPECIAL_ABILITY_SECONDARY = 29,
+	INPUT_SPECIAL_ABILITY = 28, 			// XBOX "l3" (left stick click)
+	INPUT_SPECIAL_ABILITY_SECONDARY = 29, 	// XBOX "R3" (right stick click)
 	INPUT_MOVE_LR = 30,
 	INPUT_MOVE_UD = 31,
 	INPUT_MOVE_UP_ONLY = 32,
@@ -243,10 +243,10 @@ enum ControllerInput : UINT16
 	INPUT_SCRIPT_LEFT_AXIS_Y = 219,
 	INPUT_SCRIPT_RIGHT_AXIS_X = 220,
 	INPUT_SCRIPT_RIGHT_AXIS_Y = 221,
-	INPUT_SCRIPT_RUP = 222,
-	INPUT_SCRIPT_RDOWN = 223,
-	INPUT_SCRIPT_RLEFT = 224,
-	INPUT_SCRIPT_RRIGHT = 225,
+	INPUT_SCRIPT_RUP = 222, 	// XBOX "Y"
+	INPUT_SCRIPT_RDOWN = 223, 	// XBOX "A"
+	INPUT_SCRIPT_RLEFT = 224, 	// XBOX "X"
+	INPUT_SCRIPT_RRIGHT = 225, 	// XBOX "B"
 	INPUT_SCRIPT_LB = 226,
 	INPUT_SCRIPT_RB = 227,
 	INPUT_SCRIPT_LT = 228,
@@ -522,7 +522,7 @@ enum class PauseMenuState : int
 	ViewingMap = 15
 };
 
-namespace GTAfont { 
+namespace GTAfont {
 	enum GTAfont : INT8
 	{
 		Arial = 0,
@@ -676,10 +676,10 @@ enum WeaponHash : DWORD
 	WEAPON_CERAMICPISTOL = 0x2B5EF5EC,
 	WEAPON_HAZARDCAN = 0xBA536372,
 
-    // 1.0.2189.0
+	// 1.0.2189.0
 	WEAPON_COMBATSHOTGUN = 0x5A96BA4,
 	WEAPON_GADGETPISTOL = 0x57A4368C,
-	WEAPON_MILITARYRIFLE = 0x9D1F17E6,     
+	WEAPON_MILITARYRIFLE = 0x9D1F17E6,
 
 	//The Contract(mpsecurity) - 2545
 	WEAPON_HEAVYRIFLE = 0xc78d71b4,
@@ -728,7 +728,7 @@ enum WeaponComponentHash : DWORD
 	COMPONENT_CARBINERIFLE_VARMOD_LUXE = 0xD89B9658,
 	COMPONENT_ADVANCEDRIFLE_CLIP_01 = 0xFA8FA10F,
 	COMPONENT_ADVANCEDRIFLE_VARMOD_LUXE = 0x377CD377,
-    COMPONENT_MILITARYRIFLE_CLIP_01 = 0x2D46D83B,                                          
+	COMPONENT_MILITARYRIFLE_CLIP_01 = 0x2D46D83B,
 	COMPONENT_MG_CLIP_01 = 0xF434EF84,
 	COMPONENT_MG_VARMOD_LOWRIDER = 0xD6DABABE,
 	COMPONENT_COMBATMG_CLIP_01 = 0xE1FFB34A,
@@ -786,7 +786,7 @@ enum WeaponComponentHash : DWORD
 	COMPONENT_AT_SCOPE_MEDIUM = 0xA0D89C42,
 	COMPONENT_AT_SCOPE_LARGE = 0xD2443DDC,
 	COMPONENT_AT_SCOPE_MAX = 0xBC54DA77,
-    COMPONENT_MILITARYRIFLE_SIGHT_01 = 0x6B82F395,                                           
+	COMPONENT_MILITARYRIFLE_SIGHT_01 = 0x6B82F395,
 	COMPONENT_AT_PI_SUPP = 0xC304849A,
 	COMPONENT_AT_PI_SUPP_02 = 0x65EA7EBB,
 	COMPONENT_AT_AR_SUPP = 0x837445AA,
@@ -804,7 +804,7 @@ enum WeaponComponentHash : DWORD
 	COMPONENT_ASSAULTRIFLE_CLIP_02 = 0xB1214F9B,
 	COMPONENT_CARBINERIFLE_CLIP_02 = 0x91109691,
 	COMPONENT_ADVANCEDRIFLE_CLIP_02 = 0x8EC1C979,
-    COMPONENT_MILITARYRIFLE_CLIP_02 = 0x684ACE42,                                          
+	COMPONENT_MILITARYRIFLE_CLIP_02 = 0x684ACE42,
 	COMPONENT_MG_CLIP_02 = 0x82158B47,
 	COMPONENT_COMBATPDW_CLIP_02 = 0x334A5203,
 	COMPONENT_COMBATMG_CLIP_02 = 0xD6C59CD6,
@@ -2544,7 +2544,7 @@ namespace HudColour{
 		STUNT_1,
 		STUNT_2
 	};
-	
+
 	extern const std::vector<std::string> vHudColours;
 }
 
@@ -4181,7 +4181,7 @@ namespace Bone {
 
 	};
 
-	struct NamedPedBone{ std::string name; int boneid; };
+	struct NamedPedBone { std::string name; int boneid; };
 	extern const std::vector <NamedPedBone> vBoneNames;
 }
 
@@ -4493,7 +4493,7 @@ namespace VBone {
 		wing_rf,
 		wing_rr,
 		wingtip_1,
-		wingtip_2,
+		wingtip_2
 	};
 
 	extern const std::vector<std::string> vNames;
@@ -4623,41 +4623,105 @@ namespace ZoneID {
 	};
 }
 
-namespace AnimFlag {
+namespace AnimFlag
+{
+	// Individual bitmask values for backward compatibility
 	enum AnimFlag
 	{
-		Normal = 0,
 		Loop = 1,
 		StayInLastFrame = 2,
-
+		RepositionWhenFinished = 4,
+		NotInterruptable = 8,
 		UpperBody = 16,
-		UpperBodyLoop = 17,
-		UpperBodyStayInLastFrame = 18,
-
 		SecondTask = 32,
-		SecondTaskLoop = 33,
-		SecondTaskStayInLastFrame = 34,
-
-		UpperBodySecondTask = 48,
-		UpperBodySecondTaskLoop = 49,
-		UpperBodySecondTaskStayInLastFrame = 50,
-
-		AllowInteruption = 128,
-
-		DisableRootMotion = 524288,
-		DisableRootMotionLoop = 524289,
-		DisableRootMotionStayInLastFrame = 524290,
-
-		RagdollOnCollision = 4194304,
-		RagdollOnCollisionLoop = 4194305,
-
-		UpperbodySecondTaskUnkUnk = 16785456,
-		UpperbodySecondTaskUnkUnkLoop = 16785457,
-		UpperbodySecondTaskUnkUnkStayInLastFrame = 16785458,
+		ReorientWhenFinished = 64,
+		AbortOnPedMovement = 128,
+		Additive = 256,
+		TurnOffCollision = 512,
+		OverridePhysics = 1024,
+		IgnoreGravity = 2048,
+		ExtractInitialOffset = 4096,
+		ExitAfterInterrupted = 8192,
+		TagSyncIn = 16384,
+		TagSyncOut = 32768,
+		TagSyncContinuous = 65536,
+		ForceStart = 131072,
+		UseKinematicPhysics = 262144,
+		UseMoverExtraction = 524288,
+		HideWeapon = 1048576,
+		EndsInDeadPose = 2097152,
+		ActivateRagdollOnCollision = 4194304,
+		DontExitOnDeath = 8388608,
+		AbortOnWeaponDamage = 16777216,
+		DisableForcedPhysicsUpdate = 33554432,
+		ProcessAttachmentsOnStart = 67108864,
+		ExpandPedCapsuleFromSkeleton = 134217728,
+		UseAlternativeFPAnim = 268435456,
+		BlendoutWrtLastFrame = 536870912,
+		UseFullBlending = 1073741824,
 	};
 
-	//struct NamedAnimFlag{ std::string name; int id; };
-	extern std::map<int, std::string> vFlagNames;
+	struct FlagInfo { int value; const char* name; const char* desc; };
+
+	inline constexpr FlagInfo kAnimFlags[] =
+	{
+		{ 1,          "Loop",                             "Repeat the animation" },
+		{ 2,          "Hold Last Frame",                  "Hold on the last frame of the animation" },
+		{ 4,          "Reposition When Finished",         "Pop the ped's position to match visual representation when finished" },
+		{ 8,          "Not Interruptable",                "Cannot be interrupted by external events" },
+		{ 16,         "Upper Body",                       "Only plays the upper body part of the animation" },
+		{ 32,         "Secondary Task",                   "Runs in the secondary task slot, allows movement simultaneously" },
+		{ 64,         "Reorient When Finished",           "Pop the ped's direction to match visual representation when finished" },
+		{ 128,        "Abort On Ped Movement",            "Ends early if the ped attempts to move" },
+		{ 256,        "Additive Playback",                "Play back the animation additively" },
+		{ 512,        "Turn Off Collision",               "No collision detection while playing" },
+		{ 1024,       "Override Physics",                 "No physics forces applied, uses per frame mover extraction" },
+		{ 2048,       "Ignore Gravity",                   "No gravity while playing" },
+		{ 4096,       "Extract Initial Offset",           "Extract initial offset for syncing anims on different peds" },
+		{ 8192,       "Exit After Interrupted",           "Exit the task if interrupted by another task (e.g. Natural Motion)" },
+		{ 16384,      "Tag Sync In",                      "Sync whilst blending in (seamless walk/run into full body anim)" },
+		{ 32768,      "Tag Sync Out",                     "Sync whilst blending out (seamless full body anim into walk/run)" },
+		{ 65536,      "Tag Sync Continuous",              "Sync all the time (useful for partial anims like upper body)" },
+		{ 131072,     "Force Start",                      "Force start even if falling/ragdolling" },
+		{ 262144,     "Use Kinematic Physics",            "Kinematic physics mode - pushes other entities, not pushed" },
+		{ 524288,     "Use Mover Extraction",             "Updates capsule position every frame from animation" },
+		{ 1048576,    "Hide Weapon",                      "Hide the ped's weapon while playing" },
+		{ 2097152,    "Ends In Dead Pose",                "Kill the ped when anim ends, use as dead pose" },
+		{ 4194304,    "Activate Ragdoll On Collision",    "Ragdoll if capsule contacts non-flat-ground geometry" },
+		{ 8388608,    "Dont Exit On Death",               "Secondary anim tasks don't end when ped dies" },
+		{ 16777216,   "Abort On Weapon Damage",           "Allow aborting from damage events even with Not Interruptable" },
+		{ 33554432,   "Disable Forced Physics Update",    "Prevent adjusting capsule on enter state" },
+		{ 67108864,   "Process Attachments On Start",     "Force attachments to be processed at start of clip" },
+		{ 134217728,  "Expand Capsule From Skeleton",     "Expand the capsule to the extents of the skeleton" },
+		{ 268435456,  "Use Alternative FP Anim",          "Play first person version of clip (_FP suffix) when in FP mode" },
+		{ 536870912,  "Blendout Wrt Last Frame",          "Start blending out early so blend completes at end of anim" },
+		{ 1073741824, "Use Full Blending",                "Full blending, override heading/position adjustment" },
+	};
+
+	struct FlagPreset { int value; const char* name; };
+
+	inline constexpr FlagPreset kFlagPresets[] =
+	{
+		{ 0,  "Normal" },
+		{ 1,  "Loop" },
+		{ 2,  "Hold Last Frame" },
+		{ 16, "Upper Body" },
+		{ 17, "Upper Body Loop" },
+		{ 18, "Upper Body Hold" },
+		{ 32, "Secondary" },
+		{ 33, "Secondary Loop" },
+		{ 34, "Secondary Hold" },
+		{ 48, "Upper Body Secondary" },
+		{ 49, "Upper Body Secondary Loop" },
+		{ 50, "Upper Body Secondary Hold" },
+	};
+
+	inline const char* GetFlagName(int flag)
+	{
+		for (auto& f : kAnimFlags)
+			if (f.value == flag) return f.name;
+		return "Custom";
+	}
 }
 
 enum class DecalType
@@ -4888,6 +4952,18 @@ enum class VehicleNeonLight : int
 	Front = 2,
 	Back = 3,
 };
+/*enum VehicleNeonFlash : int
+{
+	None,
+	Simple,
+	Spin,
+	SpinBack,
+};
+enum VehicleNeonFade : int
+{
+	None,
+	Simple,
+};*/
 enum class VehicleRoofState : int
 {
 	Closed,

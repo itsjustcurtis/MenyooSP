@@ -86,34 +86,34 @@ public:
 
 	UINT64 MemoryAddress() const;
 
-	Vector3 Position_get() const;
-	void Position_set(const Vector3& value);
+	Vector3 GetPosition() const;
+	void SetPosition(const Vector3& value);
 
-	Vector3 TargetPosition_get() const;
-	void TargetPosition_set(const Vector3& value);
+	Vector3 GetTargetPosition() const;
+	void SetTargetPosition(const Vector3& value);
 
-	CheckpointIcon Icon_get() const;
-	void Icon_set(const CheckpointIcon& value);
+	CheckpointIcon GetIcon() const;
+	void SetIcon(const CheckpointIcon& value);
 
-	BYTE Reserved_get() const;
-	void Reserved_set(BYTE value);
+	BYTE GetReserved() const;
+	void SetReserved(BYTE value);
 
-	float Radius_get() const;
-	void Radius_set(float value);
+	float GetRadius() const;
+	void SetRadius(float value);
 
-	RGBA Colour_get() const;
-	void Colour_set(const RGBA& value);
-	RGBA IconColour_get() const;
-	void IconColour_set(const RGBA& value);
+	RGBA GetColour() const;
+	void SetColour(const RGBA& value);
+	RGBA GetIconColour() const;
+	void SetIconColour(const RGBA& value);
 
-	float CylinderNearHeight_get() const;
-	void CylinderNearHeight_set(float value);
+	float GetCylinderNearHeight() const;
+	void SetCylinderNearHeight(float value);
 
-	float CylinderFarHeight_get() const;
-	void CylinderFarHeight_set(float value);
+	float GetCylinderFarHeight() const;
+	void SetCyclinderFarHeight(float value);
 
-	float CylinderRadius_get() const;
-	void CylinderRadius_set(float value);
+	float GetCylinderRadius() const;
+	void SetCylinderRadius(float value);
 
 	void Delete();
 	bool Exists();

@@ -11,7 +11,7 @@
 
 #include "GenericLoopedMode.h"
 
-namespace _SmashAbility_
+namespace SmashAbility
 {
 	class SmashAbility final : public GenericLoopedMode
 	{

@@ -142,19 +142,19 @@ public:
 	static PedGroup CreateNewGroup();
 
 	int& Handle();
-	int GetHandle() const;
+	int GetHandle() const noexcept;
 
-	GTAentity Leader_get() const;
-	void Leader_set(GTAentity ped);
+	GTAentity GetLeader() const;
+	void SetLeader(GTAentity ped);
 
 	int MemberCount() const;
 
-	void SeparationRange_set(float range);
+	void SetSeparationRange(float range);
 
-	void FormationSpacing_set(float spacing);
+	void SetFormationSpacing(float spacing);
 	void ResetFormationSpacing();
 
-	void FormationType_set(FormationType value);
+	void SetFormationType(FormationType value);
 
 	void Add(GTAentity ped, bool leader, bool teleportWithLeader = false);
 	void Remove(GTAentity ped);
@@ -202,72 +202,72 @@ public:
 
 	bool IsSubTaskActive(const PedSubTask& taskType);
 
-	PedHeadBlendData HeadBlendData_get() const;
-	void HeadBlendData_set(const PedHeadBlendData& blendData);
+	PedHeadBlendData GetHeadBlendData() const;
+	void SetHeadBlendData(const PedHeadBlendData& blendData);
 
-	void VoiceName_set(const std::string& value);
+	void SetVoiceName(const std::string& value);
 
 	int PedType() const;
 
 	void PlaySpeechWithVoice(const std::string& speechName, const std::string& voiceName, const std::string& speechParam, bool unk = 0);
 
-	Hash Weapon_get() const;
-	void Weapon_set(Hash weaponHash);
+	Hash GetWeapon() const;
+	void SetWeapon(Hash weaponHash);
 	void RemoveAllWeapons();
 
 	Vector3 LastWeaponImpactCoord() const;
 
-	ParachuteState ParachuteState_get() const;
+	ParachuteState GetParachuteState() const;
 	
-	int Accuracy_get() const;
-	void Accuracy_set(int value);
+	int GetAccuracy() const;
+	void SetAccuracy(int value);
 
-	void AlwaysDiesWhenInjured_set(bool value);
+	void SetAlwaysDiesWhenInjured(bool value);
 
-	void AlwaysKeepTask_set(bool value);
+	void SetAlwaysKeepTask(bool value);
 
-	int Armour_get() const;
-	void Armour_set(int value);
+	int GetArmour() const;
+	void SetArmour(int value);
 
-	void BlockPermanentEvents_set(bool value);
+	void SetBlockPermanentEvent(bool value);
 
-	bool CanRagdoll_get() const;
-	void CanRagdoll_set(bool value);
+	bool GetCanRagdoll() const;
+	void SetCanRagdoll(bool value);
 
-	void CanSwitchWeapons_set(bool value);
+	void SetCanSwitchWeapons(bool value);
 
-	void CanSufferCriticalHits_set(bool value);
+	void SetCanSufferCriticalHits(bool value);
 
-	bool CanFlyThroughWindscreen_get() const;
-	void CanFlyThroughWindscreen_set(bool value);
+	bool GetCanFlyThroughWindscreen() const;
+	void SetCanFlyThroughWindscreen(bool value);
 
-	void CanBeKnockedOffBike_set(int state);
+	void SetCanBeKnockedOffBike(int state);
 
-	void CanBeDraggedOutOfVehicle_set(bool value);
+	void SetCanBeDraggedOutOfVehicle(bool value);
 
-	void CanBeTargetted_set(bool value);
+	void SetCanBeTargetted(bool value);
 
-	void CanPlayGestures_set(bool value);
+	void SetCanPlayGestures(bool value);
 
 	bool IsInGroup() const;
-	PedGroup CurrentPedGroup_get() const;
-	void NeverLeavesGroup_set(bool value);
-	void TeleportsWithGroupLeader_set(bool value, const PedGroup& grp = 0);
+	PedGroup GetCurrentPedGroup() const;
+	void SetNeverLeavesGroup(bool value);
+	void SetTeleportsWithGroupLeader(bool value, const PedGroup& grp = 0);
 
-	void DiesInstantlyInWater_set(bool value);
-	void DrownsInWater_set(bool value);
-	void DrownsInSinkingVehicle_set(bool value);
+	void SetDiesInstantlyInWater(bool value);
+	void SetDrownsInWater(bool value);
+	void SetDrownsInSinkingVehicle(bool value);
 
-	void DrivingSpeed_set(float value);
-	void MaxDrivingSpeed_set(float value);
+	void SetDrivingSpeed(float value);
+	void SetMaxDrivingSpeed(float value);
 
-	void DrivingStyle_set(int value);
+	void SetDrivingStyle(int value);
 
 	//NaturalMotion::Euphoria Euphoria_get() const;
 
-	void FiringPattern_set(FiringPattern::FiringPattern value);
+	void SetFiringPattern(FiringPattern::FiringPattern value);
 
-	Gender Gender_get() const;
+	Gender GetGender() const;
 
 	bool IsAimingFromCover() const;
 
@@ -341,31 +341,31 @@ public:
 
 	bool IsTryingToEnterALockedVehicle() const;
 
-	int Money_get() const;
-	void Money_set(int value);
+	int GetMoney() const;
+	void SetMoney(int value);
 
-	Hash RelationshipGroup_get() const;
-	void RelationshipGroup_set(Hash grpHash);
-	void RelationshipGroup_set(const std::string& grpName);
+	Hash GetRelationshipGroup() const;
+	void SetRelationshipGroup(Hash grpHash);
+	void SetRelationshipGroup(const std::string& grpName);
 
-	void ShootRate_set(int value);
+	void SetShootRate(int value);
 
-	void HasGravity_set(bool value) override;
+	void SetHasGravity(bool value) override;
 
 	Tasks Task();
-	int TaskSequenceProgress_get() const;
+	int GetTaskSequenceProgress() const;
 	bool IsPerformingAnyTaskSequence() const;
 
 	bool WasKilledByStealth() const;
 	bool WasKilledByTakedown() const;
 
-	void WetnessHeight_set(float value);
+	void SetWetnessHeight(float value);
 
 	bool IsInVehicle() const;
 	bool IsInVehicle(GTAvehicle vehicle) const;
 	GTAvehicle CurrentVehicle() const;
 
-	VehicleSeat CurrentVehicleSeat_get();
+	VehicleSeat GetCurrentVehicleSeat();
 
 	int GetRelationshipWithPed(GTAentity otherPed) const;
 

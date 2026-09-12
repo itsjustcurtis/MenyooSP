@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 #include <map>
-//#include <utility>
 #include <array>
 
 typedef unsigned char UINT8;
@@ -24,9 +23,11 @@ class Camera;
 class PedHeadBlendData;
 class GTAentity;
 class GTAped;
-namespace GTAmodel {
+namespace GTAmodel 
+{
 	class Model;
 }
+
 enum class PedHeadOverlay : int;
 
 namespace sub
@@ -34,62 +35,34 @@ namespace sub
 	// Component changer
 
 	extern Camera g_cam_componentChanger;
+	void AddPedComponentOption(const std::string& text, int index);
+	void AddPedPropOption(const std::string& text, int index);
 
-	void AddpedcomponentOption_(const std::string& text, int index);
-	void AddpedpropOption_(const std::string& text, int index);
-
-	void ComponentChanger_();
-	void ComponentChanger2_();
-	bool HasPedSpecificDrawable(int compon_drawable_new);
-	void ComponentChangerProps_();
-	void ComponentChangerProps2_();
-	bool HasPedSpecificPropType(int prop_type_new);
+	void ComponentChanger();
+	void ComponentChanger2();
+	bool HasPedSpecificDrawable(int drawableNew);
+	void ComponentChangerProps();
+	void ComponentChangerProps2();
+	bool HasPedSpecificPropType(int propTypeNew);
 
 	// Decals - tattoos & badges
 
-	namespace PedDecals_catind
+	namespace PedDecals
 	{
 		struct PedDecalValue
 		{
 			Hash collection, value;
-			PedDecalValue(Hash newCollection, Hash newValue)
-				: collection(newCollection), value(newValue)
+			PedDecalValue(Hash newCollection, Hash newValue) : collection(newCollection), value(newValue)
 			{
 			}
 		};
 
 		extern std::map<Ped, std::vector<PedDecalValue>> vPedsAndDecals;
 
-		/*enum Collection : Hash
-		{
-		singleplayer_overlays = 0x914B39AB,
-		multiplayer_overlays = 0x23A7A83B,
-		mpbusiness_overlays = 0xFFE0288B,
-		mpheist_overlays = 0xD1ABB67A,
-		mphipster_overlays = 0xAC9EF2CE,
-		mpbeach_overlays = 0x998603B3,
-		mppilot_overlays = 0x9B9AD507,
-		mplts_overlays = 0x9C03D0A9,
-		mpluxe_overlays = 0xC10999AD,
-		mpluxe2_overlays = 0x1CE4C2E8,
-		mpchristmas_overlays = 0x4EFB3524,
-		mpchristmas2_overlays = 0xB8648D7F,
-		mpindependance_overlays = 0xBED32257,
-		mphalloween_overlays = 0x8E48C7EE,
-		mpxmas_604490_overlays = 0xA4140DE6,
-		mpvalentines_overlays = 0x6950EBED,
-		mplowrider_overlays = 0x03B424B7,
-		mplowrider2_overlays = 0x5B259C93,
-		mpexecutive_overlays = 0xB8C6CF54,
-		mpstunt_overlays = 0x3D344BFC,
-		mpimportexport_overlays = 0xC5DAA1EF,
-		};*/
-
 		struct NamedPedDecal
 		{
 			Hash collection, value;
 			std::string caption;
-
 			bool IsOnPed(GTAentity ped) const;
 			void Apply(GTAentity ped) const;
 			void Remove(GTAentity ped) const;
@@ -98,24 +71,25 @@ namespace sub
 
 		extern std::map<Hash, std::map<std::string, std::map<std::string, std::vector<NamedPedDecal>>>> vAllDecals; // PedHash[Type][Zone]
 		void PopulateDecalsDict();
+		std::string GetDecalCaption(Hash collection, Hash value);
 
-		extern std::pair<std::string, std::map<std::string, std::vector<NamedPedDecal>>>* _selectedType;
-		extern std::pair<std::string, std::vector<NamedPedDecal>>* _selectedZone;
+		extern std::pair<std::string, std::map<std::string, std::vector<NamedPedDecal>>>* selectedType;
+		extern std::pair<std::string, std::vector<NamedPedDecal>>* selectedZone;
+
+		extern bool g_tattooPreviewMode;
+		extern const NamedPedDecal* g_previewTattoo;
 
 		void Sub_Decals_Types();
 		void Sub_Decals_Zones();
 		void Sub_Decals_InZone();
-		void ComponentChanger_OpenSub_Decals();
+		void OpenSubDecals();
 
 	}
 
 	// Damage/blood textures
 
-	namespace PedDamageTextures_catind
+	namespace PedDamageTextures
 	{
-		//INT& _selectedPedHandle;
-		//extern int _boneToUse;
-
 		extern std::map<Ped, std::vector<std::string>> vPedsAndDamagePacks;
 
 		void ClearAllBloodDamage(GTAped ped);
@@ -123,7 +97,6 @@ namespace sub
 		void ClearAll241BloodDamage();
 		void ClearAll241VisibleDamage();
 
-		// Use Banner idk k
 		void Sub_CategoryList();
 		void Sub_BoneSelection();
 		void Sub_Blood();
@@ -152,14 +125,12 @@ namespace sub
 		{
 			std::array<sPedHeadOverlayData, 13> overlayData;
 			std::array<float, 20>  facialFeatureData;
-			//PedHeadBlendData blendData;
 			int hairColour;
 			int hairColourStreaks;
 			int eyeColour;
 
 			sPedHeadFeatures()
 			{
-				//memset(this->facialFeatureData, 0, sizeof(this->facialFeatureData));
 				this->facialFeatureData.fill(0);
 				this->hairColour = 0;
 				this->hairColourStreaks = 0;
@@ -168,7 +139,7 @@ namespace sub
 		};
 
 		extern std::map<Ped, sPedHeadFeatures> vPedHeads;
-		extern std::map<Ped, sPedHeadFeatures>::mapped_type* _pedHead;
+		extern std::map<Ped, sPedHeadFeatures>::mapped_type* pedHead;
 
 		extern const std::vector<std::pair<std::string, std::vector<std::string>>> vCaptions_headOverlays;
 		extern const std::vector<std::string> vCaptions_facialFeatures;
@@ -185,23 +156,40 @@ namespace sub
 		void Sub_FaceFeatures();
 		void Sub_SkinTone();
 
+		namespace PedFaceGen
+		{
+			struct sFaceGenData
+			{
+				bool useThirdParent = false;
+				bool useNonRockstarParents = false;
+				int parentGenderFilter = 0; // 0=Any, 1=Male, 2=Female
+				int skinColorFilter = 0; // 0=Any, 1=White, 2=Black, 3=Hispanic, 4=Asian, 5=Arab, 6=Pakistani
+				int nonRockstarMax = 46;
+				Hash lastPedModel = 0;
+			};
+
+			extern const std::vector<int> parentIdsByGenderSkin[2][6];
+			extern sFaceGenData settings;
+		}
+
+		void Sub_FaceGenerator();
+
 	}
 
 	// Outfits (saver)
 
-	namespace ComponentChanger_Outfit_catind
+	namespace ComponentChangerOutfit
 	{
-		extern UINT8 _persistentAttachmentsTexterIndex;
-
-		bool Create(GTAentity ped, std::string filePath);
-
+		extern UINT8 persistentAttachmentsTexterIndex;
+		extern bool legacyXMLFormat;
+		bool Create(GTAentity ped, std::string filePath, bool legacyXMLFormat = false);
 		bool Apply(GTAped ep, const std::string& filePath, bool applyModelAndHead, bool applyProps, bool applyComps, bool applyDecals, bool applyDamageTextures, bool applyAttachedEntities);
 
 	}
 
 	void ComponentChanger_Outfits();
 	void ComponentChanger_Outfits2();
-
+	void ComponentChanger_DefaultOutfits();
 }
 
 

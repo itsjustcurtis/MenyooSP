@@ -25,26 +25,38 @@ namespace sub::Spooner
 	class SpoonerEntity
 	{
 	public:
-		struct Animation_t { std::string dict, name; };
-		struct Attachment_t { bool isAttached; int boneIndex; Vector3 offset, rotation; };
+		struct Animation
+		{
+			std::string dict, name;
+			float speed, speedMultiplier, playbackRate;
+			int duration, flag;
+			bool lockPos;
+		};
+		struct Attachment { bool isAttached; int boneIndex; Vector3 offset, rotation; };
 
-		GTAentity Handle;
-		EntityType Type;
-		std::string HashName;
-		bool Dynamic;
+		GTAentity handle;
+		EntityType type;
+		std::string hashName;
+		bool dynamic;
 		//bool Door;
-		SpoonerEntity::Animation_t LastAnimation;
-		SpoonerEntity::Attachment_t AttachmentArgs;
-		UINT8 TextureVariation;
-		bool IsStill;
+		std::vector<SpoonerEntity::Animation> lastAnimations;
+		std::string currentScenario;
+		SpoonerEntity::Attachment attachmentArgs;
+		UINT8 textureVariation;
+		bool isStill;
 		//Hash RelationshipHash;
-		SpoonerTaskSequence TaskSequence;
+		SpoonerTaskSequence taskSequence;
 
 		std::string TypeName();
 
 		SpoonerEntity();
 		//const SpoonerEntity& operator = (const SpoonerEntity& right)
 		SpoonerEntity(const SpoonerEntity& right);
+
+		void AddOrUpdateLastAnimation(const Animation& anim);
+		void RemoveFromLastAnimations(int flag);
+		bool HasInLastAnimations(int flag) const;
+		void ClearLastAnimations();
 
 		friend bool operator == (const SpoonerEntity& left, const SpoonerEntity& right);
 		friend bool operator != (const SpoonerEntity& left, const SpoonerEntity& right);
@@ -62,8 +74,7 @@ namespace sub::Spooner
 	};
 	
 
-	extern SpoonerEntity SelectedEntity;
-	extern std::vector<SpoonerEntity> SelectedSpoonGroup;
+	extern SpoonerEntity selectedEntity;
 }
 
 

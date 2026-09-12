@@ -11,21 +11,13 @@
 
 #include "GenericLoopedMode.h"
 
-//#include "..\Scripting\GTAvehicle.h"
-//#include "..\Scripting\Model.h"
-
-namespace _VehicleFly_
+namespace VehicleFly
 {
 	class VehicleFly final : public GenericLoopedMode
 	{
 	private:
-		//GTAvehicle vehicle;
-		//ModelDimensions vehicle_md;
-		////DWORD hovertimer;
 	public:
 		void TurnOn() override;
-
-		//void GoStationary();
 		void GoUp(float const& control);
 		void GoDown(float const& control);
 		void GoForward(float const& control);
@@ -44,7 +36,6 @@ namespace _VehicleFly_
 
 		void Tick() override;
 		inline void DoVehicleFlyTick();
-		//void HoverTick()
 
 		void PrintFlyInstructions();
 	};

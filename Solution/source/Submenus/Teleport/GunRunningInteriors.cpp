@@ -144,7 +144,7 @@ namespace sub::TeleportLocations_catind
 			{
 				if (info.location != nullptr)
 				{
-					teleport_net_ped(ped, info.location->pos);
+					TeleportNetPed(ped, info.location->pos);
 				}
 			}
 
@@ -165,10 +165,10 @@ namespace sub::TeleportLocations_catind
 			{
 				if (currentBunkerInfo.location == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
-				GTAped ped = Static_241;
+				GTAped ped = g_activePedHandle;
 				AddTitle(currentBunkerInfo.location->name);
 
 				for (auto& o : vOptionArrays)
@@ -185,7 +185,7 @@ namespace sub::TeleportLocations_catind
 					DO_SCREEN_FADE_OUT(50);
 					CreateBunker(currentBunkerInfo);
 					TeleportPedToBunker(ped, currentBunkerInfo);
-					//Menu::SetSub_previous();
+					//Menu::SetPreviousMenu();
 					DO_SCREEN_FADE_IN(200);
 					return;
 				}
@@ -259,7 +259,7 @@ namespace sub::TeleportLocations_catind
 			{
 				if (info.location != nullptr)
 				{
-					teleport_net_ped(ped, info.location->pos);
+					TeleportNetPed(ped, info.location->pos);
 				}
 			}
 
@@ -280,10 +280,10 @@ namespace sub::TeleportLocations_catind
 			{
 				if (currentMocInfo.location == nullptr)
 				{
-					Menu::SetSub_previous();
+					Menu::SetPreviousMenu();
 					return;
 				}
-				GTAped ped = Static_241;
+				GTAped ped = g_activePedHandle;
 				AddTitle(currentMocInfo.location->name);
 
 				for (auto& o : vOptionArrays)
@@ -300,7 +300,7 @@ namespace sub::TeleportLocations_catind
 					DO_SCREEN_FADE_OUT(50);
 					CreateMoc(currentMocInfo);
 					TeleportPedToMoc(ped, currentMocInfo);
-					//Menu::SetSub_previous();
+					//Menu::SetPreviousMenu();
 					DO_SCREEN_FADE_IN(200);
 					return;
 				}
@@ -312,4 +312,9 @@ namespace sub::TeleportLocations_catind
 }
 
 
-
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TELEPORTOPS_BUNKERS,                   sub::TeleportLocations_catind::GunRunningInteriors::Bunkers::Sub_Bunkers)
+REGISTER_SUBMENU(TELEPORTOPS_BUNKERS_INLOC,             sub::TeleportLocations_catind::GunRunningInteriors::Bunkers::Sub_Bunkers_InLoc)
+REGISTER_SUBMENU(TELEPORTOPS_MOC,                       sub::TeleportLocations_catind::GunRunningInteriors::Moc::Sub_Moc)
+REGISTER_SUBMENU(TELEPORTOPS_MOC_INLOC,                 sub::TeleportLocations_catind::GunRunningInteriors::Moc::Sub_Moc_InLoc)

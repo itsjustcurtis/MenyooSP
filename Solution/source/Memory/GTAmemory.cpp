@@ -29,6 +29,8 @@
 #include "..\Util\FileLogger.h"
 #include "..\Menu\Menu.h"
 
+#include <algorithm>
+
 #include <Windows.h>
 #include <Psapi.h>
 
@@ -55,7 +57,7 @@ GetModelInfo_t GetModelInfo;
 std::unordered_map<unsigned int, std::string> g_vehicleHashes;
 CallHook<InitVehicleArchetype_t>* g_InitVehicleArchetype = nullptr;
 CVehicleModelInfo* initVehicleArchetype_stub(const char* name, bool a2, unsigned int a3) {
-	addlog(ige::LogType::LOG_DEBUG, "getting hashkey for " + std::string(name), __FILENAME__);
+	addlog(ige::LogType::LOG_DEBUG, "getting hashkey for " + std::string(name));
 	g_vehicleHashes.insert({ GET_HASH_KEY(name), boost::to_lower_copy(name) });
 	return g_InitVehicleArchetype->fn(name, a2, a3);
 }
@@ -72,19 +74,19 @@ void setupHooks() {
 	if (g_isEnhanced) {
 		auto addr = MemryScan::PatternScanner::FindPattern("e8 ? ? ? ? 43 89 44 2c");
 		if (!addr) {
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetypeEnahnced", __FILENAME__);
+			addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetypeEnahnced");
 			return;
 		}
-		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetypeEnhanced at " + std::to_string(addr), __FILENAME__);
+		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetypeEnhanced at " + std::to_string(addr));
 		g_InitVehicleArchetypeEnhanced = HookManager::SetCall(addr, initVehicleArchetypeEnhanced_stub);
 	}
 	else {
 		auto addr = GTAmemory::FindPattern("\xE8\x00\x00\x00\x00\x48\x8B\x4D\xE0\x48\x8B\x11", "x????xxxxxxx");
 		if (!addr) {
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetype", __FILENAME__);
+			addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetype");
 			return;
 		}
-		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetype at " + std::to_string(addr), __FILENAME__);
+		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetype at " + std::to_string(addr));
 		g_InitVehicleArchetype = HookManager::SetCall(addr, initVehicleArchetype_stub);
 	}
 }
@@ -185,7 +187,7 @@ namespace MemryScan
 			}
 		}
 
-		addlog(ige::LogType::LOG_ERROR, "Pattern " + s + " not found", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR, "Pattern " + s + " not found");
 
 		return NULL;
 	}
@@ -210,7 +212,7 @@ namespace MemryScan
 	{
 		DWORD64 i;
 		DWORD64 size;
-		DWORD64 address;
+		DWORD64 address = (DWORD64)g_MainModule;
 
 		MODULEINFO info = g_MainModuleInfo;
 		size = (DWORD64)info.SizeOfImage;
@@ -336,6 +338,27 @@ INT32* GTAmemory::_transitionStatus = nullptr;
 
 UINT64 GTAmemory::_gxtLabelFromHashAddr1;
 char* (__fastcall* GTAmemory::_gxtLabelFromHashFuncAddr)(UINT64 address, unsigned int hash);
+
+class CPedVariationInfoCollection;
+class CPedVariationInfo;
+class CPedPropInfo;
+
+// Ped Variation Collections - Offsets 
+uint8_t g_collectionInfoHashOffset;     // read uint8 at offset 2 from pattern
+uint8_t g_dynamicEntityArchetypeOffset;  // read uint8 at offset 3 from pattern  
+int32_t g_pedModelInfoVarInfoCollectionOffset; // read int32 at offset 4 from pattern
+uint8_t g_variationInfoPropInfoOffset;    // read uint8 at offset 3 from pattern
+
+// Ped Variation Collections - Function pointers
+int(*g_GetGlobalDrawableIndex)(CPedVariationInfoCollection*, int, uint32_t, uint32_t);
+int(*g_GetGlobalPropIndex)(CPedVariationInfoCollection*, int, uint32_t, uint32_t);
+int(*g_GetDlcDrawableIdx)(CPedVariationInfoCollection*, uint32_t, uint32_t);
+int(*g_GetDlcPropIdx)(CPedVariationInfoCollection*, uint32_t, uint32_t);
+uint8_t(*g_GetMaxNumDrawables)(CPedVariationInfo*, uint32_t);
+uint8_t(*g_GetMaxNumProps)(CPedPropInfo*, uint32_t);
+CPedVariationInfo*(*g_GetVariationInfoFromDrawableIdx)(CPedVariationInfoCollection*, uint32_t, uint32_t);
+CPedVariationInfo*(*g_GetVariationInfoFromPropIdx)(CPedVariationInfoCollection*, uint32_t, uint32_t);
+const char*(*g_GetCollectionName)(CPedVariationInfo*);
 
 /*struct EntityPoolTask
 {
@@ -645,6 +668,23 @@ private:
 		return ~((num1 | -num1) >> 63);
 	}
 };
+// Ped Variation Collections classes
+class CPedVariationInfoCollection
+{
+public:
+	void** m_infos;
+};
+
+class CPedVariationInfo
+{
+public:
+};
+
+class CPedPropInfo
+{
+public:
+};
+
 struct EntityPoolTask
 {
 	enum Type : UINT16
@@ -970,7 +1010,7 @@ struct GenericTask
 {
 public:
 	typedef UINT64(*func)(UINT64);
-	GenericTask(func pFunc, UINT64 Arg) : _toRun(pFunc), _arg(Arg)
+	GenericTask(func pFunc, UINT64 Arg) : _toRun(pFunc), _arg(Arg), _res(0)
 	{
 	}
 	virtual void Run()
@@ -1178,11 +1218,12 @@ void GTAmemory::Init()
 
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("48 8d 3d ? ? ? ? 48 8b 04 f7");
+		if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 	}
 	else {
-		address = FindPattern("\x4C\x8D\x05\x00\x00\x00\x00\x0F\xB7\xC1", "xxx????xxx");
+		address = MemryScan::PatternScanner::FindPattern("3b 35 ? ? ? ? 74 ? 48 81 fd");
+		if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address - 4) + address);
 	}
-	if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("41 57 41 56 56 57 53 48 83 ec ? 89 d7 49 89 ce");
@@ -1221,7 +1262,7 @@ void GTAmemory::Init()
 		address = *(int*)(address + 14) + address + 18;
 		s_pedEntityInVehicleCheckOffset = *(int*)(address + 3);
 
-		address = MemryScan::PatternScanner::FindPattern("0f 28 8f ? ? ? ? f3 0f 10 b7 ? ? ? ? f3 0f 16 c1 e9");
+		address = MemryScan::PatternScanner::FindPattern("0f 28 8f ? ? ? ? f3 0f 10 b7 ? ? ? ? f3 0f 16 c1");
 		s_entityPosFloatsOffset = *(int*)(address + 3);
 
 		address = MemryScan::PatternScanner::FindPattern("48 89 d6 0f b6 42 ? 04 ? 3c ? 0f 87 ? ? ? ? e9");
@@ -1295,7 +1336,12 @@ void GTAmemory::Init()
 	_vehiclePoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 
 	if (!g_isEnhanced) {
-		address = FindPattern("\x4C\x8B\x0D\x00\x00\x00\x00\x44\x8B\xC1\x49\x8B\x41\x08", "xxx????xxxxxxx");
+		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_3788_0) {
+			address = FindPattern("\x4C\x8B\x05\x00\x00\x00\x00\x41\x3B\x50\x00\x7D\x00\x49\x8B\x40", "xxx????xxx?x?xxx");
+		}
+		else {
+			address = FindPattern("\x4C\x8B\x0D\x00\x00\x00\x00\x44\x8B\xC1\x49\x8B\x41\x08", "xxx????xxxxxxx");
+		}
 		_entityPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 
 		address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\x41\x0F\xBF\xC8\x0F\xBF\x40\x10", "xxx????xxxxxxxx");
@@ -1316,7 +1362,8 @@ void GTAmemory::Init()
 	{
 		address = MemryScan::PatternScanner::FindPattern("\x40\x53\x48\x83\xEC\x20\x83\x61\x0C\x00\x44\x89\x41\x08\x49\x63\xC0", "xxxxxxxxxxxxxxxxx");
 	}
-	if (address != null)
+
+	if (address)
 	{
 		CreateNmMessageFunc = reinterpret_cast<UINT64(*)(uint64_t, uint64_t, int)>(address);
 	}
@@ -1325,7 +1372,7 @@ void GTAmemory::Init()
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("44 8b 89 ? ? ? ? b9");
-		if (address != null)
+		if (address)
 		{
 			GiveNmMessageFunc = reinterpret_cast<void(*)(uint64_t, void*, uint64_t)>(address);
 		}
@@ -1333,7 +1380,7 @@ void GTAmemory::Init()
 	else
 	{
 		address = MemryScan::PatternScanner::FindPattern("\x0F\x84\x8B\x00\x00\x00\x48\x8B\x47\x30\x48\x8B\x48\x10\x48\x8B\x51\x20\x80\x7A\x10\x0A", "xxxxxxxxxxxxxxxxxxxxxx");
-		if (address != null)
+		if (address)
 		{
 			GiveNmMessageFunc = reinterpret_cast<void(*)(uint64_t, void*, uint64_t)>((UINT64*)(*(int*)(address - 0x1E) + address - 0x1A));
 		}
@@ -1342,14 +1389,14 @@ void GTAmemory::Init()
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("7d ? 45 89 c6 48 89 d7");
-		if (address != null)
+		if (address)
 		{
 			SetNmIntAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, int)>(address - 20);
 		}
 	}
 	else {
 		address = MemryScan::PatternScanner::FindPattern("\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x41\x8B\xF8", "xxxx?xxxxxxxxxxxxxxx");
-		if (address != null)
+		if (address)
 		{
 			SetNmIntAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, int)>(address);
 		}
@@ -1358,7 +1405,7 @@ void GTAmemory::Init()
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("7d ? 45 89 c6 48 89 d3");
-		if (address != null)
+		if (address)
 		{
 			SetNmBoolAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, unsigned char)>(address - 20);
 		}
@@ -1366,7 +1413,7 @@ void GTAmemory::Init()
 	else
 	{
 		address = MemryScan::PatternScanner::FindPattern("\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x41\x8A\xF8", "xxxx?xxxxxxxxxxxxxxx");
-		if (address != null)
+		if (address)
 		{
 			SetNmBoolAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, unsigned char)>(address);
 		}
@@ -1379,7 +1426,7 @@ void GTAmemory::Init()
 	else {
 		address = MemryScan::PatternScanner::FindPattern("\x40\x53\x48\x83\xEC\x30\x48\x8B\xD9\x48\x63\x49\x0C", "xxxxxxxxxxxxx");
 	}
-	if (address != null)
+	if (address)
 	{
 		SetNmFloatAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, float)>(address);
 	}
@@ -1387,14 +1434,14 @@ void GTAmemory::Init()
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("41 56 56 57 53 48 83 ec ? 48 89 ce 48 63 79");
-		if (address != null)
+		if (address)
 		{
 			SetNmStringAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, __int64)>(address);
 		}
 	}
 	else {
 		address = MemryScan::PatternScanner::FindPattern("\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x49\x8B\xE8", "xxxxxxxxxxxxxxx");
-		if (address != null)
+		if (address)
 		{
 			SetNmStringAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, __int64)>(address - 15);
 		}
@@ -1403,7 +1450,7 @@ void GTAmemory::Init()
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("0f 29 7c 24 30 0f 29 74 24 20 48 89 ce 48 63 79");
-		if (address != null)
+		if (address)
 		{
 			SetNmVec3Address = reinterpret_cast<unsigned char(*)(__int64, __int64, float, float, float)>(address - 15);
 		}
@@ -1411,7 +1458,7 @@ void GTAmemory::Init()
 	else
 	{
 		address = MemryScan::PatternScanner::FindPattern("\x40\x53\x48\x83\xEC\x40\x48\x8B\xD9\x48\x63\x49\x0C", "xxxxxxxxxxxxx");
-		if (address != null)
+		if (address)
 		{
 			SetNmVec3Address = reinterpret_cast<unsigned char(*)(__int64, __int64, float, float, float)>(address);
 		}
@@ -1512,7 +1559,7 @@ void GTAmemory::Init()
 			address = address - 8;
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo (Enhanced)", __FILENAME__);
+			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo (Enhanced)");
 		}
 	}
 	else {
@@ -1532,7 +1579,7 @@ void GTAmemory::Init()
 				"xxxxxxxxxxx");
 
 			if (!address) {
-				addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo", __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo");
 			}
 		}
 		else {
@@ -1542,7 +1589,7 @@ void GTAmemory::Init()
 				address = address - 0x2C;
 			}
 			else {
-				addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo (v58+)", __FILENAME__);
+				addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo (v58+)");
 			}
 		}
 	}
@@ -1550,8 +1597,137 @@ void GTAmemory::Init()
 		GetModelInfo = (GetModelInfo_t)(address);
 	}
 
-	_SpSnow = SpSnow();
-	addlog(ige::LogType::LOG_INIT, "GTAMemory Init Done", __FILENAME__);
+	// ==== Ped Variation Collections initialization ====
+	// works only with legacy for now
+	if (!g_isEnhanced) {
+		
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("8B 51 ? 85 D2 75 ? 33 C0");
+		if (address) {
+			g_collectionInfoHashOffset = *(uint8_t*)(address + 2);
+			addlog(ige::LogType::LOG_DEBUG, "g_collectionInfoHashOffset found at offset: " + std::to_string(g_collectionInfoHashOffset));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_collectionInfoHashOffset pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("4C 8B 61 ? 48 8B F9 4D 63 E9");
+		if (address) {
+			g_dynamicEntityArchetypeOffset = *(uint8_t*)(address + 3);
+			addlog(ige::LogType::LOG_DEBUG, "g_dynamicEntityArchetypeOffset found at offset: " + std::to_string(g_dynamicEntityArchetypeOffset));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_dynamicEntityArchetypeOffset pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("49 8B 8C 24 ? ? ? ? 49 8B E8");
+		if (address) {
+			g_pedModelInfoVarInfoCollectionOffset = *(int*)(address + 4);
+			addlog(ige::LogType::LOG_DEBUG, "g_pedModelInfoVarInfoCollectionOffset found at offset: " + std::to_string(g_pedModelInfoVarInfoCollectionOffset));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_pedModelInfoVarInfoCollectionOffset pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 83 C1 ? E8 ? ? ? ? 48 8D 7F");
+		if (address) {
+			g_variationInfoPropInfoOffset = *(uint8_t*)(address + 3);
+			addlog(ige::LogType::LOG_DEBUG, "g_variationInfoPropInfoOffset found at offset: " + std::to_string(g_variationInfoPropInfoOffset));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_variationInfoPropInfoOffset pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 0F B7 41 ? 33 F6 45 8B F1");
+		if (address) {
+			g_GetGlobalDrawableIndex = reinterpret_cast<int(*)(CPedVariationInfoCollection*, int, uint32_t, uint32_t)>(address);
+			addlog(ige::LogType::LOG_DEBUG, "g_GetGlobalDrawableIndex found at: " + std::to_string(address));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_GetGlobalDrawableIndex pattern NOT_FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 33 FF 45 8B F1");
+		if (address) {
+			g_GetGlobalPropIndex = reinterpret_cast<int(*)(CPedVariationInfoCollection*, int, uint32_t, uint32_t)>(address);
+			addlog(ige::LogType::LOG_DEBUG, "g_GetGlobalPropIndex found at: " + std::to_string(address));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "FAIL: g_GetGlobalPropIndex pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("E8 ? ? ? ? 44 8B C3 48 8B 5D");
+		if (address) {
+			address = *reinterpret_cast<int*>(address + 1) + address + 5;
+			g_GetDlcDrawableIdx = reinterpret_cast<int(*)(CPedVariationInfoCollection*, uint32_t, uint32_t)>(address);
+			addlog(ige::LogType::LOG_DEBUG, "g_GetDlcDrawableIdx found at: " + std::to_string(address));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_GetDlcDrawableIdx pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("E8 ? ? ? ? 45 33 F6 44 8B E8 44 38 75");
+		if (address) {
+			address = *reinterpret_cast<int*>(address + 1) + address + 5;
+			g_GetDlcPropIdx = reinterpret_cast<int(*)(CPedVariationInfoCollection*, uint32_t, uint32_t)>(address);
+			addlog(ige::LogType::LOG_DEBUG, "g_GetDlcPropIdx found at: " + std::to_string(address));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_GetDlcPropIdx pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 89 5C 24 ? 57 48 83 EC ? 8B DA 48 8B F9 E8 ? ? ? ? 48 85 C0 74 ? 8B D3");
+		if (address) {
+			g_GetMaxNumDrawables = reinterpret_cast<uint8_t(*)(CPedVariationInfo*, uint32_t)>(address);
+			addlog(ige::LogType::LOG_DEBUG, "g_GetMaxNumDrawables found at: " + std::to_string(address));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_GetMaxNumDrawables pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 89 5C 24 ? 0F B7 41 ? 45 33 C0 45 8B C8 45 8B D0 8B D8");
+		if (address) {
+			g_GetMaxNumProps = reinterpret_cast<uint8_t(*)(CPedPropInfo*, uint32_t)>(address);
+			addlog(ige::LogType::LOG_DEBUG, "g_GetMaxNumProps found at: " + std::to_string(address));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_GetMaxNumProps pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 56 48 83 EC 20 33 DB 41 8B F0 8B EA 48 8B F9 66 3B 59 08 73 32 48 8B 0F");
+		if (!address) {
+			addlog(ige::LogType::LOG_WARNING, "g_GetVariationInfoFromDrawableIdx new pattern not found, trying legacy pattern...");
+			address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 8B C4 48 89 58 ? 48 89 68 ? 48 89 70 ? 48 89 78 ? 41 56 48 83 EC ? 33 DB 41 8B F0 8B EA 48 8B F9 66 3B 59 ? 73 ? 48 8B 0F");
+		}
+		if (address) {
+			g_GetVariationInfoFromDrawableIdx = reinterpret_cast<CPedVariationInfo*(*)(CPedVariationInfoCollection*, uint32_t, uint32_t)>(address);
+			addlog(ige::LogType::LOG_DEBUG, "g_GetVariationInfoFromDrawableIdx found at: " + std::to_string(address));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_GetVariationInfoFromDrawableIdx pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 54 41 55 41 56 41 57 48 83 EC ? 0F B7 41 ? 33 DB");
+		if (address) {
+			g_GetVariationInfoFromPropIdx = reinterpret_cast<CPedVariationInfo*(*)(CPedVariationInfoCollection*, uint32_t, uint32_t)>(address);
+			addlog(ige::LogType::LOG_DEBUG, "g_GetVariationInfoFromPropIdx found at: " + std::to_string(address));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_GetVariationInfoFromPropIdx pattern NOT FOUND!");
+		}
+
+		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("8B 51 ? 85 D2 75 ? 33 C0");
+		if (address) {
+			g_GetCollectionName = reinterpret_cast<const char*(*)(CPedVariationInfo*)>(address);
+			addlog(ige::LogType::LOG_DEBUG, "g_GetCollectionName found at: " + std::to_string(address));
+		}
+		else {
+			addlog(ige::LogType::LOG_ERROR, "g_GetCollectionName pattern NOT FOUND!");
+		}
+	}
+	// ==== End of Ped Variation Collections initialization ====
+
+	g_spSnow = SpSnow();
+	addlog(ige::LogType::LOG_INIT, "GTAMemory Init Done");
 }
 
 void GTAmemory::InitEnhancedPools() {
@@ -1561,8 +1737,13 @@ void GTAmemory::InitEnhancedPools() {
 		// using bit operations. The problem is that menyoo is loaded a bit too early for the initialization to have happened, and so we can't retrieve those values
 		// during GTAmemory init. For that reason, we leave that to the very end, and we keep waiting until the game has started (GameState == 0 (PLAYING)).
 		// This was not a problem with SHVDNE, since NativeMemroy init is only done after the game has started.
-
-		UINT64 address = MemryScan::PatternScanner::FindPattern("83 f9 ? 74 ? 41 89 c8");
+		UINT64 address;
+		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1013_33) {
+			address = MemryScan::PatternScanner::FindPattern("c9 41 89 c8 49 c1 e8");
+		}
+		else {
+			address = MemryScan::PatternScanner::FindPattern("83 f9 ? 74 ? 41 89 c8");
+		}
 		if (address)
 		{
 			bool isInitialized = (*(byte*)(*(int*)(address + 11) + address + 15) & 1) != 0;
@@ -1617,7 +1798,12 @@ void GTAmemory::InitEnhancedPools() {
 			}
 		}
 
-		address = MemryScan::PatternScanner::FindPattern("48 83 ec ? 83 3d ? ? ? ? ? 0f 84 ? ? ? ? 0f b6 05");
+		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1013_33) {
+			address = MemryScan::PatternScanner::FindPattern("8b 05 ? ? ? ? 85 c0 0f 8e ? ? ? ? c1 e8 ? 0f b6 0d");
+		}
+		else {
+			address = MemryScan::PatternScanner::FindPattern("48 83 ec ? 83 3d ? ? ? ? ? 0f 84 ? ? ? ? 0f b6 05");
+		}
 		if (address) {
 			bool isInitialized = (*(byte*)(*(int*)(address + 20) + address + 24) & 1) != 0;
 			UINT64 firstValue = *(UINT64*)(*(int*)(address + 38) + address + 42);
@@ -1670,54 +1856,46 @@ void GTAmemory::InitEnhancedPools() {
 			}
 		}
 
-		address = MemryScan::PatternScanner::FindPattern("48 89 cb 48 8b 41 ? 8b 10 f2 0f 10 3d");
+		address = MemryScan::PatternScanner::FindPattern("48 89 c1 45 31 c0 e8 ? ? ? ? 90 48 83 c4 20 5b 5f 5e");
 		if (address)
 		{
-			// The pattern is inside a function, which calls a function, which accesses the pool.
-			address = (*reinterpret_cast<int*>(address + 34) + address + 38);
-			if (address)
+			address -= 81;
+			bool isInitialized = (*reinterpret_cast<byte*>(*reinterpret_cast<int*>(address + 3) + address + 7) & 1) != 0;
+			UINT64 firstValue = *reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 21) + address + 25);
+			UINT64 secondValue = *reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 10) + address + 14);
+			auto firstRol = *reinterpret_cast<byte*>(address + 17); // 0x1b
+			auto secondRol = *reinterpret_cast<byte*>(address + 31); // 0x20
+			auto andValue = *reinterpret_cast<byte*>(address + 34); // 0x1f
+			auto addValue = *reinterpret_cast<byte*>(address + 37); // 0x1
+			auto xorValue = *reinterpret_cast<byte*>(address + 46); // 0x3f
+			GTAmemory::_cameraPoolAddress = (UINT64*)0UL;
+			if (isInitialized)
 			{
-				bool isInitialized = (*reinterpret_cast<byte*>(*reinterpret_cast<int*>(address + 3) + address + 7) & 1) != 0;
-				UINT64 firstValue = *reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 21) + address + 25);
-				UINT64 secondValue = *reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 10) + address + 14);
-				auto firstRol = *reinterpret_cast<byte*>(address + 17); // 0x1b
-				auto secondRol = *reinterpret_cast<byte*>(address + 31); // 0x20
-				auto andValue = *reinterpret_cast<byte*>(address + 33); // 0x1f
-				auto addValue = *reinterpret_cast<byte*>(address + 36); // 0x1
-				auto xorValue = *reinterpret_cast<byte*>(address + 44); // 0x3f
-				GTAmemory::_cameraPoolAddress = (UINT64*)0UL;
-				if (isInitialized)
-				{
-					auto rax = secondValue;
-					rax = Rol(rax, firstRol);
-					auto rsi = firstValue;
-					rsi = rsi ^ rax;
-					rsi = Rol(rsi, secondRol);
-					auto al = (byte)(rax & 0xFF);
-					al = (byte)(al & andValue);
-					rax = (rax & 0xFFFFFFFFFFFFFF00UL) | (UINT64)al;
-					auto ecx = (int)((rax + (UINT64)addValue) & 0xFFFFFFFF);
-					auto rdi = rsi;
-					auto cl = (byte)(ecx & 0xFF);
-					rdi = rdi << cl;
-					al = (byte)(al ^ xorValue);
-					rax = (rax & 0xFFFFFFFFFFFFFF00UL) | (UINT64)al;
-					auto eax = (int)(rax & 0xFFFFFFFF);
-					ecx = eax;
-					cl = (byte)(ecx & 0xFF);
-					rsi = rsi >> cl;
-					rsi = rsi | rdi;
-					rsi = ~rsi;
-					GTAmemory::_cameraPoolAddress = (UINT64*)rsi;
-				}
+				auto rax = secondValue;
+				rax = Rol(rax, firstRol);
+				auto rsi = firstValue;
+				rsi = rsi ^ rax;
+				rsi = Rol(rsi, secondRol);
+				auto al = (byte)(rax & 0xFF);
+				al = (byte)(al & andValue);
+				rax = (rax & 0xFFFFFFFFFFFFFF00UL) | (UINT64)al;
+				auto ecx = (int)((rax + (UINT64)addValue) & 0xFFFFFFFF);
+				auto rdi = rsi;
+				auto cl = (byte)(ecx & 0xFF);
+				rdi = rdi << cl;
+				al = (byte)(al ^ xorValue);
+				rax = (rax & 0xFFFFFFFFFFFFFF00UL) | (UINT64)al;
+				auto eax = (int)(rax & 0xFFFFFFFF);
+				ecx = eax;
+				cl = (byte)(ecx & 0xFF);
+				rsi = rsi >> cl;
+				rsi = rsi | rdi;
+				rsi = ~rsi;
+				GTAmemory::_cameraPoolAddress = (UINT64*)rsi;
 			}
 		}
-		address = address - 0x2C;
-		addlog(ige::LogType::LOG_TRACE, "Found Pattern: " + std::to_string(address), __FILENAME__);
 
-		GetModelInfo = (GetModelInfo_t)(address);
-
-		_SpSnow = SpSnow();
+		g_spSnow = SpSnow();
 	}
 }
 
@@ -1745,18 +1923,18 @@ struct HashNode
 };
 void GTAmemory::GenerateVehicleModelList()
 {
-	addlog(ige::LogType::LOG_DEBUG, "Generating Vehicle Model List. isEnhanced = " + std::to_string(g_isEnhanced), __FILENAME__);
+	addlog(ige::LogType::LOG_DEBUG, "Generating Vehicle Model List. isEnhanced = " + std::to_string(g_isEnhanced));
 
 	int classOffset;
 	uintptr_t address;
 	HashNode** HashMap;
 	//Zorg
 	if (g_isEnhanced) {
-		addlog(ige::LogType::LOG_TRACE, "Scanning Enhanced Address", __FILENAME__);
+		addlog(ige::LogType::LOG_TRACE, "Scanning Enhanced Address");
 		address = MemryScan::PatternScanner::FindPattern("0f b6 88 ? ? ? ? 83 e1 ? e9");
 		if (address)
 		{
-			addlog(ige::LogType::LOG_TRACE, "Found Address, scanning for Hashes", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Found Address, scanning for Hashes");
 			classOffset = *(uint*)(address + 3);
 
 			address = MemryScan::PatternScanner::FindPattern("74 ? 49 89 d0 4c 8b 1d");
@@ -1766,17 +1944,20 @@ void GTAmemory::GenerateVehicleModelList()
 				modelHashEntries = *reinterpret_cast<UINT16*>(address + *(int*)(address - 7) - 3);
 				// Pattern scan to avoid having offsets accross labels.
 				address = MemryScan::PatternScanner::FindPattern("\x3B\x05\x00\x00\x00\x00\x7D\x00\x48\x8B\x0D", "xx????x?xxx", address, 200); // TODO: use the findpattern with legacy patterns, because it supports a start address.
-				modelNum1 = *reinterpret_cast<int*>(*(int*)(address + 2) + address + 6);
-				modelNum2 = *reinterpret_cast<PUINT64>(*(int*)(address + 11) + address + 15);
-				modelNum3 = *reinterpret_cast<PUINT64>(*(int*)(address + 48) + address + 52);
-				modelNum4 = *reinterpret_cast<PUINT64>(*(int*)(address + 33) + address + 37);
+				if (address)
+				{
+					modelNum1 = *reinterpret_cast<int*>(*(int*)(address + 2) + address + 6);
+					modelNum2 = *reinterpret_cast<PUINT64>(*(int*)(address + 11) + address + 15);
+					modelNum3 = *reinterpret_cast<PUINT64>(*(int*)(address + 48) + address + 52);
+					modelNum4 = *reinterpret_cast<PUINT64>(*(int*)(address + 33) + address + 37);
+				}
 			}
 		}
 	}
 	else {
 		address = FindPattern("\x66\x81\xF9\x00\x00\x74\x10\x4D\x85\xC0", "xxx??xxxxx");
 		if (address) {
-			addlog(ige::LogType::LOG_TRACE, "Found Address, scanning for Hashes", __FILENAME__);
+			addlog(ige::LogType::LOG_TRACE, "Found Address, scanning for Hashes");
 			address = address - 0x21;
 			//UINT64 baseFuncAddr = *reinterpret_cast<int*>(address - 0x21) + address - 0x1D;
 			UINT64 baseFuncAddr = address + *reinterpret_cast<int*>(address) + 0x4;
@@ -1792,7 +1973,7 @@ void GTAmemory::GenerateVehicleModelList()
 		}
 	}
 
-	addlog(ige::LogType::LOG_TRACE, "Patterns Scanned Success", __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Patterns Scanned Success");
 	HashMap = reinterpret_cast<HashNode**>(modelHashTable);
 	//I know 0x20 items are defined but there are only 0x16 vehicle classes.
 	//But keeping it at 0x20 is just being safe as the & 0x1F in theory supports up to 0x20
@@ -1821,7 +2002,7 @@ void GTAmemory::GenerateVehicleModelList()
 			}
 		}
 	}
-	addlog(ige::LogType::LOG_TRACE, "Exiting GenerateVehicleModelList()", __FILENAME__);
+	addlog(ige::LogType::LOG_TRACE, "Exiting GenerateVehicleModelList()");
 }
 
 bool GTAmemory::IsModelAPed(unsigned int modelHash)
@@ -1949,6 +2130,7 @@ UINT64 GTAmemory::GetPtfxAddress(int handle)
 int GTAmemory::GetEntityBoneCount(int handle)
 {
 	UINT64 MemAddress = _entityAddressFunc(handle);
+	if (!MemAddress) return 0;
 	UINT64 Addr2 = (*(UINT64(__fastcall**)(__int64))(*(UINT64*)MemAddress + 88i64))(MemAddress);
 	UINT64 Addr3;
 	if (!Addr2)
@@ -1987,6 +2169,7 @@ UINT64 GTAmemory::GetEntityBoneMatrixAddress(int handle, int boneIndex)
 		return 0;
 
 	UINT64 MemAddress = _entityAddressFunc(handle);
+	if (!MemAddress) return 0;
 	UINT64 Addr2 = (*(UINT64(__fastcall**)(__int64))(*(UINT64*)MemAddress + 88i64))(MemAddress);
 	UINT64 Addr3;
 	if (!Addr2)
@@ -2206,11 +2389,11 @@ int GTAmemory::GetNumberOfVehicles()
 	return 0;
 }
 
-float GTAmemory::WorldGravity_get()
+float GTAmemory::GetWorldGravity()
 {
 	return *_readWorldGravityAddress;
 }
-void GTAmemory::WorldGravity_set(float value)
+void GTAmemory::SetWorldGravity(float value)
 {
 	*_writeWorldGravityAddress = value;
 	SET_GRAVITY_LEVEL(0);
@@ -2306,7 +2489,7 @@ uintptr_t GTAmemory::FindPattern(const char* pattern, const char* mask)
 
 //--------------------------------SpSnow---------------------------------------------------------
 
-SpSnow _SpSnow;
+SpSnow g_spSnow;
 
 void SpSnow::EnableSnow(bool bEnable)
 {
@@ -2700,14 +2883,14 @@ void GeneralGlobalHax::EnableBlockedMpVehiclesInSp()
 			if (address)
 			{
 				int globalindex = *(int*)(address + offset) & 0xFFFFFF;
-				addlog(ige::LogType::LOG_INFO, "Setting Global Variable " + std::to_string(globalindex) + " to true", __FILENAME__);
+				addlog(ige::LogType::LOG_INFO, "Setting Global Variable " + std::to_string(globalindex) + " to true");
 				*GTAmemory::GetGlobalPtr<INT32>(globalindex) = 1;
 				return;
 			}
 		}
 	}
 
-	addlog(ige::LogType::LOG_ERROR, "Global Variable not found, check game version >= 1.0.678.1", __FILENAME__);
+	addlog(ige::LogType::LOG_ERROR, "Global Variable not found, check game version >= 1.0.678.1");
 }
 
 // from EnableMPCars by drp4lyf
@@ -2725,16 +2908,16 @@ bool GTAmemory::FindScript(int hash) {
 	}
 
 	if (!patternAddr) {
-		addlog(ige::LogType::LOG_ERROR, "ERROR: finding address 1", __FILENAME__);
-		addlog(ige::LogType::LOG_ERROR, "Aborting...", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR, "ERROR: finding address 1");
+		addlog(ige::LogType::LOG_ERROR, "Aborting...");
 		return false;
 	}
 	scriptTable = (ScriptTable*)(patternAddr + *(int*)(patternAddr + 3) + 7);
 
 	ScriptTableItem* Item = scriptTable->FindScript(hash);
 	if (Item == NULL) {
-		addlog(ige::LogType::LOG_ERROR, "ERROR: finding script shop_controller ", __FILENAME__);
-		addlog(ige::LogType::LOG_ERROR, "Aborting...", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR, "ERROR: finding script shop_controller ");
+		addlog(ige::LogType::LOG_ERROR, "Aborting...");
 		return false;
 	}
 	while (!Item->IsLoaded())
@@ -2742,7 +2925,7 @@ bool GTAmemory::FindScript(int hash) {
 
 	shopController = Item->Header;
 
-	//addlog(ige::LogType::LOG_INFO,  "Found shopcontroller", __FILENAME__);
+	//addlog(ige::LogType::LOG_INFO,  "Found shopcontroller");
 	return true;
 }
 
@@ -2874,50 +3057,7 @@ void GeneralGlobalHax::SetPlayerMovementSpeed(float value)
 	}
 }
 
-int GeneralGlobalHax::GetVehicleBoostState()
-{
-	if (!g_isEnhanced) {
-		auto baddr = *GeneralGlobalHax::WorldPtrPtr();
-		if (baddr)
-		{
-			auto gameVersion = GTAmemory::GetGameVersion();
-			if (gameVersion <= eGameVersion::VER_1_0_2372_0_NOSTEAM)
-				return *(GetMultilayerPointer<int*>(baddr, std::vector<DWORD>{0x8, 0xD28, 0x318}));
-		}
-	}
-	return 0;
-}
-void GeneralGlobalHax::SetVehicleBoostState(int value)
-{
-	if (g_isEnhanced) return;
-	auto baddr = *GeneralGlobalHax::WorldPtrPtr();
-	if (baddr)
-	{
-		auto gameVersion = GTAmemory::GetGameVersion();
-		if (gameVersion <= eGameVersion::VER_1_0_2372_0_NOSTEAM)
-			*(GetMultilayerPointer<int*>(baddr, std::vector<DWORD>{0x8, 0xD28, 0x318})) = value;
-	}
-}
-float* GeneralGlobalHax::GetVehicleBoostChargePtr()
-{
-	if (!g_isEnhanced) {
-		auto baddr = *GeneralGlobalHax::WorldPtrPtr();
-		if (baddr)
-		{
-			auto gameVersion = GTAmemory::GetGameVersion();
-			if (gameVersion <= eGameVersion::VER_1_0_1103_2_NOSTEAM)
-				return (GetMultilayerPointer<float*>(baddr, std::vector<DWORD>{0x8, 0xD28, 0x31C}));
-			if (gameVersion <= eGameVersion::VER_1_0_2372_0_NOSTEAM)//VER_1_0_1868_1_NOSTEAM
-				return (GetMultilayerPointer<float*>(baddr, std::vector<DWORD>{0x8, 0xD28, 0x320})); // Might be off
-		}
-	}
-	return nullptr;
-}
-
 std::string GTAmemory::GetVehicleModelName(Hash hash) {
-	if(g_vehicleHashes.empty()) {
-		addlog(ige::LogType::LOG_ERROR, "g_vehicleHashes Empty", __FILENAME__);
-	}
 	auto modelIt = g_vehicleHashes.find(hash);
 	if (modelIt != g_vehicleHashes.end()) return modelIt->second;
 	return "NOTFOUND";
@@ -2931,4 +3071,209 @@ std::string GTAmemory::GetVehicleMakeName(Hash modelHash) {
 		return ((CVehicleModelInfo*)modelInfo)->m_manufacturerName;
 	}
 	return ((CVehicleModelInfo1290*)modelInfo)->m_manufacturerName;
+}
+
+// Ped Variation Collections - Helper Functions
+const char* GetCollectionNameHelper(CPedVariationInfo* info)
+{
+	if (!info || !g_GetCollectionName) return nullptr;
+	return g_GetCollectionName(info);
+}
+
+CPedVariationInfoCollection* GetPedVariationInfoCollection(int pedHandle)
+{
+	if (!pedHandle || !GTAmemory::_entityAddressFunc) return nullptr;
+	auto pedAddr = GTAmemory::_entityAddressFunc(pedHandle);
+	if (!pedAddr) return nullptr;
+	auto modelInfo = *(void**)(pedAddr + 0x20);
+	if (!modelInfo) return nullptr;
+	return *(CPedVariationInfoCollection**)((uintptr_t)modelInfo + g_pedModelInfoVarInfoCollectionOffset);
+}
+
+// Implementation Functions
+
+GTAmemory::DrawableCollectionData GTAmemory::BuildDrawableCollectionData(int pedHandle, int componentId)
+{
+	DrawableCollectionData result;
+	result.currentCollectionIdx = -1;
+	result.currentLocalIdx = -1;
+
+	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromDrawableIdx ||
+	    !g_GetDlcDrawableIdx || !g_GetCollectionName)
+		return result;
+
+	auto collection = GetPedVariationInfoCollection(pedHandle);
+	if (!collection) return result;
+
+	int maxGlobal = GET_NUMBER_OF_PED_DRAWABLE_VARIATIONS(pedHandle, componentId);
+	int currentGlobal = GET_PED_DRAWABLE_VARIATION(pedHandle, componentId);
+
+	struct RawColl
+	{
+		std::string name;
+		int firstGlobalIdx;
+		std::vector<std::pair<int, int>> entries;
+	};
+	std::vector<RawColl> raw;
+
+	for (int g = 0; g < maxGlobal; g++)
+	{
+		auto vi = g_GetVariationInfoFromDrawableIdx(collection, componentId, g);
+		const char* name = vi ? GetCollectionNameHelper(vi) : nullptr;
+		std::string nameStr = (name && name[0]) ? name : "basegame";
+		int local = g_GetDlcDrawableIdx(collection, componentId, g);
+
+		auto it = std::find_if(raw.begin(), raw.end(),
+			[&](const RawColl& rc) { return rc.name == nameStr; });
+		if (it == raw.end())
+		{
+			raw.push_back({nameStr, g, {{local, g}}});
+		}
+		else
+		{
+			it->entries.push_back({local, g});
+		}
+	}
+
+	std::sort(raw.begin(), raw.end(),
+		[](const RawColl& a, const RawColl& b) { return a.firstGlobalIdx < b.firstGlobalIdx; });
+
+	for (int idx = 0; idx < (int)raw.size(); idx++)
+	{
+		auto& [name, firstIdx, entries] = raw[idx];
+		std::sort(entries.begin(), entries.end());
+
+		CollectionEntry ce;
+		ce.name = name;
+		ce.maxLocalId = entries.back().first;
+
+		for (auto& [local, global] : entries)
+		{
+			ce.localToGlobal.push_back(global);
+			if (global == currentGlobal)
+			{
+				result.currentCollectionIdx = idx;
+				result.currentLocalIdx = local;
+			}
+		}
+
+		result.collections.push_back(std::move(ce));
+	}
+
+	return result;
+}
+
+GTAmemory::DrawableCollectionData GTAmemory::BuildPropCollectionData(int pedHandle, int anchorPoint)
+{
+	DrawableCollectionData result;
+	result.currentCollectionIdx = -1;
+	result.currentLocalIdx = -1;
+
+	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromPropIdx ||
+	    !g_GetDlcPropIdx || !g_GetCollectionName)
+		return result;
+
+	auto collection = GetPedVariationInfoCollection(pedHandle);
+	if (!collection) return result;
+
+	int maxGlobal = GET_NUMBER_OF_PED_PROP_DRAWABLE_VARIATIONS(pedHandle, anchorPoint);
+	int currentGlobal = GET_PED_PROP_INDEX(pedHandle, anchorPoint, 0);
+
+	struct RawColl
+	{
+		std::string name;
+		int firstGlobalIdx;
+		std::vector<std::pair<int, int>> entries;
+	};
+	std::vector<RawColl> raw;
+
+	for (int g = 0; g < maxGlobal; g++)
+	{
+		auto vi = g_GetVariationInfoFromPropIdx(collection, anchorPoint, g);
+		const char* name = vi ? g_GetCollectionName(reinterpret_cast<CPedVariationInfo*>(vi)) : nullptr;
+		std::string nameStr = (name && name[0]) ? name : "basegame";
+		int local = g_GetDlcPropIdx(collection, anchorPoint, g);
+
+		auto it = std::find_if(raw.begin(), raw.end(),
+			[&](const RawColl& rc) { return rc.name == nameStr; });
+		if (it == raw.end())
+		{
+			raw.push_back({nameStr, g, {{local, g}}});
+		}
+		else
+		{
+			it->entries.push_back({local, g});
+		}
+	}
+
+	std::sort(raw.begin(), raw.end(),
+		[](const RawColl& a, const RawColl& b) { return a.firstGlobalIdx < b.firstGlobalIdx; });
+
+	for (int idx = 0; idx < (int)raw.size(); idx++)
+	{
+		auto& [name, firstIdx, entries] = raw[idx];
+		std::sort(entries.begin(), entries.end());
+
+		CollectionEntry ce;
+		ce.name = name;
+		ce.maxLocalId = entries.back().first;
+
+		for (auto& [local, global] : entries)
+		{
+			ce.localToGlobal.push_back(global);
+			if (global == currentGlobal)
+			{
+				result.currentCollectionIdx = idx;
+				result.currentLocalIdx = local;
+			}
+		}
+
+		result.collections.push_back(std::move(ce));
+	}
+
+	return result;
+}
+
+std::string GTAmemory::GetPedDrawableCollectionString(int pedHandle, int componentId)
+{
+	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromDrawableIdx ||
+	    !g_GetDlcDrawableIdx || !g_GetCollectionName)
+		return "invalid";
+
+	auto collection = GetPedVariationInfoCollection(pedHandle);
+	if (!collection) return "invalid";
+
+	int globalDrawableIdx = GET_PED_DRAWABLE_VARIATION(pedHandle, componentId);
+	if (globalDrawableIdx < 0) return "invalid";
+
+	auto variationInfo = g_GetVariationInfoFromDrawableIdx(collection, componentId, globalDrawableIdx);
+	if (!variationInfo) return "invalid";
+
+	const char* collectionName = GetCollectionNameHelper(variationInfo);
+	int localIdx = g_GetDlcDrawableIdx(collection, componentId, globalDrawableIdx);
+
+	std::string nameStr = (collectionName && collectionName[0] != '\0') ? collectionName : "basegame";
+	return nameStr + ":" + std::to_string(localIdx);
+}
+
+std::string GTAmemory::GetPedPropCollectionString(int pedHandle, int anchorPoint)
+{
+	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromPropIdx ||
+	    !g_GetDlcPropIdx || !g_GetCollectionName)
+		return "invalid";
+
+	auto collection = GetPedVariationInfoCollection(pedHandle);
+	if (!collection) return "invalid";
+
+	int globalPropIdx = GET_PED_PROP_INDEX(pedHandle, anchorPoint, 0);
+	if (globalPropIdx < 0) return "invalid";
+
+	auto propInfo = g_GetVariationInfoFromPropIdx(collection, anchorPoint, globalPropIdx);
+	if (!propInfo) return "invalid";
+
+	const char* collectionName = g_GetCollectionName(reinterpret_cast<CPedVariationInfo*>(propInfo));
+	int localIdx = g_GetDlcPropIdx(collection, anchorPoint, globalPropIdx);
+
+	std::string nameStr = (collectionName && collectionName[0] != '\0') ? collectionName : "basegame";
+	return nameStr + ":" + std::to_string(localIdx);
 }

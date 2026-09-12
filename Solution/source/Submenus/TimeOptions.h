@@ -9,10 +9,22 @@
 */
 #pragma once
 
+#include <vector>
+
+#include "..\macros.h"
+
+#include "..\Menu\Menu.h"
+#include "..\Menu\Routine.h"
+
+#include "..\Natives\natives2.h"
+#include "..\Util\GTAmath.h"
 #include "..\Scripting\DxHookIMG.h"
+#include "..\Scripting\Game.h"
+#include "..\Util\ExePath.h"
 
 #include <string>
-#include <vector>
+#include <time.h>
+#include <stdio.h>
 
 typedef unsigned __int8 UINT8;
 
@@ -20,25 +32,32 @@ class Vector2;
 
 namespace sub
 {
-	void TimeOps_();
+	void TimeMenu();
 
-	namespace Clock_catind
+	namespace Clock
 	{
-		extern UINT8 loop_clock;
-		extern UINT8 _analogueClockIndex;
-		extern Vector2 _analogueClockPos;
+		extern UINT8 loopClock;
+		extern UINT8 analogueClockIndex;
+		extern Vector2 analogueClockPosition;
 
 		inline void DisplayClockDigital();
 
-		struct sClockImage { std::string name; DxHookIMG::DxTexture faceId, hourId, minuteId; };
-		extern std::vector<sClockImage> vClockImages;
+		struct ClockImage 
+		{ 
+			std::string name; 
+			DxHookIMG::DxTexture faceId;
+			DxHookIMG::DxTexture hourId;
+			DxHookIMG::DxTexture minuteId; 
+		};
+
+		extern std::vector<ClockImage> clockImages;
 
 		void LoadClockImages();
 		inline void DisplayClockAnalogue();
 
 		void DisplayClock();
 
-		void Sub_Clock();
+		void ClockMenu();
 	}
 
 }

@@ -11,7 +11,7 @@
 
 #include "GenericLoopedMode.h"
 
-namespace _ManualRespawn_
+namespace ManualRespawn
 {
 	class ManualRespawn final : public GenericLoopedMode
 	{
@@ -19,15 +19,10 @@ namespace _ManualRespawn_
 		bool inRespawn;
 	public:
 		ManualRespawn();
-
 		bool InRespawn();
-
 		void TurnOff() override;
-
 		bool IsSkipPressed();
-
 		inline void ShowRespawnHelpText();
-
 		void Tick() override;
 		inline void DoManualRespawnTick();
 
@@ -37,14 +32,5 @@ namespace _ManualRespawn_
 	extern ManualRespawn g_manualRespawn;
 
 	void ToggleOnOff();
-
-
-	void Check_self_death_model();
+	void CheckSelfDealthModel();
 }
-
-
-
-
-
-
-

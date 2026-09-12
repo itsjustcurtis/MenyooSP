@@ -33,6 +33,8 @@ namespace sub::Spooner
 			void FaceEntity();
 			void LookAtCoord();
 			void LookAtEntity();
+			void LookAtCoordEyesOnly();
+			void LookAtEntityEyesOnly();
 			void TeleportToCoord();
 			void SeekCoverAtCoord();
 			void SlideToCoord();
@@ -79,6 +81,8 @@ namespace sub::Spooner
 			void SetRotation();
 			void ChangeOpacity();
 			void TriggerFx();
+			void LightMoveWithEntitySub();
+			void LightPointAtEntitySub();
 		}
 		void Sub_TaskSequence_TaskList();
 		void Sub_TaskSequence_AddTask();

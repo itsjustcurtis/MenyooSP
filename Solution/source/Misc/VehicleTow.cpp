@@ -25,10 +25,10 @@
 
 #include <vector>
 
-namespace _VehicleTow_
+namespace VehicleTow
 {
 	// Not using these as class members because I feel like it
-	using _RopeGun_::EntitiesAndRope;
+	using RopeGun::EntitiesAndRope;
 	std::vector<EntitiesAndRope> ropeArr;
 	EntitiesAndRope currentPair;
 
@@ -140,7 +140,7 @@ namespace _VehicleTow_
 
 		const Vector3& oldCoord = last.GetOffsetInWorldCoords(0, -last.Dim2().y, 0);
 
-		for (GTAentity newVeh : _nearbyVehicles)
+		for (GTAentity newVeh : nearbyVehicles)
 		{
 			if (newVeh.Handle() == last.Handle())
 				continue;
@@ -178,8 +178,6 @@ namespace _VehicleTow_
 		Rope newRope = Rope::AddRope(RopeType::Normal, pos1, Vector3(0, 0, 5.0f), dist, 0.0f, true);
 		newRope.ActivatePhysics();
 		currentPair.rope = newRope;
-		//newRope.PinVertex(0, pos1);
-		//newRope.PinVertex(newRope.VertexCount() - 1, pos2);
 
 		newRope.AttachEntities(last, offset1, newVeh, offset2, dist + 0.2f);
 
@@ -209,13 +207,13 @@ namespace _VehicleTow_
 	// controls
 	bool VehicleTow::ExtendPressed()
 	{
-		return Menu::bit_controller ?
+		return Menu::usingControllerInput ?
 			IS_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LS) != 0
 			: IsKeyJustUp(VirtualKey::K);
 	}
 	bool VehicleTow::ShortenPressed()
 	{
-		return Menu::bit_controller ?
+		return Menu::usingControllerInput ?
 			IS_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LS) != 0
 			: get_key_pressed(VirtualKey::K);
 	}
@@ -226,7 +224,7 @@ namespace _VehicleTow_
 		std::string vehBehindName = vehBehind.Model().VehicleDisplayName(true);
 
 		Game::CustomHelpText::ShowTimedText(
-			oss_ << "Press " << (Menu::bit_controller ? "~INPUT_FRONTEND_LS~" : "~b~K~s~") << " to tow the ~h~" << vehBehindName << "~h~ behind your current vehicle."
+			oss_ << "Press " << (Menu::usingControllerInput ? "~INPUT_FRONTEND_LS~" : "~b~K~s~") << " to tow the ~h~" << vehBehindName << "~h~ behind your current vehicle."
 			, 100);
 	}
 

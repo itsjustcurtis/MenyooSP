@@ -36,20 +36,17 @@ namespace Language
 	{
 		static std::set<std::string> reported_missing;
 
-		try {
-			auto& ret = this->pairs.at(text);
-			return ret;
+		auto it = this->pairs.find(text);
+		if (it != this->pairs.end()) {
+			return it->second;
 		}
-		catch (std::out_of_range) {
-			if(reported_missing.insert(text).second) {
-				addlog(ige::LogType::LOG_ERROR, 
-					   "Missing translation for: " + text, 
-					   __FILENAME__);
-			}
-			this->pairs[text] = text;
 
-			return text;
+		if (reported_missing.insert(text).second)
+		{
+			addlog(ige::LogType::LOG_ERROR, "Missing translation for: " + text);
 		}
+		this->pairs[text] = text;
+		return text;
 	}
 
 	std::string TranslateToSelected(std::string text)
@@ -111,11 +108,11 @@ namespace Language
 				{
 					Json doc = Json::parse(stream);
 					lang.Dictionary() = doc;
-					addlog(ige::LogType::LOG_INFO,  "Loaded language file " + lang.GetFilePath(), __FILENAME__);
+					addlog(ige::LogType::LOG_INFO,  "Loaded language file " + lang.GetFilePath());
 				}
 				catch (...)
 				{
-					addlog(ige::LogType::LOG_ERROR,  "Unable to load language file " + lang.GetFilePath(), __FILENAME__);
+					addlog(ige::LogType::LOG_ERROR,  "Unable to load language file " + lang.GetFilePath());
 					return -1;
 				}
 
@@ -123,7 +120,7 @@ namespace Language
 			}
 		}
 
-		addlog(ige::LogType::LOG_ERROR,  "Cannot find selected language in memory. Resetting to default", __FILENAME__);
+		addlog(ige::LogType::LOG_ERROR,  "Cannot find selected language in memory. Resetting to default");
 		ResetSelectedLang();
 		return -1;
 	}

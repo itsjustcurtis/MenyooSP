@@ -19,7 +19,7 @@
 #include "..\Scripting\enums.h"
 #include "..\Scripting\Game.h"
 
-namespace _VehicleCruise_
+namespace VehicleCruise
 {
 	VehicleCruise::VehicleCruise()
 		: cruiseSpeed(0.0f)
@@ -41,7 +41,7 @@ namespace _VehicleCruise_
 
 	void VehicleCruise::BeginCruise()
 	{
-		cruiseSpeed = GTAped(PLAYER_PED_ID()).CurrentVehicle().SpeedVector_get(true).y;
+		cruiseSpeed = GTAped(PLAYER_PED_ID()).CurrentVehicle().GetSpeedVector(true).y;
 	}
 	void VehicleCruise::EndCruise()
 	{
@@ -80,17 +80,13 @@ namespace _VehicleCruise_
 
 		bool isPlane = vehicleModel.IsPlane();
 
-		float speed = vehicle.SpeedVector_get(true).y;
+		float speed = vehicle.GetSpeedVector(true).y;
 
 		if (cruiseSpeed < 0.01f)
 		{
 			EndCruise();
 			return;
 		}
-
-		//auto cartime = GET_TIME_SINCE_PLAYER_HIT_VEHICLE(player.Handle());
-		//auto pedtime = GET_TIME_SINCE_PLAYER_HIT_PED(player.Handle());
-		//auto rpm = vehicle.CurrentRPM_get();
 
 		bool inSeat = isPlane ? true : vehicle.GetPedOnSeat(VehicleSeat::SEAT_DRIVER) == ped.Handle();
 		bool isInAirOrUpsideDownIfCar = isPlane ? false : (!vehicle.IsOnAllWheels() || vehicle.IsInWater());
@@ -107,13 +103,11 @@ namespace _VehicleCruise_
 
 			if (IS_CONTROL_JUST_PRESSED(2, INPUT_VEH_BRAKE))
 			{
-				//cruiseSpeed = speed;
 				cruiseSpeed -= 2.0f / 3.6f;
 			}
 
 			if (IS_CONTROL_JUST_PRESSED(2, INPUT_VEH_ACCELERATE))
 			{
-				//cruiseSpeed = speed;
 				cruiseSpeed += 2.0f / 3.6f;
 			}
 		}
@@ -124,9 +118,9 @@ namespace _VehicleCruise_
 
 	void VehicleCruise::PrintCruiseText(bool working)
 	{
-		Game::Print::setupdraw(GTAfont::Impact, Vector2(0.30f, 0.30f), false, true, true);
+		Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.30f, 0.30f), false, true, true);
 		if (working)
-			Game::Print::drawstring(oss_ << "Cruise Speed: ~b~" << int(cruiseSpeed * 3.6f) << " KM/H", 0.95f, 0.24f);
+			Game::Print::DrawString(oss_ << "Cruise Speed: ~b~" << int(cruiseSpeed * 3.6f) << " KM/H", 0.95f, 0.24f);
 		else
 			Game::Print::drawstring("Cruise Status: ~r~Inactive.", 0.95f, 0.24f);
 	}

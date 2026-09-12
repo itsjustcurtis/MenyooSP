@@ -47,7 +47,7 @@ namespace sub::Spooner
 
 			std::vector<Vector3> vCoordsToCheckPed
 			{
-				myPed.Position_get(),
+				myPed.GetPosition(),
 				//myPed.GetOffsetInWorldCoords(0, myDim1.y, -(myDim1.z / 2)),
 				//myPed.GetOffsetInWorldCoords(0, -myDim1.y, -(myDim1.z / 2)),
 				//myPed.GetOffsetInWorldCoords(myDim1.x, 0, -(myDim1.z / 2)),
@@ -62,7 +62,7 @@ namespace sub::Spooner
 
 				vCoordsToCheckVehicle =
 				{
-					myVehicle.Position_get(),
+					myVehicle.GetPosition(),
 					myVehicle.GetOffsetInWorldCoords(0, myVehicleDim1.y, -(myVehicleDim1.z / 2)),
 					myVehicle.GetOffsetInWorldCoords(0, -myVehicleDim1.y, -(myVehicleDim1.z / 2)),
 					myVehicle.GetOffsetInWorldCoords(myVehicleDim1.x, 0, -(myVehicleDim1.z / 2)),
@@ -70,8 +70,8 @@ namespace sub::Spooner
 				};
 			}
 
-			const auto& renderingCam = World::RenderingCamera_get();
-			const Vector3& camPos = (renderingCam == 0 ? GameplayCamera::Position_get() : renderingCam.Position_get());
+			const auto& renderingCam = World::GetRenderingCamera();
+			const Vector3& camPos = (renderingCam == 0 ? GameplayCamera::GetPosition() : renderingCam.GetPosition());
 
 			for (auto& marker : Databases::MarkerDb)
 			{
@@ -88,7 +88,7 @@ namespace sub::Spooner
 				{
 					finalPosition = marker.m_attachmentArgs.attachedTo.GetOffsetInWorldCoords(marker.m_attachmentArgs.offset);
 					marker.m_position = finalPosition; // If detached, stay at pos
-					const Vector3& entRot = marker.m_attachmentArgs.attachedTo.Rotation_get();
+					const Vector3& entRot = marker.m_attachmentArgs.attachedTo.GetRotation();
 					//finalDirection = Vector3::DirectionToRotation(entRot);
 					finalRotation = Vector3(0, 0, entRot.z) + marker.m_attachmentArgs.rotation;
 				}
@@ -112,7 +112,7 @@ namespace sub::Spooner
 						Vector2 scrnPos;
 						if (World::WorldToScreen(finalPosition, scrnPos))
 						{
-							Game::Print::setupdraw(GTAfont::Impact, Vector2(0.3f, 0.3f), true, false, true);
+							Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.3f, 0.3f), true, false, true);
 							Game::Print::drawstring(marker.m_name, scrnPos.x, scrnPos.y);
 						}
 					}
@@ -140,7 +140,7 @@ namespace sub::Spooner
 									if (dest->m_attachmentArgs.attachedTo.Exists())
 									{
 										finalDest = dest->m_attachmentArgs.attachedTo.GetOffsetInWorldCoords(dest->m_attachmentArgs.offset);
-										finalDestHeading = dest->m_attachmentArgs.attachedTo.Rotation_get().z + marker.m_destinationHeading;
+										finalDestHeading = dest->m_attachmentArgs.attachedTo.GetRotation().z + marker.m_destinationHeading;
 									}
 									else
 									{
@@ -148,8 +148,8 @@ namespace sub::Spooner
 										finalDestHeading = marker.m_destinationHeading;
 									}
 
-									entityToTeleport->Position_set(finalDest);
-									entityToTeleport->Heading_set(finalDestHeading);
+									entityToTeleport->SetPosition(finalDest);
+									entityToTeleport->SetHeading(finalDestHeading);
 									switch ((EntityType)entityToTeleport->Type())
 									{
 									case EntityType::PED:
@@ -163,11 +163,11 @@ namespace sub::Spooner
 										break;
 									}
 									case EntityType::VEHICLE:
-										GTAvehicle(*entityToTeleport).Speed_set(4.2f); // Approx 15 km/h
+										GTAvehicle(*entityToTeleport).SetSpeed(4.2f); // Approx 15 km/h
 										break;
 									}
-									GameplayCamera::RelativeHeading_set(0.0f);
-									GameplayCamera::RelativePitch_set(0.0f);
+									GameplayCamera::SetRelativeHeading(0.0f);
+									GameplayCamera::SetRelativePitch(0.0f);
 									WAIT(100);
 									DO_SCREEN_FADE_IN(300);
 									return;

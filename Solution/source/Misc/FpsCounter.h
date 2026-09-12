@@ -9,13 +9,9 @@
 */
 #pragma once
 
-//#include "GenericLoopedMode.h"
-
-#include <string>
-
 typedef unsigned long DWORD;
 
-namespace _FpsCounter_
+namespace FPSCounter
 {
 	class FpsCounter final
 	{
@@ -27,18 +23,11 @@ namespace _FpsCounter_
 	public:
 		FpsCounter();
 
-		DWORD Get() const;
-
-		std::string GetString() const;
+		DWORD Get();
 
 		void Tick();
 	};
-	extern FpsCounter g_fpsCounter;
-
-
-	void DisplayFps();
-
-	void DisplayFpsTick();
+extern FpsCounter g_fpsCounter;
 
 	extern bool bDisplayFps;
 }

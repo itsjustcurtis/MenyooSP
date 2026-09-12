@@ -10,6 +10,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 typedef unsigned long DWORD, Hash;
 namespace GTAmodel {
@@ -22,12 +23,18 @@ namespace sub::Spooner
 	{
 		extern std::string xmlFavouriteProps;
 		bool IsPropAFavourite(const std::string& modelName, Hash modelHash);
-		bool AddPropToFavourites(const std::string& modelName, Hash modelHash);
+		bool AddPropToFavourites(const std::string& modelName, Hash modelHash, const std::string& category = "");
 		bool RemovePropFromFavourites(const std::string& modelName, Hash modelHash);
+		bool SetPropCategory(const std::string& modelName, const std::string& category);
 
 		extern bool(*IsVehicleAFavourite)(GTAmodel::Model vehModel);
 		extern bool(*AddVehicleToFavourites)(GTAmodel::Model vehModel, const std::string& customName);
 		extern bool(*RemoveVehicleFromFavourites)(GTAmodel::Model vehModel);
+
+		bool IsBlipIconAFavourite(int icon);
+		bool AddBlipIconToFavourites(int icon);
+		bool RemoveBlipIconFromFavourites(int icon);
+		void GetFavouriteBlipIcons(std::vector<int>& result);
 	}
 
 }

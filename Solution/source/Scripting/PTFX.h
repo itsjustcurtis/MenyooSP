@@ -13,8 +13,6 @@
 
 #include <string>
 
-//class RGBA;
-//class RgbS;
 class Vector3;
 class GTAentity;
 
@@ -121,7 +119,7 @@ namespace PTFX
 		static void SetAlpha(UINT8 value);
 	};
 
-	void trigger_ptfx_1(const std::string& asset2, const std::string& name2, GTAentity entity, Vector3 position, Vector3 rotation, float scale, int pedBone = -1);
+	void TriggerPTFX(const std::string& asset2, const std::string& name2, GTAentity entity, Vector3 position, Vector3 rotation, float scale, int pedBone = -1);
 
 }
 

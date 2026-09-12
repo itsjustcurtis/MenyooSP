@@ -8,52 +8,17 @@
 * (at your option) any later version.
 */
 #include "VehicleSpawner.h"
-
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Util\GTAmath.h"
-#include "..\Scripting\Model.h"
-#include "..\Scripting\PTFX.h"
-#include "..\Scripting\GTAentity.h"
-#include "..\Scripting\GTAvehicle.h"
-#include "..\Scripting\GTAped.h"
-#include "..\Scripting\Game.h"
-#include "..\Scripting\DxHookIMG.h"
-#include "..\Util\ExePath.h"
-#include "..\Scripting\ModelNames.h"
-#include "..\Menu\FolderPreviewBmps.h"
-#include "..\Util\StringManip.h"
-#include "..\Util\keyboard.h"
 #include "..\Util\FileLogger.h"
-
-#include "VehicleModShop.h"
-#include "WeaponOptions.h"
-#include "Spooner\MenuOptions.h"
-#include "Spooner\Databases.h"
-#include "Spooner\EntityManagement.h"
-#include "Spooner\FileManagement.h"
-#include "Spooner\SpoonerEntity.h"
-
-#include <Shlwapi.h> //PathIsDirectory
-#pragma comment(lib, "Shlwapi.lib")
-#include <string>
-#include <vector>
-#include <pugixml\src\pugixml.hpp>
-#include <dirent\include\dirent.h>
+#include "..\Util\VehiclePrices.h"
 
 namespace sub
 {
 	Blip blip_g;
-	// Vehicle - spawn function
-	int FuncSpawnVehicle_(GTAmodel::Model model, GTAped ped, bool deleteOld, bool warpIntoVehicle)
+	int SpawnVehicle(GTAmodel::Model model, GTAped ped, bool deleteOld, bool warpIntoVehicle)
 	{
 		Vehicle newcar = 0;
 		GTAentity selfPed = PLAYER_PED_ID();
-		Vector3 pedsCoords = selfPed.Position_get();
+		Vector3 pedsCoords = selfPed.GetPosition();
 		Vector3 oldVelocity;
 		Vector3 Pos1, Pos2;
 		Vehicle oldcar = 0;
@@ -68,48 +33,31 @@ namespace sub
 			oldcarBool = true;
 		}
 
-		//if (_IS_DECORATOR_OF_TYPE("MPBitset", 3))
-		//{
-		//	if (_DOES_DECORATOR_EXIST(PLAYER_ID(), "MPBitset"))
-		//	{
-		//		uVar0 = DECOR_GET_INT(PLAYER_ID(), "MPBitset");
-		//	}
-		//}
-
 		if (model.Load(3000))
 		{
 			if (oldcarBool)
 			{
 				float spacing1 = Model(GET_ENTITY_MODEL(oldcar)).Dim1().y + model.Dim2().y + 1.0f;
 				if(deleteOld)
+				{
 					Pos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(oldcar, 0, 0, 0.5f);
+				}
 				else
+				{
 					Pos1 = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(oldcar, 0, spacing1, 0.5f);
+				}
 			}
 			else
+			{
 				Pos1 = ped.GetOffsetInWorldCoords(Vector3());
+			}
 
-			PTFX::trigger_ptfx_1("proj_xmas_firework", "scr_firework_xmas_burst_rgw", 0, Pos1, Vector3(), 1.0f);
-			//PTFX::trigger_ptfx_1("scr_fbi5a", "scr_fbi5_ped_water_splash", 0, Pos1, Vector3(), 1.5f);
-
-			newcar = CREATE_VEHICLE(model.hash, Pos1.x, Pos1.y, Pos1.z, ped.Heading_get(), 1, 1, 0);
-			//SET_VEHICLE_ENGINE_ON(newcar, oldCarOn, oldCarOn);
-				
-			//if (!IS_ENTITY_IN_AIR(ped) && !IS_ENTITY_IN_WATER(ped)) SET_VEHICLE_ON_GROUND_PROPERLY(newcar, 0.0f);
-			
+			PTFX::TriggerPTFX("proj_xmas_firework", "scr_firework_xmas_burst_rgw", 0, Pos1, Vector3(), 1.0f);
+			newcar = CREATE_VEHICLE(model.hash, Pos1.x, Pos1.y, Pos1.z, ped.GetHeading(), 1, 1, 0);
 
 			SET_ENTITY_ALPHA(newcar, 0, false);
 			SET_ENTITY_COLLISION(newcar, false, true);
-			//SET_VEHICLE_HAS_STRONG_AXLES(newcar, 1);
 			SET_VEHICLE_DIRT_LEVEL(newcar, 0.0f);
-			//SET_VEHICLE_ENVEFF_SCALE(newcar, 0.0f);
-			//SET_ENTITY_AS_MISSION_ENTITY(newcar, 0, 1); //Fixes the despawning of MP onl;y cars after a couple of secs
-			//	SET_ENTITY_PROOFS(newcar, 1, 1, 1, 1, 1, 1, 1, 1);
-
-			///int newnetid = VEH_TO_NET(newcar);
-			//Game::RequestControlOfId(newnetid);
-			//SET_NETWORK_ID_CAN_MIGRATE(newnetid, 1);
-			//SET_NETWORK_ID_EXISTS_ON_ALL_MACHINES(newnetid, 1);
 
 			if (oldcarBool && DOES_ENTITY_EXIST(oldcar))
 			{
@@ -120,14 +68,12 @@ namespace sub
 				SET_ENTITY_VELOCITY(newcar, oldVelocity.x, oldVelocity.y, oldVelocity.z);
 				if (deleteOld)
 				{ 
-					//FREEZE_ENTITY_POSITION(oldcar, true);
 					SET_ENTITY_COLLISION(oldcar, false, true);
 					SET_ENTITY_ALPHA(oldcar, 0, false);
 				}
 				RESET_ENTITY_ALPHA(newcar);
 				if (warpIntoVehicle)
 				{
-					//if (Model(GET_ENTITY_MODEL(oldcar)).IsPlane()) CLEAR_PED_TASKS_IMMEDIATELY(ped); // mainPed
 					int maxi = GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(newcar);// - 2;
 					for (INT i = -1; i <= maxi; i++)
 					{
@@ -136,7 +82,6 @@ namespace sub
 						{
 							if (GTAentity(tempPed).RequestControl())
 							{
-								//CLEAR_PED_TASKS_IMMEDIATELY(tempPed);
 								SET_PED_INTO_VEHICLE(tempPed, newcar, i);
 							}
 						}
@@ -161,7 +106,6 @@ namespace sub
 					}
 					WAIT(0);
 					GTAvehicle(oldcar).RequestControl();
-					//SET_ENTITY_AS_MISSION_ENTITY(oldcar, 0, 1);
 					SET_ENTITY_COORDS(oldcar, 32.2653f, 7683.5249f, 0.5696f, 0, 0, 0, 1);
 					DELETE_VEHICLE(&oldcar);
 				}
@@ -169,52 +113,27 @@ namespace sub
 			else
 			{
 				if (warpIntoVehicle)
+				{
 					SET_PED_INTO_VEHICLE(ped.Handle(), newcar, (int)GTAvehicle(newcar).FirstFreeSeat(SEAT_DRIVER));
+				}
 				SET_ENTITY_COLLISION(newcar, true, true);
 				RESET_ENTITY_ALPHA(newcar);
 			}
-			//SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(newcar, 5);
-			//SET_VEHICLE_NUMBER_PLATE_TEXT(newcar, "MENYOO");
 
-			GTAvehicle(newcar).RadioStation_set(oldRadioStation);
+			GTAvehicle(newcar).SetRadioStation(oldRadioStation);
 			GTAvehicle(newcar).CloseAllDoors(true);
-			//if (IS_VEHICLE_A_CONVERTIBLE(newcar, 0)) LOWER_CONVERTIBLE_ROOF(newcar, 1);
 
 			model.Unload();
-
-			//// Online lock fix
-			//if (!DECORATOR::DECOR_IS_REGISTERED_AS_TYPE("Player_Vehicle", 3))
-			//	DECORATOR::DECOR_REGISTER("Player_Vehicle", 3);
-			//if (!DECORATOR::DECOR_IS_REGISTERED_AS_TYPE("Veh_Modded_By_Player", 3))
-			//	DECORATOR::DECOR_REGISTER("Veh_Modded_By_Player", 3);
-			//if (!DECORATOR::DECOR_IS_REGISTERED_AS_TYPE("Not_Allow_As_Saved_Veh", 3))
-			//	DECORATOR::DECOR_REGISTER("Not_Allow_As_Saved_Veh", 3);
-			//DECORATOR::DECOR_SET_INT(newcar, "Player_Vehicle", NETWORK::_0xBC1D768F2F5D6C05(PLAYER_ID()));
-			//DECORATOR::DECOR_SET_INT(newcar, "Veh_Modded_By_Player", GET_HASH_KEY(GET_PLAYER_NAME(PLAYER_ID())));
-			//DECORATOR::DECOR_SET_INT(newcar, "Not_Allow_As_Saved_Veh", 0);
-			//if (NETWORK::NETWORK_DOES_NETWORK_ID_EXIST(newnetid))
-			//{
-			//	ENTITY::_0x3910051CCECDB00C(newcar, true);
-			//	if (NETWORK::_0xC7827959479DCC78(newcar))
-			//	{
-			//		NETWORK::SET_NETWORK_ID_EXISTS_ON_ALL_MACHINES(newnetid, true);
-			//	}
-			//}
 			SET_VEHICLE_IS_STOLEN(newcar, false);
 		}
 		
 		return newcar;
 	}
 
-	// Vehicle spawner
-
-	namespace SpawnVehicle_catind
+	namespace VehicleSpawner
 	{
-		UINT8 SpawnVehicle_index;
-		//std::string type_name;
-		//enum Indices
+		UINT8 spawnVehicleIndex;
 
-#pragma region vehicle bmps
 		struct VehBmpSprite
 		{
 			Hash modelHash;
@@ -226,16 +145,13 @@ namespace sub
 				return left.modelHash == right;
 			}
 
-			VehBmpSprite()
-				: modelHash(0)
+			VehBmpSprite() : modelHash(0)
 			{
 			}
-			VehBmpSprite(Hash modelHashP)
-				: modelHash(modelHashP)
+			VehBmpSprite(Hash modelHashP) : modelHash(modelHashP)
 			{
 			}
-			VehBmpSprite(Hash modelHashP, std::string dictP, std::string imgNameP)
-				: modelHash(modelHashP), dict(dictP), imgName(imgNameP)
+			VehBmpSprite(Hash modelHashP, std::string dictP, std::string imgNameP) : modelHash(modelHashP), dict(dictP), imgName(imgNameP)
 			{
 			}
 
@@ -245,7 +161,7 @@ namespace sub
 				return tid.ID() != 0;
 			}
 		};
-		std::vector<VehBmpSprite> vVehicleBmps{
+		std::vector<VehBmpSprite> vehicleBMPs {
 			{ VEHICLE_AIRBUS, "candc_default", "airbus" },
 			{ VEHICLE_BARRACKS, "candc_default", "barracks" },
 			{ VEHICLE_BOXVILLE4, "candc_default", "boxville4" },
@@ -594,11 +510,9 @@ namespace sub
 			{ VEHICLE_WASTELANDER, "candc_importexport", "wastlndr" },
 			{ VEHICLE_PENETRATOR, "lgm_dlc_importexport", "penetrator" },
 			{ VEHICLE_TEMPESTA, "lgm_dlc_importexport", "tempesta" },
-			//{ VEHICLE_COMET2, "lsc_dlc_import_export", "comet3_a" },
 			{ VEHICLE_COMET3, "lsc_dlc_import_export", "comet3_b" },
 			{ VEHICLE_DIABLOUS, "lsc_dlc_import_export", "diablous2_a" },
 			{ VEHICLE_DIABLOUS2, "lsc_dlc_import_export", "diablous2_b" },
-			//{ VEHICLE_ELEGY2, "lsc_dlc_import_export", "elegy_a" },
 			{ VEHICLE_ELEGY, "lsc_dlc_import_export", "elegy_b" },
 			{ VEHICLE_FCR, "lsc_dlc_import_export", "fcr2_a" },
 			{ VEHICLE_FCR2, "lsc_dlc_import_export", "fcr2_b" },
@@ -621,15 +535,10 @@ namespace sub
 			{ VEHICLE_DUNE3, "candc_gunrunning", "dune3" },
 			{ VEHICLE_HALFTRACK, "candc_gunrunning", "halftrack" },
 			{ VEHICLE_HAULER2 , "candc_truck", "cab_1" },
-			//{ VEHICLE_INSURGENT3, "", "insurgent3" },
 			{ VEHICLE_NIGHTSHARK, "candc_gunrunning", "nightshark" },
 			{ VEHICLE_OPPRESSOR, "candc_gunrunning", "oppressor" },
-			//{ VEHICLE_PHANTOM3, "", "phantom3" },
 			{ VEHICLE_TAMPA3, "candc_gunrunning", "tampa3" },
-			//{ VEHICLE_TECHNICAL3, "", "technical3" },
 			{ VEHICLE_TORERO, "lgm_dlc_gunrunning", "torero" },
-			//{ VEHICLE_TRAILERS4, "", "" },
-			//{ VEHICLE_TRAILERLARGE, "", "" },
 			{ VEHICLE_TRAILERSMALL2, "candc_gunrunning", "trsmall2" },
 			{ VEHICLE_VAGNER, "lgm_dlc_gunrunning", "vagner" },
 			{ VEHICLE_XA21, "lgm_dlc_gunrunning", "xa21" },
@@ -721,7 +630,6 @@ namespace sub
 			{ VEHICLE_STAFFORD, "lgm_dlc_battle", "stafford" },
 			{ VEHICLE_FREECRAWLER, "lgm_dlc_battle", "freecrawler" },
 			{ VEHICLE_BLIMP3, "elt_dlc_battle", "blimp3" },
-			//{ VEHICLE_SPEEDO4, "", "" },
 
 			// b1604 Arena battle
 			{ VEHICLE_BLISTA3, "sssa_dlc_arena", "blista3" },
@@ -750,7 +658,6 @@ namespace sub
 			{ VEHICLE_IMPERATOR, "mba_vehicles", "imperator1" },
 			{ VEHICLE_IMPERATOR2, "mba_vehicles", "imperator2" },
 			{ VEHICLE_IMPERATOR3, "mba_vehicles", "imperator3" },
-			//{ VEHICLE_ISSI3, "mba_vehicles", "issi3" },
 			{ VEHICLE_ISSI4, "mba_vehicles", "issi3_c_1" },
 			{ VEHICLE_ISSI5, "mba_vehicles", "issi3_c_2" },
 			{ VEHICLE_ISSI6, "mba_vehicles", "issi3_c_3" },
@@ -877,7 +784,6 @@ namespace sub
 			{ VEHICLE_RT3000, "sssa_dlc_tuner", "rt3000" },
 			{ VEHICLE_SULTAN3, "sssa_dlc_tuner", "sultan3" },
 			{ VEHICLE_WARRENER2, "sssa_dlc_tuner", "warrener2" },
-			// { VEHICLE_FREIGHTCAR2, "ytd", "vehModel" },
 
 			//The Contract
 			{ VEHICLE_ASTRON, "lgm_dlc_security", "astron" },
@@ -896,7 +802,6 @@ namespace sub
 			{ VEHICLE_IWAGEN, "sssa_dlc_security", "iwagen" },
 			{ VEHICLE_PATRIOT3, "sssa_dlc_security", "patriot3" },
 			{ VEHICLE_MULE5, "candc_default", "mule3" },
-			// { VEHICLE_YOUGA4, "ytd", "vehModel" },
 
 			//The Criminal Enterprises
 			{ VEHICLE_CONADA, "elt_dlc_sum2", "conada" },
@@ -936,7 +841,6 @@ namespace sub
 			{ VEHICLE_TAHOMA, "sssa_dlc_xmas2022", "tahoma" },
 			{ VEHICLE_TULIP2, "sssa_dlc_xmas2022", "tulip2" },
 			{ VEHICLE_MANCHEZ3, "candc_heist4", "manchez2" },
-			// { VEHICLE_CARGOPLANE2, "ytd", "vehModel" },
 
 			//San Andreas Mercenaries
 			{ VEHICLE_CONADA2, "candc_2023_01", "conada2" },
@@ -953,9 +857,6 @@ namespace sub
 			{ VEHICLE_L35, "sssa_dlc_2023_01", "l35" },
 			{ VEHICLE_MONSTROCITI, "sssa_dlc_2023_01", "monstrociti" },
 			{ VEHICLE_RATEL, "sssa_dlc_2023_01", "ratel" },
-			// { VEHICLE_AVENGER3, "ytd", "vehModel" },
-			// { VEHICLE_AVENGER4, "ytd", "vehModel" },
-			// { VEHICLE_SPEEDO5, "ytd", "vehModel" },
 
 			//Chop Shop DLC
 			{ VEHICLE_BENSON2, "candc_2023_2", "benson2" },
@@ -987,13 +888,6 @@ namespace sub
 			{ VEHICLE_DRIFTTAMPA, "sssa_dlc_stunt", "tampa2" },
 			{ VEHICLE_PHANTOM4, "candc_importexport", "phantom2" },
 			{ VEHICLE_DRIFTYOSEMITE, "sssa_dlc_casinoheist", "yosemite2" },
-			// { VEHICLE_BOATTRAILER2, "ytd", "vehModel" },
-			// { VEHICLE_BOATTRAILER3, "ytd", "vehModel" },
-			// { VEHICLE_FREIGHT2, "ytd", "vehModel" },
-			// { VEHICLE_TOWTRUCK3, "ytd", "vehModel" },
-			// { VEHICLE_TOWTRUCK4, "ytd", "vehModel" },
-			// { VEHICLE_TRAILERS5, "ytd", "vehModel" },
-			// { VEHICLE_TVTRAILER2, "ytd", "vehModel" },
 
 			//Bottom Dollar Bounties DLC
 			{ VEHICLE_POLDOMINATOR10, "candc_dlc_2024_1", "poldom10" },
@@ -1016,7 +910,6 @@ namespace sub
 			{ VEHICLE_DRIFTCYPHER, "lgm_dlc_tuner", "cypher" },
 			{ VEHICLE_DRIFTNEBULA, "sssa_dlc_vinewood", "nebula" },
 			{ VEHICLE_DRIFTSENTINEL, "lsc_dlc_sum2", "sentinel3_b" },
-			//{ VEHICLE_POLICET3, "ytd", "vehModel" },
 
 			//Agents of Sabotage
 			{ VEHICLE_BANSHEE3, "lgm_dlc_2024_2", "banshee3" },
@@ -1028,18 +921,15 @@ namespace sub
 			{ VEHICLE_DRIFTJESTER3, "lgm_dlc_assault", "jester3" },
 			{ VEHICLE_DUSTER2, "elt_dlc_2024_2", "duster2" },
 			{ VEHICLE_FIREBOLT, "sssa_dlc_2024_2", "firebolt" },
-			// { VEHICLE_FREIGHTCAR3, "ytd", "vehModel" },
 			{ VEHICLE_JESTER5, "lgm_dlc_2024_2", "jester5" },
 			{ VEHICLE_POLCARACARA, "candc_dlc_2024_2", "polcaracar" },
 			{ VEHICLE_POLCOQUETTE4, "candc_dlc_2024_2", "polcoqutt4" },
 			{ VEHICLE_POLFACTION2, "candc_dlc_2024_2", "polfation2" },
 			{ VEHICLE_POLTERMINUS, "candc_dlc_2024_2", "polterminu" },
 			{ VEHICLE_URANUS, "sssa_dlc_2024_2", "uranus" },
-			// { VEHICLE_YOUGA5, "ytd", "vehModel" },
 			{ VEHICLE_TITAN2, "candc_dlc_2024_2", "titan2" },
 			{ VEHICLE_TACO, "candc_dlc_2024_2", "taco" },
 		};
-#pragma endregion
 		void PopulateVehicleBmps()
 		{
 			std::vector<std::string> fileNames;
@@ -1048,13 +938,13 @@ namespace sub
 			for (auto& f : fileNames)
 			{
 				Hash fhash = GET_HASH_KEY(f);
-				auto it = std::find(vVehicleBmps.begin(), vVehicleBmps.end(), fhash);
-				if (it == vVehicleBmps.end())
+				auto it = std::find(vehicleBMPs.begin(), vehicleBMPs.end(), fhash);
+				if (it == vehicleBMPs.end())
 				{
 					VehBmpSprite bmp(fhash);
 					if (bmp.LoadFile(path + f + ".png"))
 					{
-						vVehicleBmps.push_back(bmp);
+						vehicleBMPs.push_back(bmp);
 					}
 				}
 				else
@@ -1071,15 +961,17 @@ namespace sub
 			Vector2 res = { 0.1f, 0.0889f };
 
 			FLOAT x_coord = 0.324f + menuPos.x;
-			FLOAT y_coord = OptionY + 0.044f + menuPos.y;
+			FLOAT y_coord = currentOptionY + 0.044f + menuPos.y;
 
 			if (menuPos.x > 0.45f)
+			{
 				x_coord = menuPos.x - 0.003f;
+			}
 
 			DRAW_RECT(x_coord, y_coord, res.x + 0.003f, res.y + 0.003f, 0, 0, 0, 212, false);
 
-			auto vit = std::find(vVehicleBmps.begin(), vVehicleBmps.end(), vehModel.hash);
-			if (vit != vVehicleBmps.end()) //if found
+			auto vit = std::find(vehicleBMPs.begin(), vehicleBMPs.end(), vehModel.hash);
+			if (vit != vehicleBMPs.end()) //if found
 			{
 				if (vit->tid.Exists())//if dxtexture png
 				{
@@ -1088,90 +980,299 @@ namespace sub
 				else//if in-game sprite
 				{
 					if (!HAS_STREAMED_TEXTURE_DICT_LOADED(vit->dict.c_str()))
+					{
 						REQUEST_STREAMED_TEXTURE_DICT(vit->dict.c_str(), false);
+					}
 					DRAW_SPRITE(vit->dict.c_str(), vit->imgName.c_str(), x_coord, y_coord, res.x, res.y, 0.0f, 255, 255, 255, 255, false, 0);
 				}
 			}
 			else
 			{
-				Game::Print::setupdraw(0, Vector2(0, 0.185f), true, false, false);
+				Game::Print::SetupDraw(0, Vector2(0, 0.185f), true, false, false);
 				Game::Print::drawstring("No preview available", x_coord, y_coord - 0.0043f);
 			}
 		}
 		void DrawVehicleModelName(const GTAmodel::Model& vehModel)
 		{
 			FLOAT x_coord = menuPos.x + 0.25f;
-			FLOAT y_coord = OptionY + menuPos.y;
+			FLOAT y_coord = currentOptionY + menuPos.y;
 
-			Game::Print::setupdraw(font_selection, Vector2(0.0f, (font_options == 0? 0.33f:0.4f)), false, true, false, selectedtext,{0, x_coord});
+			Game::Print::SetupDraw(font_selection, Vector2(0.0f, (font_options == 0? 0.33f:0.4f)), false, true, false, selectedtext,{0, x_coord});
 			Game::Print::drawstring("ModelName: " + vehModel.VehicleModelName(), 0, y_coord);
 		}
 
-		void AddvcatOption_(const std::string& text, UINT8 index, bool *extra_option_code)
+		std::string GetVehicleClassName(int classId)
+		{
+			switch (classId)
+			{
+			case 0: return "Compact";
+			case 1: return "Sedan";
+			case 2: return "SUV";
+			case 3: return "Coupe";
+			case 4: return "Muscle";
+			case 5: return "Sports Classic";
+			case 6: return "Sport";
+			case 7: return "Super";
+			case 8: return "Motorcycle";
+			case 9: return "Offroad";
+			case 10: return "Industrial";
+			case 11: return "Utility";
+			case 12: return "Van";
+			case 13: return "Bicycle";
+			case 14: return "Boat";
+			case 15: return "Helicopter";
+			case 16: return "Plane";
+			case 17: return "Service";
+			case 18: return "Emergency";
+			case 19: return "Military";
+			case 20: return "Commercial";
+			case 21: return "Train";
+			case 22: return "Open Wheel";
+			default: return "Unknown";
+			}
+		}
+
+		std::string FormatMoney(int value)
+		{
+			if (value < 0) return "$0";
+			std::string s = std::to_string(value);
+			int n = (int)s.length() - 3;
+			while (n > 0)
+			{
+				s.insert(n, ",");
+				n -= 3;
+			}
+			return "$" + s;
+		}
+
+		float StatRatio(float val, float refMax)
+		{
+			if (refMax <= 0.0f || val <= 0.0f) return 0.0f;
+			float ratio = val / refMax;
+			return (ratio > 1.0f) ? 1.0f : ratio;
+		}
+
+		void DrawStatBar(float x, float y, float width, float height, float fillRatio, const std::string& label, const std::string& valueText, RGBA barColor, RGBA bgBarColor)
+		{
+			if (fillRatio < 0.0f) fillRatio = 0.0f;
+			if (fillRatio > 1.0f) fillRatio = 1.0f;
+
+			DRAW_RECT(x, y, width, height, bgBarColor.R, bgBarColor.G, bgBarColor.B, bgBarColor.A, false);
+
+			float fillWidth = width * fillRatio;
+			float fillX = x - (width / 2.0f) + (fillWidth / 2.0f);
+			if (fillWidth > 0.0001f)
+				DRAW_RECT(fillX, y, fillWidth, height, barColor.R, barColor.G, barColor.B, barColor.A, false);
+
+			float labelX = x - (width / 2.0f) + 0.003f;
+			float labelY = y - 0.0095f;
+			Game::Print::SetupDraw(0, Vector2(0.0f, 0.22f), false, false, true, RGBA(255, 255, 255, 255));
+			Game::Print::drawstring(label, labelX, labelY);
+
+			float valX = x + (width / 2.0f) - 0.003f;
+			Game::Print::SetupDraw(0, Vector2(0.0f, 0.22f), false, true, true, RGBA(255, 255, 255, 255), { 0, valX });
+			Game::Print::drawstring(valueText, 0, labelY);
+		}
+
+		struct VehicleStatsCache
+		{
+			Hash hash = 0;
+			float speedRatio, accelRatio, brakingRatio, tractionRatio;
+			float speedMph;
+			int seats, gears, classId;
+			int onlinePrice;
+			std::string className, makeName, massStr, priceStr, shopStr;
+			bool hasPrice;
+		};
+		static VehicleStatsCache statsCache;
+
+		void DrawVehicleStats(const GTAmodel::Model& vehModel)
+		{
+			if (!vehModel.IsValid()) return;
+			Hash hash = vehModel.hash;
+
+			if (statsCache.hash != hash)
+			{
+				statsCache.hash = hash;
+
+				float speed = GET_VEHICLE_MODEL_ESTIMATED_MAX_SPEED(hash);
+				float accel = GET_VEHICLE_MODEL_ACCELERATION(hash);
+				float braking = GET_VEHICLE_MODEL_MAX_BRAKING(hash);
+				float traction = GET_VEHICLE_MODEL_MAX_TRACTION(hash);
+
+				int classId = GET_VEHICLE_CLASS_FROM_NAME(hash);
+
+				statsCache.speedRatio = StatRatio(speed, 67.0f);
+				statsCache.accelRatio = StatRatio(accel, 0.40f);
+				statsCache.brakingRatio = StatRatio(braking, 3.2f);
+				statsCache.tractionRatio = StatRatio(traction, 2.6f);
+
+				statsCache.speedMph = speed * 2.23694f;
+				statsCache.seats = GET_VEHICLE_MODEL_NUMBER_OF_SEATS(hash);
+				statsCache.gears = GET_VEHICLE_MODEL_NUM_DRIVE_GEARS_(hash);
+				statsCache.classId = classId;
+				statsCache.className = GetVehicleClassName(classId);
+
+				std::string make = GTAmemory::GetVehicleMakeName(hash);
+				if (make.empty() || make == "NOTFOUND") statsCache.makeName = "---";
+				else statsCache.makeName = Game::GetGXTEntry(make, make);
+
+				statsCache.massStr = "";
+
+				std::string modelName = vehModel.VehicleModelName();
+				std::transform(modelName.begin(), modelName.end(), modelName.begin(), ::tolower);
+				auto& priceTable = VehiclePrices::GetPriceTable();
+				auto priceIt = priceTable.find(modelName);
+				if (priceIt != priceTable.end() && priceIt->second.price > 0)
+				{
+					statsCache.hasPrice = true;
+					statsCache.onlinePrice = priceIt->second.price;
+					statsCache.priceStr = FormatMoney(priceIt->second.price);
+					statsCache.shopStr = VehiclePrices::ShopToString(priceIt->second.shop);
+				}
+				else
+				{
+					statsCache.hasPrice = false;
+					statsCache.priceStr = "";
+					statsCache.shopStr = "";
+				}
+			}
+
+			auto& c = statsCache;
+
+			float panelX = 0.324f + menuPos.x;
+			if (menuPos.x > 0.45f)
+				panelX = menuPos.x - 0.003f;
+
+			float panelY = currentOptionY + 0.094f + menuPos.y;
+			float panelW = 0.100f;
+			float barH = 0.018f;
+			float barSpacing = 0.0195f;
+			float padding = 0.004f;
+			float lineH = 0.0155f;
+
+			int infoLineCount = 2 + 1 + (c.hasPrice ? 1 : 0);
+			float totalBarsH = 4 * barSpacing;
+			float infoH = infoLineCount * lineH + 0.015f;
+			float panelH = totalBarsH + infoH + padding * 2;
+
+			DRAW_RECT(panelX, panelY + panelH / 2.0f - padding, panelW + 0.003f, panelH, 0, 0, 0, 200, false);
+
+			RGBA barFillColor(93, 182, 229, 255);
+			RGBA barBgColor(0, 0, 0, 212);
+
+			float barW = panelW - 0.006f;
+			float barStartY = panelY + 0.012f;
+
+			std::string speedStr = std::to_string((int)c.speedMph) + " mph";
+			DrawStatBar(panelX, barStartY, barW, barH, c.speedRatio, "Speed", speedStr, barFillColor, barBgColor);
+
+			barStartY += barSpacing;
+			std::string accelStr = std::to_string((int)(c.accelRatio * 100)) + "%";
+			DrawStatBar(panelX, barStartY, barW, barH, c.accelRatio, "Acceleration", accelStr, barFillColor, barBgColor);
+
+			barStartY += barSpacing;
+			std::string brakeStr = std::to_string((int)(c.brakingRatio * 100)) + "%";
+			DrawStatBar(panelX, barStartY, barW, barH, c.brakingRatio, "Braking", brakeStr, barFillColor, barBgColor);
+
+			barStartY += barSpacing;
+			std::string tractStr = std::to_string((int)(c.tractionRatio * 100)) + "%";
+			DrawStatBar(panelX, barStartY, barW, barH, c.tractionRatio, "Traction", tractStr, barFillColor, barBgColor);
+
+			float infoStartY = barStartY + barSpacing + 0.002f;
+			float infoLabelX = panelX - (barW / 2.0f) + 0.003f;
+			float infoValueX = panelX + (barW / 2.0f) - 0.003f;
+
+			auto drawInfoLine = [&](float y, const std::string& label, const std::string& val)
+			{
+				Game::Print::SetupDraw(0, Vector2(0.0f, 0.2f), false, false, false, RGBA(160, 160, 160, 255));
+				Game::Print::drawstring(label, infoLabelX, y);
+				Game::Print::SetupDraw(0, Vector2(0.0f, 0.2f), false, true, false, RGBA(255, 255, 255, 255), { 0, infoValueX });
+				Game::Print::drawstring(val, 0, y);
+			};
+
+			DRAW_RECT(panelX, infoStartY - 0.003f, barW, 0.001f, 80, 80, 80, 200, false);
+
+			int curLine = 0;
+			drawInfoLine(infoStartY + lineH * curLine++, "Class", c.className);
+			drawInfoLine(infoStartY + lineH * curLine++, "Manufacturer", c.makeName);
+			std::string seatsGears = std::to_string(c.seats) + " Seats  |  " + std::to_string(c.gears) + " Gears";
+			drawInfoLine(infoStartY + lineH * curLine++, "Layout", seatsGears);
+
+			if (c.hasPrice)
+				drawInfoLine(infoStartY + lineH * curLine++, "Price", c.priceStr);
+		}
+
+		void AddVehicleCategoryOption(const std::string& text, UINT8 index, bool *extra_option_code)
 		{
 			std::vector<Model>* tempvecp;
 			switch (index)
 			{
-			case OPENWHEEL:		tempvecp = &g_vehHashes_OPENWHEEL; break;
-			case SUPER:			tempvecp = &g_vehHashes_SUPER; break;
-			case SPORT:			tempvecp = &g_vehHashes_SPORT; break;
-			case SPORTSCLASSIC: tempvecp = &g_vehHashes_SPORTSCLASSIC; break;
-			case COUPE:			tempvecp = &g_vehHashes_COUPE; break;
-			case MUSCLE:		tempvecp = &g_vehHashes_MUSCLE; break;
-			case OFFROAD:		tempvecp = &g_vehHashes_OFFROAD; break;
-			case SUV:			tempvecp = &g_vehHashes_SUV; break;
-			case SEDAN:			tempvecp = &g_vehHashes_SEDAN; break;
-			case COMPACT:		tempvecp = &g_vehHashes_COMPACT; break;
-			case VAN:			tempvecp = &g_vehHashes_VAN; break;
-			case SERVICE:		tempvecp = &g_vehHashes_SERVICE; break;
-			case TRAIN:			tempvecp = &g_vehHashes_TRAIN; break;
-			case EMERGENCY:		tempvecp = &g_vehHashes_EMERGENCY; break;
-			case MOTORCYCLE:	tempvecp = &g_vehHashes_MOTORCYCLE; break;
-			case BICYCLE:		tempvecp = &g_vehHashes_BICYCLE; break;
-			case PLANE:			tempvecp = &g_vehHashes_PLANE; break;
-			case HELICOPTER:	tempvecp = &g_vehHashes_HELICOPTER; break;
-			case BOAT:			tempvecp = &g_vehHashes_BOAT; break;
-			case INDUSTRIAL:	tempvecp = &g_vehHashes_INDUSTRIAL; break;
-			case COMMERCIAL:	tempvecp = &g_vehHashes_COMMERCIAL; break;
-			case UTILITY:		tempvecp = &g_vehHashes_UTILITY; break;
-			case MILITARY:		tempvecp = &g_vehHashes_MILITARY; break;
-			case OTHER:			tempvecp = &g_vehHashes_OTHER; break;
-			case DRIFT:			tempvecp = &g_vehHashes_DRIFT; break;
+				case OPENWHEEL:		tempvecp = &g_vehHashes_OPENWHEEL; break;
+				case SUPER:			tempvecp = &g_vehHashes_SUPER; break;
+				case SPORT:			tempvecp = &g_vehHashes_SPORT; break;
+				case SPORTSCLASSIC: tempvecp = &g_vehHashes_SPORTSCLASSIC; break;
+				case COUPE:			tempvecp = &g_vehHashes_COUPE; break;
+				case MUSCLE:		tempvecp = &g_vehHashes_MUSCLE; break;
+				case OFFROAD:		tempvecp = &g_vehHashes_OFFROAD; break;
+				case SUV:			tempvecp = &g_vehHashes_SUV; break;
+				case SEDAN:			tempvecp = &g_vehHashes_SEDAN; break;
+				case COMPACT:		tempvecp = &g_vehHashes_COMPACT; break;
+				case VAN:			tempvecp = &g_vehHashes_VAN; break;
+				case SERVICE:		tempvecp = &g_vehHashes_SERVICE; break;
+				case TRAIN:			tempvecp = &g_vehHashes_TRAIN; break;
+				case EMERGENCY:		tempvecp = &g_vehHashes_EMERGENCY; break;
+				case MOTORCYCLE:	tempvecp = &g_vehHashes_MOTORCYCLE; break;
+				case BICYCLE:		tempvecp = &g_vehHashes_BICYCLE; break;
+				case PLANE:			tempvecp = &g_vehHashes_PLANE; break;
+				case HELICOPTER:	tempvecp = &g_vehHashes_HELICOPTER; break;
+				case BOAT:			tempvecp = &g_vehHashes_BOAT; break;
+				case INDUSTRIAL:	tempvecp = &g_vehHashes_INDUSTRIAL; break;
+				case COMMERCIAL:	tempvecp = &g_vehHashes_COMMERCIAL; break;
+				case UTILITY:		tempvecp = &g_vehHashes_UTILITY; break;
+				case MILITARY:		tempvecp = &g_vehHashes_MILITARY; break;
+				case OTHER:			tempvecp = &g_vehHashes_OTHER; break;
+				case DRIFT:			tempvecp = &g_vehHashes_DRIFT; break;
 			}
 			if (tempvecp->empty())
+			{
 				return;
+			}
 
 			bool pressed = false;
 			AddOption(text, pressed, nullFunc, -1, true); if (pressed)
 			{
-				SpawnVehicle_index = index;
-				//type_name = std::string(text);
+				spawnVehicleIndex = index;
 				dict = std::string(text);
-				Menu::SetSub_delayed = SUB::SPAWNVEHICLE_ALLCATS;
+				Menu::pendingSubmenu = SUB::SPAWNVEHICLE_ALLCATS;
 
 				if (extra_option_code != nullptr)
+				{
 					*extra_option_code = true;
+				}
 			}
 		}
 
-		void AddVSpawnOption_(const std::string& text, const GTAmodel::Model& vehModel, Ped ped)
+		void AddVehicleSpawnOption(const std::string& text, const GTAmodel::Model& vehModel, Ped ped)
 		{
-			Vector3 toBeNodeCoordinates = GTAped(ped).Position_get();
+			Vector3 toBeNodeCoordinates = GTAped(ped).GetPosition();
 			bool pressed = false;
-			AddOption(text, pressed, nullFunc, -1, false, false); if (pressed)
+			AddOption(text, pressed, nullFunc, -1, false, false); 
+			if (pressed)
 			{
-				Vehicle vehicle = FuncSpawnVehicle_(vehModel, ped, _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_autoSit);
-				set_vehicle_max_upgrades(vehicle, _globalSpawnVehicle_autoUpgrade, _globalSpawnVehicle_invincible,
-					_globalSpawnVehicle_plateType, _globalSpawnVehicle_plateTexter_value == 0 ? _globalSpawnVehicle_plateText : "", _globalSpawnVehicle_neonToggle,
-					_globalSpawnVehicle_neonCol.R, _globalSpawnVehicle_neonCol.G, _globalSpawnVehicle_neonCol.B,
-					_globalSpawnVehicle_PrimCol, _globalSpawnVehicle_SecCol);
-				if (_globaladdBlip)
+				Vehicle vehicle = SpawnVehicle(vehModel, ped, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
+				SetVehicleMaxUpgrades(vehicle, g_spawnVehicleAutoUpgrade, g_spawnVehicleInvincible,
+					g_spawnVehiclePlateType, g_spawnVehiclePlateTexterValue == 0 ? g_spawnVehiclePlateText : "", g_spawnVehicleNeonToggle,
+					g_spawnVehicleNeonColor.R, g_spawnVehicleNeonColor.G, g_spawnVehicleNeonColor.B,
+					g_spawnVehiclePrimaryColor, g_spawnVehicleSecondaryColor);
+
+				if (g_addBlip)
 				{
 					blip_g = ADD_BLIP_FOR_ENTITY(vehicle);
 					HUD::SET_BLIP_SPRITE(blip_g, GetRandomSpriteId());
 					Game::Print::PrintBottomLeft("Added a blip.");
 				}
-				if (_globalWarpNear)
+				if (g_warpNear)
 				{
 					Vector3_t outPos;
 
@@ -1185,171 +1286,421 @@ namespace sub
 						}
 					}
 				}
-				if (!NETWORK_IS_IN_SESSION() && !_globalSpawnVehicle_persistent)
+				if (!NETWORK_IS_IN_SESSION() && !g_spawnVehiclePersistent)
+				{
 					SET_VEHICLE_AS_NO_LONGER_NEEDED(&vehicle);
+				}
 			}
 		}
-
 	}
 
-	void SpawnVehicle_()
+	void SpawnVehicleMenu()
 	{
-		using namespace SpawnVehicle_catind;
+		using namespace VehicleSpawner;
 		dict2.clear();
 		dict3.clear();
-		//type_name.clear();
-		bool spnrandom = 0;
-		bool spawnvehicle_input = 0;
+		bool spawnRandom = 0, spawnVehicleInput = 0;
 
 		AddTitle("Vehicles");
 
-		AddOption("Spawn Settings", null, nullFunc, SUB::SPAWNVEHICLE_OPTIONS);
-		AddOption("Saved Vehicles", null, nullFunc, SUB::VEHICLE_SAVER);
+		AddOption("~b~Search~s~ Vehicles", null, nullFunc, SUB::SPAWNVEHICLE_SEARCH);
 		AddOption("Favourites", null, nullFunc, SUB::SPAWNVEHICLE_FAVOURITES);
-		//AddOption("DLC Vehicles", null, nullFunc, SUB::SPAWNVEHICLE_DLC_SELECTION);
+		AddOption("Saved Vehicles", null, nullFunc, SUB::VEHICLE_SAVER);
+		AddOption("Spawn Settings", null, nullFunc, SUB::SPAWNVEHICLE_OPTIONS);
 		AddOption("Funny Vehicles (Old)", null, nullFunc, SUB::FUNNYVEHICLES);
 
 		AddBreak("---Cars---");
-		AddvcatOption_("Open Wheel", OPENWHEEL);
-		AddvcatOption_("Super", SUPER);
-		AddvcatOption_("Sports", SPORT);
-		AddvcatOption_("Sports Classics", SPORTSCLASSIC);
-		AddvcatOption_("Coupes", COUPE);
-		AddvcatOption_("Muscle", MUSCLE);
-		AddvcatOption_("Offroad", OFFROAD);
-		AddvcatOption_("SUVs", SUV);
-		AddvcatOption_("Sedans", SEDAN);
-		AddvcatOption_("Compacts", COMPACT);
-		AddvcatOption_("Drift", DRIFT);
+		AddVehicleCategoryOption("Open Wheel", OPENWHEEL);
+		AddVehicleCategoryOption("Super", SUPER);
+		AddVehicleCategoryOption("Sports", SPORT);
+		AddVehicleCategoryOption("Sports Classics", SPORTSCLASSIC);
+		AddVehicleCategoryOption("Coupes", COUPE);
+		AddVehicleCategoryOption("Muscle", MUSCLE);
+		AddVehicleCategoryOption("Offroad", OFFROAD);
+		AddVehicleCategoryOption("SUVs", SUV);
+		AddVehicleCategoryOption("Sedans", SEDAN);
+		AddVehicleCategoryOption("Compacts", COMPACT);
+		AddVehicleCategoryOption("Drift", DRIFT);
 
 		AddBreak("---Industrial---");
-		AddvcatOption_("Vans", VAN);
-		AddvcatOption_("Services", SERVICE);
-		AddvcatOption_("Industrial", INDUSTRIAL);
-		AddvcatOption_("Commercial", COMMERCIAL);
-		AddvcatOption_("Utility", UTILITY);
-		AddvcatOption_("Trains", TRAIN);
+		AddVehicleCategoryOption("Vans", VAN);
+		AddVehicleCategoryOption("Services", SERVICE);
+		AddVehicleCategoryOption("Industrial", INDUSTRIAL);
+		AddVehicleCategoryOption("Commercial", COMMERCIAL);
+		AddVehicleCategoryOption("Utility", UTILITY);
+		AddVehicleCategoryOption("Trains", TRAIN);
 
 		AddBreak("---Others---");
-		AddvcatOption_("Emergency", EMERGENCY);
-		AddvcatOption_("Military", MILITARY);
-		AddvcatOption_("Motorcycles", MOTORCYCLE);
-		AddvcatOption_("Bicycles", BICYCLE);
-		AddvcatOption_("Planes", PLANE);
-		AddvcatOption_("Helicopters", HELICOPTER);
-		AddvcatOption_("Boats", BOAT);
-		AddvcatOption_("Others", OTHER);
+		AddVehicleCategoryOption("Emergency", EMERGENCY);
+		AddVehicleCategoryOption("Military", MILITARY);
+		AddVehicleCategoryOption("Motorcycles", MOTORCYCLE);
+		AddVehicleCategoryOption("Bicycles", BICYCLE);
+		AddVehicleCategoryOption("Planes", PLANE);
+		AddVehicleCategoryOption("Helicopters", HELICOPTER);
+		AddVehicleCategoryOption("Boats", BOAT);
+		AddVehicleCategoryOption("Others", OTHER);
 
-		AddOption("Random Vehicle", spnrandom);
-		AddOption("~b~Input~s~ Model", spawnvehicle_input);
+		AddOption("Random Vehicle", spawnRandom);
+		AddOption("~b~Input~s~ Model", spawnVehicleInput);
 
-		if (spnrandom || spawnvehicle_input)
+		if (spawnRandom || spawnVehicleInput)
 		{
 			Model model;
-			Ped ped = Static_241;
-
-			if (spnrandom)
+			Ped ped = g_activePedHandle;
+			if (g_vehHashes.empty()) return;
+			if (spawnRandom)
 			{
 				if (g_vehHashes.empty())
+				{
 					return;
+				}
 				model = g_vehHashes[GET_RANDOM_INT_IN_RANGE(0, (int)g_vehHashes.size())];
 				
 			}
-			else if (spawnvehicle_input)
+			else if (spawnVehicleInput)
 			{
 				std::string inputStr = Game::InputBox("", 64U, "Enter vehicle model name (e.g. adder):");
 				if (inputStr.length() == 0)
+				{
 					return;
+				}
 				model = GET_HASH_KEY(inputStr);
 			}
 
 			if (model.IsInCdImage() && model.IsVehicle())
 			{
-				Vehicle spawnedVehicle = FuncSpawnVehicle_(model, ped, _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_autoSit);
+				Vehicle spawnedVehicle = SpawnVehicle(model, ped, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
 
-				set_vehicle_max_upgrades(spawnedVehicle, _globalSpawnVehicle_autoUpgrade, _globalSpawnVehicle_invincible,
-					_globalSpawnVehicle_plateType, _globalSpawnVehicle_plateTexter_value == 0 ? _globalSpawnVehicle_plateText : "", _globalSpawnVehicle_neonToggle,
-					_globalSpawnVehicle_neonCol.R, _globalSpawnVehicle_neonCol.G, _globalSpawnVehicle_neonCol.B,
-					_globalSpawnVehicle_PrimCol, _globalSpawnVehicle_SecCol);
+				SetVehicleMaxUpgrades(spawnedVehicle, g_spawnVehicleAutoUpgrade, g_spawnVehicleInvincible,
+					g_spawnVehiclePlateType, g_spawnVehiclePlateTexterValue == 0 ? g_spawnVehiclePlateText : "", g_spawnVehicleNeonToggle,
+					g_spawnVehicleNeonColor.R, g_spawnVehicleNeonColor.G, g_spawnVehicleNeonColor.B,
+					g_spawnVehiclePrimaryColor, g_spawnVehicleSecondaryColor);
 
-				if (!NETWORK_IS_IN_SESSION() && !_globalSpawnVehicle_persistent)
+				if (!NETWORK_IS_IN_SESSION() && !g_spawnVehiclePersistent)
 					SET_VEHICLE_AS_NO_LONGER_NEEDED(&spawnedVehicle);
 			}
-			else Game::Print::PrintError_InvalidModel(model.VehicleModelName());
+			else Game::Print::PrintErrorInvalidModel(model.VehicleModelName());
 		}
-		/*if (spawnvehicle_input)
-		{
-		OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::VehicleSpawnerInput, std::string(), 64U, "Enter vehicle model name (e.g. adder):");
-		OnscreenKeyboard::State::arg1._int = Static_241;
-		}*/
-
-		/*PCHAR chartick;
-		for (const auto& vimg : vVehicleBmps)
-		{
-		chartick = PCHAR(vimg.dict.c_str());
-		if (HAS_STREAMED_TEXTURE_DICT_LOADED(chartick))
-		SET_STREAMED_TEXTURE_DICT_AS_NO_LONGER_NEEDED(chartick);
-		}*/
-
 	}
 
-	void SpawnVehicle_Options()
+	namespace VehicleSearch
 	{
-		bool veh_plate_plus = 0, veh_plate_minus = 0, veh_plate_text_set = 0, veh_plate_text_plus = 0, veh_plate_text_minus = 0,
-			set_mspaint_index_10 = 0, set_mspaint_index_11 = 0, set_rgbcarcol_index_9 = 0;
+		static int sortIndex = 0;
+		static int classFilter = 0;
+		static int typeFilter = 0;
+		static std::vector<Model> results;
+		static std::vector<std::string> classOptions;
+		static bool dirty = true;
+		static std::string lastSearch;
+		static int lastSort = -1, lastClass = -1, lastType = -1;
 
-		auto& plateTexter_value = _globalSpawnVehicle_plateTexter_value;
-		std::vector<std::string> plateTexter{ _globalSpawnVehicle_plateText, "Random" };
-		std::vector<std::string> ms_vPlateTypeNames{ "CMOD_PLA_0", "CMOD_PLA_4", "CMOD_PLA_3", "CMOD_PLA_1", "CMOD_PLA_2", "Yankton", "CMOD_PLA_6", "CMOD_PLA_7", "CMOD_PLA_8", "CMOD_PLA_9", "CMOD_PLA_10", "CMOD_PLA_11", "CMOD_PLA_12" }; // BOW1, YOBLA, YOBLU, BOW2, BOW3, YANKTON, ECOLA, LASVENTURAS, LIBERTYCITY, LSCARMEET, LSPOUNDERS, SPRUNK 
+		static const std::vector<std::string> sortOptions = { "Name (A-Z)", "Speed", "Acceleration", "Price" };
+		static const std::vector<std::string> typeOptions = { "All", "Cars", "Bikes", "Helicopters", "Planes", "Boats" };
+
+		void BuildClassOptions()
+		{
+			classOptions.clear();
+			int total = 0;
+			for (auto& m : g_vehHashes) { if (m.IsInCdImage()) total++; }
+			classOptions.push_back("All (" + std::to_string(total) + ")");
+			for (int i = 0; i <= 22; i++)
+			{
+				int count = 0;
+				for (auto& m : g_vehHashes)
+				{
+					if (m.IsInCdImage() && GET_VEHICLE_CLASS_FROM_NAME(m.hash) == i)
+						count++;
+				}
+				if (count > 0)
+					classOptions.push_back(VehicleSpawner::GetVehicleClassName(i) + " (" + std::to_string(count) + ")");
+				else
+					classOptions.push_back(VehicleSpawner::GetVehicleClassName(i));
+			}
+		}
+
+		void RebuildResults(const std::string& searchStr)
+		{
+			results.clear();
+			std::string searchUpper = boost::to_upper_copy(searchStr);
+			auto& priceTable = VehiclePrices::GetPriceTable();
+
+			for (auto& model : g_vehHashes)
+			{
+				if (!model.IsInCdImage()) continue;
+
+				if (typeFilter != 0)
+				{
+					bool pass = false;
+					switch (typeFilter)
+					{
+					case 1: pass = model.IsCar(); break;
+					case 2: pass = model.IsBike() || model.IsBicycle(); break;
+					case 3: pass = model.IsHeli(); break;
+					case 4: pass = model.IsPlane(); break;
+					case 5: pass = model.IsBoat(); break;
+					}
+					if (!pass) continue;
+				}
+
+				if (classFilter != 0)
+				{
+					int classId = GET_VEHICLE_CLASS_FROM_NAME(model.hash);
+					if (classId != (classFilter - 1)) continue;
+				}
+
+				if (!searchUpper.empty())
+				{
+					std::string displayUpper = boost::to_upper_copy(model.VehicleDisplayName(true));
+					std::string modelUpper = boost::to_upper_copy(model.VehicleModelName());
+					std::string makeRaw = GTAmemory::GetVehicleMakeName(model.hash);
+					std::string makeUpper;
+					if (!makeRaw.empty() && makeRaw != "NOTFOUND")
+						makeUpper = boost::to_upper_copy(Game::GetGXTEntry(makeRaw, makeRaw));
+
+					if (displayUpper.find(searchUpper) == std::string::npos &&
+						modelUpper.find(searchUpper) == std::string::npos &&
+						makeUpper.find(searchUpper) == std::string::npos)
+						continue;
+				}
+
+				results.push_back(model);
+			}
+
+			switch (sortIndex)
+			{
+			case 0:
+				std::sort(results.begin(), results.end(), [](const Model& a, const Model& b) {
+					return boost::to_lower_copy(a.VehicleDisplayName(true)) < boost::to_lower_copy(b.VehicleDisplayName(true));
+				});
+				break;
+			case 1:
+				std::sort(results.begin(), results.end(), [](const Model& a, const Model& b) {
+					return GET_VEHICLE_MODEL_ESTIMATED_MAX_SPEED(a.hash) > GET_VEHICLE_MODEL_ESTIMATED_MAX_SPEED(b.hash);
+				});
+				break;
+			case 2:
+				std::sort(results.begin(), results.end(), [](const Model& a, const Model& b) {
+					return GET_VEHICLE_MODEL_ACCELERATION(a.hash) > GET_VEHICLE_MODEL_ACCELERATION(b.hash);
+				});
+				break;
+			case 3:
+				std::sort(results.begin(), results.end(), [&priceTable](const Model& a, const Model& b) {
+					std::string nameA = boost::to_lower_copy(a.VehicleModelName());
+					std::string nameB = boost::to_lower_copy(b.VehicleModelName());
+					auto itA = priceTable.find(nameA);
+					auto itB = priceTable.find(nameB);
+					int priceA = (itA != priceTable.end()) ? itA->second.price : 0;
+					int priceB = (itB != priceTable.end()) ? itB->second.price : 0;
+					return priceA > priceB;
+				});
+				break;
+			}
+		}
+	}
+
+	void SpawnVehicleSearchMenu()
+	{
+		using namespace VehicleSpawner;
+		using namespace VehicleSearch;
+		auto& searchStr = dict2;
+
+		if (classOptions.empty()) BuildClassOptions();
+
+		AddTitle("Vehicle Search");
+
+		bool bSearchPressed = false;
+		AddOption(searchStr.empty() ? "~b~SEARCH~s~" : ("~b~" + searchStr + "~s~"), bSearchPressed, nullFunc, -1, true);
+		if (bSearchPressed)
+		{
+			searchStr = Game::InputBox(searchStr, 64U, "Search vehicles:", boost::to_lower_copy(searchStr));
+			boost::to_upper(searchStr);
+		}
+
+		bool sortRight = false, sortLeft = false;
+		AddTexter("Sort", sortIndex, sortOptions, null, sortRight, sortLeft);
+		if (sortRight && sortIndex < (int)(sortOptions.size() - 1)) sortIndex++;
+		if (sortLeft && sortIndex > 0) sortIndex--;
+
+		bool classRight = false, classLeft = false;
+		AddTexter("Class", classFilter, classOptions, null, classRight, classLeft);
+		if (classRight && classFilter < (int)(classOptions.size() - 1)) classFilter++;
+		if (classLeft && classFilter > 0) classFilter--;
+
+		bool typeRight = false, typeLeft = false;
+		AddTexter("Type", typeFilter, typeOptions, null, typeRight, typeLeft);
+		if (typeRight && typeFilter < (int)(typeOptions.size() - 1)) typeFilter++;
+		if (typeLeft && typeFilter > 0) typeFilter--;
+
+		if (dirty || searchStr != lastSearch || sortIndex != lastSort ||
+			classFilter != lastClass || typeFilter != lastType)
+		{
+			RebuildResults(searchStr);
+			lastSearch = searchStr;
+			lastSort = sortIndex;
+			lastClass = classFilter;
+			lastType = typeFilter;
+			dirty = false;
+		}
+
+		AddBreak("---Results: " + std::to_string(results.size()) + "---");
+
+		for (auto& vehModel : results)
+		{
+			bool bIsSpooner = false;
+			for (int ci = Menu::menuHistoryIndex; ci >= 0 && ci >= Menu::menuHistoryIndex - 2; ci--)
+			{
+				if (Menu::submenuHistory[ci] == SUB::SPOONER_SPAWN_VEHICLE)
+				{
+					bIsSpooner = true;
+					break;
+				}
+			}
+
+			if (bIsSpooner)
+				sub::Spooner::MenuOptions::AddOption_AddVehicle(vehModel.VehicleDisplayName(true), vehModel);
+			else
+				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_activePedHandle);
+
+			if (Menu::IsLastDrawnOptionSelected())
+			{
+				if (g_spawnVehicleDrawBMPs)
+				{
+					DrawVehicleBmp(vehModel);
+					DrawVehicleStats(vehModel);
+				}
+
+				DrawVehicleModelName(vehModel);
+
+				bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(vehModel);
+				if (Menu::usingControllerInput)
+				{
+					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
+					{
+						!bIsAFav ? SpawnVehicleAddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicleRemoveVehicleModelFromFavourites(vehModel);
+					}
+				}
+				else
+				{
+					Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+					if (IsKeyJustUp(VirtualKey::B))
+					{
+						!bIsAFav ? SpawnVehicleAddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicleRemoveVehicleModelFromFavourites(vehModel);
+					}
+				}
+			}
+		}
+	}
+
+	void SpawnVehicleOptions()
+	{
+		bool vehPlatePlus = 0;
+		bool vehPlateMinus = 0; 
+		bool vehPlateTextSet = 0; 
+		bool vehPlateTextPlus = 0; 
+		bool vehPlateTextMinus = 0;
+		bool setMSPaintIndex10 = 0; 
+		bool setMSPaintIndex11 = 0; 
+		bool setRGBCarcolIndex9 = 0;
+
+		auto& plateTexter_value = g_spawnVehiclePlateTexterValue;
+		std::vector<std::string> plateTexter{ g_spawnVehiclePlateText, "Random" };
+		std::vector<std::string> plateTypeNames{ "CMOD_PLA_0", "CMOD_PLA_4", "CMOD_PLA_3", "CMOD_PLA_1", "CMOD_PLA_2", "Yankton", "CMOD_PLA_6", "CMOD_PLA_7", "CMOD_PLA_8", "CMOD_PLA_9", "CMOD_PLA_10", "CMOD_PLA_11", "CMOD_PLA_12" }; // BOW1, YOBLA, YOBLU, BOW2, BOW3, YANKTON, ECOLA, LASVENTURAS, LIBERTYCITY, LSCARMEET, LSPOUNDERS, SPRUNK 
 
 		AddTitle("Spawn Settings");
-		AddToggle("Delete Old Vehicle", _globalSpawnVehicle_deleteOld);
-		AddToggle("Auto-Sit In Vehicle", _globalSpawnVehicle_autoSit);
-		AddToggle("Add Blip For Spawned Vehicles", _globaladdBlip);
-		AddToggle("Spawn At Nearest Node", _globalWarpNear);
-		AddToggle("Spawn Pre-Upgraded", _globalSpawnVehicle_autoUpgrade);
-		AddToggle("Spawn Invincible", _globalSpawnVehicle_invincible);
-		AddToggle("Spawn Persistent", _globalSpawnVehicle_persistent);
-		AddOption("Primary Paint", set_mspaint_index_10, nullFunc, SUB::MSPAINTS2); // Primary Paint
-		AddOption("Secondary Paint", set_mspaint_index_11, nullFunc, SUB::MSPAINTS2); // Secondary Paint
+		AddToggle("Delete Old Vehicle", g_spawnVehicleDeleteOld);
+		AddToggle("Auto-Sit In Vehicle", g_spawnVehicleAutoSit);
+		AddToggle("Add Blip For Spawned Vehicles", g_addBlip);
+		AddToggle("Spawn At Nearest Node", g_warpNear);
+		AddToggle("Spawn Pre-Upgraded", g_spawnVehicleAutoUpgrade);
+		AddToggle("Spawn Invincible", g_spawnVehicleInvincible);
+		AddToggle("Spawn Persistent", g_spawnVehiclePersistent);
+		AddOption("Primary Paint", setMSPaintIndex10, nullFunc, SUB::MSPAINTS2); // Primary Paint
+		AddOption("Secondary Paint", setMSPaintIndex11, nullFunc, SUB::MSPAINTS2); // Secondary Paint
 		AddBreak("---Neons---");
-		AddToggle("Toggle", _globalSpawnVehicle_neonToggle);
-		AddOption("RGB Colour", set_rgbcarcol_index_9, nullFunc, SUB::MSPAINTS_RGB); if (*Menu::currentopATM == Menu::printingop) Add_preset_colour_options_previews(_globalSpawnVehicle_neonCol);
+		AddToggle("Toggle", g_spawnVehicleNeonToggle);
+		AddOption("RGB Colour", setRGBCarcolIndex9, nullFunc, SUB::MSPAINTS_RGB); 
+		if (Menu::IsLastDrawnOptionSelected())
+		{
+			AddPresetColourOptionsPreview(g_spawnVehicleNeonColor);
+		}
 
 		AddBreak("---Plate---");
-		AddTexter("Type", _globalSpawnVehicle_plateType, ms_vPlateTypeNames, null, veh_plate_plus, veh_plate_minus);
-		AddTexter("Text", plateTexter_value, plateTexter, veh_plate_text_set, veh_plate_text_plus, veh_plate_text_minus);
+		AddTexter("Type", g_spawnVehiclePlateType, plateTypeNames, null, vehPlatePlus, vehPlateMinus);
+		AddTexter("Text", plateTexter_value, plateTexter, vehPlateTextSet, vehPlateTextPlus, vehPlateTextMinus);
 
 		AddBreak("---Previews---");
-		AddToggle("Enable Previews", _globalSpawnVehicle_drawBmps);
-		bool bReloadPreviewsPressed = false;
-		AddOption("Reload Previews", bReloadPreviewsPressed); if (bReloadPreviewsPressed)
+		AddToggle("Enable Previews", g_spawnVehicleDrawBMPs);
+		bool reloadPreviewsPressed = false;
+		AddOption("Reload Previews", reloadPreviewsPressed); 
+
+		if (reloadPreviewsPressed)
 		{
-			SpawnVehicle_catind::PopulateVehicleBmps();
+			VehicleSpawner::PopulateVehicleBmps();
 			FolderPreviewBmps_catind::PopulateFolderBmps();
 		}
 
-		if (set_mspaint_index_10) ms_curr_paint_index = 10;
-		if (set_mspaint_index_11) ms_curr_paint_index = 11;
-		if (set_rgbcarcol_index_9) bit_MSPaints_RGB_mode = 9;
+		if (setMSPaintIndex10) 
+		{
+			SelectSpawnPrimaryPaint();
+		}
+		if (setMSPaintIndex11) 
+		{
+			SelectSpawnSecondaryPaint();
+		}
+		if (setRGBCarcolIndex9) 
+		{
+			bitMSPaintsRGBMode = 9;
+		}
 
-		if (veh_plate_plus) { if (_globalSpawnVehicle_plateType < (INT)(ms_vPlateTypeNames.size() - 1)) _globalSpawnVehicle_plateType++; return; }
-		if (veh_plate_minus) { if (_globalSpawnVehicle_plateType > 0) _globalSpawnVehicle_plateType--; return; }
+		if (vehPlatePlus) 
+		{ 
+			if (g_spawnVehiclePlateType < (INT)(plateTypeNames.size() - 1)) 
+			{
+				g_spawnVehiclePlateType++; 
+				return;
+			}
+		}
+		if (vehPlateMinus)
+		{ 
+			if (g_spawnVehiclePlateType > 0)
+			{
+				g_spawnVehiclePlateType--; 
+				return; 
+			}
+		}
 
-		if (veh_plate_text_plus) { if (plateTexter_value < 1) plateTexter_value++; return; }
-		if (veh_plate_text_minus) { if (plateTexter_value > 0) plateTexter_value--; return; }
+		if (vehPlateTextPlus) 
+		{ 
+			if (plateTexter_value < 1) 
+			{
+				plateTexter_value++; 
+				return; 
+			}
+		}
+		if (vehPlateTextMinus) 
+		{ 
+			if (plateTexter_value > 0) 
+			{
+				plateTexter_value--; 
+				return; 
+			}
+		}
 
-		if (veh_plate_text_set)
+		if (vehPlateTextSet)
 		{
 			switch (plateTexter_value)
 			{
 			case 0:
-				std::string inputStr = Game::InputBox("", 9U, "CMOD_MOD_18_D", _globalSpawnVehicle_plateText);
+				std::string inputStr = Game::InputBox("", 9U, "CMOD_MOD_18_D", g_spawnVehiclePlateText);
 				if (inputStr.length() > 0 && inputStr.length() <= 8)
-					_globalSpawnVehicle_plateText = inputStr;
+				{
+					g_spawnVehiclePlateText = inputStr;
+				}
 				else
-					Game::Print::PrintError_InvalidInput(inputStr);
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::GSpawnVehiclePlateText, std::string(), 8U, "CMOD_MOD_18_D", _globalSpawnVehicle_plateText);
+				{
+					Game::Print::PrintErrorInvalidInput(inputStr);
+				}
 				break;
 			}
 			return;
@@ -1357,21 +1708,141 @@ namespace sub
 
 	}
 
-	bool SpawnVehicle_IsVehicleModelAFavourite(GTAmodel::Model vehModel)
+	bool SpawnVehicleIsVehicleModelAFavourite(GTAmodel::Model vehModel)
 	{
 		std::string xmlAddedVehicleModels = "AddedVehicleModels.xml";
 		pugi::xml_document doc;
 		if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str()).status != pugi::status_ok)
+		{
 			return false;
+		}
 		pugi::xml_node nodeRoot = doc.child("AddedVehicleModels");
 		const std::string& vehModelName = vehModel.VehicleDisplayName(false);
-		return nodeRoot.find_child_by_attribute("modelName", vehModelName.c_str())
-			|| nodeRoot.find_child_by_attribute("modelHash", int_to_hexstring(vehModel.hash, true).c_str());
+		return nodeRoot.find_child_by_attribute("modelName", vehModelName.c_str()) || nodeRoot.find_child_by_attribute("modelHash", IntToHexString(vehModel.hash, true).c_str());
 	}
-	bool SpawnVehicle_AddVehicleModelToFavourites(GTAmodel::Model vehModel, const std::string& customName)
+	void SaveVehiclePropsToNode(pugi::xml_node& node, GTAvehicle ev)
 	{
-		if (customName.empty())
-			return false;
+		if (!ev.Exists()) return;
+
+		auto nodeProps = node.append_child("VehicleProperties");
+		auto nodeColours = nodeProps.append_child("Colours");
+		nodeColours.append_child("Primary").text() = ev.GetPrimaryColour();
+		nodeColours.append_child("Secondary").text() = ev.GetSecondaryColour();
+		nodeColours.append_child("Pearl").text() = ev.GetPearlescentColour();
+		nodeColours.append_child("Rim").text() = ev.GetRimColour();
+		if (ev.IsPrimaryColorCustom())
+		{
+			RgbS c = ev.GetCustomPrimaryColour();
+			nodeColours.append_child("Cust1_R").text() = c.R;
+			nodeColours.append_child("Cust1_G").text() = c.G;
+			nodeColours.append_child("Cust1_B").text() = c.B;
+		}
+		if (ev.IsSecondaryColorCustom())
+		{
+			RgbS c = ev.GetCustomSecondaryColour();
+			nodeColours.append_child("Cust2_R").text() = c.R;
+			nodeColours.append_child("Cust2_G").text() = c.G;
+			nodeColours.append_child("Cust2_B").text() = c.B;
+		}
+
+		nodeProps.append_child("Livery").text() = ev.GetLivery();
+		nodeProps.append_child("WheelType").text() = ev.GetWheelType();
+		nodeProps.append_child("WindowTint").text() = ev.GetWindowTint();
+		nodeProps.append_child("BulletProofTyres").text() = !ev.GetCanTyresBurst();
+		nodeProps.append_child("NumberPlateText").text() = ev.GetNumberPlateText().c_str();
+		nodeProps.append_child("NumberPlateIndex").text() = ev.GetNumberPlateTextIndex();
+
+		auto nodeNeons = nodeProps.append_child("Neons");
+		nodeNeons.append_child("Left").text() = ev.IsNeonLightOn(VehicleNeonLight::Left);
+		nodeNeons.append_child("Right").text() = ev.IsNeonLightOn(VehicleNeonLight::Right);
+		nodeNeons.append_child("Front").text() = ev.IsNeonLightOn(VehicleNeonLight::Front);
+		nodeNeons.append_child("Back").text() = ev.IsNeonLightOn(VehicleNeonLight::Back);
+		RgbS neonCol = ev.GetNeonLightsColour();
+		nodeNeons.append_child("R").text() = neonCol.R;
+		nodeNeons.append_child("G").text() = neonCol.G;
+		nodeNeons.append_child("B").text() = neonCol.B;
+
+		auto nodeMods = nodeProps.append_child("Mods");
+		for (int i = 0; i < 49; i++)
+		{
+			bool isToggleable = (i >= 17 && i <= 22);
+			if (isToggleable)
+				nodeMods.append_child(("_" + std::to_string(i)).c_str()).text() = ev.IsToggleModOn(i);
+			else
+				nodeMods.append_child(("_" + std::to_string(i)).c_str()).text() = (std::to_string(ev.GetMod(i)) + "," + std::to_string(ev.GetModVariation(i))).c_str();
+		}
+	}
+
+	void ApplyVehiclePropsFromNode(pugi::xml_node& node, GTAvehicle ev)
+	{
+		auto nodeProps = node.child("VehicleProperties");
+		if (!nodeProps || !ev.Exists()) return;
+
+		SET_VEHICLE_MOD_KIT(ev.Handle(), 0);
+
+		auto nodeColours = nodeProps.child("Colours");
+		if (nodeColours)
+		{
+			ev.SetPrimaryColour(nodeColours.child("Primary").text().as_int(0));
+			ev.SetSecondaryColour(nodeColours.child("Secondary").text().as_int(0));
+			ev.SetPearlescentColour(nodeColours.child("Pearl").text().as_int(0));
+			ev.SetRimColour(nodeColours.child("Rim").text().as_int(0));
+			if (nodeColours.child("Cust1_R"))
+				ev.SetCustomPrimaryColour(nodeColours.child("Cust1_R").text().as_int(), nodeColours.child("Cust1_G").text().as_int(), nodeColours.child("Cust1_B").text().as_int());
+			if (nodeColours.child("Cust2_R"))
+				ev.SetCustomSecondaryColour(nodeColours.child("Cust2_R").text().as_int(), nodeColours.child("Cust2_G").text().as_int(), nodeColours.child("Cust2_B").text().as_int());
+		}
+
+		ev.SetLivery(nodeProps.child("Livery").text().as_int(-1));
+		ev.SetWheelType(nodeProps.child("WheelType").text().as_int(0));
+		ev.SetWindowTint(nodeProps.child("WindowTint").text().as_int(0));
+		ev.SetCanTyresBurst(!nodeProps.child("BulletProofTyres").text().as_bool(false));
+		ev.SetNumberPlateText(nodeProps.child("NumberPlateText").text().as_string(""));
+		ev.SetNumberPlateTextIndex(nodeProps.child("NumberPlateIndex").text().as_int(0));
+
+		auto nodeNeons = nodeProps.child("Neons");
+		if (nodeNeons)
+		{
+			ev.SetNeonLightOn(VehicleNeonLight::Left, nodeNeons.child("Left").text().as_bool());
+			ev.SetNeonLightOn(VehicleNeonLight::Right, nodeNeons.child("Right").text().as_bool());
+			ev.SetNeonLightOn(VehicleNeonLight::Front, nodeNeons.child("Front").text().as_bool());
+			ev.SetNeonLightOn(VehicleNeonLight::Back, nodeNeons.child("Back").text().as_bool());
+			ev.SetNeonLightsColour(nodeNeons.child("R").text().as_int(), nodeNeons.child("G").text().as_int(), nodeNeons.child("B").text().as_int());
+		}
+
+		auto nodeMods = nodeProps.child("Mods");
+		if (nodeMods)
+		{
+			for (int i = 0; i < 49; i++)
+			{
+				auto modNode = nodeMods.child(("_" + std::to_string(i)).c_str());
+				if (!modNode) continue;
+				bool isToggleable = (i >= 17 && i <= 22);
+				if (isToggleable)
+					ev.ToggleMod(i, modNode.text().as_bool());
+				else
+				{
+					std::string val = modNode.text().as_string();
+					auto commaPos = val.find(',');
+					if (commaPos != std::string::npos)
+					{
+						try
+						{
+							int modIdx = std::stoi(val.substr(0, commaPos));
+							int modVar = std::stoi(val.substr(commaPos + 1));
+							ev.SetMod(i, modIdx, modVar);
+						}
+						catch (...) {}
+					}
+				}
+			}
+		}
+	}
+
+	bool SpawnVehicleAddVehicleModelToFavourites(GTAmodel::Model vehModel, const std::string& customName)
+	{
+		if (customName.empty()) return false;
+
 		std::string xmlAddedVehicleModels = "AddedVehicleModels.xml";
 		pugi::xml_document doc;
 		if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str()).status != pugi::status_ok)
@@ -1385,33 +1856,42 @@ namespace sub
 		}
 		pugi::xml_node nodeRoot = doc.child("AddedVehicleModels");
 
-		//if (vehModel.IsInCdImage()){
 		const std::string& vehModelName = vehModel.VehicleDisplayName(false);
-		auto nodeOldLoc = nodeRoot.find_child_by_attribute("modelHash", int_to_hexstring(vehModel.hash, true).c_str());
-		if (!nodeOldLoc) // If null
-		{
+		auto nodeOldLoc = nodeRoot.find_child_by_attribute("modelHash", IntToHexString(vehModel.hash, true).c_str());
+		if (!nodeOldLoc)
 			nodeOldLoc = nodeRoot.find_child_by_attribute("modelName", vehModelName.c_str());
-		}
-		if (nodeOldLoc) // If not null
-		{
+		if (nodeOldLoc)
 			nodeOldLoc.parent().remove_child(nodeOldLoc);
-		}
+
 		auto nodeNewLoc = nodeRoot.append_child("VehModel");
 		nodeNewLoc.append_attribute("modelName") = vehModelName.c_str();
-		nodeNewLoc.append_attribute("modelHash") = int_to_hexstring(vehModel.hash, true).c_str();
+		nodeNewLoc.append_attribute("modelHash") = IntToHexString(vehModel.hash, true).c_str();
 		nodeNewLoc.append_attribute("customName") = customName.c_str();
+
+		GTAped myPed = PLAYER_PED_ID();
+		if (myPed.IsInVehicle())
+		{
+			GTAvehicle myVeh = myPed.CurrentVehicle();
+			if (myVeh.Model().hash == vehModel.hash)
+			{
+				SaveVehiclePropsToNode(nodeNewLoc, myVeh);
+			}
+		}
+
 		return (doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str()));
 	}
-	bool SpawnVehicle_RemoveVehicleModelFromFavourites(GTAmodel::Model vehModel)
+	bool SpawnVehicleRemoveVehicleModelFromFavourites(GTAmodel::Model vehModel)
 	{
 		std::string xmlAddedVehicleModels = "AddedVehicleModels.xml";
 		pugi::xml_document doc;
 		if (doc.load_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str()).status != pugi::status_ok)
+		{
 			return false;
+		}
 		pugi::xml_node nodeRoot = doc.child("AddedVehicleModels");
 
 		const std::string& vehModelName = vehModel.VehicleDisplayName(false);
-		auto nodeOldLoc = nodeRoot.find_child_by_attribute("modelHash", int_to_hexstring(vehModel.hash, true).c_str());
+		auto nodeOldLoc = nodeRoot.find_child_by_attribute("modelHash", IntToHexString(vehModel.hash, true).c_str());
 		if (!nodeOldLoc) // If null
 		{
 			nodeOldLoc = nodeRoot.find_child_by_attribute("modelName", vehModelName.c_str());
@@ -1423,118 +1903,107 @@ namespace sub
 		return (doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str()));
 	}
 
-	void SpawnVehicle_AllCatsSub()
+	void SpawnVehicleAllCategoriesMenu()
 	{
-		using namespace SpawnVehicle_catind;
-		const std::vector<Model> *tempvecp;
-
-		/*for (auto& vimg : vVehicleBmps)
-		{
-		if (!vimg.tid.Exists())
-		{
-		PCHAR spriteDictName = vimg.dict.c_str();
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED(spriteDictName))
-		REQUEST_STREAMED_TEXTURE_DICT(spriteDictName, false);
-		}
-		}*/
+		using namespace VehicleSpawner;
+		const std::vector<Model> *tempVehicleCopy;
 
 		AddTitle(dict);
 
-		switch (SpawnVehicle_index)
+		switch (spawnVehicleIndex)
 		{
-		case OPENWHEEL:		tempvecp = &g_vehHashes_OPENWHEEL; break;
-		case SUPER:			tempvecp = &g_vehHashes_SUPER; break;
-		case SPORT:			tempvecp = &g_vehHashes_SPORT; break;
-		case SPORTSCLASSIC: tempvecp = &g_vehHashes_SPORTSCLASSIC; break;
-		case COUPE:			tempvecp = &g_vehHashes_COUPE; break;
-		case MUSCLE:		tempvecp = &g_vehHashes_MUSCLE; break;
-		case OFFROAD:		tempvecp = &g_vehHashes_OFFROAD; break;
-		case SUV:			tempvecp = &g_vehHashes_SUV; break;
-		case SEDAN:			tempvecp = &g_vehHashes_SEDAN; break;
-		case COMPACT:		tempvecp = &g_vehHashes_COMPACT; break;
-		case VAN:			tempvecp = &g_vehHashes_VAN; break;
-		case SERVICE:		tempvecp = &g_vehHashes_SERVICE; break;
-		case TRAIN:			tempvecp = &g_vehHashes_TRAIN; break;
-		case EMERGENCY:		tempvecp = &g_vehHashes_EMERGENCY; break;
-		case MOTORCYCLE:	tempvecp = &g_vehHashes_MOTORCYCLE; break;
-		case BICYCLE:		tempvecp = &g_vehHashes_BICYCLE; break;
-		case PLANE:			tempvecp = &g_vehHashes_PLANE; break;
-		case HELICOPTER:	tempvecp = &g_vehHashes_HELICOPTER; break;
-		case BOAT:			tempvecp = &g_vehHashes_BOAT; break;
-		case INDUSTRIAL:	tempvecp = &g_vehHashes_INDUSTRIAL; break;
-		case COMMERCIAL:	tempvecp = &g_vehHashes_COMMERCIAL; break;
-		case UTILITY:		tempvecp = &g_vehHashes_UTILITY; break;
-		case MILITARY:		tempvecp = &g_vehHashes_MILITARY; break;
-		case OTHER:			tempvecp = &g_vehHashes_OTHER; break;
-		case DRIFT:			tempvecp = &g_vehHashes_DRIFT; break;
+			case OPENWHEEL:		tempVehicleCopy = &g_vehHashes_OPENWHEEL; break;
+			case SUPER:			tempVehicleCopy = &g_vehHashes_SUPER; break;
+			case SPORT:			tempVehicleCopy = &g_vehHashes_SPORT; break;
+			case SPORTSCLASSIC: tempVehicleCopy = &g_vehHashes_SPORTSCLASSIC; break;
+			case COUPE:			tempVehicleCopy = &g_vehHashes_COUPE; break;
+			case MUSCLE:		tempVehicleCopy = &g_vehHashes_MUSCLE; break;
+			case OFFROAD:		tempVehicleCopy = &g_vehHashes_OFFROAD; break;
+			case SUV:			tempVehicleCopy = &g_vehHashes_SUV; break;
+			case SEDAN:			tempVehicleCopy = &g_vehHashes_SEDAN; break;
+			case COMPACT:		tempVehicleCopy = &g_vehHashes_COMPACT; break;
+			case VAN:			tempVehicleCopy = &g_vehHashes_VAN; break;
+			case SERVICE:		tempVehicleCopy = &g_vehHashes_SERVICE; break;
+			case TRAIN:			tempVehicleCopy = &g_vehHashes_TRAIN; break;
+			case EMERGENCY:		tempVehicleCopy = &g_vehHashes_EMERGENCY; break;
+			case MOTORCYCLE:	tempVehicleCopy = &g_vehHashes_MOTORCYCLE; break;
+			case BICYCLE:		tempVehicleCopy = &g_vehHashes_BICYCLE; break;
+			case PLANE:			tempVehicleCopy = &g_vehHashes_PLANE; break;
+			case HELICOPTER:	tempVehicleCopy = &g_vehHashes_HELICOPTER; break;
+			case BOAT:			tempVehicleCopy = &g_vehHashes_BOAT; break;
+			case INDUSTRIAL:	tempVehicleCopy = &g_vehHashes_INDUSTRIAL; break;
+			case COMMERCIAL:	tempVehicleCopy = &g_vehHashes_COMMERCIAL; break;
+			case UTILITY:		tempVehicleCopy = &g_vehHashes_UTILITY; break;
+			case MILITARY:		tempVehicleCopy = &g_vehHashes_MILITARY; break;
+			case OTHER:			tempVehicleCopy = &g_vehHashes_OTHER; break;
+			case DRIFT:			tempVehicleCopy = &g_vehHashes_DRIFT; break;
 		}
 
-		//std::vector<std::string>&tempvecp2 = *tempvecp;
-
-		if (tempvecp->empty())
+		if (tempVehicleCopy->empty())
 		{
-			Menu::SetSub_previous();
+			Menu::SetPreviousMenu();
 			return;
 		}
 
-		for (auto& vehModel : *tempvecp)
+		for (auto& vehModel : *tempVehicleCopy)
 		{
 			if (!vehModel.IsInCdImage())
+			{
 				continue;
 
-			bool bSetEngSoundPressed = false, bSpawnVehForAllPlayersPressed = false;
+			}
+			bool setEngineSoundPressed = false;
+			bool spawnVehicleForAllPlayersPressed = false;
 
-			switch (Menu::currentsub_ar[Menu::currentsub_ar_index])
+			switch (Menu::submenuHistory[Menu::menuHistoryIndex])
 			{
 			case SUB::SPOONER_SPAWN_VEHICLE:
 				sub::Spooner::MenuOptions::AddOption_AddVehicle(vehModel.VehicleDisplayName(true), vehModel);
 				break;
 			case SUB::SPAWNVEHICLE:
-				AddVSpawnOption_(vehModel.VehicleDisplayName(true), vehModel, Static_241);
+				AddVehicleSpawnOption(vehModel.VehicleDisplayName(true), vehModel, g_activePedHandle);
 				break;
 
 			}
 			/// one submenu back >>>
-			switch (Menu::currentsub_ar[Menu::currentsub_ar_index - 1]) /// -1
+			switch (Menu::submenuHistory[Menu::menuHistoryIndex - 1]) /// -1
 			{
 			case SUB::OBJECTGUN:
-				AddogunOption_(vehModel.VehicleDisplayName(true), vehModel, nullptr, false);
+				AddObjectGunOption(vehModel.VehicleDisplayName(true), vehModel, nullptr, false);
 				break;
 			case SUB::KABOOMGUN:
-				AddkgunOption_(vehModel.VehicleDisplayName(true), vehModel.hash, nullptr, false);
+				AddKaboomGunOption(vehModel.VehicleDisplayName(true), vehModel.hash, nullptr, false);
 				break;
 			case SUB::MSENGINESOUND:
-				AddTickol(vehModel.VehicleDisplayName(true), get_vehicle_engine_sound_name(Static_12) == vehModel.VehicleDisplayName(false), bSetEngSoundPressed, bSetEngSoundPressed); if (bSetEngSoundPressed)
+				Vehicle engineSoundVehicleTarget = GetVehicleModShopTarget();
+				AddTickol(vehModel.VehicleDisplayName(true), GetVehicleEngineSoundName(engineSoundVehicleTarget) == vehModel.VehicleDisplayName(false), setEngineSoundPressed, setEngineSoundPressed);
+				if (setEngineSoundPressed)
 				{
-					GTAvehicle veh12 = Static_12;
+					GTAvehicle veh12 = engineSoundVehicleTarget;
 					veh12.RequestControl(200);
-					set_vehicle_engine_sound_name(veh12, vehModel.VehicleDisplayName(false));
+					SetVehicleEngineSoundName(veh12, vehModel.VehicleDisplayName(false));
 				}
 				break;
 			}
 
-
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
-				if (_globalSpawnVehicle_drawBmps)
+				if (g_spawnVehicleDrawBMPs)
+				{
 					DrawVehicleBmp(vehModel);
-				
+					DrawVehicleStats(vehModel);
+				}
+
 				DrawVehicleModelName(vehModel);
 
-				bool bIsAFav = SpawnVehicle_IsVehicleModelAFavourite(vehModel);
-				if (Menu::bit_controller)
+				bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(vehModel);
+				if (Menu::usingControllerInput)
 				{
 					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
 
 					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
 					{
-						!bIsAFav ? SpawnVehicle_AddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicle_RemoveVehicleModelFromFavourites(vehModel);
-						/*if (!bIsAFav)
-						{
-						OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteVehicleModelSelected, "", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true));
-						OnscreenKeyboard::State::arg1._uint = vehModel.hash;
-						}
-						else SpawnVehicle_RemoveVehicleModelFromFavourites(vehModel);*/
+						!bIsAFav ? SpawnVehicleAddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicleRemoveVehicleModelFromFavourites(vehModel);
 					}
 				}
 				else
@@ -1543,27 +2012,21 @@ namespace sub
 
 					if (IsKeyJustUp(VirtualKey::B))
 					{
-						!bIsAFav ? SpawnVehicle_AddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicle_RemoveVehicleModelFromFavourites(vehModel);
-						/*if (!bIsAFav)
-						{
-						OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteVehicleModelSelected, "", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true));
-						OnscreenKeyboard::State::arg1._uint = vehModel.hash;
-						}
-						else SpawnVehicle_RemoveVehicleModelFromFavourites(vehModel);*/
+						!bIsAFav ? SpawnVehicleAddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicleRemoveVehicleModelFromFavourites(vehModel);
 					}
 				}
 			}
 		}
 
 	}
-	void SpawnVehicle_Favourites()
+	void SpawnVehicleFavouritesMenu()
 	{
-		auto& _searchStr = dict2;
-		using namespace SpawnVehicle_catind;
+		auto& searchStr = dict2;
+		using namespace VehicleSpawner;
 
-		GTAped myPed = Static_241;
+		GTAped myPed = g_activePedHandle;
 		GTAvehicle myVehicle = myPed.CurrentVehicle();
-		bool bIsInVehicle = myVehicle.Exists();
+		bool isInVehicle = myVehicle.Exists();
 
 		AddTitle("Favourites");
 
@@ -1592,23 +2055,26 @@ namespace sub
 				if (ism.IsInCdImage())
 				{
 					std::string inputStrName = Game::InputBox("", 28U, "Enter custom name:", ism.VehicleDisplayName(true));
-					if (SpawnVehicle_AddVehicleModelToFavourites(ism, inputStrName))
+					if (SpawnVehicleAddVehicleModelToFavourites(ism, inputStrName))
 					{
 						Game::Print::PrintBottomLeft("Model ~b~added~s~.");
 					}
 					else
+					{
 						Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add model.");
+					}
 				}
 			}
 			else
-				Game::Print::PrintError_InvalidModel(inputStrModel);
-			//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteVehicleModelEntryName, std::string(), 28U, "Enter model name (e.g. adder):");
+			{
+				Game::Print::PrintErrorInvalidModel(inputStrModel);
+			}
 		}
 
-		if (bIsInVehicle)
+		if (isInVehicle)
 		{
 			const Model& myVehicleModel = myVehicle.Model();
-			bool bIsCurrentModelAFav = SpawnVehicle_IsVehicleModelAFavourite(myVehicleModel);
+			bool bIsCurrentModelAFav = SpawnVehicleIsVehicleModelAFavourite(myVehicleModel);
 			bool bAddCurrentModelToFav = false, bRemoveCurrentModelFromFav = false;
 			AddTickol("Current Vehicle's Model", bIsCurrentModelAFav, bAddCurrentModelToFav, bRemoveCurrentModelFromFav, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 			if (bAddCurrentModelToFav)
@@ -1616,47 +2082,42 @@ namespace sub
 				std::string inputStrName = Game::InputBox("", 28U, "Enter custom name:", myVehicleModel.VehicleDisplayName(true));
 				if (inputStrName.length() > 0)
 				{
-					if (SpawnVehicle_AddVehicleModelToFavourites(myVehicleModel, inputStrName))
+					if (SpawnVehicleAddVehicleModelToFavourites(myVehicleModel, inputStrName))
 					{
 						Game::Print::PrintBottomLeft("Model ~b~added~s~.");
 					}
-					else Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add model.");
+					else
+					{
+						Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to add model.");
+					}
 				}
-				else Game::Print::PrintError_InvalidInput(inputStrName);
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteVehicleModelCurrent, std::string(), 28U, "Enter custom name:", myVehicleModel.VehicleDisplayName(true));
-				//OnscreenKeyboard::State::arg1._uint = myVehicleModel.hash;
+				else 
+				{
+					Game::Print::PrintErrorInvalidInput(inputStrName);
+				}
 			}
 			else if (bRemoveCurrentModelFromFav)
 			{
-				if (SpawnVehicle_RemoveVehicleModelFromFavourites(myVehicleModel))
+				if (SpawnVehicleRemoveVehicleModelFromFavourites(myVehicleModel))
 				{
 					Game::Print::PrintBottomLeft("Model ~b~removed~s~.");
 				}
-				else Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to remove model.");
+				else 
+				{
+					Game::Print::PrintBottomLeft("~r~Error:~s~ Unable to remove model.");
+				}
 			}
 		}
 
 		if (nodeRoot.first_child())
 		{
-			/*for (auto& vimg : vVehicleBmps)
-			{
-			if (!vimg.tid.Exists())
-			{
-			PCHAR spriteDictName = vimg.dict.c_str();
-			if (!HAS_STREAMED_TEXTURE_DICT_LOADED(spriteDictName))
-			REQUEST_STREAMED_TEXTURE_DICT(spriteDictName, false);
-			}
-			}*/
-
 			AddBreak("---Added Models---");
 
 			bool bSearchPressed = false;
-			AddOption(_searchStr.empty() ? "SEARCH" : _searchStr, bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
+			AddOption(searchStr.empty() ? "SEARCH" : searchStr, bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
 			{
-				_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", boost::to_lower_copy(_searchStr));
-				boost::to_upper(_searchStr);
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToUpper, _searchStr, 126U, std::string(), _searchStr);
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
+				searchStr = Game::InputBox(searchStr, 126U, "SEARCH", boost::to_lower_copy(searchStr));
+				boost::to_upper(searchStr);
 			}
 
 			for (auto nodeLocToLoad = nodeRoot.first_child(); nodeLocToLoad; nodeLocToLoad = nodeLocToLoad.next_sibling())
@@ -1665,10 +2126,16 @@ namespace sub
 				Model vehModel = nodeLocToLoad.attribute("modelHash").as_uint(0);
 				std::string vehCustomName = nodeLocToLoad.attribute("customName").as_string();
 
-				if (!_searchStr.empty()) { if (boost::to_upper_copy(vehModelName).find(_searchStr) == std::string::npos) continue; }
+				if (!searchStr.empty()) 
+				{ 
+					if (boost::to_upper_copy(vehModelName).find(searchStr) == std::string::npos) 
+					continue; 
+				}
 
 				if (vehModel.hash == 0)
+				{
 					vehModel = GET_HASH_KEY(vehModelName);
+				}
 
 				std::string vehDisplayName = vehCustomName.length() ? vehCustomName : vehModel.VehicleDisplayName(true);
 
@@ -1678,47 +2145,70 @@ namespace sub
 				}
 				else
 				{
-					// The following has to be copied from SpawnVehicle_AllCats when stuff changes there. I can just make a procedure but naaaaah
+					bool setEngineSoundPressed = false;
 
-					bool bSetEngSoundPressed = false, bSpawnVehForAllPlayersPressed = false;
-
-					switch (Menu::currentsub_ar[Menu::currentsub_ar_index])
+					switch (Menu::submenuHistory[Menu::menuHistoryIndex])
 					{
 					case SUB::SPOONER_SPAWN_VEHICLE:
 						sub::Spooner::MenuOptions::AddOption_AddVehicle(vehDisplayName, vehModel);
 						break;
 					case SUB::SPAWNVEHICLE:
-						AddVSpawnOption_(vehDisplayName, vehModel, Static_241);
+					{
+						bool bFavPressed = false;
+						AddOption(vehDisplayName, bFavPressed);
+						if (bFavPressed)
+						{
+							Vehicle vehicle = SpawnVehicle(vehModel, g_activePedHandle, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
+							if (vehicle != 0)
+							{
+								GTAvehicle gv(vehicle);
+								gv.RequestControl(300);
+								if (nodeLocToLoad.child("VehicleProperties"))
+									ApplyVehiclePropsFromNode(nodeLocToLoad, gv);
+								else
+									SetVehicleMaxUpgrades(vehicle, g_spawnVehicleAutoUpgrade, g_spawnVehicleInvincible,
+										g_spawnVehiclePlateType, g_spawnVehiclePlateTexterValue == 0 ? g_spawnVehiclePlateText : "", g_spawnVehicleNeonToggle,
+										g_spawnVehicleNeonColor.R, g_spawnVehicleNeonColor.G, g_spawnVehicleNeonColor.B,
+										g_spawnVehiclePrimaryColor, g_spawnVehicleSecondaryColor);
+								if (!NETWORK_IS_IN_SESSION() && !g_spawnVehiclePersistent)
+									SET_VEHICLE_AS_NO_LONGER_NEEDED(&vehicle);
+							}
+						}
 						break;
 					}
+					}
 					/// one submenu back >>>
-					switch (Menu::currentsub_ar[Menu::currentsub_ar_index - 1]) /// -1
+					switch (Menu::submenuHistory[Menu::menuHistoryIndex - 1]) /// -1
 					{
 					case SUB::OBJECTGUN:
-						AddogunOption_(vehDisplayName, vehModel, &null, false);
+						AddObjectGunOption(vehDisplayName, vehModel, &null, false);
 						break;
 					case SUB::KABOOMGUN:
-						AddkgunOption_(vehDisplayName, vehModel.hash, &null, false);
+						AddKaboomGunOption(vehDisplayName, vehModel.hash, &null, false);
 						break;
 					case SUB::MSENGINESOUND:
-						AddTickol(vehDisplayName, get_vehicle_engine_sound_name(Static_12) == vehModel.VehicleDisplayName(false), bSetEngSoundPressed, bSetEngSoundPressed); if (bSetEngSoundPressed)
+						Vehicle engineSoundVehicleTarget = GetVehicleModShopTarget();
+						AddTickol(vehDisplayName, GetVehicleEngineSoundName(engineSoundVehicleTarget) == vehModel.VehicleDisplayName(false), setEngineSoundPressed, setEngineSoundPressed); if (setEngineSoundPressed)
 						{
-							GTAvehicle veh12 = Static_12;
+							GTAvehicle veh12 = engineSoundVehicleTarget;
 							veh12.RequestControl(200);
-							set_vehicle_engine_sound_name(veh12, vehModel.VehicleDisplayName(false));
+							SetVehicleEngineSoundName(veh12, vehModel.VehicleDisplayName(false));
 						}
 						break;
 					}
 				}
 
-				if (Menu::printingop == *Menu::currentopATM)
+				if (Menu::IsLastDrawnOptionSelected())
 				{
-					if (_globalSpawnVehicle_drawBmps)
+					if (g_spawnVehicleDrawBMPs)
+					{
 						DrawVehicleBmp(vehModel);
+						DrawVehicleStats(vehModel);
+					}
 
 					DrawVehicleModelName(vehModel);
 
-					if (Menu::bit_controller)
+					if (Menu::usingControllerInput)
 					{
 						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
 
@@ -1726,8 +2216,10 @@ namespace sub
 						{
 							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
-							if (*Menu::currentopATM >= Menu::totalop)
+						if (Menu::IsSelectionAtBottom())
+							{
 								Menu::Up();
+							}
 							return; // Yeah
 						}
 					}
@@ -1739,17 +2231,16 @@ namespace sub
 						{
 							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
 							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
-							if (*Menu::currentopATM >= Menu::totalop)
+						if (Menu::IsSelectionAtBottom())
+							{
 								Menu::Up();
+							}
 							return; // Yeah
 						}
 					}
 				}
-
 			}
 		}
-		//if (Menu::currentop > Menu::printingop) Menu::Up();
-
 	}
 	//keeping this code, but purely for future reference, access in the menu has been blocked
 	const std::vector<std::string> CAPTIONS_CUNNINGSTUNTS{ "Nagasaki BF400", "Grotti Brioso R/A", "Vapid Desert Raid", "Emperor ETR1", "Western Gargoyle", "Obey Omnis", "Annis RE-7B", "Vapid Trophy Truck", "Lampadati Tropos Rallye", "Progen Tyrus", "Western Cliffhanger", "Ocelot Lynx", "Declasse Drift Tampa", "MTL Dune", "Vapid Contender" };
@@ -2161,19 +2652,19 @@ namespace sub
 		{ "Agents Of Sabotage", CAPTIONS_AGENTS_OF_SABOTAGE, VALUES_AGENTS_OF_SABOTAGE },
 	};
 
-	int vehDlcCatagoryId = 0;
+	int vehDLCCategoryID = 0;
 	int vehDlcIdToSpawn = 0;
-	void SpawnVehicle_DLC()
+	void SpawnVehicleDLC()
 	{
 		bool spawnVehicle = false;
 
-		if (vehDlcCatagoryId < 0 || vehDlcCatagoryId >= VehicleDlcCategories.size())
+		if (vehDLCCategoryID < 0 || vehDLCCategoryID >= VehicleDlcCategories.size())
 		{
 			Game::Print::PrintBottomLeft("Invalid Category");
 			return;
 		}
 
-		const auto& selectedCategory = VehicleDlcCategories[vehDlcCatagoryId];
+		const auto& selectedCategory = VehicleDlcCategories[vehDLCCategoryID];
 
 		AddTitle(selectedCategory.name);
 
@@ -2181,18 +2672,23 @@ namespace sub
 		{
 			AddOption(selectedCategory.captions[i], spawnVehicle);
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::IsLastDrawnOptionSelected())
+			{
 				vehDlcIdToSpawn = static_cast<int>(i);
+			}
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
 
-				if (_globalSpawnVehicle_drawBmps)
-					SpawnVehicle_catind::DrawVehicleBmp(selectedCategory.values[vehDlcIdToSpawn]);
+				if (g_spawnVehicleDrawBMPs)
+				{
+					VehicleSpawner::DrawVehicleBmp(selectedCategory.values[vehDlcIdToSpawn]);
+					VehicleSpawner::DrawVehicleStats(GTAmodel::Model(selectedCategory.values[vehDlcIdToSpawn]));
+				}
 
-				const bool bIsAFav = SpawnVehicle_IsVehicleModelAFavourite(selectedCategory.values[vehDlcIdToSpawn]);
+				const bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(selectedCategory.values[vehDlcIdToSpawn]);
 
-				if (Menu::bit_controller)
+				if (Menu::usingControllerInput)
 				{
 					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + std::string(" favourites"));
 
@@ -2200,14 +2696,14 @@ namespace sub
 					{
 						if (!bIsAFav)
 						{
-							SpawnVehicle_AddVehicleModelToFavourites(
+							SpawnVehicleAddVehicleModelToFavourites(
 								selectedCategory.values[vehDlcIdToSpawn],
 								Game::InputBox("", 28U, "Enter custom name:",
 									GTAmodel::Model(selectedCategory.values[vehDlcIdToSpawn]).VehicleDisplayName(true)));
 						}
 						else
 						{
-							SpawnVehicle_RemoveVehicleModelFromFavourites(selectedCategory.values[vehDlcIdToSpawn]);
+							SpawnVehicleRemoveVehicleModelFromFavourites(selectedCategory.values[vehDlcIdToSpawn]);
 						}
 					}
 				}
@@ -2219,14 +2715,14 @@ namespace sub
 					{
 						if (!bIsAFav)
 						{
-							SpawnVehicle_AddVehicleModelToFavourites(
+							SpawnVehicleAddVehicleModelToFavourites(
 								selectedCategory.values[vehDlcIdToSpawn],
 								Game::InputBox("", 28U, "Enter custom name:",
 									GTAmodel::Model(selectedCategory.values[vehDlcIdToSpawn]).VehicleDisplayName(true)));
 						}
 						else
 						{
-							SpawnVehicle_RemoveVehicleModelFromFavourites(selectedCategory.values[vehDlcIdToSpawn]);
+							SpawnVehicleRemoveVehicleModelFromFavourites(selectedCategory.values[vehDlcIdToSpawn]);
 						}
 					}
 				}
@@ -2235,36 +2731,90 @@ namespace sub
 
 		if (spawnVehicle)
 		{
-			FuncSpawnVehicle_(
-				selectedCategory.values[vehDlcIdToSpawn], Static_241, _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_autoSit);
+			SpawnVehicle(selectedCategory.values[vehDlcIdToSpawn], g_activePedHandle, g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit);
 		}
 	}
 
-	void SpawnVehicle_DLC_Selection()
+	void SpawnVehicleDLCSelection()
 	{
 		AddTitle("DLC Vehicles");
 		for (size_t i = 0; i < VehicleDlcCategories.size(); ++i)
 		{
 			AddOption(VehicleDlcCategories[i].name, null, nullFunc, SUB::SPAWNVEHICLEDLC);
 
-			if (Menu::printingop == *Menu::currentopATM)
+			if (Menu::IsLastDrawnOptionSelected())
 			{
-				vehDlcCatagoryId = static_cast<int>(i);
+				vehDLCCategoryID = static_cast<int>(i);
 			}
 		}
 	}
 	// Vehicle saver
 
-	namespace VehicleSaver_catind
+	namespace VehicleSaver
 	{
 		UINT8 _persistentAttachmentsTexterIndex = 0;
 		UINT8 _driverVisibilityTexterIndex = 0;
 
-		void VehSaver_SaveToFile(std::string filePath, GTAvehicle ev)
+		static void writeRgbChannels(pugi::xml_node parent, const char* prefix, const RgbS& c)
+		{
+			parent.append_child((std::string(prefix) + "R").c_str()).text() = c.R;
+			parent.append_child((std::string(prefix) + "G").c_str()).text() = c.G;
+			parent.append_child((std::string(prefix) + "B").c_str()).text() = c.B;
+		}
+
+		static RgbS readRgbChannels(pugi::xml_node parent, const char* prefix)
+		{
+			RgbS c;
+			c.R = parent.child((std::string(prefix) + "R").c_str()).text().as_int();
+			c.G = parent.child((std::string(prefix) + "G").c_str()).text().as_int();
+			c.B = parent.child((std::string(prefix) + "B").c_str()).text().as_int();
+			return c;
+		}
+
+		template<typename MapT, typename KeyT>
+		static void writeMultiplierIfPresent(pugi::xml_node parent, const char* name, const MapT& map, const KeyT& key)
+		{
+			auto it = map.find(key);
+			if (it != map.end()) parent.append_child(name).text() = it->second;
+		}
+
+		struct VehicleDoorEntry { const char* xmlName; VehicleDoor door; };
+		static const VehicleDoorEntry kVehicleDoors[] = {
+			{ "BackLeftDoor",   VehicleDoor::BackLeftDoor   },
+			{ "BackRightDoor",  VehicleDoor::BackRightDoor  },
+			{ "FrontLeftDoor",  VehicleDoor::FrontLeftDoor  },
+			{ "FrontRightDoor", VehicleDoor::FrontRightDoor },
+			{ "Hood",           VehicleDoor::Hood           },
+			{ "Trunk",          VehicleDoor::Trunk          },
+			{ "Trunk2",         VehicleDoor::Trunk2         },
+		};
+
+		struct VehicleTyreEntry { const char* xmlName; int index; };
+		static const VehicleTyreEntry kVehicleTyres[] = {
+			{ "FrontLeft",  0 }, 
+			{ "FrontRight", 1 },
+			{ "_2",         2 }, 
+			{ "_3",         3 },
+			{ "BackLeft",   4 }, 
+			{ "BackRight",  5 },
+			{ "_6",         6 },
+			{ "_7",         7 },
+			{ "_8", 8 },
+		};
+
+		struct VehicleNeonEntry { const char* xmlName; VehicleNeonLight light; };
+		static const VehicleNeonEntry kVehicleNeons[] = {
+			{ "Left",  VehicleNeonLight::Left  },
+			{ "Right", VehicleNeonLight::Right },
+			{ "Front", VehicleNeonLight::Front },
+			{ "Back",  VehicleNeonLight::Back  },
+		};
+
+		void VehicleSaveToFile(std::string filePath, GTAvehicle ev)
 		{
 			if (!ev.IsVehicle())
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Invalid vehicle.");
+				Game::Print::ShowNotification("~r~Error:", "Invalid vehicle.");
 				return;
 			}
 
@@ -2293,7 +2843,7 @@ namespace sub
 			nodeVehicle.append_attribute("menyoo_ver") = MENYOO_CURRENT_VER_;
 
 			const Model& eModel = ev.Model();
-			nodeVehicle.append_child("ModelHash").text() = int_to_hexstring(eModel.hash, true).c_str();
+			nodeVehicle.append_child("ModelHash").text() = IntToHexString(eModel.hash, true).c_str();
 			nodeVehicle.append_child("InitialHandle").text() = ev.Handle();
 
 			auto nodeVehicleStuff = nodeVehicle.append_child("VehicleProperties");
@@ -2306,75 +2856,65 @@ namespace sub
 			GET_VEHICLE_MOD_COLOR_2(ev.Handle(), &mod2a, &mod2b);
 			bool isPrimaryColourCustom = ev.IsPrimaryColorCustom();
 			bool isSecondaryColourCustom = ev.IsSecondaryColorCustom();
-			RgbS cust1 = ev.CustomPrimaryColour_get();
-			RgbS cust2 = ev.CustomSecondaryColour_get();
-			RgbS tyreSmokeRgb = ev.TyreSmokeColour_get();
-			nodeVehicleColours.append_child("Primary").text() = ev.PrimaryColour_get();
-			nodeVehicleColours.append_child("Secondary").text() = ev.SecondaryColour_get();
-			nodeVehicleColours.append_child("Pearl").text() = ev.PearlescentColour_get();
-			nodeVehicleColours.append_child("Rim").text() = ev.RimColour_get();
+			RgbS cust1 = ev.GetCustomPrimaryColour();
+			RgbS cust2 = ev.GetCustomSecondaryColour();
+			RgbS tyreSmokeRgb = ev.GetTyreSmokeColour();
+			nodeVehicleColours.append_child("Primary").text() = ev.GetPrimaryColour();
+			nodeVehicleColours.append_child("Secondary").text() = ev.GetSecondaryColour();
+			nodeVehicleColours.append_child("Pearl").text() = ev.GetPearlescentColour();
+			nodeVehicleColours.append_child("Rim").text() = ev.GetRimColour();
 			nodeVehicleColours.append_child("Mod1_a").text() = mod1a;
 			nodeVehicleColours.append_child("Mod1_b").text() = mod1b;
 			nodeVehicleColours.append_child("Mod1_c").text() = mod1c;
 			nodeVehicleColours.append_child("Mod2_a").text() = mod2a;
 			nodeVehicleColours.append_child("Mod2_b").text() = mod2b;
 			nodeVehicleColours.append_child("IsPrimaryColourCustom").text() = isPrimaryColourCustom;
-			if (isPrimaryColourCustom)
+			if (isPrimaryColourCustom) 
 			{
-				nodeVehicleColours.append_child("Cust1_R").text() = cust1.R;
-				nodeVehicleColours.append_child("Cust1_G").text() = cust1.G;
-				nodeVehicleColours.append_child("Cust1_B").text() = cust1.B;
+				writeRgbChannels(nodeVehicleColours, "Cust1_", cust1);
 			}
 			nodeVehicleColours.append_child("IsSecondaryColourCustom").text() = isSecondaryColourCustom;
-			if (isSecondaryColourCustom)
+			if (isSecondaryColourCustom) 
 			{
-				nodeVehicleColours.append_child("Cust2_R").text() = cust2.R;
-				nodeVehicleColours.append_child("Cust2_G").text() = cust2.G;
-				nodeVehicleColours.append_child("Cust2_B").text() = cust2.B;
+				writeRgbChannels(nodeVehicleColours, "Cust2_", cust2);
 			}
-			nodeVehicleColours.append_child("tyreSmoke_R").text() = tyreSmokeRgb.R;
-			nodeVehicleColours.append_child("tyreSmoke_G").text() = tyreSmokeRgb.G;
-			nodeVehicleColours.append_child("tyreSmoke_B").text() = tyreSmokeRgb.B;
-			//if (eModel.IsBennySupportedVehicle()) {
-			nodeVehicleColours.append_child("LrInterior").text() = ev.InteriorColour_get();
-			nodeVehicleColours.append_child("LrDashboard").text() = ev.DashboardColour_get();
-			nodeVehicleColours.append_child("LrXenonHeadlights").text() = ev.HeadlightColour_get();
+			writeRgbChannels(nodeVehicleColours, "tyreSmoke_", tyreSmokeRgb);
+			nodeVehicleColours.append_child("LrInterior").text() = ev.GetInteriorColour();
+			nodeVehicleColours.append_child("LrDashboard").text() = ev.GetDashboardColour();
+			nodeVehicleColours.append_child("LrXenonHeadlights").text() = ev.GetHeadlightColour();
 
 			// Other stuff
-			nodeVehicleStuff.append_child("Livery").text() = ev.Livery_get(); // Livery should be applied before paint is applied
-			nodeVehicleStuff.append_child("NumberPlateText").text() = ev.NumberPlateText_get().c_str();
-			nodeVehicleStuff.append_child("NumberPlateIndex").text() = ev.NumberPlateTextIndex_get();
-			nodeVehicleStuff.append_child("WheelType").text() = ev.WheelType_get();
-			nodeVehicleStuff.append_child("WheelsInvisible").text() = are_vehicle_wheels_invisible(ev);
-			nodeVehicleStuff.append_child("EngineSoundName").text() = get_vehicle_engine_sound_name(ev).c_str();
-			nodeVehicleStuff.append_child("WindowTint").text() = ev.WindowTint_get();
-			nodeVehicleStuff.append_child("BulletProofTyres").text() = !ev.CanTyresBurst_get();
-			nodeVehicleStuff.append_child("DirtLevel").text() = ev.DirtLevel_get();
-			nodeVehicleStuff.append_child("PaintFade").text() = ev.PaintFade_get();
-			nodeVehicleStuff.append_child("RoofState").text() = (int)ev.RoofState_get();
-			nodeVehicleStuff.append_child("SirenActive").text() = ev.SirenActive_get();
-			nodeVehicleStuff.append_child("EngineOn").text() = ev.EngineRunning_get();
-			nodeVehicleStuff.append_child("EngineHealth").text() = ev.EngineHealth_get();
-			nodeVehicleStuff.append_child("LightsOn").text() = ev.LightsOn_get();
+			nodeVehicleStuff.append_child("Livery").text() = ev.GetLivery(); // Livery should be applied before paint is applied
+			nodeVehicleStuff.append_child("NumberPlateText").text() = ev.GetNumberPlateText().c_str();
+			nodeVehicleStuff.append_child("NumberPlateIndex").text() = ev.GetNumberPlateTextIndex();
+			nodeVehicleStuff.append_child("WheelType").text() = ev.GetWheelType();
+			nodeVehicleStuff.append_child("WheelsInvisible").text() = AreVehicleWheelsInvisible(ev);
+			nodeVehicleStuff.append_child("EngineSoundName").text() = GetVehicleEngineSoundName(ev).c_str();
+			nodeVehicleStuff.append_child("WindowTint").text() = ev.GetWindowTint();
+			nodeVehicleStuff.append_child("BulletProofTyres").text() = !ev.GetCanTyresBurst();
+			nodeVehicleStuff.append_child("DirtLevel").text() = ev.GetDirtLevel();
+			nodeVehicleStuff.append_child("PaintFade").text() = ev.GetPaintFade();
+			nodeVehicleStuff.append_child("RoofState").text() = (int)ev.GetRoofState();
+			nodeVehicleStuff.append_child("SirenActive").text() = ev.GetSirenActive();
+			nodeVehicleStuff.append_child("EngineOn").text() = ev.GetEngineRunning();
+			nodeVehicleStuff.append_child("EngineHealth").text() = ev.GetEngineHealth();
+			nodeVehicleStuff.append_child("LightsOn").text() = ev.GetLightsOn();
 			nodeVehicleStuff.append_child("IsRadioLoud").text() = CAN_VEHICLE_RECEIVE_CB_RADIO(ev.Handle());// != 0;
-			nodeVehicleStuff.append_child("LockStatus").text() = (int)ev.LockStatus_get();
+			nodeVehicleStuff.append_child("LockStatus").text() = (int)ev.GetLockStatus();
 
 			// Neons
 			auto nodeVehicleNeons = nodeVehicleStuff.append_child("Neons");
-			RgbS neonLightsRgb = ev.NeonLightsColour_get();
-			nodeVehicleNeons.append_child("Left").text() = ev.IsNeonLightOn(VehicleNeonLight::Left);
-			nodeVehicleNeons.append_child("Right").text() = ev.IsNeonLightOn(VehicleNeonLight::Right);
-			nodeVehicleNeons.append_child("Front").text() = ev.IsNeonLightOn(VehicleNeonLight::Front);
-			nodeVehicleNeons.append_child("Back").text() = ev.IsNeonLightOn(VehicleNeonLight::Back);
-			nodeVehicleNeons.append_child("R").text() = neonLightsRgb.R;
-			nodeVehicleNeons.append_child("G").text() = neonLightsRgb.G;
-			nodeVehicleNeons.append_child("B").text() = neonLightsRgb.B;
+			for (const auto& n : kVehicleNeons)
+			{
+				nodeVehicleNeons.append_child(n.xmlName).text() = ev.IsNeonLightOn(n.light);
+			}
+			writeRgbChannels(nodeVehicleNeons, "", ev.GetNeonLightsColour());
 
 			// Extras (modExtras)
 			auto nodeVehicleModExtras = nodeVehicleStuff.append_child("ModExtras");
 			for (UINT8 i = 0; i < 60; i++)
 			{
-				if (ev.DoesExtraExist(i)) nodeVehicleModExtras.append_child(("_" + std::to_string(i)).c_str()).text() = ev.ExtraOn_get(i);
+				if (ev.DoesExtraExist(i)) nodeVehicleModExtras.append_child(("_" + std::to_string(i)).c_str()).text() = ev.GetExtraOn(i);
 			}
 
 			// Mods (customisations)
@@ -2382,57 +2922,52 @@ namespace sub
 			for (UINT i = 0; i < vValues_ModSlotNames.size(); i++)
 			{
 				bool isToggleable = (i >= 17 && i <= 22);
-				if (isToggleable) nodeVehicleMods.append_child(("_" + std::to_string(i)).c_str()).text() = ev.IsToggleModOn(i);
-				else nodeVehicleMods.append_child(("_" + std::to_string(i)).c_str()).text() = (std::to_string(ev.GetMod(i)) + "," + std::to_string(ev.GetModVariation(i))).c_str();
+				if (isToggleable) 
+				{
+					nodeVehicleMods.append_child(("_" + std::to_string(i)).c_str()).text() = ev.IsToggleModOn(i);
+				}
+				else
+				{
+					nodeVehicleMods.append_child(("_" + std::to_string(i)).c_str()).text() = (std::to_string(ev.GetMod(i)) + "," + std::to_string(ev.GetModVariation(i))).c_str();
+				}
 			}
 
 			// Doors
 			auto nodeVehicleDoorsOpen = nodeVehicleStuff.append_child("DoorsOpen");
-			nodeVehicleDoorsOpen.append_child("BackLeftDoor").text() = ev.IsDoorOpen(VehicleDoor::BackLeftDoor);
-			nodeVehicleDoorsOpen.append_child("BackRightDoor").text() = ev.IsDoorOpen(VehicleDoor::BackRightDoor);
-			nodeVehicleDoorsOpen.append_child("FrontLeftDoor").text() = ev.IsDoorOpen(VehicleDoor::FrontLeftDoor);
-			nodeVehicleDoorsOpen.append_child("FrontRightDoor").text() = ev.IsDoorOpen(VehicleDoor::FrontRightDoor);
-			nodeVehicleDoorsOpen.append_child("Hood").text() = ev.IsDoorOpen(VehicleDoor::Hood);
-			nodeVehicleDoorsOpen.append_child("Trunk").text() = ev.IsDoorOpen(VehicleDoor::Trunk);
-			nodeVehicleDoorsOpen.append_child("Trunk2").text() = ev.IsDoorOpen(VehicleDoor::Trunk2);
+			for (const auto& d : kVehicleDoors)
+			{
+				nodeVehicleDoorsOpen.append_child(d.xmlName).text() = ev.IsDoorOpen(d.door);
+			}
 			auto nodeVehicleDoorsBroken = nodeVehicleStuff.append_child("DoorsBroken");
-			nodeVehicleDoorsBroken.append_child("BackLeftDoor").text() = ev.IsDoorBroken(VehicleDoor::BackLeftDoor);
-			nodeVehicleDoorsBroken.append_child("BackRightDoor").text() = ev.IsDoorBroken(VehicleDoor::BackRightDoor);
-			nodeVehicleDoorsBroken.append_child("FrontLeftDoor").text() = ev.IsDoorBroken(VehicleDoor::FrontLeftDoor);
-			nodeVehicleDoorsBroken.append_child("FrontRightDoor").text() = ev.IsDoorBroken(VehicleDoor::FrontRightDoor);
-			nodeVehicleDoorsBroken.append_child("Hood").text() = ev.IsDoorBroken(VehicleDoor::Hood);
-			nodeVehicleDoorsBroken.append_child("Trunk").text() = ev.IsDoorBroken(VehicleDoor::Trunk);
-			nodeVehicleDoorsBroken.append_child("Trunk2").text() = ev.IsDoorBroken(VehicleDoor::Trunk2);
+			for (const auto& d : kVehicleDoors)
+			{
+				nodeVehicleDoorsBroken.append_child(d.xmlName).text() = ev.IsDoorBroken(d.door);
+			}
 
 			// Tyres Bursted
 			auto nodeVehicleTyresBursted = nodeVehicleStuff.append_child("TyresBursted");
-			nodeVehicleTyresBursted.append_child("FrontLeft").text() = ev.IsTyreBursted(0);
-			nodeVehicleTyresBursted.append_child("FrontRight").text() = ev.IsTyreBursted(1);
-			nodeVehicleTyresBursted.append_child("_2").text() = ev.IsTyreBursted(2);
-			nodeVehicleTyresBursted.append_child("_3").text() = ev.IsTyreBursted(3);
-			nodeVehicleTyresBursted.append_child("BackLeft").text() = ev.IsTyreBursted(4);
-			nodeVehicleTyresBursted.append_child("BackRight").text() = ev.IsTyreBursted(5);
-			nodeVehicleTyresBursted.append_child("_6").text() = ev.IsTyreBursted(6);
-			nodeVehicleTyresBursted.append_child("_7").text() = ev.IsTyreBursted(7);
-			nodeVehicleTyresBursted.append_child("_8").text() = ev.IsTyreBursted(8);
+			for (const auto& t : kVehicleTyres)
+			{
+				nodeVehicleTyresBursted.append_child(t.xmlName).text() = ev.IsTyreBursted(t.index);
+			}
 
 			// Multipliers
-			if (g_multList_rpm.count(ev.Handle())) nodeVehicleStuff.append_child("RpmMultiplier").text() = g_multList_rpm[ev.Handle()];
-			if (g_multList_torque.count(ev.Handle())) nodeVehicleStuff.append_child("TorqueMultiplier").text() = g_multList_torque[ev.Handle()];
-			if (g_multList_maxSpeed.count(ev.Handle())) nodeVehicleStuff.append_child("MaxSpeed").text() = g_multList_maxSpeed[ev.Handle()];
-			if (g_multList_headlights.count(ev.Handle())) nodeVehicleStuff.append_child("HeadlightIntensity").text() = g_multList_headlights[ev.Handle()];
+			writeMultiplierIfPresent(nodeVehicleStuff, "RpmMultiplier",      g_multListRPM,        ev.Handle());
+			writeMultiplierIfPresent(nodeVehicleStuff, "TorqueMultiplier",   g_multListTorque,     ev.Handle());
+			writeMultiplierIfPresent(nodeVehicleStuff, "MaxSpeed",           g_multListMaxSpeed,   ev.Handle());
+			writeMultiplierIfPresent(nodeVehicleStuff, "HeadlightIntensity", g_multListHeadLights, ev.Handle());
 
-			nodeVehicle.append_child("OpacityLevel").text() = ev.Alpha_get();
-			nodeVehicle.append_child("LodDistance").text() = ev.LodDistance_get();
+			nodeVehicle.append_child("OpacityLevel").text() = ev.GetAlpha();
+			nodeVehicle.append_child("LodDistance").text() = ev.GetLODDistance();
 			nodeVehicle.append_child("IsVisible").text() = ev.IsVisible();
 			if (driverPedExists)
 			{
 				nodeVehicle.append_child("IsDriverVisible").text() = driverPed.IsVisible();
 			}
-			nodeVehicle.append_child("MaxHealth").text() = ev.MaxHealth_get();
-			nodeVehicle.append_child("Health").text() = ev.Health_get();
+			nodeVehicle.append_child("MaxHealth").text() = ev.GetMaxHealth();
+			nodeVehicle.append_child("Health").text() = ev.GetHealth();
 
-			nodeVehicle.append_child("HasGravity").text() = ev.HasGravity_get();
+			nodeVehicle.append_child("HasGravity").text() = ev.GetHasGravity();
 			nodeVehicle.append_child("IsOnFire").text() = ev.IsOnFire();
 			nodeVehicle.append_child("IsInvincible").text() = ev.IsInvincible();
 			nodeVehicle.append_child("IsBulletProof").text() = ev.IsBulletProof();
@@ -2452,19 +2987,25 @@ namespace sub
 			{
 				for (auto& e : sub::Spooner::Databases::EntityDb)
 				{
-					if (e.AttachmentArgs.isAttached)
+					if (e.attachmentArgs.isAttached)
 					{
 						GTAentity att;
-						if (sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.Handle, att))
+						if (sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.handle, att))
 						{
 							if (att.Handle() == vSpoonerAttachmentsSaved[bei].Handle()) // baseEntToCheck is vSpoonerAttachmentsSaved[bei]
 							{
 								auto nodeAttachment = nodeAttachments.append_child("Attachment");
 								sub::Spooner::FileManagement::AddEntityToXmlNode(e, nodeAttachment);
 								std::string attachedToHandleStr = nodeAttachment.child("Attachment").child("AttachedTo").text().as_string();
-								if (attachedToHandleStr == "PLAYER") nodeAttachment.child("Attachment").child("AttachedTo").text() = myPed.Handle();
-								else if (attachedToHandleStr == "VEHICLE") nodeAttachment.child("Attachment").child("AttachedTo").text() = g_myVeh;
-								vSpoonerAttachmentsSaved.push_back(e.Handle);
+								if (attachedToHandleStr == "PLAYER") 
+								{
+									nodeAttachment.child("Attachment").child("AttachedTo").text() = myPed.Handle();
+								}
+								else if (attachedToHandleStr == "VEHICLE") 
+								{
+									nodeAttachment.child("Attachment").child("AttachedTo").text() = g_myVeh;
+								}
+								vSpoonerAttachmentsSaved.push_back(e.handle);
 							}
 						}
 					}
@@ -2474,21 +3015,19 @@ namespace sub
 			if (doc.save_file((const char*)filePath.c_str()))
 			{
 				Game::Print::PrintBottomLeft("File ~b~saved~s~.");
-				addlog(ige::LogType::LOG_INFO,  "Vehicle saved - " + eModel.VehicleDisplayName(false) + " in " + filePath, __FILENAME__);
 			}
 			else
 			{
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to save file.");
-				addlog(ige::LogType::LOG_ERROR,  "Unable to save vehicle.", __FILENAME__);
+				Game::Print::ShowNotification("~r~Error:", "Unable to save file.");
 			}
 		}
-		void VehSaver_ReadFromFile(std::string filePath, GTAentity ped)
+
+		void VehicleReadFromFile(std::string filePath, GTAentity ped)
 		{
 			pugi::xml_document doc;
 			if (doc.load_file((const char*)filePath.c_str()).status != pugi::status_ok)
 			{
-				addlog(ige::LogType::LOG_ERROR,  "Unable to load vehicle file " + filePath, __FILENAME__);
-				Game::Print::PrintBottomCentre("~r~Error:~s~ Unable to load file.");
+				Game::Print::ShowNotification("~r~Error:", "Unable to load file.");
 			}
 
 			GTAentity myPed = PLAYER_PED_ID();
@@ -2499,31 +3038,31 @@ namespace sub
 			Model eModel = nodeVehicle.child("ModelHash").text().as_uint();
 			if (!eModel.IsInCdImage())
 			{
-				Game::Print::PrintError_InvalidModel(std::to_string(eModel.hash));
+				Game::Print::PrintErrorInvalidModel(std::to_string(eModel.hash));
 				return;
 			}
 			eModel.Load();
 
-			GTAvehicle ev = FuncSpawnVehicle_(eModel, ped.Handle(), _globalSpawnVehicle_deleteOld, _globalSpawnVehicle_autoSit); // spawn vehicle to commence customisation
+			GTAvehicle ev = SpawnVehicle(eModel, ped.Handle(), g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit); // spawn vehicle to commence customisation
 			if (ped.Handle() == myPed.Handle())
 			{
 				g_myVeh = ev.Handle();
-				g_myVeh_model = eModel;
+				g_myVehModel = eModel;
 				myVehicle = g_myVeh;
 			}
 			SET_VEHICLE_MOD_KIT(ev.Handle(), 0);
-			set_vehicle_max_upgrades(ev.Handle(), false, _globalSpawnVehicle_invincible, _globalSpawnVehicle_plateType);
+			SetVehicleMaxUpgrades(ev.Handle(), false, g_spawnVehicleInvincible, g_spawnVehiclePlateType);
 
 			WAIT(100);
 
 			auto nodeVehicleInitialHandle = nodeVehicle.child("InitialHandle");
 			ScrHandle evInitHandle = nodeVehicleInitialHandle.text().as_int();
 
-			ev.HasGravity_set(nodeVehicle.child("HasGravity").text().as_bool(true));
+			ev.SetHasGravity(nodeVehicle.child("HasGravity").text().as_bool(true));
 
 			auto nodeVehicleStuff = nodeVehicle.child("VehicleProperties");
 
-			ev.Livery_set(nodeVehicleStuff.child("Livery").text().as_int()); // Livery should be applied before paint is applied
+			ev.SetLivery(nodeVehicleStuff.child("Livery").text().as_int()); // Livery should be applied before paint is applied
 																			 // Colours
 			auto nodeVehicleColours = nodeVehicleStuff.child("Colours");
 			int mod1a = nodeVehicleColours.child("Mod1_a").text().as_int();
@@ -2533,75 +3072,67 @@ namespace sub
 			int mod2a = nodeVehicleColours.child("Mod2_a").text().as_int();
 			int mod2b = nodeVehicleColours.child("Mod2_b").text().as_int();
 			SET_VEHICLE_MOD_COLOR_2(ev.Handle(), mod2a, mod2b);
-			ev.PrimaryColour_set(nodeVehicleColours.child("Primary").text().as_int());
-			ev.SecondaryColour_set(nodeVehicleColours.child("Secondary").text().as_int());
-			ev.PearlescentColour_set(nodeVehicleColours.child("Pearl").text().as_int());
-			ev.RimColour_set(nodeVehicleColours.child("Rim").text().as_int());
+			ev.SetPrimaryColour(nodeVehicleColours.child("Primary").text().as_int());
+			ev.SetSecondaryColour(nodeVehicleColours.child("Secondary").text().as_int());
+			ev.SetPearlescentColour(nodeVehicleColours.child("Pearl").text().as_int());
+			ev.SetRimColour(nodeVehicleColours.child("Rim").text().as_int());
 			bool isPrimaryColourCustom = nodeVehicleColours.child("IsPrimaryColourCustom").text().as_bool();
 			bool isSecondaryColourCustom = nodeVehicleColours.child("IsSecondaryColourCustom").text().as_bool();
 			if (isPrimaryColourCustom)
 			{
-				RgbS cust1;
-				cust1.R = nodeVehicleColours.child("Cust1_R").text().as_int();
-				cust1.G = nodeVehicleColours.child("Cust1_G").text().as_int();
-				cust1.B = nodeVehicleColours.child("Cust1_B").text().as_int();
-				ev.CustomPrimaryColour_set(cust1);
+				ev.SetCustomPrimaryColour(readRgbChannels(nodeVehicleColours, "Cust1_"));
 			}
 			if (isSecondaryColourCustom)
 			{
-				RgbS cust2;
-				cust2.R = nodeVehicleColours.child("Cust2_R").text().as_int();
-				cust2.G = nodeVehicleColours.child("Cust2_G").text().as_int();
-				cust2.B = nodeVehicleColours.child("Cust2_B").text().as_int();
-				ev.CustomSecondaryColour_set(cust2);
+				ev.SetCustomSecondaryColour(readRgbChannels(nodeVehicleColours, "Cust2_"));
 			}
-			RgbS tyreSmokeRgb;
-			tyreSmokeRgb.R = nodeVehicleColours.child("tyreSmoke_R").text().as_int();
-			tyreSmokeRgb.G = nodeVehicleColours.child("tyreSmoke_G").text().as_int();
-			tyreSmokeRgb.B = nodeVehicleColours.child("tyreSmoke_B").text().as_int();
-			ev.TyreSmokeColour_set(tyreSmokeRgb);
-			//if (eModel.IsBennySupportedVehicle()) {
-			ev.InteriorColour_set(nodeVehicleColours.child("LrInterior").text().as_int());
-			ev.DashboardColour_set(nodeVehicleColours.child("LrDashboard").text().as_int());
-			ev.HeadlightColour_set(nodeVehicleColours.child("LrXenonHeadlights").text().as_int());
+			ev.SetTyreSmokeColour(readRgbChannels(nodeVehicleColours, "tyreSmoke_"));
+			ev.SetInteriorColour(nodeVehicleColours.child("LrInterior").text().as_int());
+			ev.SetDashboardColour(nodeVehicleColours.child("LrDashboard").text().as_int());
+			ev.SetHeadlightColour(nodeVehicleColours.child("LrXenonHeadlights").text().as_int());
 
 			// Other stuff
-			ev.NumberPlateText_set(nodeVehicleStuff.child("NumberPlateText").text().as_string());
-			ev.NumberPlateTextIndex_set(nodeVehicleStuff.child("NumberPlateIndex").text().as_int());
-			ev.WheelType_set(nodeVehicleStuff.child("WheelType").text().as_int());
-			ev.WindowTint_set(nodeVehicleStuff.child("WindowTint").text().as_int());
-			ev.CanTyresBurst_set(!nodeVehicleStuff.child("BulletProofTyres").text().as_bool());
-			ev.DirtLevel_set(nodeVehicleStuff.child("DirtLevel").text().as_float());
-			ev.PaintFade_set(nodeVehicleStuff.child("PaintFade").text().as_float());
-			ev.RoofState_set((VehicleRoofState)nodeVehicleStuff.child("RoofState").text().as_int());
-			ev.SirenActive_set(nodeVehicleStuff.child("SirenActive").text().as_bool());
-			if (nodeVehicleStuff.child("EngineOn")) ev.EngineRunning_set(nodeVehicleStuff.child("EngineOn").text().as_bool());
-			if (nodeVehicleStuff.child("EngineHealth")) ev.EngineHealth_set(nodeVehicleStuff.child("EngineHealth").text().as_int());
-			if (nodeVehicleStuff.child("LightsOn")) ev.LightsOn_set(nodeVehicleStuff.child("LightsOn").text().as_bool());
+			ev.SetNumberPlateText(nodeVehicleStuff.child("NumberPlateText").text().as_string());
+			ev.SetNumberPlateTextIndex(nodeVehicleStuff.child("NumberPlateIndex").text().as_int());
+			ev.SetWheelType(nodeVehicleStuff.child("WheelType").text().as_int());
+			ev.SetWindowTint(nodeVehicleStuff.child("WindowTint").text().as_int());
+			ev.SetCanTyresBurst(!nodeVehicleStuff.child("BulletProofTyres").text().as_bool());
+			ev.SetDirtLevel(nodeVehicleStuff.child("DirtLevel").text().as_float());
+			ev.SetPaintFade(nodeVehicleStuff.child("PaintFade").text().as_float());
+			ev.SetRoofState((VehicleRoofState)nodeVehicleStuff.child("RoofState").text().as_int());
+			ev.SetSirenActive(nodeVehicleStuff.child("SirenActive").text().as_bool());
+			if (nodeVehicleStuff.child("EngineOn")) 
+			{
+				ev.SetEngineRunning(nodeVehicleStuff.child("EngineOn").text().as_bool());
+			}
+			if (nodeVehicleStuff.child("EngineHealth")) 
+			{
+				ev.SetEngineHealth(nodeVehicleStuff.child("EngineHealth").text().as_int());
+			}
+			if (nodeVehicleStuff.child("LightsOn")) 
+			{
+				ev.SetLightsOn(nodeVehicleStuff.child("LightsOn").text().as_bool());
+			}
 			if (nodeVehicleStuff.child("IsRadioLoud").text().as_int(0))
 			{
 				SET_VEHICLE_RADIO_LOUD(ev.Handle(), nodeVehicleStuff.child("IsRadioLoud").text().as_int());
 				SET_VEHICLE_RADIO_ENABLED(ev.Handle(), true);
 			}
-			ev.LockStatus_set((VehicleLockStatus)nodeVehicleStuff.child("LockStatus").text().as_int());
+			ev.SetLockStatus((VehicleLockStatus)nodeVehicleStuff.child("LockStatus").text().as_int());
 
 			// Neons
 			auto nodeVehicleNeons = nodeVehicleStuff.child("Neons");
-			RgbS neonLightsRgb;
-			ev.SetNeonLightOn(VehicleNeonLight::Left, nodeVehicleNeons.child("Left").text().as_bool());
-			ev.SetNeonLightOn(VehicleNeonLight::Right, nodeVehicleNeons.child("Right").text().as_bool());
-			ev.SetNeonLightOn(VehicleNeonLight::Front, nodeVehicleNeons.child("Front").text().as_bool());
-			ev.SetNeonLightOn(VehicleNeonLight::Back, nodeVehicleNeons.child("Back").text().as_bool());
-			neonLightsRgb.R = nodeVehicleNeons.child("R").text().as_int();
-			neonLightsRgb.G = nodeVehicleNeons.child("G").text().as_int();
-			neonLightsRgb.B = nodeVehicleNeons.child("B").text().as_int();
-			ev.NeonLightsColour_set(neonLightsRgb);
+			for (const auto& n : kVehicleNeons)
+			{
+				ev.SetNeonLightOn(n.light, nodeVehicleNeons.child(n.xmlName).text().as_bool());
+			}
+			ev.SetNeonLightsColour(readRgbChannels(nodeVehicleNeons, ""));
 
 			// Extras (modExtras)
 			auto nodeVehicleModExtras = nodeVehicleStuff.child("ModExtras");
 			for (auto nodeVehicleModExtrasObject = nodeVehicleModExtras.first_child(); nodeVehicleModExtrasObject; nodeVehicleModExtrasObject = nodeVehicleModExtrasObject.next_sibling())
 			{
-				ev.ExtraOn_set(stoi(std::string(nodeVehicleModExtrasObject.name()).substr(1)), nodeVehicleModExtrasObject.text().as_bool());
+				ev.SetExtraOn(stoi(std::string(nodeVehicleModExtrasObject.name()).substr(1)), nodeVehicleModExtrasObject.text().as_bool());
 			}
 
 			// Mods (customisations)
@@ -2624,44 +3155,52 @@ namespace sub
 			auto nodeVehicleDoorsOpen = nodeVehicleStuff.child("DoorsOpen");
 			if (nodeVehicleDoorsOpen)
 			{
-				nodeVehicleDoorsOpen.child("BackLeftDoor").text().as_bool() ? ev.OpenDoor(VehicleDoor::BackLeftDoor, false, true) : ev.CloseDoor(VehicleDoor::BackLeftDoor, true);
-				nodeVehicleDoorsOpen.child("BackRightDoor").text().as_bool() ? ev.OpenDoor(VehicleDoor::BackRightDoor, false, true) : ev.CloseDoor(VehicleDoor::BackRightDoor, true);
-				nodeVehicleDoorsOpen.child("FrontLeftDoor").text().as_bool() ? ev.OpenDoor(VehicleDoor::FrontLeftDoor, false, true) : ev.CloseDoor(VehicleDoor::FrontLeftDoor, true);
-				nodeVehicleDoorsOpen.child("FrontRightDoor").text().as_bool() ? ev.OpenDoor(VehicleDoor::FrontRightDoor, false, true) : ev.CloseDoor(VehicleDoor::FrontRightDoor, true);
-				nodeVehicleDoorsOpen.child("Hood").text().as_bool() ? ev.OpenDoor(VehicleDoor::Hood, false, true) : ev.CloseDoor(VehicleDoor::Hood, true);
-				nodeVehicleDoorsOpen.child("Trunk").text().as_bool() ? ev.OpenDoor(VehicleDoor::Trunk, false, true) : ev.CloseDoor(VehicleDoor::Trunk, true);
-				nodeVehicleDoorsOpen.child("Trunk2").text().as_bool() ? ev.OpenDoor(VehicleDoor::Trunk2, false, true) : ev.CloseDoor(VehicleDoor::Trunk2, true);
+				for (const auto& d : kVehicleDoors)
+				{
+					if (nodeVehicleDoorsOpen.child(d.xmlName).text().as_bool())
+					{
+						ev.OpenDoor(d.door, false, true);
+					}
+					else
+					{
+						ev.CloseDoor(d.door, true);
+					}
+				}
 			}
 			auto nodeVehicleDoorsBroken = nodeVehicleStuff.child("DoorsBroken");
 			if (nodeVehicleDoorsBroken)
 			{
-				if (nodeVehicleDoorsBroken.child("BackLeftDoor").text().as_bool()) ev.BreakDoor(VehicleDoor::BackLeftDoor, true);
-				if (nodeVehicleDoorsBroken.child("BackRightDoor").text().as_bool()) ev.BreakDoor(VehicleDoor::BackRightDoor, true);
-				if (nodeVehicleDoorsBroken.child("FrontLeftDoor").text().as_bool()) ev.BreakDoor(VehicleDoor::FrontLeftDoor, true);
-				if (nodeVehicleDoorsBroken.child("FrontRightDoor").text().as_bool()) ev.BreakDoor(VehicleDoor::FrontRightDoor, true);
-				if (nodeVehicleDoorsBroken.child("Hood").text().as_bool()) ev.BreakDoor(VehicleDoor::Hood, true);
-				if (nodeVehicleDoorsBroken.child("Trunk").text().as_bool()) ev.BreakDoor(VehicleDoor::Trunk, true);
-				if (nodeVehicleDoorsBroken.child("Trunk2").text().as_bool()) ev.BreakDoor(VehicleDoor::Trunk2, true);
+				for (const auto& d : kVehicleDoors)
+				{
+					if (nodeVehicleDoorsBroken.child(d.xmlName).text().as_bool())
+					{
+						ev.BreakDoor(d.door, true);
+					}
+				}
 			}
 
 			// Tyres
 			auto nodeVehicleTyresBursted = nodeVehicleStuff.child("TyresBursted");
 			if (nodeVehicleTyresBursted)
 			{
-				if (nodeVehicleTyresBursted.child("FrontLeft").text().as_bool()) ev.BurstTyre(0);
-				if (nodeVehicleTyresBursted.child("FrontRight").text().as_bool()) ev.BurstTyre(1);
-				if (nodeVehicleTyresBursted.child("_2").text().as_bool()) ev.BurstTyre(2);
-				if (nodeVehicleTyresBursted.child("_3").text().as_bool()) ev.BurstTyre(3);
-				if (nodeVehicleTyresBursted.child("BackLeft").text().as_bool()) ev.BurstTyre(4);
-				if (nodeVehicleTyresBursted.child("BackRight").text().as_bool()) ev.BurstTyre(5);
-				if (nodeVehicleTyresBursted.child("_6").text().as_bool()) ev.BurstTyre(6);
-				if (nodeVehicleTyresBursted.child("_7").text().as_bool()) ev.BurstTyre(7);
-				if (nodeVehicleTyresBursted.child("_8").text().as_bool()) ev.BurstTyre(8);
+				for (const auto& t : kVehicleTyres)
+				{
+					if (nodeVehicleTyresBursted.child(t.xmlName).text().as_bool())
+					{
+						ev.BurstTyre(t.index);
+					}
+				}
 			}
 
-			if (nodeVehicleStuff.child("WheelsInvisible").text().as_bool()) set_vehicle_wheels_invisible(ev, true);
+			if (nodeVehicleStuff.child("WheelsInvisible").text().as_bool()) 
+			{
+				SetVehicleWheelsInvisible(ev, true);
+			}
 			std::string engSoundName = nodeVehicleStuff.child("EngineSoundName").text().as_string();
-			if (engSoundName.length()) set_vehicle_engine_sound_name(ev, engSoundName);
+			if (engSoundName.length()) 
+			{
+				SetVehicleEngineSoundName(ev, engSoundName);
+			}
 
 			// Multipliers
 			auto nodeVehicleRpmMultiplier = nodeVehicleStuff.child("RpmMultiplier");
@@ -2671,27 +3210,27 @@ namespace sub
 			if (nodeVehicleRpmMultiplier)
 			{
 				MODIFY_VEHICLE_TOP_SPEED(ev.Handle(), nodeVehicleRpmMultiplier.text().as_float());
-				g_multList_rpm[ev.Handle()] = nodeVehicleRpmMultiplier.text().as_float();
+				g_multListRPM[ev.Handle()] = nodeVehicleRpmMultiplier.text().as_float();
 			}
 			if (nodeVehicleTorqueMultiplier)
 			{
 				SET_VEHICLE_CHEAT_POWER_INCREASE(ev.Handle(), nodeVehicleTorqueMultiplier.text().as_float());
-				g_multList_torque[ev.Handle()] = nodeVehicleTorqueMultiplier.text().as_float();
+				g_multListTorque[ev.Handle()] = nodeVehicleTorqueMultiplier.text().as_float();
 			}
 			if (nodeVehicleMaxSpeed)
 			{
 				SET_ENTITY_MAX_SPEED(ev.Handle(), nodeVehicleMaxSpeed.text().as_float());
-				g_multList_maxSpeed[ev.Handle()] = nodeVehicleMaxSpeed.text().as_float();
+				g_multListMaxSpeed[ev.Handle()] = nodeVehicleMaxSpeed.text().as_float();
 			}
 			if (nodeVehicleHeadlightIntensity)
 			{
 				SET_VEHICLE_LIGHT_MULTIPLIER(ev.Handle(), nodeVehicleHeadlightIntensity.text().as_float());
-				g_multList_headlights[ev.Handle()] = nodeVehicleHeadlightIntensity.text().as_float();
+				g_multListHeadLights[ev.Handle()] = nodeVehicleHeadlightIntensity.text().as_float();
 			}
 
 			int opacityLevel = nodeVehicle.child("OpacityLevel").text().as_int();
-			if (opacityLevel < 255) ev.Alpha_set(opacityLevel);
-			ev.LodDistance_set(nodeVehicle.child("LodDistance").text().as_int());
+			if (opacityLevel < 255) ev.SetAlpha(opacityLevel);
+			ev.SetLODDistance(nodeVehicle.child("LodDistance").text().as_int());
 
 			bool bDriverIsVisible = ped.IsVisible();
 			bool bVehicleIsVisible = nodeVehicle.child("IsVisible").text().as_bool();
@@ -2718,14 +3257,19 @@ namespace sub
 					break; // ForceOn
 				}
 			}
-			if (nodeVehicle.child("MaxHealth")) ev.MaxHealth_set(nodeVehicle.child("MaxHealth").text().as_int());
-			if (nodeVehicle.child("Health")) ev.Health_set(nodeVehicle.child("Health").text().as_int());
+			if (nodeVehicle.child("MaxHealth")) 
+			{
+				ev.SetMaxHealth(nodeVehicle.child("MaxHealth").text().as_int());
+			}
+			if (nodeVehicle.child("Health")) 
+			{
+				ev.SetHealth(nodeVehicle.child("Health").text().as_int());
+			}
 
 			ev.SetOnFire(nodeVehicle.child("IsOnFire").text().as_bool());
 			ev.SetInvincible(nodeVehicle.child("IsInvincible").text().as_bool());
 			ev.SetBulletProof(nodeVehicle.child("IsBulletProof").text().as_bool());
-			ev.IsCollisionEnabled_set(true);
-			//ev.SetCollisionProof(nodeVehicle.child("IsCollisionProof").text().as_bool());
+			ev.SetIsCollisionEnabled(true);
 			ev.SetExplosionProof(nodeVehicle.child("IsExplosionProof").text().as_bool());
 			ev.SetFireProof(nodeVehicle.child("IsFireProof").text().as_bool());
 			ev.SetMeleeProof(nodeVehicle.child("IsMeleeProof").text().as_bool());
@@ -2739,9 +3283,9 @@ namespace sub
 			bool bStartTaskSeqsOnLoad = nodeAttachments.attribute("StartTaskSequencesOnLoad").as_bool(true);
 			switch (_persistentAttachmentsTexterIndex)
 			{
-			case 0: break; // FileDecides
-			case 1: bAddAttachmentsToSpoonerDb = false; break; // ForceOff
-			case 2: bAddAttachmentsToSpoonerDb = true; break; // ForceOn
+				case 0: break; // FileDecides
+				case 1: bAddAttachmentsToSpoonerDb = false; break; // ForceOff
+				case 2: bAddAttachmentsToSpoonerDb = true; break; // ForceOn
 			}
 
 			for (auto nodeAttachment = nodeAttachments.first_child(); nodeAttachment; nodeAttachment = nodeAttachment.next_sibling())
@@ -2756,76 +3300,86 @@ namespace sub
 			{
 				for (auto& e : vSpawnedAttachments)
 				{
-					sub::Spooner::EntityManagement::AttachEntity(e.e, ev, e.e.AttachmentArgs.boneIndex, e.e.AttachmentArgs.offset, e.e.AttachmentArgs.rotation);
+					sub::Spooner::EntityManagement::AttachEntity(e.e, ev, e.e.attachmentArgs.boneIndex, e.e.attachmentArgs.offset, e.e.attachmentArgs.rotation);
 				}
 			}
 			else
 			{
 				sub::Spooner::SpoonerEntityWithInitHandle evwih;
-				evwih.e.Handle = ev;
-				evwih.e.Dynamic = true;
-				evwih.e.Type = EntityType::VEHICLE;
-				evwih.e.HashName = get_vehicle_model_label(evwih.e.Handle.Model(), true);
+				evwih.e.handle = ev;
+				evwih.e.dynamic = true;
+				evwih.e.type = EntityType::VEHICLE;
+				evwih.e.hashName = get_vehicle_model_label(evwih.e.handle.Model(), true);
 				evwih.initHandle = evInitHandle;
 				vSpawnedAttachments.push_back(evwih); // ADD EV
 
 				for (auto& e : vSpawnedAttachments)
 				{
-					if (e.e.AttachmentArgs.isAttached)
+					if (e.e.attachmentArgs.isAttached)
 					{
 						for (auto& b : vSpawnedAttachments)
 						{
 							if (e.attachedToHandle == b.initHandle)
 							{
-								sub::Spooner::EntityManagement::AttachEntity(e.e, b.e.Handle, e.e.AttachmentArgs.boneIndex, e.e.AttachmentArgs.offset, e.e.AttachmentArgs.rotation);
+								sub::Spooner::EntityManagement::AttachEntity(e.e, b.e.handle, e.e.attachmentArgs.boneIndex, e.e.attachmentArgs.offset, e.e.attachmentArgs.rotation);
 								break;
 							}
 
 						}
 					}
 				}
-
-				//vSpawnedAttachments.pop_back(); // REMOVE EV
 			}
+
 			if (bAddAttachmentsToSpoonerDb)
 			{
 				for (auto& e : vSpawnedAttachments)
 				{
-					if (!e.e.TaskSequence.empty())
+					if (!e.e.taskSequence.empty())
 					{
-						auto& vTskPtrs = e.e.TaskSequence.AllTasks();
+						auto& vTskPtrs = e.e.taskSequence.AllTasks();
 						for (auto& u : vSpawnedAttachments)
 						{
 							for (auto& tskPtr : vTskPtrs)
 							{
-								tskPtr->LoadTargetingDressing(u.initHandle, u.e.Handle.Handle());
+								tskPtr->LoadTargetingDressing(u.initHandle, u.e.handle.Handle());
 							}
 						}
-						if (bStartTaskSeqsOnLoad) e.e.TaskSequence.Start();
+						if (bStartTaskSeqsOnLoad) e.e.taskSequence.Start();
 					}
 					sub::Spooner::Databases::EntityDb.push_back(e.e);
 				}
 			}
+
 			else
 			{
 				if (NETWORK_IS_IN_SESSION() && !vSpawnedAttachments.empty())
 				{
-					if (vSpawnedAttachments.back().e.Handle.Handle() == ev.Handle()) vSpawnedAttachments.back().e.Handle = 0;
+					if (vSpawnedAttachments.back().e.handle.Handle() == ev.Handle()) 
+					{
+						vSpawnedAttachments.back().e.handle = 0;
+					}
 				}
 				for (auto& e : vSpawnedAttachments)
 				{
-					if (!_globalSpawnVehicle_persistent) e.e.Handle.NoLongerNeeded();
+					if (!g_spawnVehiclePersistent) 
+					{
+						e.e.handle.NoLongerNeeded();
+					}
 				}
 			}
 
-			for (auto& amh : vModelHashes) Model(amh).Unload();
+			for (auto& amh : vModelHashes)
+			{
+				Model(amh).Unload();
+			}
 			eModel.Unload();
 
-			addlog(ige::LogType::LOG_INFO,  "Loaded vehicle file " + filePath, __FILENAME__);
 			std::ostringstream ss;
 			ss << "Spawned vehicle from file with " << (vSpawnedAttachments.size() - 1) << " attachments. ";
 			if (bAddAttachmentsToSpoonerDb)
+			{
 				ss << "The attachments have been added to the Spooner Database.";
+			}
 			Game::Print::PrintBottomLeft(ss);
 		}
 
@@ -2834,9 +3388,9 @@ namespace sub
 			std::ofstream outfile;
 			auto& _dir = dict3;
 			int r, g, b;
-			VEHICLE::GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(Static_12, &r, &g, &b);
-			std::array<int, 3> hsv = gethsvfromrgb(r, g, b);
-			float normalisedcolour = normalisehsv(hsv[0], hsv[1], hsv[2]);
+			VEHICLE::GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(g_myVeh, &r, &g, &b);
+			std::array<int, 3> hsv = GetHSVFromRGB(r, g, b);
+			float normalisedcolour = NormalizeHSV(hsv[0], hsv[1], hsv[2]);
 
 			std::vector<std::pair<std::string, std::pair<std::string, float>>> ColourNames
 			{
@@ -2870,7 +3424,7 @@ namespace sub
 			}
 			int prim, sec;
 			std::string finish;
-			GET_VEHICLE_COLOURS(Static_12, &prim, &sec);
+			GET_VEHICLE_COLOURS(g_myVeh, &prim, &sec);
 			switch (prim)
 			{
 			case 0:
@@ -2910,7 +3464,7 @@ namespace sub
 			outfile.open(dict3 + "\\Custom colours.txt", std::ios_base::app); // append instead of overwrite
 			outfile << "Check https://gtamods.com/wiki/Carcols.ymt for all colour names, audio hashes and IDs.\n";
 			outfile << "<Item>\n";
-			outfile << "      <color value = \"0xFF" + ((int_to_hexstring(r, false)) + int_to_hexstring(g, false) + int_to_hexstring(b, false) + "\"/>\n");
+			outfile << "      <color value = \"0xFF" + ((IntToHexString(r, false)) + IntToHexString(g, false) + IntToHexString(b, false) + "\"/>\n");
 			outfile << "      <metallicID>EVehicleModelColorMetallic_" + finish + "</metallicID>\n";
 			outfile << "      <audioColor>POLICE_SCANNER_COLOUR_" + nearestColour + "</audioColor>\n";
 			outfile << "      <audioPrefix>none</audioPrefix>\n";
@@ -2928,12 +3482,12 @@ namespace sub
 			std::ofstream outfile;
 			const Model& eModel = vehicle.Model();
 			std::string spawnname = GET_DISPLAY_NAME_FROM_VEHICLE_MODEL(eModel.hash);
-			int color1 = vehicle.PrimaryColour_get(), 
-				color2 = vehicle.SecondaryColour_get(),
-				color3 = vehicle.PearlescentColour_get(),
-				color4 = vehicle.RimColour_get(),
-				color5 = vehicle.InteriorColour_get(),
-				color6 = vehicle.DashboardColour_get();
+			int color1 = vehicle.GetPrimaryColour(), 
+				color2 = vehicle.GetSecondaryColour(),
+				color3 = vehicle.GetPearlescentColour(),
+				color4 = vehicle.GetRimColour(),
+				color5 = vehicle.GetInteriorColour(),
+				color6 = vehicle.GetDashboardColour();
 
 
 			outfile.open(dict3 + "\\Carvar colours.txt", std::ios_base::app); // append instead of overwrite
@@ -2950,13 +3504,13 @@ namespace sub
 			return 0;
 		}
 
-		void Sub_VehSaver()
+		void VehicleSaverMenu()
 		{
 			auto& _searchStr = dict2;
 			auto& _name = dict;
 			auto& _dir = dict3;
 
-			auto ped = Static_241;
+			auto ped = g_activePedHandle;
 			auto vehicle = GET_VEHICLE_PED_IS_USING(ped);
 			bool isPedInVeh = IS_PED_IN_ANY_VEHICLE(ped, 0) || IS_PED_SITTING_IN_ANY_VEHICLE(ped);
 
@@ -2967,13 +3521,38 @@ namespace sub
 
 			bool persistentAttachments_plus = 0, persistentAttachments_minus = 0;
 			AddTexter("AddAttachmentsToSpoonerDB", _persistentAttachmentsTexterIndex, std::vector<std::string>{"FileDecides", "ForceOff", "ForceOn"}, null, persistentAttachments_plus, persistentAttachments_minus);
-			if (persistentAttachments_plus) { if (_persistentAttachmentsTexterIndex < 2) _persistentAttachmentsTexterIndex++; }
-			if (persistentAttachments_minus) { if (_persistentAttachmentsTexterIndex > 0) _persistentAttachmentsTexterIndex--; }
+			if (persistentAttachments_plus) 
+			{
+				 if (_persistentAttachmentsTexterIndex < 2)
+				 {
+				 	_persistentAttachmentsTexterIndex++; 
+				 }
+			}
+
+			if (persistentAttachments_minus) 
+			{ 
+				if (_persistentAttachmentsTexterIndex > 0)
+				{
+					_persistentAttachmentsTexterIndex--; 
+				}
+			}
 
 			bool driverVisi_plus = 0, driverVisi_minus = 0;
 			AddTexter("Driver Visibility", _driverVisibilityTexterIndex, std::vector<std::string>{"FileDecides", "Retain" "ForceOff", "ForceOn"}, null, driverVisi_plus, driverVisi_minus);
-			if (driverVisi_plus) { if (_driverVisibilityTexterIndex < 3) _driverVisibilityTexterIndex++; }
-			if (driverVisi_plus) { if (_driverVisibilityTexterIndex > 0) _driverVisibilityTexterIndex--; }
+			if (driverVisi_plus) 
+			{
+				if (_driverVisibilityTexterIndex < 3) 
+				{
+					_driverVisibilityTexterIndex++; 
+				}
+			}
+			if (driverVisi_minus) 
+			{ 
+				if (_driverVisibilityTexterIndex > 0)
+				{
+					_driverVisibilityTexterIndex--; 
+				}
+			}
 
 
 			AddOption("Save Current Vehicle", save2);
@@ -2983,8 +3562,10 @@ namespace sub
 
 			AddOption("Create New Folder", bCreateFolderPressed);
 
-			//get_all_filenames_with_extension(GetPathffA(Pathff::Vehicle, false), ".xml", vfilnames, false);
-			if (_dir.empty()) _dir = GetPathffA(Pathff::Vehicle, false);
+			if (_dir.empty()) 
+			{
+				_dir = GetPathffA(Pathff::Vehicle, false);
+			}
 			DIR* dir_point = opendir(_dir.c_str());
 			dirent* entry = readdir(dir_point);
 			while (entry)
@@ -3000,53 +3581,70 @@ namespace sub
 			AddOption("..", bFolderBackPressed); if (bFolderBackPressed)
 			{
 				_dir = _dir.substr(0, _dir.rfind("\\"));
-				Menu::currentop = 6;
+				Menu::selectedOptionIndex = 6;
 			}
 
 			if (!vfilnames.empty())
 			{
 				bool bSearchPressed = false;
-				AddOption(_searchStr.empty() ? "SEARCH" : _searchStr, bSearchPressed, nullFunc, -1, true); if (bSearchPressed)
+				AddOption(_searchStr.empty() ? "SEARCH" : _searchStr, bSearchPressed, nullFunc, -1, true);
+				if (bSearchPressed)
 				{
 					_searchStr = Game::InputBox(_searchStr, 126U, "SEARCH", boost::to_lower_copy(_searchStr));
 					boost::to_upper(_searchStr);
-					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SearchToUpper, _searchStr, 126U, std::string(), _searchStr);
-					//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_searchStr);
 				}
 
 				for (auto& filname : vfilnames)
 				{
 					if (filname.front() == '.' || filname.front() == ',')
+					{
 						continue;
-					if (!_searchStr.empty()) { if (boost::to_upper_copy(filname).find(_searchStr) == std::string::npos) continue; }
+					}
+					if (!_searchStr.empty()) 
+					{
+						if (boost::to_upper_copy(filname).find(_searchStr) == std::string::npos) 
+						{
+							continue;
+						}
+					}
 
 					bool isFolder = PathIsDirectoryA((_dir + "\\" + filname).c_str()) != 0;
 					bool isXml = filname.length() > 4 && filname.rfind(".xml") == filname.length() - 4;
 					TICKOL icon = TICKOL::NONE;
-					if (isFolder) icon = TICKOL::ARROWRIGHT;
-					else if (isXml) icon = TICKOL::TICK2;
+					if (isFolder) 
+					{
+						icon = TICKOL::ARROWRIGHT;
+					}
+					else if (isXml) 
+					{
+						icon = TICKOL::TICK2;
+					}
 					bool bFilePressed = false;
 
 					if (isFolder)
 					{
-						AddTickol(filname + " >>>", true, bFilePressed, bFilePressed, icon, TICKOL::NONE); if (bFilePressed)
+						AddTickol(filname + " >>>", true, bFilePressed, bFilePressed, icon, TICKOL::NONE); 
+						if (bFilePressed)
 						{
 							_dir = _dir + "\\" + filname;
-							Menu::currentop = 6;
+							Menu::selectedOptionIndex = 6;
 						}
 
-						if (Menu::printingop == *Menu::currentopATM && !bFilePressed)
+						if (Menu::IsLastDrawnOptionSelected() && !bFilePressed)
 						{
 							if (FolderPreviewBmps_catind::bFolderBmpsEnabled)
+							{
 								FolderPreviewBmps_catind::DrawBmp(_dir + "\\" + filname);
+							}
 						}
 					}
 					else if (isXml)
 					{
-						AddTickol(filname, true, bFilePressed, bFilePressed, icon, TICKOL::NONE); if (bFilePressed)
+						AddTickol(filname, true, bFilePressed, bFilePressed, icon, TICKOL::NONE); 
+						if (bFilePressed)
 						{
 							_name = filname.substr(0, filname.rfind('.'));
-							Menu::SetSub_delayed = SUB::VEHICLE_SAVER_INITEM;
+							Menu::pendingSubmenu = SUB::VEHICLE_SAVER_INITEM;
 							return;
 						}
 					}
@@ -3061,23 +3659,33 @@ namespace sub
 					std::string inputStr = Game::InputBox("", 28U, "Enter file name:");
 					if (inputStr.length() > 0)
 					{
-						VehSaver_SaveToFile(_dir + "\\" + inputStr + ".xml", vehicle);
+						if (!IsSafePath(inputStr))
+						{
+							Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
+						}
+						else
+						{
+							VehicleSaveToFile(_dir + "\\" + inputStr + ".xml", vehicle);
+						}
 					}
 					else
-						Game::Print::PrintError_InvalidInput(inputStr);
-					//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SaveVehicleToFile, std::string(), 28U, "Enter file name:");
-					//OnscreenKeyboard::State::arg1._int = vehicle;
-					//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&_dir);
+					{
+						Game::Print::PrintErrorInvalidInput(inputStr);
+					}
 				}
 			}
 
 			if (ms_paints_savergb)
+			{
 				saveColourVals();
+			}
 
 			if (savecarvar)
 			{
 				if (isPedInVeh)
+				{
 					saveCarVars(vehicle);
+				}
 			}
 
 			if (bCreateFolderPressed)
@@ -3085,34 +3693,36 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter folder name:");
 				if (inputStr.length() > 0)
 				{
-					if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) ||
-						GetLastError() == ERROR_ALREADY_EXISTS)
+					if (!IsSafePath(inputStr))
+					{
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
+					}
+					else if (CreateDirectoryA((_dir + "\\" + inputStr).c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
 					{
 						_dir = _dir + "\\" + inputStr;
-						Menu::currentop = 6;
+						Menu::selectedOptionIndex = 6;
 						Game::Print::PrintBottomLeft("Folder ~b~created~s~.");
 					}
 					else
 					{
-						Game::Print::PrintBottomCentre("~r~Failed~s~ to create folder.");
+						Game::Print::ShowNotification("~r~Failed", "to create folder.");
 					}
 				}
 				else
-					Game::Print::PrintError_InvalidInput(inputStr);
+				{
+					Game::Print::PrintErrorInvalidInput(inputStr);
+				}
 				return;
-				// No OnscreenKeyboard!
 			}
-
-			//if (Menu::currentop > Menu::printingop) Menu::Up();
-			//else if (Menu::currentop <= 0) Menu::Down();
 		}
-		void Sub_VehSaver_InItem()
+
+		void VehSaverInItemMenu()
 		{
 			auto& _name = dict;
 			auto& _dir = dict3;
 			std::string filePath = _dir + "\\" + _name + ".xml";
 
-			auto& ped = Static_241;
+			auto& ped = g_activePedHandle;
 			auto vehicle = GET_VEHICLE_PED_IS_USING(ped);
 			bool isPedInVeh = IS_PED_IN_ANY_VEHICLE(ped, 0) || IS_PED_SITTING_IN_ANY_VEHICLE(ped);
 
@@ -3121,12 +3731,15 @@ namespace sub
 			AddTitle(dict);
 			AddOption("Spawn", bLoad);
 			AddOption("Rename File", bRename);
-			if (isPedInVeh) AddOption("Overwrite File", bOverwrite);
+			if (isPedInVeh) 
+			{
+				AddOption("Overwrite File", bOverwrite);
+			}
 			AddOption("Delete File", bDelete);
 
 			if (bLoad)
 			{
-				VehSaver_ReadFromFile(filePath, ped);
+				VehicleReadFromFile(filePath, ped);
 			}
 
 			if (bRename)
@@ -3134,38 +3747,50 @@ namespace sub
 				std::string inputStr = Game::InputBox("", 28U, "Enter new name:", _name);
 				if (inputStr.length() > 0)
 				{
-					std::string oldPath = _dir + "\\" + _name + ".xml";
-					std::string newPath = _dir + "\\" + inputStr + ".xml";
-					if (rename(oldPath.c_str(), (newPath).c_str()) == 0)
+					if (!IsSafePath(inputStr))
 					{
-						Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
-						_name = inputStr;
+						Game::Print::ShowNotification("~r~Error:", "Invalid characters in name.");
 					}
 					else
-						Game::Print::PrintBottomCentre("~r~Error~s~ renaming file.");
+					{
+						std::string oldPath = _dir + "\\" + _name + ".xml";
+						std::string newPath = _dir + "\\" + inputStr + ".xml";
+						if (rename(oldPath.c_str(), (newPath).c_str()) == 0)
+						{
+							Game::Print::PrintBottomLeft("File ~b~renamed~s~.");
+							_name = inputStr;
+						}
+						else 
+						{
+							Game::Print::ShowNotification("~r~Error", "renaming file.");
+						}
+					}
 				}
-				else
-					Game::Print::PrintError_InvalidInput(inputStr);
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::RenameVehicleFile, std::string(), 28U, "Enter new name:", _name);
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&_name);
-				//OnscreenKeyboard::State::arg2._ptr = reinterpret_cast<void*>(&_dir);
+				else 
+				{
+					Game::Print::PrintErrorInvalidInput(inputStr);
+				}
 			}
 
 			if (bOverwrite)
 			{
 				if (isPedInVeh)
 				{
-					VehSaver_SaveToFile(filePath, vehicle);
+					VehicleSaveToFile(filePath, vehicle);
 				}
 			}
 
 			if (bDelete)
 			{
-				if (remove(filePath.c_str()) == 0)
+				if (remove(filePath.c_str()) == 0) 
+				{
 					Game::Print::PrintBottomLeft("File ~b~deleted~s~.");
-				else
-					Game::Print::PrintBottomCentre("~r~Error~s~ deleting file.");
-				Menu::SetSub_previous();
+				}
+				else 
+				{
+						Game::Print::ShowNotification("~r~Error", "deleting file.");
+				}
+				Menu::SetPreviousMenu();
 				Menu::Up();
 				return;
 			}
@@ -3181,7 +3806,8 @@ namespace sub
 				if (nodeDriverVisible)
 				{
 					bool bToggleDriverVisiblePressed = false;
-					AddTickol("Driver Visibility", nodeDriverVisible.text().as_bool(), bToggleDriverVisiblePressed, bToggleDriverVisiblePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleDriverVisiblePressed)
+					AddTickol("Driver Visibility", nodeDriverVisible.text().as_bool(), bToggleDriverVisiblePressed, bToggleDriverVisiblePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+					if (bToggleDriverVisiblePressed)
 					{
 						nodeDriverVisible.text() = !nodeDriverVisible.text().as_bool();
 						doc.save_file((const char*)filePath.c_str());
@@ -3191,7 +3817,8 @@ namespace sub
 				auto nodeAddAttachmentsToSpoonerDb = nodeVehicle.child("SpoonerAttachments").attribute("SetAttachmentsPersistentAndAddToSpoonerDatabase");
 				bool bAddAttachemntsToSpoonerDb = nodeAddAttachmentsToSpoonerDb.as_bool();
 				bool bToggleAddAttachmentsToSpoonerDbPressed = false;
-				AddTickol("Persistent Attachments (AddToSpoonerDb)", bAddAttachemntsToSpoonerDb, bToggleAddAttachmentsToSpoonerDbPressed, bToggleAddAttachmentsToSpoonerDbPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleAddAttachmentsToSpoonerDbPressed)
+				AddTickol("Persistent Attachments (AddToSpoonerDb)", bAddAttachemntsToSpoonerDb, bToggleAddAttachmentsToSpoonerDbPressed, bToggleAddAttachmentsToSpoonerDbPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+				if (bToggleAddAttachmentsToSpoonerDbPressed)
 				{
 					nodeAddAttachmentsToSpoonerDb = !nodeAddAttachmentsToSpoonerDb.as_bool();
 					bAddAttachemntsToSpoonerDb = !bAddAttachemntsToSpoonerDb;
@@ -3204,18 +3831,28 @@ namespace sub
 					if (nodeStartTaskSeqOnLoad)
 					{
 						bool bToggleStartTaskSeqOnLoadPressed = false;
-						AddTickol("Start Task Sequences Immediately", nodeStartTaskSeqOnLoad.as_bool(), bToggleStartTaskSeqOnLoadPressed, bToggleStartTaskSeqOnLoadPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleStartTaskSeqOnLoadPressed)
+						AddTickol("Start Task Sequences Immediately", nodeStartTaskSeqOnLoad.as_bool(), bToggleStartTaskSeqOnLoadPressed, bToggleStartTaskSeqOnLoadPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+						if (bToggleStartTaskSeqOnLoadPressed)
 						{
 							nodeStartTaskSeqOnLoad = !nodeStartTaskSeqOnLoad.as_bool();
 							doc.save_file((const char*)filePath.c_str());
 						}
 					}
 				}
-
 			}
-
 		}
-
 	}
-
 }
+
+
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(SPAWNVEHICLE,               	sub::SpawnVehicleMenu)
+REGISTER_SUBMENU(SPAWNVEHICLE_OPTIONS,       	sub::SpawnVehicleOptions)
+REGISTER_SUBMENU(SPAWNVEHICLE_ALLCATS,       	sub::SpawnVehicleAllCategoriesMenu)
+REGISTER_SUBMENU(SPAWNVEHICLEDLC,            	sub::SpawnVehicleDLC)
+REGISTER_SUBMENU(SPAWNVEHICLE_DLC_SELECTION, 	sub::SpawnVehicleDLCSelection)
+REGISTER_SUBMENU(SPAWNVEHICLE_FAVOURITES,    	sub::SpawnVehicleFavouritesMenu)
+REGISTER_SUBMENU(SPAWNVEHICLE_SEARCH,        	sub::SpawnVehicleSearchMenu)
+REGISTER_SUBMENU(VEHICLE_SAVER,       			sub::VehicleSaver::VehicleSaverMenu)
+REGISTER_SUBMENU(VEHICLE_SAVER_INITEM, 			sub::VehicleSaver::VehSaverInItemMenu)

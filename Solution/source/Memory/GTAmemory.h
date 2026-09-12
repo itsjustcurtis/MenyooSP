@@ -612,8 +612,8 @@ public:
 
 	static int GetNumberOfVehicles();
 
-	static float WorldGravity_get();
-	static void WorldGravity_set(float value);
+	static float GetWorldGravity();
+	static void SetWorldGravity(float value);
 
 	static inline bool bittest(int data, unsigned char index)
 	{
@@ -631,6 +631,28 @@ public:
 	static bool FindScript(int hash);
 	static std::string GetVehicleModelName(Hash modelHash);
 	static std::string GetVehicleMakeName(Hash modelHash);
+
+	// Ped Variation Collections (returns "collection:local_id" format, e.g., "mp_f_clothes_01:23")
+	static std::string GetPedDrawableCollectionString(int pedHandle, int componentId);
+	static std::string GetPedPropCollectionString(int pedHandle, int anchorPoint);
+
+	// Collection enumeration data
+	struct CollectionEntry
+	{
+		std::string name;             // e.g. "mp_f_clothes_01" or "basegame"
+		int maxLocalId;               // highest local index in this collection
+		std::vector<int> localToGlobal; // maps localIdx -> global drawable index
+	};
+	struct DrawableCollectionData
+	{
+		std::vector<CollectionEntry> collections;
+		int currentCollectionIdx;     // index into collections[]
+		int currentLocalIdx;          // local index within that collection
+	};
+
+	// Build collection map for a ped's component slot (model-cached)
+	static DrawableCollectionData BuildDrawableCollectionData(int pedHandle, int componentId);
+	static DrawableCollectionData BuildPropCollectionData(int pedHandle, int anchorPoint);
 
 private:
 	static UINT64 modelHashTable, modelNum2, modelNum3, modelNum4;
@@ -667,7 +689,7 @@ public:
 	void ToggleSnow(bool bEnable);
 	void Tick();
 };
-extern SpSnow _SpSnow;
+extern SpSnow g_spSnow;
 
 class GeneralGlobalHax final
 {
@@ -682,11 +704,6 @@ public:
 	static void SetPlayerSwimSpeed(float value);
 	static float GetPlayerMovementSpeed();
 	static void SetPlayerMovementSpeed(float value);
-
-	static int GetVehicleBoostState();
-	static void SetVehicleBoostState(int value);
-	static float* GetVehicleBoostChargePtr();
-
 };
 
 void setupHooks();

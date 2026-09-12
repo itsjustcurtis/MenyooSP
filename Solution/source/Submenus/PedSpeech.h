@@ -9,26 +9,35 @@
 */
 #pragma once
 
+#include "..\macros.h"
+
+#include "..\Menu\Menu.h"
+#include "..\Menu\Routine.h"
+
+#include "..\Natives\natives2.h"
+#include "..\Util\ExePath.h"
+#include "..\Scripting\GTAped.h"
+#include "..\Scripting\Game.h"
+#include "..\Util\StringManip.h"
+
 #include <string>
-#include <vector>
 #include <array>
+#include <vector>
+#include <set>
+#include <simpleini\SimpleIni.h>
 
 typedef unsigned short uint16_t;
 
 namespace sub
 {
-	namespace Speech_catind
+	namespace Speech
 	{
-		//#pragma region ambient speech names old
 		struct SpeechNameS { std::string title, label; };
 		extern std::vector<SpeechNameS> vSpeechNames;
-		//#pragma region ambient speech voice names old
 		struct VoiceNameS { std::string title, label; };
 		extern std::vector<VoiceNameS> vVoiceNames;
-		//#pragma region ambient speech data organised old
 		struct AmbientSpeechDataS { std::string title, voiceName, speechName, paramName; };
 		extern const std::vector<AmbientSpeechDataS> vSpeechData;
-		//#pragma region ambient speech SPEECH_PARAM names
 		struct SpeechParamS { std::string title, label; };
 		extern const std::array<SpeechParamS, 37> vSpeechParams;
 
@@ -38,17 +47,12 @@ namespace sub
 			std::vector<std::string> speechNames;
 		};
 		extern std::vector<AmbientVoice_t> vVoiceData;
-
 		extern AmbientVoice_t* _currVoiceInfo;
 		extern uint16_t _currSpeechParamIndex;
 
-		//extern std::string& _searchStr;
-
 		bool PopulateVoiceData();
-
-		void Sub_VoiceChanger();
-
-		void Sub_AmbientSpeechPlayer();
+		void VoiceChangerMenu();
+		void AmbientSpeechPlayerMenu();
 		void Sub_AmbientSpeechPlayer_InVoice();
 
 	}

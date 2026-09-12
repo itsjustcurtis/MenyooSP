@@ -27,10 +27,7 @@
 
 #include "..\Menu\Routine.h"
 
-//#include <string>
-//#include <sstream>
-
-namespace _RopeGun_
+namespace RopeGun
 {
 	EntitiesAndRope::EntitiesAndRope()
 		: rope(0), e1(0), e2(0), initialDistance(0.0f)
@@ -43,7 +40,6 @@ namespace _RopeGun_
 	EntitiesAndRope::EntitiesAndRope(const EntitiesAndRope& obj)
 		: rope(obj.rope), e1(obj.e1), e2(obj.e2), initialDistance(obj.initialDistance)
 	{
-		//this->operator=(obj);
 	}
 
 	EntitiesAndRope& EntitiesAndRope::operator = (const EntitiesAndRope& right)
@@ -100,7 +96,7 @@ namespace _RopeGun_
 		GTAentity aimedThing;
 		bool bNoTarget = false;
 
-		if (g_myWeap == whash) // if (player.GetWeapon() == whash)
+		if (g_myWeap == whash)
 		{
 			if (player.IsFreeAiming() || player.IsTargetingAnything())
 			{
@@ -113,7 +109,7 @@ namespace _RopeGun_
 						bNoTarget = true;
 						float maxDistForRay = 1000.0f;
 						aimedCoords = GameplayCamera::RaycastForCoord(Vector2(0.0f, 0.0f), 0, maxDistForRay, maxDistForRay + 200.0f);
-						if (GameplayCamera::Position_get().DistanceTo(aimedCoords) > maxDistForRay + 100.0f)
+						if (GameplayCamera::GetPosition().DistanceTo(aimedCoords) > maxDistForRay + 100.0f)
 							return;
 					}
 				}
@@ -177,8 +173,8 @@ namespace _RopeGun_
 				continue;
 			}
 
-			const Vector3& pos1 = r.e1.Position_get();
-			const Vector3& pos2 = r.e2.Position_get();
+			const Vector3& pos1 = r.e1.GetPosition();
+			const Vector3& pos2 = r.e2.GetPosition();
 			float dist = pos1.DistanceTo(pos2);
 
 			if (dist > r.initialDistance - 0.2f)
@@ -237,20 +233,13 @@ namespace _RopeGun_
 		entity1.RequestControl(500);
 		entity2.RequestControl(500);
 
-		//if (!entity1.HasControl() || !entity2.HasControl()) return;
-
-		//GTAentity myPed = PLAYER_PED_ID();
-		//Vector3& myPos = myPed.Position_get();
-		const Vector3& pos1 = entity1.Position_get();
-		const Vector3& pos2 = entity2.Position_get();
+		const Vector3& pos1 = entity1.GetPosition();
+		const Vector3& pos2 = entity2.GetPosition();
 		float dist = pos1.DistanceTo(pos2);
 
 		Rope::LoadTextures();
 		Rope newRope = Rope::AddRope(RopeType::Normal, pos1, Vector3(0, 0, 5.0f), dist, 0.0f, true);
 		newRope.ActivatePhysics();
-		//newRope.PinVertex(0, pos1);
-		//newRope.PinVertex(newRope.VertexCount() - 1, pos2);
-		//SET_DISABLE_BREAKING(newRope.Handle(), true);
 		newRope.AttachEntities(entity1, entity2, dist);
 
 		allRopes.push_back(EntitiesAndRope(newRope, entity1, entity2, dist));
@@ -260,8 +249,6 @@ namespace _RopeGun_
 		auto fake = World::CreateProp(0x3A49EBD1, pos, Vector3(), false, false); // p_car_keys_01
 		fake.FreezePosition(true);
 		WAIT(20);
-		//fake.MissionEntity_set(true);
-		//fake.IsCollisionEnabled_set(false);
 		fake.SetVisible(false);
 		fake.FreezePosition(true);
 		return fake;
@@ -269,7 +256,7 @@ namespace _RopeGun_
 
 	void RopeGun::PrintGunInstructions()
 	{
-		Game::Print::PrintBottomLeft(oss_ << "Use the ~b~" << get_weapon_label(whash, true) << "~s~ for hax.");
+		Game::Print::PrintBottomLeft(oss_ << "Use the ~b~" << GetWeaponLabel(whash, true) << "~s~ for hax.");
 		Game::Print::PrintBottomLeft("Two bullet hits on two different entities or surfaces (WHILE AIMING) create a rope.");
 	}
 	void RopeGun::PrintShootCountHelpText()

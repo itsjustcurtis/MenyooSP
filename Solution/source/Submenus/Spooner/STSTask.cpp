@@ -32,7 +32,7 @@ namespace sub::Spooner
 	{
 		{ STSTaskType::Nothing,{ "Nothing", EntityType::ALL } },
 		{ STSTaskType::SetHealth,{ "Set Health", EntityType::ALL } },
-		{ STSTaskType::AddBlip,{ "Add Blip (If None Present)", EntityType::ALL } },
+		{ STSTaskType::AddBlip,{ "Add Blip (If None Present) (Obsolete)", EntityType::ALL } },
 		{ STSTaskType::RemoveBlip,{ "Remove Blip", EntityType::ALL } },
 
 		{ STSTaskType::Pause,{ "Pause", EntityType::PED } },
@@ -43,6 +43,8 @@ namespace sub::Spooner
 		{ STSTaskType::FaceEntity,{ "Face Entity", EntityType::PED } },
 		{ STSTaskType::LookAtCoord,{ "Keep Looking At Position", EntityType::PED } },
 		{ STSTaskType::LookAtEntity,{ "Keep Looking At Entity", EntityType::PED } },
+		{ STSTaskType::LookAtCoordEyesOnly,{ "Keep Looking At Position (Eyes Only)", EntityType::PED } },
+		{ STSTaskType::LookAtEntityEyesOnly,{ "Keep Looking At Entity (Eyes Only)", EntityType::PED } },
 		{ STSTaskType::TeleportToCoord,{ "Teleport To Position", EntityType::ALL } },
 		{ STSTaskType::SeekCoverAtCoord,{ "Seek Cover At Position", EntityType::PED } },
 		//{ STSTaskType::SlideToCoord, {"Slide To Position", EntityType::PED }},
@@ -54,7 +56,7 @@ namespace sub::Spooner
 		{ STSTaskType::FleeFromCoord,{ "Flee From Position", EntityType::PED } },
 		{ STSTaskType::NearestAppropriateAction,{ "Closest Appropriate Action", EntityType::PED } },
 		{ STSTaskType::ScenarioAction,{ "Perform Scenario Action", EntityType::PED } },
-		{ STSTaskType::PlayAnimation,{ "Play Animation", EntityType::PED } },
+		{ STSTaskType::PlayAnimation,{ "Play Animation", EntityType::ALL } },
 		{ STSTaskType::SetActiveWeapon,{ "Set Active Weapon", EntityType::PED } },
 		{ STSTaskType::AimAtCoord,{ "Aim At Position", EntityType::PED } },
 		{ STSTaskType::AimAtEntity,{ "Aim At Entity", EntityType::PED } },
@@ -88,6 +90,9 @@ namespace sub::Spooner
 
 		{ STSTaskType::SnapTasks,{ "Refresh (Snap & Stand)", EntityType::PED } },
 		{ STSTaskType::EndSequence,{ "End Sequence", EntityType::ALL } },
+
+		{ STSTaskType::LightMoveWithEntity,{ "Make a Light Move With This Entity", EntityType::ALL } },
+		{ STSTaskType::LightPointAtEntity,{ "Make a Light Point At This Entity", EntityType::ALL } },
 	};
 
 	// STSTask
@@ -112,7 +117,8 @@ namespace sub::Spooner
 				this->duration = right->duration;
 				this->durationAfterLife = right->durationAfterLife;
 				this->isLoopedTask = right->isLoopedTask;
-			}	this->ImportTaskDataSpecific(right);
+				this->ImportTaskDataSpecific(right);
+			}
 		}
 	}
 

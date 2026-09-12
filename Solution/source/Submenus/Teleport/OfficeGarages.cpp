@@ -238,7 +238,7 @@ namespace sub::TeleportLocations_catind
 		{
 			if (garageInfo.location != nullptr)
 			{
-				teleport_net_ped(ped, garageInfo.location->second->at(garageInfo.garageId).pos);
+				TeleportNetPed(ped, garageInfo.location->second->at(garageInfo.garageId).pos);
 			}
 		}
 
@@ -260,10 +260,10 @@ namespace sub::TeleportLocations_catind
 		{
 			if (currentGarageInfo.location == nullptr)
 			{
-				Menu::SetSub_previous();
+				Menu::SetPreviousMenu();
 				return;
 			}
-			GTAped ped = Static_241;
+			GTAped ped = g_activePedHandle;
 
 			AddTitle(currentGarageInfo.location->first);
 
@@ -303,7 +303,7 @@ namespace sub::TeleportLocations_catind
 				DO_SCREEN_FADE_OUT(50);
 				CreateOfficeGarage(currentGarageInfo);
 				TeleportPedToOfficeGarage(ped, currentGarageInfo);
-				//Menu::SetSub_previous();
+				//Menu::SetPreviousMenu();
 				DO_SCREEN_FADE_IN(200);
 				return;
 			}
@@ -312,3 +312,8 @@ namespace sub::TeleportLocations_catind
 	}
 
 }
+
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(TELEPORTOPS_OFFICEGARAGES,             sub::TeleportLocations_catind::OfficeGarages::Sub_OfficeGarages)
+REGISTER_SUBMENU(TELEPORTOPS_OFFICEGARAGES_INLOC,       sub::TeleportLocations_catind::OfficeGarages::Sub_OfficeGarages_InLoc)

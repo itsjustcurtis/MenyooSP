@@ -84,7 +84,11 @@ namespace sub::Spooner
 		AimAtCoord = 49,
 		AimAtEntity = 50,
 		AddBlip = 51,
-		RemoveBlip = 52
+		RemoveBlip = 52,
+		LookAtCoordEyesOnly = 53,
+		LookAtEntityEyesOnly = 54,
+		LightMoveWithEntity = 55,
+		LightPointAtEntity = 56
 	};
 
 	extern std::vector<std::pair<STSTaskType, std::pair<std::string, EntityType>>> vSTSTaskTypeNames;
@@ -130,7 +134,7 @@ namespace sub::Spooner
 
 		virtual void LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle);
 
-		// virual ctor and dtor k
+		virtual ~STSTask() = default;
 	};
 
 }

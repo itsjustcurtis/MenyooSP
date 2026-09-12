@@ -29,6 +29,8 @@
 
 #include "SpoonerEntity.h"
 #include "EntityManagement.h"
+#include "Databases.h"
+#include "SpoonerLight.h"
 #include "Submenus_TaskSequence.h"
 
 #include <pugixml\src\pugixml.hpp>
@@ -90,7 +92,7 @@ namespace sub::Spooner
 		}
 		void SetHealth::Run(void* ve)
 		{
-			reinterpret_cast<SpoonerEntity*>(ve)->Handle.Health_set(this->healthValue);
+			reinterpret_cast<SpoonerEntity*>(ve)->handle.SetHealth(this->healthValue);
 		}
 
 		void AddBlip::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -179,10 +181,10 @@ namespace sub::Spooner
 		{
 			SpoonerEntity& e = *reinterpret_cast<SpoonerEntity*>(ve);
 
-			//GTAblip(e.Handle.CurrentBlip()).Remove();
-			if (!GTAblip(e.Handle.CurrentBlip()).Exists()) // Only add new blip if none present already
+			//GTAblip(e.handle.CurrentBlip()).Remove();
+			if (!GTAblip(e.handle.CurrentBlip()).Exists()) // Only add new blip if none present already
 			{
-				this->blip = e.Handle.AddBlip();
+				this->blip = e.handle.AddBlip();
 				this->blip.SetFriendly(this->isFriendly);
 				this->blip.SetFlashing(this->isFlashing);
 				this->blip.SetIcon(this->icon);
@@ -222,7 +224,7 @@ namespace sub::Spooner
 		{
 			SpoonerEntity& e = *reinterpret_cast<SpoonerEntity*>(ve);
 
-			GTAblip(e.Handle.CurrentBlip()).Remove();
+			GTAblip(e.handle.CurrentBlip()).Remove();
 		}
 
 		Pause::Pause()
@@ -322,7 +324,7 @@ namespace sub::Spooner
 		}
 		void FaceDirection::RunP(GTAped& ep)
 		{
-			ep.Task().TurnTo(ep.Position_get().PointOnCircle(2.0f, this->heading), this->durationAfterLife > 0 ? -1 : this->duration + 200);
+			ep.Task().TurnTo(ep.GetPosition().PointOnCircle(2.0f, this->heading), this->durationAfterLife > 0 ? -1 : this->duration + 200);
 		}
 
 		void FaceEntity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -449,6 +451,90 @@ namespace sub::Spooner
 				this->targetEntity = u_e_Handle;
 		}
 
+		void LookAtCoordEyesOnly::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
+		{
+			auto nodePos = nodeTask.append_child("Position");
+			nodePos.append_attribute("X") = this->coord.x;
+			nodePos.append_attribute("Y") = this->coord.y;
+			nodePos.append_attribute("Z") = this->coord.z;
+		}
+		void LookAtCoordEyesOnly::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
+		{
+			auto nodePos = nodeTask.child("Position");
+			this->coord.x = nodePos.attribute("X").as_float();
+			this->coord.y = nodePos.attribute("Y").as_float();
+			this->coord.z = nodePos.attribute("Z").as_float();
+		}
+		void LookAtCoordEyesOnly::ImportTaskDataSpecific(STSTask* otherTsk)
+		{
+			auto otherTskT = otherTsk->GetTypeTask<STSTasks::LookAtCoordEyesOnly>();
+			this->coord = otherTskT->coord;
+		}
+		LookAtCoordEyesOnly::LookAtCoordEyesOnly()
+		{
+			this->type = STSTaskType::LookAtCoordEyesOnly;
+			this->submenu = Submenus::Sub_TaskSequence::LookAtCoordEyesOnly;
+			this->duration = 10000;
+			this->durationAfterLife = 0;
+			this->isLoopedTask = false;
+		}
+		void LookAtCoordEyesOnly::RunP(GTAped& ep)
+		{
+			TASK_LOOK_AT_COORD(ep.Handle(), this->coord.x, this->coord.y, this->coord.z, this->durationAfterLife > 0 ? -1 : this->duration, 8192, 2);
+		}
+		void LookAtCoordEyesOnly::EndP(GTAped& ep)
+		{
+			if (this->durationAfterLife == 0)
+			{
+				ep.Task().ClearLookAt();
+			}
+		}
+
+		void LookAtEntityEyesOnly::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
+		{
+			auto targetHandle = this->targetEntity.GetHandle();
+			if (targetHandle == PLAYER_PED_ID())
+				nodeTask.append_child("TargetInitHandle").text() = "PLAYER";
+			else
+				nodeTask.append_child("TargetInitHandle").text() = targetHandle;
+		}
+		void LookAtEntityEyesOnly::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
+		{
+			if (strcmp(nodeTask.child("TargetInitHandle").text().as_string(), "PLAYER") == 0)
+				this->targetEntity.Handle() = PLAYER_PED_ID();
+			else
+				this->targetEntity.Handle() = nodeTask.child("TargetInitHandle").text().as_int();
+		}
+		void LookAtEntityEyesOnly::ImportTaskDataSpecific(STSTask* otherTsk)
+		{
+			auto otherTskT = otherTsk->GetTypeTask<STSTasks::LookAtEntityEyesOnly>();
+			this->targetEntity = otherTskT->targetEntity;
+		}
+		LookAtEntityEyesOnly::LookAtEntityEyesOnly()
+		{
+			this->type = STSTaskType::LookAtEntityEyesOnly;
+			this->submenu = Submenus::Sub_TaskSequence::LookAtEntityEyesOnly;
+			this->duration = 10000;
+			this->durationAfterLife = 0;
+			this->isLoopedTask = false;
+		}
+		void LookAtEntityEyesOnly::RunP(GTAped& ep)
+		{
+			TASK_LOOK_AT_ENTITY(ep.Handle(), this->targetEntity.Handle(), this->durationAfterLife > 0 ? -1 : this->duration, 8192, 2);
+		}
+		void LookAtEntityEyesOnly::EndP(GTAped& ep)
+		{
+			if (this->durationAfterLife == 0)
+			{
+				ep.Task().ClearLookAt();
+			}
+		}
+		void LookAtEntityEyesOnly::LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle)
+		{
+			if (this->targetEntity == u_initHandle && this->targetEntity != PLAYER_PED_ID())
+				this->targetEntity = u_e_Handle;
+		}
+
 		void TeleportToCoord::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
 		{
 			nodeTask.append_child("TakeVehicleToo").text() = this->takeVehicleToo;
@@ -487,12 +573,12 @@ namespace sub::Spooner
 			if (takeVehicleToo)
 			{
 				GTAvehicle veh = ep.CurrentVehicle();
-				(veh.Exists() ? (GTAentity)veh : (GTAentity)ep).Position_set(this->destination);
+				(veh.Exists() ? (GTAentity)veh : (GTAentity)ep).SetPosition(this->destination);
 				//SET_PED_COORDS_KEEP_VEHICLE(ep.Handle(), this->destination.x, this->destination.y, this->destination.z);
 			}
 			else
 			{
-				ep.Position_set(this->destination);
+				ep.SetPosition(this->destination);
 			}
 		}
 
@@ -617,7 +703,7 @@ namespace sub::Spooner
 		}
 		void GoToCoord::RunP(GTAped& ep)
 		{
-			TASK_GO_STRAIGHT_TO_COORD(ep.Handle(), this->destination.x, this->destination.y, this->destination.z, this->speed, this->durationAfterLife > 0 ? -1 : this->duration, Vector3::DirectionToRotation(Vector3::Normalize(this->destination - ep.Position_get())).z, 0.0f);
+			TASK_GO_STRAIGHT_TO_COORD(ep.Handle(), this->destination.x, this->destination.y, this->destination.z, this->speed, this->durationAfterLife > 0 ? -1 : this->duration, Vector3::DirectionToRotation(Vector3::Normalize(this->destination - ep.GetPosition())).z, 0.0f);
 		}
 
 		void FollowRoute::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -746,7 +832,7 @@ namespace sub::Spooner
 		}
 		void PatrolInRange::RunP(GTAped& ep)
 		{
-			ep.Task().WanderAround(this->coord.IsZero() ? ep.Position_get()/*Legacy/bugged PatrolInRange behaviour*/ : this->coord, this->radius);
+			ep.Task().WanderAround(this->coord.IsZero() ? ep.GetPosition()/*Legacy/bugged PatrolInRange behaviour*/ : this->coord, this->radius);
 		}
 
 		WanderFreely::	WanderFreely()
@@ -849,7 +935,7 @@ namespace sub::Spooner
 		}
 		void ScenarioAction::RunP(GTAped& ep)
 		{
-			//const PCHAR scen = (const PCHAR)AnimationSub_TaskScenarios::vNamedScenarios[scenarioArrIndex].label.c_str();
+			//const PCHAR scen = (const PCHAR)AnimationTaskScenarios::vNamedScenarios[scenarioArrIndex].label.c_str();
 			//const PCHAR scen = (const PCHAR)this->scenarioName.c_str();
 			//if (!IS_PED_USING_SCENARIO(ep.Handle(), scen))
 			ep.Task().StartScenario(this->scenarioName);
@@ -900,13 +986,35 @@ namespace sub::Spooner
 			this->flag = AnimFlag::Loop;
 			this->lockPos = false;
 		}
-		void PlayAnimation::RunP(GTAped& ep)
+		void PlayAnimation::Run(void* ve)
 		{
-			if (this->durationToAnimDuration)
-				this->duration = GET_ENTITY_ANIM_TOTAL_TIME(ep.Handle(), this->animDict.c_str(), this->animName.c_str());
+			GTAentity entity = *reinterpret_cast<GTAentity*>(ve);
 
-			//if (IS_ENTITY_PLAYING_ANIM(ep.Handle, animDict.c_str(), animDict.c_str(), 3))
-			ep.Task().PlayAnimation(this->animDict, this->animName, this->speed, this->speedMultiplier, this->durationAfterLife > 0 ? -1 : this->duration, this->flag, 0.0f, this->lockPos);
+			if (this->durationToAnimDuration)
+				this->duration = GET_ENTITY_ANIM_TOTAL_TIME(entity.Handle(), this->animDict.c_str(), this->animName.c_str());
+
+			REQUEST_ANIM_DICT(this->animDict.c_str());
+			for (DWORD timeOut = GetTickCount() + 1750; GetTickCount() < timeOut;)
+			{
+				if (HAS_ANIM_DICT_LOADED(this->animDict.c_str())) break;
+				WAIT(0);
+			}
+
+			if (entity.IsPed())
+			{
+				TASK_PLAY_ANIM(entity.Handle(), this->animDict.c_str(), this->animName.c_str(),
+					this->speed, this->speedMultiplier,
+					this->durationAfterLife > 0 ? -1 : this->duration,
+					this->flag, 0.0f, this->lockPos, this->lockPos, this->lockPos);
+			}
+			else
+			{
+				PLAY_ENTITY_ANIM(entity.Handle(), this->animName.c_str(), this->animDict.c_str(),
+					8.0f,
+					static_cast<BOOL>(this->flag & AnimFlag::Loop),
+					static_cast<BOOL>(this->flag & AnimFlag::StayInLastFrame),
+					0, 0.0f, 0);
+			}
 		}
 		void PlayAnimation::LoadTargetingDressing(Entity u_initHandle, Entity u_e_Handle)
 		{
@@ -916,7 +1024,7 @@ namespace sub::Spooner
 
 		void SetActiveWeapon::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
 		{
-			nodeTask.append_child("WeaponHash").text() = int_to_hexstring(weaponHash, true).c_str();
+			nodeTask.append_child("WeaponHash").text() = IntToHexString(weaponHash, true).c_str();
 		}
 		void SetActiveWeapon::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
 		{
@@ -1052,7 +1160,7 @@ namespace sub::Spooner
 		}
 		void ShootAtCoord::RunP(GTAped& ep)
 		{
-			Hash currWeapon = ep.Weapon_get();
+			Hash currWeapon = ep.GetWeapon();
 			ScrHandle pedHandle = ep.Handle();
 
 			int ammo;
@@ -1094,7 +1202,7 @@ namespace sub::Spooner
 		}
 		void ShootAtEntity::RunP(GTAped& ep)
 		{
-			Hash currWeapon = ep.Weapon_get();
+			Hash currWeapon = ep.GetWeapon();
 			ScrHandle pedHandle = ep.Handle();
 
 			int ammo;
@@ -1135,8 +1243,8 @@ namespace sub::Spooner
 		void FightHatedTargets::RunP(GTAped& ep)
 		{
 			std::vector<GTAped> pedHandles;
-			//GTAmemory::GetPedHandles(pedHandles, ep.Position_get(), this->radius);
-			World::GetNearbyPeds(pedHandles, ep.Position_get(), this->radius);
+			//GTAmemory::GetPedHandles(pedHandles, ep.GetPosition(), this->radius);
+			World::GetNearbyPeds(pedHandles, ep.GetPosition(), this->radius);
 
 			TaskSequence squ;
 
@@ -1152,7 +1260,7 @@ namespace sub::Spooner
 					squ.AddTask().FightAgainst(target, this->durationAfterLife > 0 ? -1 : this->duration);
 					continue; break;
 				}
-				switch (World::GetRelationshipBetweenGroups(ep.RelationshipGroup_get(), target.RelationshipGroup_get()))
+				switch (World::GetRelationshipBetweenGroups(ep.GetRelationshipGroup(), target.GetRelationshipGroup()))
 				{
 				case PedRelationship::Hate:
 				case PedRelationship::Dislike:
@@ -1401,7 +1509,7 @@ namespace sub::Spooner
 		void DriveWander::RunP(GTAped& ep)
 		{
 			float speedInMps = this->speedInKmph / 3.6f;
-			ep.MaxDrivingSpeed_set(speedInMps + 1.0f);
+			ep.SetMaxDrivingSpeed(speedInMps + 1.0f);
 
 			ep.Task().CruiseWithVehicle(ep.CurrentVehicle(), speedInMps, this->drivingStyle);
 		}
@@ -1446,7 +1554,7 @@ namespace sub::Spooner
 		void DriveToCoord::RunP(GTAped& ep)
 		{
 			float speedInMps = this->speedInKmph / 3.6f;
-			ep.MaxDrivingSpeed_set(speedInMps + 1.0f);
+			ep.SetMaxDrivingSpeed(speedInMps + 1.0f);
 
 			GTAvehicle veh = ep.CurrentVehicle();
 			const Model& vehModel = veh.Model();
@@ -1680,7 +1788,7 @@ namespace sub::Spooner
 		}
 		void AchieveVelocity::RunP(GTAped& ep)
 		{
-			ep.Velocity_set(Vector3::RotationToDirection((this->isRelative ? ep.Rotation_get() : Vector3::Zero()) + Vector3(this->pitch, 0.0f, this->heading)) * this->magnitude);
+			ep.SetVelocity(Vector3::RotationToDirection((this->isRelative ? ep.GetRotation() : Vector3::Zero()) + Vector3(this->pitch, 0.0f, this->heading)) * this->magnitude);
 		}
 
 		void AchievePushForce::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -1876,7 +1984,6 @@ namespace sub::Spooner
 			case FreezeInPlace::eFreezeType::FREEZETYPE_RESETVELOCITY:
 				ep.FreezePosition(true);
 				ep.FreezePosition(false);
-				//ep.Velocity_set(Vector3::Zero());
 				break;
 			}
 		}
@@ -1913,10 +2020,10 @@ namespace sub::Spooner
 		{
 			SpoonerEntity& e = *reinterpret_cast<SpoonerEntity*>(ve);
 			GTAentity att;
-			if (e.AttachmentArgs.isAttached && sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.Handle, att))
-				EntityManagement::AttachEntity(e, att, e.AttachmentArgs.boneIndex, e.AttachmentArgs.offset, (this->isRelative ? e.AttachmentArgs.rotation : Vector3()) + rotationValue);
+			if (e.attachmentArgs.isAttached && sub::Spooner::EntityManagement::GetEntityThisEntityIsAttachedTo(e.handle, att))
+				EntityManagement::AttachEntity(e, att, e.attachmentArgs.boneIndex, e.attachmentArgs.offset, (this->isRelative ? e.attachmentArgs.rotation : Vector3()) + rotationValue);
 			else
-				e.Handle.Rotation_set((this->isRelative ? e.Handle.Rotation_get() : Vector3()) + rotationValue);
+				e.handle.SetRotation((this->isRelative ? e.handle.GetRotation() : Vector3()) + rotationValue);
 		}
 
 		void ChangeOpacity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -1946,7 +2053,7 @@ namespace sub::Spooner
 			if (this->opacityValue == 269)
 				ep.ResetAlpha();
 			else
-				ep.Alpha_set(this->opacityValue);
+				ep.SetAlpha(this->opacityValue);
 		}
 
 		void TriggerFx::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
@@ -2044,6 +2151,124 @@ namespace sub::Spooner
 		void TriggerFx::EndP(GTAped& ep)
 		{
 			timer = 0U;
+		}
+
+		LightMoveWithEntity::LightMoveWithEntity()
+		{
+			this->type = STSTaskType::LightMoveWithEntity;
+			this->submenu = Submenus::Sub_TaskSequence::LightMoveWithEntitySub;
+			this->duration = -2;
+			this->durationAfterLife = -2;
+			this->isLoopedTask = true;
+			this->lightId = 0;
+			this->offsetInitialized = false;
+		}
+		void LightMoveWithEntity::Run(void* ve)
+		{
+			SpoonerEntity* entity = reinterpret_cast<SpoonerEntity*>(ve);
+			if (!entity->handle.Exists()) return;
+
+			for (auto& light : Databases::LightDb)
+			{
+				if (light.m_id == this->lightId)
+				{
+					if (!this->offsetInitialized)
+					{
+						this->offset = light.m_position - entity->handle.GetPosition();
+						this->offsetInitialized = true;
+					}
+					light.m_position = entity->handle.GetPosition() + this->offset;
+					break;
+				}
+			}
+		}
+		void LightMoveWithEntity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
+		{
+			nodeTask.append_child("LightId").text() = this->lightId;
+			nodeTask.append_child("OffsetInitialized").text() = this->offsetInitialized;
+			if (this->offsetInitialized)
+			{
+				auto nodeOff = nodeTask.append_child("Offset");
+				nodeOff.append_attribute("X") = this->offset.x;
+				nodeOff.append_attribute("Y") = this->offset.y;
+				nodeOff.append_attribute("Z") = this->offset.z;
+			}
+		}
+		void LightMoveWithEntity::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
+		{
+			this->lightId = nodeTask.child("LightId").text().as_uint(0);
+			this->offsetInitialized = nodeTask.child("OffsetInitialized").text().as_bool(false);
+			if (this->offsetInitialized)
+			{
+				auto nodeOff = nodeTask.child("Offset");
+				this->offset.x = nodeOff.attribute("X").as_float();
+				this->offset.y = nodeOff.attribute("Y").as_float();
+				this->offset.z = nodeOff.attribute("Z").as_float();
+			}
+		}
+		void LightMoveWithEntity::ImportTaskDataSpecific(STSTask* otherTsk)
+		{
+			auto other = otherTsk->GetTypeTask<LightMoveWithEntity>();
+			this->lightId = other->lightId;
+			this->offset = other->offset;
+			this->offsetInitialized = other->offsetInitialized;
+		}
+
+		LightPointAtEntity::LightPointAtEntity()
+		{
+			this->type = STSTaskType::LightPointAtEntity;
+			this->submenu = Submenus::Sub_TaskSequence::LightPointAtEntitySub;
+			this->duration = -2;
+			this->durationAfterLife = -2;
+			this->isLoopedTask = true;
+			this->lightId = 0;
+			this->m_pedBoneId = -1; // used only for peds
+			this->m_vehBoneTag = ""; // used only for vehicles
+		}
+		void LightPointAtEntity::Run(void* ve)
+		{
+			SpoonerEntity* entity = reinterpret_cast<SpoonerEntity*>(ve);
+			if (!entity->handle.Exists()) return;
+
+			Vector3 targetPos;
+			if (m_pedBoneId >= 0 && entity->handle.IsPed())
+				targetPos = GTAped(entity->handle).GetBoneCoord(m_pedBoneId);
+			else if (!m_vehBoneTag.empty() && entity->handle.IsVehicle())
+				targetPos = entity->handle.GetBoneCoords(m_vehBoneTag);
+			else
+				targetPos = entity->handle.GetPosition();
+
+			for (auto& light : Databases::LightDb)
+			{
+				if (light.m_id == this->lightId)
+				{
+					Vector3 dir = targetPos - light.m_position;
+					float len = dir.Length();
+					if (len > 0.001f)
+						light.m_direction = dir / len;
+					break;
+				}
+			}
+		}
+		void LightPointAtEntity::GetXmlNodeTaskSpecific(pugi::xml_node& nodeTask) const
+		{
+			nodeTask.append_child("LightId").text() = this->lightId;
+			nodeTask.append_child("PedBoneId").text() = this->m_pedBoneId;
+			nodeTask.append_child("VehBoneTag").text() = this->m_vehBoneTag.c_str();
+		}
+		void LightPointAtEntity::ImportXmlNodeTaskSpecific(pugi::xml_node& nodeTask)
+		{
+			this->lightId = nodeTask.child("LightId").text().as_uint(0);
+			this->m_pedBoneId = nodeTask.child("PedBoneId").text().as_int(-1);
+			auto vehNode = nodeTask.child("VehBoneTag");
+			this->m_vehBoneTag = vehNode ? vehNode.text().as_string() : "";
+		}
+		void LightPointAtEntity::ImportTaskDataSpecific(STSTask* otherTsk)
+		{
+			auto other = otherTsk->GetTypeTask<LightPointAtEntity>();
+			this->lightId = other->lightId;
+			this->m_pedBoneId = other->m_pedBoneId;
+			this->m_vehBoneTag = other->m_vehBoneTag;
 		}
 
 		EndSequence::EndSequence()

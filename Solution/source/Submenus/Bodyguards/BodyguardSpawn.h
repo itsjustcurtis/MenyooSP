@@ -28,6 +28,6 @@ namespace sub::BodyguardMenu
     {
         extern std::vector<Ped> s_bodyguards;
         static constexpr size_t MAX_BODYGUARDS = 7;
-        void AddOption_BodyguardPed(const std::string& text, const GTAmodel::Model& model);
+        void AddOptionBodyGuardPed(const std::string& text, const GTAmodel::Model& model);
     }
 }

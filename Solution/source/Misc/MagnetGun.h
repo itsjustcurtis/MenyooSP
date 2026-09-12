@@ -13,7 +13,7 @@
 
 typedef unsigned long Hash;
 
-namespace _MagnetGun_
+namespace MagnetGun
 {
 	class MagnetGun final : public GenericLoopedMode
 	{
@@ -28,14 +28,12 @@ namespace _MagnetGun_
 
 		void Tick() override;
 		inline void DoMagnetGunTick();
-
 		void DisplayMagnetGunHelp();
 
 	};
 
 
 	extern MagnetGun g_magnetGun;
-
 	void ToggleOnOff();
 }
 

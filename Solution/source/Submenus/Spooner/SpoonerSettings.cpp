@@ -18,24 +18,26 @@
 
 #include <string>
 #include <vector>
+#include <Windows.h>
 
 namespace sub::Spooner
 {
 	//enum class eSpoonerModeMode : UINT8 { GroundEase, Precision };
-	const std::vector<std::string> vSpoonerModeMode{ "Surface Ease", "Precision" };
+	const std::vector<std::string> spoonerModeModeNames{ "Surface Ease", "Precision" };
 
 	namespace Settings
 	{
 //#define GTA_MAX_ENTITIES 2048
 
-		float CameraMovementSensitivityKeyboard = 0.33f;
-		float CameraRotationSensitivityMouse = 6.5f;
-		float CameraMovementSensitivityGamepad = 0.9f;
-		float CameraRotationSensitivityGamepad = 1.4f;
+		float cameraMovementSensitivityKeyboard = 0.33f;
+		float cameraRotationSensitivityMouse = 6.5f;
+		float cameraMovementSensitivityGamepad = 0.9f;
+		float cameraRotationSensitivityGamepad = 1.4f;
 
-		eSpoonerModeMode SpoonerModeMode = eSpoonerModeMode::GroundEase;
+		eSpoonerModeMode spoonerModeMode = eSpoonerModeMode::GroundEase;
 
 		bool bShowModelPreviews = true;
+		bool bDisplaySpoonerInfo = true;
 		bool bShowBoxAroundSelectedEntity = false;
 		bool bSpawnDynamicProps = false;
 		bool bSpawnDynamicPeds = true;
@@ -45,8 +47,18 @@ namespace sub::Spooner
 		bool bSpawnStillPeds = true;
 		bool bAddToDbAsMissionEntities = true;
 		bool bKeepPositionWhenAttaching = false;
-
+		
 		bool bTeleportToReferenceWhenLoadingFile = true;
+
+		bool bGridSnapEnabled = false; // use SnapPos / SnapRot to get the snapped position / rotation Vector3
+		float gridSnapSize = 1.0f;
+		float rotationSnapDegrees = 0.0f;
+		bool bSnapToGround = false; // use SnapPos to get the snapped position Vector3
+		bool bDrawGrid = false;
+
+		bool bAutoSaveDb = false;
+		DWORD autoSaveIntervalMs = 180000;
+		int autoSaveMaxFiles = 10;
 	}
 
 }

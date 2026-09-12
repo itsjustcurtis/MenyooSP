@@ -68,8 +68,8 @@ namespace sub::BodyguardMenu
 			if (!ent.Handle.Exists())
 				return;
 
-			if (ent.HashName.empty())
-				ent.HashName = int_to_hexstring(ent.Handle.Model().hash, true);
+			if (ent.hashName.empty())
+				ent.hashName = IntToHexString(ent.Handle.Model().hash, true);
 
 			BodyguardDb.push_back(std::move(ent));
 		}
@@ -104,7 +104,7 @@ namespace sub::BodyguardMenu
 
 			ent.Handle.Detach();
 
-			ent.Handle.MissionEntity_set(false);
+			ent.Handle.SetMissionEntity(false);
 
 			if (ped && ENTITY::DOES_ENTITY_EXIST(ped))
 			{
@@ -120,7 +120,7 @@ namespace sub::BodyguardMenu
 		{
 			if (ent.Exists())
 			{
-				const auto& soe_pos = ent.Position_get();
+				const auto& soe_pos = ent.GetPosition();
 				const auto& soe_md = ent.ModelDimensions();
 				const auto& markerPos = soe_pos + Vector3(0, 0, (std::max)(soe_md.Dim1.z, soe_md.Dim2.z) + 0.20f); // May not be at the right position if the entity is tilted
 				World::DrawMarker(MarkerType::UpsideDownCone, markerPos, Vector3(), Vector3(), Vector3(0.45f, 0.45f, 0.50f), RGBA(190, 0, 0, 190));

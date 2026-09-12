@@ -13,13 +13,11 @@
 
 class GTAvehicle;
 
-namespace _VehicleTow_
+namespace VehicleTow
 {
 	class VehicleTow final : public GenericLoopedMode
 	{
 	private:
-		//std::vector<EntitiesAndRope> ropeArr;
-		//EntitiesAndRope currentPair;
 	public:
 		void TurnOn() override;
 		void TurnOff() override;

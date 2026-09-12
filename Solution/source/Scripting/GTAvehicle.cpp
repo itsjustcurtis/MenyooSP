@@ -37,321 +37,12 @@
 #include <vector>
 #include <map>
 
-#pragma region vehicle mod slot names
-const std::vector<std::string> vValues_HornNames
-{
-	"CMOD_HRN_TRK",
-	"CMOD_HRN_COP",
-	"CMOD_HRN_CLO",
-	"CMOD_HRN_MUS1",
-	"CMOD_HRN_MUS2",
-	"CMOD_HRN_MUS3",
-	"CMOD_HRN_MUS4",
-	"CMOD_HRN_MUS5",
-	"CMOD_HRN_SAD", 
-	"HORN_CLAS1", 
-	"HORN_CLAS2", 
-	"HORN_CLAS3",
-	"HORN_CLAS4",
-	"HORN_CLAS5",
-	"HORN_CLAS6",
-	"HORN_CLAS7",
-	"HORN_CNOTE_C0",
-	"HORN_CNOTE_D0",
-	"HORN_CNOTE_E0",
-	"HORN_CNOTE_F0",
-	"HORN_CNOTE_G0",
-	"HORN_CNOTE_A0",
-	"HORN_CNOTE_B0",
-	"HORN_CNOTE_C1",
-	"HORN_HIPS1",
-	"HORN_HIPS2",
-	"HORN_HIPS3",
-	"HORN_HIPS4",
-	"HORN_INDI_1",
-	"HORN_INDI_2",
-	"HORN_INDI_3",
-	"HORN_INDI_4",
-	"HORN_LUXE1",
-	"HORN_LUXE2",
-	"HORN_LUXE3",
-	"",
-	"",
-	"",
-	"HORN_HWEEN1",
-	"",
-	"HORN_HWEEN2",
-	"",
-	"HORN_LOWRDER1",
-	"",
-	"HORN_LOWRDER2",
-	"",
-	"HORN_XM15_1",
-	"",
-	"HORN_XM15_2",
-	"",
-	"HORN_XM15_3",
-	"",
-	"CMOD_AIRHORN_01",
-	"",
-	"CMOD_AIRHORN_02",
-	"",
-	"CMOD_AIRHORN_03",
-	""
-};
 
-const std::vector<std::string> vValues_ModSlotNames
+std::string GetModSlotName(Vehicle vehicle, INT modType, bool gxt)
 {
-	"CMOD_MOD_SPO",
-	"CMOD_BUM_1",
-	"CMOD_BUM_4",
-	"CMOD_MOD_SKI",
-	"CMOD_MOD_MUF",
-	"CMOD_MOD_CHA",
-	"CMOD_MOD_GRL",
-	"CMOD_MOD_HOD",
-	"CMOD_MOD_FEN",
-	"CMOD_MOD_FEN",
-	"CMOD_MOD_ROF",
-	"CMOD_MOD_ENG",
-	"CMOD_MOD_BRA",
-	"CMOD_MOD_TRN",
-	"CMOD_MOD_HRN",
-	"CMOD_MOD_SUS",
-	"CMOD_MOD_ARM",
-	"Unknown 17",
-	"CMOD_MOD_TUR",
-	"Unknown 19",
-	"Tyre Smoke",
-	"Unknown 21",
-	"CMOD_MOD_LGT",
-	"CMOD_MOD_WHEM",
-	"CMOD_WHE0_1",
-
-
-	/*"VEM_SUPERMOD_0",
-	"VEM_SUPERMOD_1",
-	"VEM_SUPERMOD_2",
-	"VEM_SUPERMOD_3",
-	"VEM_SUPERMOD_4",
-	"VEM_SUPERMOD_5",
-	"VEM_SUPERMOD_6",
-	"VEM_SUPERMOD_7",
-	"VEM_SUPERMOD_8",
-	"VEM_SUPERMOD_9",
-	"VEM_SUPERMOD_10",
-	"VEM_SUPERMOD_11",
-	"VEM_SUPERMOD_12",
-	"VEM_SUPERMOD_13",
-	"VEM_SUPERMOD_14",
-	"VEM_SUPERMOD_15",
-	"VEM_SUPERMOD_16",
-	"VEM_SUPERMOD_17",
-	"VEM_SUPERMOD_18",
-	"VEM_SUPERMOD_19",
-	"VEM_SUPERMOD_20",
-	"VEM_SUPERMOD_21",
-	"VEM_SUPERMOD_22",
-	"VEM_SUPERMOD_23",*/
-	"CMM_MOD_S0",//"Plateholder",
-	"CMM_MOD_S1",//"Vanity Plate",
-	"CMM_MOD_S2",//"Trim Design",
-	"CMM_MOD_S3",//"Ornament",
-	"CMM_MOD_S4",//"Dash",
-	"CMM_MOD_S5",//"Dial Design",
-	"CMM_MOD_S6",//"Doorcards",
-	"CMM_MOD_S7",//"Leather Seats",
-	"CMM_MOD_S8",//"Steering Wheel",
-	"CMM_MOD_S9",//"Column Shifter Lever",
-	"CMM_MOD_S10",//"Plaque",
-	"CMM_MOD_S11",//"Speakers",
-	"CMM_MOD_S12",//"Trunk",
-	"CMM_MOD_S13",//"Hydraulics",
-	"CMM_MOD_S14",//"Engine Block",
-	"CMM_MOD_S15",//"Air Filter",
-	"CMM_MOD_S16",//"Struts",
-	"CMM_MOD_S17",//"Arch Cover",
-	"CMM_MOD_S18",//"Aerials",
-	"CMM_MOD_S19",//"Trim",
-	"CMM_MOD_S20",//"Tank",
-	"CMM_MOD_S21",//"Windows",
-	"CMM_MOD_S22",//"Unknown 47",
-	"CMM_MOD_S23",//"Livery",
-};
-#pragma endregion
-std::string get_mod_slot_name(Vehicle vehicle, INT modType, bool gxt)
-{
-	//switch (modType) {
-	//case 3:
-	//	return "CMOD_MOD_0_D";
-	//	break;
-	//case 4:
-	//	return "CMOD_MOD_ARM";
-	//	break;
-	//case 5:
-	//	return "CMOD_MOD_BRA";
-	//	break;
-	//case 8:
-	//	return "CMOD_MOD_BUM";
-	//	break;
-	//case 9:
-	//	return "CMOD_MOD_CHA";
-	//	break;
-	//case 38:
-	//	return "CMOD_MOD_COL";
-	//	break;
-	//case 10:
-	//	return "CMOD_MOD_ENG";
-	//	break;
-	//case 13:
-	//	return "CMOD_MOD_EXP";
-	//	break;
-	//case 21:
-	//	return "CMOD_MOD_GLD";
-	//	break;
-	//case 22:
-	//	return "CMOD_MOD_GLD2";
-	//	break;
-	//case 23:
-	//	return "CMOD_MOD_GRL";
-	//	break;
-	//case 26:
-	//	return "CMOD_MOD_HOD";
-	//	break;
-	//case 27:
-	//	return "CMOD_MOD_HRN";
-	//	break;
-	//case 31:
-	//	return "CMOD_MOD_LTP";
-	//	break;
-	//case 28:
-	//	return "CMOD_MOD_LGT";
-	//	break;
-	//case 29:
-	//	return "CMOD_MOD_LGT_H";
-	//	break;
-	//case 30:
-	//	return "CMOD_MOD_LGT_N";
-	//	break;
-	//case 12:
-	//	return "CMOD_MOD_MUF";
-	//	break;
-	//case 33:
-	//	return "CMOD_MOD_PLA";
-	//	break;
-	//case 40:
-	//	return "CMOD_MOD_ROF";
-	//	break;
-	//case 42:
-	//	return "CMOD_MOD_SEL";
-	//	break;
-	//case 54:
-	//	return "CMOD_MOD_VIN";
-	//	break;
-	//case 44:
-	//	return "CMOD_MOD_SKI";
-	//	break;
-	//case 46:
-	//	return "CMOD_MOD_SPO";
-	//	break;
-	//case 47:
-	//	return "CMOD_MOD_SUS";
-	//	break;
-	//case 58:
-	//	return "CMOD_MOD_TYR";
-	//	break;
-	//case 57:
-	//	return "CMOD_MOD_WCL";
-	//	break;
-	//case 48:
-	//	return "CMOD_MOD_TGT";
-	//	break;
-	//case 50:
-	//	return "CMOD_MOD_TRN";
-	//	break;
-	//case 53:
-	//	return "CMOD_MOD_TUR";
-	//	break;
-	//case 55:
-	//	return "CMOD_MOD_WHEM";
-	//	break;
-	//case 56:
-	//	return "CMOD_MOD_WHE";
-	//	break;
-	//case 60:
-	//	return "CMOD_MOD_WIN";
-	//	break;
-	//case 15:
-	//	return "CMOD_MOD_FEN";
-	//	break;
-	//case 2:
-	//	return "CMM_MOD INVALID";
-	//	break;
-	//default:
-	//	//return GET_MOD_SLOT_NAME(vehicle, modType
-	//	return "CMM_MOD INVALID";
-	//	break;
-	//}
-	//return "";
 	std::string name;
 	if (modType >= 0 && modType < vValues_ModSlotNames.size())
 	{
-		//switch (modType)
-		//{
-		//default: Return = "UNK"; break;
-		//case 0: Return = "CMOD_MOD_SPO"; break;
-		//case 1: Return = "CMOD_BUM_1"; break;
-		//case 2: Return = "CMOD_BUM_4"; break;
-		//case 3: Return = "CMOD_MOD_SKI"; break;
-		//case 4: Return = "CMOD_MOD_MUF"; break;
-		//case 5: Return = "CMOD_MOD_CHA"; break;
-		//case 6: Return = "CMOD_MOD_GRL"; break;
-		//case 7: Return = "CMOD_MOD_HOD"; break;
-		//case 8: Return = "CMOD_MOD_FEN"; break;
-		//case 9: Return = "CMOD_MOD_FEN"; break;
-		//case 10: Return = IS_VEHICLE_MODEL(vehicle, VEHICLE_BAGGER) ? "Saddle Bags" : "CMOD_MOD_ROF"; break;
-		//case 11: Return = "CMOD_MOD_ENG"; break;
-		//case 12: Return = "CMOD_MOD_BRA"; break;
-		//case 13: Return = "CMOD_MOD_TRN"; break;
-		//case 14: Return = "CMOD_MOD_HRN"; break;
-		//case 15: Return = "CMOD_MOD_SUS"; break;
-		//case 16: Return = "CMOD_MOD_ARM"; break;
-		//case 17: Return = "Unknown 17"; break;
-		//case 18: Return = "CMOD_MOD_TUR"; break;
-		//case 19: Return = "Unknown 19"; break;
-		//case 20: Return = "Tyre Smoke"; break;
-		//case 21: Return = "Unknown 21"; break;
-		//case 22: Return = "CMOD_MOD_LGT"; break;
-		//case 23: Return = "CMOD_MOD_WHEM"; break; //is_model_a_bikes(GET_ENTITY_MODEL(vehicle)) ? "CMOD_WHE0_0" : "CMOD_MOD_WHEM"; break;
-		//case 24: Return = "CMOD_WHE0_1"; break;
-		////case 25: Return = "CMOD_TYR_2"; break;
-		////case 26: Return = "CMOD_TYR_1"; break;
-		////case 27: Return = "CMOD_GLD2_2"; break;
-		//case 25: Return = "Plate Holder"; break;
-		//case 26: Return = "Vanity Plates"; break;
-		//case 27: Return = "Trim Design"; break;
-		//case 28: Return = "Ornaments"; break;
-		//case 29: Return = "Unknown 29"; break;
-		//case 30: Return = "Dial"; break;
-		//case 31: Return = "Speakers (Door)"; break;
-		//case 32: Return = "Leather Seats"; break;
-		//case 33: Return = "Steering Wheels"; break;
-		//case 34: Return = "Column Shifter Levers"; break;
-		//case 35: Return = "Plaques"; break;
-		//case 36: Return = "Speakers"; break;
-		//case 37: Return = "Speakers (Trunk)"; break;
-		//case 38: Return = "Hydraulics"; break;
-		//case 39: Return = "Engine Block"; break;
-		//case 40: Return = "Air Filters"; break;
-		//case 41: Return = "Unknown 41"; break;
-		//case 42: Return = "Arch Covers"; break;
-		//case 43: Return = "Aerials"; break;
-		//case 44: Return = "Trim"; break;
-		//case 45: Return = "Tank"; break;
-		//case 46: Return = "Unknown 46"; break;
-		//case 47: Return = "Unknown 47"; break;
-		//case 48: Return = "Liveries 9"; break;
-		//}
 		Model vehModel = GET_ENTITY_MODEL(vehicle);
 		REQUEST_ADDITIONAL_TEXT("mod_mnu", 19);
 		while (!HAS_ADDITIONAL_TEXT_LOADED(19)) {
@@ -361,21 +52,6 @@ std::string get_mod_slot_name(Vehicle vehicle, INT modType, bool gxt)
 			name = vValues_ModSlotNames[modType];
 		else
 			name = GET_MOD_SLOT_NAME(vehicle, modType);
-
-		/*switch (modType)
-		{
-		default: name = vValues_ModSlotNames[modType]; break;
-		case VehicleMod::SideSkirt: name = (vehModel.hash == VEHICLE_FAGGIO3) ? "TOP_ARCHCOVER" : vehModel.IsBike() ? "CMM_MOD_S15" : vValues_ModSlotNames[modType]; break;// Air filter for bikes
-		case VehicleMod::Roof: name = (vehModel.hash == VEHICLE_BAGGER) ? "CMOD_SB_T" : "CMOD_MOD_ROF"; break; // Saddle bags for bagger
-		case VehicleMod::AirFilter: if (vehModel.hash == VEHICLE_SULTANRS) name = "CMM_MOD_S15b"; else name = vValues_ModSlotNames[modType];
-		case VehicleMod::Struts: if (vehModel.hash == VEHICLE_SULTANRS || vehModel.hash == VEHICLE_BANSHEE2) name = "CMM_MOD_S16b"; else name = vValues_ModSlotNames[modType];
-		case VehicleMod::ArchCover: if (vehModel.hash == VEHICLE_SULTANRS) name = "CMM_MOD_S17b"; else name = vValues_ModSlotNames[modType];
-		case VehicleMod::Aerials: if (vehModel.hash == VEHICLE_SULTANRS) name = "CMM_MOD_S18b"; else if (vehModel.hash == VEHICLE_BTYPE3) name = "CMM_MOD_S18c"; else name = vValues_ModSlotNames[modType];
-		case VehicleMod::Trim: if (vehModel.hash == VEHICLE_SULTANRS) name = "CMM_MOD_S19b"; else if (vehModel.hash == VEHICLE_BTYPE3) name = "CMM_MOD_S19c"; else if (vehModel.hash == VEHICLE_VIRGO2) name = "CMM_MOD_S19d"; else name = vValues_ModSlotNames[modType];
-		case VehicleMod::Tank: if (vehModel.hash == VEHICLE_SLAMVAN3) name = "CMM_MOD_S27"; else name = vValues_ModSlotNames[modType];
-		case VehicleMod::Windows: if (vehModel.hash == VEHICLE_BTYPE3) name = "CMM_MOD_S21b"; else name = vValues_ModSlotNames[modType];
-		case VehicleMod::Unknown47: if (vehModel.hash == VEHICLE_SLAMVAN3) name = "SLVAN3_RDOOR"; else name = vValues_ModSlotNames[modType];
-		}*/
 	}
 	else
 	{
@@ -389,7 +65,8 @@ std::string get_mod_slot_name(Vehicle vehicle, INT modType, bool gxt)
 
 	return name;
 }
-std::string get_mod_text_label(Vehicle vehicle, INT modType, INT modValue, bool gxt)
+
+std::string GetModTextLabel(Vehicle vehicle, INT modType, INT modValue, bool gxt)
 {
 	if (modValue < 0)
 	{
@@ -398,7 +75,7 @@ std::string get_mod_text_label(Vehicle vehicle, INT modType, INT modValue, bool 
 		case VehicleMod::FrontBumper: return GET_FILENAME_FOR_AUDIO_CONVERSATION("CMOD_BUM_0"); break;
 		case VehicleMod::RearBumper: return GET_FILENAME_FOR_AUDIO_CONVERSATION("CMOD_BUM_3"); break;
 		}
-		return ((std::string)"Stock " + get_mod_slot_name(vehicle, modType, true));
+		return ((std::string)"Stock " + GetModSlotName(vehicle, modType, true));
 	}
 
 	std::vector<std::string> armournames{ "CMOD_ARM_1", "CMOD_ARM_2", "CMOD_ARM_3", "CMOD_ARM_4", "CMOD_ARM_5" };
@@ -410,11 +87,11 @@ std::string get_mod_text_label(Vehicle vehicle, INT modType, INT modValue, bool 
 	case VehicleMod::Engine:
 		return "EMS Upgrade " +  std::to_string(modValue + 1); break;
 	case VehicleMod::Brakes: case VehicleMod::Transmission:
-		return modValue >= brakenames.size() ? get_mod_slot_name(vehicle, modType, true) + std::to_string(modValue) : brakenames[modValue] + get_mod_slot_name(vehicle, modType, true); break;
+		return modValue >= brakenames.size() ? GetModSlotName(vehicle, modType, true) + std::to_string(modValue) : brakenames[modValue] + GetModSlotName(vehicle, modType, true); break;
 	case VehicleMod::Horns:
-		return modValue >= vValues_HornNames.size() ? get_mod_slot_name(vehicle, modType, true) + std::to_string(modValue) : (gxt && DOES_TEXT_LABEL_EXIST((PCHAR)vValues_HornNames[modValue].c_str()) ? GET_FILENAME_FOR_AUDIO_CONVERSATION((PCHAR)vValues_HornNames[modValue].c_str()) : vValues_HornNames[modValue]); break;
+		return modValue >= vValues_HornNames.size() ? GetModSlotName(vehicle, modType, true) + std::to_string(modValue) : (gxt && DOES_TEXT_LABEL_EXIST((PCHAR)vValues_HornNames[modValue].c_str()) ? GET_FILENAME_FOR_AUDIO_CONVERSATION((PCHAR)vValues_HornNames[modValue].c_str()) : vValues_HornNames[modValue]); break;
 	case VehicleMod::Suspension:
-		return modValue >= suspensionnames.size() ? get_mod_slot_name(vehicle, modType, true) + std::to_string(modValue) : suspensionnames[modValue] + get_mod_slot_name(vehicle, modType, true); break;
+		return modValue >= suspensionnames.size() ? GetModSlotName(vehicle, modType, true) + std::to_string(modValue) : suspensionnames[modValue] + GetModSlotName(vehicle, modType, true); break;
 	case VehicleMod::Armor:
 		return modValue >= armournames.size() ? "Armour Upgrade " + std::to_string((modValue + 1) * 20) + "%" : (gxt && DOES_TEXT_LABEL_EXIST((PCHAR)armournames[modValue].c_str()) ? GET_FILENAME_FOR_AUDIO_CONVERSATION((PCHAR)armournames[modValue].c_str()) : armournames[modValue]); break;
 	}
@@ -424,10 +101,8 @@ std::string get_mod_text_label(Vehicle vehicle, INT modType, INT modValue, bool 
 
 
 	// If all else fails
-	return get_mod_slot_name(vehicle, modType, true) + " " + std::to_string(modValue + 1);
-
+	return GetModSlotName(vehicle, modType, true) + " " + std::to_string(modValue + 1);
 }
-
 
 GTAvehicle::GTAvehicle()
 	: GTAentity()
@@ -462,7 +137,7 @@ void GTAvehicle::Delete(bool tele)
 	if (blip.Exists())
 		blip.Remove();
 
-	this->MissionEntity_set(false);
+	this->SetMissionEntity(false);
 
 	if (tele)
 		SET_ENTITY_COORDS_NO_OFFSET(this->mHandle, 32.2653f, 7683.5249f, 0.5696f, 0, 0, 0);
@@ -498,7 +173,7 @@ void GTAvehicle::Repair(bool checkIfDamaged)
 	}
 }
 
-void GTAvehicle::EngineSound_set(const std::string& vehName)
+void GTAvehicle::SetEngineSound(const std::string& vehName)
 {
 	FORCE_USE_AUDIO_GAME_OBJECT(this->mHandle, vehName.c_str());
 }
@@ -522,19 +197,22 @@ GTAentity GTAvehicle::GetPedOnSeat(VehicleSeat seat) const
 {
 	return GET_PED_IN_VEHICLE_SEAT(this->mHandle, (seat), 0);
 }
+
 bool GTAvehicle::IsSeatFree(VehicleSeat seat) const
 {
 	return IS_VEHICLE_SEAT_FREE(this->mHandle, (seat), 0) != 0;
 }
-GTAentity GTAvehicle::Driver_get() const
+
+GTAentity GTAvehicle::GetDriver() const
 {
 	return this->GetPedOnSeat(VehicleSeat::SEAT_DRIVER);
 }
-std::vector<GTAentity> GTAvehicle::Occupants_get(bool bIncludeDriver) const
+
+std::vector<GTAentity> GTAvehicle::GetOccupants(bool bIncludeDriver) const
 {
 	std::vector<GTAentity> pedArray;
 
-	GTAentity driver = this->Driver_get();
+	GTAentity driver = this->GetDriver();
 	if (bIncludeDriver && driver.Exists())
 		pedArray.push_back(driver);
 
@@ -551,6 +229,7 @@ std::vector<GTAentity> GTAvehicle::Occupants_get(bool bIncludeDriver) const
 
 	return pedArray;
 }
+
 VehicleSeat GTAvehicle::FirstFreeSeat(VehicleSeat defaultReturn) const
 {
 	int maxPass = GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(this->mHandle);// - 2;
@@ -562,19 +241,22 @@ VehicleSeat GTAvehicle::FirstFreeSeat(VehicleSeat defaultReturn) const
 	return defaultReturn;
 }
 
-std::string GTAvehicle::NumberPlateText_get() const
+std::string GTAvehicle::GetNumberPlateText() const
 {
 	return GET_VEHICLE_NUMBER_PLATE_TEXT(this->mHandle);
 }
-void GTAvehicle::NumberPlateText_set(const std::string& value)
+
+void GTAvehicle::SetNumberPlateText(const std::string& value)
 {
 	SET_VEHICLE_NUMBER_PLATE_TEXT(this->mHandle, value.c_str());
 }
-int GTAvehicle::NumberPlateTextIndex_get() const
+
+int GTAvehicle::GetNumberPlateTextIndex() const
 {
 	return GET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(this->mHandle);
 }
-void GTAvehicle::NumberPlateTextIndex_set(int value)
+
+void GTAvehicle::SetNumberPlateTextIndex(int value)
 {
 	SET_VEHICLE_NUMBER_PLATE_TEXT_INDEX(this->mHandle, value);
 }
@@ -584,20 +266,22 @@ bool GTAvehicle::IsConvertible() const
 	return IS_VEHICLE_A_CONVERTIBLE(this->mHandle, false) != 0;
 }
 
-bool GTAvehicle::Stolen_get() const
+bool GTAvehicle::GetStolen() const
 {
 	return IS_VEHICLE_STOLEN(this->mHandle) != 0;
 }
-void GTAvehicle::Stolen_set(bool value)
+
+void GTAvehicle::SetStolen(bool value)
 {
 	SET_VEHICLE_IS_STOLEN(this->mHandle, value);
 }
 
-bool GTAvehicle::Driveable_get() const
+bool GTAvehicle::GetDriveable() const
 {
 	return IS_VEHICLE_DRIVEABLE(this->mHandle, false) != 0;
 }
-void GTAvehicle::Driveable_set(bool value)
+
+void GTAvehicle::SetDriveable(bool value)
 {
 	SET_VEHICLE_UNDRIVEABLE(this->mHandle, !value);
 }
@@ -606,20 +290,23 @@ bool GTAvehicle::IsStopped() const
 {
 	return IS_VEHICLE_STOPPED(this->mHandle) != 0;
 }
+
 bool GTAvehicle::IsStoppedAtTrafficLights() const
 {
 	return IS_VEHICLE_STOPPED_AT_TRAFFIC_LIGHTS(this->mHandle) != 0;
 }
+
 void GTAvehicle::StopImmediately()
 {
 	SET_VEHICLE_FORWARD_SPEED(this->mHandle, 0.0f);
 }
 
-float GTAvehicle::MaxBraking_get() const
+float GTAvehicle::GetMaxBraking() const
 {
 	return GET_VEHICLE_MAX_BRAKING(this->mHandle);
 }
-float GTAvehicle::MaxTraction_get() const
+
+float GTAvehicle::GetMaxTraction() const
 {
 	return GET_VEHICLE_MAX_TRACTION(this->mHandle);
 }
@@ -629,7 +316,7 @@ bool GTAvehicle::IsOnAllWheels() const
 	return IS_VEHICLE_ON_ALL_WHEELS(this->mHandle) != 0;
 }
 
-void GTAvehicle::Speed_set(float value)
+void GTAvehicle::SetSpeed(float value)
 {
 	if (this->Model().IsTrain())
 	{
@@ -646,36 +333,40 @@ void GTAvehicle::SetForwardSpeed(float value)
 	SET_VEHICLE_FORWARD_SPEED(this->mHandle, value);
 }
 
-void GTAvehicle::MaxSpeed_set(float value)
+void GTAvehicle::SetMaxSpeed(float value)
 {
 	SET_VEHICLE_MAX_SPEED(this->mHandle, value);
 }
 
-float GTAvehicle::DirtLevel_get() const
+float GTAvehicle::GetDirtLevel() const
 {
 	return GET_VEHICLE_DIRT_LEVEL(this->mHandle);
 }
-void GTAvehicle::DirtLevel_set(float value)
+
+void GTAvehicle::SetDirtLevel(float value)
 {
 	SET_VEHICLE_DIRT_LEVEL(this->mHandle, value);
 }
-float GTAvehicle::PaintFade_get() const
+
+float GTAvehicle::GetPaintFade() const
 {
 	return GET_VEHICLE_ENVEFF_SCALE(this->mHandle);
 }
-void GTAvehicle::PaintFade_set(float value)
+
+void GTAvehicle::SetPaintFade(float value)
 {
 	SET_VEHICLE_ENVEFF_SCALE(this->mHandle, value);
 }
 
-VehicleRoofState GTAvehicle::RoofState_get() const
+VehicleRoofState GTAvehicle::GetRoofState() const
 {
 	if (IS_THIS_MODEL_AN_AMPHIBIOUS_CAR(this->mHandle))
 		return static_cast<VehicleRoofState>(1);
 	else
 		return static_cast<VehicleRoofState>(GET_CONVERTIBLE_ROOF_STATE(this->mHandle));
 }
-void GTAvehicle::RoofState_set(VehicleRoofState value)
+
+void GTAvehicle::SetRoofState(VehicleRoofState value)
 {
 	switch (value)
 	{
@@ -690,97 +381,105 @@ void GTAvehicle::RoofState_set(VehicleRoofState value)
 	}
 }
 
-float GTAvehicle::BodyHealth_get() const
+float GTAvehicle::GetBodyHealth() const
 {
 	return GET_VEHICLE_BODY_HEALTH(this->mHandle);
 }
-void GTAvehicle::BodyHealth_set(float value)
+
+void GTAvehicle::SetBodyHealth(float value)
 {
 	SET_VEHICLE_BODY_HEALTH(this->mHandle, value);
 }
 
-float GTAvehicle::EngineHealth_get() const
+float GTAvehicle::GetEngineHealth() const
 {
 	return GET_VEHICLE_ENGINE_HEALTH(this->mHandle);
 }
-void GTAvehicle::EngineHealth_set(float value)
+
+void GTAvehicle::SetEngineHealth(float value)
 {
 	SET_VEHICLE_ENGINE_HEALTH(this->mHandle, value);
 }
 
-float GTAvehicle::PetrolTankHealth_get() const
+float GTAvehicle::GetPetrolTankHealth() const
 {
 	return GET_VEHICLE_PETROL_TANK_HEALTH(this->mHandle);
 }
-void GTAvehicle::PetrolTankHealth_set(float value)
+
+void GTAvehicle::SetPetrolTankHealth(float value)
 {
 	SET_VEHICLE_PETROL_TANK_HEALTH(this->mHandle, value);
 }
 
-bool GTAvehicle::SirenActive_get() const
+bool GTAvehicle::GetSirenActive() const
 {
 	return IS_VEHICLE_SIREN_ON(this->mHandle) != 0;
 }
-void GTAvehicle::SirenActive_set(bool value)
+void GTAvehicle::SetSirenActive(bool value)
 {
 	SET_VEHICLE_SIREN(this->mHandle, value);
 }
 
-bool GTAvehicle::LoudRadioActive_get() const
+bool GTAvehicle::GetLoudRadioActive() const
 {
 	return CAN_VEHICLE_RECEIVE_CB_RADIO(this->mHandle) != 0;
 }
-void GTAvehicle::LoudRadioActive_set(bool value)
+
+void GTAvehicle::SetLoudRadioActive(bool value)
 {
 	SET_VEHICLE_RADIO_LOUD(this->mHandle, value);
 }
 
-int GTAvehicle::PrimaryColour_get() const
+int GTAvehicle::GetPrimaryColour() const
 {
 	int colour1, colour2;
 	GET_VEHICLE_COLOURS(this->mHandle, &colour1, &colour2);
 	return colour1;
 }
-void GTAvehicle::PrimaryColour_set(int value)
+
+void GTAvehicle::SetPrimaryColour(int value)
 {
 	int colour1, colour2;
 	GET_VEHICLE_COLOURS(this->mHandle, &colour1, &colour2);
 	SET_VEHICLE_COLOURS(this->mHandle, value, colour2);
 }
 
-int GTAvehicle::SecondaryColour_get() const
+int GTAvehicle::GetSecondaryColour() const
 {
 	int colour1, colour2;
 	GET_VEHICLE_COLOURS(this->mHandle, &colour1, &colour2);
 	return colour2;
 }
-void GTAvehicle::SecondaryColour_set(int value)
+
+void GTAvehicle::SetSecondaryColour(int value)
 {
 	int colour1, colour2;
 	GET_VEHICLE_COLOURS(this->mHandle, &colour1, &colour2);
 	SET_VEHICLE_COLOURS(this->mHandle, colour1, value);
 }
 
-int GTAvehicle::RimColour_get() const
+int GTAvehicle::GetRimColour() const
 {
 	int colour1, colour2;
 	GET_VEHICLE_EXTRA_COLOURS(this->mHandle, &colour1, &colour2);
 	return colour2;
 }
-void GTAvehicle::RimColour_set(int value)
+
+void GTAvehicle::SetRimColour(int value)
 {
 	int colour1, colour2;
 	GET_VEHICLE_EXTRA_COLOURS(this->mHandle, &colour1, &colour2);
 	SET_VEHICLE_EXTRA_COLOURS(this->mHandle, colour1, value);
 }
 
-int GTAvehicle::PearlescentColour_get() const
+int GTAvehicle::GetPearlescentColour() const
 {
 	int colour1, colour2;
 	GET_VEHICLE_EXTRA_COLOURS(this->mHandle, &colour1, &colour2);
 	return colour1;
 }
-void GTAvehicle::PearlescentColour_set(int value)
+
+void GTAvehicle::SetPearlescentColour(int value)
 {
 	int colour1, colour2;
 	GET_VEHICLE_EXTRA_COLOURS(this->mHandle, &colour1, &colour2);
@@ -788,7 +487,7 @@ void GTAvehicle::PearlescentColour_set(int value)
 }
 
 // For Benny's supported vehicles
-int GTAvehicle::InteriorColour_get() const
+int GTAvehicle::GetInteriorColour() const
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_877_1_STEAM)
 		return 0;
@@ -796,13 +495,15 @@ int GTAvehicle::InteriorColour_get() const
 	GET_VEHICLE_EXTRA_COLOUR_5(this->mHandle, &col);
 	return col;
 }
-void GTAvehicle::InteriorColour_set(int value)
+
+void GTAvehicle::SetInteriorColour(int value)
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_877_1_STEAM)
 		return;
 	SET_VEHICLE_EXTRA_COLOUR_5(this->mHandle, value);
 }
-int GTAvehicle::DashboardColour_get() const
+
+int GTAvehicle::GetDashboardColour() const
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_877_1_STEAM)
 		return 0;
@@ -810,7 +511,8 @@ int GTAvehicle::DashboardColour_get() const
 	GET_VEHICLE_EXTRA_COLOUR_6(this->mHandle, &col);
 	return col;
 }
-void GTAvehicle::DashboardColour_set(int value)
+
+void GTAvehicle::SetDashboardColour(int value)
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_877_1_STEAM)
 		return;
@@ -818,33 +520,36 @@ void GTAvehicle::DashboardColour_set(int value)
 }
 
 // b1604
-int GTAvehicle::HeadlightColour_get() const
+int GTAvehicle::GetHeadlightColour() const
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_1604_0_STEAM)
 		return 0;
 	return GET_VEHICLE_XENON_LIGHT_COLOR_INDEX(this->mHandle);
 }
-void GTAvehicle::HeadlightColour_set(int value)
+
+void GTAvehicle::SetHeadlightColour(int value)
 {
 	if (GTAmemory::GetGameVersion() < eGameVersion::VER_1_0_1604_0_STEAM)
 		return;
 	SET_VEHICLE_XENON_LIGHT_COLOR_INDEX(this->mHandle, value);
 }
 
-int GTAvehicle::WheelType_get() const
+int GTAvehicle::GetWheelType() const
 {
 	return GET_VEHICLE_WHEEL_TYPE(this->mHandle);
 }
-void GTAvehicle::WheelType_set(int value)
+
+void GTAvehicle::SetWheelType(int value)
 {
 	SET_VEHICLE_WHEEL_TYPE(this->mHandle, value);
 }
 
-int GTAvehicle::WindowTint_get() const
+int GTAvehicle::GetWindowTint() const
 {
 	return GET_VEHICLE_WINDOW_TINT(this->mHandle);
 }
-void GTAvehicle::WindowTint_set(int value)
+
+void GTAvehicle::SetWindowTint(int value)
 {
 	SET_VEHICLE_WINDOW_TINT(this->mHandle, value);
 }
@@ -853,73 +558,78 @@ bool GTAvehicle::IsPrimaryColorCustom() const
 {
 	return GET_IS_VEHICLE_PRIMARY_COLOUR_CUSTOM(this->mHandle) != 0;
 }
+
 bool GTAvehicle::IsSecondaryColorCustom() const
 {
 	return GET_IS_VEHICLE_SECONDARY_COLOUR_CUSTOM(this->mHandle) != 0;
 }
 
-void GTAvehicle::Wanted_set(bool value)
+void GTAvehicle::SetWanted(bool value)
 {
 	SET_VEHICLE_IS_WANTED(this->mHandle, value);
 }
 
-void GTAvehicle::HasGravity_set(bool value)
+void GTAvehicle::SetHasGravity(bool value)
 {
 	SET_VEHICLE_GRAVITY(this->mHandle, value);
-	GTAentity::HasGravity_set(value);
+	GTAentity::SetHasGravity(value);
 }
 
-bool GTAvehicle::EngineRunning_get() const
+bool GTAvehicle::GetEngineRunning() const
 {
 	return GET_IS_VEHICLE_ENGINE_RUNNING(this->mHandle) != 0;
 }
-void GTAvehicle::EngineRunning_set(bool value)
+
+void GTAvehicle::SetEngineRunning(bool value)
 {
 	SET_VEHICLE_ENGINE_ON(this->mHandle, value, true, true);
 }
 
-void GTAvehicle::EnginePowerMultiplier_set(float value)
+void GTAvehicle::SetEnginePowerMultiplier(float value)
 {
 	MODIFY_VEHICLE_TOP_SPEED(this->mHandle, value);
 }
-void GTAvehicle::EngineTorqueMultiplier_set(float value)
+
+void GTAvehicle::SetEngineTorqueMulitplier(float value)
 {
 	SET_VEHICLE_CHEAT_POWER_INCREASE(this->mHandle, value);
 }
 
-void GTAvehicle::EngineCanDegrade_set(bool value)
+void GTAvehicle::SetEngineCanDegrade(bool value)
 {
 	SET_VEHICLE_ENGINE_CAN_DEGRADE(this->mHandle, value);
 }
 
-bool GTAvehicle::LightsOn_get() const
+bool GTAvehicle::GetLightsOn() const
 {
 	int lightState1, lightState2;
 	GET_VEHICLE_LIGHTS_STATE(this->mHandle, &lightState1, &lightState2);
 	return lightState1 == 1;
 }
-void GTAvehicle::LightsOn_set(bool value)
+
+void GTAvehicle::SetLightsOn(bool value)
 {
 	SET_VEHICLE_LIGHTS(this->mHandle, value ? 3 : 4);
 }
 
-bool GTAvehicle::HighBeamsOn_get() const
+bool GTAvehicle::GetHighBeamsOn() const
 {
 	int lightState1, lightState2;
 	GET_VEHICLE_LIGHTS_STATE(this->mHandle, &lightState1, &lightState2);
 	return lightState2 == 1;
 }
 
-void GTAvehicle::LightsMultiplier_set(float value)
+void GTAvehicle::SetLightsMultiplier(float value)
 {
 	SET_VEHICLE_LIGHT_MULTIPLIER(this->mHandle, value);
 }
 
-bool GTAvehicle::LeftHeadLightBroken_get() const
+bool GTAvehicle::GetLeftHeadlightBroken() const
 {
 	return GET_IS_LEFT_VEHICLE_HEADLIGHT_DAMAGED(this->mHandle) != 0;
 }
-void GTAvehicle::LeftHeadLightBroken_set(bool value)
+
+void GTAvehicle::SetLeftHeadlightBroken(bool value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -936,11 +646,12 @@ void GTAvehicle::LeftHeadLightBroken_set(bool value)
 	}
 }
 
-bool GTAvehicle::RightHeadLightBroken_get() const
+bool GTAvehicle::GetRightHeadlightBroken() const
 {
 	return GET_IS_RIGHT_VEHICLE_HEADLIGHT_DAMAGED(this->mHandle) != 0;
 }
-void GTAvehicle::RightHeadLightBroken_set(bool value)
+
+void GTAvehicle::SetRightHeadlightBroken(bool value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -957,58 +668,61 @@ void GTAvehicle::RightHeadLightBroken_set(bool value)
 	}
 }
 
-bool GTAvehicle::IsFrontBumperBrokenOff_get() const
+bool GTAvehicle::GetIsFrontBumperBrokenOff() const
 {
 	return IS_VEHICLE_BUMPER_BROKEN_OFF(this->mHandle, true) != 0;
 }
-bool GTAvehicle::IsRearBumperBrokenOff_get() const
+
+bool GTAvehicle::GetIsRearBumperBrokenOff() const
 {
 	return IS_VEHICLE_BUMPER_BROKEN_OFF(this->mHandle, false) != 0;
 }
 
-void GTAvehicle::BrakeLightsOn_set(bool value)
+void GTAvehicle::SetBrakeLightsOn(bool value)
 {
 	SET_VEHICLE_BRAKE_LIGHTS(this->mHandle, value);
 }
 
-void GTAvehicle::HandbrakeOn_set(bool value)
+void GTAvehicle::SetHandBrakeOn(bool value)
 {
 	SET_VEHICLE_HANDBRAKE(this->mHandle, value);
 }
 
-void GTAvehicle::LeftIndicatorLightOn_set(bool value)
+void GTAvehicle::SetLeftIndicatorLightOn(bool value)
 {
 	SET_VEHICLE_INDICATOR_LIGHTS(this->mHandle, 1, value);
 }
-void GTAvehicle::RightIndicatorLightOn_set(bool value)
+void GTAvehicle::SetRightIndicatorLightOn(bool value)
 {
 	SET_VEHICLE_INDICATOR_LIGHTS(this->mHandle, 0, value);
 }
 
-void GTAvehicle::InteriorLightOn_set(bool value)
+void GTAvehicle::SetInteriorLightOn(bool value)
 {
 	SET_VEHICLE_INTERIORLIGHT(this->mHandle, value);
 }
 
-bool GTAvehicle::TaxiLightOn_get() const
+bool GTAvehicle::GetTaxiLightOn() const
 {
 	return IS_TAXI_LIGHT_ON(this->mHandle) != 0;
 }
-void GTAvehicle::TaxiLightOn_set(bool value)
+
+void GTAvehicle::SetTaxiLightOn(bool value)
 {
 	SET_TAXI_LIGHTS(this->mHandle, value);
 }
 
-bool GTAvehicle::SearchLightOn_get() const
+bool GTAvehicle::GetSearchLightOn() const
 {
 	return IS_VEHICLE_SEARCHLIGHT_ON(this->mHandle) != 0;
 }
-void GTAvehicle::SearchLightOn_set(bool value)
+
+void GTAvehicle::SetSearchLightOn(bool value)
 {
 	SET_VEHICLE_SEARCHLIGHT(this->mHandle, value, false);
 }
 
-bool GTAvehicle::NeedsToBeHotwired_get() const
+bool GTAvehicle::GetNeedsToBeHotwired() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1025,35 +739,38 @@ bool GTAvehicle::NeedsToBeHotwired_get() const
 	}
 	return false;
 }
-void GTAvehicle::NeedsToBeHotwired_set(bool value)
+
+void GTAvehicle::SetNeedsToBeHotwired(bool value)
 {
 	SET_VEHICLE_NEEDS_TO_BE_HOTWIRED(this->mHandle, value);
 }
 
-bool GTAvehicle::CanTyresBurst_get() const
+bool GTAvehicle::GetCanTyresBurst() const
 {
 	return GET_VEHICLE_TYRES_CAN_BURST(this->mHandle) != 0;
 }
-void GTAvehicle::CanTyresBurst_set(bool value)
+
+void GTAvehicle::SetCanTyresBurst(bool value)
 {
 	SET_VEHICLE_TYRES_CAN_BURST(this->mHandle, value);
 }
 
-bool GTAvehicle::CanTyresDrift_get() const
+bool GTAvehicle::GetCanTyresDrift() const
 {
 	return GET_DRIFT_TYRES_SET(this->mHandle) != 0;
 }
-void GTAvehicle::CanTyresDrift_set(bool value)
+
+void GTAvehicle::SetCanTyresDrift(bool value)
 {
 	SET_DRIFT_TYRES(this->mHandle, value);
 }
 
-void GTAvehicle::CanBeVisiblyDamaged_set(bool value)
+void GTAvehicle::SetCanBeVisiblyDamaged(bool value)
 {
 	SET_VEHICLE_CAN_BE_VISIBLY_DAMAGED(this->mHandle, value);
 }
 
-bool GTAvehicle::PreviouslyOwnedByPlayer_get() const
+bool GTAvehicle::GetPreviouslyOwnedByPlayer() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1070,76 +787,86 @@ bool GTAvehicle::PreviouslyOwnedByPlayer_get() const
 	}
 	return false;
 }
-void GTAvehicle::PreviouslyOwnedByPlayer_set(bool value)
+
+void GTAvehicle::SetPreviouslyOwnedByPlayer(bool value)
 {
 	SET_VEHICLE_HAS_BEEN_OWNED_BY_PLAYER(this->mHandle, value);
 }
 
-RgbS GTAvehicle::CustomPrimaryColour_get() const
+RgbS GTAvehicle::GetCustomPrimaryColour() const
 {
 	int r, g, b;
 	GET_VEHICLE_CUSTOM_PRIMARY_COLOUR(this->mHandle, &r, &g, &b);
 	return RgbS(r, g, b);
 }
-void GTAvehicle::CustomPrimaryColour_set(RgbS value)
+
+void GTAvehicle::SetCustomPrimaryColour(RgbS value)
 {
 	SET_VEHICLE_CUSTOM_PRIMARY_COLOUR(this->mHandle, value.R, value.G, value.B);
 }
-void GTAvehicle::CustomPrimaryColour_set(BYTE r, BYTE g, BYTE b)
+
+void GTAvehicle::SetCustomPrimaryColour(BYTE r, BYTE g, BYTE b)
 {
 	SET_VEHICLE_CUSTOM_PRIMARY_COLOUR(this->mHandle, r, g, b);
 }
 
-RgbS GTAvehicle::CustomSecondaryColour_get() const
+RgbS GTAvehicle::GetCustomSecondaryColour() const
 {
 	int r, g, b;
 	GET_VEHICLE_CUSTOM_SECONDARY_COLOUR(this->mHandle, &r, &g, &b);
 	return RgbS(r, g, b);
 }
-void GTAvehicle::CustomSecondaryColour_set(RgbS value)
+
+void GTAvehicle::SetCustomSecondaryColour(RgbS value)
 {
 	SET_VEHICLE_CUSTOM_SECONDARY_COLOUR(this->mHandle, value.R, value.G, value.B);
 }
-void GTAvehicle::CustomSecondaryColour_set(BYTE r, BYTE g, BYTE b)
+
+void GTAvehicle::SetCustomSecondaryColour(BYTE r, BYTE g, BYTE b)
 {
 	SET_VEHICLE_CUSTOM_SECONDARY_COLOUR(this->mHandle, r, g, b);
 }
 
-RgbS GTAvehicle::NeonLightsColour_get() const
+RgbS GTAvehicle::GetNeonLightsColour() const
 {
 	int r, g, b;
 	GET_VEHICLE_NEON_COLOUR(this->mHandle, &r, &g, &b);
 	return RgbS(r, g, b);
 }
-void GTAvehicle::NeonLightsColour_set(RgbS value)
+
+void GTAvehicle::SetNeonLightsColour(RgbS value)
 {
 	SET_VEHICLE_NEON_COLOUR(this->mHandle, value.R, value.G, value.B);
 }
-void GTAvehicle::NeonLightsColour_set(BYTE r, BYTE g, BYTE b)
+
+void GTAvehicle::SetNeonLightsColour(BYTE r, BYTE g, BYTE b)
 {
 	SET_VEHICLE_NEON_COLOUR(this->mHandle, r, g, b);
+	g_setNeonColour = { r, g, b };
 }
 
-RgbS GTAvehicle::TyreSmokeColour_get() const
+RgbS GTAvehicle::GetTyreSmokeColour() const
 {
 	int r, g, b;
 	GET_VEHICLE_TYRE_SMOKE_COLOR(this->mHandle, &r, &g, &b);
 	return RgbS(r, g, b);
 }
-void GTAvehicle::TyreSmokeColour_set(RgbS value)
+
+void GTAvehicle::SetTyreSmokeColour(RgbS value)
 {
 	SET_VEHICLE_TYRE_SMOKE_COLOR(this->mHandle, value.R, value.G, value.B);
 }
-void GTAvehicle::TyreSmokeColour_set(BYTE r, BYTE g, BYTE b)
+
+void GTAvehicle::SetTyreSmokeColour(BYTE r, BYTE g, BYTE b)
 {
 	SET_VEHICLE_TYRE_SMOKE_COLOR(this->mHandle, r, g, b);
 }
 
-int GTAvehicle::Livery_get() const
+int GTAvehicle::GetLivery() const
 {
 	return GET_VEHICLE_LIVERY(this->mHandle);
 }
-void GTAvehicle::Livery_set(int liveryIndex)
+void GTAvehicle::SetLivery(int liveryIndex)
 {
 	SET_VEHICLE_LIVERY(this->mHandle, liveryIndex);
 }
@@ -1148,16 +875,17 @@ int GTAvehicle::LiveryCount() const
 	return GET_VEHICLE_LIVERY_COUNT(this->mHandle);
 }
 
-bool GTAvehicle::AlarmActive_get() const
+bool GTAvehicle::GetAlarmActive() const
 {
 	return IS_VEHICLE_ALARM_ACTIVATED(this->mHandle) != 0;
 }
-void GTAvehicle::AlarmActive_set(bool value)
+
+void GTAvehicle::SetAlarmActive(bool value)
 {
 	SET_VEHICLE_ALARM(this->mHandle, value);
 }
 
-int GTAvehicle::CurrentGear_get() const
+int GTAvehicle::GetCurrentGear() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1174,7 +902,8 @@ int GTAvehicle::CurrentGear_get() const
 	}
 	return 0;
 }
-int GTAvehicle::HighGear_get() const
+
+int GTAvehicle::GetHighGear() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1191,7 +920,8 @@ int GTAvehicle::HighGear_get() const
 	}
 	return 0;
 }
-void GTAvehicle::HighGear_set(UINT8 value)
+
+void GTAvehicle::SetHighGear(UINT8 value)
 {
 	if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1604_0_STEAM)
 	{
@@ -1217,7 +947,8 @@ void GTAvehicle::HighGear_set(UINT8 value)
 		GTAmemory::WriteByte(memoryAddress + offset, value);
 	}
 }
-float GTAvehicle::FuelLevel_get() const
+
+float GTAvehicle::GetFuelLevel() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1234,7 +965,8 @@ float GTAvehicle::FuelLevel_get() const
 	}
 	return 0.0f;
 }
-void GTAvehicle::FuelLevel_set(float value) // Uh...
+
+void GTAvehicle::SetFuelLevel(float value) // Uh...
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1250,7 +982,8 @@ void GTAvehicle::FuelLevel_set(float value) // Uh...
 		GTAmemory::WriteFloat(memoryAddress + offset, value);
 	}
 }
-float GTAvehicle::CurrentRPM_get() const
+
+float GTAvehicle::GetCurrentRPM() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1267,7 +1000,8 @@ float GTAvehicle::CurrentRPM_get() const
 	}
 	return 0.0f;
 }
-void GTAvehicle::CurrentRPM_set(float value)
+
+void GTAvehicle::SetCurrentRPM(float value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1283,7 +1017,8 @@ void GTAvehicle::CurrentRPM_set(float value)
 		GTAmemory::WriteFloat(memoryAddress + offset, value);
 	}
 }
-float GTAvehicle::Acceleration_get() const
+
+float GTAvehicle::GetAcceleration() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1300,7 +1035,8 @@ float GTAvehicle::Acceleration_get() const
 	}
 	return 0.0f;
 }
-float GTAvehicle::WheelSpeed_get() const
+
+float GTAvehicle::GetWheelSpeed() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1317,7 +1053,8 @@ float GTAvehicle::WheelSpeed_get() const
 	}
 	return 0.0f;
 }
-float GTAvehicle::SteeringAngle_get(bool inDegrees) const
+
+float GTAvehicle::GetSteeringAngle(bool inDegrees) const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1335,7 +1072,8 @@ float GTAvehicle::SteeringAngle_get(bool inDegrees) const
 	}
 	return 0.0f;
 }
-float GTAvehicle::SteeringScale_get() const
+
+float GTAvehicle::GetSteeringScale() const
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1352,7 +1090,8 @@ float GTAvehicle::SteeringScale_get() const
 	}
 	return 0.0f;
 }
-void GTAvehicle::SteeringScale_set(float value)
+
+void GTAvehicle::SetSteeringScale(float value)
 {
 	auto memoryAddress = this->MemoryAddress();
 	if (memoryAddress)
@@ -1381,13 +1120,19 @@ void GTAvehicle::FixDoor(VehicleDoor door)
 		typedef void CVehicleDoor;
 		// EB 03 49 8B C0 0F BF 40 0C - 0x25
 		typedef CVehicleDoor*(__thiscall * tCVehicle__GetDoorByID)(CVehicle* This, uint32_t doorId);
-		static tCVehicle__GetDoorByID CVehicle__GetDoorByID = (tCVehicle__GetDoorByID)(MemryScan::PatternScanner::FindPattern("EB 03 49 8B C0 0F BF 40 0C") - 0x25);
+		static auto doorByIdPattern = MemryScan::PatternScanner::FindPattern("\xEB\x03\x49\x8B\xC0\x0F\xBF\x40\x0C", "xxxxxxxxx");
+		static tCVehicle__GetDoorByID CVehicle__GetDoorByID = doorByIdPattern ? (tCVehicle__GetDoorByID)(doorByIdPattern - 0x25) : nullptr;
 		// C1 E8 14 A8 01 0F 85 ? ? ? ? 33 DB - 0x1A
 		typedef void(__thiscall * tCVehicleDoor__Fix)(CVehicleDoor* This, CVehicle* veh);
-		static tCVehicleDoor__Fix CVehicleDoor__Fix = (tCVehicleDoor__Fix)(MemryScan::PatternScanner::FindPattern("C1 E8 14 A8 01 0F 85 ? ? ? ? 33 DB") - 0x1A);
+		static auto doorFixPattern = MemryScan::PatternScanner::FindPattern("\xC1\xE8\x14\xA8\x01\x0F\x85\x00\x00\x00\x00\x33\xDB", "xxxxxxx????xx");
+		static tCVehicleDoor__Fix CVehicleDoor__Fix = doorFixPattern ? (tCVehicleDoor__Fix)(doorFixPattern - 0x1A) : nullptr;
+
+		if (!CVehicle__GetDoorByID || !CVehicleDoor__Fix) return;
 
 		CVehicle* veh = (CVehicle*)this->MemoryAddress();
+		if (!veh) return;
 		CVehicleDoor* vehDoor = CVehicle__GetDoorByID(veh, doorId);
+		if (!vehDoor) return;
 		CVehicleDoor__Fix(vehDoor, veh);
 	}
 }
@@ -1397,7 +1142,7 @@ void GTAvehicle::FixAllDoors()
 		this->FixDoor(index);
 }
 
-void GTAvehicle::RadioStation_set(int value)
+void GTAvehicle::SetRadioStation(int value)
 {
 	if (value == RadioStation::Off)
 	{
@@ -1414,11 +1159,11 @@ VehicleClass GTAvehicle::ClassType_get()
 	return static_cast<VehicleClass>(GET_VEHICLE_CLASS(this->mHandle));
 }
 
-VehicleLockStatus GTAvehicle::LockStatus_get() const
+VehicleLockStatus GTAvehicle::GetLockStatus() const
 {
 	return static_cast<VehicleLockStatus>(GET_VEHICLE_DOOR_LOCK_STATUS(this->mHandle));
 }
-void GTAvehicle::LockStatus_set(const VehicleLockStatus& value)
+void GTAvehicle::SetLockStatus(const VehicleLockStatus& value)
 {
 	SET_VEHICLE_DOORS_LOCKED(this->mHandle, static_cast<int>(value));
 }
@@ -1454,11 +1199,11 @@ void GTAvehicle::RemoveMod(int modType)
 
 std::string GTAvehicle::GetModSlotName(int modType, bool getProperName) const
 {
-	return get_mod_slot_name(this->mHandle, modType, getProperName);
+	return ::GetModSlotName(this->mHandle, modType, getProperName);
 }
 std::string GTAvehicle::GetModName(int modType, int modIndex, bool getProperName) const
 {
-	return get_mod_text_label(this->mHandle, modType, modIndex, getProperName);
+	return GetModTextLabel(this->mHandle, modType, modIndex, getProperName);
 }
 
 void GTAvehicle::ClearCustomPrimaryColour()
@@ -1481,7 +1226,7 @@ bool GTAvehicle::PlaceOnGroundProperly()
 }
 void GTAvehicle::PlaceOnNextStreet()
 {
-	const Vector3 pos = this->Position_get();
+	const Vector3 pos = this->GetPosition();
 	Vector3_t newPos;
 
 	float heading;
@@ -1493,9 +1238,9 @@ void GTAvehicle::PlaceOnNextStreet()
 
 		if (!IS_POINT_OBSCURED_BY_A_MISSION_ENTITY(newPos.x, newPos.y, newPos.z, 5.0f, 5.0f, 5.0f, 0))
 		{
-			this->Position_set(newPos);
+			this->SetPosition(newPos);
 			PlaceOnGround();
-			this->Heading_set(heading);
+			this->SetHeading(heading);
 			break;
 		}
 	}
@@ -1526,7 +1271,7 @@ bool GTAvehicle::HasForks_get() const
 {
 	return HasBone(VBone::forks);
 }
-bool GTAvehicle::HasSiren_get() const
+bool GTAvehicle::GetHasSiren() const
 {
 	return HasBone(VBone::siren1);
 }
@@ -1636,11 +1381,11 @@ bool GTAvehicle::DoesExtraExist(int extraId) const
 {
 	return DOES_EXTRA_EXIST(this->mHandle, extraId) != 0;
 }
-bool GTAvehicle::ExtraOn_get(int extraId) const
+bool GTAvehicle::GetExtraOn(int extraId) const
 {
 	return IS_VEHICLE_EXTRA_TURNED_ON(this->mHandle, extraId) != 0;
 }
-void GTAvehicle::ExtraOn_set(int extraId, bool value)
+void GTAvehicle::SetExtraOn(int extraId, bool value)
 {
 	SET_VEHICLE_EXTRA(this->mHandle, extraId, !value); // Opposite for some reason
 }
@@ -1748,7 +1493,7 @@ bool GTAvehicle::IsInBurnout() const
 {
 	return IS_VEHICLE_IN_BURNOUT(this->mHandle) != 0;
 }
-void GTAvehicle::ForceBurnout_set(bool value)
+void GTAvehicle::SetForceBurnout(bool value)
 {
 	SET_VEHICLE_BURNOUT(this->mHandle, value);
 }
@@ -3869,28 +3614,28 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 	if (!vehicle.Exists())
 		return GTAvehicle();
 
-	Vector3 Pos = vehicle.Position_get();
-	Vector3 Rot = vehicle.Rotation_get();
+	Vector3 Pos = vehicle.GetPosition();
+	Vector3 Rot = vehicle.GetRotation();
 
 	Model vehicleModel = vehicle.Model();
 
 	GTAvehicle newVeh = World::CreateVehicle(vehicleModel, Pos, Rot, false);
 	WAIT(40);
 
-	newVeh.PrimaryColour_set(vehicle.PrimaryColour_get());
-	newVeh.SecondaryColour_set(vehicle.SecondaryColour_get());
+	newVeh.SetPrimaryColour(vehicle.GetPrimaryColour());
+	newVeh.SetSecondaryColour(vehicle.GetSecondaryColour());
 	if (vehicle.IsPrimaryColorCustom())
 	{
-		newVeh.CustomPrimaryColour_set(vehicle.CustomPrimaryColour_get());
+		newVeh.SetCustomPrimaryColour(vehicle.GetCustomPrimaryColour());
 	}
 	if (vehicle.IsSecondaryColorCustom())
 	{
-		newVeh.CustomSecondaryColour_set(vehicle.CustomSecondaryColour_get());
+		newVeh.SetCustomSecondaryColour(vehicle.GetCustomSecondaryColour());
 	}
 
 	SET_VEHICLE_MOD_KIT(newVeh.Handle(), 0);
 
-	newVeh.WheelType_set(vehicle.WheelType_get());
+	newVeh.SetWheelType(vehicle.GetWheelType());
 
 	for (int i = 0; i < vValues_ModSlotNames.size(); i++)
 	{
@@ -3900,16 +3645,16 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 			newVeh.SetMod(i, vehicle.GetMod(i), vehicle.GetModVariation(i));
 	}
 
-	newVeh.CanTyresBurst_set(vehicle.CanTyresBurst_get());
-	newVeh.TyreSmokeColour_set(vehicle.TyreSmokeColour_get());
-	newVeh.NumberPlateTextIndex_set(vehicle.NumberPlateTextIndex_get());
-	newVeh.NumberPlateText_set(vehicle.NumberPlateText_get());
-	newVeh.PearlescentColour_set(vehicle.PearlescentColour_get());
-	newVeh.RimColour_set(vehicle.RimColour_get());
+	newVeh.SetCanTyresBurst(vehicle.GetCanTyresBurst());
+	newVeh.SetTyreSmokeColour(vehicle.GetTyreSmokeColour());
+	newVeh.SetNumberPlateTextIndex(vehicle.GetNumberPlateTextIndex());
+	newVeh.SetNumberPlateText(vehicle.GetNumberPlateText());
+	newVeh.SetPearlescentColour(vehicle.GetPearlescentColour());
+	newVeh.SetRimColour(vehicle.GetRimColour());
 
 	if (newVeh.IsConvertible())
 	{
-		newVeh.RoofState_set(vehicle.RoofState_get());
+		newVeh.SetRoofState(vehicle.GetRoofState());
 	}
 
 	for (VehicleNeonLight i : { VehicleNeonLight::Left, VehicleNeonLight::Right, VehicleNeonLight::Front, VehicleNeonLight::Back})
@@ -3920,30 +3665,30 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 	for (int i = 0; i <= 60; i++)
 	{
 		if (newVeh.DoesExtraExist(i))
-			newVeh.ExtraOn_set(i, vehicle.ExtraOn_get(i));
+			newVeh.SetExtraOn(i, vehicle.GetExtraOn(i));
 	}
 
-	if (newVeh.LiveryCount() > 1 && newVeh.Livery_get() >= 0)
+	if (newVeh.LiveryCount() > 1 && newVeh.GetLivery() >= 0)
 	{
-		newVeh.Livery_set(vehicle.Livery_get());
+		newVeh.SetLivery(vehicle.GetLivery());
 	}
 
-	newVeh.NeonLightsColour_set(vehicle.NeonLightsColour_get());
+	newVeh.SetNeonLightsColour(vehicle.GetNeonLightsColour());
 
-	newVeh.WindowTint_set(vehicle.WindowTint_get());
+	newVeh.SetWindowTint(vehicle.GetWindowTint());
 
-	newVeh.DirtLevel_set(vehicle.DirtLevel_get());
+	newVeh.SetDirtLevel(vehicle.GetDirtLevel());
 
-	newVeh.EngineRunning_set(true);
+	newVeh.SetEngineRunning(true);
 
 	if (DOES_VEHICLE_HAVE_CREW_EMBLEM(vehicle.Handle(), 0) && pedForEmblem.Exists())
 	{
 		add_emblem_to_vehicle(newVeh, pedForEmblem);
 	}
 
-	newVeh.InteriorColour_set(vehicle.InteriorColour_get());
-	newVeh.DashboardColour_set(vehicle.DashboardColour_get());
-	newVeh.HeadlightColour_set(vehicle.HeadlightColour_get());
+	newVeh.SetInteriorColour(vehicle.GetInteriorColour());
+	newVeh.SetDashboardColour(vehicle.GetDashboardColour());
+	newVeh.SetHeadlightColour(vehicle.GetHeadlightColour());
 
 	// Burst tyres
 	for (int i = 0; i <= 8; i++)
@@ -3953,37 +3698,37 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 	}
 
 	// Apply multipliers
-	auto rpmMultIt = g_multList_rpm.find(vehicle.Handle());
-	if (rpmMultIt != g_multList_rpm.end())
+	auto rpmMultIt = g_multListRPM.find(vehicle.Handle());
+	if (rpmMultIt != g_multListRPM.end())
 	{
-		g_multList_rpm[newVeh.Handle()] = rpmMultIt->second;
-		newVeh.EnginePowerMultiplier_set(rpmMultIt->second);
+		g_multListRPM[newVeh.Handle()] = rpmMultIt->second;
+		newVeh.SetEnginePowerMultiplier(rpmMultIt->second);
 	}
-	auto torqueMultIt = g_multList_torque.find(vehicle.Handle());
-	if (torqueMultIt != g_multList_torque.end())
+	auto torqueMultIt = g_multListTorque.find(vehicle.Handle());
+	if (torqueMultIt != g_multListTorque.end())
 	{
-		g_multList_torque[newVeh.Handle()] = torqueMultIt->second;
-		newVeh.EngineTorqueMultiplier_set(torqueMultIt->second);
+		g_multListTorque[newVeh.Handle()] = torqueMultIt->second;
+		newVeh.SetEngineTorqueMulitplier(torqueMultIt->second);
 	}
-	auto maxSpeedMultIt = g_multList_maxSpeed.find(vehicle.Handle());
-	if (maxSpeedMultIt != g_multList_maxSpeed.end())
+	auto maxSpeedMultIt = g_multListMaxSpeed.find(vehicle.Handle());
+	if (maxSpeedMultIt != g_multListMaxSpeed.end())
 	{
-		g_multList_maxSpeed[newVeh.Handle()] = maxSpeedMultIt->second;
-		newVeh.MaxSpeed_set(maxSpeedMultIt->second);
+		g_multListMaxSpeed[newVeh.Handle()] = maxSpeedMultIt->second;
+		newVeh.SetMaxSpeed(maxSpeedMultIt->second);
 	}
-	auto headlightsMultIt = g_multList_headlights.find(vehicle.Handle());
-	if (headlightsMultIt != g_multList_headlights.end())
+	auto headlightsMultIt = g_multListHeadLights.find(vehicle.Handle());
+	if (headlightsMultIt != g_multListHeadLights.end())
 	{
-		g_multList_headlights[newVeh.Handle()] = headlightsMultIt->second;
-		newVeh.LightsMultiplier_set(headlightsMultIt->second);
+		g_multListHeadLights[newVeh.Handle()] = headlightsMultIt->second;
+		newVeh.SetLightsMultiplier(headlightsMultIt->second);
 	}
 
 	// Engine sound
-	auto engineSoundIt = g_vehList_engSound.find(vehicle.Handle());
-	if (engineSoundIt != g_vehList_engSound.end())
+	auto engineSoundIt = g_vehListEngineSounds.find(vehicle.Handle());
+	if (engineSoundIt != g_vehListEngineSounds.end())
 	{
-		g_vehList_engSound[newVeh.Handle()] = engineSoundIt->second;
-		newVeh.EngineSound_set(engineSoundIt->second);
+		g_vehListEngineSounds[newVeh.Handle()] = engineSoundIt->second;
+		newVeh.SetEngineSound(engineSoundIt->second);
 	}
 
 	vehicleModel.Unload();

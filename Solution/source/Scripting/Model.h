@@ -55,15 +55,15 @@ namespace GTAmodel
 		Vector3 Dim1() const;
 		Vector3 Dim2() const;
 
-		bool IsBicycle() const;
-		bool IsBike() const;
-		bool IsQuadbike() const;
-		bool IsBoat() const;
-		bool IsCar() const;
-		bool IsHeli() const;
-		bool IsPlane() const;
-		bool IsTrain() const;
-		bool IsFastBoat() const;
+		bool IsBicycle() const noexcept;
+		bool IsBike() const noexcept;
+		bool IsQuadbike() const noexcept;
+		bool IsBoat() const noexcept;
+		bool IsCar() const noexcept;
+		bool IsHeli() const noexcept;
+		bool IsPlane() const noexcept;
+		bool IsTrain() const noexcept;
+		bool IsFastBoat() const noexcept;
 		bool IsCargobob() const;
 		bool IsBus() const;
 		bool IsPoliceVehicle() const;
@@ -71,23 +71,23 @@ namespace GTAmodel
 		bool IsWheelChangingSupportedVehicle() const;
 		bool IsBennySupportedVehicle();
 
-		bool IsVehicle() const;
+		bool IsVehicle() const noexcept;
 		bool IsPed() const;
 
 		void Load() const;
 		bool Load(DWORD timeOut) const;
 		void LoadAndWait() const;
-		bool IsLoaded() const;
+		bool IsLoaded() const noexcept;
 		void Unload() const;
 
 		void LoadCollision() const;
 		bool LoadCollision(DWORD timeOut) const;
-		bool IsCollisionLoaded() const;
+		bool IsCollisionLoaded() const noexcept;
 		void LoadCollisionAndWait() const;
 
 
-		bool IsValid() const;
-		bool IsInCdImage() const;
+		bool IsValid() const noexcept;
+		bool IsInCdImage() const noexcept;
 		bool Exists() const;
 
 	};

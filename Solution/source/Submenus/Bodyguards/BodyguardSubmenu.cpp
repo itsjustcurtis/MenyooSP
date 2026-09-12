@@ -13,12 +13,12 @@
 
 namespace sub
 {
-    void ComponentChanger_();
+    void ComponentChanger();
 }
 
 namespace sub::BodyguardMenu
 {
-    void SetEnt242() { Static_241= SelectedBodyguard->Handle.Handle(); }
+    void SetSelectedBodyguardAsActivePed() { g_activePedHandle = SelectedBodyguard->Handle.Handle(); }
     void BodyguardEntityOps()
     {
         // Determine the title dynamically
@@ -34,15 +34,15 @@ namespace sub::BodyguardMenu
                     title = SelectedBodyguard->Name;
                 }
                 // Otherwise use a stored hash-name (if present)
-                else if (!SelectedBodyguard->HashName.empty())
+                else if (!SelectedBodyguard->hashName.empty())
                 {
-                    title = SelectedBodyguard->HashName;
+                    title = SelectedBodyguard->hashName;
                 }
                 // Fallback: use the model hash as hex string
                 else
                 {
                     auto model = SelectedBodyguard->Handle.Model();
-                    title = int_to_hexstring(model.hash, true);
+                    title = IntToHexString(model.hash, true);
                 }
             }
             else
@@ -67,16 +67,16 @@ namespace sub::BodyguardMenu
             return;
         }
 
-        AddOption("Wardrobe", null, SetEnt242, SUB::COMPONENTS);
+        AddOption("Wardrobe", null, SetSelectedBodyguardAsActivePed, SUB::COMPONENTS);
         if (g_cam_componentChanger.Exists())
         {
             g_cam_componentChanger.SetActive(false);
             g_cam_componentChanger.Destroy();
-            World::RenderingCamera_set(0);
+            World::SetRenderingCamera(0);
         }
-        AddOption("Voice Changer", null, SetEnt242, SUB::VOICECHANGER);
+        AddOption("Voice Changer", null, SetSelectedBodyguardAsActivePed, SUB::VOICECHANGER);
         AddOption("Weapons", null, nullFunc, SUB::BODYGUARD_WEAPONOPS);
-        AddOption("Loadouts", null, SetEnt242, SUB::WEAPONOPS_LOADOUTS);
+        AddOption("Loadouts", null, SetSelectedBodyguardAsActivePed, SUB::WEAPONOPS_LOADOUTS);
     }
     void BodyguardWeaponOps()
     {
@@ -109,13 +109,13 @@ namespace sub::BodyguardMenu
 
         if (g_WeaponOpsPedOverride != 0)
         {
-            Static_241 = g_WeaponOpsPedOverride;
-            Static_240 = g_WeaponOpsPlayerOverride;
+            g_activePedHandle = g_WeaponOpsPedOverride;
+            g_activePlayerId = g_WeaponOpsPlayerOverride;
         }
         else
         {
-            Static_241 = PLAYER::PLAYER_PED_ID();
-            Static_240 = PLAYER::PLAYER_ID();
+            g_activePedHandle = PLAYER::PLAYER_PED_ID();
+            g_activePlayerId = PLAYER::PLAYER_ID();
         }
 
         WeaponsLoadouts_catind::Sub_Loadouts_InItem();
@@ -126,3 +126,8 @@ namespace sub::BodyguardMenu
     }
 
 }
+
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(BODYGUARD_ENTITYOPS,   sub::BodyguardMenu::BodyguardEntityOps)
+REGISTER_SUBMENU(BODYGUARD_WEAPONOPS,   sub::BodyguardMenu::BodyguardWeaponOps)

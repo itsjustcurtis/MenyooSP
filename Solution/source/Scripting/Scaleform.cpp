@@ -45,7 +45,7 @@ int& Scaleform::Handle()
 	return this->mHandle;
 }
 
-int Scaleform::GetHandle() const
+int Scaleform::GetHandle() const noexcept
 {
 	return this->mHandle;
 }

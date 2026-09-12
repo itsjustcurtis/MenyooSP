@@ -29,27 +29,27 @@ enum class CameraShake : int;
 class GameplayCamera final
 {
 public:
-	static float FieldOfView_get();
-	static void FieldOfView_set(float value);
+	static float GetFieldOfView();
+	static void SetFieldOfView(float value);
 
 	static bool IsAimCamActive();
 	static bool IsFirstPersonAimCamActive();
 	static bool IsLookingBehind();
 	static bool IsRendering();
 	static bool IsShaking();
-	static Vector3 Position_get();
+	static Vector3 GetPosition();
 	static Vector3 GetOffsetInWorldCoords(const Vector3& offset);
 	static Vector3 GetOffsetInWorldCoords(float X, float Y, float Z);
 	static Vector3 GetOffsetGivenWorldCoords(const Vector3& worldCoords);
 	static Vector3 GetOffsetGivenWorldCoords(float X, float Y, float Z);
-	static float RelativeHeading_get();
-	static void RelativeHeading_set(float value);
-	static float RelativePitch_get();
-	static void RelativePitch_set(float value);
-	static Vector3 Rotation_get();
-	static Vector3 Direction_get();
-	static float Zoom_get();
-	static void ShakeAmplitude_set(float value);
+	static float GetRelativeHeading();
+	static void SetRelativeHeading(float value);
+	static float GetRelativePitch();
+	static void SetRelativePitch(float value);
+	static Vector3 GetRotation();
+	static Vector3 GetDirection();
+	static float GetZoom();
+	static void SetShakeAmplitude(float value);
 
 	static void Shake(CameraShake shakeType, float amplitude);
 
@@ -65,7 +65,7 @@ public:
 
 	static Vector3 RaycastForCoord(const Vector2& screenCoord, GTAentity ignoreEntity, float maxDistance = 100.0f, float failDistance = 100.0f);
 
-	static Vector3 DirectionFromScreenCentre_get();
+	static Vector3 GetDirectionFromScreenCentre();
 
 private:
 
@@ -73,4 +73,4 @@ private:
 };
 
 
-Vector3 get_coords_from_cam(float distance);
+Vector3 GetCoordsFromCam(float distance);

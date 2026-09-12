@@ -9,26 +9,11 @@
 */
 #include "CutscenePlayer.h"
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-//#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Scripting\GTAplayer.h"
-#include "..\Scripting\Game.h"
-#include "..\Util\ExePath.h"
-#include "..\Util\FileLogger.h"
-
-#include <Windows.h> //GetTickCount
-#include <string>
-#include <vector>
-
 namespace sub
 {
-	namespace CutscenePlayer_catind
+	namespace CutscenePlayer
 	{
-		std::vector<std::string> vCutsceneLabels;
+		std::vector<std::string> cutsceneLabels;
 
 		void PopulateCutsceneLabels()
 		{
@@ -37,16 +22,16 @@ namespace sub
 
 			if (fin.is_open())
 			{
-				vCutsceneLabels.clear();
+				cutsceneLabels.clear();
 
 				for (std::string line; std::getline(fin, line);)
 				{
 					if (line.length() > 2)
 					{
-						vCutsceneLabels.push_back(line);
+						cutsceneLabels.push_back(line);
 					}
 				}
-				addlog(ige::LogType::LOG_INFO,  "Loaded cutscene names from " + filePath, __FILENAME__);
+				addlog(ige::LogType::LOG_INFO,  "Loaded cutscene names from " + filePath);
 				fin.close();
 			}
 		}
@@ -86,39 +71,36 @@ namespace sub
 			{
 				WAIT(0);
 				if (!HAS_CUTSCENE_LOADED())
+				{
 					continue;
+				}
 				SET_CUTSCENE_FADE_VALUES(0, 0, 1, 0);
-				//SET_CUTSCENE_CAN_BE_SKIPPED(FALSE);
 				START_CUTSCENE(0);
 				SET_WIDESCREEN_BORDERS(0, 0);
 				SET_RADIO_TO_STATION_NAME("OFF");
 				break;
 			}
-
 		}
 
-
-		void Sub_CutsceneList()
+		void CutsceneListMenu()
 		{
 			AddTitle("Cutscene Player");
-
 			AddOption("STOP CUTSCENE(S)", null, EndCutscene);
 
-			for (auto& label : vCutsceneLabels)
+			for (auto& label : cutsceneLabels)
 			{
 				bool pressed = false;
 				AddOption(label, pressed); if (pressed)
 				{
 					PlayCutscene(label);
 				}
-
 			}
-
 		}
-
 	}
-
 }
 
 
+#include "..\Menu\submenu_switch.h"
+#include "..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(CUTSCENEPLAYER,       sub::CutscenePlayer::CutsceneListMenu)
 

@@ -34,7 +34,7 @@ namespace sub::BodyguardMenu
 
             bool bPressed = false;
 
-            std::string label = !bg.Name.empty() ? bg.Name : bg.HashName;
+            std::string label = !bg.Name.empty() ? bg.Name : bg.hashName;
 
             AddOption(label, bPressed, nullFunc, SUB::BODYGUARD_ENTITYOPS);
 
@@ -43,14 +43,14 @@ namespace sub::BodyguardMenu
                 SelectedBodyguard = &bg;
             }
 
-            if (*Menu::currentopATM == Menu::printingop)
+            if (Menu::IsLastDrawnOptionSelected())
             {
                 if (bg.Handle.Exists())
                     ENTITY::SET_ENTITY_HAS_GRAVITY(bg.Handle.GetHandle(), true);
                 sub::BodyguardMenu::BodyguardManagement::ShowArrowAboveEntity(bg.Handle);
 
                 bool bDeletePressed = false;
-                if (Menu::bit_controller)
+                if (Menu::usingControllerInput)
                 {
                     Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Bodyguard");
                     bDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
@@ -79,3 +79,9 @@ namespace sub::BodyguardMenu
         AddTitle("Bodyguard Settings");
     }
 }
+
+
+#include "..\..\Menu\submenu_switch.h"
+#include "..\..\Menu\submenu_enum.h"
+REGISTER_SUBMENU(BODYGUARD_LIST,        sub::BodyguardMenu::BodyguardList)
+REGISTER_SUBMENU(BODYGUARD_SETTINGS,    sub::BodyguardMenu::BodyguardOps_)

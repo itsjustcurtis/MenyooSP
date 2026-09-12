@@ -28,6 +28,7 @@ namespace sub::Spooner
 		DWORD timer;
 	public:
 		SpoonerTaskSequence();
+		~SpoonerTaskSequence();
 
 		void operator = (const SpoonerTaskSequence& right);
 

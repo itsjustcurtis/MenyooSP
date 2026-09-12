@@ -1,0 +1,60 @@
+name: Bug report
+description: Create a report to help us improve
+title: "[Bug Report] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please complete all required fields.
+
+  - type: textarea
+    id: describe_the_bug
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: to_reproduce
+    attributes:
+      label: To Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Open the menu
+        2. Navigate to '...'
+        3. Do '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots or videos to help explain your problem.
+      placeholder: Drag and drop images here, or paste a link.
+    validations:
+      required: false
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: |
+        Change your loglevel in the Menyoo .ini file to 3 and share your menyoolog.txt file with your report.
+      placeholder: Paste the contents of menyoolog.txt here...
+      render: text
+    validations:
+      required: false
