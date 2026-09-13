@@ -62,6 +62,7 @@
 #include "..\..\Util\ObjectCategories.h"
 
 #include "BlipCustoms.h"
+#include "BlipMapping.h"
 #include "SpoonerBlips.h"
 
 #include <Shlwapi.h>
@@ -74,7 +75,6 @@
 #include <array>
 #include <pugixml/src/pugixml.hpp>
 #include <dirent\include\dirent.h>
-#include "../../BlipMapping.h"
 
 namespace sub
 {
@@ -5193,6 +5193,7 @@ namespace sub
 		}
 		void Sub_SpawnPed()
 		{
+			bool modelChangerInput = false;
 			AddTitle("Spawn Ped");
 
 			AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
@@ -5212,6 +5213,10 @@ namespace sub
 			AddOption("Story Scenario Females", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOFEMALES);
 			AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
 			AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
+			AddOption("~b~Input~s~ Model", modelChangerInput);
+
+			if (modelChangerInput)
+				EntityManagement::InputEntityIntoDb(EntityType::PED);
 		}
 		void Sub_SpawnVehicle()
 		{
