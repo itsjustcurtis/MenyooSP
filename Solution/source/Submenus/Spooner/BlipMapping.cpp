@@ -14,7 +14,7 @@ namespace sub::Spooner
             int hash = ent.Model().hash;
 
             // Exact model matches — Face-up
-            if (hash == GET_HASH_KEY("stockade"))       return { BlipIcon::ArmoredTruck,            false };
+            if (hash == GET_HASH_KEY("stockade"))       return { BlipIcon::ArmoredTruck,            false }; //Would this be better as a switch/case? Lots of duplicate return values for different hashes.
             if (hash == GET_HASH_KEY("stockade3"))       return { BlipIcon::ArmoredTruck,            false };
             if (hash == GET_HASH_KEY("riot"))       return { BlipIcon::ArmoredTruck,            false };
             if (hash == GET_HASH_KEY("towtruck"))       return { BlipIcon::TowTruck,                false };
