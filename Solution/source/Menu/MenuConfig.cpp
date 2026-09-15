@@ -24,6 +24,7 @@
 #include "..\Submenus\Spooner\SpoonerSettings.h"
 #include "..\Misc\ManualRespawn.h"
 #include "..\Misc\FpsCounter.h"
+#include "..\Misc\FreeCam.h"
 #include "..\Submenus\MiscOptions.h"
 #include "..\Misc\JumpAroundMode.h"
 #include "..\Memory\GTAmemory.h"
@@ -203,7 +204,7 @@ void MenuConfig::ConfigRead()
 	 //loop_hide_hud = ini.GetBoolValue(section_haxValues.c_str(), "hide_hud", loop_hide_hud);
 	showFullHUD = ini.GetBoolValue(section_haxValues.c_str(), "show_full_hud", showFullHUD);
 	ManualRespawn::g_manualRespawn.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "manual_respawn", ManualRespawn::g_manualRespawn.Enabled());
-	noClip = ini.GetBoolValue(section_haxValues.c_str(), "freecam", noClip);
+	FreeCamMode::bEnabled = ini.GetBoolValue(section_haxValues.c_str(), "freecam", FreeCamMode::bEnabled);
 	bDisplayXyzhCoords = ini.GetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", bDisplayXyzhCoords);
 	sub::Spooner::Settings::bDisplaySpoonerInfo = ini.GetBoolValue(section_spooner.c_str(), "DisplaySpoonerInfo", sub::Spooner::Settings::bDisplaySpoonerInfo);
 	FPSCounter::bDisplayFps = ini.GetBoolValue(section_haxValues.c_str(), "display_fps", FPSCounter::bDisplayFps);
@@ -331,6 +332,8 @@ void MenuConfig::ConfigRead()
     std::string section_freecam = "free-camera";
     FreeCam::defaultSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
     FreeCam::defaultFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov);
+	// older versions saved this as "right_click_slow_speed"
+	FreeCam::defaultSlowSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "right_click_slow_speed", FreeCam::defaultSlowSpeed);
 	FreeCam::defaultSlowSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_slow_speed", FreeCam::defaultSlowSpeed);
     FreeCam::speedAdjustStep = (float)ini.GetDoubleValue(section_freecam.c_str(), "speed_adjust_step", FreeCam::speedAdjustStep); 
     FreeCam::fovAdjustStep = (float)ini.GetDoubleValue(section_freecam.c_str(), "fov_adjust_step", FreeCam::fovAdjustStep);
@@ -467,7 +470,7 @@ void MenuConfig::SaveConfig()
 										   //ini.SetBoolValue(section_haxValues.c_str(), "hide_hud", loop_hide_hud);
 	ini.SetBoolValue(section_haxValues.c_str(), "show_full_hud", showFullHUD);
 	ini.SetBoolValue(section_haxValues.c_str(), "manual_respawn", ManualRespawn::g_manualRespawn.Enabled());
-	ini.SetBoolValue(section_haxValues.c_str(), "freecam", noClip);
+	ini.SetBoolValue(section_haxValues.c_str(), "freecam", FreeCamMode::bEnabled);
 	ini.SetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", bDisplayXyzhCoords);
 	ini.SetBoolValue(section_haxValues.c_str(), "display_fps", FPSCounter::bDisplayFps);
 	ini.SetBoolValue(section_haxValues.c_str(), "basic_tv_player", sub::TVChannelStuff::loopBasicTV);
@@ -592,7 +595,7 @@ void MenuConfig::SaveConfig()
     std::string section_freecam = "free-camera";
     ini.SetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
     ini.SetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov); 
-	ini.SetDoubleValue(section_freecam.c_str(), "right_click_slow_speed", FreeCam::defaultSlowSpeed);
+	ini.SetDoubleValue(section_freecam.c_str(), "default_slow_speed", FreeCam::defaultSlowSpeed);
     ini.SetDoubleValue(section_freecam.c_str(), "speed_adjust_step", FreeCam::speedAdjustStep);
     ini.SetDoubleValue(section_freecam.c_str(), "fov_adjust_step", FreeCam::fovAdjustStep);
     ini.SetDoubleValue(section_freecam.c_str(), "min_speed", FreeCam::minSpeed);

@@ -20,7 +20,8 @@
 #include "..\Scripting\Game.h"
 #include "..\Scripting\GameplayCamera.h"
 #include "..\Scripting\ModelNames.h" // _vNeonColours
-#include "Routine.h" // (loop_no_clip_toggle, loop_hide_hud)
+#include "Routine.h" // (loop_hide_hud)
+#include "..\Misc\FreeCam.h"
 #include "Language.h"
 #include "..\Util\FileLogger.h"
 #include "..\Menu\Menu.h"
@@ -711,7 +712,7 @@ void Menu::SetSub_closed()
 
 void Menu::glare_test()
 {
-	if (noClipToggle)
+	if (FreeCamMode::IsActive())
 	{
 		//Label_unloadglare:;
 		scaleform_menuGlare.Unload();

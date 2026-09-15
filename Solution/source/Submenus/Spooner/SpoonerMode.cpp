@@ -12,6 +12,7 @@
 #include "ImGuiSpooner.h"
 #include "SpoonerCursor.h"
 #include "..\PedComponentChanger.h"
+#include "..\..\Misc\FreeCam.h"
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
@@ -452,6 +453,7 @@ namespace sub::Spooner
 			if (!menuHasNotOpened)
 			{
 				WardrobeCamera::Disable(false);
+				FreeCamMode::Stop();
 				SpoonerMode::bEnabled = true;
 				sub::Spooner::ImGuiSpooner::SetVisible(true);
 				if (Menu::activeSubmenu != SUB::CLOSED)

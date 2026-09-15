@@ -13,6 +13,7 @@
 /////////////////////////////
 
 #include "PedComponentChanger.h"
+#include "..\Misc\FreeCam.h"
 
 #include "..\macros.h"
 
@@ -134,8 +135,8 @@ namespace sub
 			{
 				if (Spooner::SpoonerMode::bEnabled && Spooner::SpoonerCamera::camera.Exists())
 					return Spooner::SpoonerCamera::camera;
-				if (g_cam_noClip.Exists())
-					return g_cam_noClip;
+				if (FreeCamMode::IsActive() && FreeCamMode::GetCamera().Exists())
+					return FreeCamMode::GetCamera();
 				return Camera();
 			}
 

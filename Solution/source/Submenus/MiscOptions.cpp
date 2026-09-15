@@ -8,6 +8,7 @@
 * (at your option) any later version.
 */
 #include "MiscOptions.h"
+#include "..\Misc\FreeCam.h"
 #include "Spooner/Submenus.h"
 #include "VehicleModShop.h"
 
@@ -34,7 +35,7 @@ namespace sub
 		bool miscVehiclePopulationOff = false;
 
 		AddTitle("Misc Options");
-		AddToggle("FreeCam (No-Clip)", noClip, miscFreecamOn, miscFreecamOff);
+		AddToggle("FreeCam (No-Clip)", FreeCamMode::bEnabled, miscFreecamOn, miscFreecamOff);
 		AddLocal("Top-Down View", GTA2Cam::g_gta2Cam.Enabled(), GTA2Cam::ToggleOnOff, GTA2Cam::ToggleOnOff);
 		AddLocal("Manual Respawn", ManualRespawn::g_manualRespawn.Enabled(), ManualRespawn::ToggleOnOff, ManualRespawn::ToggleOnOff);
 		AddTexter("Auto-kill Enemies", autoKillEnemies, std::vector<std::string>{"Off", "Weak", "Radical"}, null, autoKillPlus, autoKillMinus);
@@ -208,19 +209,14 @@ namespace sub
 
 		if (miscFreecamOn)
 		{
-			noClipToggle = false;
 			Game::Print::ShowNotification("Press ~b~" + VkCodeToStr(BindNoClip) + "~s~ OR ~b~X+LS~s~ OR ~b~Square+L3~s~ to toggle FreeCam.");
 			return;
 		}
 
-		if (miscFreecamOff) 
-		{ 
-			if (noClipToggle) 
-			{
-				SetNoclipOff1();
-				SetNoclipOff2();
-				return;
-			}
+		if (miscFreecamOff)
+		{
+			FreeCamMode::Stop();
+			return;
 		}
 
 		if (autoKillPlus) 
