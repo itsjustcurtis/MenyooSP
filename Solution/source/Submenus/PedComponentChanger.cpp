@@ -213,8 +213,8 @@ namespace sub
 			{
 				g_cam_componentChanger.SetActive(false);
 				g_cam_componentChanger.Destroy();
-				if (sub::Spooner::SpoonerMode::bEnabled && sub::Spooner::SpoonerMode::spoonerModeCamera.Exists())
-					World::SetRenderingCamera(sub::Spooner::SpoonerMode::spoonerModeCamera);
+				if (sub::Spooner::SpoonerMode::bEnabled && sub::Spooner::SpoonerCamera::camera.Exists())
+					World::SetRenderingCamera(sub::Spooner::SpoonerCamera::camera);
 				else
 					World::SetRenderingCamera(0);
 			}

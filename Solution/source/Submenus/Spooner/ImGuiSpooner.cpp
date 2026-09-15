@@ -12,6 +12,7 @@
 #include <atomic>
 #include <mutex>
 #include <cmath>
+#include <cstring>
 
 #include "SpoonerEntity.h"
 #include "SpoonerMode.h"
@@ -23,32 +24,45 @@
 
 namespace sub::Spooner::ImGuiSpooner
 {
+// ═══════════════════════════════════════════════════════════════════
+//  Shared State
+// ═══════════════════════════════════════════════════════════════════
+
+	// Gizmo writes
 	struct PendingWrites
 	{
+		int entityHandle = 0;
 		bool positionDirty = false;  Vector3 positionVal{};
 		bool rotationDirty = false;  Vector3 rotationVal{};
 		bool scaleDirty = false;     Vector3 scaleVal{1.0f, 1.0f, 1.0f};
 	};
 
-	struct SharedState
+	struct RenderState
 	{
-		bool entityValid = false;
-		Vector3 position{};
-		Vector3 rotation{};
-		Vector3 scale{1.0f, 1.0f, 1.0f};
-
-		// Active rendering camera
 		Vector3 camCoord{};
 		Vector3 camRot{};
 		float   camFov = 50.0f;
-
-		// SpoonerMode state mirrored here for render-thread access
 		SpoonerMode::EditingState editingState;
-
-		// Render-thread interaction state.
 		bool gizmoOver = false;
 		bool gizmoUsing = false;
+		bool gridSnapEnabled = false;
+		float gridSnapSize = 1.0f;
+		float rotationSnapDegrees = 0.0f;
+	};
 
+	struct EntityCache
+	{
+		bool entityValid = false;
+		int entityHandle = 0;
+		Vector3 position{};
+		Vector3 rotation{};
+		Vector3 scale{1.0f, 1.0f, 1.0f};
+	};
+
+	struct SharedState
+	{
+		RenderState render;
+		EntityCache cache;
 		PendingWrites pending;
 	};
 
@@ -57,7 +71,11 @@ namespace sub::Spooner::ImGuiSpooner
 
 	static std::atomic<bool> g_Visible{ false };
 	static std::atomic<bool> g_ShuttingDown{ false };
-	static bool g_ImGuiInitialized = false;
+	static std::atomic<bool> g_ImGuiInitialized{ false };
+
+// ═══════════════════════════════════════════════════════════════════
+//  Gizmo Math
+// ═══════════════════════════════════════════════════════════════════
 
 	static void BuildTransformMatrix(const Vector3& pos, const Vector3& rot, const Vector3& scale, float* matrix)
 	{
@@ -217,54 +235,58 @@ namespace sub::Spooner::ImGuiSpooner
 		}
 	}
 
+// ═══════════════════════════════════════════════════════════════════
+//  Gizmo
+// ═══════════════════════════════════════════════════════════════════
 
 	static void RunGizmo_NoLock(SharedState& s)
 	{
-		s.gizmoOver = false;
-		s.gizmoUsing = false;
+		s.render.gizmoOver = false;
+		s.render.gizmoUsing = false;
 
-		if (!s.entityValid || s.editingState.mode != SpoonerMode::eEditMode::Gizmo) return;
+		if (!s.cache.entityValid || s.render.editingState.mode != SpoonerMode::eEditMode::Gizmo) return;
 
 		ImGuiIO& io = ImGui::GetIO();
 
 		float viewMat[16], projMat[16];
-		BuildCameraMatricesFromCache(s.camCoord, s.camRot, s.camFov, io.DisplaySize.x, io.DisplaySize.y, viewMat, projMat);
+		BuildCameraMatricesFromCache(s.render.camCoord, s.render.camRot, s.render.camFov, io.DisplaySize.x, io.DisplaySize.y, viewMat, projMat);
 
 		ImGuizmo::BeginFrame();
 		ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
 		ImGuizmo::OPERATION op;
-		switch (s.editingState.transformMode)
+		switch (s.render.editingState.transformMode)
 		{
 			case SpoonerMode::eTransformMode::Rotation: op = ImGuizmo::ROTATE; break;
 			case SpoonerMode::eTransformMode::Scale:    op = ImGuizmo::SCALE;  break;
 			default:                                          op = ImGuizmo::TRANSLATE; break;
 		}
-		ImGuizmo::MODE gizmoMode = s.editingState.localSpace ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
+		ImGuizmo::MODE gizmoMode = s.render.editingState.localSpace ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
 
 		if (op == ImGuizmo::TRANSLATE)
 		{
 			float matrix[16];
-			BuildTransformMatrix(s.position, s.rotation, Vector3(1.0f, 1.0f, 1.0f), matrix);
+			BuildTransformMatrix(s.cache.position, s.cache.rotation, Vector3(1.0f, 1.0f, 1.0f), matrix);
 
 			float deltaMatrix[16]{};
-			float snapMatrix[3] = { Settings::gridSnapSize, Settings::gridSnapSize, Settings::gridSnapSize };
+			float snapMatrix[3] = { s.render.gridSnapSize, s.render.gridSnapSize, s.render.gridSnapSize };
 
 			ImGuizmo::Manipulate(viewMat, projMat, op, gizmoMode, matrix, deltaMatrix,
-				(Settings::bGridSnapEnabled && Settings::gridSnapSize > 0.0f) ? snapMatrix : nullptr);
+				(s.render.gridSnapEnabled && s.render.gridSnapSize > 0.0f) ? snapMatrix : nullptr);
 
 			if (ImGuizmo::IsUsing())
 			{
 				Vector3 newPos(
-					s.position.x + deltaMatrix[12],
-					s.position.y + deltaMatrix[13],
-					s.position.z + deltaMatrix[14]
+					s.cache.position.x + deltaMatrix[12],
+					s.cache.position.y + deltaMatrix[13],
+					s.cache.position.z + deltaMatrix[14]
 				);
 
-				if (fabsf(newPos.x - s.position.x) > FLT_EPSILON ||
-					fabsf(newPos.y - s.position.y) > FLT_EPSILON ||
-					fabsf(newPos.z - s.position.z) > FLT_EPSILON)
+				if (fabsf(newPos.x - s.cache.position.x) > FLT_EPSILON ||
+					fabsf(newPos.y - s.cache.position.y) > FLT_EPSILON ||
+					fabsf(newPos.z - s.cache.position.z) > FLT_EPSILON)
 				{
+					s.pending.entityHandle = s.cache.entityHandle;
 					s.pending.positionDirty = true;
 					s.pending.positionVal = newPos;
 				}
@@ -277,17 +299,17 @@ namespace sub::Spooner::ImGuiSpooner
 
 			if (!ImGuizmo::IsUsing())
 			{
-				BuildTransformMatrix(s.position, s.rotation, Vector3(1.0f, 1.0f, 1.0f), s_DragMatrix);
-				s_LastEuler[0] = s.rotation.x;
-				s_LastEuler[1] = s.rotation.y;
-				s_LastEuler[2] = s.rotation.z;
+				BuildTransformMatrix(s.cache.position, s.cache.rotation, Vector3(1.0f, 1.0f, 1.0f), s_DragMatrix);
+				s_LastEuler[0] = s.cache.rotation.x;
+				s_LastEuler[1] = s.cache.rotation.y;
+				s_LastEuler[2] = s.cache.rotation.z;
 			}
 
 			float oldRot[3] = { s_LastEuler[0], s_LastEuler[1], s_LastEuler[2] };
-			float snapMatrix[3] = { Settings::rotationSnapDegrees, Settings::rotationSnapDegrees, Settings::rotationSnapDegrees };
+			float snapMatrix[3] = { s.render.rotationSnapDegrees, s.render.rotationSnapDegrees, s.render.rotationSnapDegrees };
 			
 			ImGuizmo::Manipulate(viewMat, projMat, op, gizmoMode, s_DragMatrix, nullptr,
-				(Settings::bGridSnapEnabled && Settings::rotationSnapDegrees > 0.0f) ? snapMatrix : nullptr);
+				(s.render.gridSnapEnabled && s.render.rotationSnapDegrees > 0.0f) ? snapMatrix : nullptr);
 
 			if (ImGuizmo::IsUsing())
 			{
@@ -302,6 +324,7 @@ namespace sub::Spooner::ImGuiSpooner
 					fabsf(newRot.y - oldRot[1]) > FLT_EPSILON ||
 					fabsf(newRot.z - oldRot[2]) > FLT_EPSILON)
 				{
+					s.pending.entityHandle = s.cache.entityHandle;
 					s.pending.rotationDirty = true;
 					s.pending.rotationVal = newRot;
 				}
@@ -316,7 +339,7 @@ namespace sub::Spooner::ImGuiSpooner
 			static float s_DragMatrix[16];
 
 			if (!ImGuizmo::IsUsing())
-				BuildTransformMatrix(s.position, s.rotation, s.scale, s_DragMatrix);
+				BuildTransformMatrix(s.cache.position, s.cache.rotation, s.cache.scale, s_DragMatrix);
 
 			float deltaMatrix[16] = {0};
 			ImGuizmo::Manipulate(viewMat, projMat, ImGuizmo::SCALE, ImGuizmo::LOCAL, s_DragMatrix, deltaMatrix, nullptr);
@@ -327,57 +350,59 @@ namespace sub::Spooner::ImGuiSpooner
 				DecomposeTransformMatrix(deltaMatrix, deltaPos, deltaRot, deltaScale);
 
 				Vector3 newScale;
-				newScale.x = s.scale.x * deltaScale.x;
-				newScale.y = s.scale.y * deltaScale.y;
-				newScale.z = s.scale.z * deltaScale.z;
+				newScale.x = s.cache.scale.x * deltaScale.x;
+				newScale.y = s.cache.scale.y * deltaScale.y;
+				newScale.z = s.cache.scale.z * deltaScale.z;
 
-				if (fabsf(newScale.x - s.scale.x) > FLT_EPSILON ||
-					fabsf(newScale.y - s.scale.y) > FLT_EPSILON ||
-					fabsf(newScale.z - s.scale.z) > FLT_EPSILON)
+				if (fabsf(newScale.x - s.cache.scale.x) > FLT_EPSILON ||
+					fabsf(newScale.y - s.cache.scale.y) > FLT_EPSILON ||
+					fabsf(newScale.z - s.cache.scale.z) > FLT_EPSILON)
 				{
+					s.pending.entityHandle = s.cache.entityHandle;
 					s.pending.scaleDirty = true;
 					s.pending.scaleVal = newScale;
 				}
 			}
 		}
 
-		s.gizmoOver  = ImGuizmo::IsOver();
-		s.gizmoUsing = ImGuizmo::IsUsing();
+		s.render.gizmoOver  = ImGuizmo::IsOver();
+		s.render.gizmoUsing = ImGuizmo::IsUsing();
+	}
+
+// ═══════════════════════════════════════════════════════════════════
+//  D3D11 Render Callback
+// ═══════════════════════════════════════════════════════════════════
+
+	static bool ImGui_Init(ID3D11Device* device, ID3D11DeviceContext* context)
+	{
+		HWND hWnd = D3D11Hook::GetWindowHandle();
+		if (!hWnd) return false;
+
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO();
+		io.IniFilename = nullptr;
+		io.MouseDrawCursor = false;
+		ImGui::StyleColorsDark();
+
+		if (!ImGui_ImplWin32_Init(hWnd)) { ImGui::DestroyContext(); return false; }
+		if (!ImGui_ImplDX11_Init(device, context)) { ImGui_ImplWin32_Shutdown(); ImGui::DestroyContext(); return false; }
+		g_ImGuiInitialized = true;
+		return true;
 	}
 
 	static void OnRender(ID3D11Device* device, ID3D11DeviceContext* context, IDXGISwapChain* swapChain)
 	{
 		if (g_ShuttingDown || !g_Visible)
 		{
+			if (g_ImGuiInitialized)
+				ImGui::GetIO().MouseDrawCursor = false;
 			D3D11Hook::SetMenuVisible(false);
 			return;
 		}
 
-		if (!g_ImGuiInitialized)
-		{
-			HWND hWnd = D3D11Hook::GetWindowHandle();
-			if (!hWnd) return;
-
-			IMGUI_CHECKVERSION();
-			ImGui::CreateContext();
-			ImGuiIO& io = ImGui::GetIO();
-			io.IniFilename = nullptr;
-			io.MouseDrawCursor = false;
-			ImGui::StyleColorsDark();
-
-			if (!ImGui_ImplWin32_Init(hWnd))
-			{
-				ImGui::DestroyContext();
-				return;
-			}
-			if (!ImGui_ImplDX11_Init(device, context))
-			{
-				ImGui_ImplWin32_Shutdown();
-				ImGui::DestroyContext();
-				return;
-			}
-			g_ImGuiInitialized = true;
-		}
+		if (!g_ImGuiInitialized && !ImGui_Init(device, context))
+			return;
 
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
@@ -386,7 +411,8 @@ namespace sub::Spooner::ImGuiSpooner
 		{
 			std::lock_guard<std::mutex> lock(g_Mutex);
 
-			ImGui::GetIO().MouseDrawCursor = g_Shared.editingState.mode == SpoonerMode::eEditMode::Gizmo && g_Shared.editingState.cameraLocked;
+			// draw cursor only when using the gizmo
+			ImGui::GetIO().MouseDrawCursor = g_Shared.render.editingState.mode == SpoonerMode::eEditMode::Gizmo;
 
 			RunGizmo_NoLock(g_Shared);
 		}
@@ -394,6 +420,10 @@ namespace sub::Spooner::ImGuiSpooner
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Attachment Gizmo Math
+// ═══════════════════════════════════════════════════════════════════
 
 	static Vector3 WorldDeltaToBoneRelative(const Vector3& worldDelta, const Vector3& boneRotEuler)
 	{
@@ -423,9 +453,16 @@ namespace sub::Spooner::ImGuiSpooner
 		}
 	}
 
-	static void DrainPending_ScriptThread(SharedState& s)
+// ═══════════════════════════════════════════════════════════════════
+//  Script Thread Ticks
+// ═══════════════════════════════════════════════════════════════════
+
+	static void ApplyPending_ScriptThread(PendingWrites pending)
 	{
 		SpoonerEntity& sel = selectedEntity;
+		const bool targetsCurrentEntity = pending.entityHandle == 0 || pending.entityHandle == sel.handle.GetHandle();
+		if (!targetsCurrentEntity)
+			return;
 		if (sel.handle.Exists())
 		{
 			GTAentity parentEntity(ENTITY::GET_ENTITY_ATTACHED_TO(sel.handle.Handle()));
@@ -433,19 +470,19 @@ namespace sub::Spooner::ImGuiSpooner
 			// Normal entity (not attached)
 			if (!sel.attachmentArgs.isAttached)
 			{
-				if (s.pending.positionDirty) sel.handle.SetPosition(SpoonerMode::SnapPos(s.pending.positionVal));
-				if (s.pending.rotationDirty) sel.handle.SetRotation(SpoonerMode::SnapRot(s.pending.rotationVal));
+				if (pending.positionDirty) sel.handle.SetPosition(SpoonerMode::SnapPos(pending.positionVal));
+				if (pending.rotationDirty) sel.handle.SetRotation(SpoonerMode::SnapRot(pending.rotationVal));
 			}
 			// Attached entity - converting to local offsets
 			else if (parentEntity.Exists())
 			{
-				if (s.pending.positionDirty) GetAttachmentOffset(sel, parentEntity, s.pending.positionVal);
-				if (s.pending.rotationDirty)
+				if (pending.positionDirty) GetAttachmentOffset(sel, parentEntity, pending.positionVal);
+				if (pending.rotationDirty)
 				{
 					float oldWorldM[16], newWorldM[16], oldLocalM[16];
 					Vector3 curWorldRot = sel.handle.GetRotation();
 					BuildTransformMatrix(Vector3(), curWorldRot, Vector3(1.0f, 1.0f, 1.0f), oldWorldM);
-					BuildTransformMatrix(Vector3(), s.pending.rotationVal, Vector3(1.0f, 1.0f, 1.0f), newWorldM);
+					BuildTransformMatrix(Vector3(), pending.rotationVal, Vector3(1.0f, 1.0f, 1.0f), newWorldM);
 					BuildTransformMatrix(Vector3(), sel.attachmentArgs.rotation, Vector3(1.0f, 1.0f, 1.0f), oldLocalM);
 
 					float worldT[16], temp[16], newLocalM[16];
@@ -458,14 +495,14 @@ namespace sub::Spooner::ImGuiSpooner
 					sel.attachmentArgs.rotation = newLocalRot;
 				}
 
-				if (s.pending.positionDirty || s.pending.rotationDirty)
+				if (pending.positionDirty || pending.rotationDirty)
 				{
 					sel.handle.AttachTo(parentEntity, sel.attachmentArgs.boneIndex, sel.handle.GetIsCollisionEnabled(), sel.attachmentArgs.offset, sel.attachmentArgs.rotation);
 				}
 			}
 
-			if (s.pending.scaleDirty) {
-				sel.handle.SetScale(s.pending.scaleVal);
+			if (pending.scaleDirty) {
+				sel.handle.SetScale(pending.scaleVal);
 				// syncing scale so that it doesn't reset every time we grab the gizmo
 				Entity entHandle = sel.handle.GetHandle();
 				Submenus::EntityScaleState& state = [&]() -> Submenus::EntityScaleState& {
@@ -477,71 +514,94 @@ namespace sub::Spooner::ImGuiSpooner
 					}
 				}();
 				state.handle = entHandle;
-				state.scale = s.pending.scaleVal;
+				state.scale = pending.scaleVal;
 			}
 		}
-		s.pending = PendingWrites{};
 	}
+
+	// ── Snapshot ──────────────────────────────────────────────────
 
 	static void RefreshSnapshot_ScriptThread(SharedState& s)
 	{
 		int renderingCam = CAM::GET_RENDERING_CAM();
 		if (renderingCam != 0 && CAM::DOES_CAM_EXIST(renderingCam))
 		{
-			s.camCoord = CAM::GET_CAM_COORD(renderingCam);
-			s.camRot   = CAM::GET_CAM_ROT(renderingCam, 2);
-			s.camFov   = CAM::GET_CAM_FOV(renderingCam);
+			s.render.camCoord = CAM::GET_CAM_COORD(renderingCam);
+			s.render.camRot   = CAM::GET_CAM_ROT(renderingCam, 2);
+			s.render.camFov   = CAM::GET_CAM_FOV(renderingCam);
 		}
 		else
 		{
-			s.camCoord = CAM::GET_GAMEPLAY_CAM_COORD();
-			s.camRot   = CAM::GET_GAMEPLAY_CAM_ROT(2);
-			s.camFov   = CAM::GET_GAMEPLAY_CAM_FOV();
+			s.render.camCoord = CAM::GET_GAMEPLAY_CAM_COORD();
+			s.render.camRot   = CAM::GET_GAMEPLAY_CAM_ROT(2);
+			s.render.camFov   = CAM::GET_GAMEPLAY_CAM_FOV();
 		}
 
-		s.editingState = SpoonerMode::editingState;
-
-		const bool inGizmoNow = s.editingState.mode == SpoonerMode::eEditMode::Gizmo;
-		static bool s_wasInGizmo = false;
-		if (inGizmoNow && !s_wasInGizmo)
-		{
-			SpoonerMode::editingState.cameraLocked = true;
-			s.editingState.cameraLocked = true;
-		}
-		s_wasInGizmo = inGizmoNow;
+		s.render.editingState = SpoonerMode::editingState;
+		s.render.gridSnapEnabled = Settings::bGridSnapEnabled;
+		s.render.gridSnapSize = Settings::gridSnapSize;
+		s.render.rotationSnapDegrees = Settings::rotationSnapDegrees;
 
 		SpoonerEntity& sel = selectedEntity;
-		s.entityValid = (sel.handle.Handle() != 0) && sel.handle.Exists();
-		if (!s.entityValid)
+		s.cache.entityHandle = sel.handle.Handle();
+		s.cache.entityValid = (s.cache.entityHandle != 0) && sel.handle.Exists();
+		if (!s.cache.entityValid)
 		{
-			s.position = Vector3{};
-			s.rotation = Vector3{};
-			s.scale = Vector3{1.0f, 1.0f, 1.0f};
+			s.cache.position = Vector3{};
+			s.cache.rotation = Vector3{};
+			s.cache.scale = Vector3{1.0f, 1.0f, 1.0f};
 			return;
 		}
 
-		s.position = sel.handle.GetPosition();
-		s.rotation = sel.handle.GetRotation();
-		s.scale = sel.handle.GetScale();
+		s.cache.position = sel.handle.GetPosition();
+		s.cache.rotation = sel.handle.GetRotation();
+		s.cache.scale = sel.handle.GetScale();
 	}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Main Tick
+// ═══════════════════════════════════════════════════════════════════
 
 	void Tick()
 	{
-		bool suppressGameInput = false;
+		if (!g_Visible) return;
+
+		PendingWrites pending;
 		{
 			std::lock_guard<std::mutex> lock(g_Mutex);
-			DrainPending_ScriptThread(g_Shared);
-			RefreshSnapshot_ScriptThread(g_Shared);
-
-			suppressGameInput = g_Visible && (
-				(g_Shared.editingState.mode == SpoonerMode::eEditMode::Gizmo && g_Shared.editingState.cameraLocked) ||
-				g_Shared.gizmoOver ||
-				g_Shared.gizmoUsing);
+			pending = g_Shared.pending;
+			g_Shared.pending = PendingWrites{};
 		}
 
-		if (suppressGameInput)
+		ApplyPending_ScriptThread(pending);
+
+		SharedState snapshot;
+		RefreshSnapshot_ScriptThread(snapshot);
+
+		bool capturedGizmoOver = false, capturedGizmoUsing = false;
+		SpoonerMode::eEditMode capturedEditMode = SpoonerMode::eEditMode::Disabled;
+		{
+			std::lock_guard<std::mutex> lock(g_Mutex);
+
+			// gizmo interaction flags are owned by the render thread
+			snapshot.render.gizmoOver = g_Shared.render.gizmoOver;
+			snapshot.render.gizmoUsing = g_Shared.render.gizmoUsing;
+			g_Shared.render = snapshot.render;
+			g_Shared.cache = snapshot.cache;
+
+			capturedGizmoOver = g_Shared.render.gizmoOver;
+			capturedGizmoUsing = g_Shared.render.gizmoUsing;
+			capturedEditMode = g_Shared.render.editingState.mode;
+		}
+
+		// Disable player controls when using the gizmo
+		if (capturedEditMode == SpoonerMode::eEditMode::Gizmo || capturedGizmoOver || capturedGizmoUsing)
 			PAD::DISABLE_ALL_CONTROL_ACTIONS(0);
 	}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Public API
+// ═══════════════════════════════════════════════════════════════════
 
 	bool Initialize()
 	{
@@ -556,6 +616,10 @@ namespace sub::Spooner::ImGuiSpooner
 	{
 		g_ShuttingDown = true;
 		g_Visible = false;
+		D3D11Hook::SetMenuVisible(false);
+
+		for (int i = 0; D3D11Hook::IsRenderingFrame() && i < 100; ++i)
+			Sleep(10);
 
 		if (g_ImGuiInitialized)
 		{
@@ -571,7 +635,13 @@ namespace sub::Spooner::ImGuiSpooner
 	void SetVisible(bool visible)
 	{
 		g_Visible = visible;
-		D3D11Hook::SetMenuVisible(visible);
+		if (visible)
+			D3D11Hook::SetMenuVisible(true);
+		else
+		{
+			std::lock_guard<std::mutex> lock(g_Mutex);
+			g_Shared.pending = PendingWrites{};
+		}
 	}
 
 	bool IsVisible()

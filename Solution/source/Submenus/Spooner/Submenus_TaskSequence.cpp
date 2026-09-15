@@ -199,7 +199,7 @@ namespace sub::Spooner
 
 				AddOption("~italic~" + coord.ToString(), null);
 
-				auto& spoocam = SpoonerMode::spoonerModeCamera;
+				auto& spoocam = SpoonerCamera::camera;
 				if (!spoocam.IsActive())
 				{
 					bool bSetPosToMe = false;
@@ -283,7 +283,7 @@ namespace sub::Spooner
 
 				AddOption("~italic~" + tskPtr->targetPos.ToString(), null);
 
-				auto& spoocam = SpoonerMode::spoonerModeCamera;
+				auto& spoocam = SpoonerCamera::camera;
 				if (!spoocam.IsActive())
 				{
 					bool bSetPosToMe = false;
@@ -442,7 +442,7 @@ namespace sub::Spooner
 					else ++cit;
 				}
 
-				auto& spoocam = SpoonerMode::spoonerModeCamera;
+				auto& spoocam = SpoonerCamera::camera;
 				if (!spoocam.IsActive())
 				{
 					bool bSetPosToMe = false;
@@ -1122,7 +1122,7 @@ namespace sub::Spooner
 					AddBreak(nas.first);
 					AddOption("~italic~" + nas.second->ToString(), null);
 
-					auto& spoocam = SpoonerMode::spoonerModeCamera;
+					auto& spoocam = SpoonerCamera::camera;
 					if (!spoocam.IsActive())
 					{
 						bool bSetPosToMe = false;

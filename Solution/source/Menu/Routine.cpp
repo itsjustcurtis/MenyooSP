@@ -757,9 +757,7 @@ float g_forgeGunPrecision = 0.2f;
 float g_forgeGunShootForce = 300.0f;
 bool objectSpawnForgeAssistance = false;
 
-DWORD g_lastSpeedDisplayTime = 0;
 DWORD g_lastFOVDisplayTime = 0;
-float g_lastSpeedValue = 0.0f;
 float g_lastFOVValue = 0.0f;
 
 DWORD g_lastHeightLockMessageTime = 0;
@@ -2010,27 +2008,17 @@ void SetNoclip()
 				}
 
 				// Mouse wheel to adjust speed
+				const float previousSpeed = g_freecamSpeed;
 				if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
-				{
 					g_freecamSpeed = min(g_freecamSpeed + MenuConfig::FreeCam::speedAdjustStep, MenuConfig::FreeCam::maxSpeed);
-					MenuConfig::FreeCam::defaultSpeed = g_freecamSpeed;
-					MenuConfig::SaveConfig();
-					g_lastSpeedValue = g_freecamSpeed;
-					g_lastSpeedDisplayTime = GetTickCount();
-				}
 				if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))
-				{
 					g_freecamSpeed = max(g_freecamSpeed - MenuConfig::FreeCam::speedAdjustStep, MenuConfig::FreeCam::minSpeed);
+
+				if (previousSpeed != g_freecamSpeed)
+				{
 					MenuConfig::FreeCam::defaultSpeed = g_freecamSpeed;
 					MenuConfig::SaveConfig();
-					g_lastSpeedValue = g_freecamSpeed;
-					g_lastSpeedDisplayTime = GetTickCount();
-				}
-
-				if (GetTickCount() - g_lastSpeedDisplayTime < 1000)
-				{
-					Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
-					Game::Print::DrawString(oss_ << "FreeCam Speed: " << g_lastSpeedValue, 0.5f, 0.95f);
+					Game::Print::ShowNotification(oss_ << "FreeCam Speed: " << g_freecamSpeed, 1.0f);
 				}
 			}
 
