@@ -32,9 +32,24 @@ enum class PedHeadOverlay : int;
 
 namespace sub
 {
+	// Wardrobe front view camera
+
+	namespace WardrobeCamera
+	{
+		enum class Framing : UINT8 { Body, Head };
+
+		bool IsActive();
+		// active or still easing back to the previous view
+		bool IsBusy();
+		void Enable(const GTAped& ped);
+		// restoreView = false when another camera is taking over the view
+		void Disable(bool restoreView = true);
+		void SetFraming(const GTAped& ped, Framing framing);
+		void Tick();
+	}
+
 	// Component changer
 
-	extern Camera g_cam_componentChanger;
 	void AddPedComponentOption(const std::string& text, int index);
 	void AddPedPropOption(const std::string& text, int index);
 

@@ -11,6 +11,7 @@
 
 #include "ImGuiSpooner.h"
 #include "SpoonerCursor.h"
+#include "..\PedComponentChanger.h"
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
@@ -450,6 +451,7 @@ namespace sub::Spooner
 		{
 			if (!menuHasNotOpened)
 			{
+				WardrobeCamera::Disable(false);
 				SpoonerMode::bEnabled = true;
 				sub::Spooner::ImGuiSpooner::SetVisible(true);
 				if (Menu::activeSubmenu != SUB::CLOSED)
@@ -462,11 +464,10 @@ namespace sub::Spooner
 		}
 		void TurnOff()
 		{
+			WardrobeCamera::Disable(false);
 			SpoonerCursor::Reset();
 			SpoonerMode::bEnabled = false;
 			sub::Spooner::ImGuiSpooner::SetVisible(false);
-			if (Menu::activeSubmenu != SUB::CLOSED)
-				Menu::SetSub_closed();
 			SpoonerMode::editingState.SetMode(SpoonerMode::eEditMode::Disabled);
 			auto& info = modelPreviewInfo;
 			for (auto it = info.previousEntities.begin(); it != info.previousEntities.end();)

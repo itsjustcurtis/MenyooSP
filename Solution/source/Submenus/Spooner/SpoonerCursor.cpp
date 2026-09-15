@@ -6,6 +6,7 @@
 #include "SpoonerEntity.h"
 #include "EntityManagement.h"
 #include "Submenus.h"
+#include "..\PedComponentChanger.h"
 #include "..\..\Menu\Menu.h"
 #include "..\..\Natives\natives2.h"
 #include "..\..\Natives\types.h"
@@ -72,6 +73,7 @@ namespace sub::Spooner::SpoonerCursor
 		bool ShouldDraw()
 		{
 			return SpoonerMode::bEnabled &&
+				!WardrobeCamera::IsBusy() &&
 				SpoonerMode::editingState.mode == SpoonerMode::eEditMode::Disabled &&
 				SpoonerCamera::camera.Exists();
 		}

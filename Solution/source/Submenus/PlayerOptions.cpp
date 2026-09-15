@@ -72,12 +72,6 @@ namespace sub
 		AddOption("Model Changer", null, nullFunc, SUB::MODELCHANGER);
 
 		AddOption("Wardrobe", null, nullFunc, SUB::COMPONENTS);
-		if (g_cam_componentChanger.Exists())
-		{
-			g_cam_componentChanger.SetActive(false);
-			g_cam_componentChanger.Destroy();
-			World::SetRenderingCamera(0);
-		}
 		
 		AddOption("Animations", null, nullFunc, SUB::ANIMATIONSUB);
 		AddOption("Scenario Actions", null, nullFunc, SUB::AnimationTaskScenarios);

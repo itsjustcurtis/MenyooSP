@@ -5,6 +5,7 @@
 #include "MarkerManagement.h"
 #include "SpoonerMarker.h"
 #include "Submenus.h"
+#include "..\PedComponentChanger.h"
 #include "..\..\Menu\Menu.h"
 #include "..\..\Natives\natives2.h"
 #include "..\..\Util\keyboard.h"
@@ -187,6 +188,14 @@ namespace sub::Spooner::SpoonerCamera
 		if (IS_PAUSE_MENU_ACTIVE()) return;
 
 		HIDE_HUD_AND_RADAR_THIS_FRAME();
+
+		// wardrobe front view owns the view (or is easing back to it); don't take it back or move the Spooner camera
+		if (WardrobeCamera::IsBusy())
+		{
+			DisablePlayerControls(player);
+			return;
+		}
+
 		EnsureActive(playerPed);
 		DisablePlayerControls(player);
 

@@ -71,9 +71,260 @@ namespace sub
 		else
 			return (current > minVal) ? current - step : current;
 	}
+	// Wardrobe front view camera
+
+	namespace WardrobeCamera
+	{
+		namespace
+		{
+			constexpr int transitionMs = 1000;
+			constexpr int exitTransitionMs = 900;
+			constexpr DWORD takeoverGraceMs = transitionMs + 500;
+
+			Camera camera;
+			GTAped framedPed;
+			Framing framing = Framing::Body;
+			DWORD enabledAt = 0;
+
+			// camera kept alive while easing back to the previous view
+			Camera exitingCamera;
+			Camera exitTarget;
+			bool exitToScriptCamera = false;
+			DWORD exitStartedAt = 0;
+			Vector3 exitStartPos{};
+			Vector3 exitStartRot{};
+			float exitStartFov = 0.0f;
+
+			bool IsWardrobeSubmenu(int submenu)
+			{
+				switch (submenu)
+				{
+				case SUB::COMPONENTS: case SUB::COMPONENTS2:
+				case SUB::COMPONENTS_OUTFITS: case SUB::COMPONENTS_OUTFITS2: case SUB::COMPONENTS_OUTFITS_DEFAULT:
+				case SUB::COMPONENTSPROPS: case SUB::COMPONENTSPROPS2:
+				case SUB::PEDDECALS_TYPES: case SUB::PEDDECALS_ZONES: case SUB::PEDDECALS_ZONES_SEARCH: case SUB::PEDDECALS_INZONE:
+				case SUB::PEDDAMAGET_CATEGORYLIST: case SUB::PEDDAMAGET_BONESELECTION: case SUB::PEDDAMAGET_BLOOD:
+				case SUB::PEDDAMAGET_DAMAGEDECALS: case SUB::PEDDAMAGET_DAMAGEPACKS:
+				case SUB::PED_HEADFEATURES_MAIN: case SUB::PED_HEADFEATURES_HEADOVERLAYS: case SUB::PED_HEADFEATURES_HEADOVERLAYS_INITEM:
+				case SUB::PED_HEADFEATURES_FACEFEATURES: case SUB::PED_HEADFEATURES_FACEGENERATOR: case SUB::PED_HEADFEATURES_SKINTONE:
+					return true;
+				default:
+					return false;
+				}
+			}
+
+			void ApplyFraming()
+			{
+				if (!camera.Exists() || !framedPed.Exists()) return;
+
+				if (framing == Framing::Head)
+				{
+					camera.AttachTo(framedPed, Bone::Head, Vector3(0.0f, 0.6f, 0.0f));
+					camera.PointAt(framedPed, Bone::Head);
+				}
+				else
+				{
+					camera.AttachTo(framedPed, Vector3(0.0f, 2.6f + framedPed.Dim1().y, 0.5f));
+					camera.PointAt(framedPed);
+				}
+			}
+
+			// The script camera that should render once the front view exits (none = gameplay camera)
+			Camera GetViewOwner()
+			{
+				if (Spooner::SpoonerMode::bEnabled && Spooner::SpoonerCamera::camera.Exists())
+					return Spooner::SpoonerCamera::camera;
+				if (g_cam_noClip.Exists())
+					return g_cam_noClip;
+				return Camera();
+			}
+
+			void DestroyCamera(Camera& cam)
+			{
+				if (cam.Exists())
+				{
+					cam.SetActive(false);
+					cam.Destroy();
+				}
+				cam = Camera();
+			}
+
+			void FinishExit()
+			{
+				DestroyCamera(exitingCamera);
+				exitTarget = Camera();
+			}
+
+			float WrapDegrees(float degrees)
+			{
+				degrees = fmod(degrees + 180.0f, 360.0f);
+				return degrees < 0.0f ? degrees + 180.0f : degrees - 180.0f;
+			}
+
+			void TickExit()
+			{
+				if (exitingCamera.Handle() == 0) return;
+				if (!exitingCamera.Exists())
+				{
+					FinishExit();
+					return;
+				}
+
+				const DWORD elapsed = GetTickCount() - exitStartedAt;
+
+				// gameplay camera: the native RENDER_SCRIPT_CAMS ease is doing the blend
+				if (!exitToScriptCamera)
+				{
+					if (elapsed > static_cast<DWORD>(exitTransitionMs) + 150)
+						FinishExit();
+					return;
+				}
+
+				// the target went away mid-blend (e.g. Spooner/FreeCam turned off); its owner already reset the view
+				if (!exitTarget.Exists())
+				{
+					FinishExit();
+					return;
+				}
+
+				// Manual blend towards the target's *current* pose, so it also lands on a moving camera
+				const float t = (std::min)(1.0f, static_cast<float>(elapsed) / exitTransitionMs);
+				const float s = t * t * (3.0f - 2.0f * t); // smoothstep
+
+				const Vector3 targetPos = exitTarget.GetPosition();
+				const Vector3 targetRot = exitTarget.GetRotation();
+				const float targetFov = exitTarget.GetFieldOfView();
+
+				exitingCamera.SetPosition(Vector3(
+					exitStartPos.x + (targetPos.x - exitStartPos.x) * s,
+					exitStartPos.y + (targetPos.y - exitStartPos.y) * s,
+					exitStartPos.z + (targetPos.z - exitStartPos.z) * s));
+				exitingCamera.SetRotation(Vector3(
+					exitStartRot.x + WrapDegrees(targetRot.x - exitStartRot.x) * s,
+					exitStartRot.y + WrapDegrees(targetRot.y - exitStartRot.y) * s,
+					exitStartRot.z + WrapDegrees(targetRot.z - exitStartRot.z) * s));
+				exitingCamera.SetFieldOfView(exitStartFov + (targetFov - exitStartFov) * s);
+
+				if (t >= 1.0f)
+				{
+					// both cameras share the same pose now, so this switch is invisible
+					World::SetRenderingCamera(exitTarget);
+					FinishExit();
+				}
+			}
+
+			// Smoothly hand the view back to whoever owns it, keeping our camera alive until the blend ends
+			void BeginExit()
+			{
+				FinishExit();
+
+				exitingCamera = camera;
+				camera = Camera();
+				framedPed = GTAped();
+				exitStartedAt = GetTickCount();
+
+				// freeze the shot where it is so the blend doesn't follow the ped around
+				exitingCamera.Detach();
+				exitingCamera.StopPointing();
+				exitStartPos = exitingCamera.GetPosition();
+				exitStartRot = exitingCamera.GetRotation();
+				exitStartFov = exitingCamera.GetFieldOfView();
+
+				exitTarget = GetViewOwner();
+				exitToScriptCamera = exitTarget.Exists();
+				if (!exitToScriptCamera)
+					RENDER_SCRIPT_CAMS(false, true, exitTransitionMs, 1, 0, 0);
+			}
+		}
+
+		bool IsActive()
+		{
+			return camera.Exists();
+		}
+
+		bool IsBusy()
+		{
+			return IsActive() || exitingCamera.Exists();
+		}
+
+		void Enable(const GTAped& ped)
+		{
+			if (IsActive() || !ped.Exists()) return;
+
+			// re-entering mid ease-out: jump to the view we were easing to, then blend in from there
+			if (exitToScriptCamera && exitTarget.Exists() && exitingCamera.Exists())
+				World::SetRenderingCamera(exitTarget);
+			FinishExit();
+			Camera previous = World::GetRenderingCamera();
+
+			camera = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", false);
+			camera.SetFieldOfView(40.0f);
+			framedPed = ped;
+			framing = Framing::Body;
+			ApplyFraming();
+			enabledAt = GetTickCount();
+
+			if (previous.Exists())
+				previous.InterpTo(camera, transitionMs, true, true);
+			else
+			{
+				camera.SetActive(true);
+				RENDER_SCRIPT_CAMS(true, true, transitionMs, 1, 0, 0);
+			}
+		}
+
+		void Disable(bool restoreView)
+		{
+			if (restoreView && camera.Exists())
+			{
+				BeginExit();
+				return;
+			}
+
+			// hard hand-off: another camera is taking over, so cut immediately
+			FinishExit();
+			DestroyCamera(camera);
+			framedPed = GTAped();
+		}
+
+		void SetFraming(const GTAped& ped, Framing newFraming)
+		{
+			if (!IsActive()) return;
+
+			framedPed = ped;
+			framing = newFraming;
+			ApplyFraming();
+		}
+
+		void Tick()
+		{
+			TickExit();
+			if (camera.Handle() == 0) return;
+
+			// destroyed externally (e.g. "Delete All Cameras")
+			if (!camera.Exists())
+			{
+				Disable(false);
+				return;
+			}
+
+			if (!IsWardrobeSubmenu(Menu::activeSubmenu) || !framedPed.Exists())
+			{
+				Disable();
+				return;
+			}
+
+			// another camera (Spooner, FreeCam, ...) took over the view
+			if (GetTickCount() - enabledAt > takeoverGraceMs && !camera.IsInterpolating()
+				&& World::GetRenderingCamera().Handle() != camera.Handle())
+			{
+				Disable(false);
+			}
+		}
+	}
+
 	// Component changer
 
-	Camera g_cam_componentChanger;
 	static int s_selectedComponentIndex = 0;
 	static int s_selectedPropIndex = 0;
 	static int s_selectedOverlayIndex = 0;
@@ -135,14 +386,10 @@ namespace sub
 
 		GTAped thisPed = g_activePedHandle;
 
-		if (g_cam_componentChanger.Exists())
-		{
-			g_cam_componentChanger.AttachTo(thisPed, Vector3(0.0f, 2.6f + thisPed.Dim1().y, 0.5f));
-			g_cam_componentChanger.PointAt(thisPed);
-		}
+		WardrobeCamera::SetFraming(thisPed, WardrobeCamera::Framing::Body);
 
 		AddTitle("Wardrobe");
-		AddLocal("Front View", g_cam_componentChanger.Exists(), frontView, frontView);
+		AddLocal("Front View", WardrobeCamera::IsActive(), frontView, frontView);
 		AddOption("Outfits", null, nullFunc, SUB::COMPONENTS_OUTFITS);
 		AddOption("Default Outfits (Beta)", null, nullFunc, SUB::COMPONENTS_OUTFITS_DEFAULT);
 		AddOption("Decal Overlays", null, PedDecals::OpenSubDecals, -1, true);
@@ -209,33 +456,10 @@ namespace sub
 			return;
 		}
 		if (frontView) {
-			if (g_cam_componentChanger.Exists())
-			{
-				g_cam_componentChanger.SetActive(false);
-				g_cam_componentChanger.Destroy();
-				if (sub::Spooner::SpoonerMode::bEnabled && sub::Spooner::SpoonerCamera::camera.Exists())
-					World::SetRenderingCamera(sub::Spooner::SpoonerCamera::camera);
-				else
-					World::SetRenderingCamera(0);
-			}
+			if (WardrobeCamera::IsActive())
+				WardrobeCamera::Disable();
 			else
-			{
-				Camera gmCam = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
-				g_cam_componentChanger = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
-
-				g_cam_componentChanger.SetFieldOfView(40.0f);
-				g_cam_componentChanger.AttachTo(thisPed, Vector3(0.0f, 1.5f + thisPed.Dim1().y, 0.5f));
-				g_cam_componentChanger.PointAt(thisPed);
-
-				gmCam.SetPosition(World::GetRenderingCamera().Handle() == 0 ? GameplayCamera::GetPosition() : World::GetRenderingCamera().GetPosition());
-				gmCam.SetRotation(World::GetRenderingCamera().Handle() == 0 ? GameplayCamera::GetRotation() : World::GetRenderingCamera().GetRotation());
-
-				gmCam.InterpTo(g_cam_componentChanger, 1000, true, true);
-				while (gmCam.IsInterpolating())
-					WAIT(0);
-				gmCam.Destroy();
-				World::SetRenderingCamera(g_cam_componentChanger);
-			}
+				WardrobeCamera::Enable(thisPed);
 			return;
 		}
 	}
@@ -366,11 +590,7 @@ namespace sub
 	{
 		GTAped thisPed = g_activePedHandle;
 
-		if (g_cam_componentChanger.Exists())
-		{
-			g_cam_componentChanger.AttachTo(thisPed, Bone::Head, Vector3(0.0f, 0.6f, 0.0f));
-			g_cam_componentChanger.PointAt(thisPed, Bone::Head);
-		}
+		WardrobeCamera::SetFraming(thisPed, WardrobeCamera::Framing::Head);
 
 		bool bRandomProps = false, bDefaultProps = false;
 		const std::vector<std::string> propNames
@@ -1179,11 +1399,7 @@ namespace sub
 			GTAped ped = g_activePedHandle;
 			Model pedModel = ped.Model();
 
-			if (g_cam_componentChanger.Exists())
-			{
-				g_cam_componentChanger.AttachTo(ped, Bone::Head, Vector3(0.0f, 0.645f, 0.0f));
-				g_cam_componentChanger.PointAt(ped, Bone::Head);
-			}
+			WardrobeCamera::SetFraming(ped, WardrobeCamera::Framing::Head);
 
 			if (!ped.Exists() || !DoesPedModelSupportHeadFeatures(pedModel.hash))
 			{

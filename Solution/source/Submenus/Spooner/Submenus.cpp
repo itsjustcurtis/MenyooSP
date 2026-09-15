@@ -2431,12 +2431,6 @@ namespace sub
 			}
 
 				AddOption("Wardrobe", null, SetSelectedEntityAsActivePed, SUB::COMPONENTS);
-			if (g_cam_componentChanger.Exists())
-			{
-				g_cam_componentChanger.SetActive(false);
-				g_cam_componentChanger.Destroy();
-				World::SetRenderingCamera(0);
-			}
 
 				AddOption("Animations", null, SetSelectedEntityAsActivePed, SUB::ANIMATIONSUB);
 				AddOption("Scenario Actions", null, SetSelectedEntityAsActivePed, SUB::AnimationTaskScenarios);

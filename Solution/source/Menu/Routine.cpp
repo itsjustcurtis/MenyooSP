@@ -1868,6 +1868,7 @@ void SetNoclipOff2()
 	auto& cam = g_cam_noClip;
 	if (cam.Exists())
 	{
+		sub::WardrobeCamera::Disable(false);
 		cam.SetActive(false);
 		cam.Destroy();
 		World::SetRenderingCamera(0);
@@ -1935,6 +1936,7 @@ void SetNoclip()
 
 		if (!cam.Exists())
 		{
+			sub::WardrobeCamera::Disable(false);
 			ent.RequestControl();
 			cam = World::CreateCamera();
 			cam.SetPosition(GameplayCamera::GetPosition());
@@ -3344,6 +3346,7 @@ float NormalizeHSV(int h, int s, int v)
 
 static void TickSubsystems()
 {
+	sub::WardrobeCamera::Tick();
 	sub::Spooner::SpoonerMode::Tick();
 	sub::GhostRiderMode::Tick();
 	sub::VehicleAutoDrive::Tick();
