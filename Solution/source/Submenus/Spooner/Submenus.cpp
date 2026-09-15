@@ -115,6 +115,9 @@ namespace sub
 					return;
 				if (IsSelected(entity.handle))
 					return;
+				// attached entities can't be selected, pivot would replace their attachment
+				if (entity.handle.IsAttached())
+					return;
 				MultiSelect::g_selectedEntities.push_back(entity);
 			}
 
@@ -2229,12 +2232,14 @@ namespace sub
 					}
 
 					bool bInMultiSelect = MultiSelect::IsSelected(e.handle);
+					// selected entities are being attached to the pivot, so only unselected ones can be genuinely attached
+					bool bBlocked = !bInMultiSelect && e.handle.IsAttached();
 					bool bEntityPressed = false;
-					AddTickol(e.hashName, bInMultiSelect, bEntityPressed, bEntityPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					AddTickol(e.hashName + (bBlocked ? " ~r~(Attached)" : ""), bInMultiSelect, bEntityPressed, bEntityPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 					if (Menu::IsLastDrawnOptionSelected())
 						EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(127, 0, 255, 200));
 
-					if (bEntityPressed)
+					if (bEntityPressed && !bBlocked)
 					{
 						MultiSelect::DestroyPivot();
 						if (bInMultiSelect)
