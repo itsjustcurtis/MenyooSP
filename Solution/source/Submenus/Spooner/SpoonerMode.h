@@ -56,6 +56,10 @@ namespace sub::Spooner
 			{
 				return mode == eEditMode::Gizmo && cameraLocked;
 			}
+			bool UsesGizmoCursor() const
+			{
+				return mode == eEditMode::Gizmo && cameraLocked;
+			}
 		};
 		extern EditingState editingState;
 

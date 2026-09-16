@@ -253,6 +253,8 @@ namespace sub::Spooner::ImGuiSpooner
 
 		ImGuizmo::BeginFrame();
 		ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+		// the mouse drives the camera while unlocked, so the gizmo is display-only
+		ImGuizmo::Enable(s.render.editingState.cameraLocked);
 
 		ImGuizmo::OPERATION op;
 		switch (s.render.editingState.transformMode)
@@ -411,8 +413,8 @@ namespace sub::Spooner::ImGuiSpooner
 		{
 			std::lock_guard<std::mutex> lock(g_Mutex);
 
-			// draw cursor only when using the gizmo
-			ImGui::GetIO().MouseDrawCursor = g_Shared.render.editingState.mode == SpoonerMode::eEditMode::Gizmo;
+			// draw cursor only when the gizmo is usable (camera locked)
+			ImGui::GetIO().MouseDrawCursor = g_Shared.render.editingState.UsesGizmoCursor();
 
 			RunGizmo_NoLock(g_Shared);
 		}
