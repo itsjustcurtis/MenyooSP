@@ -42,8 +42,7 @@ namespace FreeCamMode
 		// controller movement is scaled so the default speed (0.5) matches the old fixed 0.8 / 1.8
 		constexpr float controllerSpeedScale = 1.6f;
 		constexpr float controllerHastenMultiplier = 2.25f;
-		constexpr float keyboardSprintMultiplier = 2.0f;
-		constexpr DWORD configSaveDelayMs = 1000;
+		constexpr float keyboardSprintMultiplier = 4.0f;
 
 		struct EntityState
 		{
@@ -63,16 +62,12 @@ namespace FreeCamMode
 		{
 			bool active = false;
 			Camera camera;
-			float speed = 0.5f;
 
 			bool heightLocked = false;
 			float lockedHeight = 0.0f;
 
 			EntityState ped;      // player ped, captured when flying starts or the ped changes
 			EntityState vehicle;  // vehicle being flown, if any
-
-			bool configDirty = false;
-			DWORD lastConfigChange = 0;
 		};
 
 		State state;
@@ -192,7 +187,7 @@ namespace FreeCamMode
 		{
 			Input input = ReadRotationInput(controllerRotationSensitivity);
 
-			float movement = state.speed * controllerSpeedScale;
+			float movement = MenuConfig::FreeCam::defaultSpeed * controllerSpeedScale;
 			if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_RB))
 				movement *= controllerHastenMultiplier;
 
@@ -208,7 +203,7 @@ namespace FreeCamMode
 
 			float movement = IS_DISABLED_CONTROL_PRESSED(2, INPUT_VEH_ATTACK2)
 				? MenuConfig::FreeCam::defaultSlowSpeed
-				: state.speed;
+				: MenuConfig::FreeCam::defaultSpeed;
 			if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
 				movement *= keyboardSprintMultiplier;
 
@@ -267,21 +262,6 @@ namespace FreeCamMode
 
 		// ── Keyboard adjustments (height lock, speed, FOV) ─────────────
 
-		void MarkConfigDirty()
-		{
-			state.configDirty = true;
-			state.lastConfigChange = GetTickCount();
-		}
-
-		void FlushConfigSave(bool force = false)
-		{
-			if (!state.configDirty) return;
-			if (!force && GetTickCount() - state.lastConfigChange < configSaveDelayMs) return;
-
-			state.configDirty = false;
-			MenuConfig::SaveConfig();
-		}
-
 		void ToggleHeightLock()
 		{
 			state.heightLocked = !state.heightLocked;
@@ -300,13 +280,13 @@ namespace FreeCamMode
 
 		void AdjustSpeed(int scroll)
 		{
-			const float newSpeed = std::clamp(state.speed + scroll * MenuConfig::FreeCam::speedAdjustStep,
+			const float currentSpeed = MenuConfig::FreeCam::defaultSpeed;
+			const float newSpeed = std::clamp(currentSpeed + scroll * MenuConfig::FreeCam::speedAdjustStep,
 				MenuConfig::FreeCam::minSpeed, MenuConfig::FreeCam::maxSpeed);
-			if (newSpeed == state.speed) return;
+			if (newSpeed == currentSpeed) return;
 
-			state.speed = newSpeed;
 			MenuConfig::FreeCam::defaultSpeed = newSpeed;
-			MarkConfigDirty();
+			MenuConfig::RequestSave();
 			Game::Print::ShowNotification(oss_ << "FreeCam Speed: " << newSpeed, 1.0f);
 		}
 
@@ -319,7 +299,7 @@ namespace FreeCamMode
 
 			state.camera.SetFieldOfView(newFov);
 			MenuConfig::FreeCam::defaultFov = newFov;
-			MarkConfigDirty();
+			MenuConfig::RequestSave();
 			Game::Print::ShowNotification(oss_ << "FreeCam FOV: " << newFov, 1.0f);
 		}
 
@@ -375,7 +355,6 @@ namespace FreeCamMode
 
 		state = State{};
 		state.active = true;
-		state.speed = MenuConfig::FreeCam::defaultSpeed;
 		SyncControlledEntity();
 
 		GTAentity controlled = GetControlledEntity();
@@ -415,7 +394,7 @@ namespace FreeCamMode
 			World::SetRenderingCamera(0);
 		}
 
-		FlushConfigSave(true);
+		MenuConfig::FlushPendingSave(true);
 		state = State{};
 	}
 
@@ -473,6 +452,6 @@ namespace FreeCamMode
 			ApplyMovement(input);
 		}
 
-		FlushConfigSave();
+		MenuConfig::FlushPendingSave();
 	}
 }

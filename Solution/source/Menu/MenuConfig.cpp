@@ -606,6 +606,28 @@ void MenuConfig::SaveConfig()
 	ini.SaveFile((GetPathffA(Pathff::Main, true) + "menyooConfig.ini").c_str());
 }
 
+namespace
+{
+	constexpr DWORD pendingSaveDelayMs = 1000;
+	bool savePending = false;
+	DWORD lastSaveRequest = 0;
+}
+
+void MenuConfig::RequestSave()
+{
+	savePending = true;
+	lastSaveRequest = GetTickCount();
+}
+
+void MenuConfig::FlushPendingSave(bool force)
+{
+	if (!savePending) return;
+	if (!force && GetTickCount() - lastSaveRequest < pendingSaveDelayMs) return;
+
+	savePending = false;
+	SaveConfig();
+}
+
 void MenuConfig::ConfigResetHaxValues()
 {
 	auto& ini = MenuConfig::iniFile;

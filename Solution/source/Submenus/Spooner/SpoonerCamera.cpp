@@ -7,6 +7,7 @@
 #include "Submenus.h"
 #include "..\PedComponentChanger.h"
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\MenuConfig.h"
 #include "..\..\Natives\natives2.h"
 #include "..\..\Util\keyboard.h"
 #include "..\..\Scripting\Game.h"
@@ -21,7 +22,13 @@
 namespace sub::Spooner::SpoonerCamera
 {
 	Camera camera;
-	static float speed = 1.0f;
+	// shared FreeCam speed is scaled so its default (0.5) matches the old Spooner default (1.0)
+	constexpr float speedScale = 2.0f;
+
+	static float GetSpeed()
+	{
+		return MenuConfig::FreeCam::defaultSpeed * speedScale;
+	}
 
 	struct Input
 	{
@@ -38,6 +45,7 @@ namespace sub::Spooner::SpoonerCamera
 		camera.Destroy();
 		World::SetRenderingCamera(0);
 		camera = Camera();
+		MenuConfig::FlushPendingSave(true);
 	}
 
 	static void EnsureActive(const GTAped& playerPed)
@@ -48,7 +56,7 @@ namespace sub::Spooner::SpoonerCamera
 			camera = World::CreateCamera(
 				playerPosition + Vector3(0, 0, 2.8f),
 				Vector3(0, 0, playerPed.GetRotation().z),
-				73.0f);
+				MenuConfig::FreeCam::defaultFov);
 			camera.SetActive(false);
 		}
 
@@ -70,7 +78,7 @@ namespace sub::Spooner::SpoonerCamera
 	static Input ReadControllerInput()
 	{
 		Input input;
-		const float movementSensitivity = Settings::cameraMovementSensitivityGamepad * speed;
+		const float movementSensitivity = Settings::cameraMovementSensitivityGamepad * GetSpeed();
 		const float rotationSensitivity = Settings::cameraRotationSensitivityGamepad;
 
 		input.translation.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
@@ -91,12 +99,12 @@ namespace sub::Spooner::SpoonerCamera
 			float movementSensitivity = Settings::cameraMovementSensitivityKeyboard;
 			if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
 				movementSensitivity *= 4.0f;
-			movementSensitivity *= speed;
+			movementSensitivity *= GetSpeed();
 
 			input.translation.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
 			input.translation.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
-			input.translation.z = IsKeyDown(VirtualKey::X) ? movementSensitivity / 2.0f
-				: IsKeyDown(VirtualKey::Z) ? -movementSensitivity / 2.0f
+			input.translation.z = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? movementSensitivity
+				: IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -movementSensitivity
 				: 0.0f;
 		}
 
@@ -110,16 +118,52 @@ namespace sub::Spooner::SpoonerCamera
 		return input;
 	}
 
-	static void UpdateSpeed()
+	// Returns -1 / 0 / +1 for scroll down / none / up
+	static int ReadScroll()
 	{
-		const float previousSpeed = speed;
-		if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
-			speed = min(speed + 0.1f, 10.0f);
-		if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))
-			speed = max(speed - 0.1f, 0.1f);
+		if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP)) return 1;
+		if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN)) return -1;
+		return 0;
+	}
 
-		if (previousSpeed != speed)
-			Game::Print::ShowNotification(oss_ << "Spooner Camera Speed: " << speed, 1.0f);
+	static void AdjustSpeed(int scroll)
+	{
+		const float currentSpeed = MenuConfig::FreeCam::defaultSpeed;
+		const float newSpeed = std::clamp(currentSpeed + scroll * MenuConfig::FreeCam::speedAdjustStep,
+			MenuConfig::FreeCam::minSpeed, MenuConfig::FreeCam::maxSpeed);
+		if (newSpeed == currentSpeed) return;
+
+		MenuConfig::FreeCam::defaultSpeed = newSpeed;
+		MenuConfig::RequestSave();
+		Game::Print::ShowNotification(oss_ << "Spooner Camera Speed: " << newSpeed, 1.0f);
+	}
+
+	static void AdjustFov(int scroll)
+	{
+		const float currentFov = camera.GetFieldOfView();
+		const float newFov = std::clamp(currentFov + scroll * MenuConfig::FreeCam::fovAdjustStep,
+			MenuConfig::FreeCam::minFov, MenuConfig::FreeCam::maxFov);
+		if (newFov == currentFov) return;
+
+		camera.SetFieldOfView(newFov);
+		MenuConfig::FreeCam::defaultFov = newFov;
+		MenuConfig::RequestSave();
+		Game::Print::ShowNotification(oss_ << "Spooner Camera FOV: " << newFov, 1.0f);
+	}
+
+	static void HandleScrollAdjustments()
+	{
+		const int scroll = ReadScroll();
+		if (scroll == 0) return;
+
+		// Space + scroll: FOV (keyboard only)
+		if (!Menu::usingControllerInput && IsKeyDown(VK_SPACE))
+		{
+			AdjustFov(scroll);
+			return;
+		}
+
+		AdjustSpeed(scroll);
 	}
 
 	static void ApplyInput(const Input& input)
@@ -203,9 +247,10 @@ namespace sub::Spooner::SpoonerCamera
 			? ReadControllerInput()
 			: ReadKeyboardInput();
 
-		UpdateSpeed();
+		HandleScrollAdjustments();
 		ApplyInput(input);
 		HandleShortcuts();
 		DrawDistanceWarning(playerPed);
+		MenuConfig::FlushPendingSave();
 	}
 }
