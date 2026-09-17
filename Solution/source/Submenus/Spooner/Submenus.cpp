@@ -261,6 +261,7 @@ namespace sub
 			AddToggle("Spawn Still Peds (Block Fleeing)", Settings::bSpawnStillPeds);
 			AddToggle("Make Added (To DB) Entities Persistent", Settings::bAddToDbAsMissionEntities);
 			AddToggle("Teleport To Reference When Loading File", Settings::bTeleportToReferenceWhenLoadingFile);
+			AddToggle("Invert Scroll Sensitivity", Settings::bInvertScrollSensitivity);
 
 			if (Menu::usingControllerInput)
 			{
@@ -1743,7 +1744,7 @@ namespace sub
 
 				auto& precision = SpoonerMode::editingState.transformMode == SpoonerMode::eTransformMode::Position ? SpoonerMode::editingState.precisionPos : SpoonerMode::editingState.precisionRot;
 
-				AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0);
+				AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
 
 				switch (SpoonerMode::editingState.transformMode)
 				{
@@ -1995,7 +1996,7 @@ namespace sub
 			                 : SpoonerMode::editingState.transformMode == SpoonerMode::eTransformMode::Rotation ? SpoonerMode::editingState.precisionRot
 			                 : SpoonerMode::editingState.precisionScale;
 
-			AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0);
+			AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
 
 			switch (SpoonerMode::editingState.transformMode)
 			{
@@ -2123,7 +2124,7 @@ namespace sub
 				? SpoonerMode::editingState.precisionPos
 				: SpoonerMode::editingState.precisionRot;
 
-			AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0);
+			AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
 
 			if (editMode == SpoonerMode::eTransformMode::Position)
 			{
@@ -2270,8 +2271,8 @@ namespace sub
 				AddBreak("---Bulk Edit---");
 
 				AddOption("Delete", bDelete);
-				AddNumberMultiplier("Scroll Sensitivity (Position)", precisionPos, 4, 10.0, 0.0001, 10.0);
-				AddNumberMultiplier("Scroll Sensitivity (Rotation)", precisionRot, 4, 10.0, 0.0001, 10.0);
+				AddNumberMultiplier("Scroll Sensitivity (Position)", precisionPos, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
+				AddNumberMultiplier("Scroll Sensitivity (Rotation)", precisionRot, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
 
 				AddNumberStepper("Pos X", pivotPos.x, 4, (double)precisionPos);
 				AddNumberStepper("Pos Y", pivotPos.y, 4, (double)precisionPos);

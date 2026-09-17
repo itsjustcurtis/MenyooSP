@@ -37,6 +37,7 @@
 #include "STSTasks.h"
 #include "SpoonerEntity.h"
 #include "SpoonerMode.h"
+#include "SpoonerSettings.h"
 #include "Databases.h"
 #include "SpoonerLight.h"
 #include "EntityManagement.h"
@@ -1279,20 +1280,16 @@ namespace sub::Spooner
 
 				//=========================OFFSET VECTOR======================
 				AddBreak("---Region To Push---");
-				bool prec_plus = 0, prec_minus = 0,
-					offsetx_plus = 0, offsetx_minus = 0,
+				bool offsetx_plus = 0, offsetx_minus = 0,
 					offsety_plus = 0, offsety_minus = 0,
 					offsetz_plus = 0, offsetz_minus = 0,
 					bResetOffsetVector = 0;
 
-				AddNumber("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 4, null, prec_minus, prec_plus);
+				AddNumberMultiplier("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
 				AddNumber("X", tskPtr->offsetVector.x, 4, null, offsetx_plus, offsetx_minus);
 				AddNumber("Y", tskPtr->offsetVector.y, 4, null, offsety_plus, offsety_minus);
 				AddNumber("Z", tskPtr->offsetVector.z, 4, null, offsetz_plus, offsetz_minus);
 				AddOption("RESET", bResetOffsetVector); if (bResetOffsetVector) tskPtr->offsetVector.clear();
-
-				if (prec_plus) { if (SpoonerMode::editingState.precisionPos < 10.0f) SpoonerMode::editingState.precisionPos *= 10; }
-				if (prec_minus) { if (SpoonerMode::editingState.precisionPos > 0.0001f) SpoonerMode::editingState.precisionPos /= 10; }
 
 				if (offsetx_plus) tskPtr->offsetVector.x += SpoonerMode::editingState.precisionPos;
 				if (offsetx_minus) tskPtr->offsetVector.x -= SpoonerMode::editingState.precisionPos;
@@ -1337,20 +1334,16 @@ namespace sub::Spooner
 
 				//=========================OFFSET VECTOR======================
 				AddBreak("---Destination Offset---");
-				bool prec_plus = 0, prec_minus = 0,
-					offsetx_plus = 0, offsetx_minus = 0,
+				bool offsetx_plus = 0, offsetx_minus = 0,
 					offsety_plus = 0, offsety_minus = 0,
 					offsetz_plus = 0, offsetz_minus = 0,
 					bResetOffsetVector = 0;
 
-				AddNumber("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 4, null, prec_minus, prec_plus);
+				AddNumberMultiplier("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
 				AddNumber("X", tskPtr->offsetVector.x, 4, null, offsetx_plus, offsetx_minus);
 				AddNumber("Y", tskPtr->offsetVector.y, 4, null, offsety_plus, offsety_minus);
 				AddNumber("Z", tskPtr->offsetVector.z, 4, null, offsetz_plus, offsetz_minus);
 				AddOption("RESET", bResetOffsetVector); if (bResetOffsetVector) tskPtr->offsetVector.clear();
-
-				if (prec_plus) { if (SpoonerMode::editingState.precisionPos < 10.0f) SpoonerMode::editingState.precisionPos *= 10; }
-				if (prec_minus) { if (SpoonerMode::editingState.precisionPos > 0.0001f) SpoonerMode::editingState.precisionPos /= 10; }
 
 				if (offsetx_plus) tskPtr->offsetVector.x += SpoonerMode::editingState.precisionPos;
 				if (offsetx_minus) tskPtr->offsetVector.x -= SpoonerMode::editingState.precisionPos;
@@ -1407,13 +1400,12 @@ namespace sub::Spooner
 				bool bToggleRelativePressed = false;
 				AddTickol("Relative", tskPtr->isRelative, bToggleRelativePressed, bToggleRelativePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleRelativePressed) tskPtr->isRelative = !tskPtr->isRelative;
 
-				bool prec_plus = 0, prec_minus = 0,
-					rotx_plus = 0, rotx_minus = 0,
+				bool rotx_plus = 0, rotx_minus = 0,
 					roty_plus = 0, roty_minus = 0,
 					rotz_plus = 0, rotz_minus = 0,
 					bResetRotVector = 0;
 
-				AddNumber("Scroll Sensitivity", SpoonerMode::editingState.precisionRot, 4, null, prec_minus, prec_plus);
+				AddNumberMultiplier("Scroll Sensitivity", SpoonerMode::editingState.precisionRot, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
 				AddNumber("X", tskPtr->rotationValue.x, 4, null, rotx_plus, rotx_minus);
 				AddNumber("Y", tskPtr->rotationValue.y, 4, null, roty_plus, roty_minus);
 				AddNumber("Z", tskPtr->rotationValue.z, 4, null, rotz_plus, rotz_minus);
@@ -1422,9 +1414,6 @@ namespace sub::Spooner
 					if (tskPtr->isRelative) tskPtr->rotationValue.clear();
 					else tskPtr->rotationValue = entityRot;
 				}
-
-				if (prec_plus) { if (SpoonerMode::editingState.precisionRot < 10.0f) SpoonerMode::editingState.precisionRot *= 10; }
-				if (prec_minus) { if (SpoonerMode::editingState.precisionRot > 0.0001f) SpoonerMode::editingState.precisionRot /= 10; }
 
 				if (rotx_plus && tskPtr->rotationValue.x < 180.0f) tskPtr->rotationValue.x += SpoonerMode::editingState.precisionRot;
 				if (rotx_minus && tskPtr->rotationValue.x > -180.0f) tskPtr->rotationValue.x -= SpoonerMode::editingState.precisionRot;
@@ -1839,9 +1828,9 @@ namespace sub::Spooner
 			auto& thisDuration = tskPtr->duration;
 			if (thisDuration >= 0) // -1 for tasks with no settings. -2 for tasks with settings but no duration setting.
 			{
-				bool bDuration_plus = false, bDuration_minus = false, bDuration_input = false, bDurationMult_plus = false, bDurationMult_minus = false, prec_plus = 0, prec_minus = 0;
+				bool bDuration_plus = false, bDuration_minus = false, bDuration_input = false, bDurationMult_plus = false, bDurationMult_minus = false;
 				AddNumber("Duration (In Seconds)", (float(thisDuration) / 1000), 3, bDuration_input, bDuration_plus, bDuration_minus);
-				AddNumber("Scroll Sensitivity", (float(SpoonerMode::editingState.precisionPos)), 3, null, prec_minus, prec_plus);
+				AddNumberMultiplier("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 3, 10.0, 0.001, 10.0, !Settings::bInvertScrollSensitivity);
 				if (bDuration_plus) { 
 					addlog(ige::LogType::LOG_TRACE, "Increasing duration by " + std::to_string(SpoonerMode::editingState.precisionPos * 1000) + " milliseconds. Target " + std::to_string(thisDuration + SpoonerMode::editingState.precisionPos * 1000));
 					if (thisDuration <= INT_MAX-SpoonerMode::editingState.precisionPos*1000) thisDuration += static_cast<int>(SpoonerMode::editingState.precisionPos*1000);
@@ -1852,14 +1841,6 @@ namespace sub::Spooner
 					if (thisDuration > SpoonerMode::editingState.precisionPos*1000) thisDuration -= static_cast<int>(SpoonerMode::editingState.precisionPos*1000);
 					addlog(ige::LogType::LOG_TRACE, "New duration is " + std::to_string(thisDuration) + " milliseconds.");
 				}						
-				if (prec_plus) {
-					addlog(ige::LogType::LOG_TRACE, "Increasing duration scroll sensitivity to " + std::to_string(SpoonerMode::editingState.precisionPos * 10) + " seconds.");
-					if (SpoonerMode::editingState.precisionPos < 10.0f) SpoonerMode::editingState.precisionPos *= 10;
-				}
-				if (prec_minus) {
-					addlog(ige::LogType::LOG_TRACE, "Decreasing duration scroll sensitivity to " + std::to_string(SpoonerMode::editingState.precisionPos / 10) + " seconds.");
-					if (SpoonerMode::editingState.precisionPos > 0.001f) SpoonerMode::editingState.precisionPos /= 10;
-				}
 				if (bDuration_input)
 				{
 					std::string oldDurationPreText = std::to_string(float(thisDuration) / 1000);

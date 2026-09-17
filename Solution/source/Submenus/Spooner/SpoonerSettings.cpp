@@ -27,6 +27,8 @@ namespace sub::Spooner
 		float cameraMovementSensitivityGamepad = 0.9f;
 		float cameraRotationSensitivityGamepad = 1.4f;
 
+		bool bInvertScrollSensitivity = false; // false = left multiplies Scroll Sensitivity, true = right multiplies
+
 		bool bShowModelPreviews = true;
 		bool bDisplaySpoonerInfo = true;
 		bool bShowBoxAroundSelectedEntity = false;

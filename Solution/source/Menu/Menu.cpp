@@ -1494,10 +1494,11 @@ template void AddNumberStepper<int>(const std::string&, int&, __int8, double, st
 template void AddNumberStepper<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
 template void AddNumberStepper<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
 template<typename T>
-void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min, std::optional<double> max, bool gxt)
+void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min, std::optional<double> max, bool invert, bool gxt)
 {
 	bool enterPressed = false, right = false, left = false;
 	AddNumber(text, (double)value, decimal_places, enterPressed, right, left, gxt);
+	if (invert) std::swap(right, left);
 	if (right) value = (T)((double)value * multiplier);
 	if (left)  value = (T)((double)value / multiplier);
 	if (enterPressed)
@@ -1515,9 +1516,9 @@ void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_place
 	if (min.has_value() && value < (T)min.value()) value = (T)min.value();
 	if (max.has_value() && value > (T)max.value()) value = (T)max.value();
 }
-template void AddNumberMultiplier<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool);
-template void AddNumberMultiplier<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool);
-template void AddNumberMultiplier<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool);
+template void AddNumberMultiplier<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template void AddNumberMultiplier<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template void AddNumberMultiplier<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
 void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& normal, const std::string& selected, const RGBA& colour)
 {
 	if (!HAS_STREAMED_TEXTURE_DICT_LOADED(textureDict.c_str())) REQUEST_STREAMED_TEXTURE_DICT(textureDict.c_str(), 0);

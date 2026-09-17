@@ -22,6 +22,8 @@ namespace sub::Spooner
 		extern float cameraMovementSensitivityGamepad;
 		extern float cameraRotationSensitivityGamepad;
 
+		extern bool bInvertScrollSensitivity;
+
 		extern bool bShowModelPreviews;
 		extern bool bDisplaySpoonerInfo;
 		extern bool bShowBoxAroundSelectedEntity;
