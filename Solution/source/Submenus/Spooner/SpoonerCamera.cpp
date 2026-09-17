@@ -8,6 +8,7 @@
 #include "..\PedComponentChanger.h"
 #include "..\..\Menu\Menu.h"
 #include "..\..\Menu\MenuConfig.h"
+#include "..\..\Misc\FreeCam.h"
 #include "..\..\Natives\natives2.h"
 #include "..\..\Util\keyboard.h"
 #include "..\..\Scripting\Game.h"
@@ -22,13 +23,6 @@
 namespace sub::Spooner::SpoonerCamera
 {
 	Camera camera;
-	// shared FreeCam speed is scaled so its default (0.5) matches the old Spooner default (1.0)
-	constexpr float speedScale = 2.0f;
-
-	static float GetSpeed()
-	{
-		return MenuConfig::FreeCam::defaultSpeed * speedScale;
-	}
 
 	struct Input
 	{
@@ -78,8 +72,9 @@ namespace sub::Spooner::SpoonerCamera
 	static Input ReadControllerInput()
 	{
 		Input input;
-		const float movementSensitivity = Settings::cameraMovementSensitivityGamepad * GetSpeed();
-		const float rotationSensitivity = Settings::cameraRotationSensitivityGamepad;
+		// movement and look speeds are shared with FreeCam
+		const float movementSensitivity = MenuConfig::FreeCam::defaultSpeed * FreeCamMode::controllerSpeedScale;
+		const float rotationSensitivity = MenuConfig::FreeCam::rotationSensitivityGamepad;
 
 		input.translation.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
 		input.translation.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
@@ -96,10 +91,12 @@ namespace sub::Spooner::SpoonerCamera
 
 		if (!editingState.BlocksCameraTranslation())
 		{
-			float movementSensitivity = Settings::cameraMovementSensitivityKeyboard;
+			// movement speeds and the Left Ctrl slow-down are shared with FreeCam
+			float movementSensitivity = IS_DISABLED_CONTROL_PRESSED(0, INPUT_DUCK)
+				? MenuConfig::FreeCam::defaultSlowSpeed
+				: MenuConfig::FreeCam::defaultSpeed;
 			if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
-				movementSensitivity *= 4.0f;
-			movementSensitivity *= GetSpeed();
+				movementSensitivity *= FreeCamMode::keyboardSprintMultiplier;
 
 			input.translation.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movementSensitivity;
 			input.translation.y = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_UD) * movementSensitivity;
@@ -110,7 +107,7 @@ namespace sub::Spooner::SpoonerCamera
 
 		if (!editingState.BlocksCameraRotation())
 		{
-			const float rotationSensitivity = Settings::cameraRotationSensitivityMouse;
+			const float rotationSensitivity = MenuConfig::FreeCam::rotationSensitivityMouse;
 			input.rotation.x = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD) * rotationSensitivity;
 			input.rotation.z = -GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR) * rotationSensitivity;
 		}
@@ -216,7 +213,7 @@ namespace sub::Spooner::SpoonerCamera
 		Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.35f, 0.35f), true, false, true, warningColour);
 		Game::Print::DrawString(oss_ << "WARNING: Your camera is too far from the player. You might experience texture loss or the environment might look low quality.", 0.5f, 0.72f);
 		Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.35f, 0.35f), true, false, true, warningColour);
-		Game::Print::DrawString(oss_ << "This is expected - use the Freecam (available in \"Misc Options\" menu) to move around the map freely.", 0.5f, 0.75f);
+		Game::Print::DrawString(oss_ << "This is expected - use the Freecam (available in \"Misc Options > FreeCam Settings\" menu) to move around the map freely.", 0.5f, 0.75f);
 	}
 
 	void Tick()

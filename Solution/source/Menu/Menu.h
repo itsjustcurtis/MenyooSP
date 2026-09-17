@@ -259,8 +259,9 @@ void AddTexter(const std::string& text, int selectedindex, const std::vector<std
 
 int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts);
 
+// Returns true when the value changed this frame
 template<typename T>
-void AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool gxt = 0, bool wrap = false);
+bool AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool gxt = 0, bool wrap = false);
 template<typename T>
 // invert: false = right multiplies / left divides, true = left multiplies / right divides
 void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool invert = false, bool gxt = 0);

@@ -244,11 +244,6 @@ namespace sub
 		}
 		void Sub_Settings()
 		{
-			bool movsensK_input = 0, movsensK_plus = 0, movsensK_minus = 0;
-			bool movsensG_input = 0, movsensG_plus = 0, movsensG_minus = 0;
-			bool rotsensK_input = 0, rotsensK_plus = 0, rotsensK_minus = 0;
-			bool rotsensG_input = 0, rotsensG_plus = 0, rotsensG_minus = 0;
-
 			AddTitle("Settings");
 			AddToggle("Display Model Previews (Spooner Mode)", Settings::bShowModelPreviews);
 			AddToggle("Display Spooner Info", Settings::bDisplaySpoonerInfo);
@@ -263,72 +258,9 @@ namespace sub
 			AddToggle("Teleport To Reference When Loading File", Settings::bTeleportToReferenceWhenLoadingFile);
 			AddToggle("Invert Scroll Sensitivity", Settings::bInvertScrollSensitivity);
 
-			if (Menu::usingControllerInput)
-			{
-				AddNumber("Movement Sensitivity (Gamepad)", Settings::cameraMovementSensitivityGamepad, 4, movsensG_input, movsensG_plus, movsensG_minus);
-				AddNumber("Rotation Sensitivity (Gamepad)", Settings::cameraRotationSensitivityGamepad, 4, rotsensG_input, rotsensG_plus, rotsensG_minus);
-			}
-			else
-			{
-				AddNumber("Movement Sensitivity (Keyboard)", Settings::cameraMovementSensitivityKeyboard, 4, movsensK_input, movsensK_plus, movsensK_minus);
-				AddNumber("Rotation Sensitivity (Mouse)", Settings::cameraRotationSensitivityMouse, 4, rotsensK_input, rotsensK_plus, rotsensK_minus);
-			}
-
 			AddOption("Reload Model List Files", null, PopulateGlobalEntityModelsArrays);
 
 			AddOption("Grid Snap Settings", null, nullFunc, SUB::SPOONER_MANUALEDITING_SNAP);
-
-			if (movsensK_input || movsensG_input)
-			{
-				float& val = (movsensK_input ? Settings::cameraMovementSensitivityKeyboard : Settings::cameraMovementSensitivityGamepad);
-				std::string inputStr = Game::InputBox("", 11U, "", std::to_string(val).substr(0, 10));
-				if (inputStr.length() > 0)
-				{
-					try { val = stof(inputStr); }
-					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
-				}
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 10U, std::to_string(val).substr(0, 10));
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&val);
-			}
-			if (movsensK_plus || movsensG_plus)
-			{
-				float& val = (movsensK_plus ? Settings::cameraMovementSensitivityKeyboard : Settings::cameraMovementSensitivityGamepad);
-				if (val < FLT_MAX)
-					val += (movsensK_minus ? 0.0005f : 0.0005f);
-			}
-			if (movsensK_minus || movsensG_minus)
-			{
-				float& val = (movsensK_minus ? Settings::cameraMovementSensitivityKeyboard : Settings::cameraMovementSensitivityGamepad);
-				if (val > 0.0f)
-					val -= (movsensK_minus ? 0.0005f : 0.0005f);
-			}
-
-			if (rotsensK_input || rotsensG_input)
-			{
-				float& val = (rotsensK_input ? Settings::cameraRotationSensitivityMouse : Settings::cameraRotationSensitivityGamepad);
-				std::string inputStr = Game::InputBox("", 11U, "", std::to_string(val).substr(0, 10));
-				if (inputStr.length() > 0)
-				{
-					try { val = stof(inputStr); }
-					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
-				}
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 10U, std::to_string(val).substr(0, 10));
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&val);
-			}
-			if (rotsensK_plus || rotsensG_plus)
-			{
-				bool isK = rotsensK_plus;
-				float& val = (rotsensK_plus ? Settings::cameraRotationSensitivityMouse : Settings::cameraRotationSensitivityGamepad);
-				if (val < FLT_MAX)
-					val += (rotsensK_plus ? 0.0005f : 0.0005f);
-			}
-			if (rotsensK_minus || rotsensG_minus)
-			{
-				float& val = (rotsensK_minus ? Settings::cameraRotationSensitivityMouse : Settings::cameraRotationSensitivityGamepad);
-				if (val > 0.0f)
-					val -= (rotsensK_minus ? 0.0005f : 0.0005f);
-			}
-
 		}
 		void Sub_SaveFiles()
 		{

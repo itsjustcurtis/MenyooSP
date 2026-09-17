@@ -272,6 +272,7 @@ void TickMenyooConfig()
 		}
 		g_MenyooConfigTick = GetTickCount();
 	}
+	MenuConfig::FlushPendingSave();
 	firstTick = false;
 }
 

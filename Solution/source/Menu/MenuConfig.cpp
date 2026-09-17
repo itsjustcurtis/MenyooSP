@@ -48,15 +48,27 @@ bool MenuConfig::bShowNotificationBackground = true;
 // Initialize the default camera parameters
 namespace MenuConfig {
     namespace FreeCam {
-        float defaultSpeed = 0.5f;
-        float defaultFov = 50.0f;
-		float defaultSlowSpeed = 0.2f;
+        float defaultSpeed = Defaults::speed;
+        float defaultFov = Defaults::fov;
+		float defaultSlowSpeed = Defaults::slowSpeed;
+		float rotationSensitivityMouse = Defaults::rotationSensitivityMouse;
+		float rotationSensitivityGamepad = Defaults::rotationSensitivityGamepad;
         float speedAdjustStep = 0.1f;
         float fovAdjustStep = 1.0f;
         float minSpeed = 0.1f;
         float maxSpeed = 10.0f;
         float minFov = 30.0f;
         float maxFov = 120.0f;
+
+		void ResetToDefaults()
+		{
+			defaultSpeed = Defaults::speed;
+			defaultFov = Defaults::fov;
+			defaultSlowSpeed = Defaults::slowSpeed;
+			rotationSensitivityMouse = Defaults::rotationSensitivityMouse;
+			rotationSensitivityGamepad = Defaults::rotationSensitivityGamepad;
+			RequestSave();
+		}
     }
 }
 
@@ -179,10 +191,6 @@ void MenuConfig::ConfigRead()
 	sub::Spooner::SpoonerMode::bindsKeyboard = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeHotkey", sub::Spooner::SpoonerMode::bindsKeyboard);
 	sub::Spooner::SpoonerMode::bindsGamepad.first = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_1", sub::Spooner::SpoonerMode::bindsGamepad.first);
 	sub::Spooner::SpoonerMode::bindsGamepad.second = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_2", sub::Spooner::SpoonerMode::bindsGamepad.second);
-	sub::Spooner::Settings::cameraMovementSensitivityKeyboard = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityKeyboard", sub::Spooner::Settings::cameraMovementSensitivityKeyboard);
-	sub::Spooner::Settings::cameraRotationSensitivityMouse = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityMouse", sub::Spooner::Settings::cameraRotationSensitivityMouse);
-	sub::Spooner::Settings::cameraMovementSensitivityGamepad = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityGamepad", sub::Spooner::Settings::cameraMovementSensitivityGamepad);
-	sub::Spooner::Settings::cameraRotationSensitivityGamepad = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityGamepad", sub::Spooner::Settings::cameraRotationSensitivityGamepad);
 	sub::Spooner::Settings::bInvertScrollSensitivity = ini.GetBoolValue(section_spooner.c_str(), "InvertScrollSensitivity", sub::Spooner::Settings::bInvertScrollSensitivity);
 	sub::Spooner::Settings::bShowModelPreviews = ini.GetBoolValue(section_spooner.c_str(), "ShowModelPreviews", sub::Spooner::Settings::bShowModelPreviews);
 	sub::Spooner::Settings::bShowBoxAroundSelectedEntity = ini.GetBoolValue(section_spooner.c_str(), "ShowBoxAroundSelectedEntity", sub::Spooner::Settings::bShowBoxAroundSelectedEntity);
@@ -336,6 +344,8 @@ void MenuConfig::ConfigRead()
 	// older versions saved this as "right_click_slow_speed"
 	FreeCam::defaultSlowSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "right_click_slow_speed", FreeCam::defaultSlowSpeed);
 	FreeCam::defaultSlowSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_slow_speed", FreeCam::defaultSlowSpeed);
+	FreeCam::rotationSensitivityMouse = (float)ini.GetDoubleValue(section_freecam.c_str(), "rotation_sensitivity_mouse", FreeCam::rotationSensitivityMouse);
+	FreeCam::rotationSensitivityGamepad = (float)ini.GetDoubleValue(section_freecam.c_str(), "rotation_sensitivity_gamepad", FreeCam::rotationSensitivityGamepad);
     FreeCam::speedAdjustStep = (float)ini.GetDoubleValue(section_freecam.c_str(), "speed_adjust_step", FreeCam::speedAdjustStep); 
     FreeCam::fovAdjustStep = (float)ini.GetDoubleValue(section_freecam.c_str(), "fov_adjust_step", FreeCam::fovAdjustStep);
     FreeCam::minSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "min_speed", FreeCam::minSpeed);
@@ -445,10 +455,6 @@ void MenuConfig::SaveConfig()
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeHotkey", sub::Spooner::SpoonerMode::bindsKeyboard);
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_1", sub::Spooner::SpoonerMode::bindsGamepad.first);
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_2", sub::Spooner::SpoonerMode::bindsGamepad.second);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityKeyboard", sub::Spooner::Settings::cameraMovementSensitivityKeyboard);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityMouse", sub::Spooner::Settings::cameraRotationSensitivityMouse);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityGamepad", sub::Spooner::Settings::cameraMovementSensitivityGamepad);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityGamepad", sub::Spooner::Settings::cameraRotationSensitivityGamepad);
 	ini.SetBoolValue(section_spooner.c_str(), "InvertScrollSensitivity", sub::Spooner::Settings::bInvertScrollSensitivity);
 	ini.SetBoolValue(section_spooner.c_str(), "ShowModelPreviews", sub::Spooner::Settings::bShowModelPreviews);
 	ini.SetBoolValue(section_spooner.c_str(), "ShowBoxAroundSelectedEntity", sub::Spooner::Settings::bShowBoxAroundSelectedEntity);
@@ -598,6 +604,8 @@ void MenuConfig::SaveConfig()
     ini.SetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
     ini.SetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov); 
 	ini.SetDoubleValue(section_freecam.c_str(), "default_slow_speed", FreeCam::defaultSlowSpeed);
+	ini.SetDoubleValue(section_freecam.c_str(), "rotation_sensitivity_mouse", FreeCam::rotationSensitivityMouse);
+	ini.SetDoubleValue(section_freecam.c_str(), "rotation_sensitivity_gamepad", FreeCam::rotationSensitivityGamepad);
     ini.SetDoubleValue(section_freecam.c_str(), "speed_adjust_step", FreeCam::speedAdjustStep);
     ini.SetDoubleValue(section_freecam.c_str(), "fov_adjust_step", FreeCam::fovAdjustStep);
     ini.SetDoubleValue(section_freecam.c_str(), "min_speed", FreeCam::minSpeed);

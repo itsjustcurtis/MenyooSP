@@ -8,7 +8,9 @@
 * (at your option) any later version.
 */
 #include "MiscOptions.h"
+#include "..\Menu\MenuConfig.h"
 #include "..\Misc\FreeCam.h"
+#include "Spooner/SpoonerCamera.h"
 #include "Spooner/Submenus.h"
 #include "VehicleModShop.h"
 
@@ -20,8 +22,6 @@ namespace sub
 
 		const std::vector<std::string> explosions_wp_names{ "Off", "Visible & Shaky", "Visible", "Invisible" };
 
-		bool miscFreecamOn = false;
-		bool miscFreecamOff = false;
 		bool autoKillPlus = false;
 		bool autoKillMinus = false;
 		bool miscMassacreModeOn = false;
@@ -35,7 +35,7 @@ namespace sub
 		bool miscVehiclePopulationOff = false;
 
 		AddTitle("Misc Options");
-		AddToggle("FreeCam (No-Clip)", FreeCamMode::bEnabled, miscFreecamOn, miscFreecamOff);
+		AddOption("FreeCam Settings", null, nullFunc, SUB::FREECAMSETTINGS);
 		AddLocal("Top-Down View", GTA2Cam::g_gta2Cam.Enabled(), GTA2Cam::ToggleOnOff, GTA2Cam::ToggleOnOff);
 		AddLocal("Manual Respawn", ManualRespawn::g_manualRespawn.Enabled(), ManualRespawn::ToggleOnOff, ManualRespawn::ToggleOnOff);
 		AddTexter("Auto-kill Enemies", autoKillEnemies, std::vector<std::string>{"Off", "Weak", "Radical"}, null, autoKillPlus, autoKillMinus);
@@ -205,18 +205,6 @@ namespace sub
 					break;
 				}
 			}
-		}
-
-		if (miscFreecamOn)
-		{
-			Game::Print::ShowNotification("Press ~b~" + VkCodeToStr(BindNoClip) + "~s~ OR ~b~X+LS~s~ OR ~b~Square+L3~s~ to toggle FreeCam.");
-			return;
-		}
-
-		if (miscFreecamOff)
-		{
-			FreeCamMode::Stop();
-			return;
 		}
 
 		if (autoKillPlus) 
@@ -976,6 +964,63 @@ namespace sub
 			}
 		}
 	}
+
+	namespace FreeCamSettings
+	{
+		namespace
+		{
+			void ApplyFovToActiveCameras(float fov)
+			{
+				Camera freeCam = FreeCamMode::GetCamera();
+				if (freeCam.Exists())
+					freeCam.SetFieldOfView(fov);
+
+				Camera& spoonerCam = Spooner::SpoonerCamera::camera;
+				if (spoonerCam.Exists())
+					spoonerCam.SetFieldOfView(fov);
+			}
+		}
+
+		void FreeCamSettingsMenu()
+		{
+			namespace Cfg = MenuConfig::FreeCam;
+
+			bool freecamOn = false;
+			bool freecamOff = false;
+
+			AddTitle("FreeCam Settings");
+			AddToggle("FreeCam (No-Clip)", FreeCamMode::bEnabled, freecamOn, freecamOff);
+
+			AddBreak("---Shared With Spooner Camera---");
+			bool changed = false;
+			changed |= AddNumberStepper("Movement Speed", Cfg::defaultSpeed, 2, Cfg::speedAdjustStep, Cfg::minSpeed, Cfg::maxSpeed);
+			changed |= AddNumberStepper("Slow Speed", Cfg::defaultSlowSpeed, 2, Cfg::speedAdjustStep, Cfg::minSpeed, Cfg::maxSpeed);
+			if (AddNumberStepper("FOV", Cfg::defaultFov, 1, Cfg::fovAdjustStep, Cfg::minFov, Cfg::maxFov))
+			{
+				changed = true;
+				ApplyFovToActiveCameras(Cfg::defaultFov);
+			}
+			changed |= AddNumberStepper("Rotation Sensitivity (Mouse)", Cfg::rotationSensitivityMouse, 1, 0.5, 0.5, 50.0);
+			changed |= AddNumberStepper("Rotation Sensitivity (Gamepad)", Cfg::rotationSensitivityGamepad, 1, 0.1, 0.1, 10.0);
+			if (changed)
+				MenuConfig::RequestSave();
+
+			bool resetToDefaults = false;
+			AddOption("Reset To Defaults", resetToDefaults);
+			if (resetToDefaults)
+			{
+				Cfg::ResetToDefaults();
+				ApplyFovToActiveCameras(Cfg::defaultFov);
+				Game::Print::ShowNotification("FreeCam settings reset to defaults.");
+			}
+
+			if (freecamOn)
+				Game::Print::ShowNotification("Press ~b~" + VkCodeToStr(BindNoClip) + "~s~ OR ~b~X+LS~s~ OR ~b~Square+L3~s~ to toggle FreeCam.");
+
+			if (freecamOff)
+				FreeCamMode::Stop();
+		}
+	}
 }
 
 
@@ -988,6 +1033,7 @@ REGISTER_SUBMENU(MISCOPS,     			sub::MiscOps)
 REGISTER_SUBMENU(TVCHANNELSTUFF_TV,    	sub::TVChannelStuff::TVMenu)
 REGISTER_SUBMENU(HUDOPTIONS,           	sub::HudOptions::HudOptionsMenu)
 REGISTER_SUBMENU(GAMECAMOPTIONS,       	sub::GameCamOptions::GameCamOptionsMenu)
+REGISTER_SUBMENU(FREECAMSETTINGS,      	sub::FreeCamSettings::FreeCamSettingsMenu)
 REGISTER_SUBMENU(RADIOSUB,             	sub::RadioMenu)
 
 

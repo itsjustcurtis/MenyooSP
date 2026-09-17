@@ -16,6 +16,11 @@ namespace FreeCamMode
 	// Feature enabled in Misc Options (hotkey can toggle flying). Persisted as "freecam".
 	extern bool bEnabled;
 
+	// Movement scaling shared with Spooner Camera so both fly at the same speed
+	// controller movement is scaled so the default speed (0.5) matches the old fixed 0.8 / 1.8
+	constexpr float controllerSpeedScale = 1.6f;
+	constexpr float keyboardSprintMultiplier = 4.0f;
+
 	// Currently flying
 	bool IsActive();
 

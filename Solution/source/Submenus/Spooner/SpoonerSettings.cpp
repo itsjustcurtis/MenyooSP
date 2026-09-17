@@ -22,11 +22,6 @@ namespace sub::Spooner
 	{
 //#define GTA_MAX_ENTITIES 2048
 
-		float cameraMovementSensitivityKeyboard = 0.33f;
-		float cameraRotationSensitivityMouse = 6.5f;
-		float cameraMovementSensitivityGamepad = 0.9f;
-		float cameraRotationSensitivityGamepad = 1.4f;
-
 		bool bInvertScrollSensitivity = false; // false = left multiplies Scroll Sensitivity, true = right multiplies
 
 		bool bShowModelPreviews = true;

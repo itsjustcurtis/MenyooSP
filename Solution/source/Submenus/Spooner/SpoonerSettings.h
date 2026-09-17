@@ -17,11 +17,6 @@ namespace sub::Spooner
 	{
 #define GTA_MAX_ENTITIES 2048
 
-		extern float cameraMovementSensitivityKeyboard;
-		extern float cameraRotationSensitivityMouse;
-		extern float cameraMovementSensitivityGamepad;
-		extern float cameraRotationSensitivityGamepad;
-
 		extern bool bInvertScrollSensitivity;
 
 		extern bool bShowModelPreviews;

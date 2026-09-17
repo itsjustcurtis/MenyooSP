@@ -37,12 +37,7 @@ namespace FreeCamMode
 
 	namespace
 	{
-		constexpr float mouseRotationSensitivity = 11.0f;
-		constexpr float controllerRotationSensitivity = 2.5f;
-		// controller movement is scaled so the default speed (0.5) matches the old fixed 0.8 / 1.8
-		constexpr float controllerSpeedScale = 1.6f;
 		constexpr float controllerHastenMultiplier = 2.25f;
-		constexpr float keyboardSprintMultiplier = 4.0f;
 
 		struct EntityState
 		{
@@ -173,6 +168,9 @@ namespace FreeCamMode
 			}
 			if (!enabled && Menu::usingControllerInput)
 				DISABLE_CONTROL_ACTION(0, INPUT_VEH_HORN, TRUE);
+			// Left Ctrl slows the camera down; don't let it also toggle the ped's stealth stance
+			if (!enabled && !Menu::usingControllerInput)
+				DISABLE_CONTROL_ACTION(0, INPUT_DUCK, TRUE);
 		}
 
 		Input ReadRotationInput(float sensitivity)
@@ -185,7 +183,7 @@ namespace FreeCamMode
 
 		Input ReadControllerInput()
 		{
-			Input input = ReadRotationInput(controllerRotationSensitivity);
+			Input input = ReadRotationInput(MenuConfig::FreeCam::rotationSensitivityGamepad);
 
 			float movement = MenuConfig::FreeCam::defaultSpeed * controllerSpeedScale;
 			if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_RB))
@@ -199,9 +197,9 @@ namespace FreeCamMode
 
 		Input ReadKeyboardInput()
 		{
-			Input input = ReadRotationInput(mouseRotationSensitivity);
+			Input input = ReadRotationInput(MenuConfig::FreeCam::rotationSensitivityMouse);
 
-			float movement = IS_DISABLED_CONTROL_PRESSED(2, INPUT_VEH_ATTACK2)
+			float movement = IS_DISABLED_CONTROL_PRESSED(0, INPUT_DUCK)
 				? MenuConfig::FreeCam::defaultSlowSpeed
 				: MenuConfig::FreeCam::defaultSpeed;
 			if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
@@ -332,7 +330,7 @@ namespace FreeCamMode
 			else
 			{
 				Game::CustomHelpText::ShowTimedText(oss_ << "FreeCam:~n~~INPUT_MOVE_UD~/~INPUT_MOVE_LR~ = " << Game::GetGXTEntry("ITEM_MOV_CAM")
-					<< "~n~~INPUT_LOOK_LR~ = " << Game::GetGXTEntry("ITEM_MOVE") << "~n~~INPUT_PARACHUTE_BRAKE_RIGHT~/~INPUT_PARACHUTE_BRAKE_LEFT~ = " << "Ascend/Descend" << "~n~~INPUT_SPRINT~ = " << "Hasten", 6000);
+					<< "~n~~INPUT_LOOK_LR~ = " << Game::GetGXTEntry("ITEM_MOVE") << "~n~~INPUT_PARACHUTE_BRAKE_RIGHT~/~INPUT_PARACHUTE_BRAKE_LEFT~ = " << "Ascend/Descend" << "~n~~INPUT_SPRINT~ = " << "Hasten" << "~n~~INPUT_DUCK~ = " << "Slow Down", 6000);
 			}
 		}
 	}
