@@ -929,6 +929,58 @@ namespace sub
 			{ VEHICLE_URANUS, "sssa_dlc_2024_2", "uranus" },
 			{ VEHICLE_TITAN2, "candc_dlc_2024_2", "titan2" },
 			{ VEHICLE_TACO, "candc_dlc_2024_2", "taco" },
+
+			//Money Fronts
+			{ VEHICLE_MAVERICK2 , "elt_default", "maverick" },
+			{ VEHICLE_DRIFTHARDY , "sssa_dlc_2025_1", "hardy1" },
+			{ VEHICLE_HARDY , "sssa_dlc_2025_1", "hardy1" },
+			{ VEHICLE_MINIMUS , "sssa_dlc_2025_1", "minimus" },
+			{ VEHICLE_DRIFTGAUNT4 , "sssa_dlc_vinewood", "gauntlet4" },
+			{ VEHICLE_STOCKADE4 , "candc_dlc_2025_1", "stockade4" },
+			{ VEHICLE_DRIFTL352 , "sssa_dlc_2025_1", "driftl352" },
+			{ VEHICLE_TAMPA4 , "sssa_dlc_2025_1", "tampa4" },
+			{ VEHICLE_L352 , "sssa_dlc_2025_1", "l352" },
+			{ VEHICLE_RAPIDGT4 , "lgm_dlc_2025_1", "rapidgt4" },
+			{ VEHICLE_DRIFTCHAV6 , "sssa_dlc_2024_2", "chavosv6" },
+			{ VEHICLE_CHEETAH3 , "lgm_dlc_2025_1", "cheetah3" },
+			{ VEHICLE_EVERON3 , "lgm_dlc_2025_1", "everon3" },
+			{ VEHICLE_WOODLANDER , "sssa_dlc_2025_1", "woodlander" },
+			{ VEHICLE_SUZUME , "lgm_dlc_2025_1", "suzume" },
+			{ VEHICLE_SENTINEL5 , "lgm_dlc_2025_1", "sentinel5" },
+			{ VEHICLE_DRIFTDOM10 , "sssa_dlc_2024_1", "dominator10" },
+			{ VEHICLE_POLICEB2 , "candc_dlc_2025_1", "policeb2" },
+
+			//Safehouse in the Hills
+			{ VEHICLE_POLBUFFALO , "candc_dlc_2025_2", "polbuffalo" },
+			{ VEHICLE_POLBUFFALO6 , "candc_dlc_2025_2", "polbuffalo6" },
+			{ VEHICLE_DRIFTRT3 , "sssa_dlc_tuner", "rt3000" },
+			{ VEHICLE_GT750 , "lgm_dlc_2025_2", "gt750" },
+			{ VEHICLE_ITALI2 , "lgm_dlc_2025_2", "itali2" },
+			{ VEHICLE_ASTRALE , "lgm_dlc_2025_2", "astrale" },
+			{ VEHICLE_XTREME , "lgm_dlc_2025_2", "xtreme" },
+			{ VEHICLE_LUIVA , "lgm_dlc_2025_2", "luiva" },
+			{ VEHICLE_DKEITORA , "sssa_dlc_2025_2", "keitora" },
+			{ VEHICLE_KEITORA , "sssa_dlc_2025_2", "keitora" },
+			{ VEHICLE_DRIFTSENT2 , "sssa_dlc_business2", "sentinel" },
+			{ VEHICLE_SENTINEL6 , "sssa_dlc_2025_2", "sentinel6" },
+			{ VEHICLE_DRIFTDOM9 , "sssa_dlc_2023_2", "dominator9" },
+			{ VEHICLE_FMJ2 , "lgm_dlc_2025_2", "fmj2" },
+
+			//Kortz Center Heist
+			{ VEHICLE_MERULA , "sssa_dlc_2026_1", "merula" },
+			{ VEHICLE_DRIFTELEGY , "lsc_dlc_import_export", "elegy_b" },
+			{ VEHICLE_LRCGT , "lgm_dlc_2026_1", "lrcgt" },
+			{ VEHICLE_LAUFER , "sssa_dlc_2026_1", "laufer" },
+			{ VEHICLE_WARDEN , "lgm_dlc_2026_1", "warden" },
+			{ VEHICLE_CARTUCCIA , "lgm_dlc_2026_1", "cartuccia" },
+			{ VEHICLE_VELENOGT , "lgm_dlc_2026_1", "velenogt" },
+			{ VEHICLE_DRIFTCOQUE , "lgm_default", "coquette" },
+			{ VEHICLE_ESTRIDE , "sssa_dlc_2026_1", "estride" },
+			{ VEHICLE_HORUS , "lgm_dlc_2026_1", "horus" },
+			{ VEHICLE_POLIGNUS , "candc_dlc_2026_1", "polignus" },
+			{ VEHICLE_DRIFTDOM8 , "sssa_dlc_tuner", "dominator8" },
+
+
 		};
 		void PopulateVehicleBmps()
 		{
