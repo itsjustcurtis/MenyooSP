@@ -328,7 +328,9 @@ namespace sub::TeleportLocations_catind
 			}
 
 			bool bCreateFacilityPressed = false;
-			AddOption("Build Facility", bCreateFacilityPressed); if (bCreateFacilityPressed)
+			AddOption("Build Facility", bCreateFacilityPressed);
+			AddOptionDescription("Loads the facility with the options above and teleports you inside.");
+			if (bCreateFacilityPressed)
 			{
 				DO_SCREEN_FADE_OUT(50);
 				CreateFacility(currentFacilityInfo);

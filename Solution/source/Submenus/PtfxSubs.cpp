@@ -3368,6 +3368,7 @@ namespace sub
             std::string pageLabel = "Page " + std::to_string(ptfxPage + 1) + " / " + std::to_string(totalPages);
             AddTitle("FX - " + pageLabel);
             AddNumber("Items Per Page", ITEMS_PER_PAGE, 0, null, itemCountPlus, itemCountMinus);
+            AddOptionDescription("How many effects are listed per page.");
             AddOption("Favourites", detectKeypress, nullFunc, SUB::PTFX_FAVORITES);
             if (detectKeypress)
             {
@@ -3378,11 +3379,13 @@ namespace sub
             {
             case SUB::PLAYEROPS: case SUB::SPOONER_SELECTEDENTITYOPS:
                 AddOption("Loop On Entity", null, nullFunc, SUB::PTFXSUB);
+                AddOptionDescription("Effects that play continuously on the entity.");
                 break;
             case SUB::PTFXSUB:
             {
                 bool bPressedClear = false;
                 AddOption("Clear On All Entities", bPressedClear); 
+                AddOptionDescription("Stops all looping effects.");
                 if (bPressedClear)
                 {
                     fxLoops.clear();

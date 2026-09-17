@@ -184,7 +184,9 @@ namespace sub::TeleportLocations_catind
 				}
 
 				bool bCreateClubhousePressed = false;
-				AddOption("Build Clubhouse", bCreateClubhousePressed); if (bCreateClubhousePressed)
+				AddOption("Build Clubhouse", bCreateClubhousePressed);
+				AddOptionDescription("Loads the clubhouse with the options above and teleports you inside.");
+				if (bCreateClubhousePressed)
 				{
 					DO_SCREEN_FADE_OUT(50);
 					CreateClubhouse(currentClubhouseInfo);
@@ -337,7 +339,9 @@ namespace sub::TeleportLocations_catind
 				if (bOption_minus) { if (currentBusinessInfo.option  > 0) { currentBusinessInfo.option--; } }
 
 				bool bCreateBusinessPressed = false;
-				AddOption("Build Business", bCreateBusinessPressed); if (bCreateBusinessPressed)
+				AddOption("Build Business", bCreateBusinessPressed);
+				AddOptionDescription("Loads the business with the option above and teleports you inside.");
+				if (bCreateBusinessPressed)
 				{
 					DO_SCREEN_FADE_OUT(50);
 					CreateBusiness(currentBusinessInfo);

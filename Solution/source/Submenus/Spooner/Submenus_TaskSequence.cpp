@@ -64,7 +64,9 @@ namespace sub::Spooner
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::SetHealth>();
 
 				bool bTogglePlayOncePressed = false;
-				AddTickol("Apply Only Once", !tskPtr->isLoopedTask, bTogglePlayOncePressed, bTogglePlayOncePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bTogglePlayOncePressed)
+				AddTickol("Apply Only Once", !tskPtr->isLoopedTask, bTogglePlayOncePressed, bTogglePlayOncePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Off: health is reapplied every frame for the task's duration.");
+				if (bTogglePlayOncePressed)
 				{
 					if (tskPtr->isLoopedTask)
 					{
@@ -83,6 +85,7 @@ namespace sub::Spooner
 
 				bool bInputPressed = false, bPlusPressed = false, bMinusPressed = false;
 				AddNumber("Health Value", tskPtr->healthValue, 0, bInputPressed, bPlusPressed, bMinusPressed);
+				AddOptionDescription("The health the entity is set to.");
 				if (bPlusPressed) { if (tskPtr->healthValue < INT_MAX) { tskPtr->healthValue++; } }
 				if (bMinusPressed) { if (tskPtr->healthValue > 0) { tskPtr->healthValue--; } }
 				if (bInputPressed)
@@ -163,12 +166,17 @@ namespace sub::Spooner
 				if (bScale_minus) { if (tskPtr->scale > 0.0f) tskPtr->scale -= 0.01f; }
 
 				AddToggle("Flashing", tskPtr->isFlashing);
+				AddOptionDescription("The blip flashes on the map.");
 				AddToggle("Friendly", tskPtr->isFriendly);
+				AddOptionDescription("Shows the blip as friendly instead of hostile.");
 				AddToggle("Short-Range", tskPtr->isShortRange);
+				AddOptionDescription("The blip only shows on the minimap when you're nearby.");
 				AddToggle("Show Route", tskPtr->showRoute);
+				AddOptionDescription("Draws a GPS route to the blip.");
 
 				bool number_plus = false, number_minus = false;
 				AddTexter("Display Number", tskPtr->showNumber, std::vector<std::string>{""}, null, number_plus, number_minus);
+				AddOptionDescription("Shows a number on the blip.");
 				if (number_plus) { if (tskPtr->showNumber < INT_MAX) tskPtr->showNumber++; }
 				if (number_minus) { if (tskPtr->showNumber > INT_MIN) tskPtr->showNumber--; }
 
@@ -213,7 +221,9 @@ namespace sub::Spooner
 				else
 				{
 					bool bSetPosToHitCoords = false;
-					AddOption("Set Target To Camera Target", bSetPosToHitCoords); if (bSetPosToHitCoords)
+					AddOption("Set Target To Camera Target", bSetPosToHitCoords);
+					AddOptionDescription("Uses the point your camera is aiming at.");
+					if (bSetPosToHitCoords)
 					{
 						Vector3 hitCoords = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 						coord = hitCoords;
@@ -232,7 +242,9 @@ namespace sub::Spooner
 				}
 
 				bool bManualEditingForPosPressed = false;
-				AddOption("Adjust Target Manually", bManualEditingForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bManualEditingForPosPressed)
+				AddOption("Adjust Target Manually", bManualEditingForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING);
+				AddOptionDescription("Fine-tune the target position with X/Y/Z values.");
+				if (bManualEditingForPosPressed)
 				{
 					SpoonerVector3ManualEditingPtrs = { 0, &coord, nullptr };
 				}
@@ -297,7 +309,9 @@ namespace sub::Spooner
 				else
 				{
 					bool bSetPosToHitCoords = false;
-					AddOption("Set Target To Camera Target", bSetPosToHitCoords); if (bSetPosToHitCoords)
+					AddOption("Set Target To Camera Target", bSetPosToHitCoords);
+					AddOptionDescription("Uses the point your camera is aiming at.");
+					if (bSetPosToHitCoords)
 					{
 						Vector3 hitCoords = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 						tskPtr->targetPos = hitCoords;
@@ -316,6 +330,7 @@ namespace sub::Spooner
 
 				bool bHeading_plus = false, bHeading_minus = false;
 				AddNumber("Direction To Face", tskPtr->heading, 0, null, bHeading_plus, bHeading_minus);
+				AddOptionDescription("Heading in degrees the ped faces after arriving.");
 				if (bHeading_plus) { tskPtr->heading += 1.0f; if (tskPtr->heading > 180.0f) tskPtr->heading = -180.0f; }
 				if (bHeading_minus) { tskPtr->heading -= 1.0f; if (tskPtr->heading < -180.0f) tskPtr->heading = 180.0f; }
 			}
@@ -356,7 +371,9 @@ namespace sub::Spooner
 				if (selectedEntity.type == EntityType::PED)
 				{
 					bool bTeleVehicleToggle = false;
-					AddTickol("Take Vehicle Too (If In One)", tskPtr->takeVehicleToo, bTeleVehicleToggle, bTeleVehicleToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bTeleVehicleToggle) tskPtr->takeVehicleToo = !tskPtr->takeVehicleToo;
+					AddTickol("Take Vehicle Too (If In One)", tskPtr->takeVehicleToo, bTeleVehicleToggle, bTeleVehicleToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					AddOptionDescription("If the ped is in a vehicle, it teleports with them.");
+					if (bTeleVehicleToggle) tskPtr->takeVehicleToo = !tskPtr->takeVehicleToo;
 				}
 
 				PAtCoord(tskPtr->destination);
@@ -366,7 +383,9 @@ namespace sub::Spooner
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::SeekCoverAtCoord>();
 
 				bool bAllowPeekingToggle = false;
-				AddTickol("Allow Peeking", tskPtr->canPeekInCover, bAllowPeekingToggle, bAllowPeekingToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bAllowPeekingToggle) tskPtr->canPeekInCover = !tskPtr->canPeekInCover;
+				AddTickol("Allow Peeking", tskPtr->canPeekInCover, bAllowPeekingToggle, bAllowPeekingToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("The ped can lean out of cover.");
+				if (bAllowPeekingToggle) tskPtr->canPeekInCover = !tskPtr->canPeekInCover;
 
 				PAtCoord(tskPtr->coverPos);
 			}
@@ -383,6 +402,7 @@ namespace sub::Spooner
 
 				bool bHeading_plus = false, bHeading_minus = false;
 				AddNumber("Direction To Face", tskPtr->heading, 0, null, bHeading_plus, bHeading_minus);
+				AddOptionDescription("Heading in degrees the ped faces after arriving.");
 				if (bHeading_plus) { tskPtr->heading += 1.0f; if (tskPtr->heading > 180.0f) tskPtr->heading = -180.0f; }
 				if (bHeading_minus) { tskPtr->heading -= 1.0f; if (tskPtr->heading < -180.0f) tskPtr->heading = 180.0f; }
 
@@ -394,6 +414,7 @@ namespace sub::Spooner
 
 				bool bSpeed_plus = false, bSpeed_minus = false;
 				AddTexter("Speed", (tskPtr->speed > 2.5f ? 1 : 0), std::vector<std::string>{"Walk", "Run"}, null, bSpeed_plus, bSpeed_minus);
+				AddOptionDescription("Walk or run.");
 				if (bSpeed_plus) { if (tskPtr->speed < 4.0f) tskPtr->speed = 4.0f; }
 				if (bSpeed_minus) { if (tskPtr->speed > 1.0f) tskPtr->speed = 1.0f; }
 
@@ -413,6 +434,7 @@ namespace sub::Spooner
 
 				bool bSpeed_plus = false, bSpeed_minus = false;
 				AddTexter("Speed", (tskPtr->speed > 2.5f ? 1 : 0), std::vector<std::string>{"Walk", "Run"}, null, bSpeed_plus, bSpeed_minus);
+				AddOptionDescription("Walk or run.");
 				if (bSpeed_plus) { if (tskPtr->speed < 4.0f) tskPtr->speed = 4.0f; }
 				if (bSpeed_minus) { if (tskPtr->speed > 1.0f) tskPtr->speed = 1.0f; }
 
@@ -447,7 +469,9 @@ namespace sub::Spooner
 				if (!spoocam.IsActive())
 				{
 					bool bSetPosToMe = false;
-					AddTickol("Add Player Position", true, bSetPosToMe, bSetPosToMe, TICKOL::SMALLNEWSTAR); if (bSetPosToMe)
+					AddTickol("Add Player Position", true, bSetPosToMe, bSetPosToMe, TICKOL::SMALLNEWSTAR);
+					AddOptionDescription("Adds your position as the next point on the route.");
+					if (bSetPosToMe)
 					{
 						Vector3 myPos = GTAentity(PLAYER_PED_ID()).GetPosition();
 						tskPtr->route.push_back(myPos);
@@ -457,7 +481,9 @@ namespace sub::Spooner
 				else
 				{
 					bool bSetPosToHitCoords = false;
-					AddTickol("Add Camera Target Position", true, bSetPosToHitCoords, bSetPosToHitCoords, TICKOL::SMALLNEWSTAR); if (bSetPosToHitCoords)
+					AddTickol("Add Camera Target Position", true, bSetPosToHitCoords, bSetPosToHitCoords, TICKOL::SMALLNEWSTAR);
+					AddOptionDescription("Adds the point your camera is aiming at as the next point on the route.");
+					if (bSetPosToHitCoords)
 					{
 						Vector3 hitCoords = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 						tskPtr->route.push_back(hitCoords);
@@ -472,6 +498,7 @@ namespace sub::Spooner
 
 				bool bSpeed_plus = false, bSpeed_minus = false;
 				AddTexter("Speed", (tskPtr->speed > 2.5f ? 1 : 0), std::vector<std::string>{"Walk", "Run"}, null, bSpeed_plus, bSpeed_minus);
+				AddOptionDescription("Walk or run.");
 				if (bSpeed_plus) { if (tskPtr->speed < 4.0f) tskPtr->speed = 4.0f; }
 				if (bSpeed_minus) { if (tskPtr->speed > 1.0f) tskPtr->speed = 1.0f; }
 
@@ -485,6 +512,7 @@ namespace sub::Spooner
 
 				bool bRadius_plus = false, bRadius_minus = false;
 				AddNumber("Radius", thisRadius, 0, null, bRadius_plus, bRadius_minus);
+				AddOptionDescription("How far from the point the ped wanders while patrolling.");
 				if (Menu::IsLastDrawnOptionSelected())
 					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisRadius);
 				if (bRadius_plus) { if (thisRadius < FLT_MAX) thisRadius += 1.0f; }
@@ -510,13 +538,16 @@ namespace sub::Spooner
 
 				bool bSearchRadius_plus = false, bSearchRadius_minus = false;
 				AddNumber("Search Radius", thisSearchRadius, 0, null, bSearchRadius_plus, bSearchRadius_minus);
+				AddOptionDescription("How far to look for a nearby scenario (e.g. a bench or wall to lean on).");
 				if (Menu::IsLastDrawnOptionSelected())
 					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisSearchRadius);
 				if (bSearchRadius_plus) { if (thisSearchRadius < FLT_MAX) thisSearchRadius += 1.0f; }
 				if (bSearchRadius_minus) { if (thisSearchRadius > 0.0f) thisSearchRadius -= 1.0f; }
 
 				bool bWarpTogglePressed = false;
-				AddTickol("Warp", thisWarp, bWarpTogglePressed, bWarpTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bWarpTogglePressed) thisWarp = !thisWarp;
+				AddTickol("Warp", thisWarp, bWarpTogglePressed, bWarpTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Teleports straight into the scenario instead of walking there.");
+				if (bWarpTogglePressed) thisWarp = !thisWarp;
 
 			}
 			void ScenarioAction()
@@ -665,7 +696,9 @@ namespace sub::Spooner
 				AddTitle("Settings");
 
 				AddNumberStepper("Blend-In Speed", tskPtr->speed, 1, 0.1);
+				AddOptionDescription("How quickly the ped blends into the animation. Higher is snappier.");
 				AddNumberStepper("Blend-Out Speed", tskPtr->speedMultiplier, 1, 0.1);
+				AddOptionDescription("How quickly the ped blends out when the animation ends. Usually negative (default -4).");
 
 				const int numPresets = static_cast<int>(std::size(AnimFlag::kFlagPresets));
 				int currentPresetIdx = numPresets;
@@ -685,10 +718,12 @@ namespace sub::Spooner
 				presetLabels.push_back("Custom");
 
 				int newPresetIdx = AddTexterCycler("Flag Preset", currentPresetIdx, presetLabels);
+				AddOptionDescription("Common animation flag combinations, such as looping, upper body only or holding the last frame.");
 				if (newPresetIdx != currentPresetIdx && newPresetIdx < numPresets)
 					tskPtr->flag = AnimFlag::kFlagPresets[newPresetIdx].value;
 				bool bToggleLockPos = false;
 				AddTickol("Lock Position", tskPtr->lockPos, bToggleLockPos, bToggleLockPos, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+				AddOptionDescription("Stops the animation from moving the ped's position.");
 				if (bToggleLockPos)
 					tskPtr->lockPos = !tskPtr->lockPos;
 			}
@@ -840,6 +875,7 @@ namespace sub::Spooner
 
 				bool bRadius_plus = false, bRadius_minus = false;
 				AddNumber("Radius", thisRadius, 0, null, bRadius_plus, bRadius_minus);
+				AddOptionDescription("The ped attacks hostile or disliked peds within this range.");
 				if (Menu::IsLastDrawnOptionSelected())
 					EntityManagement::DrawRadiusDisplayingMarker(selectedEntity.handle.GetPosition(), thisRadius);
 				if (bRadius_plus) { if (thisRadius < FLT_MAX) thisRadius += 1.0f; }
@@ -920,6 +956,7 @@ namespace sub::Spooner
 					paramIter = sub::Speech::vSpeechParams.begin();
 				bool bSpeechParam_plus = false, bSpeechParam_minus = false;
 				AddTexter("Modifier", 0, std::vector<std::string>{ paramIter->title }, null, bSpeechParam_plus, bSpeechParam_minus);
+				AddOptionDescription("Variation of the speech line (e.g. shouted, near or far).");
 				if (bSpeechParam_plus) { if (std::next(paramIter) != sub::Speech::vSpeechParams.end()) tskPtr->paramName = (++paramIter)->label; }
 				if (bSpeechParam_minus) { if (paramIter != sub::Speech::vSpeechParams.begin()) tskPtr->paramName = (--paramIter)->label; }
 
@@ -1022,6 +1059,7 @@ namespace sub::Spooner
 				}
 				bool bDrivingStyle_plus = false, bDrivingStyle_minus = false;
 				AddTexter("Driving Style", 0, cds, null, bDrivingStyle_plus, bDrivingStyle_minus);
+				AddOptionDescription("How the driver behaves: obeying traffic, rushing, reckless, etc.");
 				if (bDrivingStyle_plus) { if (cdsi < DrivingStyle::nameArray.size() - 1) { cdsi++; tskPtr->drivingStyle = DrivingStyle::nameArray[cdsi].style; } }
 				if (bDrivingStyle_minus) { if (cdsi > 0) { cdsi--; tskPtr->drivingStyle = DrivingStyle::nameArray[cdsi].style; } }
 			}
@@ -1058,6 +1096,7 @@ namespace sub::Spooner
 				}
 				bool bDrivingStyle_plus = false, bDrivingStyle_minus = false;
 				AddTexter("Driving Style", 0, cds, null, bDrivingStyle_plus, bDrivingStyle_minus);
+				AddOptionDescription("How the driver behaves: obeying traffic, rushing, reckless, etc.");
 				if (bDrivingStyle_plus) { if (cdsi < DrivingStyle::nameArray.size() - 1) { cdsi++; tskPtr->drivingStyle = DrivingStyle::nameArray[cdsi].style; } }
 				if (bDrivingStyle_minus) { if (cdsi > 0) { cdsi--; tskPtr->drivingStyle = DrivingStyle::nameArray[cdsi].style; } }
 
@@ -1096,11 +1135,13 @@ namespace sub::Spooner
 				}
 				bool bDrivingStyle_plus = false, bDrivingStyle_minus = false;
 				AddTexter("Driving Style", 0, cds, null, bDrivingStyle_plus, bDrivingStyle_minus);
+				AddOptionDescription("How the driver behaves: obeying traffic, rushing, reckless, etc.");
 				if (bDrivingStyle_plus) { if (cdsi < DrivingStyle::nameArray.size() - 1) { cdsi++; tskPtr->drivingStyle = DrivingStyle::nameArray[cdsi].style; } }
 				if (bDrivingStyle_minus) { if (cdsi > 0) { cdsi--; tskPtr->drivingStyle = DrivingStyle::nameArray[cdsi].style; } }
 
 				bool bMinDistance_plus = false, bMinDistance_minus = false;
 				AddNumber("Minimum Distance", tskPtr->minDistance, 1, null, bMinDistance_plus, bMinDistance_minus);
+				AddOptionDescription("Distance kept from the vehicle being followed.");
 				if (bMinDistance_plus) { if (tskPtr->minDistance < FLT_MAX) tskPtr->minDistance += 0.5f; }
 				if (bMinDistance_minus) { if (tskPtr->minDistance > 0.0f) tskPtr->minDistance -= 0.5f; }
 				
@@ -1136,7 +1177,9 @@ namespace sub::Spooner
 					else
 					{
 						bool bSetPosToHitCoords = false;
-						AddOption("Set To Camera Target", bSetPosToHitCoords); if (bSetPosToHitCoords)
+						AddOption("Set To Camera Target", bSetPosToHitCoords);
+						AddOptionDescription("Uses the point your camera is aiming at.");
+						if (bSetPosToHitCoords)
 						{
 							Vector3 hitCoords = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 							*nas.second = hitCoords;
@@ -1184,7 +1227,9 @@ namespace sub::Spooner
 				}
 
 				bool bOnGroundOnlyTogglePressed = false;
-				AddTickol("On Ground Only", tskPtr->onGroundOnly, bOnGroundOnlyTogglePressed, bOnGroundOnlyTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bOnGroundOnlyTogglePressed) tskPtr->onGroundOnly = !tskPtr->onGroundOnly;
+				AddTickol("On Ground Only", tskPtr->onGroundOnly, bOnGroundOnlyTogglePressed, bOnGroundOnlyTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Only applies the speed while all wheels touch the ground.");
+				if (bOnGroundOnlyTogglePressed) tskPtr->onGroundOnly = !tskPtr->onGroundOnly;
 
 			}
 
@@ -1194,6 +1239,7 @@ namespace sub::Spooner
 
 				bool bNewValue_plus = false, bNewValue_minus = false;
 				AddNumber("New Value", tskPtr->newValue, 0, null, bNewValue_plus, bNewValue_minus);
+				AddOptionDescription("Object tint/texture variation index to switch to.");
 				if (bNewValue_plus) { if (tskPtr->newValue < UINT8_MAX) tskPtr->newValue++; }
 				if (bNewValue_minus) { if (tskPtr->newValue > 0) tskPtr->newValue--; }
 			}
@@ -1216,21 +1262,26 @@ namespace sub::Spooner
 				World::DrawLine(entityPos, markerPos, RGBA(177, 33, 193, 210));
 
 				bool bToggleRelativePressed = false;
-				AddTickol("Relative", tskPtr->isRelative, bToggleRelativePressed, bToggleRelativePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleRelativePressed)
+				AddTickol("Relative", tskPtr->isRelative, bToggleRelativePressed, bToggleRelativePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Direction is relative to the entity's facing instead of the world.");
+				if (bToggleRelativePressed)
 					tskPtr->isRelative = !tskPtr->isRelative;
 
 				bool bHeading_plus = false, bHeading_minus = false;
 				AddNumber("Direction", tskPtr->heading, 0, null, bHeading_plus, bHeading_minus);
+				AddOptionDescription("Horizontal direction (heading) in degrees.");
 				if (bHeading_plus) { tskPtr->heading += 1.0f; if (tskPtr->heading > 180.0f) tskPtr->heading = -180.0f; }
 				if (bHeading_minus) { tskPtr->heading -= 1.0f; if (tskPtr->heading < -180.0f) tskPtr->heading = 180.0f; }
 
 				bool bPitch_plus = false, bPitch_minus = false;
 				AddNumber("Pitch", tskPtr->pitch, 2, null, bPitch_plus, bPitch_minus);
+				AddOptionDescription("Vertical angle in degrees; positive points upward.");
 				if (bPitch_plus) { tskPtr->pitch += 1.0f; if (tskPtr->pitch > 90.0f) tskPtr->pitch = -90.0f; }
 				if (bPitch_minus) { tskPtr->pitch -= 1.0f; if (tskPtr->pitch < -90.0f) tskPtr->pitch = 90.0f; }
 
 				bool bMagnitude_plus = false, bMagnitude_minus = false;
 				AddNumber("Magnitude (m/s)", tskPtr->magnitude, 1, null, bMagnitude_plus, bMagnitude_minus);
+				AddOptionDescription("Speed the entity is launched at.");
 				if (bMagnitude_plus) { if (tskPtr->magnitude < FLT_MAX) tskPtr->magnitude += 0.5f; }
 				if (bMagnitude_minus) { if (tskPtr->magnitude > -FLT_MAX) tskPtr->magnitude -= 0.5f; }
 			}
@@ -1254,27 +1305,33 @@ namespace sub::Spooner
 				World::DrawMarker(MarkerType::DebugSphere, thisEntity.GetOffsetInWorldCoords(tskPtr->offsetVector), markerRot, Vector3(), Vector3(0.07f, 0.07f, 0.07f), RGBA(177, 33, 193, 210));
 
 				bool bToggleRelativePressed = false;
-				AddTickol("Relative", tskPtr->isRelative, bToggleRelativePressed, bToggleRelativePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleRelativePressed)
+				AddTickol("Relative", tskPtr->isRelative, bToggleRelativePressed, bToggleRelativePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Direction is relative to the entity's facing instead of the world.");
+				if (bToggleRelativePressed)
 					tskPtr->isRelative = !tskPtr->isRelative;
 
 				std::vector<std::string> vForceTypeNames = { "0", "Standard", "2", "Standard Weak" };
 				bool bForceType_plus = false, bForceType_minus = false;
 				AddTexter("Force Type", tskPtr->forceType, vForceTypeNames, null, bForceType_plus, bForceType_minus);
+				AddOptionDescription("How the game applies the push. \"Standard\" is the usual choice.");
 				if (bForceType_plus) { if (tskPtr->forceType < vForceTypeNames.size() - 1) tskPtr->forceType++; }
 				if (bForceType_minus) { if (tskPtr->forceType > 0) tskPtr->forceType--; }
 
 				bool bHeading_plus = false, bHeading_minus = false;
 				AddNumber("Direction", tskPtr->heading, 0, null, bHeading_plus, bHeading_minus);
+				AddOptionDescription("Horizontal direction (heading) in degrees.");
 				if (bHeading_plus) { tskPtr->heading += 1.0f; if (tskPtr->heading > 180.0f) tskPtr->heading = -180.0f; }
 				if (bHeading_minus) { tskPtr->heading -= 1.0f; if (tskPtr->heading < -180.0f) tskPtr->heading = 180.0f; }
 
 				bool bPitch_plus = false, bPitch_minus = false;
 				AddNumber("Pitch", tskPtr->pitch, 2, null, bPitch_plus, bPitch_minus);
+				AddOptionDescription("Vertical angle in degrees; positive points upward.");
 				if (bPitch_plus) { tskPtr->pitch += 1.0f; if (tskPtr->pitch > 90.0f) tskPtr->pitch = -90.0f; }
 				if (bPitch_minus) { tskPtr->pitch -= 1.0f; if (tskPtr->pitch < -90.0f) tskPtr->pitch = 90.0f; }
 
 				bool bMagnitude_plus = false, bMagnitude_minus = false;
 				AddNumber("Magnitude", tskPtr->magnitude, 1, null, bMagnitude_plus, bMagnitude_minus);
+				AddOptionDescription("Strength of the push.");
 				if (bMagnitude_plus) { if (tskPtr->magnitude < FLT_MAX) tskPtr->magnitude += 0.5f; }
 				if (bMagnitude_minus) { if (tskPtr->magnitude > -FLT_MAX) tskPtr->magnitude -= 0.5f; }
 
@@ -1286,6 +1343,7 @@ namespace sub::Spooner
 					bResetOffsetVector = 0;
 
 				AddNumberMultiplier("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
+				AddOptionDescription("Step size used by X/Y/Z. Each press multiplies or divides it by 10 (0.0001 to 10).");
 				AddNumber("X", tskPtr->offsetVector.x, 4, null, offsetx_plus, offsetx_minus);
 				AddNumber("Y", tskPtr->offsetVector.y, 4, null, offsety_plus, offsety_minus);
 				AddNumber("Z", tskPtr->offsetVector.z, 4, null, offsetz_plus, offsetz_minus);
@@ -1305,11 +1363,13 @@ namespace sub::Spooner
 
 				bool bAngleFreq_plus = false, bAngleFreq_minus = false;
 				AddNumber("Angular Frequency", tskPtr->angleFreq, 2, null, bAngleFreq_plus, bAngleFreq_minus);
+				AddOptionDescription("How strongly the entity is pulled toward the target. Higher is faster.");
 				if (bAngleFreq_plus) { if (tskPtr->angleFreq < FLT_MAX - 2.0f) tskPtr->angleFreq += 0.01f; }
 				if (bAngleFreq_minus) { if (tskPtr->angleFreq > 0.0f) tskPtr->angleFreq -= 0.01f; }
 
 				bool bDampRatio_plus = false, bDampRatio_minus = false;
 				AddNumber("Damping Ratio", tskPtr->dampRatio, 2, null, bDampRatio_plus, bDampRatio_minus);
+				AddOptionDescription("Below 1 overshoots and bounces; 1 settles smoothly; above 1 settles slowly.");
 				if (bDampRatio_plus) { if (tskPtr->dampRatio < FLT_MAX - 2.0f) tskPtr->dampRatio += 0.05f; }
 				if (bDampRatio_minus) { if (tskPtr->dampRatio > 0.0f) tskPtr->dampRatio -= 0.05f; }
 
@@ -1324,11 +1384,13 @@ namespace sub::Spooner
 
 				bool bAngleFreq_plus = false, bAngleFreq_minus = false;
 				AddNumber("Angular Frequency", tskPtr->angleFreq, 2, null, bAngleFreq_plus, bAngleFreq_minus);
+				AddOptionDescription("How strongly the entity is pulled toward the target. Higher is faster.");
 				if (bAngleFreq_plus) { if (tskPtr->angleFreq < FLT_MAX - 2.0f) tskPtr->angleFreq += 0.01f; }
 				if (bAngleFreq_minus) { if (tskPtr->angleFreq > 0.0f) tskPtr->angleFreq -= 0.01f; }
 
 				bool bDampRatio_plus = false, bDampRatio_minus = false;
 				AddNumber("Damping Ratio", tskPtr->dampRatio, 2, null, bDampRatio_plus, bDampRatio_minus);
+				AddOptionDescription("Below 1 overshoots and bounces; 1 settles smoothly; above 1 settles slowly.");
 				if (bDampRatio_plus) { if (tskPtr->dampRatio < FLT_MAX - 2.0f) tskPtr->dampRatio += 0.05f; }
 				if (bDampRatio_minus) { if (tskPtr->dampRatio > 0.0f) tskPtr->dampRatio -= 0.05f; }
 
@@ -1340,6 +1402,7 @@ namespace sub::Spooner
 					bResetOffsetVector = 0;
 
 				AddNumberMultiplier("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
+				AddOptionDescription("Step size used by X/Y/Z. Each press multiplies or divides it by 10 (0.0001 to 10).");
 				AddNumber("X", tskPtr->offsetVector.x, 4, null, offsetx_plus, offsetx_minus);
 				AddNumber("Y", tskPtr->offsetVector.y, 4, null, offsety_plus, offsety_minus);
 				AddNumber("Z", tskPtr->offsetVector.z, 4, null, offsetz_plus, offsetz_minus);
@@ -1368,7 +1431,9 @@ namespace sub::Spooner
 				for (auto& ft : vFrzTypNames)
 				{
 					bool bFrzTypPressed = false;
-					AddTickol(ft.second, tskPtr->freezeType == ft.first, bFrzTypPressed, bFrzTypPressed); if (bFrzTypPressed)
+					AddTickol(ft.second, tskPtr->freezeType == ft.first, bFrzTypPressed, bFrzTypPressed);
+					AddOptionDescription("Freeze: locks it in place. Unfreeze: releases it. Reset Velocity: stops all movement without leaving it frozen.");
+					if (bFrzTypPressed)
 					{
 						tskPtr->freezeType = ft.first;
 					}
@@ -1398,7 +1463,9 @@ namespace sub::Spooner
 				World::DrawLine(entityPos, markerPos, RGBA(177, 33, 193, 210));
 
 				bool bToggleRelativePressed = false;
-				AddTickol("Relative", tskPtr->isRelative, bToggleRelativePressed, bToggleRelativePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleRelativePressed) tskPtr->isRelative = !tskPtr->isRelative;
+				AddTickol("Relative", tskPtr->isRelative, bToggleRelativePressed, bToggleRelativePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Adds the values to the entity's current rotation instead of setting it outright.");
+				if (bToggleRelativePressed) tskPtr->isRelative = !tskPtr->isRelative;
 
 				bool rotx_plus = 0, rotx_minus = 0,
 					roty_plus = 0, roty_minus = 0,
@@ -1406,6 +1473,7 @@ namespace sub::Spooner
 					bResetRotVector = 0;
 
 				AddNumberMultiplier("Scroll Sensitivity", SpoonerMode::editingState.precisionRot, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
+				AddOptionDescription("Step size used by X/Y/Z rotation. Each press multiplies or divides it by 10 (0.0001 to 10).");
 				AddNumber("X", tskPtr->rotationValue.x, 4, null, rotx_plus, rotx_minus);
 				AddNumber("Y", tskPtr->rotationValue.y, 4, null, roty_plus, roty_minus);
 				AddNumber("Z", tskPtr->rotationValue.z, 4, null, rotz_plus, rotz_minus);
@@ -1427,7 +1495,9 @@ namespace sub::Spooner
 				auto tskPtr = _selectedSTST->GetTypeTask<STSTasks::ChangeOpacity>();
 
 				bool bAlphaLevelResetPressed = false;
-				AddTickol("Reset To Default", tskPtr->opacityValue == 269, bAlphaLevelResetPressed, null); if (bAlphaLevelResetPressed)
+				AddTickol("Reset To Default", tskPtr->opacityValue == 269, bAlphaLevelResetPressed, null);
+				AddOptionDescription("Restores the entity's normal opacity.");
+				if (bAlphaLevelResetPressed)
 				{
 					tskPtr->opacityValue = 269;
 				}
@@ -1479,7 +1549,9 @@ namespace sub::Spooner
 				World::DrawMarker(MarkerType::DebugSphere, thisEntity.GetOffsetInWorldCoords(tskPtr->posOffset), Vector3(), Vector3(), Vector3(0.1f, 0.1f, 0.1f), RGBA(tskPtr->colour, 190));
 
 				bool bTogglePlayOncePressed = false;
-				AddTickol("Play Only Once", !tskPtr->isLoopedTask, bTogglePlayOncePressed, bTogglePlayOncePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bTogglePlayOncePressed)
+				AddTickol("Play Only Once", !tskPtr->isLoopedTask, bTogglePlayOncePressed, bTogglePlayOncePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Off: the effect repeats every Interval for the task's duration.");
+				if (bTogglePlayOncePressed)
 				{
 					if (tskPtr->isLoopedTask)
 					{
@@ -1499,6 +1571,7 @@ namespace sub::Spooner
 				{
 					bool bDelay_input = false, bDelay_plus = false, bDelay_minus = false;
 					AddNumber("Interval (In Seconds)", (float(tskPtr->delay) / 1000), 1, bDelay_input, bDelay_plus, bDelay_minus);
+					AddOptionDescription("Time between each effect repeat.");
 					if (bDelay_plus) { if (tskPtr->delay < INT_MAX) tskPtr->delay += 100; }
 					if (bDelay_minus) { if (tskPtr->delay > 0U) tskPtr->delay -= 100; }
 					if (bDelay_input)
@@ -1535,7 +1608,9 @@ namespace sub::Spooner
 				AddsettingscolOption("Colour", tskPtr->colour);
 
 				bool bManualEditingForPosPressed = false;
-				AddOption("Adjust Relative Position", bManualEditingForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING); if (bManualEditingForPosPressed)
+				AddOption("Adjust Relative Position", bManualEditingForPosPressed, nullFunc, SUB::SPOONER_VECTOR3_MANUALEDITING);
+				AddOptionDescription("Offset of the effect from the entity.");
+				if (bManualEditingForPosPressed)
 				{
 					SpoonerVector3ManualEditingPtrs = { thisEntity, &tskPtr->posOffset, &tskPtr->rotOffset };
 				}
@@ -1674,6 +1749,7 @@ namespace sub::Spooner
 
 			bool bStartPressed = false, bStopPressed = false;
 			AddLocal("Status", taskSequence.IsActive(), bStartPressed, bStopPressed);
+			AddOptionDescription("Starts or stops this entity's task sequence.");
 			if (bStartPressed)
 			{
 				if (!taskList.empty())
@@ -1830,7 +1906,9 @@ namespace sub::Spooner
 			{
 				bool bDuration_plus = false, bDuration_minus = false, bDuration_input = false, bDurationMult_plus = false, bDurationMult_minus = false;
 				AddNumber("Duration (In Seconds)", (float(thisDuration) / 1000), 3, bDuration_input, bDuration_plus, bDuration_minus);
+				AddOptionDescription("How long this task runs before the sequence moves to the next one.");
 				AddNumberMultiplier("Scroll Sensitivity", SpoonerMode::editingState.precisionPos, 3, 10.0, 0.001, 10.0, !Settings::bInvertScrollSensitivity);
+				AddOptionDescription("Seconds added or removed per press on Duration. Each press multiplies or divides it by 10 (0.001 to 10).");
 				if (bDuration_plus) { 
 					addlog(ige::LogType::LOG_TRACE, "Increasing duration by " + std::to_string(SpoonerMode::editingState.precisionPos * 1000) + " milliseconds. Target " + std::to_string(thisDuration + SpoonerMode::editingState.precisionPos * 1000));
 					if (thisDuration <= INT_MAX-SpoonerMode::editingState.precisionPos*1000) thisDuration += static_cast<int>(SpoonerMode::editingState.precisionPos*1000);
@@ -1870,7 +1948,9 @@ namespace sub::Spooner
 				if (tskPtr->durationAfterLife >= 0)
 				{
 					bool bInfDurationToggle = false;
-					AddTickol("Keep Task Running After Allocated Time", tskPtr->durationAfterLife == 1, bInfDurationToggle, bInfDurationToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bInfDurationToggle) tskPtr->durationAfterLife = tskPtr->durationAfterLife == 1 ? 0 : 1;
+					AddTickol("Keep Task Running After Allocated Time", tskPtr->durationAfterLife == 1, bInfDurationToggle, bInfDurationToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					AddOptionDescription("Doesn't end this task when its time runs out, so it keeps going while later tasks run.");
+					if (bInfDurationToggle) tskPtr->durationAfterLife = tskPtr->durationAfterLife == 1 ? 0 : 1;
 				}
 			}
 

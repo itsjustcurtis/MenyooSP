@@ -391,8 +391,10 @@ namespace sub
 
 		AddTitle("Wardrobe");
 		AddLocal("Front View", WardrobeCamera::IsActive(), frontView, frontView);
+		AddOptionDescription("Moves the camera in front of the ped while you change clothes.");
 		AddOption("Outfits", null, nullFunc, SUB::COMPONENTS_OUTFITS);
 		AddOption("Default Outfits (Beta)", null, nullFunc, SUB::COMPONENTS_OUTFITS_DEFAULT);
+		AddOptionDescription("The game's built-in shop outfits. Only works for supported ped models.");
 		AddOption("Decal Overlays", null, PedDecals::OpenSubDecals, -1, true);
 		AddOption("Damage Overlays", null, nullFunc, SUB::PEDDAMAGET_CATEGORYLIST);
 		AddOption("Head Features", null, nullFunc, SUB::PED_HEADFEATURES_MAIN);
@@ -423,8 +425,11 @@ namespace sub
 
 		AddBreak("---Utilities---");
 		AddOption("Random Components", bRandomComponents);
+		AddOptionDescription("Randomizes every clothing component. Press twice to confirm.");
 		AddOption("Default Components", bDefaultComponents);
+		AddOptionDescription("Resets clothing to the model's default. Press twice to confirm.");
 		AddOption("Default Components and Accessories", bClearAll);
+		AddOptionDescription("Resets clothing and removes all accessories. Press twice to confirm.");
 
 		static int confirmRandom = 0, confirmDefault = 0;
 		static UINT16 lastSub = 0;
@@ -520,6 +525,7 @@ namespace sub
 
 				int prevCollectionIdx = data.currentCollectionIdx;
 				data.currentCollectionIdx = AddTexterCycler("Collection", data.currentCollectionIdx, names);
+				AddOptionDescription("The clothing set this item was added in (base game, a game update or a mod). Base game items are listed as \"basegame\".");
 				bool collectionChanged = (data.currentCollectionIdx != prevCollectionIdx);
 
 				if (collectionChanged)
@@ -532,6 +538,7 @@ namespace sub
 				int prevLocalDrawableId = data.currentLocalIdx;
 
 				AddNumberStepper("Local ID", data.currentLocalIdx, 0, 1.0, 0, col.maxLocalId, false, true);
+				AddOptionDescription("The item's number within its collection. Unlike Type, it stays the same after game updates.");
 				bool localDrawableIdChanged = collectionChanged || (data.currentLocalIdx != prevLocalDrawableId);
 
 				if (localDrawableIdChanged)
@@ -703,6 +710,7 @@ namespace sub
 
 				int prevCollectionIdx = data.currentCollectionIdx;
 				data.currentCollectionIdx = AddTexterCycler("Collection", data.currentCollectionIdx, names);
+				AddOptionDescription("The clothing set this item was added in (base game, a game update or a mod). Base game items are listed as \"basegame\".");
 				bool collectionChanged = (data.currentCollectionIdx != prevCollectionIdx);
 
 				if (collectionChanged)
@@ -714,6 +722,7 @@ namespace sub
 
 				int prevLocalPropId = data.currentLocalIdx;
 				AddNumberStepper("Local ID", data.currentLocalIdx, 0, 1.0, 0, col.maxLocalId, false, true);
+				AddOptionDescription("The item's number within its collection. Unlike Type, it stays the same after game updates.");
 				bool localPropIdChanged = collectionChanged || (data.currentLocalIdx != prevLocalPropId);
 
 				if (localPropIdChanged)
@@ -1454,6 +1463,7 @@ namespace sub
 			AddBreak("---Hair---");
 			AddNumber("Hair Colour", pedHead->hairColour, 0, null, hairColourPlus, hairColourMinus);
 			AddNumber("Hair Streaks Colour", pedHead->hairColourStreaks, 0, null, hairStreaksPlus, hairStreaksMinus);
+			AddOptionDescription("Colour of the hair highlights.");
 
 			AddBreak("---Eyes---");
 			AddNumber(Game::GetGXTEntry("FACE_APP_EYE", "Eye Colour"), pedHead->eyeColour, 0, null, eyeColourPlus, eyeColourMinus);
@@ -1684,6 +1694,7 @@ namespace sub
 
 			AddTitle("Shape & Skin Tone");
 			AddToggle("Unlock ID Limits", g_unlockMaxIDs);
+			AddOptionDescription("Allows parent IDs up to 255 (modded heads) instead of the standard 0-45.");
 
 			int maxIds = getMaxShapeAndSkinIds();
 
@@ -1724,8 +1735,11 @@ namespace sub
 			};
 
 			addMixSlider("Shape", blendData.shapeMix);
+			AddOptionDescription("Face shape blend between father (0) and mother (1).");
 			addMixSlider("Tone", blendData.skinMix);
+			AddOptionDescription("Skin tone blend between father (0) and mother (1).");
 			addMixSlider("Ancestor (Shape & Tone)", blendData.thirdMix);
+			AddOptionDescription("How much the third parent affects shape and tone.");
 		}
 
 		void Sub_FaceGenerator()
@@ -1784,20 +1798,30 @@ namespace sub
 
 			// --- Parents ---
 			AddTickol("Use Third Parent", PedFaceGen::settings.useThirdParent, PedFaceGen::settings.useThirdParent, PedFaceGen::settings.useThirdParent, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("Randomizing also picks an ancestor parent.");
 			PedFaceGen::settings.parentGenderFilter = AddTexterCycler("Parent Filter", PedFaceGen::settings.parentGenderFilter, genderOpts);
+			AddOptionDescription("Limits random parents by gender.");
 			PedFaceGen::settings.skinColorFilter = AddTexterCycler("Skin Colour", PedFaceGen::settings.skinColorFilter, skinOpts);
+			AddOptionDescription("Limits random parents by ethnicity.");
 			
 			// Show non-rockstar parents only if parent / skin color filter is set to "Any" (we don't know the genders/races of modded-parents)
 			bool showNonRockstar = (PedFaceGen::settings.parentGenderFilter == 0) && (PedFaceGen::settings.skinColorFilter == 0);
 			if (showNonRockstar)
+			{
 				AddNumberStepper("Non-Rockstar Parent Max ID", PedFaceGen::settings.nonRockstarMax, 0, 1.0, 46.0, 255.0);
+				AddOptionDescription("Highest modded parent ID (46+) included when randomizing. Only shown when both filters are \"Any\".");
+			}
 
 			// --- Randomize ---
 			AddBreak("---Randomize---");
 			AddOption("Randomize Face", bRandFace);
+			AddOptionDescription("Random parents plus shape and tone blend.");
 			AddOption("Randomize Face Shapes", bRandShapes);
+			AddOptionDescription("Randomizes only the shape parents and blend.");
 			AddOption("Randomize Face Textures", bRandSkins);
+			AddOptionDescription("Randomizes only the skin tone parents and blend.");
 			AddOption("Randomize Everything", bRandEverything);
+			AddOptionDescription("Randomizes the face and all facial features.");
 
 			if (bRandFace || bRandShapes || bRandSkins || bRandEverything)
 			{
@@ -2126,10 +2150,12 @@ namespace sub
 
 		bool attachmentsPlus = false, attachmentsMinus = false;
 		AddTexter("AddAttachmentsToSpoonerDB", persistentAttachmentsTexterIndex, std::vector<std::string>{ "FileDecides", "ForceOff", "ForceOn" }, null, attachmentsPlus, attachmentsMinus);
+		AddOptionDescription("When loading an outfit, whether its attached objects join the Spooner database. FileDecides uses the file's setting; ForceOff/ForceOn override it.");
 		if (attachmentsPlus) { if (persistentAttachmentsTexterIndex < 2) persistentAttachmentsTexterIndex++; }
 		if (attachmentsMinus) { if (persistentAttachmentsTexterIndex > 0) persistentAttachmentsTexterIndex--; }
 
 		ComponentChangerOutfit::legacyXMLFormat = AddTexterCycler("XML Format", ComponentChangerOutfit::legacyXMLFormat, { "New XML format", "Legacy XML format" }) == 1;
+		AddOptionDescription("New XML Format saves the file with more readable node names. Legacy XML format saves it with non-human readable node names, but will more likely work with external XML importers.");
 
 		AddOption("Save Outfit To File", savePressed);
 
@@ -2266,12 +2292,18 @@ namespace sub
 
 		AddTitle(name);
 		AddOption("Apply", outfits2_apply);
+		AddOptionDescription("Applies everything: ped model/head, clothing, accessories, decals, damage and attachments.");
 		AddOption("Apply Clothing & Attachments", outfits2_applyAllFeatures);
+		AddOptionDescription("Applies everything except the ped model and head.");
 		AddOption((std::string)"Apply " + (g_activePedHandle == PLAYER_PED_ID() ? "Ped Model" : "Head Features"), outfits2_applyModel);
+		AddOptionDescription("Applies only the ped model and head features, without clothing.");
 		AddOption("Apply and Set as Default", outfits2_applySetDefault);
+		AddOptionDescription("Applies to your character and loads this outfit automatically every time the game starts.");
 		ComponentChangerOutfit::legacyXMLFormat = AddTexterCycler("XML Format", ComponentChangerOutfit::legacyXMLFormat, { "New XML format", "Legacy XML format" }) == 1;
+		AddOptionDescription("New XML Format saves the file with more readable node names. Legacy XML format saves it with non-human readable node names, but will more likely work with external XML importers.");
 		AddOption("Rename File", outfits2_rename);
 		AddOption("Overwrite File", outfits2_overwrite);
+		AddOptionDescription("Replaces this file with the current ped's outfit.");
 		AddOption("Delete File", outfits2_delete);
 
 		if (outfits2_apply)
@@ -2367,6 +2399,7 @@ namespace sub
 			auto nodeClearDecalOverlays = nodeEntity.child("ClearDecalOverlays");
 			bool bToggleClearDecalOverlaysPressed = false;
 			AddTickol("Clear Previous Decals", nodeClearDecalOverlays.text().as_bool(true), bToggleClearDecalOverlaysPressed, bToggleClearDecalOverlaysPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("Removes the ped's existing tattoos and decals before applying this outfit.");
 			if (bToggleClearDecalOverlaysPressed)
 			{
 				if (!nodeClearDecalOverlays) 
@@ -2382,6 +2415,7 @@ namespace sub
 			{
 				bool bToggleShortHeightedPressed = false;
 				AddTickol("Short Height", nodeShortHeighted.text().as_bool(), bToggleShortHeightedPressed, bToggleShortHeightedPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Loads the ped in its shorter form.");
 				if (bToggleShortHeightedPressed)
 				{
 					nodeShortHeighted.text() = !nodeShortHeighted.text().as_bool();
@@ -2395,6 +2429,7 @@ namespace sub
 			{
 				bool bToggleAddAttachmentsToSpoonerDbPressed = false;
 				AddTickol("Persistent Attachments (AddToSpoonerDb)", bAddAttachemntsToSpoonerDb, bToggleAddAttachmentsToSpoonerDbPressed, bToggleAddAttachmentsToSpoonerDbPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Attached objects are added to the Spooner database and don't despawn.");
 				if (bToggleAddAttachmentsToSpoonerDbPressed)
 				{
 					nodeAddAttachmentsToSpoonerDb = !nodeAddAttachmentsToSpoonerDb.as_bool();
@@ -2410,6 +2445,7 @@ namespace sub
 				{
 					bool bToggleStartTaskSeqOnLoadPressed = false;
 					AddTickol("Start Task Sequences Immediately", nodeStartTaskSeqOnLoad.as_bool(), bToggleStartTaskSeqOnLoadPressed, bToggleStartTaskSeqOnLoadPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					AddOptionDescription("Attached entities start their Spooner task sequences as soon as they load.");
 					if (bToggleStartTaskSeqOnLoadPressed)
 					{
 						nodeStartTaskSeqOnLoad = !nodeStartTaskSeqOnLoad.as_bool();

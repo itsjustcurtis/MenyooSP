@@ -29,10 +29,13 @@ namespace sub
 		AddTitle("Time");
 		AddOption("Clock (System Time)", null, nullFunc, SUB::CLOCK);
 		AddToggle("Pause Clock Time", pauseClock, pauseClockToggle);
+		AddOptionDescription("Freezes the in-game time.");
 		AddToggle("Sync With System Time", syncClock);
+		AddOptionDescription("Matches in-game time to your PC clock.");
 		AddNumber("Hour", hour, 0, null, hourPlus, hourMinus);
 		AddNumber("Minute", minute, 0, null, minutePlus, minuteMinus);
 		AddNumber("World Speed", currentTimescale, 1, null, timeScalePlus, timeScaleMinus);
+		AddOptionDescription("Game speed. Below 1.0 is slow motion.");
 		AddBreak("---Presets---");
 		AddOption("Sunrise (06:00)", presetSunrise);
 		AddOption("Noon (12:00)", presetNoon);
@@ -254,6 +257,7 @@ namespace sub
 			bool clockTimePlus = false;
 			bool clockTimeMinus = false;
 			AddTexter("Clock", mode, std::vector<std::string>{"Off", "Digital", "Analogue"}, null, clockTimePlus, clockTimeMinus);
+			AddOptionDescription("Shows a digital or analogue clock on screen.");
 			if (clockTimePlus) 
 			{ 
 				if (mode < maxClockTime) 

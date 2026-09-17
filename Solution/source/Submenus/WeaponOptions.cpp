@@ -100,29 +100,48 @@ namespace sub
 		AddOption("Give Max Ammo", bGiveMaxAmmoPressed);
 		AddOption("Remove All Weapons", WeaponopsRemoveWeaps_);
 		AddToggle("Infinite Parachutes", selfInfiniteParachutes);
+		AddOptionDescription("Gives you a new parachute whenever you don't have one.");
 		AddToggle("Infinite Ammo In Clip", bitInfiniteAmmo, WeaponopsInfiniteAmmoOn_, WeaponopsInfiniteAmmoOff_);
+		AddOptionDescription("Never need to reload.");
 		AddToggle("Explosive Melee", explosiveMelee);
+		AddOptionDescription("Punches and melee hits cause explosions.");
 		AddToggle("Explosive Ammo", explosiveRounds);
 		AddToggle("Tenfold Bullets", tripleBullets);
+		AddOptionDescription("Each shot fires a spread of extra bullets.");
 		AddToggle("Flaming Bullets", flamingRounds);
 		AddTexter("Weapon Damage", 0, std::vector<std::string>{wdmg_ss.str()}, wdmg_jump, wdmg_plus, wdmg_minus);
+		AddOptionDescription("Multiplies your weapon and melee damage. 1.0 is normal.");
 		AddToggle("Bullet Time", bulletTime, null, WeaponopsBulletTimeOff_);
+		AddOptionDescription("Slows time briefly whenever you shoot.");
 		AddToggle("Triggerbot", selfTriggerbot);
+		AddOptionDescription("Shoots automatically when aiming at a living ped.");
 		AddToggle("Rapid Fire", rapidFire, WeaponopsRapidFireOn_);
+		AddOptionDescription("Fires as fast as possible while holding the trigger.");
 		AddToggle("Soul-Switch Gun (SP)", soulSwitchGun, Weaponops_soulswitch_on);
+		AddOptionDescription("Aim at a ped with the Combat Pistol and shoot to take control of them.");
 		AddLocal("Rope Gun (Glitchy)", RopeGun::g_ropeGun.Enabled(), RopeGun::ToggleOnOff, RopeGun::ToggleOnOff);
+		AddOptionDescription("With the Heavy Pistol, aim and shoot two entities or surfaces to tie them with a rope.");
 		AddLocal("Magnet Gun", MagnetGun::g_magnetGun.Enabled(), MagnetGun::ToggleOnOff, MagnetGun::ToggleOnOff);
+		AddOptionDescription("Aim the Assault Rifle to pull nearby objects in front of you. Scroll to change distance.");
 		AddLocal("Flamethrower " + GetWeaponLabel(FlameThrower::_whash, true), FlameThrower::IsPlayerAdded(g_activePlayerId), FlameThrower::AddSelf, FlameThrower::RemoveSelf);
+		AddOptionDescription("Turns the Fire Extinguisher into a flamethrower.");
 		AddToggle("Teleport Gun", teleportGun, bTeleportGunOn);
+		AddOptionDescription("Shoot with the Heavy Pistol to teleport where the bullet lands.");
 		AddToggle("Ped Revival Gun", selfResurrectionGun, bSelfResurrectionGunOn);
+		AddOptionDescription("Shoot a dead ped with the Stun Gun to bring them back to life.");
 		AddToggle("Entity Removal Gun", selfDeleteGun, bSelfDeleteGunOn);
+		AddOptionDescription("Shoot anything with the SNS Pistol to delete it.");
 		AddToggle("Light Gun", lightGun);
+		AddOptionDescription("Shots leave coloured lights where they land.");
 		AddOption("Laser Sight", null, nullFunc, SUB::WEAPONOPS_LASERSIGHT);
 		AddOption("Forge Gun", null, nullFunc, SUB::FORGEGUN);
 		AddOption("Gravity Gun", null, nullFunc, SUB::GRAVITYGUN);
 		AddOption("TriggerFX Gun", null, nullFunc, SUB::TRIGGERFXGUN);
+		AddOptionDescription("Shots create a particle effect where they land.");
 		AddOption("Kaboom Gun", null, nullFunc, SUB::KABOOMGUN);
+		AddOptionDescription("Shots cause explosions where they land.");
 		AddOption("Bullet Gun", null, nullFunc, SUB::BULLETGUN);
+		AddOptionDescription("Your gun fires a projectile of your choice, such as rockets.");
 		AddOption("Ped Gun", null, nullFunc, SUB::PEDGUN);
 		AddOption("Object & Vehicle Gun", null, nullFunc, SUB::OBJECTGUN);
 
@@ -199,9 +218,13 @@ namespace sub
 
 		AddTitle("Forge Gun");
 		AddToggle("Gun Toggle", forgeGun, Weaponops_forgeGun_on);
+		AddOptionDescription("Aim the pistol to pick up and move objects. Scroll to change distance.");
 		AddToggle("Freeze Pickups In Place", objectSpawnForgeAssistance);
+		AddOptionDescription("Held objects are frozen when you let go, instead of falling.");
 		AddNumber("Rotation Precision", g_forgeGunPrecision, 4, null, prec_plus, prec_minus);
+		AddOptionDescription("Degrees an object rotates per key press while holding it.");
 		AddNumber("Launch Force", g_forgeGunShootForce, 0, setForce_custom, setForce_plus, setForce_minus);
+		AddOptionDescription("How hard held objects are thrown when you shoot.");
 
 
 		if (setForce_custom) {
@@ -433,9 +456,13 @@ namespace sub
 
 			AddTitle("Gravity Gun");
 			AddToggle("Toggle", g_gravityGun.Enabled(), printInstructions);
+			AddOptionDescription("Aim to pick up entities, scroll to change distance, shoot to launch.");
 			AddToggle("Multiple Pick Ups", g_gravityGun.MultipleEntities());
+			AddOptionDescription("Picks up several entities at once.");
 			AddTexter("Pick Up Type", type, str_entitytypes, null, type_plus, type_minus);
+			AddOptionDescription("Which kinds of entities can be picked up.");
 			AddNumber("Launch Force", shootForce, 0, setForce_custom, setForce_plus, setForce_minus);
+			AddOptionDescription("How hard held objects are thrown when you shoot.");
 
 			if (printInstructions) {
 				Game::Print::PrintBottomLeft("Use the ~b~" + GetWeaponLabel(g_gravityGun.WHASH(), true) + "~s~ for hax.");
@@ -506,7 +533,9 @@ namespace sub
 		AddTitle("Kaboom Gun");
 		AddToggle("Gun Toggle", kaboomGun);
 		AddToggle("Invisibility Toggle", kaboomGunInvis);
+		AddOptionDescription("Explosions have no visible effect but still do damage.");
 		AddToggle("Random Toggle", kaboomGunRandBit);
+		AddOptionDescription("Adds an extra explosion of a random type on each hit.");
 		AddKaboomGunOption("Molotov", 3);
 		AddKaboomGunOption("Steam", 11);
 		AddKaboomGunOption("Flame", 12);
@@ -619,6 +648,7 @@ namespace sub
 		AddTitle("Ped Gun");
 		AddToggle("Gun Toggle", pedGun);
 		AddToggle("Random Toggle", pedGunRandBit);
+		AddOptionDescription("Fires a random ped model each shot.");
 		AddOption("All Peds", null, nullFunc, SUB::PEDGUN_ALLPEDS);
 		AddPedGunOption("Pogo", 3696858125);
 		AddPedGunOption("Mime", 1021093698);
@@ -1229,7 +1259,9 @@ namespace sub
 				}
 			}
 			bool it_FillAmmo = 0;
-			AddOption("Fill Ammo", it_FillAmmo); if (it_FillAmmo)
+			AddOption("Fill Ammo", it_FillAmmo);
+			AddOptionDescription("Sets this weapon's ammo to max.");
+			if (it_FillAmmo)
 			{
 				int maxAmmo = 0;
 				GET_MAX_AMMO(ped, whash, &maxAmmo);
@@ -1238,7 +1270,9 @@ namespace sub
 			}
 
 			bool it_FillinfAmmo = 0;
-			AddOption("Empty Ammo", it_FillinfAmmo); if (it_FillinfAmmo)
+			AddOption("Empty Ammo", it_FillinfAmmo);
+			AddOptionDescription("Sets this weapon's ammo to zero.");
+			if (it_FillinfAmmo)
 			{
 				SET_AMMO_IN_CLIP(ped, whash, -1);
 				SET_PED_AMMO(ped, whash, -1, 0);
@@ -1512,6 +1546,7 @@ namespace sub
 			AddTitle("Loadouts");
 
 			AddOption("Save Current Loadout", save2);
+			AddOptionDescription("Saves all weapons, attachments and tints you're carrying to a file.");
 
 			AddOption("Create New Folder", bCreateFolderPressed);
 
@@ -1644,6 +1679,7 @@ namespace sub
 
 			AddTitle(_name);
 			AddOption("Apply", bLoad);
+			AddOptionDescription("Replaces your weapons with this loadout.");
 			AddOption("Rename File", bRename);
 			AddOption("Overwrite File", bOverwrite);
 			AddOption("Delete File", bDelete);

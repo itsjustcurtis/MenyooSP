@@ -114,6 +114,7 @@ namespace sub
 		if (myPedIsInVehicle)
 		{
 			AddTexter("CMOD_MOD_MNT", fixCarTexterVal, fixCarTexter, fixCar, fixCarPlus, fixCarMinus, true); // Fix & Wash
+			AddOptionDescription("Repairs the vehicle. Left/right chooses whether to keep dirt or open windows.");
 		}
 		AddOption("Vehicle Spawner", funnyVehicleFreezeOff, nullFunc, SUB::SPAWNVEHICLE);
 		AddOption("Menyoo Customs", vehicleMenuModShop, nullFunc, -1, true);
@@ -138,36 +139,61 @@ namespace sub
 		AddOption("Vehicle Multipliers", null, nullFunc, SUB::VEHICLEMULTIPLIERS);
 		AddOption("Speedometers", null, nullFunc, SUB::VEHICLESPEEDOS);
 		AddOption("Multi-Platform Neons", null, nullFunc, SUB::MULTIPLATNEONS);
+		AddOptionDescription("Draws neon light under any vehicle, including bikes and boats.");
 		AddOption("PV Options", null, nullFunc, SUB::PVOPS);
+		AddOptionDescription("Remember a vehicle as your personal vehicle and teleport to or into it later.");
 		AddOption("Auto Drive", null, nullFunc, SUB::AUTODRIVESUB);
+		AddOptionDescription("Your vehicle drives itself to the waypoint or to random destinations.");
 		AddOption((std::string)"Slam It (" + Game::GetGXTEntry("CMOD_MOD_22_D") + ")", goToSlamItMenu, nullFunc, SUB::VEHICLESLAM);
+		AddOptionDescription("Pushes the vehicle down for a lower stance.");
 		AddOption("Opacity (Local)", vehicleMenuAlphaLevel, nullFunc, -1, true);
+		AddOptionDescription("Vehicle transparency. Only visible to you.");
 		AddNumber("Damage & Defense", vehicleDamageAndDefense, 2, damageAndDefenseCustom, damageAndDefensePlus, damageAndDefenseMinus);
+		AddOptionDescription("Multiplies damage your vehicle deals and resists. 1.0 is normal.");
 		AddToggle("Invincibility (Looped)", vehicleInvincibility, null, invincibilityOff);
+		AddOptionDescription("Keeps the vehicle invincible and repaired while enabled.");
 		AddLocal("Invisibility", !myVehicle.IsVisible(), vehicleInvisibility, invisible);
 		AddToggle("Auto-Repair", vehicleFixLoop);
 		AddToggle("Auto-Flip", vehicleFlipLoop);
+		AddOptionDescription("Puts the vehicle back on its wheels when it lands upside down.");
 		AddToggle("Keep Engine & Lights On", selfEngineOn);
+		AddOptionDescription("Stops the engine and lights turning off.");
 		AddTickol("Kill Engine", (GET_VEHICLE_ENGINE_HEALTH(g_myVeh) < 0.0f), vehicleMenuEngine, vehicleMenuEngine, TICKOL::PERCENTAGESTICKER, TICKOL::NONE);
+		AddOptionDescription("Destroys the engine so the vehicle won't drive.");
 		AddToggle("Rainbow Mode", carColorChange);
+		AddOptionDescription("Cycles the paint through colours.");
 		AddLocal("Slidy Tyres", bitVehicleSlippyTires, slippyTires, slippyTires);
+		AddOptionDescription("Greatly reduces tyre grip.");
 		AddLocal("Cruise Control", VehicleCruise::g_vehicleCruise.Enabled(), VehicleCruise::ToggleOnOff, VehicleCruise::ToggleOnOff);
+		AddOptionDescription("Holds the current speed.");
 		AddLocal("Tow Mode (ALPHA)", VehicleTow::g_vehicleTow.Enabled(), VehicleTow::ToggleOnOff, VehicleTow::ToggleOnOff);
+		AddOptionDescription("Park in front of a vehicle to tow it with a rope. Instructions appear on screen.");
 		AddToggle("Race Boost On Horn", raceBoost, boostOn);
+		AddOptionDescription("Hold horn for a speed boost.");
 		AddToggle("Infinite Native Boost (for e.g. Oppressor)", unlimitedVehicleBoost);
+		AddOptionDescription("Keeps rocket boost full on vehicles that have one (e.g. Oppressor, Voltic). Hold horn.");
 		AddToggle("SuprKar Mode", superCarMode, superCarModeOn, superCarModeOff);
+		AddOptionDescription("Much faster acceleration and instant braking while on the ground.");
 		AddLocal("Fly Mode", VehicleFly::g_vehicleFly.Enabled(), VehicleFly::ToggleOnOff, VehicleFly::ToggleOnOff);
+		AddOptionDescription("Keyboard: Handbrake up, Sprint down, Accelerate/Brake forward/back, A/D turn. Controller: Accelerate up, Brake down, left stick to move.");
 		AddToggle("Glue to Ground", superGrip);
+		AddOptionDescription("Keeps the vehicle snapped to the ground, preventing flips.");
 		AddTexter("Vehicle Jump", carJump, Menu::usingControllerInput ? std::vector<std::string>{"Off", "Tap/Press A/X", "Hold A/X"} : std::vector<std::string>{ "Off", "Tap/Press Space", "Hold Space" }, null, carJumpPlus, carJumpMinus);
+		AddOptionDescription("Jump with Space (A/X on controller). Hold mode keeps jumping while held.");
 		AddToggle("Hydraulics", carHydraulics, hydraulicsOn);
+		AddOptionDescription("Hold Left Shift (LS) with WASD (stick) to bounce the suspension.");
 		AddToggle("Drive On Water", driveOnWater, driveOnWaterOn, driveOnWaterOff);
+		AddOptionDescription("Lets the vehicle drive on the water surface.");
 		AddToggle("Increased Mass", vehicleHeavyMass, null, heavyMassOff);
+		AddOptionDescription("Pushes other vehicles away at speed; your vehicle stays invincible and repaired.");
 		AddTickol("Child Locks", (GET_VEHICLE_DOOR_LOCK_STATUS(g_myVeh) == 4), childLocksOn, childLocksOff, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+		AddOptionDescription("Passengers can't get out.");
 		AddTickol("Door Locks", (GET_VEHICLE_DOOR_LOCK_STATUS(g_myVeh) == 2), doorLocksOn, doorLocksOff, TICKOL::BOXTICK, TICKOL::BOXBLANK);
 		AddLocal("No Gravity", bitVehicleGravity, noGravityOn, noGravityOff);
 		AddLocal("Freeze Vehicle", bitFreezeVehicle, freezeCarOn, freezeCarOff);
 		AddLocal("Set on Fire", myVehicle.IsOnFire(), setOnFire, setOnFire);
 		AddLocal("Collision", myVehicle.GetIsCollisionEnabled(), collisionsOn, collisionsOff);
+		AddOptionDescription("Off: the vehicle passes through objects.");
 		AddOption("Delete Vehicle", deleteCar);
 
 		if (toggleCargobobMagnet) 
@@ -604,6 +630,7 @@ namespace sub
 
 		AddTitle("PV Options");
 		AddTickol("Remember Vehicle", pv == myVehicle, pvSave, pvUnsave);
+		AddOptionDescription("Saves your current vehicle as your personal vehicle for the options below.");
 		AddOption("Teleport Into Seat", pvTeleportIntoIt);
 		AddOption("Teleport to Vehicle", pvTeleportToIt);
 		AddOption("Teleport Vehicle to Self", pvTeleportItToYou);
@@ -982,11 +1009,14 @@ namespace sub
 			AddTitle("Auto Drive");
 
 			AddToggle("Random Destination", bRandDestinationMode, ToggleOnOff, ToggleOnOff);
+			AddOptionDescription("Auto Drive picks random destinations instead of the waypoint.");
 			AddLocal("Go To Waypoint", Methods.Enabled() && !bRandDestinationMode, ToggleOnOff, ToggleOnOff);
 			AddNumber("Speed (KMPH)", speed * 3.6f, 1, null, speedPlus, speedMinus);
 			AddTexter("Driving Style", drivingStyleIndex, drivingStyleNames, null, drivingStylePlus, drivingStyleMinus);
 			AddToggle("Push Other Vehicles Away", bPushEmAway);
+			AddOptionDescription("Pushes nearby vehicles out of the way while driving.");
 			AddNumber("Forcefield Radius", pushRadius, 1, null, radiusPlus, radiusMinus);
+			AddOptionDescription("Range of the push.");
 
 			if (speedPlus) 
 			{
@@ -1158,8 +1188,11 @@ namespace sub
 
 		AddTitle("Multipliers");
 		AddNumber("CMOD_STAT_1", accelMult, 0, null, accelerationMultiplierPlus, accelerationMultiplierMinus, true); // Acceleration
+		AddOptionDescription("Multiplier on top of the vehicle's normal acceleration.");
 		AddNumber(Game::GetGXTEntry("CMOD_STAT_2") + " & Reverse", brakeMult, 0, null, brakeMultiplierPlus, brakeMultiplierMinus); // Braking & Reverse
+		AddOptionDescription("Multiplier on top of the vehicle's normal braking and reverse.");
 		AddNumber("CMOD_STAT_3", handlingMult, 0, null, handlingMultiplierPlus, handlingMultiplierMinus, true); // Handling/Traction
+		AddOptionDescription("Multiplier on top of the vehicle's normal handling and traction.");
 
 
 		if (accelerationMultiplierPlus) 
@@ -1225,7 +1258,9 @@ namespace sub
 
 		AddTitle("Neons");
 		AddToggle("Toggle", multiPlatNeons, null, clearList);
+		AddOptionDescription("Draws neon light under any vehicle, including bikes and boats.");
 		AddNumber("Intensity", g_multiPlatNeonsIntensity, 2, intensityCustom, intensityPlus, intensityMinus);
+		AddOptionDescription("Brightness of the neon light.");
 		AddToggle("Rainbow Mode", multiPlatNeonsRainbow);
 
 		AddOption("Set Colour", setRGBIndexTo3, nullFunc, SUB::MSPAINTS_RGB);

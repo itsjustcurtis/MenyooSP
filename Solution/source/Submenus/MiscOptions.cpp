@@ -37,26 +37,43 @@ namespace sub
 		AddTitle("Misc Options");
 		AddOption("FreeCam Settings", null, nullFunc, SUB::FREECAMSETTINGS);
 		AddLocal("Top-Down View", GTA2Cam::g_gta2Cam.Enabled(), GTA2Cam::ToggleOnOff, GTA2Cam::ToggleOnOff);
+		AddOptionDescription("GTA 2-style overhead camera.");
 		AddLocal("Manual Respawn", ManualRespawn::g_manualRespawn.Enabled(), ManualRespawn::ToggleOnOff, ManualRespawn::ToggleOnOff);
+		AddOptionDescription("When you die, press the shown key to respawn where you are instead of at the hospital.");
 		AddTexter("Auto-kill Enemies", autoKillEnemies, std::vector<std::string>{"Off", "Weak", "Radical"}, null, autoKillPlus, autoKillMinus);
+		AddOptionDescription("Weak kills hostile peds; Radical kills everyone the game considers your enemy.");
 		AddLocal("Meteor Shower Mode", MeteorShower::g_meteorShower.Enabled(), MeteorShower::ToggleOnOff, MeteorShower::ToggleOnOff);
+		AddOptionDescription("Meteors fall around you.");
 		AddToggle("EMP Mode (For Night-time)", blackoutMode, null, blackoutOff);
+		AddOptionDescription("Blacks out city lights, kills nearby engines and makes drivers get out.");
 		AddToggle("Simple Blackout Mode (For Night-time)", simpleBlackoutMode, null, blackoutOff);
+		AddOptionDescription("Turns off city lights only.");
 		AddToggle("Jump-Around Mode", JumpAroundMode::bEnabled, jumpAroundOn, jumpAroundOff);
+		AddOptionDescription("Nearby vehicles keep jumping.");
 		AddToggle("Fireworks Ahoy", fireworksDisplay);
+		AddOptionDescription("Fireworks go off around you.");
 		AddToggle("Massacre Mode", massacreMode, miscMassacreModeOn, miscMassacreModeOff);
+		AddOptionDescription("Nearby vehicles and peds are thrown around violently.");
 		AddToggle("Restricted Area Access", restrictedAreasAccess);
+		AddOptionDescription("Stops military base, prison and airport security from attacking you.");
 		AddTexter("Explosions At Waypoint", explostionWP, explosions_wp_names, null, explosionsWPPlus, explosionsWPMinus);
+		AddOptionDescription("Continuous explosions at your waypoint.");
 		AddToggle("Decreased Ped Population", pedPopulation, null, miscPedPopulationOff);
+		AddOptionDescription("Fewer ambient peds.");
 		AddToggle("Decreased Vehicle Population", vehiclePopulation, null, miscVehiclePopulationOff);
+		AddOptionDescription("Less traffic.");
 		AddToggle("Decreased Weapon Pickups", clearWeaponPickups);
+		AddOptionDescription("Fewer weapon pickups.");
 		AddOption("Cutscene Player", null, nullFunc, SUB::CUTSCENEPLAYER);
 		AddOption("TV Player", null, nullFunc, SUB::TVCHANNELSTUFF_TV);
 		AddOption("Radio", null, nullFunc, SUB::RADIOSUB);
 		AddOption("Animal Riding (SP)", null, nullFunc, SUB::ANIMALRIDING);
 		AddOption("Clear Area", null, nullFunc, SUB::CLEARAREA);
+		AddOptionDescription("Delete vehicles, peds or objects around you.");
 		AddOption("Vision Hax", null, nullFunc, SUB::TIMECYCLES);
+		AddOptionDescription("Screen filters, night vision and heat vision.");
 		AddOption("Map Mods (Old)", null, nullFunc, SUB::MAPMODS);
+		AddOptionDescription("Premade map edits you can load and teleport to.");
 		AddOption("HUD Options", null, nullFunc, SUB::HUDOPTIONS);
 		AddOption("Game Camera Options", null, nullFunc, SUB::GAMECAMOPTIONS);
 
@@ -64,6 +81,7 @@ namespace sub
 
 		bool bDeleteAllCams = false;
 		AddOption("Delete All Cameras", bDeleteAllCams);
+		AddOptionDescription("Removes all script cameras. Use if you're stuck with a frozen view.");
 		if (bDeleteAllCams)
 		{
 			World::SetRenderingCamera(0);
@@ -72,9 +90,12 @@ namespace sub
 		}
 
 		AddOption("Rectangle Draw Tool (Mouse) (ALPHA) [DEV]", null, DrawToolsMenu, -1, true);
+		AddOptionDescription("Click and drag to draw a rectangle and see its screen position and size. Press Backspace (B) to exit.");
 
 		bool bEnableCellphoneYsc = false;
-		AddTickol("In-Game Mobile Phone", GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(0xF292D030) > 0, bEnableCellphoneYsc, bEnableCellphoneYsc, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bEnableCellphoneYsc)
+		AddTickol("In-Game Mobile Phone", GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(0xF292D030) > 0, bEnableCellphoneYsc, bEnableCellphoneYsc, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+		AddOptionDescription("Enables or disables the phone script.");
+		if (bEnableCellphoneYsc)
 		{
 			if (GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(0xF292D030) > 0) // cellphone_controller
 			{
@@ -94,6 +115,7 @@ namespace sub
 		bool yscScriptMinus = false;
 
 		AddTexter("YSC Script [DEV]", yscScriptTexterIndex, vYscScriptTexter, yscScriptInput, yscScriptPlus, yscScriptMinus);
+		AddOptionDescription("Press to load or unload a game script by name.");
 
 		if (yscScriptPlus) 
 		{ 
@@ -289,10 +311,12 @@ namespace sub
 		AddTitle("Vision Hax");
 		AddLocal("Heat Vision", GET_USINGSEETHROUGH(), heatVisionOn, heatVisionOn);
 		AddToggle("Heat Vision On Aim", hvSnipers);
+		AddOptionDescription("Heat vision turns on while aiming a weapon.");
 		AddToggle("Night Vision (SP)", bitNightVision, nightVisionOn, nightVisionOff);
 
 		AddBreak("---Timecycle Hax---");
 		AddNumber("Timecycle Strength", currentTimecycleStrength, 2, null, strengthPlus, strengthMinus);
+		AddOptionDescription("Intensity of the active screen filter.");
 		AddOption("Reset", timecyclesReset);
 
 		for (auto& i : TimecycleModification::vTimecycles)
@@ -307,6 +331,7 @@ namespace sub
 
 		AddBreak("---Custom---");
 		AddOption("Input Custom", timecyclesInput);
+		AddOptionDescription("Enter a timecycle modifier name to apply it.");
 
 		if (heatVisionOn) 
 		{ 
@@ -378,6 +403,7 @@ namespace sub
 		AddTitle("Clear Area");
 
 		AddNumber("Range To Clear", g_clearAreaRadius, 2, clearAreaRadiusInput, clearAreaRadiusPlus, clearAreaRadiusMinus);
+		AddOptionDescription("Radius used by the clear options below.");
 		if (Menu::IsLastDrawnOptionSelected())
 		{
 			sub::Spooner::EntityManagement::DrawRadiusDisplayingMarker(GET_ENTITY_COORDS(g_activePedHandle, 1), g_clearAreaRadius);
@@ -671,6 +697,7 @@ namespace sub
 
 			AddTitle("Water Hack");
 			AddToggle("Toggle", g_waterHack.Enabled());
+			AddOptionDescription("Raises the water level around you to create waves at beaches.");
 			AddNumber("Radius", radius, 1, radiusInput, radiusPlus, radiusMinus);
 			AddNumber("Height", height, 1, heightInput, heightPlus, heightMinus);
 
@@ -849,15 +876,18 @@ namespace sub
 
 			bool revealMinimapToggle = false;
 			AddToggle("Reveal Entire Minimap", revealMinimap, revealMinimapToggle, revealMinimapToggle); 
+			AddOptionDescription("Removes fog of war from the map.");
 			if (revealMinimapToggle)
 			{
 				SET_MINIMAP_HIDE_FOW(revealMinimap);
 			}
 
 			AddToggle("Display XYZH Coords", bDisplayXyzhCoords);
+			AddOptionDescription("Shows your position and heading (H) on screen.");
 			AddToggle("Display FPS", FPSCounter::bDisplayFps);
 			AddToggle("Hide HUD", hideHUD);
 			AddToggle("Show Full HUD", showFullHUD);
+			AddOptionDescription("Shows all HUD elements, e.g. cash and ammo.");
 
 			AddBreak("Component Colours");
 			for (auto& h : std::vector<std::pair<int, std::string>>
@@ -911,6 +941,7 @@ namespace sub
 			bool shakeTypePlus = false;
 			bool shakeTypeMinus = false;
 			AddTexter("Shake Type", shakeID < 0 ? 0 : shakeID, shakeID < 0 ? std::vector<std::string>{"None"} : shakeNames, null, shakeTypePlus, shakeTypeMinus);
+			AddOptionDescription("Style of gameplay camera shake.");
 			if (shakeTypePlus) 
 			{ 
 				if (shakeID < (INT8)(shakeNames.size() - 1)) 
@@ -938,6 +969,7 @@ namespace sub
 			bool shakeAmplitudePlus = false; 
 			bool shakeAmplitudeMinus = false;
 			AddNumber("Shake Amplitude", shakeAmplitude, 2, null, shakeAmplitudePlus, shakeAmplitudeMinus);
+			AddOptionDescription("Strength of the camera shake.");
 			if (shakeAmplitudePlus) 
 			{ 
 				shakeAmplitude += 0.05f; 
@@ -994,12 +1026,15 @@ namespace sub
 			AddBreak("---Shared With Spooner Camera---");
 			bool changed = false;
 			changed |= AddNumberStepper("Movement Speed", Cfg::defaultSpeed, 2, Cfg::speedAdjustStep, Cfg::minSpeed, Cfg::maxSpeed);
+			AddOptionDescription("Default movement speed. Also applies to the Spooner camera.");
 			changed |= AddNumberStepper("Slow Speed", Cfg::defaultSlowSpeed, 2, Cfg::speedAdjustStep, Cfg::minSpeed, Cfg::maxSpeed);
+			AddOptionDescription("Movement speed while Left Ctrl (Duck) is held. Also applies to the Spooner camera.");
 			if (AddNumberStepper("FOV", Cfg::defaultFov, 1, Cfg::fovAdjustStep, Cfg::minFov, Cfg::maxFov))
 			{
 				changed = true;
 				ApplyFovToActiveCameras(Cfg::defaultFov);
 			}
+			AddOptionDescription("Also applies to the Spooner camera.");
 			changed |= AddNumberStepper("Rotation Sensitivity (Mouse)", Cfg::rotationSensitivityMouse, 1, 0.5, 0.5, 50.0);
 			changed |= AddNumberStepper("Rotation Sensitivity (Gamepad)", Cfg::rotationSensitivityGamepad, 1, 0.1, 0.1, 10.0);
 			if (changed)
@@ -1007,6 +1042,7 @@ namespace sub
 
 			bool resetToDefaults = false;
 			AddOption("Reset To Defaults", resetToDefaults);
+			AddOptionDescription("Resets movement speed, slow speed, FOV and rotation sensitivities. Doesn't turn FreeCam on or off.");
 			if (resetToDefaults)
 			{
 				Cfg::ResetToDefaults();
