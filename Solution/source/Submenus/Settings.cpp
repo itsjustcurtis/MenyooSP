@@ -29,16 +29,27 @@ namespace sub
 		AddOption("Menu Colours", null, nullFunc, SUB::SETTINGS_COLOURS);
 		AddOption("Menu Fonts", null, nullFunc, SUB::SETTINGS_FONTS);
 		AddOption("Menu Position", null, nullFunc, SUB::SETTINGS_MENUPOS);
+		AddToggle("Notification Background", MenuConfig::bShowNotificationBackground, MenuConfig::SaveConfig, MenuConfig::SaveConfig);
 		AddToggle("Mouse Support", Menu::usingMouseInput);
+		AddOptionDescription("Navigate the menu with the mouse. Right-click goes back.");
 		AddToggle("Gradients", Menu::useGradientBackgrounds);
+		AddOptionDescription("Uses gradient textures for the menu background and bars.");
 		AddToggle("Titlebox Globe", Menu::enableGlareEffect);
+		AddOptionDescription("Animated globe effect on the title bar.");
 		AddToggle("Centre Title", Menu::centerTitleText);
 		AddToggle("Centre Options", Menu::centerOptionText);
 		AddToggle("Centre Breaks", Menu::centerBreakText);
+		AddOptionDescription("Centres the text of section headings.");
+		AddToggle("Option Text Stroke", Menu::optionTextStroke);
+		AddOptionDescription("Draws an black outline around option text for better readability.");
 		AddToggle("Reset Player Model Upon Death (SP)", checkSelfDeathModel);
+		AddOptionDescription("Restores a story character model if you die as a custom model.");
 		AddToggle("Sync Menyoo With Config File", bSyncWithConfig, MenuConfig::SaveConfig, MenuConfig::SaveConfig);
+		AddOptionDescription("Saves settings to menyooConfig.ini automatically.");
 		AddToggle("LSC Style Part Selection", g_LSCCustoms);
+		AddOptionDescription("Highlighting a part or paint previews it, like in Los Santos Customs.");
 		AddOption("Reset Toggles (Most Of Them)", null, MenuConfig::ConfigResetHaxValues);
+		AddOptionDescription("Turns off most active cheats and modes.");
 
 	}
 
@@ -135,6 +146,7 @@ namespace sub
 		AddsettingscolOption("Selection Box", selectionhi);
 		AddsettingscolOption("Ped Trackers", _globalPedTrackers_Col);
 		AddToggle("Rainbow", rainbowBoxes);
+		AddOptionDescription("Cycles this menu colour through the rainbow.");
 	}
 	bool HexToRGBA(const std::string& hex, RGBA& colour)
 	{
@@ -179,6 +191,7 @@ namespace sub
 		AddNumber("Blue", settingsRGBA->B, 0, settingsRInput, settingsRPlus, settingsRMinus);
 		AddNumber("Opacity", settingsRGBA->A, 0, settingsRInput, settingsRPlus, settingsRMinus);
 		AddTexter("HUD Colour", settingsHUDColor, HudColour::vHudColours, settingsHUDColourApply, settingsHUDColourPlus, settingsHUDColourMinus);
+		AddOptionDescription("Pick from the game's HUD colour presets.");
 
 		{
 			bool bHexInputPressed = false;
@@ -337,6 +350,7 @@ namespace sub
 		AddsettingsfonOption("Pricedown", GTAfont::Pricedown, dummyFeature);
 		AddsettingsfonOption("Caps", GTAfont::Caps, dummyFeature);
 		AddOption("Input Index", fonts2Input);
+		AddOptionDescription("Enter a font number directly.");
 
 		if (fonts2Input)
 		{

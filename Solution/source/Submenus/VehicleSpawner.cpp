@@ -1360,6 +1360,7 @@ namespace sub
 		AddOption("Saved Vehicles", null, nullFunc, SUB::VEHICLE_SAVER);
 		AddOption("Spawn Settings", null, nullFunc, SUB::SPAWNVEHICLE_OPTIONS);
 		AddOption("Funny Vehicles (Old)", null, nullFunc, SUB::FUNNYVEHICLES);
+		AddOptionDescription("Pre-built joke vehicles made from attached props.");
 
 		AddBreak("---Cars---");
 		AddVehicleCategoryOption("Open Wheel", OPENWHEEL);
@@ -1393,6 +1394,7 @@ namespace sub
 		AddVehicleCategoryOption("Others", OTHER);
 
 		AddOption("Random Vehicle", spawnRandom);
+		AddOptionDescription("Spawns a random vehicle.");
 		AddOption("~b~Input~s~ Model", spawnVehicleInput);
 
 		if (spawnRandom || spawnVehicleInput)
@@ -1661,16 +1663,23 @@ namespace sub
 
 		AddTitle("Spawn Settings");
 		AddToggle("Delete Old Vehicle", g_spawnVehicleDeleteOld);
+		AddOptionDescription("Deletes your previous vehicle when you spawn a new one.");
 		AddToggle("Auto-Sit In Vehicle", g_spawnVehicleAutoSit);
+		AddOptionDescription("Puts you in the driver seat after spawning.");
 		AddToggle("Add Blip For Spawned Vehicles", g_addBlip);
+		AddOptionDescription("Adds a map blip on each spawned vehicle.");
 		AddToggle("Spawn At Nearest Node", g_warpNear);
+		AddOptionDescription("Spawns on the nearest road instead of in front of you.");
 		AddToggle("Spawn Pre-Upgraded", g_spawnVehicleAutoUpgrade);
+		AddOptionDescription("Applies upgrades to new vehicles.");
 		AddToggle("Spawn Invincible", g_spawnVehicleInvincible);
 		AddToggle("Spawn Persistent", g_spawnVehiclePersistent);
+		AddOptionDescription("Spawned vehicles won't despawn.");
 		AddOption("Primary Paint", setMSPaintIndex10, nullFunc, SUB::MSPAINTS2); // Primary Paint
 		AddOption("Secondary Paint", setMSPaintIndex11, nullFunc, SUB::MSPAINTS2); // Secondary Paint
 		AddBreak("---Neons---");
 		AddToggle("Toggle", g_spawnVehicleNeonToggle);
+		AddOptionDescription("Spawned vehicles get neon lights in the colour below.");
 		AddOption("RGB Colour", setRGBCarcolIndex9, nullFunc, SUB::MSPAINTS_RGB); 
 		if (Menu::IsLastDrawnOptionSelected())
 		{
@@ -1683,8 +1692,10 @@ namespace sub
 
 		AddBreak("---Previews---");
 		AddToggle("Enable Previews", g_spawnVehicleDrawBMPs);
+		AddOptionDescription("Shows a vehicle image while browsing.");
 		bool reloadPreviewsPressed = false;
 		AddOption("Reload Previews", reloadPreviewsPressed); 
+		AddOptionDescription("Reloads the preview image files.");
 
 		if (reloadPreviewsPressed)
 		{
@@ -3573,6 +3584,7 @@ namespace sub
 
 			bool persistentAttachments_plus = 0, persistentAttachments_minus = 0;
 			AddTexter("AddAttachmentsToSpoonerDB", _persistentAttachmentsTexterIndex, std::vector<std::string>{"FileDecides", "ForceOff", "ForceOn"}, null, persistentAttachments_plus, persistentAttachments_minus);
+			AddOptionDescription("When loading a vehicle, whether its attached objects join the Spooner database. FileDecides uses the file's setting; ForceOff/ForceOn override it.");
 			if (persistentAttachments_plus) 
 			{
 				 if (_persistentAttachmentsTexterIndex < 2)
@@ -3591,6 +3603,7 @@ namespace sub
 
 			bool driverVisi_plus = 0, driverVisi_minus = 0;
 			AddTexter("Driver Visibility", _driverVisibilityTexterIndex, std::vector<std::string>{"FileDecides", "Retain" "ForceOff", "ForceOn"}, null, driverVisi_plus, driverVisi_minus);
+			AddOptionDescription("Whether the driver's visibility is taken from the file or forced on or off.");
 			if (driverVisi_plus) 
 			{
 				if (_driverVisibilityTexterIndex < 3) 
@@ -3610,7 +3623,9 @@ namespace sub
 			AddOption("Save Current Vehicle", save2);
 
 			AddOption("Store CarVariations", savecarvar);
+			AddOptionDescription("Dev tool: appends this vehicle's paint indices to \"Carvar colours.txt\" in this folder.");
 			AddOption("Save Colour Profile", ms_paints_savergb);
+			AddOptionDescription("Dev tool: saves the nearest named colour of the custom primary paint.");
 
 			AddOption("Create New Folder", bCreateFolderPressed);
 
@@ -3859,6 +3874,7 @@ namespace sub
 				{
 					bool bToggleDriverVisiblePressed = false;
 					AddTickol("Driver Visibility", nodeDriverVisible.text().as_bool(), bToggleDriverVisiblePressed, bToggleDriverVisiblePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+					AddOptionDescription("Whether the driver is visible when this vehicle loads.");
 					if (bToggleDriverVisiblePressed)
 					{
 						nodeDriverVisible.text() = !nodeDriverVisible.text().as_bool();
@@ -3870,6 +3886,7 @@ namespace sub
 				bool bAddAttachemntsToSpoonerDb = nodeAddAttachmentsToSpoonerDb.as_bool();
 				bool bToggleAddAttachmentsToSpoonerDbPressed = false;
 				AddTickol("Persistent Attachments (AddToSpoonerDb)", bAddAttachemntsToSpoonerDb, bToggleAddAttachmentsToSpoonerDbPressed, bToggleAddAttachmentsToSpoonerDbPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+				AddOptionDescription("Attached objects are added to the Spooner database and don't despawn.");
 				if (bToggleAddAttachmentsToSpoonerDbPressed)
 				{
 					nodeAddAttachmentsToSpoonerDb = !nodeAddAttachmentsToSpoonerDb.as_bool();
@@ -3884,6 +3901,7 @@ namespace sub
 					{
 						bool bToggleStartTaskSeqOnLoadPressed = false;
 						AddTickol("Start Task Sequences Immediately", nodeStartTaskSeqOnLoad.as_bool(), bToggleStartTaskSeqOnLoadPressed, bToggleStartTaskSeqOnLoadPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); 
+						AddOptionDescription("Attached entities start their Spooner task sequences as soon as they load.");
 						if (bToggleStartTaskSeqOnLoadPressed)
 						{
 							nodeStartTaskSeqOnLoad = !nodeStartTaskSeqOnLoad.as_bool();

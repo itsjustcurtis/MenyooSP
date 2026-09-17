@@ -369,6 +369,7 @@ namespace sub
 		AddOption("~b~Search~s~ Peds", null, nullFunc, SUB::MODELCHANGER_SEARCH);
 		AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
 		AddOption("Randomize Ped Variation", modelChangerRandomPedVariation);
+		AddOptionDescription("Randomizes clothing and features for the current model.");
 
 		AddBreak("---Categories---");
 		AddOption("Player", null, nullFunc, SUB::MODELCHANGER_PLAYER);
@@ -385,9 +386,13 @@ namespace sub
 
 		AddBreak("---Scenario---");
 		AddOption("Scenario Females", null, nullFunc, SUB::MODELCHANGER_SCENARIOFEMALES);
+		AddOptionDescription("Peds used by world scenarios, such as workers and joggers.");
 		AddOption("Scenario Males", null, nullFunc, SUB::MODELCHANGER_SCENARIOMALES);
+		AddOptionDescription("Peds used by world scenarios, such as workers and joggers.");
 		AddOption("Story Scenario Females", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOFEMALES);
+		AddOptionDescription("Scenario peds from story mode.");
 		AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
+		AddOptionDescription("Scenario peds from story mode.");
 		AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
 		AddOption("~b~Input~s~ Model", modelChangerInput);
 

@@ -24,6 +24,7 @@
 #include "..\Submenus\Spooner\SpoonerSettings.h"
 #include "..\Misc\ManualRespawn.h"
 #include "..\Misc\FpsCounter.h"
+#include "..\Misc\FreeCam.h"
 #include "..\Submenus\MiscOptions.h"
 #include "..\Misc\JumpAroundMode.h"
 #include "..\Memory\GTAmemory.h"
@@ -42,19 +43,32 @@
 
 CSimpleIniA MenuConfig::iniFile;
 bool MenuConfig::bSaveAtIntervals = true;
+bool MenuConfig::bShowNotificationBackground = true;
 
 // Initialize the default camera parameters
 namespace MenuConfig {
     namespace FreeCam {
-        float defaultSpeed = 0.5f;
-        float defaultFov = 50.0f;
-		float defaultSlowSpeed = 0.2f;
+        float defaultSpeed = Defaults::speed;
+        float defaultFov = Defaults::fov;
+		float defaultSlowSpeed = Defaults::slowSpeed;
+		float rotationSensitivityMouse = Defaults::rotationSensitivityMouse;
+		float rotationSensitivityGamepad = Defaults::rotationSensitivityGamepad;
         float speedAdjustStep = 0.1f;
         float fovAdjustStep = 1.0f;
         float minSpeed = 0.1f;
         float maxSpeed = 10.0f;
         float minFov = 30.0f;
         float maxFov = 120.0f;
+
+		void ResetToDefaults()
+		{
+			defaultSpeed = Defaults::speed;
+			defaultFov = Defaults::fov;
+			defaultSlowSpeed = Defaults::slowSpeed;
+			rotationSensitivityMouse = Defaults::rotationSensitivityMouse;
+			rotationSensitivityGamepad = Defaults::rotationSensitivityGamepad;
+			RequestSave();
+		}
     }
 }
 
@@ -83,6 +97,7 @@ void MenuConfig::ConfigRead()
 	std::string section_settings = "settings";/////////
 
 	MenuConfig::bSaveAtIntervals = ini.GetBoolValue(section_settings.c_str(), "sync_with_config_at_intervals", MenuConfig::bSaveAtIntervals);
+	MenuConfig::bShowNotificationBackground = ini.GetBoolValue(section_settings.c_str(), "show_notification_background", MenuConfig::bShowNotificationBackground);
 	checkSelfDeathModel = ini.GetBoolValue(section_settings.c_str(), "DeathModelReset", checkSelfDeathModel);
 	menuToggleKey = ini.GetLongValue(section_settings.c_str(), "open_key", menuToggleKey);
 	menubindsGamepad.first = ini.GetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
@@ -95,6 +110,7 @@ void MenuConfig::ConfigRead()
 	Menu::centerTitleText = ini.GetBoolValue(section_settings.c_str(), "centre_title", Menu::centerTitleText);
 	Menu::centerOptionText = ini.GetBoolValue(section_settings.c_str(), "centre_options", Menu::centerOptionText);
 	Menu::centerBreakText = ini.GetBoolValue(section_settings.c_str(), "centre_breaks", Menu::centerBreakText);
+	Menu::optionTextStroke = ini.GetBoolValue(section_settings.c_str(), "option_text_stroke", Menu::optionTextStroke);
 	Language::configLangName = ini.GetValue(section_settings.c_str(), "language", Language::configLangName.c_str());
 	Language::Init();
 	g_loglevel = ini.GetLongValue(section_settings.c_str(), "log level", g_loglevel);
@@ -176,10 +192,7 @@ void MenuConfig::ConfigRead()
 	sub::Spooner::SpoonerMode::bindsKeyboard = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeHotkey", sub::Spooner::SpoonerMode::bindsKeyboard);
 	sub::Spooner::SpoonerMode::bindsGamepad.first = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_1", sub::Spooner::SpoonerMode::bindsGamepad.first);
 	sub::Spooner::SpoonerMode::bindsGamepad.second = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_2", sub::Spooner::SpoonerMode::bindsGamepad.second);
-	sub::Spooner::Settings::cameraMovementSensitivityKeyboard = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityKeyboard", sub::Spooner::Settings::cameraMovementSensitivityKeyboard);
-	sub::Spooner::Settings::cameraRotationSensitivityMouse = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityMouse", sub::Spooner::Settings::cameraRotationSensitivityMouse);
-	sub::Spooner::Settings::cameraMovementSensitivityGamepad = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityGamepad", sub::Spooner::Settings::cameraMovementSensitivityGamepad);
-	sub::Spooner::Settings::cameraRotationSensitivityGamepad = (float)ini.GetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityGamepad", sub::Spooner::Settings::cameraRotationSensitivityGamepad);
+	sub::Spooner::Settings::bInvertScrollSensitivity = ini.GetBoolValue(section_spooner.c_str(), "InvertScrollSensitivity", sub::Spooner::Settings::bInvertScrollSensitivity);
 	sub::Spooner::Settings::bShowModelPreviews = ini.GetBoolValue(section_spooner.c_str(), "ShowModelPreviews", sub::Spooner::Settings::bShowModelPreviews);
 	sub::Spooner::Settings::bShowBoxAroundSelectedEntity = ini.GetBoolValue(section_spooner.c_str(), "ShowBoxAroundSelectedEntity", sub::Spooner::Settings::bShowBoxAroundSelectedEntity);
 	sub::Spooner::Settings::bSpawnDynamicProps = ini.GetBoolValue(section_spooner.c_str(), "SpawnDynamicProps", sub::Spooner::Settings::bSpawnDynamicProps);
@@ -191,7 +204,6 @@ void MenuConfig::ConfigRead()
 	sub::Spooner::Settings::bAddToDbAsMissionEntities = ini.GetBoolValue(section_spooner.c_str(), "AddToDbAsMissionEntities", sub::Spooner::Settings::bAddToDbAsMissionEntities);
 	sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile = ini.GetBoolValue(section_spooner.c_str(), "TeleportToReferenceWhenLoadingFile", sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile);
 	sub::Spooner::Settings::bKeepPositionWhenAttaching = ini.GetBoolValue(section_spooner.c_str(), "KeepPositionWhenAttaching", sub::Spooner::Settings::bKeepPositionWhenAttaching);
-	sub::Spooner::Settings::spoonerModeMode = (sub::Spooner::eSpoonerModeMode)ini.GetLongValue(section_spooner.c_str(), "SpoonerModeMethod", (UINT8)sub::Spooner::Settings::spoonerModeMode);
 	sub::Spooner::Settings::bAutoSaveDb = ini.GetBoolValue(section_spooner.c_str(), "AutoSaveDb", sub::Spooner::Settings::bAutoSaveDb);
 	sub::Spooner::Settings::autoSaveIntervalMs = (DWORD)ini.GetLongValue(section_spooner.c_str(), "AutoSaveIntervalMs", sub::Spooner::Settings::autoSaveIntervalMs);
 	sub::Spooner::Settings::autoSaveMaxFiles = (int)ini.GetLongValue(section_spooner.c_str(), "AutoSaveMaxFiles", sub::Spooner::Settings::autoSaveMaxFiles);
@@ -202,7 +214,7 @@ void MenuConfig::ConfigRead()
 	 //loop_hide_hud = ini.GetBoolValue(section_haxValues.c_str(), "hide_hud", loop_hide_hud);
 	showFullHUD = ini.GetBoolValue(section_haxValues.c_str(), "show_full_hud", showFullHUD);
 	ManualRespawn::g_manualRespawn.Enabled() = ini.GetBoolValue(section_haxValues.c_str(), "manual_respawn", ManualRespawn::g_manualRespawn.Enabled());
-	noClip = ini.GetBoolValue(section_haxValues.c_str(), "freecam", noClip);
+	FreeCamMode::bEnabled = ini.GetBoolValue(section_haxValues.c_str(), "freecam", FreeCamMode::bEnabled);
 	bDisplayXyzhCoords = ini.GetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", bDisplayXyzhCoords);
 	sub::Spooner::Settings::bDisplaySpoonerInfo = ini.GetBoolValue(section_spooner.c_str(), "DisplaySpoonerInfo", sub::Spooner::Settings::bDisplaySpoonerInfo);
 	FPSCounter::bDisplayFps = ini.GetBoolValue(section_haxValues.c_str(), "display_fps", FPSCounter::bDisplayFps);
@@ -330,7 +342,11 @@ void MenuConfig::ConfigRead()
     std::string section_freecam = "free-camera";
     FreeCam::defaultSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
     FreeCam::defaultFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov);
+	// older versions saved this as "right_click_slow_speed"
+	FreeCam::defaultSlowSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "right_click_slow_speed", FreeCam::defaultSlowSpeed);
 	FreeCam::defaultSlowSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "default_slow_speed", FreeCam::defaultSlowSpeed);
+	FreeCam::rotationSensitivityMouse = (float)ini.GetDoubleValue(section_freecam.c_str(), "rotation_sensitivity_mouse", FreeCam::rotationSensitivityMouse);
+	FreeCam::rotationSensitivityGamepad = (float)ini.GetDoubleValue(section_freecam.c_str(), "rotation_sensitivity_gamepad", FreeCam::rotationSensitivityGamepad);
     FreeCam::speedAdjustStep = (float)ini.GetDoubleValue(section_freecam.c_str(), "speed_adjust_step", FreeCam::speedAdjustStep); 
     FreeCam::fovAdjustStep = (float)ini.GetDoubleValue(section_freecam.c_str(), "fov_adjust_step", FreeCam::fovAdjustStep);
     FreeCam::minSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "min_speed", FreeCam::minSpeed);
@@ -348,6 +364,7 @@ void MenuConfig::SaveConfig()
 
 
 	ini.SetBoolValue(section_settings.c_str(), "sync_with_config_at_intervals", MenuConfig::bSaveAtIntervals);
+	ini.SetBoolValue(section_settings.c_str(), "show_notification_background", MenuConfig::bShowNotificationBackground);
 	ini.SetBoolValue(section_settings.c_str(), "DeathModelReset", checkSelfDeathModel);
 	ini.SetLongValue(section_settings.c_str(), "open_key", menuToggleKey);
 	ini.SetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
@@ -360,6 +377,7 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_settings.c_str(), "centre_title", Menu::centerTitleText);
 	ini.SetBoolValue(section_settings.c_str(), "centre_options", Menu::centerOptionText);
 	ini.SetBoolValue(section_settings.c_str(), "centre_breaks", Menu::centerBreakText);
+	ini.SetBoolValue(section_settings.c_str(), "option_text_stroke", Menu::optionTextStroke);
 	ini.SetValue(section_settings.c_str(), "language", Language::configLangName.c_str());
 	ini.SetLongValue(section_settings.c_str(), "log level", g_loglevel);
 
@@ -439,10 +457,7 @@ void MenuConfig::SaveConfig()
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeHotkey", sub::Spooner::SpoonerMode::bindsKeyboard);
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_1", sub::Spooner::SpoonerMode::bindsGamepad.first);
 	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_2", sub::Spooner::SpoonerMode::bindsGamepad.second);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityKeyboard", sub::Spooner::Settings::cameraMovementSensitivityKeyboard);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityMouse", sub::Spooner::Settings::cameraRotationSensitivityMouse);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraMovementSensitivityGamepad", sub::Spooner::Settings::cameraMovementSensitivityGamepad);
-	ini.SetDoubleValue(section_spooner.c_str(), "CameraRotationSensitivityGamepad", sub::Spooner::Settings::cameraRotationSensitivityGamepad);
+	ini.SetBoolValue(section_spooner.c_str(), "InvertScrollSensitivity", sub::Spooner::Settings::bInvertScrollSensitivity);
 	ini.SetBoolValue(section_spooner.c_str(), "ShowModelPreviews", sub::Spooner::Settings::bShowModelPreviews);
 	ini.SetBoolValue(section_spooner.c_str(), "ShowBoxAroundSelectedEntity", sub::Spooner::Settings::bShowBoxAroundSelectedEntity);
 	ini.SetBoolValue(section_spooner.c_str(), "DisplaySpoonerInfo", sub::Spooner::Settings::bDisplaySpoonerInfo);
@@ -455,7 +470,6 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_spooner.c_str(), "AddToDbAsMissionEntities", sub::Spooner::Settings::bAddToDbAsMissionEntities);
 	ini.SetBoolValue(section_spooner.c_str(), "TeleportToReferenceWhenLoadingFile", sub::Spooner::Settings::bTeleportToReferenceWhenLoadingFile);
 	ini.SetBoolValue(section_spooner.c_str(), "KeepPositionWhenAttaching", sub::Spooner::Settings::bKeepPositionWhenAttaching);
-	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeMethod", (UINT8)sub::Spooner::Settings::spoonerModeMode);
 	ini.SetBoolValue(section_spooner.c_str(), "AutoSaveDb", sub::Spooner::Settings::bAutoSaveDb);
 	ini.SetLongValue(section_spooner.c_str(), "AutoSaveIntervalMs", sub::Spooner::Settings::autoSaveIntervalMs);
 	ini.SetLongValue(section_spooner.c_str(), "AutoSaveMaxFiles", sub::Spooner::Settings::autoSaveMaxFiles);
@@ -466,7 +480,7 @@ void MenuConfig::SaveConfig()
 										   //ini.SetBoolValue(section_haxValues.c_str(), "hide_hud", loop_hide_hud);
 	ini.SetBoolValue(section_haxValues.c_str(), "show_full_hud", showFullHUD);
 	ini.SetBoolValue(section_haxValues.c_str(), "manual_respawn", ManualRespawn::g_manualRespawn.Enabled());
-	ini.SetBoolValue(section_haxValues.c_str(), "freecam", noClip);
+	ini.SetBoolValue(section_haxValues.c_str(), "freecam", FreeCamMode::bEnabled);
 	ini.SetBoolValue(section_haxValues.c_str(), "display_xyzh_coords", bDisplayXyzhCoords);
 	ini.SetBoolValue(section_haxValues.c_str(), "display_fps", FPSCounter::bDisplayFps);
 	ini.SetBoolValue(section_haxValues.c_str(), "basic_tv_player", sub::TVChannelStuff::loopBasicTV);
@@ -591,7 +605,9 @@ void MenuConfig::SaveConfig()
     std::string section_freecam = "free-camera";
     ini.SetDoubleValue(section_freecam.c_str(), "default_speed", FreeCam::defaultSpeed);
     ini.SetDoubleValue(section_freecam.c_str(), "default_fov", FreeCam::defaultFov); 
-	ini.SetDoubleValue(section_freecam.c_str(), "right_click_slow_speed", FreeCam::defaultSlowSpeed);
+	ini.SetDoubleValue(section_freecam.c_str(), "default_slow_speed", FreeCam::defaultSlowSpeed);
+	ini.SetDoubleValue(section_freecam.c_str(), "rotation_sensitivity_mouse", FreeCam::rotationSensitivityMouse);
+	ini.SetDoubleValue(section_freecam.c_str(), "rotation_sensitivity_gamepad", FreeCam::rotationSensitivityGamepad);
     ini.SetDoubleValue(section_freecam.c_str(), "speed_adjust_step", FreeCam::speedAdjustStep);
     ini.SetDoubleValue(section_freecam.c_str(), "fov_adjust_step", FreeCam::fovAdjustStep);
     ini.SetDoubleValue(section_freecam.c_str(), "min_speed", FreeCam::minSpeed);
@@ -600,6 +616,28 @@ void MenuConfig::SaveConfig()
     ini.SetDoubleValue(section_freecam.c_str(), "max_fov", FreeCam::maxFov);
 
 	ini.SaveFile((GetPathffA(Pathff::Main, true) + "menyooConfig.ini").c_str());
+}
+
+namespace
+{
+	constexpr DWORD pendingSaveDelayMs = 1000;
+	bool savePending = false;
+	DWORD lastSaveRequest = 0;
+}
+
+void MenuConfig::RequestSave()
+{
+	savePending = true;
+	lastSaveRequest = GetTickCount();
+}
+
+void MenuConfig::FlushPendingSave(bool force)
+{
+	if (!savePending) return;
+	if (!force && GetTickCount() - lastSaveRequest < pendingSaveDelayMs) return;
+
+	savePending = false;
+	SaveConfig();
 }
 
 void MenuConfig::ConfigResetHaxValues()

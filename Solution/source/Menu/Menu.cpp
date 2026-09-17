@@ -20,7 +20,8 @@
 #include "..\Scripting\Game.h"
 #include "..\Scripting\GameplayCamera.h"
 #include "..\Scripting\ModelNames.h" // _vNeonColours
-#include "Routine.h" // (loop_no_clip_toggle, loop_hide_hud)
+#include "Routine.h" // (loop_hide_hud)
+#include "..\Misc\FreeCam.h"
 #include "Language.h"
 #include "..\Util\FileLogger.h"
 #include "..\Menu\Menu.h"
@@ -138,6 +139,7 @@ void MenuInput::UpdateDeltaCursorNormal()
 bool titleBarStripeVisible;
 bool numberInputActive = false;
 bool menuHasNotOpened = true;
+bool ignoreMenuToggleUntilRelease = false;
 
 Vector2 menuPos;
 Vector2 g_deltaCursorNormal;
@@ -180,11 +182,12 @@ INT Menu::pendingSubmenu = 0;
 int Menu::nextDeferredActionTime = 0;
 bool Menu::usingControllerInput = 0, Menu::usingMouseInput = 0;
 bool Menu::centerTitleText = 1, Menu::centerOptionText = 0, Menu::centerBreakText = 1,
-Menu::useGradientBackgrounds = 1, Menu::drawSeparatorLine = 1, Menu::enableGlareEffect = 1;
+Menu::useGradientBackgrounds = 1, Menu::drawSeparatorLine = 1, Menu::enableGlareEffect = 1, Menu::optionTextStroke = 0;
 Scaleform Menu::scaleform_menuGlare;
 Scaleform Menu::instructional_buttons;
 std::vector<Scaleform_IbT> Menu::vIB;
 std::function<void()> Menu::OnSubBack = nullptr;
+std::string Menu::selectedOptionDescription;
 INT8 g_loglevel = 2;
 
 
@@ -474,12 +477,73 @@ void Menu::optionhi()
 
 	if (enableGlareEffect && !titleBarStripeVisible) glare_test();
 }
+void Menu::draw_description()
+{
+	if (selectedOptionDescription.empty())
+		return;
+
+	const std::string text = Language::TranslateToSelected(selectedOptionDescription);
+	selectedOptionDescription.clear();
+
+	const float rows = (float)(std::min)(totalOptionCount, GTA_MAXOP);
+	const float footerBottom = ((rows + 1.0f) * 0.035f) + 0.1415f + (0.0345f / 2.0f);
+	const float boxTop = footerBottom + menuPos.y;
+	const float textX = 0.066f + menuPos.x;
+	const float textWrapEnd = 0.254f + menuPos.x;
+	const float textScale = 0.3f;
+	const float padding = 0.006f;
+
+	auto setupText = [&]()
+	{
+		Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.0f, textScale), false, false, true, optiontext, Vector2(textX, textWrapEnd));
+	};
+
+	setupText();
+	if (text.length() < 100)
+	{
+		BEGIN_TEXT_COMMAND_GET_NUMBER_OF_LINES_FOR_STRING("STRING");
+		ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(text.c_str());
+	}
+	else
+	{
+		BEGIN_TEXT_COMMAND_GET_NUMBER_OF_LINES_FOR_STRING("jamyfafi");
+		add_text_component_long_string(text);
+	}
+	int lineCount = END_TEXT_COMMAND_GET_NUMBER_OF_LINES_FOR_STRING(textX, boxTop);
+	if (lineCount < 1) lineCount = 1;
+
+	const float lineHeight = GET_RENDERED_CHARACTER_HEIGHT(textScale, GTAfont::Arial) * 1.3f;
+	const float boxHeight = lineCount * lineHeight + padding * 2.0f;
+
+	DRAW_RECT(0.16f + menuPos.x, boxTop + boxHeight / 2.0f, 0.20f, boxHeight, BG.R, BG.G, BG.B, BG.A, false);
+
+	setupText();
+	Game::Print::drawstring(text, textX, boxTop + padding);
+}
 bool Menu::isBinds()
 {
 	// Open menu - RB + Left / F8
 	UINT8 index1 = menubindsGamepad.first < 50 ? 0 : 2;
 	UINT8 index2 = menubindsGamepad.second < 50 ? 0 : 2;
-	return usingControllerInput ? (IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, menubindsGamepad.second)) : IsKeyJustUp(menuToggleKey); // F8
+	// fixes a bug that occured when the menu is initializing and user presses F8 multiple times
+	if (ignoreMenuToggleUntilRelease)
+	{
+		bool toggleHeld = usingControllerInput
+			? (IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) || IS_DISABLED_CONTROL_PRESSED(index2, menubindsGamepad.second))
+			: IsKeyDown(menuToggleKey);
+		if (!toggleHeld)
+		{
+			if (!usingControllerInput)
+				ResetKeyState(menuToggleKey);
+			ignoreMenuToggleUntilRelease = false;
+		}
+		return false;
+	}
+
+	if (usingControllerInput)
+		return IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, menubindsGamepad.second);
+	else 
+		return IsKeyJustUp(menuToggleKey); // F8
 }
 void Menu::while_closed()
 {
@@ -490,6 +554,7 @@ void Menu::while_closed()
 		if (menuHasNotOpened) {
 			justopened();
 			GTAmemory::InitEnhancedPools();
+			ignoreMenuToggleUntilRelease = true;
 		}
 		else
 			addlog(ige::LogType::LOG_TRACE, "Menu has been opened before, skipping initialization");
@@ -691,7 +756,7 @@ void Menu::SetSub_closed()
 
 void Menu::glare_test()
 {
-	if (noClipToggle)
+	if (FreeCamMode::IsActive())
 	{
 		//Label_unloadglare:;
 		scaleform_menuGlare.Unload();
@@ -835,6 +900,7 @@ void Menu::sub_handler()
 			isClosed = false;
 		}
 		submenu_switch();
+		draw_description();
 
 		if (Menu::selectedOptionIndex > Menu::currentOptionCount) { Menu::selectedOptionIndex = Menu::currentOptionCount + 1; Menu::Up(false); }
 		else if (Menu::selectedOptionIndex < 1) { Menu::selectedOptionIndex = 0; Menu::Down(false); }
@@ -1199,6 +1265,7 @@ void AddOption(std::string text, bool& option_code_bool, void(&callback)(), int 
 	currentOptionY = currentOptionY * 0.035f + 0.125f;
 
 	Game::Print::setupdraw();
+	if (Menu::optionTextStroke) SET_TEXT_OUTLINE();
 	if (font_options == 0)
 		SET_TEXT_SCALE(0, 0.33f);
 	SET_TEXT_FONT(font_options);
@@ -1258,6 +1325,11 @@ void AddOption(std::string text, bool& option_code_bool, void(&callback)(), int 
 inline void AddOption(std::ostream& os, bool& option_code_bool, void(&callback)(), int submenu_index, bool show_arrow, bool gxt)
 {
 	AddOption(dynamic_cast<std::ostringstream&>(os).str(), option_code_bool, callback, submenu_index, show_arrow, gxt);
+}
+void AddOptionDescription(const std::string& text)
+{
+	if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+		Menu::selectedOptionDescription = text;
 }
 void OptionStatus(BOOL status)
 {
@@ -1356,7 +1428,8 @@ void AddBreak(std::string text)
 	currentOptionY = currentOptionY * 0.035f + 0.125f;
 
 
-	Game::Print::setupdraw(); //SET_TEXT_OUTLINE();
+	Game::Print::setupdraw();
+	if (Menu::optionTextStroke) SET_TEXT_OUTLINE();
 	SET_TEXT_FONT(font_breaks);
 	SET_TEXT_COLOUR(optionbreaks.R, optionbreaks.G, optionbreaks.B, optionbreaks.A);
 	if (Menu::currentOptionCount == Menu::selectedOptionIndex)
@@ -1396,7 +1469,7 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 	if (currentOptionY < 0.6325f && currentOptionY > 0.1425f)
 	{
 		FLOAT newXpos;
-		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, optiontext);
 		if (Menu::IsLastDrawnOptionSelected())
 		{
 			if (&RIGHT_PRESS != &null && &LEFT_PRESS != &null)
@@ -1409,20 +1482,20 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 				newXpos = get_xcoord_at_menu_rightEdge(textureRes.x - 0.005, textureRes.x - 0.005 + Game::Print::GetTextWidth(value, decimal_places), true);
 				DRAW_SPRITE("CommonMenu", "arrowleft", newXpos, currentOptionY + 0.016f + menuPos.y, textureRes.x, textureRes.y, 0.0f, selectedtext.R, selectedtext.G, selectedtext.B, selectedtext.A, false, 0); // Left
 
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), textureRes.x - 0.005, true);
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 			}
 			else
 			{
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), 0.0024f, true);
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 			}
 		}
 		else
 		{
 			newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), 0.0024f, true);
-			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, optiontext);
 		}
 
 		Game::Print::drawfloat(value, decimal_places, newXpos, currentOptionY + 0.0056 + menuPos.y);
@@ -1440,15 +1513,16 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 
 }
 template<typename T>
-void AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min, std::optional<double> max, bool gxt, bool wrap)
+bool AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min, std::optional<double> max, bool gxt, bool wrap)
 {
+	const T previousValue = value;
 	bool enterPressed = false, right = false, left = false;
 	AddNumber(text, (double)value, decimal_places, enterPressed, right, left, gxt);
 	if (right) value = (T)((double)value + step_size);
 	if (left)  value = (T)((double)value - step_size);
 	if (enterPressed)
 	{
-		std::string inputStr = Game::InputBox("", 5U, "", std::to_string(value));
+		std::string inputStr = Game::InputBox("", 11U, "", std::to_string(value).substr(0, 10));
 		if (inputStr.length() > 0)
 		{
 			try
@@ -1468,15 +1542,17 @@ void AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, 
 		if (min.has_value() && value < (T)min.value()) value = (T)min.value();
 		if (max.has_value() && value > (T)max.value()) value = (T)max.value();
 	}
+	return value != previousValue;
 }
-template void AddNumberStepper<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
-template void AddNumberStepper<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
-template void AddNumberStepper<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template bool AddNumberStepper<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template bool AddNumberStepper<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template bool AddNumberStepper<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
 template<typename T>
-void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min, std::optional<double> max, bool gxt)
+void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min, std::optional<double> max, bool invert, bool gxt)
 {
 	bool enterPressed = false, right = false, left = false;
 	AddNumber(text, (double)value, decimal_places, enterPressed, right, left, gxt);
+	if (invert) std::swap(right, left);
 	if (right) value = (T)((double)value * multiplier);
 	if (left)  value = (T)((double)value / multiplier);
 	if (enterPressed)
@@ -1494,9 +1570,9 @@ void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_place
 	if (min.has_value() && value < (T)min.value()) value = (T)min.value();
 	if (max.has_value() && value > (T)max.value()) value = (T)max.value();
 }
-template void AddNumberMultiplier<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool);
-template void AddNumberMultiplier<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool);
-template void AddNumberMultiplier<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool);
+template void AddNumberMultiplier<int>(const std::string&, int&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template void AddNumberMultiplier<float>(const std::string&, float&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
+template void AddNumberMultiplier<double>(const std::string&, double&, __int8, double, std::optional<double>, std::optional<double>, bool, bool);
 void draw_tickol_tick_BNW(const std::string& textureDict, const std::string& normal, const std::string& selected, const RGBA& colour)
 {
 	if (!HAS_STREAMED_TEXTURE_DICT_LOADED(textureDict.c_str())) REQUEST_STREAMED_TEXTURE_DICT(textureDict.c_str(), 0);
@@ -1650,7 +1726,7 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 
 		chartickStr = DOES_TEXT_LABEL_EXIST(chartickStr.c_str()) ? GET_FILENAME_FOR_AUDIO_CONVERSATION(chartickStr.c_str()) : Language::TranslateToSelected(chartickStr);
 		FLOAT newXpos;
-		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, optiontext);
 
 		if (Menu::IsLastDrawnOptionSelected())
 		{
@@ -1664,20 +1740,20 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 				newXpos = get_xcoord_at_menu_rightEdge(textureRes.x - 0.005, textureRes.x - 0.005 + Game::Print::GetTextWidth(chartickStr), true);
 				DRAW_SPRITE("CommonMenu", "arrowleft", newXpos, currentOptionY + 0.016f + menuPos.y, textureRes.x, textureRes.y, 0.0f, selectedtext.R, selectedtext.G, selectedtext.B, selectedtext.A, false, 0); // Left
 
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), textureRes.x - 0.005, true);
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 			}
 			else
 			{
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), 0.0024f, true);
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 			}
 		}
 		else
 		{
 			newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), 0.0024f, true);
-			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, optiontext);
 		}
 
 		Game::Print::drawstring(chartickStr, newXpos, currentOptionY + 0.0056 + menuPos.y);

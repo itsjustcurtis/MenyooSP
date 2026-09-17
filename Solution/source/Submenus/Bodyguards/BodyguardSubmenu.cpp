@@ -68,12 +68,6 @@ namespace sub::BodyguardMenu
         }
 
         AddOption("Wardrobe", null, SetSelectedBodyguardAsActivePed, SUB::COMPONENTS);
-        if (g_cam_componentChanger.Exists())
-        {
-            g_cam_componentChanger.SetActive(false);
-            g_cam_componentChanger.Destroy();
-            World::SetRenderingCamera(0);
-        }
         AddOption("Voice Changer", null, SetSelectedBodyguardAsActivePed, SUB::VOICECHANGER);
         AddOption("Weapons", null, nullFunc, SUB::BODYGUARD_WEAPONOPS);
         AddOption("Loadouts", null, SetSelectedBodyguardAsActivePed, SUB::WEAPONOPS_LOADOUTS);

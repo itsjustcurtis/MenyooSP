@@ -115,6 +115,9 @@ namespace sub
 					return;
 				if (IsSelected(entity.handle))
 					return;
+				// attached entities can't be selected, pivot would replace their attachment
+				if (entity.handle.IsAttached())
+					return;
 				MultiSelect::g_selectedEntities.push_back(entity);
 			}
 
@@ -220,18 +223,19 @@ namespace sub
 
 	void Sub_SpoonerMain()
 		{
-			SpoonerMode::editingState.mode = SpoonerMode::eEditMode::Disabled;
-			SpoonerMode::editingState.cameraLocked = false;
-			selectedEntity.handle = 0;
+		SpoonerMode::editingState.SetMode(SpoonerMode::eEditMode::Disabled);
+		selectedEntity.handle = 0;
 			_searchStr.clear(); // Sub_SaveFiles _searchStr
 			dict3.clear(); // Sub_SaveFiles _dir
 
 			AddTitle("Object Spooner");
 
 			AddLocal("Spooner Mode", SpoonerMode::bEnabled, SpoonerMode::Toggle, SpoonerMode::Toggle);
+			AddOptionDescription("Free camera for selecting, moving and spawning entities.");
 			AddOption("Spawn Entity Into World", null, nullFunc, SUB::SPOONER_SPAWN_CATEGORIES);
 			AddOption("Manage Entity Database", null, nullFunc, SUB::SPOONER_MANAGEDB);
 			AddOption("Manage Multiple Entities", null, nullFunc, SUB::SPOONER_MULTISELECT);
+			AddOptionDescription("Select several entities to move, rotate, copy or delete together.");
 			AddOption("Manage Markers", null, nullFunc, SUB::SPOONER_MANAGEMARKERS);
 			AddOption("Manage Light Sources", null, nullFunc, SUB::SPOONER_MANAGELIGHTS);
 			AddOption("Manage Blips", null, nullFunc, SUB::SPOONER_BLIPS);
@@ -242,95 +246,35 @@ namespace sub
 		}
 		void Sub_Settings()
 		{
-			bool bSmm_plus = false, bSmm_minus = false;
-			bool movsensK_input = 0, movsensK_plus = 0, movsensK_minus = 0;
-			bool movsensG_input = 0, movsensG_plus = 0, movsensG_minus = 0;
-			bool rotsensK_input = 0, rotsensK_plus = 0, rotsensK_minus = 0;
-			bool rotsensG_input = 0, rotsensG_plus = 0, rotsensG_minus = 0;
-
 			AddTitle("Settings");
 			AddToggle("Display Model Previews (Spooner Mode)", Settings::bShowModelPreviews);
+			AddOptionDescription("Shows a preview of the model you're about to spawn.");
 			AddToggle("Display Spooner Info", Settings::bDisplaySpoonerInfo);
+			AddOptionDescription("Shows entity counts on screen while Spooner Mode is on.");
 			AddToggle("Display Entity Surrounding Box", Settings::bShowBoxAroundSelectedEntity);
+			AddOptionDescription("Draws a box around the selected entity.");
 			AddToggle("Spawn Dynamic Objects", Settings::bSpawnDynamicProps);
+			AddOptionDescription("New objects react to physics. Off: they spawn frozen in place.");
 			AddToggle("Spawn Dynamic Peds", Settings::bSpawnDynamicPeds);
+			AddOptionDescription("New peds react to physics. Off: they spawn frozen in place.");
 			AddToggle("Spawn Dynamic Vehicles", Settings::bSpawnDynamicVehicles);
+			AddOptionDescription("New vehicles react to physics. Off: they spawn frozen in place.");
 			AddToggle("Freeze Entity When Moving It (Spooner Mode)", Settings::bFreezeEntityWhenMovingIt);
+			AddOptionDescription("Freezes the entity while you drag it so it doesn't fall or roll.");
 			AddToggle("Spawn Invincible Entities", Settings::bSpawnInvincibleEntities);
 			AddToggle("Spawn Still Peds (Block Fleeing)", Settings::bSpawnStillPeds);
+			AddOptionDescription("Spawned peds don't react or run away.");
 			AddToggle("Make Added (To DB) Entities Persistent", Settings::bAddToDbAsMissionEntities);
+			AddOptionDescription("Database entities won't despawn when you move away.");
 			AddToggle("Teleport To Reference When Loading File", Settings::bTeleportToReferenceWhenLoadingFile);
-			AddTexter("Spooner Mode Method", static_cast<UINT8>(Settings::spoonerModeMode), spoonerModeModeNames, null, bSmm_plus, bSmm_minus);
-
-			if (Menu::usingControllerInput)
-			{
-				AddNumber("Movement Sensitivity (Gamepad)", Settings::cameraMovementSensitivityGamepad, 4, movsensG_input, movsensG_plus, movsensG_minus);
-				AddNumber("Rotation Sensitivity (Gamepad)", Settings::cameraRotationSensitivityGamepad, 4, rotsensG_input, rotsensG_plus, rotsensG_minus);
-			}
-			else
-			{
-				AddNumber("Movement Sensitivity (Keyboard)", Settings::cameraMovementSensitivityKeyboard, 4, movsensK_input, movsensK_plus, movsensK_minus);
-				AddNumber("Rotation Sensitivity (Mouse)", Settings::cameraRotationSensitivityMouse, 4, rotsensK_input, rotsensK_plus, rotsensK_minus);
-			}
+			AddOptionDescription("Teleports you to the file's reference coordinates when loading.");
+			AddToggle("Invert Scroll Sensitivity", Settings::bInvertScrollSensitivity);
+			AddOptionDescription("Swaps the direction of Scroll Sensitivity options in Manual Editing menus. Off: Left multiplies by 10, Right divides. On: Right multiplies, Left divides.");
 
 			AddOption("Reload Model List Files", null, PopulateGlobalEntityModelsArrays);
+			AddOptionDescription("Re-reads the model list files without restarting the game.");
 
 			AddOption("Grid Snap Settings", null, nullFunc, SUB::SPOONER_MANUALEDITING_SNAP);
-
-			if (bSmm_plus) { if ((UINT8)Settings::spoonerModeMode < spoonerModeModeNames.size() - 1) Settings::spoonerModeMode = eSpoonerModeMode((UINT8)Settings::spoonerModeMode + 1); }
-			if (bSmm_minus) { if ((UINT8)Settings::spoonerModeMode > 0) Settings::spoonerModeMode = eSpoonerModeMode((UINT8)Settings::spoonerModeMode - 1); }
-
-			if (movsensK_input || movsensG_input)
-			{
-				float& val = (movsensK_input ? Settings::cameraMovementSensitivityKeyboard : Settings::cameraMovementSensitivityGamepad);
-				std::string inputStr = Game::InputBox("", 11U, "", std::to_string(val).substr(0, 10));
-				if (inputStr.length() > 0)
-				{
-					try { val = stof(inputStr); }
-					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
-				}
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 10U, std::to_string(val).substr(0, 10));
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&val);
-			}
-			if (movsensK_plus || movsensG_plus)
-			{
-				float& val = (movsensK_plus ? Settings::cameraMovementSensitivityKeyboard : Settings::cameraMovementSensitivityGamepad);
-				if (val < FLT_MAX)
-					val += (movsensK_minus ? 0.0005f : 0.0005f);
-			}
-			if (movsensK_minus || movsensG_minus)
-			{
-				float& val = (movsensK_minus ? Settings::cameraMovementSensitivityKeyboard : Settings::cameraMovementSensitivityGamepad);
-				if (val > 0.0f)
-					val -= (movsensK_minus ? 0.0005f : 0.0005f);
-			}
-
-			if (rotsensK_input || rotsensG_input)
-			{
-				float& val = (rotsensK_input ? Settings::cameraRotationSensitivityMouse : Settings::cameraRotationSensitivityGamepad);
-				std::string inputStr = Game::InputBox("", 11U, "", std::to_string(val).substr(0, 10));
-				if (inputStr.length() > 0)
-				{
-					try { val = stof(inputStr); }
-					catch (...) { Game::Print::PrintErrorInvalidInput(inputStr); }
-				}
-				//OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::SetArg1Float, std::string(), 10U, std::to_string(val).substr(0, 10));
-				//OnscreenKeyboard::State::arg1._ptr = reinterpret_cast<void*>(&val);
-			}
-			if (rotsensK_plus || rotsensG_plus)
-			{
-				bool isK = rotsensK_plus;
-				float& val = (rotsensK_plus ? Settings::cameraRotationSensitivityMouse : Settings::cameraRotationSensitivityGamepad);
-				if (val < FLT_MAX)
-					val += (rotsensK_plus ? 0.0005f : 0.0005f);
-			}
-			if (rotsensK_minus || rotsensG_minus)
-			{
-				float& val = (rotsensK_minus ? Settings::cameraRotationSensitivityMouse : Settings::cameraRotationSensitivityGamepad);
-				if (val > 0.0f)
-					val -= (rotsensK_minus ? 0.0005f : 0.0005f);
-			}
-
 		}
 		void Sub_SaveFiles()
 		{
@@ -344,7 +288,9 @@ namespace sub
 			AddTitle("Manage Saved Files");
 
 			bool bSaveDb = false;
-			AddOption("Save Database To File (" + std::to_string(Databases::EntityDb.size() + Databases::MarkerDb.size() + Databases::LightDb.size()) + ")", bSaveDb); if (bSaveDb)
+			AddOption("Save Database To File (" + std::to_string(Databases::EntityDb.size() + Databases::MarkerDb.size() + Databases::LightDb.size()) + ")", bSaveDb);
+			AddOptionDescription("Saves all database entities, markers and lights.");
+			if (bSaveDb)
 			{
 				std::string inputStr = Game::InputBox("", 28U, "Enter file name:");
 				if (inputStr.length() > 0)
@@ -368,7 +314,9 @@ namespace sub
 		}
 
 			bool bSaveWorld = false;
-			AddOption("Save World To File (" + std::to_string(worldEntities.size()) + ")", bSaveWorld); if (bSaveWorld)
+			AddOption("Save World To File (" + std::to_string(worldEntities.size()) + ")", bSaveWorld);
+			AddOptionDescription("Saves every entity currently in the world, not just the database.");
+			if (bSaveWorld)
 			{
 				std::string inputStr = Game::InputBox("", 28U, "Enter file name:");
 				if (inputStr.length() > 0)
@@ -393,6 +341,7 @@ namespace sub
 			GTAmemory::GetEntityHandles(vSaveRangeEntities, myPos, fSaveRangeRadius);
 			bool bSaveRange_plus = false, bSaveRange_minus = false, bSaveRange_save = false;
 			AddNumber("Save Range To File (" + std::to_string(vSaveRangeEntities.size()) + ")", fSaveRangeRadius, 0, bSaveRange_save, bSaveRange_plus, bSaveRange_minus);
+			AddOptionDescription("Saves world entities within this radius of you. Left/right changes the radius; press to save.");
 			if (Menu::IsLastDrawnOptionSelected())
 				EntityManagement::DrawRadiusDisplayingMarker(myPos, fSaveRangeRadius);
 			if (bSaveRange_plus) { if (fSaveRangeRadius < FLT_MAX) fSaveRangeRadius += 1.0f; }
@@ -635,12 +584,14 @@ namespace sub
 			int intervalIdx = 0;
 			for (int i = 0; i < 4; i++) { if (Settings::autoSaveIntervalMs == intervalValues[i]) { intervalIdx = i; break; } }
 			intervalIdx = AddTexterCycler("Save Interval", intervalIdx, intervalNames);
+			AddOptionDescription("How often the database is auto-saved.");
 			if (intervalIdx >= 0 && intervalIdx < 4)
 				Settings::autoSaveIntervalMs = intervalValues[intervalIdx];
 
 			int maxIdx = 0;
 			for (int i = 0; i < 4; i++) { if (Settings::autoSaveMaxFiles == maxFileValues[i]) { maxIdx = i; break; } }
 			maxIdx = AddTexterCycler("Max Files to Keep", maxIdx, maxFileNames);
+			AddOptionDescription("The oldest auto-saves are deleted beyond this number.");
 			if (maxIdx >= 0 && maxIdx < 4)
 				Settings::autoSaveMaxFiles = maxFileValues[maxIdx];
 		}
@@ -654,7 +605,9 @@ namespace sub
 			AddTitle(_name);
 
 			bool bTeleToRef = false;
-			AddOption("Teleport To Reference", bTeleToRef); if (bTeleToRef)
+			AddOption("Teleport To Reference", bTeleToRef);
+			AddOptionDescription("Teleports you to the file's reference coordinates.");
+			if (bTeleToRef)
 			{
 				FileManagement::TeleportToReference(filePath);
 			}
@@ -683,7 +636,9 @@ namespace sub
 			}
 
 			bool bLoadPlacements = false;
-			AddOption("Load Placements", bLoadPlacements); if (bLoadPlacements)
+			AddOption("Load Placements", bLoadPlacements);
+			AddOptionDescription("Spawns everything in this file.");
+			if (bLoadPlacements)
 			{
 				if (FileManagement::LoadPlacementsFromFile(filePath))
 				{
@@ -723,7 +678,9 @@ namespace sub
 			}
 
 			bool vOverwriteFile = false;
-			AddOption("Overwrite Placements In File (With DB)", vOverwriteFile); if (vOverwriteFile)
+			AddOption("Overwrite Placements In File (With DB)", vOverwriteFile);
+			AddOptionDescription("Replaces this file's contents with the current database. File attributes are kept.");
+			if (vOverwriteFile)
 			{
 				if (FileManagement::SaveDbToFile(filePath, false))
 				{
@@ -765,7 +722,9 @@ namespace sub
 				{
 					std::string noteStr = nodeNote.text().as_string();
 					bool bEditNotePressed = false;
-					AddTexter("Note", 0, std::vector<std::string>{noteStr.length() > 0 ? (noteStr.length() < 10 ? noteStr : noteStr.substr(0, 10) + "...") : "~italic~None"}, bEditNotePressed); if (bEditNotePressed)
+					AddTexter("Note", 0, std::vector<std::string>{noteStr.length() > 0 ? (noteStr.length() < 10 ? noteStr : noteStr.substr(0, 10) + "...") : "~italic~None"}, bEditNotePressed);
+					AddOptionDescription("A text note stored in the file.");
+					if (bEditNotePressed)
 					{
 						std::string inputStr = Game::InputBox("~`", 300U, "Enter note:", noteStr);
 						if (inputStr.compare("~`") != 0)
@@ -784,7 +743,9 @@ namespace sub
 				{
 					std::string audioFileName = nodeAudioFile.text().as_string();
 					bool bEditAudioFileNamePressed = false;
-					AddTexter("Audio File To Play", 0, std::vector<std::string>{audioFileName.length() > 0 ? audioFileName : "~italic~None"}, bEditAudioFileNamePressed); if (bEditAudioFileNamePressed)
+					AddTexter("Audio File To Play", 0, std::vector<std::string>{audioFileName.length() > 0 ? audioFileName : "~italic~None"}, bEditAudioFileNamePressed);
+					AddOptionDescription("Sound played on load. The file must be in menyooStuff\\Audio.");
+					if (bEditAudioFileNamePressed)
 					{
 						std::string inputStr = Game::InputBox("~`", 64U, "Enter filename with extension (file should be in menyooStuff\\Audio):", audioFileName);
 						if (inputStr.compare("~`") != 0)
@@ -802,7 +763,9 @@ namespace sub
 				if (nodeStartTaskSeqOnLoad)
 				{
 					bool bToggleStartTaskSeqOnLoadPressed = false;
-					AddTickol("Start Task Sequences Immediately", nodeStartTaskSeqOnLoad.text().as_bool(), bToggleStartTaskSeqOnLoadPressed, bToggleStartTaskSeqOnLoadPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleStartTaskSeqOnLoadPressed)
+					AddTickol("Start Task Sequences Immediately", nodeStartTaskSeqOnLoad.text().as_bool(), bToggleStartTaskSeqOnLoadPressed, bToggleStartTaskSeqOnLoadPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					AddOptionDescription("Task sequences start as soon as the file loads.");
+					if (bToggleStartTaskSeqOnLoadPressed)
 					{
 						nodeStartTaskSeqOnLoad.text() = !nodeStartTaskSeqOnLoad.text().as_bool();
 						doc.save_file((const char*)filePath.c_str());
@@ -813,7 +776,9 @@ namespace sub
 				if (nodeClearDatabase)
 				{
 					bool bToggleClearDatabasePressed = false;
-					AddTickol("Delete Database Entities", nodeClearDatabase.text().as_bool(), bToggleClearDatabasePressed, bToggleClearDatabasePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleClearDatabasePressed)
+					AddTickol("Delete Database Entities", nodeClearDatabase.text().as_bool(), bToggleClearDatabasePressed, bToggleClearDatabasePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					AddOptionDescription("Deletes the current database entities before loading.");
+					if (bToggleClearDatabasePressed)
 					{
 						nodeClearDatabase.text() = !nodeClearDatabase.text().as_bool();
 						doc.save_file((const char*)filePath.c_str());
@@ -824,7 +789,9 @@ namespace sub
 				if (nodeClearMarkers)
 				{
 					bool bToggleClearMarkersPressed = false;
-					AddTickol("Delete Database Markers", nodeClearMarkers.text().as_bool(), bToggleClearMarkersPressed, bToggleClearMarkersPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleClearMarkersPressed)
+					AddTickol("Delete Database Markers", nodeClearMarkers.text().as_bool(), bToggleClearMarkersPressed, bToggleClearMarkersPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					AddOptionDescription("Deletes the current markers before loading.");
+					if (bToggleClearMarkersPressed)
 					{
 						nodeClearMarkers.text() = !nodeClearMarkers.text().as_bool();
 						doc.save_file((const char*)filePath.c_str());
@@ -862,6 +829,7 @@ namespace sub
 					float clearWorldRadius = nodeClearWorld.text().as_float();
 					bool clearWorld_plus = false, clearWorld_minus = false;
 					AddNumber("Delete World Entities (Within Radius)", clearWorldRadius, 0, null, clearWorld_plus, clearWorld_minus);
+					AddOptionDescription("Deletes world entities within this radius of the reference coordinates before loading.");
 					if (Menu::IsLastDrawnOptionSelected())
 						EntityManagement::DrawRadiusDisplayingMarker(refCoords, clearWorldRadius, RGBA(255, 0, 0, 130));
 					if (clearWorld_plus) { if (clearWorldRadius < FLT_MAX) { clearWorldRadius += 1.0f; nodeClearWorld.text() = abs(clearWorldRadius); doc.save_file((const char*)filePath.c_str()); } }
@@ -878,7 +846,7 @@ namespace sub
 					AddBreak(std::get<0>(nas));
 					AddOption("~italic~" + (xNode ? std::get<1>(nas)->ToString() : "Not Set"), null);
 
-					auto& spoocam = SpoonerMode::spoonerModeCamera;
+					auto& spoocam = SpoonerCamera::camera;
 					if (!spoocam.IsActive())
 					{
 						bool bSetPosToMe = false;
@@ -902,7 +870,9 @@ namespace sub
 					else
 					{
 						bool bSetPosToHitCoords = false;
-						AddOption("Set To Camera Target", bSetPosToHitCoords); if (bSetPosToHitCoords)
+						AddOption("Set To Camera Target", bSetPosToHitCoords);
+						AddOptionDescription("Uses the point your camera is aiming at.");
+						if (bSetPosToHitCoords)
 						{
 							Vector3 hitCoords = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 							*std::get<1>(nas) = hitCoords;
@@ -951,6 +921,7 @@ namespace sub
 					std::string timecycModStr = nodeTimecycMod.text().as_string();
 					bool bTimecycMod_pressed = false, bTimecycMod_plus = false, bTimecycMod_minus = false;
 					AddTexter("Timecycle Mod", 0, std::vector<std::string>{timecycModStr.length() ? timecycModStr : "None"}, bTimecycMod_pressed, bTimecycMod_plus, bTimecycMod_minus);
+					AddOptionDescription("Visual filter applied on load.");
 					if (bTimecycMod_plus)
 					{
 						auto tit = std::find_if(TimecycleModification::vTimecycles.begin(), TimecycleModification::vTimecycles.end(),
@@ -1011,6 +982,7 @@ namespace sub
 					float timecycModStrength = nodeTimecycMod.attribute("strength").as_float(1.0f);
 					bool bTimecycModStrength_plus = false, bTimecycModStrength_minus = false;
 					AddNumber("Strength", timecycModStrength, 2, null, bTimecycModStrength_plus, bTimecycModStrength_minus);
+					AddOptionDescription("Strength of the timecycle filter.");
 					if (bTimecycModStrength_plus)
 					{
 						if (timecycModStrength < 3.0f)
@@ -1071,7 +1043,9 @@ namespace sub
 			AddTitle(_name);
 
 			bool bLoadPlacements = false;
-			AddOption("Load Placements", bLoadPlacements); if (bLoadPlacements)
+			AddOption("Load Placements", bLoadPlacements);
+			AddOptionDescription("Spawns everything in this file.");
+			if (bLoadPlacements)
 			{
 				if (FileManagement::LoadPlacementsFromSP00NFile(filePath))
 				{
@@ -1138,9 +1112,12 @@ namespace sub
 			AddTitle("Manage Entities");
 
 			AddOption("Removal", null, nullFunc, SUB::SPOONER_MANAGEDB_REMOVAL);
+			AddOptionDescription("Bulk-delete entities, markers and lights, from the database or the whole world.");
 
 			bool bPressedSelf = false;
-			AddOption((std::string)"Self (" + (bIsSelfInDb ? "Is In Database)" : "Is Not In Database)"), bPressedSelf); if (bPressedSelf)
+			AddOption((std::string)"Self (" + (bIsSelfInDb ? "Is In Database)" : "Is Not In Database)"), bPressedSelf);
+			AddOptionDescription("Open options for your own ped, whether or not it's in the database.");
+			if (bPressedSelf)
 			{
 				if (bIsSelfInDb) selectedEntity = Databases::EntityDb[myIndexInDb];
 				else
@@ -1245,6 +1222,7 @@ namespace sub
 			AddOption("Delete All Peds In Database", null, EntityManagement::DeleteAllPedsInDb);
 			AddOption("Delete All Vehicles In Database", null, EntityManagement::DeleteAllVehiclesInDb);
 			AddOption("Delete All Invalid Entities In Database", null, EntityManagement::DeleteInvalidEntitiesInDb);
+			AddOptionDescription("Removes database entries whose entity no longer exists.");
 
 			AddBreak("---World---");
 			AddOption("Delete All Entities In World (" + std::to_string(worldEntities.size()) + ")", null, EntityManagement::DeleteAllEntitiesInWorld);
@@ -1253,6 +1231,7 @@ namespace sub
 			AddOption("Delete All Vehicles In World (" + std::to_string(worldVehicles.size()) + ")", null, EntityManagement::DeleteAllVehiclesInWorld);
 
 			AddOption("Clear Entity Database (And Keep Entities)", null, EntityManagement::ClearDb);
+			AddOptionDescription("Empties the database but leaves the entities in the world.");
 		}
 		/*void Sub_ManageEntities_Removal_FromDb()
 		{
@@ -1289,8 +1268,7 @@ namespace sub
 		}*/
 		void Sub_SelectedEntityOps()
 		{
-			SpoonerMode::editingState.mode = SpoonerMode::eEditMode::Disabled;
-			SpoonerMode::editingState.cameraLocked = false;
+			SpoonerMode::editingState.SetMode(SpoonerMode::eEditMode::Disabled);
 			if (!selectedEntity.handle.Exists())
 			{
 				Menu::SetPreviousMenu();
@@ -1350,6 +1328,7 @@ namespace sub
 
 			bool bAddToOrDb = false, bRemoveFromDb = false;
 			AddTickol("Entity Is In Database", isThisEntityInDb, bAddToOrDb, bRemoveFromDb, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("Database entities are saved to files and managed by Spooner.");
 			if (bAddToOrDb)
 			{
 				EntityManagement::AddEntityToDb(selectedEntity);
@@ -1367,6 +1346,7 @@ namespace sub
 
 			bool bCopyPressed = false, bCopy_plus = false, bCopy_minus = false;
 			AddTexter("Copy", _copyEntTexterValue, std::vector<std::string>{ "This Entity Only", "With Attachments" }, bCopyPressed, bCopy_plus, bCopy_minus);
+			AddOptionDescription("Creates a duplicate. Left/right chooses whether attachments are copied too.");
 			if (bCopy_plus) { if (_copyEntTexterValue < 1U) _copyEntTexterValue++; }
 			if (bCopy_minus) { if (_copyEntTexterValue > 0) _copyEntTexterValue--; }
 			if (bCopyPressed)
@@ -1433,7 +1413,9 @@ namespace sub
 			}
 
 			bool bDynamicPressed = false;
-			AddLocal("Dynamic", selectedEntity.dynamic, bDynamicPressed, bDynamicPressed); if (bDynamicPressed)
+			AddLocal("Dynamic", selectedEntity.dynamic, bDynamicPressed, bDynamicPressed);
+			AddOptionDescription("Reacts to physics. Off: frozen in place.");
+			if (bDynamicPressed)
 			{
 				selectedEntity.dynamic = !selectedEntity.dynamic;
 				selectedEntity.handle.SetDynamic(selectedEntity.dynamic);
@@ -1463,6 +1445,7 @@ namespace sub
 				auto& thisTextureVariation = selectedEntity.textureVariation;
 				bool bTextureVariation_plus = false, bTextureVariation_minus = false;
 				AddNumber("Texture Variation", thisTextureVariation, 0, null, bTextureVariation_plus, bTextureVariation_minus);
+				AddOptionDescription("Object tint/texture variant.");
 				if (bTextureVariation_plus) { if (thisTextureVariation < UINT8_MAX) { thisTextureVariation++; SET_OBJECT_TINT_INDEX(selectedEntity.handle.Handle(), thisTextureVariation); } }
 				if (bTextureVariation_minus) { if (thisTextureVariation > 0) { thisTextureVariation--; SET_OBJECT_TINT_INDEX(selectedEntity.handle.Handle(), thisTextureVariation); } }
 			}
@@ -1522,6 +1505,7 @@ namespace sub
 			}
 
 			AddOption("Opacity (Local)", null, SetSelectedEntityAsVehicleTarget, SUB::ENTITYALPHALEVEL);
+			AddOptionDescription("Transparency. Only visible to you.");
 
 			bool bCollisionPressed = false;
 			AddLocal("Collision", selectedEntity.handle.GetIsCollisionEnabled(), bCollisionPressed, bCollisionPressed); if (bCollisionPressed)
@@ -1537,7 +1521,9 @@ namespace sub
 
 			bool bHasGravity = selectedEntity.handle.GetHasGravity();
 			bool bGravityTogglePressed = false;
-			AddLocal("Gravity", bHasGravity, bGravityTogglePressed, bGravityTogglePressed); if (bGravityTogglePressed)
+			AddLocal("Gravity", bHasGravity, bGravityTogglePressed, bGravityTogglePressed);
+			AddOptionDescription("Off: the entity floats.");
+			if (bGravityTogglePressed)
 			{
 				switch (selectedEntity.type)
 				{
@@ -1552,9 +1538,9 @@ namespace sub
 			bool bGoToEntityPressed = false;
 			AddOption("Go To Entity", bGoToEntityPressed); if (bGoToEntityPressed)
 			{
-				if (SpoonerMode::spoonerModeCamera.IsActive())
+			if (SpoonerCamera::camera.IsActive())
 				{
-					auto& cam = SpoonerMode::spoonerModeCamera;
+					auto& cam = SpoonerCamera::camera;
 					cam.SetPosition(selectedEntity.handle.GetOffsetInWorldCoords(0, -5.0f - selectedEntity.handle.Dim2().y, 0));
 				}
 				else
@@ -1573,9 +1559,9 @@ namespace sub
 					//entityToTele = entityToTeleMaybe;
 				if (selectedEntity.handle.IsAttached()) EntityManagement::DetachEntity(selectedEntity); // Detach if attached :(
 
-				if (SpoonerMode::spoonerModeCamera.IsActive())
+			if (SpoonerCamera::camera.IsActive())
 				{
-					auto& cam = SpoonerMode::spoonerModeCamera;
+					auto& cam = SpoonerCamera::camera;
 					selectedEntity.handle.SetPosition(cam.GetOffsetInWorldCoords(0, 5.0f + selectedEntity.handle.Dim2().y, 0));
 				}
 				else
@@ -1586,7 +1572,9 @@ namespace sub
 			}
 
 			bool bPlaceOnGround = false;
-			AddOption("Place On Ground", bPlaceOnGround); if (bPlaceOnGround)
+			AddOption("Place On Ground", bPlaceOnGround);
+			AddOptionDescription("Snaps the entity down onto the ground.");
+			if (bPlaceOnGround)
 			{
 				selectedEntity.handle.PlaceOnGround();
 			}
@@ -1600,7 +1588,9 @@ namespace sub
 				AddOption("TriggerFX", null, SetSelectedEntityAsActivePed, SUB::PTFXSUB);
 
 			bool bGoToTaskSeqMenu = false;
-			AddTexter("Task Sequence", selectedEntity.taskSequence.IsActive() ? 1 : 0, std::vector<std::string>{"Inactive", "Active"}, bGoToTaskSeqMenu); if (bGoToTaskSeqMenu)
+			AddTexter("Task Sequence", selectedEntity.taskSequence.IsActive() ? 1 : 0, std::vector<std::string>{"Inactive", "Active"}, bGoToTaskSeqMenu);
+			AddOptionDescription("Press to edit this entity's task sequence.");
+			if (bGoToTaskSeqMenu)
 			{
 				Menu::pendingSubmenu = SUB::SPOONER_TASKSEQUENCE_TASKLIST;
 			}
@@ -1668,6 +1658,7 @@ namespace sub
 				SpoonerMode::UpdateEntityEditingState(nextOffset, nextRot);
 
 				SpoonerMode::editingState.transformMode = static_cast<SpoonerMode::eTransformMode>(AddTexterCycler("Editing", (int)SpoonerMode::editingState.transformMode > 1 ? 0 : (int)SpoonerMode::editingState.transformMode, {"Position", "Rotation"}));
+				AddOptionDescription("Whether the values below change position or rotation.");
 
 				// Bone text scroller if type is PED or VEHICLE
 				if (parentEntityType == EntityType::PED)
@@ -1747,7 +1738,8 @@ namespace sub
 
 				auto& precision = SpoonerMode::editingState.transformMode == SpoonerMode::eTransformMode::Position ? SpoonerMode::editingState.precisionPos : SpoonerMode::editingState.precisionRot;
 
-				AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0);
+				AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
+				AddOptionDescription("Step size used by the values below. Each press multiplies or divides it by 10 (0.0001 to 10).");
 
 				switch (SpoonerMode::editingState.transformMode)
 				{
@@ -1783,9 +1775,13 @@ namespace sub
 				AddBreak("---Options---");
 				AddOption("Snapping", null, nullFunc, SUB::SPOONER_MANUALEDITING_SNAP);
 
-				SpoonerMode::editingState.mode = static_cast<SpoonerMode::eEditMode>(AddTexterCycler("Entity manipulation mode", (int)SpoonerMode::editingState.mode, {"None", "Keyboard", "Gizmo"}));
+				SpoonerMode::editingState.SetMode(static_cast<SpoonerMode::eEditMode>(AddTexterCycler("Entity manipulation mode", (int)SpoonerMode::editingState.mode, {"None", "Keyboard", "Gizmo"})));
+				AddOptionDescription("None: no editing. Keyboard: move the entity with the keyboard, camera movement is locked. Gizmo: drag the on-screen handles, press V to lock the camera and use the cursor.");
 				if (SpoonerMode::editingState.mode != SpoonerMode::eEditMode::Disabled && SpoonerMode::editingState.transformMode != SpoonerMode::eTransformMode::Scale)
+				{
 					AddToggle("Local Space", SpoonerMode::editingState.localSpace);
+					AddOptionDescription("Move and rotate along the entity's own axes instead of the world axes.");
+				}
 			}
 
 		}
@@ -1802,7 +1798,9 @@ namespace sub
 			AddTitle("Attach To Something");
 
 			bool bToggleKeepPosWhenAttaching = false;
-			AddTickol("Keep World Position When Attaching", Settings::bKeepPositionWhenAttaching, bToggleKeepPosWhenAttaching, bToggleKeepPosWhenAttaching, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleKeepPosWhenAttaching)
+			AddTickol("Keep World Position When Attaching", Settings::bKeepPositionWhenAttaching, bToggleKeepPosWhenAttaching, bToggleKeepPosWhenAttaching, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("On: stays where it is when attached. Off: snaps to the attach point.");
+			if (bToggleKeepPosWhenAttaching)
 				Settings::bKeepPositionWhenAttaching = !Settings::bKeepPositionWhenAttaching;
 
 			AddBreak("---Available Entities---");
@@ -1961,9 +1959,13 @@ namespace sub
 			AddTitle("Snapping Options");
 
 			AddToggle("Grid Snap", Settings::bGridSnapEnabled);
+			AddOptionDescription("Snaps position and rotation to the grid while moving entities.");
 			AddNumberStepper("Grid Size (m)", Settings::gridSnapSize, 2, 0.25, 0.01);
+			AddOptionDescription("Size of each grid step.");
 			AddNumberStepper("Rotation Snap (deg)", Settings::rotationSnapDegrees, 1, 5.0, 0.0);
+			AddOptionDescription("Rotation step size. 0 turns off rotation snapping.");
 			AddToggle("Snap to Ground", Settings::bSnapToGround);
+			AddOptionDescription("Keeps moved entities on the ground.");
 			AddToggle("Draw Grid On Screen", Settings::bDrawGrid);
 		}
 		void Sub_ManualEditing()
@@ -1992,6 +1994,7 @@ namespace sub
 			SpoonerMode::UpdateEntityEditingState(nextPos, nextRot);
 			// Mode selector
 			SpoonerMode::editingState.transformMode = static_cast<SpoonerMode::eTransformMode>(AddTexterCycler("Editing", static_cast<int>(SpoonerMode::editingState.transformMode), {"Position", "Rotation", "Scale"}));
+			AddOptionDescription("Whether the values below change position, rotation or scale.");
 
 			AddBreak("---Values---");
 
@@ -1999,7 +2002,8 @@ namespace sub
 			                 : SpoonerMode::editingState.transformMode == SpoonerMode::eTransformMode::Rotation ? SpoonerMode::editingState.precisionRot
 			                 : SpoonerMode::editingState.precisionScale;
 
-			AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0);
+			AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
+			AddOptionDescription("Step size used by the values below. Each press multiplies or divides it by 10 (0.0001 to 10).");
 
 			switch (SpoonerMode::editingState.transformMode)
 			{
@@ -2036,11 +2040,15 @@ namespace sub
 			AddOption("Snapping", null, nullFunc, SUB::SPOONER_MANUALEDITING_SNAP);
 			
 
-			SpoonerMode::editingState.mode = static_cast<SpoonerMode::eEditMode>(AddTexterCycler("Entity manipulation mode", (int)SpoonerMode::editingState.mode, { "None", "Keyboard", "Gizmo" }));
+			SpoonerMode::editingState.SetMode(static_cast<SpoonerMode::eEditMode>(AddTexterCycler("Entity manipulation mode", (int)SpoonerMode::editingState.mode, { "None", "Keyboard", "Gizmo" })));
+			AddOptionDescription("None: no editing. Keyboard: move the entity with the keyboard, camera movement is locked. Gizmo: drag the on-screen handles, press V to lock the camera and use the cursor.");
 
 			// don't show if not in editing mode or if in scale mode (because scaling is always local-space)
 			if (SpoonerMode::editingState.mode != SpoonerMode::eEditMode::Disabled && SpoonerMode::editingState.transformMode != SpoonerMode::eTransformMode::Scale)
+			{
 				AddToggle("Local Space", SpoonerMode::editingState.localSpace);
+				AddOptionDescription("Move and rotate along the entity's own axes instead of the world axes.");
+			}
 
 
 			// Apply position changes
@@ -2118,7 +2126,10 @@ namespace sub
 				if (hasPos) modeNames.push_back("Position");
 				if (hasRot) modeNames.push_back("Rotation");
 				if (modeNames.size() > 1)
+				{
 					editMode = static_cast<SpoonerMode::eTransformMode>(AddTexterCycler("Editing", static_cast<int>(editMode), modeNames));
+					AddOptionDescription("Whether the values below change position or rotation.");
+				}
 			}
 
 			AddBreak("---Values---");
@@ -2127,7 +2138,8 @@ namespace sub
 				? SpoonerMode::editingState.precisionPos
 				: SpoonerMode::editingState.precisionRot;
 
-			AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0);
+			AddNumberMultiplier("Scroll Sensitivity", precision, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
+			AddOptionDescription("Step size used by the values below. Each press multiplies or divides it by 10 (0.0001 to 10).");
 
 			if (editMode == SpoonerMode::eTransformMode::Position)
 			{
@@ -2153,6 +2165,13 @@ namespace sub
 		}
 		void Sub_MultiSelect()
 		{
+			// show in-game indicator of which entities are selected
+			for (const auto& entity : MultiSelect::g_selectedEntities)
+			{
+				if (entity.handle.Exists())
+					EntityManagement::ShowArrowAboveEntity(entity.handle, RGBA(127, 0, 255, 200));
+			}
+
 			if (!g_multiSelectEditActive)
 			{
 				g_multiSelectPrevSelected = selectedEntity;
@@ -2229,12 +2248,16 @@ namespace sub
 					}
 
 					bool bInMultiSelect = MultiSelect::IsSelected(e.handle);
+					// selected entities are being attached to the pivot, so only unselected ones can be genuinely attached
+					bool bBlocked = !bInMultiSelect && e.handle.IsAttached();
 					bool bEntityPressed = false;
-					AddTickol(e.hashName, bInMultiSelect, bEntityPressed, bEntityPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					AddTickol(e.hashName + (bBlocked ? " ~r~(Attached)" : ""), bInMultiSelect, bEntityPressed, bEntityPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					if (bBlocked)
+						AddOptionDescription("Attached entities can't be multi-selected. Detach it first.");
 					if (Menu::IsLastDrawnOptionSelected())
 						EntityManagement::ShowArrowAboveEntity(e.handle, RGBA(127, 0, 255, 200));
 
-					if (bEntityPressed)
+					if (bEntityPressed && !bBlocked)
 					{
 						MultiSelect::DestroyPivot();
 						if (bInMultiSelect)
@@ -2265,8 +2288,10 @@ namespace sub
 				AddBreak("---Bulk Edit---");
 
 				AddOption("Delete", bDelete);
-				AddNumberMultiplier("Scroll Sensitivity (Position)", precisionPos, 4, 10.0, 0.0001, 10.0);
-				AddNumberMultiplier("Scroll Sensitivity (Rotation)", precisionRot, 4, 10.0, 0.0001, 10.0);
+				AddNumberMultiplier("Scroll Sensitivity (Position)", precisionPos, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
+				AddOptionDescription("Step size used by Pos X/Y/Z. Each press multiplies or divides it by 10 (0.0001 to 10).");
+				AddNumberMultiplier("Scroll Sensitivity (Rotation)", precisionRot, 4, 10.0, 0.0001, 10.0, !Settings::bInvertScrollSensitivity);
+				AddOptionDescription("Step size used by Pitch/Roll/Yaw. Each press multiplies or divides it by 10 (0.0001 to 10).");
 
 				AddNumberStepper("Pos X", pivotPos.x, 4, (double)precisionPos);
 				AddNumberStepper("Pos Y", pivotPos.y, 4, (double)precisionPos);
@@ -2275,6 +2300,7 @@ namespace sub
 				AddNumberStepper("Roll", pivotRot.y, 4, (double)precisionRot);
 				AddNumberStepper("Yaw", pivotRot.z, 4, (double)precisionRot);
 				AddNumberStepper("Opacity (Local)", opacityDelta, 0, 1.0);
+				AddOptionDescription("Changes the opacity of all selected entities by this amount.");
 
 				if (bDelete)
 				{
@@ -2353,6 +2379,7 @@ namespace sub
 
 				bool bCopyPressed = false, bCopy_plus = false, bCopy_minus = false;
 				AddTexter("Copy", _copyEntTexterValue, std::vector<std::string>{ "Selected Only", "Copy With Attachments" }, bCopyPressed, bCopy_plus, bCopy_minus);
+				AddOptionDescription("Creates a duplicate. Left/right chooses whether attachments are copied too.");
 				if (bCopy_plus) { if (_copyEntTexterValue < 1U) _copyEntTexterValue++; }
 				if (bCopy_minus) { if (_copyEntTexterValue > 0) _copyEntTexterValue--; }
 				if (bCopyPressed)
@@ -2405,9 +2432,13 @@ namespace sub
 
 			if (!isPedMyPed)
 				MenuOptions::AddOption_RelationshipTextScroller();
-			AddToggle("Is Still (Block Fleeing)", selectedEntity.isStill, pedops_isStill_toggle, pedops_isStill_toggle); if (pedops_isStill_toggle) { thisPed.SetBlockPermanentEvent(selectedEntity.isStill); }
+			AddToggle("Is Still (Block Fleeing)", selectedEntity.isStill, pedops_isStill_toggle, pedops_isStill_toggle);
+			AddOptionDescription("The ped doesn't react or run away.");
+			if (pedops_isStill_toggle) { thisPed.SetBlockPermanentEvent(selectedEntity.isStill); }
 			AddLocal("Can Ragdoll", thisPed.GetCanRagdoll(), pedops_canRagdoll_toggle, pedops_canRagdoll_toggle); if (pedops_canRagdoll_toggle) { bool ns = !thisPed.GetCanRagdoll(); thisPed.SetCanRagdoll(ns); SET_PED_RAGDOLL_ON_COLLISION(thisPed.Handle(), ns); }
-			AddLocal("Is Short Heighted (Small)", bIsPedShortHeighted, pedops_shortHeighted_toggle, pedops_shortHeighted_toggle); if (pedops_shortHeighted_toggle) { SET_PED_CONFIG_FLAG(selectedEntity.handle.Handle(), ePedConfigFlags::_Shrink, bIsPedShortHeighted ? 0 : 1); }
+			AddLocal("Is Short Heighted (Small)", bIsPedShortHeighted, pedops_shortHeighted_toggle, pedops_shortHeighted_toggle);
+			AddOptionDescription("Shrinks the ped.");
+			if (pedops_shortHeighted_toggle) { SET_PED_CONFIG_FLAG(selectedEntity.handle.Handle(), ePedConfigFlags::_Shrink, bIsPedShortHeighted ? 0 : 1); }
 
 			int thisArmour = thisPed.GetArmour();
 			bool bArmour_plus = false, bArmour_minus = false, bArmour_input = false;
@@ -2431,12 +2462,6 @@ namespace sub
 			}
 
 				AddOption("Wardrobe", null, SetSelectedEntityAsActivePed, SUB::COMPONENTS);
-			if (g_cam_componentChanger.Exists())
-			{
-				g_cam_componentChanger.SetActive(false);
-				g_cam_componentChanger.Destroy();
-				World::SetRenderingCamera(0);
-			}
 
 				AddOption("Animations", null, SetSelectedEntityAsActivePed, SUB::ANIMATIONSUB);
 				AddOption("Scenario Actions", null, SetSelectedEntityAsActivePed, SUB::AnimationTaskScenarios);
@@ -2450,6 +2475,7 @@ namespace sub
 				//AddOption("Give Vehicle", null, SetSelectedEntityAsActivePed, SUB::SPAWNVEHICLE);
 				AddOption("Attach Objects (Doesn't Save)", null, SetSelectedEntityAsActivePed, SUB::ATTACHFUNNYOBJECTSUB);
 			AddLocal("Companion (7 Max) (Doesn't Save) (Obsolete)", myPedGroup.Contains(thisPed), pedops_friend, pedops_friend);
+			AddOptionDescription("Adds the ped to your group. Max 7, not saved.");
 			AddLocal("Burn Ped", thisPed.IsOnFire(), pedops_burn, pedops_burn);
 			if (!isPedMyPed)
 				AddLocal("Piggyback Ride  (Doesn't Save)", (GET_ENTITY_ATTACHED_TO(myPed.Handle() == thisPed.Handle()) && IS_ENTITY_PLAYING_ANIM(myPed.Handle(), "mini@prostitutes@sexnorm_veh", "bj_loop_male", 3)), pedops_piggyback, pedops_piggyback);
@@ -2457,7 +2483,11 @@ namespace sub
 				AddLocal("Shoulder Ride  (Doesn't Save)", (GET_ENTITY_ATTACHED_TO(myPed.Handle() == thisPed.Handle()) && IS_ENTITY_PLAYING_ANIM(myPed.Handle(), "amb@prop_human_seat_chair@male@elbows_on_knees@idle_a", "idle_a", 3)), pedops_shoulderRide, pedops_shoulderRide);
 			//AddOption("Warp Into Nearest Car", pedops_warp_nearest);
 			AddOption("Travel To Waypoint", pedops_wp_walk);
-			if (!isPedMyPed) AddOption("Become This Ped (Soul-Steal) (SP)", butAmIOnline ? null : pedops_become_ped);
+			if (!isPedMyPed)
+			{
+				AddOption("Become This Ped (Soul-Steal) (SP)", butAmIOnline ? null : pedops_become_ped);
+				AddOptionDescription("Take control of this ped (story mode only).");
+			}
 
 
 			if (pedops_friend)
@@ -2666,7 +2696,7 @@ namespace sub
 			bool bAddNewMarkerPressed = false;
 			AddTickol("ADD NEW MARKER", true, bAddNewMarkerPressed, bAddNewMarkerPressed, TICKOL::SMALLNEWSTAR); if (bAddNewMarkerPressed)
 			{
-				auto& spoocam = SpoonerMode::spoonerModeCamera;
+				auto& spoocam = SpoonerCamera::camera;
 				if (!spoocam.IsActive())
 				{
 					GTAentity myPed = PLAYER_PED_ID();
@@ -2702,6 +2732,7 @@ namespace sub
 
 			bool bInRange_plus = false, bInRange_minus = false, bInRange_execute = false;
 			AddNumber("Delete Markers In Range", fMarkerRemovalRadius, 0, bInRange_execute, bInRange_plus, bInRange_minus);
+			AddOptionDescription("Deletes markers within this radius. Left/right changes the radius; press to delete.");
 			if (Menu::IsLastDrawnOptionSelected())
 				EntityManagement::DrawRadiusDisplayingMarker(myPos, fMarkerRemovalRadius);
 			if (bInRange_plus) { if (fMarkerRemovalRadius < FLT_MAX) fMarkerRemovalRadius += 1.0f; }
@@ -2759,7 +2790,7 @@ namespace sub
 				World::DrawMarker(MarkerType::DebugSphere, helpingSpherePos, Vector3(), Vector3(), Vector3(0.1f, 0.1f, 0.1f), RGBA(SelectedMarker->m_colour, 200));
 			}
 
-			auto& spoocam = SpoonerMode::spoonerModeCamera;
+			auto& spoocam = SpoonerCamera::camera;
 
 			bool bEditNamePressed = false;
 			AddTexter("Name", 0, std::vector<std::string>{SelectedMarker->m_name}, bEditNamePressed); if (bEditNamePressed)
@@ -2780,13 +2811,17 @@ namespace sub
 			if (bScale_minus) { if (SelectedMarker->m_scale > 0.0f) SelectedMarker->m_scale -= 0.05f; }
 
 			bool bShowNameToggle = false;
-			AddTickol("Show Name", SelectedMarker->m_showName, bShowNameToggle, bShowNameToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bShowNameToggle) SelectedMarker->m_showName = !SelectedMarker->m_showName;
+			AddTickol("Show Name", SelectedMarker->m_showName, bShowNameToggle, bShowNameToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("Shows the marker's name above it.");
+			if (bShowNameToggle) SelectedMarker->m_showName = !SelectedMarker->m_showName;
 
 			bool bRotateContinuouslyToggle = false;
 			AddTickol("Rotate Continuously", SelectedMarker->m_rotateContinuously, bRotateContinuouslyToggle, bRotateContinuouslyToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bRotateContinuouslyToggle) SelectedMarker->m_rotateContinuously = !SelectedMarker->m_rotateContinuously;
 
 			bool bAllowVehiclesToggle = false;
-			AddTickol("Allow Vehicle Teleportation", SelectedMarker->m_allowVehicles, bAllowVehiclesToggle, bAllowVehiclesToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bAllowVehiclesToggle) SelectedMarker->m_allowVehicles = !SelectedMarker->m_allowVehicles;
+			AddTickol("Allow Vehicle Teleportation", SelectedMarker->m_allowVehicles, bAllowVehiclesToggle, bAllowVehiclesToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("Your vehicle teleports with you through this marker.");
+			if (bAllowVehiclesToggle) SelectedMarker->m_allowVehicles = !SelectedMarker->m_allowVehicles;
 
 			AddsettingscolOption("Colour", SelectedMarker->m_colour);
 
@@ -2807,7 +2842,9 @@ namespace sub
 				else
 				{
 					bool bSetPosToHitCoords = false;
-					AddOption("Set To Camera Target", bSetPosToHitCoords); if (bSetPosToHitCoords)
+					AddOption("Set To Camera Target", bSetPosToHitCoords);
+					AddOptionDescription("Uses the point your camera is aiming at.");
+					if (bSetPosToHitCoords)
 					{
 						Vector3 hitCoords = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 						SelectedMarker->m_position = hitCoords;
@@ -2855,7 +2892,9 @@ namespace sub
 				AddOption("~italic~" + finalDest.ToString(), null);
 
 				bool bSetPosToNull = false;
-				AddTickol("No Destination", SelectedMarker->m_destinationVal.m_position.IsZero(), bSetPosToNull, bSetPosToNull); if (bSetPosToNull)
+				AddTickol("No Destination", SelectedMarker->m_destinationVal.m_position.IsZero(), bSetPosToNull, bSetPosToNull);
+				AddOptionDescription("The marker is decorative and doesn't teleport.");
+				if (bSetPosToNull)
 				{
 					SelectedMarker->m_destinationVal.m_position.clear();
 					SelectedMarker->m_destinationVal.m_attachmentArgs.attachedTo = 0;
@@ -2876,7 +2915,9 @@ namespace sub
 				else
 				{
 					bool bSetPosToHitCoords = false;
-					AddOption("Set To Camera Target", bSetPosToHitCoords); if (bSetPosToHitCoords)
+					AddOption("Set To Camera Target", bSetPosToHitCoords);
+					AddOptionDescription("Uses the point your camera is aiming at.");
+					if (bSetPosToHitCoords)
 					{
 						Vector3 hitCoords = spoocam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 						SelectedMarker->m_destinationVal.m_position = hitCoords;
@@ -2901,6 +2942,7 @@ namespace sub
 				if (Databases::MarkerDb.size() > 1)
 				{
 					AddOption("Link With Marker" + (SelectedMarker->m_destinationPtr == nullptr ? "" : " ('" + SelectedMarker->m_destinationPtr->m_name + "')"), null, nullFunc, SUB::SPOONER_MANAGEMARKERS_INMARKER_DEST2MARKER);
+					AddOptionDescription("Teleports to another marker's position.");
 				}
 
 				if (SelectedMarker->m_destinationPtr == nullptr)
@@ -2925,6 +2967,7 @@ namespace sub
 
 				bool bDestHeading_plus = false, bDestHeading_minus = false;
 				AddNumber("Post-Teleport Direction (To Face)", SelectedMarker->m_destinationHeading, 1, null, bDestHeading_plus, bDestHeading_minus);
+				AddOptionDescription("Heading you face after teleporting.");
 				if (bDestHeading_plus) { SelectedMarker->m_destinationHeading += 1.0f; }
 				if (bDestHeading_minus) { SelectedMarker->m_destinationHeading -= 1.0f; }
 			}
@@ -3013,7 +3056,9 @@ namespace sub
 			AddTitle("Attach To Something");
 
 			bool bToggleKeepPosWhenAttaching = false;
-			AddTickol("Keep World Position When Attaching", Settings::bKeepPositionWhenAttaching, bToggleKeepPosWhenAttaching, bToggleKeepPosWhenAttaching, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bToggleKeepPosWhenAttaching)
+			AddTickol("Keep World Position When Attaching", Settings::bKeepPositionWhenAttaching, bToggleKeepPosWhenAttaching, bToggleKeepPosWhenAttaching, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("On: stays where it is when attached. Off: snaps to the attach point.");
+			if (bToggleKeepPosWhenAttaching)
 				Settings::bKeepPositionWhenAttaching = !Settings::bKeepPositionWhenAttaching;
 
 			bool bDetachPressed = false;
@@ -3114,7 +3159,7 @@ namespace sub
 			bool bAddNewLightPressed = false;
 			AddTickol("ADD NEW LIGHT", true, bAddNewLightPressed, bAddNewLightPressed, TICKOL::SMALLNEWSTAR); if (bAddNewLightPressed)
 			{
-				auto& spoonerCam = SpoonerMode::spoonerModeCamera;
+				auto& spoonerCam = SpoonerCamera::camera;
 				if (!spoonerCam.IsActive())
 				{
 					GTAentity myPed = PLAYER_PED_ID();
@@ -3143,7 +3188,7 @@ namespace sub
 					AddOption(presetLabel, bPresetPressed); if (bPresetPressed)
 					{
 						SpoonerLight copy = p;
-						auto& spoonerCam = SpoonerMode::spoonerModeCamera;
+						auto& spoonerCam = SpoonerCamera::camera;
 						if (spoonerCam.IsActive())
 						{
 							copy.m_position = spoonerCam.GetPosition();
@@ -3183,6 +3228,7 @@ namespace sub
 
 			bool bInRange_plus = false, bInRange_minus = false, bInRange_execute = false;
 			AddNumber("Delete Lights In Range", fLightRemovalRadius, 0, bInRange_execute, bInRange_plus, bInRange_minus);
+			AddOptionDescription("Deletes lights within this radius. Left/right changes the radius; press to delete.");
 			if (Menu::IsLastDrawnOptionSelected())
 				EntityManagement::DrawRadiusDisplayingMarker(myPos, fLightRemovalRadius);
 			if (bInRange_plus) { if (fLightRemovalRadius < FLT_MAX) fLightRemovalRadius += 1.0f; }
@@ -3209,7 +3255,7 @@ namespace sub
 
 			LightManagement::DrawPreviewMarkers();
 
-			auto& spoonerCam = SpoonerMode::spoonerModeCamera;
+			auto& spoonerCam = SpoonerCamera::camera;
 
 			AddTitle(SelectedLight->m_name);
 
@@ -3235,6 +3281,7 @@ namespace sub
 				AddBreak("---Omni Properties---");
 
 				AddNumberStepper("Range", SelectedLight->m_range, 1, 0.5, 0.0, 1000.0);
+				AddOptionDescription("How far the light reaches.");
 				AddNumberStepper("Intensity", SelectedLight->m_intensity, 2, 0.1, 0.0, 100.0);
 			}
 			else
@@ -3242,13 +3289,19 @@ namespace sub
 				AddBreak("---Spot Properties---");
 
 				AddNumberStepper("Distance", SelectedLight->m_spotDistance, 1, 0.5, 0.0, 1000.0);
+				AddOptionDescription("How far the spotlight shines.");
 				AddNumberStepper("Brightness", SelectedLight->m_spotBrightness, 2, 0.1, 0.0, 100.0);
 				AddNumberStepper("Roundness", SelectedLight->m_spotRoundness, 2, 0.1, 0.0, 10.0);
+				AddOptionDescription("Softness of the spotlight cone's edge.");
 				AddNumberStepper("Radius", SelectedLight->m_spotRadius, 2, 0.1, 0.0, 100.0);
+				AddOptionDescription("Width of the spotlight cone.");
 				AddNumberStepper("Falloff", SelectedLight->m_spotFalloff, 2, 0.1, 0.0, 100.0);
+				AddOptionDescription("How quickly brightness fades across the cone.");
 
 				bool bShadowToggle = false;
-				AddTickol("Light Draws Shadows", SelectedLight->m_useShadow, bShadowToggle, bShadowToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bShadowToggle) SelectedLight->m_useShadow = !SelectedLight->m_useShadow;
+				AddTickol("Light Draws Shadows", SelectedLight->m_useShadow, bShadowToggle, bShadowToggle, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Casts shadows. Affects performance.");
+				if (bShadowToggle) SelectedLight->m_useShadow = !SelectedLight->m_useShadow;
 			}
 
 			AddBreak("---Position---");
@@ -3266,7 +3319,9 @@ namespace sub
 				else
 				{
 					bool bSetPosToHitCoords = false;
-					AddOption("Set To Camera Target", bSetPosToHitCoords); if (bSetPosToHitCoords)
+					AddOption("Set To Camera Target", bSetPosToHitCoords);
+					AddOptionDescription("Uses the point your camera is aiming at.");
+					if (bSetPosToHitCoords)
 					{
 						Vector3 hitCoords = spoonerCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 						SelectedLight->m_position = hitCoords;
@@ -3275,7 +3330,9 @@ namespace sub
 				if (spoonerCam.IsActive())
 				{
 					bool bSetPosToCam = false;
-					AddOption("Set To Camera Position", bSetPosToCam); if (bSetPosToCam)
+					AddOption("Set To Camera Position", bSetPosToCam);
+					AddOptionDescription("Uses the camera's own position.");
+					if (bSetPosToCam)
 					{
 						SelectedLight->m_position = spoonerCam.GetPosition();
 					}
@@ -3309,7 +3366,9 @@ namespace sub
 					if (spoonerCam.IsActive())
 					{
 						bool bPointAtCursor = false;
-						AddOption("Point At Cursor", bPointAtCursor); if (bPointAtCursor)
+						AddOption("Point At Cursor", bPointAtCursor);
+						AddOptionDescription("Points the spotlight at what's in the centre of the Spooner camera view.");
+						if (bPointAtCursor)
 						{
 							Vector3 target = spoonerCam.RaycastForCoord(Vector2(0.0f, 0.0f), 0, 160.0f, 3.0f);
 							Vector3 dir = Vector3::Normalize(target - SelectedLight->m_position);
@@ -3380,7 +3439,7 @@ namespace sub
 					AddOption(presetLabel, bPresetPressed); if (bPresetPressed)
 					{
 						SpoonerLight copy = p;
-						auto& spoonerCam = SpoonerMode::spoonerModeCamera;
+						auto& spoonerCam = SpoonerCamera::camera;
 						if (spoonerCam.IsActive())
 						{
 							copy.m_position = spoonerCam.GetPosition();
@@ -3468,6 +3527,7 @@ namespace sub
 
 			bool bAttachBlipToEntityPressed = false;
 			AddTickol("Create Entity Blip", true, bAttachBlipToEntityPressed, bAttachBlipToEntityPressed, TICKOL::SMALLNEWSTAR);
+			AddOptionDescription("A blip that follows an entity.");
 			if (bAttachBlipToEntityPressed)
 			{
 				Menu::pendingSubmenu = SUB::SPOONER_BLIPS_ENTITY_SELECT;
@@ -3475,9 +3535,10 @@ namespace sub
 
 			bool bAddNewCoordBlipPressed = false;
 			AddTickol("Create Coord Blip", true, bAddNewCoordBlipPressed, bAddNewCoordBlipPressed, TICKOL::SMALLNEWSTAR);
+			AddOptionDescription("A blip at a fixed position.");
 			if (bAddNewCoordBlipPressed)
 			{
-				auto& spoocam = SpoonerMode::spoonerModeCamera;
+				auto& spoocam = SpoonerCamera::camera;
 
 				if (!spoocam.IsActive())
 				{
@@ -3502,9 +3563,10 @@ namespace sub
 
 			bool bAddNewRadialBlipPressed = false;
 			AddTickol("Create Radial Blip", true, bAddNewRadialBlipPressed, bAddNewRadialBlipPressed, TICKOL::SMALLNEWSTAR);
+			AddOptionDescription("A circle or rectangle marking an area on the map.");
 			if (bAddNewRadialBlipPressed)
 			{
-				auto& spoocam = SpoonerMode::spoonerModeCamera;
+				auto& spoocam = SpoonerCamera::camera;
 
 				if (!spoocam.IsActive())
 				{
@@ -3585,7 +3647,7 @@ namespace sub
 				AddOption("Add Coord Blip", bAddCoord);
 				if (bAddCoord)
 				{
-					auto& spoocam = SpoonerMode::spoonerModeCamera;
+					auto& spoocam = SpoonerCamera::camera;
 					if (!spoocam.IsActive())
 					{
 						GTAentity myPed = PLAYER_PED_ID();
@@ -3647,7 +3709,7 @@ namespace sub
 				AddOption("Add Radial Blip", bAddRadial);
 				if (bAddRadial)
 				{
-					auto& spoocam = SpoonerMode::spoonerModeCamera;
+					auto& spoocam = SpoonerCamera::camera;
 					if (!spoocam.IsActive())
 					{
 						GTAentity myPed = PLAYER_PED_ID();
@@ -3850,6 +3912,7 @@ namespace sub
 
 			bool bToggleRotation = false;
 			AddTickol("Sync Rotation With Entity", blip->bSyncRotation, bToggleRotation, bToggleRotation, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("The blip rotates with the entity's heading.");
 			if (bToggleRotation)
 			{
 				blip->bSyncRotation = !blip->bSyncRotation;
@@ -3900,6 +3963,7 @@ namespace sub
 
 			bool bToggleCone = false;
 			AddTickol("Show Cone (Only for peds)", blip->bShowCone, bToggleCone, bToggleCone, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("Shows the ped's field-of-view cone on the minimap.");
 			if (bToggleCone)
 			{
 				blip->bShowCone = !blip->bShowCone;
@@ -3908,6 +3972,7 @@ namespace sub
 
 			bool bToggleShortRange = false;
 			AddTickol("Short Range", blip->bShortRange, bToggleShortRange, bToggleShortRange, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("The blip only shows on the minimap when nearby.");
 			if (bToggleShortRange)
 			{
 				blip->bShortRange = !blip->bShortRange;
@@ -3916,6 +3981,7 @@ namespace sub
 
 			bool bToggleSelectable = false;
 			AddTickol("Selectable On Map", blip->bSelectableOnMap, bToggleSelectable, bToggleSelectable, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("The blip can be selected on the pause map.");
 			if (bToggleSelectable)
 			{
 				blip->bSelectableOnMap = !blip->bSelectableOnMap;
@@ -3930,6 +3996,7 @@ namespace sub
 			if (priorityIt == priorityValues.end()) priorityIt = priorityValues.begin();
 
 			AddTexter("Priority", 0, std::vector<std::string>{ std::to_string(blip->Priority) }, null, priority_plus, priority_minus);
+			AddOptionDescription("Which blips draw on top when they overlap.");
 
 			if (priority_plus)
 			{
@@ -4078,6 +4145,7 @@ namespace sub
 
 			bool bToggleShortRange = false;
 			AddTickol("Short Range", blip->bShortRange, bToggleShortRange, bToggleShortRange, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("The blip only shows on the minimap when nearby.");
 			if (bToggleShortRange)
 			{
 				blip->bShortRange = !blip->bShortRange;
@@ -4086,6 +4154,7 @@ namespace sub
 
 			bool bToggleSelectable = false;
 			AddTickol("Selectable On Map", blip->bSelectableOnMap, bToggleSelectable, bToggleSelectable, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("The blip can be selected on the pause map.");
 			if (bToggleSelectable)
 			{
 				blip->bSelectableOnMap = !blip->bSelectableOnMap;
@@ -4100,6 +4169,7 @@ namespace sub
 			if (priorityIt == priorityValues.end()) priorityIt = priorityValues.begin();
 
 			AddTexter("Priority", 0, std::vector<std::string>{ std::to_string(blip->Priority) }, null, priority_plus, priority_minus);
+			AddOptionDescription("Which blips draw on top when they overlap.");
 
 			if (priority_plus)
 			{
@@ -4845,11 +4915,13 @@ namespace sub
 
 			bool sizeRight = false, sizeLeft = false;
 			AddTexter("Size", sizeFilter, sizeOptions, null, sizeRight, sizeLeft);
+			AddOptionDescription("Filters objects by physical size.");
 			if (sizeRight && sizeFilter < (int)(sizeOptions.size() - 1)) sizeFilter++;
 			if (sizeLeft && sizeFilter > 0) sizeFilter--;
 
 			bool lodRight = false, lodLeft = false;
 			AddTexter("LOD/Proxy", lodFilter, lodOptionsList, null, lodRight, lodLeft);
+			AddOptionDescription("Filters out, or shows only, low-detail placeholder models.");
 			if (lodRight && lodFilter < 1) lodFilter++;
 			if (lodLeft && lodFilter > 0) lodFilter--;
 
@@ -5070,7 +5142,7 @@ namespace sub
 
 				auto& props = it->second;
 				std::string catName = cat.empty() ? "UNORDERED" : cat;
-				std::string catLabel = "� ~b~" + catName + "~s~ ~c~(" + std::to_string(props.size()) + ")~s~";
+				std::string catLabel = "— ~b~" + catName + "~s~ ~c~(" + std::to_string(props.size()) + ")~s~";
 
 				if (MenuCategory::AddCategory(catLabel))
 				{

@@ -72,12 +72,6 @@ namespace sub
 		AddOption("Model Changer", null, nullFunc, SUB::MODELCHANGER);
 
 		AddOption("Wardrobe", null, nullFunc, SUB::COMPONENTS);
-		if (g_cam_componentChanger.Exists())
-		{
-			g_cam_componentChanger.SetActive(false);
-			g_cam_componentChanger.Destroy();
-			World::SetRenderingCamera(0);
-		}
 		
 		AddOption("Animations", null, nullFunc, SUB::ANIMATIONSUB);
 		AddOption("Scenario Actions", null, nullFunc, SUB::AnimationTaskScenarios);
@@ -86,11 +80,14 @@ namespace sub
 		AddOption("Speech Player", null, nullFunc, SUB::SPEECHPLAYER);
 		AddOption("Voice Changer", null, nullFunc, SUB::VOICECHANGER);
 		AddOption("Ped Flags", null, nullFunc, SUB::PEDFLAGMANAGER_NAMEDLIST);
+		AddOptionDescription("Turn individual game ped config flags on or off.");
 		AddOption("TriggerFX", null, nullFunc, SUB::PTFXSUB);
 		AddOption("Breathe Stuff", null, nullFunc, SUB::BREATHESTUFF);
+		AddOptionDescription("Breathe particle effects out of your mouth. Hold J (LS) to use.");
 		AddOption("Ghost Rider Mode", null, nullFunc, SUB::GHOSTRIDERMODE);
 
 		AddOption("Opacity (Local)", goToAlphaLevel, nullFunc, SUB::ENTITYALPHALEVEL);
+		AddOptionDescription("Your transparency. Only visible to you.");
 		if (goToAlphaLevel)
 		{
 			Spooner::Submenus::SetPlayerAsEntityAlphaTarget();
@@ -99,37 +96,57 @@ namespace sub
 		AddOption("Cloning Options", null, nullFunc, SUB::CLONECOMPANIONSUB);
 
 		AddOption("Replenish Player", replenishPlayer);
+		AddOptionDescription("Restores full health and armour.");
 		AddOption("Max All Stats (SP)", maxAllStats);
+		AddOptionDescription("Maxes all skill stats for the current story character.");
 		AddToggle("Refill Health When In Cover", selfRefillHealthInCover);
+		AddOptionDescription("Slowly regains health while in cover and not aiming.");
 		AddToggle("Invincibility", playerInvincibility, null, invincibilityOff);
 		AddLocal("Invisibility", !myPed.IsVisible(), invisibilityOff, invisibilityOff);
 		AddToggle("No Ragdoll", playerNoRagdoll, null, noRagdollOff);
+		AddOptionDescription("You won't fall over from impacts.");
 		AddToggle("Seatbelt", playerSeatbelt, null, seatbeltOff);
+		AddOptionDescription("Stops you flying out of vehicles in crashes.");
 		AddToggle("Unlimited Special Ability (SP)", playerUnlimitedAbility);
 		AddToggle("Auto-Clean", playerAutoClean);
+		AddOptionDescription("Continuously removes blood and visible damage.");
 		AddToggle("Super Run", superRun);
+		AddOptionDescription("Hold sprint to run much faster.");
 		AddToggle("Super Jump", superJump);
 		AddToggle("Walk underwater", playerWalkUnderwater);
+		AddOptionDescription("Walk along the bottom instead of swimming.");
 		AddTexter("Forcefield", forceField, forceFieldNames, null, forceFieldPlus, forceFieldMinus);
+		AddOptionDescription("Push Out shoves nearby entities away; Destroy damages them.");
 		AddLocal("Smash Ability", SmashAbility::g_smashAbility.Enabled(), SmashAbility::ToggleOnOff, SmashAbility::ToggleOnOff);
+		AddOptionDescription("Hold Jump to use a ground-smash ability.");
 		AddToggle("Fly Manual", superman, supermanOn);
+		AddOptionDescription("While skydiving: Numpad 7/1 (RT/LT) up/down, Numpad + (RB) boost, Numpad - (A) brake.");
 		AddToggle("Fly Auto", supermanAuto, supermanAutoOn);
+		AddOptionDescription("While skydiving, you're pushed forward and upward automatically.");
 		AddToggle("Ignored By Everyone", ignoredByEveryone, null, ignoredByEveryoneOff);
+		AddOptionDescription("Peds and police ignore you and stay calm.");
 		AddNumber("Wanted Level", wantedLevel, 0, null, wantedPlus, wantedMinus);
 		if (wantedLevel > 0)
 		{
 			AddLocal("Freeze Wanted Level", selfFreezeWantedLevel, wantedFreezeOn, wantedFreezeOff);
+			AddOptionDescription("Keeps your wanted level at its current value.");
 		}
 		else
 		{
 			AddToggle("Never Wanted", neverWanted, neverWantedOn, neverWantedOff);
 		}
 		AddToggle("Burn Mode", playerBurn, burnModeOn, burnModeOff);
+		AddOptionDescription("Keeps you on fire (use with Invincibility).");
 		AddNumber("Height (Elongation) - Experimental", height, 2, null, heightPlus, heightMinus);
+		AddOptionDescription("Stretches your ped vertically. 1.0 is normal.");
 		AddNumber("Movement Speed (Alt)", swimSpeedMult, 2, null, movementSpeedModifierPlus, movementSpeedModifierMinus);
+		AddOptionDescription("Multiplies run and swim speed.");
 		AddNumber("Sweat Level", selfSweatMult, 2, null, sweatPlus, sweatMinus);
+		AddOptionDescription("How sweaty your ped looks. High values also make clothes look wet.");
 		AddNumber("Noise Level", playerNoiseMult, 2, null, noiseValuePlus, noiseValueMinus);
+		AddOptionDescription("How much noise you make for stealth detection. 1.0 is normal.");
 		AddLocal("Collision", myPed.GetIsCollisionEnabled(), collisionOn, collisionOff);
+		AddOptionDescription("Off: you walk through objects and walls.");
 
 
 		if (collisionOn || collisionOff)
@@ -535,6 +552,7 @@ namespace sub
 			AddTitle("Custom");
 			AddNumber("ID", flagID, 0, idInput, idPlus, idMinus);
 			AddLocal("Status", flagStatus, idToggle, idToggle);
+			AddOptionDescription("Sets the ped config flag with this ID on or off.");
 
 			if (idPlus) 
 			{ 
@@ -591,6 +609,7 @@ namespace sub
 
 		bool cloneNeutralPressed = false;
 		AddOption("Clone As Neutral", cloneNeutralPressed); 
+		AddOptionDescription("Clone ignores you.");
 		if (cloneNeutralPressed)
 		{
 			GTAped clone = playerPed.Clone(playerPed.GetHeading(), true, true);
@@ -608,6 +627,7 @@ namespace sub
 
 		bool cloneCompanionPressed = false;
 		AddOption("Clone As Companion (7 Max)", cloneCompanionPressed); 
+		AddOptionDescription("Clone follows and fights for you (max 7).");
 		if (cloneCompanionPressed)
 		{
 			GTAped clone = playerPed.Clone(playerPed.GetHeading(), true, true);
@@ -650,6 +670,7 @@ namespace sub
 
 		bool cloneEnemyPressed = false;
 		AddOption("Clone As Enemy", cloneEnemyPressed); 
+		AddOptionDescription("Clone attacks you.");
 		if (cloneEnemyPressed)
 		{
 			GTAped clone = playerPed.Clone(playerPed.GetHeading(), true, true);

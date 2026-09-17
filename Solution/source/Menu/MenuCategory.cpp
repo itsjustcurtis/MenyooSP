@@ -33,6 +33,7 @@ These can be used to implement custom category navigation if desired. Take a loo
 #include "..\Util\keyboard.h"
 #include "..\Natives\natives2.h"
 
+#include <algorithm>
 #include <vector>
 #include <map>
 
@@ -46,6 +47,8 @@ static int pendingCategoryIndex = -1;
 // Frame tracking for auto-clearing per-frame state
 static DWORD s_lastFrameTick = 0;
 static bool categoryNavigationHintAdded = false;
+// Category count from the previous frame, so the first header of a frame knows whether navigation is available
+static size_t s_lastCategoryCount = 0;
 
 // Persistent expanded state, keyed on "activeSubmenu:label"
 static std::map<std::string, bool> s_expandedState;
@@ -60,6 +63,8 @@ namespace MenuCategory
 {
 	void ResetCategoryState()
 	{
+		if (!categoryHeaderPositions.empty())
+			s_lastCategoryCount = categoryHeaderPositions.size();
 		categoryHeaderPositions.clear();
 		categoryHeaderLabels.clear();
 
@@ -75,6 +80,8 @@ namespace MenuCategory
 		DWORD now = GetTickCount();
 		if (now != s_lastFrameTick)
 		{
+			if (!categoryHeaderPositions.empty())
+				s_lastCategoryCount = categoryHeaderPositions.size();
 			categoryHeaderPositions.clear();
 			categoryHeaderLabels.clear();
 			categoryNavigationHintAdded = false;
@@ -98,6 +105,13 @@ namespace MenuCategory
 			expanded = !expanded;
 		categoryHeaderPositions.push_back(Menu::currentOptionCount);
 		categoryHeaderLabels.push_back(label);
+
+		if ((std::max)(categoryHeaderPositions.size(), s_lastCategoryCount) > 1)
+			AddOptionDescription(Menu::usingControllerInput
+				? "Press to expand or collapse. Press L3 to jump to another category."
+				: "Press to expand or collapse. Press G to jump to another category.");
+		else
+			AddOptionDescription("Press to expand or collapse.");
 
 		if (categoryHeaderPositions.size() > 1)
 		{

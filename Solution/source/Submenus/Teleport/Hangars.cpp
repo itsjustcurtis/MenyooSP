@@ -321,7 +321,9 @@ namespace sub::TeleportLocations_catind
 			}
 
 			bool bCreateHangarPressed = false;
-			AddOption("Build Hangar", bCreateHangarPressed); if (bCreateHangarPressed)
+			AddOption("Build Hangar", bCreateHangarPressed);
+			AddOptionDescription("Loads the hangar with the options above and teleports you inside.");
+			if (bCreateHangarPressed)
 			{
 				DO_SCREEN_FADE_OUT(50);
 				CreateHangar(currentHangarInfo);

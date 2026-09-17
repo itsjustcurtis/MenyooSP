@@ -650,6 +650,7 @@ namespace sub
 		AddOption("Shark Movements", dictSetShark, nullFunc, SUB::ANIMATIONSUB_SHARK);
 		AddOption("All Animations", null, nullFunc, SUB::ANIMATIONSUB_ALLPEDANIMS);
 		AddOption("Custom Input", null, nullFunc, SUB::ANIMATIONSUB_CUSTOM);
+		AddOptionDescription("Play any animation by typing its dictionary and name.");
 		AddOption("Favourites", null, nullFunc, SUB::ANIMATIONSUB_FAVOURITES);
 		AddOption("Settings", null, nullFunc, SUB::ANIMATIONSUB_SETTINGS);
 
@@ -700,12 +701,18 @@ namespace sub
 	{
 		AddTitle("Settings");
 		AddNumberStepper("Blend-In Speed", g_customAnimSettings.speed, 2, 0.1, 0.0);
+		AddOptionDescription("How quickly the ped blends into the animation. Higher is snappier.");
 		AddNumberStepper("Blend-Out Speed", g_customAnimSettings.speedMult, 2, 0.1);
+		AddOptionDescription("How quickly the ped blends out when the animation ends. Usually negative (default -4).");
 		AddNumberStepper("Duration (ms)", g_customAnimSettings.duration, 0, 100.0, -1.0);
+		AddOptionDescription("How long the animation plays. -1 plays it in full, or until stopped if it loops.");
 		AddOption("Flag Options", null, nullFunc, SUB::ANIMATIONSUB_FLAGS);
+		AddOptionDescription("Choose how the animation plays: looping, upper body only, holding the last frame, etc.");
 		AddNumberStepper("Playback Rate", g_customAnimSettings.playbackRate, 2, 0.1, 0.0);
+		AddOptionDescription("Starting point of the animation, from 0 (beginning) to 1 (end).");
 		bool toggleLockPosition = false;
 		AddTickol("Lock Position", g_customAnimSettings.lockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+		AddOptionDescription("Stops the animation from moving the ped's position.");
 		if (toggleLockPosition)
 			g_customAnimSettings.lockPos = !g_customAnimSettings.lockPos;
 	}
@@ -733,6 +740,7 @@ namespace sub
 		presetLabels.push_back("Custom");
 
 		int newPresetIdx = AddTexterCycler("Preset", currentPresetIdx, presetLabels);
+		AddOptionDescription("Common flag combinations. Changing a flag below switches this to \"Custom\".");
 		if (newPresetIdx != currentPresetIdx && newPresetIdx < numPresets)
 			g_customAnimSettings.flag = AnimFlag::kFlagPresets[newPresetIdx].value;
 
@@ -744,6 +752,7 @@ namespace sub
 			bool isSet = (g_customAnimSettings.flag & f.value) != 0;
 			bool pressed = false;
 			AddTickol(f.name, isSet, pressed, pressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription(f.desc);
 			if (pressed)
 				g_customAnimSettings.flag ^= f.value;
 		}
@@ -893,17 +902,26 @@ namespace sub
 
 		AddTitle("Custom Animation");
 		AddOption(sub_animDict, inputDict);
+		AddOptionDescription("Press to enter the animation dictionary.");
 		AddOption(sub_animName, inputName);
+		AddOptionDescription("Press to enter the animation name.");
 		AddOption("Apply", apply);
 		AddOption("Stop", stop);
 		AddTickol("Favourite", bIsAFavourite, addToFavourites, removeFromFavourites, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+		AddOptionDescription("Adds this dictionary and name to Favourites.");
 		AddBreak("---Settings---");
 		AddNumberStepper("Blend-In Speed", g_customAnimSettings.speed, 2, 0.1, 0.0);
+		AddOptionDescription("How quickly the ped blends into the animation. Higher is snappier.");
 		AddNumberStepper("Blend-Out Speed", g_customAnimSettings.speedMult, 2, 0.1);
+		AddOptionDescription("How quickly the ped blends out when the animation ends. Usually negative (default -4).");
 		AddNumberStepper("Duration (ms)", g_customAnimSettings.duration, 0, 100.0, -1.0);
+		AddOptionDescription("How long the animation plays. -1 plays it in full, or until stopped if it loops.");
 		AddOption("Flag Options", null, nullFunc, SUB::ANIMATIONSUB_FLAGS);
+		AddOptionDescription("Choose how the animation plays: looping, upper body only, holding the last frame, etc.");
 		AddNumberStepper("Playback Rate", g_customAnimSettings.playbackRate, 2, 0.1, 0.0);
+		AddOptionDescription("Starting point of the animation, from 0 (beginning) to 1 (end).");
 		AddTickol("Lock Position", g_customAnimSettings.lockPos, toggleLockPosition, toggleLockPosition, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+		AddOptionDescription("Stops the animation from moving the ped's position.");
 		if (toggleLockPosition)
 			g_customAnimSettings.lockPos = !g_customAnimSettings.lockPos;
 
@@ -1551,6 +1569,7 @@ namespace sub
 		{
 			bool weaponAnimPressed = false;
 			AddOption(wa.first, weaponAnimPressed); 
+			AddOptionDescription("Changes how the ped holds its weapon. Not saved to outfits or Spooner files.");
 			if (weaponAnimPressed)
 			{
 				WEAPON::SET_WEAPON_ANIMATION_OVERRIDE(g_activePedHandle, wa.second);

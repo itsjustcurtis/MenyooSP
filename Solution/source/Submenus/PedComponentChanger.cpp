@@ -13,6 +13,7 @@
 /////////////////////////////
 
 #include "PedComponentChanger.h"
+#include "..\Misc\FreeCam.h"
 
 #include "..\macros.h"
 
@@ -71,9 +72,260 @@ namespace sub
 		else
 			return (current > minVal) ? current - step : current;
 	}
+	// Wardrobe front view camera
+
+	namespace WardrobeCamera
+	{
+		namespace
+		{
+			constexpr int transitionMs = 1000;
+			constexpr int exitTransitionMs = 900;
+			constexpr DWORD takeoverGraceMs = transitionMs + 500;
+
+			Camera camera;
+			GTAped framedPed;
+			Framing framing = Framing::Body;
+			DWORD enabledAt = 0;
+
+			// camera kept alive while easing back to the previous view
+			Camera exitingCamera;
+			Camera exitTarget;
+			bool exitToScriptCamera = false;
+			DWORD exitStartedAt = 0;
+			Vector3 exitStartPos{};
+			Vector3 exitStartRot{};
+			float exitStartFov = 0.0f;
+
+			bool IsWardrobeSubmenu(int submenu)
+			{
+				switch (submenu)
+				{
+				case SUB::COMPONENTS: case SUB::COMPONENTS2:
+				case SUB::COMPONENTS_OUTFITS: case SUB::COMPONENTS_OUTFITS2: case SUB::COMPONENTS_OUTFITS_DEFAULT:
+				case SUB::COMPONENTSPROPS: case SUB::COMPONENTSPROPS2:
+				case SUB::PEDDECALS_TYPES: case SUB::PEDDECALS_ZONES: case SUB::PEDDECALS_ZONES_SEARCH: case SUB::PEDDECALS_INZONE:
+				case SUB::PEDDAMAGET_CATEGORYLIST: case SUB::PEDDAMAGET_BONESELECTION: case SUB::PEDDAMAGET_BLOOD:
+				case SUB::PEDDAMAGET_DAMAGEDECALS: case SUB::PEDDAMAGET_DAMAGEPACKS:
+				case SUB::PED_HEADFEATURES_MAIN: case SUB::PED_HEADFEATURES_HEADOVERLAYS: case SUB::PED_HEADFEATURES_HEADOVERLAYS_INITEM:
+				case SUB::PED_HEADFEATURES_FACEFEATURES: case SUB::PED_HEADFEATURES_FACEGENERATOR: case SUB::PED_HEADFEATURES_SKINTONE:
+					return true;
+				default:
+					return false;
+				}
+			}
+
+			void ApplyFraming()
+			{
+				if (!camera.Exists() || !framedPed.Exists()) return;
+
+				if (framing == Framing::Head)
+				{
+					camera.AttachTo(framedPed, Bone::Head, Vector3(0.0f, 0.6f, 0.0f));
+					camera.PointAt(framedPed, Bone::Head);
+				}
+				else
+				{
+					camera.AttachTo(framedPed, Vector3(0.0f, 2.6f + framedPed.Dim1().y, 0.5f));
+					camera.PointAt(framedPed);
+				}
+			}
+
+			// The script camera that should render once the front view exits (none = gameplay camera)
+			Camera GetViewOwner()
+			{
+				if (Spooner::SpoonerMode::bEnabled && Spooner::SpoonerCamera::camera.Exists())
+					return Spooner::SpoonerCamera::camera;
+				if (FreeCamMode::IsActive() && FreeCamMode::GetCamera().Exists())
+					return FreeCamMode::GetCamera();
+				return Camera();
+			}
+
+			void DestroyCamera(Camera& cam)
+			{
+				if (cam.Exists())
+				{
+					cam.SetActive(false);
+					cam.Destroy();
+				}
+				cam = Camera();
+			}
+
+			void FinishExit()
+			{
+				DestroyCamera(exitingCamera);
+				exitTarget = Camera();
+			}
+
+			float WrapDegrees(float degrees)
+			{
+				degrees = fmod(degrees + 180.0f, 360.0f);
+				return degrees < 0.0f ? degrees + 180.0f : degrees - 180.0f;
+			}
+
+			void TickExit()
+			{
+				if (exitingCamera.Handle() == 0) return;
+				if (!exitingCamera.Exists())
+				{
+					FinishExit();
+					return;
+				}
+
+				const DWORD elapsed = GetTickCount() - exitStartedAt;
+
+				// gameplay camera: the native RENDER_SCRIPT_CAMS ease is doing the blend
+				if (!exitToScriptCamera)
+				{
+					if (elapsed > static_cast<DWORD>(exitTransitionMs) + 150)
+						FinishExit();
+					return;
+				}
+
+				// the target went away mid-blend (e.g. Spooner/FreeCam turned off); its owner already reset the view
+				if (!exitTarget.Exists())
+				{
+					FinishExit();
+					return;
+				}
+
+				// Manual blend towards the target's *current* pose, so it also lands on a moving camera
+				const float t = (std::min)(1.0f, static_cast<float>(elapsed) / exitTransitionMs);
+				const float s = t * t * (3.0f - 2.0f * t); // smoothstep
+
+				const Vector3 targetPos = exitTarget.GetPosition();
+				const Vector3 targetRot = exitTarget.GetRotation();
+				const float targetFov = exitTarget.GetFieldOfView();
+
+				exitingCamera.SetPosition(Vector3(
+					exitStartPos.x + (targetPos.x - exitStartPos.x) * s,
+					exitStartPos.y + (targetPos.y - exitStartPos.y) * s,
+					exitStartPos.z + (targetPos.z - exitStartPos.z) * s));
+				exitingCamera.SetRotation(Vector3(
+					exitStartRot.x + WrapDegrees(targetRot.x - exitStartRot.x) * s,
+					exitStartRot.y + WrapDegrees(targetRot.y - exitStartRot.y) * s,
+					exitStartRot.z + WrapDegrees(targetRot.z - exitStartRot.z) * s));
+				exitingCamera.SetFieldOfView(exitStartFov + (targetFov - exitStartFov) * s);
+
+				if (t >= 1.0f)
+				{
+					// both cameras share the same pose now, so this switch is invisible
+					World::SetRenderingCamera(exitTarget);
+					FinishExit();
+				}
+			}
+
+			// Smoothly hand the view back to whoever owns it, keeping our camera alive until the blend ends
+			void BeginExit()
+			{
+				FinishExit();
+
+				exitingCamera = camera;
+				camera = Camera();
+				framedPed = GTAped();
+				exitStartedAt = GetTickCount();
+
+				// freeze the shot where it is so the blend doesn't follow the ped around
+				exitingCamera.Detach();
+				exitingCamera.StopPointing();
+				exitStartPos = exitingCamera.GetPosition();
+				exitStartRot = exitingCamera.GetRotation();
+				exitStartFov = exitingCamera.GetFieldOfView();
+
+				exitTarget = GetViewOwner();
+				exitToScriptCamera = exitTarget.Exists();
+				if (!exitToScriptCamera)
+					RENDER_SCRIPT_CAMS(false, true, exitTransitionMs, 1, 0, 0);
+			}
+		}
+
+		bool IsActive()
+		{
+			return camera.Exists();
+		}
+
+		bool IsBusy()
+		{
+			return IsActive() || exitingCamera.Exists();
+		}
+
+		void Enable(const GTAped& ped)
+		{
+			if (IsActive() || !ped.Exists()) return;
+
+			// re-entering mid ease-out: jump to the view we were easing to, then blend in from there
+			if (exitToScriptCamera && exitTarget.Exists() && exitingCamera.Exists())
+				World::SetRenderingCamera(exitTarget);
+			FinishExit();
+			Camera previous = World::GetRenderingCamera();
+
+			camera = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", false);
+			camera.SetFieldOfView(40.0f);
+			framedPed = ped;
+			framing = Framing::Body;
+			ApplyFraming();
+			enabledAt = GetTickCount();
+
+			if (previous.Exists())
+				previous.InterpTo(camera, transitionMs, true, true);
+			else
+			{
+				camera.SetActive(true);
+				RENDER_SCRIPT_CAMS(true, true, transitionMs, 1, 0, 0);
+			}
+		}
+
+		void Disable(bool restoreView)
+		{
+			if (restoreView && camera.Exists())
+			{
+				BeginExit();
+				return;
+			}
+
+			// hard hand-off: another camera is taking over, so cut immediately
+			FinishExit();
+			DestroyCamera(camera);
+			framedPed = GTAped();
+		}
+
+		void SetFraming(const GTAped& ped, Framing newFraming)
+		{
+			if (!IsActive()) return;
+
+			framedPed = ped;
+			framing = newFraming;
+			ApplyFraming();
+		}
+
+		void Tick()
+		{
+			TickExit();
+			if (camera.Handle() == 0) return;
+
+			// destroyed externally (e.g. "Delete All Cameras")
+			if (!camera.Exists())
+			{
+				Disable(false);
+				return;
+			}
+
+			if (!IsWardrobeSubmenu(Menu::activeSubmenu) || !framedPed.Exists())
+			{
+				Disable();
+				return;
+			}
+
+			// another camera (Spooner, FreeCam, ...) took over the view
+			if (GetTickCount() - enabledAt > takeoverGraceMs && !camera.IsInterpolating()
+				&& World::GetRenderingCamera().Handle() != camera.Handle())
+			{
+				Disable(false);
+			}
+		}
+	}
+
 	// Component changer
 
-	Camera g_cam_componentChanger;
 	static int s_selectedComponentIndex = 0;
 	static int s_selectedPropIndex = 0;
 	static int s_selectedOverlayIndex = 0;
@@ -135,16 +387,14 @@ namespace sub
 
 		GTAped thisPed = g_activePedHandle;
 
-		if (g_cam_componentChanger.Exists())
-		{
-			g_cam_componentChanger.AttachTo(thisPed, Vector3(0.0f, 2.6f + thisPed.Dim1().y, 0.5f));
-			g_cam_componentChanger.PointAt(thisPed);
-		}
+		WardrobeCamera::SetFraming(thisPed, WardrobeCamera::Framing::Body);
 
 		AddTitle("Wardrobe");
-		AddLocal("Front View", g_cam_componentChanger.Exists(), frontView, frontView);
+		AddLocal("Front View", WardrobeCamera::IsActive(), frontView, frontView);
+		AddOptionDescription("Moves the camera in front of the ped while you change clothes.");
 		AddOption("Outfits", null, nullFunc, SUB::COMPONENTS_OUTFITS);
 		AddOption("Default Outfits (Beta)", null, nullFunc, SUB::COMPONENTS_OUTFITS_DEFAULT);
+		AddOptionDescription("The game's built-in shop outfits. Only works for supported ped models.");
 		AddOption("Decal Overlays", null, PedDecals::OpenSubDecals, -1, true);
 		AddOption("Damage Overlays", null, nullFunc, SUB::PEDDAMAGET_CATEGORYLIST);
 		AddOption("Head Features", null, nullFunc, SUB::PED_HEADFEATURES_MAIN);
@@ -175,8 +425,11 @@ namespace sub
 
 		AddBreak("---Utilities---");
 		AddOption("Random Components", bRandomComponents);
+		AddOptionDescription("Randomizes every clothing component. Press twice to confirm.");
 		AddOption("Default Components", bDefaultComponents);
+		AddOptionDescription("Resets clothing to the model's default. Press twice to confirm.");
 		AddOption("Default Components and Accessories", bClearAll);
+		AddOptionDescription("Resets clothing and removes all accessories. Press twice to confirm.");
 
 		static int confirmRandom = 0, confirmDefault = 0;
 		static UINT16 lastSub = 0;
@@ -209,33 +462,10 @@ namespace sub
 			return;
 		}
 		if (frontView) {
-			if (g_cam_componentChanger.Exists())
-			{
-				g_cam_componentChanger.SetActive(false);
-				g_cam_componentChanger.Destroy();
-				if (sub::Spooner::SpoonerMode::bEnabled && sub::Spooner::SpoonerMode::spoonerModeCamera.Exists())
-					World::SetRenderingCamera(sub::Spooner::SpoonerMode::spoonerModeCamera);
-				else
-					World::SetRenderingCamera(0);
-			}
+			if (WardrobeCamera::IsActive())
+				WardrobeCamera::Disable();
 			else
-			{
-				Camera gmCam = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
-				g_cam_componentChanger = CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", 1);
-
-				g_cam_componentChanger.SetFieldOfView(40.0f);
-				g_cam_componentChanger.AttachTo(thisPed, Vector3(0.0f, 1.5f + thisPed.Dim1().y, 0.5f));
-				g_cam_componentChanger.PointAt(thisPed);
-
-				gmCam.SetPosition(World::GetRenderingCamera().Handle() == 0 ? GameplayCamera::GetPosition() : World::GetRenderingCamera().GetPosition());
-				gmCam.SetRotation(World::GetRenderingCamera().Handle() == 0 ? GameplayCamera::GetRotation() : World::GetRenderingCamera().GetRotation());
-
-				gmCam.InterpTo(g_cam_componentChanger, 1000, true, true);
-				while (gmCam.IsInterpolating())
-					WAIT(0);
-				gmCam.Destroy();
-				World::SetRenderingCamera(g_cam_componentChanger);
-			}
+				WardrobeCamera::Enable(thisPed);
 			return;
 		}
 	}
@@ -295,6 +525,7 @@ namespace sub
 
 				int prevCollectionIdx = data.currentCollectionIdx;
 				data.currentCollectionIdx = AddTexterCycler("Collection", data.currentCollectionIdx, names);
+				AddOptionDescription("The clothing set this item was added in (base game, a game update or a mod). Base game items are listed as \"basegame\".");
 				bool collectionChanged = (data.currentCollectionIdx != prevCollectionIdx);
 
 				if (collectionChanged)
@@ -307,6 +538,7 @@ namespace sub
 				int prevLocalDrawableId = data.currentLocalIdx;
 
 				AddNumberStepper("Local ID", data.currentLocalIdx, 0, 1.0, 0, col.maxLocalId, false, true);
+				AddOptionDescription("The item's number within its collection. Unlike Type, it stays the same after game updates.");
 				bool localDrawableIdChanged = collectionChanged || (data.currentLocalIdx != prevLocalDrawableId);
 
 				if (localDrawableIdChanged)
@@ -366,11 +598,7 @@ namespace sub
 	{
 		GTAped thisPed = g_activePedHandle;
 
-		if (g_cam_componentChanger.Exists())
-		{
-			g_cam_componentChanger.AttachTo(thisPed, Bone::Head, Vector3(0.0f, 0.6f, 0.0f));
-			g_cam_componentChanger.PointAt(thisPed, Bone::Head);
-		}
+		WardrobeCamera::SetFraming(thisPed, WardrobeCamera::Framing::Head);
 
 		bool bRandomProps = false, bDefaultProps = false;
 		const std::vector<std::string> propNames
@@ -482,6 +710,7 @@ namespace sub
 
 				int prevCollectionIdx = data.currentCollectionIdx;
 				data.currentCollectionIdx = AddTexterCycler("Collection", data.currentCollectionIdx, names);
+				AddOptionDescription("The clothing set this item was added in (base game, a game update or a mod). Base game items are listed as \"basegame\".");
 				bool collectionChanged = (data.currentCollectionIdx != prevCollectionIdx);
 
 				if (collectionChanged)
@@ -493,6 +722,7 @@ namespace sub
 
 				int prevLocalPropId = data.currentLocalIdx;
 				AddNumberStepper("Local ID", data.currentLocalIdx, 0, 1.0, 0, col.maxLocalId, false, true);
+				AddOptionDescription("The item's number within its collection. Unlike Type, it stays the same after game updates.");
 				bool localPropIdChanged = collectionChanged || (data.currentLocalIdx != prevLocalPropId);
 
 				if (localPropIdChanged)
@@ -1179,11 +1409,7 @@ namespace sub
 			GTAped ped = g_activePedHandle;
 			Model pedModel = ped.Model();
 
-			if (g_cam_componentChanger.Exists())
-			{
-				g_cam_componentChanger.AttachTo(ped, Bone::Head, Vector3(0.0f, 0.645f, 0.0f));
-				g_cam_componentChanger.PointAt(ped, Bone::Head);
-			}
+			WardrobeCamera::SetFraming(ped, WardrobeCamera::Framing::Head);
 
 			if (!ped.Exists() || !DoesPedModelSupportHeadFeatures(pedModel.hash))
 			{
@@ -1237,6 +1463,7 @@ namespace sub
 			AddBreak("---Hair---");
 			AddNumber("Hair Colour", pedHead->hairColour, 0, null, hairColourPlus, hairColourMinus);
 			AddNumber("Hair Streaks Colour", pedHead->hairColourStreaks, 0, null, hairStreaksPlus, hairStreaksMinus);
+			AddOptionDescription("Colour of the hair highlights.");
 
 			AddBreak("---Eyes---");
 			AddNumber(Game::GetGXTEntry("FACE_APP_EYE", "Eye Colour"), pedHead->eyeColour, 0, null, eyeColourPlus, eyeColourMinus);
@@ -1467,6 +1694,7 @@ namespace sub
 
 			AddTitle("Shape & Skin Tone");
 			AddToggle("Unlock ID Limits", g_unlockMaxIDs);
+			AddOptionDescription("Allows parent IDs up to 255 (modded heads) instead of the standard 0-45.");
 
 			int maxIds = getMaxShapeAndSkinIds();
 
@@ -1507,8 +1735,11 @@ namespace sub
 			};
 
 			addMixSlider("Shape", blendData.shapeMix);
+			AddOptionDescription("Face shape blend between father (0) and mother (1).");
 			addMixSlider("Tone", blendData.skinMix);
+			AddOptionDescription("Skin tone blend between father (0) and mother (1).");
 			addMixSlider("Ancestor (Shape & Tone)", blendData.thirdMix);
+			AddOptionDescription("How much the third parent affects shape and tone.");
 		}
 
 		void Sub_FaceGenerator()
@@ -1567,20 +1798,30 @@ namespace sub
 
 			// --- Parents ---
 			AddTickol("Use Third Parent", PedFaceGen::settings.useThirdParent, PedFaceGen::settings.useThirdParent, PedFaceGen::settings.useThirdParent, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("Randomizing also picks an ancestor parent.");
 			PedFaceGen::settings.parentGenderFilter = AddTexterCycler("Parent Filter", PedFaceGen::settings.parentGenderFilter, genderOpts);
+			AddOptionDescription("Limits random parents by gender.");
 			PedFaceGen::settings.skinColorFilter = AddTexterCycler("Skin Colour", PedFaceGen::settings.skinColorFilter, skinOpts);
+			AddOptionDescription("Limits random parents by ethnicity.");
 			
 			// Show non-rockstar parents only if parent / skin color filter is set to "Any" (we don't know the genders/races of modded-parents)
 			bool showNonRockstar = (PedFaceGen::settings.parentGenderFilter == 0) && (PedFaceGen::settings.skinColorFilter == 0);
 			if (showNonRockstar)
+			{
 				AddNumberStepper("Non-Rockstar Parent Max ID", PedFaceGen::settings.nonRockstarMax, 0, 1.0, 46.0, 255.0);
+				AddOptionDescription("Highest modded parent ID (46+) included when randomizing. Only shown when both filters are \"Any\".");
+			}
 
 			// --- Randomize ---
 			AddBreak("---Randomize---");
 			AddOption("Randomize Face", bRandFace);
+			AddOptionDescription("Random parents plus shape and tone blend.");
 			AddOption("Randomize Face Shapes", bRandShapes);
+			AddOptionDescription("Randomizes only the shape parents and blend.");
 			AddOption("Randomize Face Textures", bRandSkins);
+			AddOptionDescription("Randomizes only the skin tone parents and blend.");
 			AddOption("Randomize Everything", bRandEverything);
+			AddOptionDescription("Randomizes the face and all facial features.");
 
 			if (bRandFace || bRandShapes || bRandSkins || bRandEverything)
 			{
@@ -1909,10 +2150,12 @@ namespace sub
 
 		bool attachmentsPlus = false, attachmentsMinus = false;
 		AddTexter("AddAttachmentsToSpoonerDB", persistentAttachmentsTexterIndex, std::vector<std::string>{ "FileDecides", "ForceOff", "ForceOn" }, null, attachmentsPlus, attachmentsMinus);
+		AddOptionDescription("When loading an outfit, whether its attached objects join the Spooner database. FileDecides uses the file's setting; ForceOff/ForceOn override it.");
 		if (attachmentsPlus) { if (persistentAttachmentsTexterIndex < 2) persistentAttachmentsTexterIndex++; }
 		if (attachmentsMinus) { if (persistentAttachmentsTexterIndex > 0) persistentAttachmentsTexterIndex--; }
 
 		ComponentChangerOutfit::legacyXMLFormat = AddTexterCycler("XML Format", ComponentChangerOutfit::legacyXMLFormat, { "New XML format", "Legacy XML format" }) == 1;
+		AddOptionDescription("New XML Format saves the file with more readable node names. Legacy XML format saves it with non-human readable node names, but will more likely work with external XML importers.");
 
 		AddOption("Save Outfit To File", savePressed);
 
@@ -2049,12 +2292,18 @@ namespace sub
 
 		AddTitle(name);
 		AddOption("Apply", outfits2_apply);
+		AddOptionDescription("Applies everything: ped model/head, clothing, accessories, decals, damage and attachments.");
 		AddOption("Apply Clothing & Attachments", outfits2_applyAllFeatures);
+		AddOptionDescription("Applies everything except the ped model and head.");
 		AddOption((std::string)"Apply " + (g_activePedHandle == PLAYER_PED_ID() ? "Ped Model" : "Head Features"), outfits2_applyModel);
+		AddOptionDescription("Applies only the ped model and head features, without clothing.");
 		AddOption("Apply and Set as Default", outfits2_applySetDefault);
+		AddOptionDescription("Applies to your character and loads this outfit automatically every time the game starts.");
 		ComponentChangerOutfit::legacyXMLFormat = AddTexterCycler("XML Format", ComponentChangerOutfit::legacyXMLFormat, { "New XML format", "Legacy XML format" }) == 1;
+		AddOptionDescription("New XML Format saves the file with more readable node names. Legacy XML format saves it with non-human readable node names, but will more likely work with external XML importers.");
 		AddOption("Rename File", outfits2_rename);
 		AddOption("Overwrite File", outfits2_overwrite);
+		AddOptionDescription("Replaces this file with the current ped's outfit.");
 		AddOption("Delete File", outfits2_delete);
 
 		if (outfits2_apply)
@@ -2150,6 +2399,7 @@ namespace sub
 			auto nodeClearDecalOverlays = nodeEntity.child("ClearDecalOverlays");
 			bool bToggleClearDecalOverlaysPressed = false;
 			AddTickol("Clear Previous Decals", nodeClearDecalOverlays.text().as_bool(true), bToggleClearDecalOverlaysPressed, bToggleClearDecalOverlaysPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+			AddOptionDescription("Removes the ped's existing tattoos and decals before applying this outfit.");
 			if (bToggleClearDecalOverlaysPressed)
 			{
 				if (!nodeClearDecalOverlays) 
@@ -2165,6 +2415,7 @@ namespace sub
 			{
 				bool bToggleShortHeightedPressed = false;
 				AddTickol("Short Height", nodeShortHeighted.text().as_bool(), bToggleShortHeightedPressed, bToggleShortHeightedPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Loads the ped in its shorter form.");
 				if (bToggleShortHeightedPressed)
 				{
 					nodeShortHeighted.text() = !nodeShortHeighted.text().as_bool();
@@ -2178,6 +2429,7 @@ namespace sub
 			{
 				bool bToggleAddAttachmentsToSpoonerDbPressed = false;
 				AddTickol("Persistent Attachments (AddToSpoonerDb)", bAddAttachemntsToSpoonerDb, bToggleAddAttachmentsToSpoonerDbPressed, bToggleAddAttachmentsToSpoonerDbPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+				AddOptionDescription("Attached objects are added to the Spooner database and don't despawn.");
 				if (bToggleAddAttachmentsToSpoonerDbPressed)
 				{
 					nodeAddAttachmentsToSpoonerDb = !nodeAddAttachmentsToSpoonerDb.as_bool();
@@ -2193,6 +2445,7 @@ namespace sub
 				{
 					bool bToggleStartTaskSeqOnLoadPressed = false;
 					AddTickol("Start Task Sequences Immediately", nodeStartTaskSeqOnLoad.as_bool(), bToggleStartTaskSeqOnLoadPressed, bToggleStartTaskSeqOnLoadPressed, TICKOL::BOXTICK, TICKOL::BOXBLANK);
+					AddOptionDescription("Attached entities start their Spooner task sequences as soon as they load.");
 					if (bToggleStartTaskSeqOnLoadPressed)
 					{
 						nodeStartTaskSeqOnLoad = !nodeStartTaskSeqOnLoad.as_bool();

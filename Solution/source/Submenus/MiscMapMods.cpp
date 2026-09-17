@@ -236,6 +236,7 @@ namespace sub
 			AddTitle(currentMAPMODC->Name());
 			AddOption("Teleport", currentMapModTeleport);
 			AddLocal("Load", currentMAPMODC->IsLoaded(), currentMapModLoad, currentMapModUnload);
+			AddOptionDescription("Spawns or removes this map mod's objects.");
 
 			if (currentMapModTeleport) 
 			{

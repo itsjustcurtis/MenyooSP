@@ -180,7 +180,9 @@ namespace sub::TeleportLocations_catind
 				}
 
 				bool bCreateBunkerPressed = false;
-				AddOption("Build Bunker", bCreateBunkerPressed); if (bCreateBunkerPressed)
+				AddOption("Build Bunker", bCreateBunkerPressed);
+				AddOptionDescription("Loads the bunker with the options above and teleports you inside.");
+				if (bCreateBunkerPressed)
 				{
 					DO_SCREEN_FADE_OUT(50);
 					CreateBunker(currentBunkerInfo);
@@ -295,7 +297,9 @@ namespace sub::TeleportLocations_catind
 				}
 
 				bool bCreateBunkerPressed = false;
-				AddOption("Build MOC", bCreateBunkerPressed); if (bCreateBunkerPressed)
+				AddOption("Build MOC", bCreateBunkerPressed);
+				AddOptionDescription("Loads the Mobile Operations Center with the options above and teleports you inside.");
+				if (bCreateBunkerPressed)
 				{
 					DO_SCREEN_FADE_OUT(50);
 					CreateMoc(currentMocInfo);

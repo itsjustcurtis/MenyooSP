@@ -547,6 +547,7 @@ namespace sub::TeleportLocations_catind
 
 			bool bInternalLoc_plus = false, bInternalLoc_minus = false;
 			AddTexter("Position Index", currentYachtInfo.internalLocationIndex, std::vector<std::string>{}, null, bInternalLoc_plus, bInternalLoc_minus);
+			AddOptionDescription("Which yacht spot at this location to use (1-3).");
 			if (bInternalLoc_plus) { if (currentYachtInfo.internalLocationIndex < 3) { currentYachtInfo.internalLocationIndex++; } }
 			if (bInternalLoc_minus) { if (currentYachtInfo.internalLocationIndex > 1) { currentYachtInfo.internalLocationIndex--; } }
 
@@ -589,7 +590,9 @@ namespace sub::TeleportLocations_catind
 			AddsettingscolOption("Marker Colour", currentYachtInfo.markerColour);
 
 			bool bCreateYachtPressed = false;
-			AddOption("Build Yacht", bCreateYachtPressed); if (bCreateYachtPressed)
+			AddOption("Build Yacht", bCreateYachtPressed);
+			AddOptionDescription("Spawns the yacht with the options above.");
+			if (bCreateYachtPressed)
 			{
 				DO_SCREEN_FADE_OUT(50);
 				for (auto& sclf : currentYachtInfo.vScaleforms) sclf.first.Unload();

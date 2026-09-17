@@ -154,10 +154,11 @@ public:
 	static INT optionSelectionHistory[100];
 	static INT pendingSubmenu;
 	static int nextDeferredActionTime;
-	static bool usingControllerInput, usingMouseInput, centerTitleText, centerOptionText, centerBreakText, useGradientBackgrounds, drawSeparatorLine, enableGlareEffect;
+	static bool usingControllerInput, usingMouseInput, centerTitleText, centerOptionText, centerBreakText, useGradientBackgrounds, drawSeparatorLine, enableGlareEffect, optionTextStroke;
 	static Scaleform scaleform_menuGlare, instructional_buttons;
 	static std::vector<Scaleform_IbT> vIB;
 	static std::function<void()> OnSubBack;
+	static std::string selectedOptionDescription;
 
 
 	static inline void Tick()
@@ -179,6 +180,7 @@ public:
 	static void titlebox_draw();
 	static void background();
 	static void optionhi();
+	static void draw_description();
 	static bool isBinds();
 	static void while_closed();
 	static void while_opened();
@@ -245,6 +247,8 @@ void AddTitle(std::string text);
 void AddOption(std::string text, bool &option_code_bool = null, void(&callback)() = nullFunc, int submenu_index = -1, bool show_arrow = 0, bool gxt = 0);
 inline void AddOption(std::ostream& os, bool &option_code_bool = null, void(&callback)() = nullFunc, int submenu_index = -1, bool show_arrow = 0, bool gxt = 0);
 void OptionStatus(BOOL status);
+// Attaches a description to the option added just before this call; shown below the menu while that option is selected
+void AddOptionDescription(const std::string& text);
 void AddToggle(const std::string& text, bool &loop_variable, bool &extra_option_code_ON = null, bool &extra_option_code_OFF = null, bool gxt = 0);
 void AddToggle(const std::string& text, bool &loop_variable, void(&callback_ON)(), void(&callback_OFF)(), bool gxt = 0);
 void AddLocal(const std::string& text, BOOL condition, bool &option_code_ON, bool &option_code_OFF, bool gxt = 0);
@@ -259,10 +263,12 @@ void AddTexter(const std::string& text, int selectedindex, const std::vector<std
 
 int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts);
 
+// Returns true when the value changed this frame
 template<typename T>
-void AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool gxt = 0, bool wrap = false);
+bool AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool gxt = 0, bool wrap = false);
 template<typename T>
-void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool gxt = 0);
+// invert: false = right multiplies / left divides, true = left multiplies / right divides
+void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool invert = false, bool gxt = 0);
 
 void AddPresetColourOptionsPreviews(UINT8 const r, UINT8 const g, UINT8 const b);
 void AddPresetColourOptionsPreview(const RgbS& rgb);
