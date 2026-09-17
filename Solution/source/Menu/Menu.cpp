@@ -187,6 +187,7 @@ Scaleform Menu::scaleform_menuGlare;
 Scaleform Menu::instructional_buttons;
 std::vector<Scaleform_IbT> Menu::vIB;
 std::function<void()> Menu::OnSubBack = nullptr;
+std::string Menu::selectedOptionDescription;
 INT8 g_loglevel = 2;
 
 
@@ -475,6 +476,49 @@ void Menu::optionhi()
 	else DRAW_RECT(0.16f + menuPos.x, Y_coord + menuPos.y, 0.20f, 0.035f, selectionhi.R, selectionhi.G, selectionhi.B, selectionhi.A, false);
 
 	if (enableGlareEffect && !titleBarStripeVisible) glare_test();
+}
+void Menu::draw_description()
+{
+	if (selectedOptionDescription.empty())
+		return;
+
+	const std::string text = Language::TranslateToSelected(selectedOptionDescription);
+	selectedOptionDescription.clear();
+
+	const float rows = (float)(std::min)(totalOptionCount, GTA_MAXOP);
+	const float footerBottom = ((rows + 1.0f) * 0.035f) + 0.1415f + (0.0345f / 2.0f);
+	const float boxTop = footerBottom + menuPos.y;
+	const float textX = 0.066f + menuPos.x;
+	const float textWrapEnd = 0.254f + menuPos.x;
+	const float textScale = 0.3f;
+	const float padding = 0.006f;
+
+	auto setupText = [&]()
+	{
+		Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.0f, textScale), false, false, true, optiontext, Vector2(textX, textWrapEnd));
+	};
+
+	setupText();
+	if (text.length() < 100)
+	{
+		BEGIN_TEXT_COMMAND_GET_NUMBER_OF_LINES_FOR_STRING("STRING");
+		ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(text.c_str());
+	}
+	else
+	{
+		BEGIN_TEXT_COMMAND_GET_NUMBER_OF_LINES_FOR_STRING("jamyfafi");
+		add_text_component_long_string(text);
+	}
+	int lineCount = END_TEXT_COMMAND_GET_NUMBER_OF_LINES_FOR_STRING(textX, boxTop);
+	if (lineCount < 1) lineCount = 1;
+
+	const float lineHeight = GET_RENDERED_CHARACTER_HEIGHT(textScale, GTAfont::Arial) * 1.3f;
+	const float boxHeight = lineCount * lineHeight + padding * 2.0f;
+
+	DRAW_RECT(0.16f + menuPos.x, boxTop + boxHeight / 2.0f, 0.20f, boxHeight, BG.R, BG.G, BG.B, BG.A, false);
+
+	setupText();
+	Game::Print::drawstring(text, textX, boxTop + padding);
 }
 bool Menu::isBinds()
 {
@@ -856,6 +900,7 @@ void Menu::sub_handler()
 			isClosed = false;
 		}
 		submenu_switch();
+		draw_description();
 
 		if (Menu::selectedOptionIndex > Menu::currentOptionCount) { Menu::selectedOptionIndex = Menu::currentOptionCount + 1; Menu::Up(false); }
 		else if (Menu::selectedOptionIndex < 1) { Menu::selectedOptionIndex = 0; Menu::Down(false); }
@@ -1279,6 +1324,11 @@ void AddOption(std::string text, bool& option_code_bool, void(&callback)(), int 
 inline void AddOption(std::ostream& os, bool& option_code_bool, void(&callback)(), int submenu_index, bool show_arrow, bool gxt)
 {
 	AddOption(dynamic_cast<std::ostringstream&>(os).str(), option_code_bool, callback, submenu_index, show_arrow, gxt);
+}
+void AddOptionDescription(const std::string& text)
+{
+	if (Menu::currentOptionCount == *Menu::activeOptionIndex)
+		Menu::selectedOptionDescription = text;
 }
 void OptionStatus(BOOL status)
 {
