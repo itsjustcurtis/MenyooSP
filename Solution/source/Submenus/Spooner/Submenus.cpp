@@ -5142,7 +5142,7 @@ namespace sub
 
 				auto& props = it->second;
 				std::string catName = cat.empty() ? "UNORDERED" : cat;
-				std::string catLabel = "� ~b~" + catName + "~s~ ~c~(" + std::to_string(props.size()) + ")~s~";
+				std::string catLabel = "— ~b~" + catName + "~s~ ~c~(" + std::to_string(props.size()) + ")~s~";
 
 				if (MenuCategory::AddCategory(catLabel))
 				{

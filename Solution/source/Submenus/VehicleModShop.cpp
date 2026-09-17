@@ -3216,11 +3216,11 @@ namespace sub
 			ReapplyCachedParts(vehicle, cache);
 			const bool hasDoors = !vehicle.Doors_get().empty();
 
-			if (hasDoors && MenuCategory::AddCategory("� ~b~Doors~s~"))
+			if (hasDoors && MenuCategory::AddCategory("— ~b~Doors~s~"))
 				AddDoorOptions(vehicle);
-			if (HasExtras(vehicle) && MenuCategory::AddCategory("� ~b~Extras~s~"))
+			if (HasExtras(vehicle) && MenuCategory::AddCategory("— ~b~Extras~s~"))
 				AddExtraOptions(vehicle);
-			if (vehicle.Model().IsHeli() && MenuCategory::AddCategory("� ~b~Helicopter Parts~s~"))
+			if (vehicle.Model().IsHeli() && MenuCategory::AddCategory("— ~b~Helicopter Parts~s~"))
 			{
 				bool pressed = false;
 				AddTickol("Break Rudder", false, pressed, pressed, TICKOL::CROSS);
@@ -3230,7 +3230,7 @@ namespace sub
 					SET_VEHICLE_RUDDER_BROKEN(vehicle.Handle(), true);
 				}
 			}
-			if (MenuCategory::AddCategory("� ~b~Tyres~s~"))
+			if (MenuCategory::AddCategory("— ~b~Tyres~s~"))
 				AddTyreOptions(vehicle);
 		}
 	}
