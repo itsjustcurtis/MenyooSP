@@ -182,7 +182,7 @@ INT Menu::pendingSubmenu = 0;
 int Menu::nextDeferredActionTime = 0;
 bool Menu::usingControllerInput = 0, Menu::usingMouseInput = 0;
 bool Menu::centerTitleText = 1, Menu::centerOptionText = 0, Menu::centerBreakText = 1,
-Menu::useGradientBackgrounds = 1, Menu::drawSeparatorLine = 1, Menu::enableGlareEffect = 1;
+Menu::useGradientBackgrounds = 1, Menu::drawSeparatorLine = 1, Menu::enableGlareEffect = 1, Menu::optionTextStroke = 0;
 Scaleform Menu::scaleform_menuGlare;
 Scaleform Menu::instructional_buttons;
 std::vector<Scaleform_IbT> Menu::vIB;
@@ -1265,6 +1265,7 @@ void AddOption(std::string text, bool& option_code_bool, void(&callback)(), int 
 	currentOptionY = currentOptionY * 0.035f + 0.125f;
 
 	Game::Print::setupdraw();
+	if (Menu::optionTextStroke) SET_TEXT_OUTLINE();
 	if (font_options == 0)
 		SET_TEXT_SCALE(0, 0.33f);
 	SET_TEXT_FONT(font_options);
@@ -1427,7 +1428,8 @@ void AddBreak(std::string text)
 	currentOptionY = currentOptionY * 0.035f + 0.125f;
 
 
-	Game::Print::setupdraw(); //SET_TEXT_OUTLINE();
+	Game::Print::setupdraw();
+	if (Menu::optionTextStroke) SET_TEXT_OUTLINE();
 	SET_TEXT_FONT(font_breaks);
 	SET_TEXT_COLOUR(optionbreaks.R, optionbreaks.G, optionbreaks.B, optionbreaks.A);
 	if (Menu::currentOptionCount == Menu::selectedOptionIndex)
@@ -1467,7 +1469,7 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 	if (currentOptionY < 0.6325f && currentOptionY > 0.1425f)
 	{
 		FLOAT newXpos;
-		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, optiontext);
 		if (Menu::IsLastDrawnOptionSelected())
 		{
 			if (&RIGHT_PRESS != &null && &LEFT_PRESS != &null)
@@ -1480,20 +1482,20 @@ void AddNumber(const std::string& text, double value, __int8 decimal_places, boo
 				newXpos = get_xcoord_at_menu_rightEdge(textureRes.x - 0.005, textureRes.x - 0.005 + Game::Print::GetTextWidth(value, decimal_places), true);
 				DRAW_SPRITE("CommonMenu", "arrowleft", newXpos, currentOptionY + 0.016f + menuPos.y, textureRes.x, textureRes.y, 0.0f, selectedtext.R, selectedtext.G, selectedtext.B, selectedtext.A, false, 0); // Left
 
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), textureRes.x - 0.005, true);
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 			}
 			else
 			{
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), 0.0024f, true);
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 			}
 		}
 		else
 		{
 			newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(value, decimal_places), 0.0024f, true);
-			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, optiontext);
 		}
 
 		Game::Print::drawfloat(value, decimal_places, newXpos, currentOptionY + 0.0056 + menuPos.y);
@@ -1724,7 +1726,7 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 
 		chartickStr = DOES_TEXT_LABEL_EXIST(chartickStr.c_str()) ? GET_FILENAME_FOR_AUDIO_CONVERSATION(chartickStr.c_str()) : Language::TranslateToSelected(chartickStr);
 		FLOAT newXpos;
-		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, optiontext);
 
 		if (Menu::IsLastDrawnOptionSelected())
 		{
@@ -1738,20 +1740,20 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 				newXpos = get_xcoord_at_menu_rightEdge(textureRes.x - 0.005, textureRes.x - 0.005 + Game::Print::GetTextWidth(chartickStr), true);
 				DRAW_SPRITE("CommonMenu", "arrowleft", newXpos, currentOptionY + 0.016f + menuPos.y, textureRes.x, textureRes.y, 0.0f, selectedtext.R, selectedtext.G, selectedtext.B, selectedtext.A, false, 0); // Left
 
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), textureRes.x - 0.005, true);
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 			}
 			else
 			{
 				newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), 0.0024f, true);
-				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, selectedtext);
+				Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, selectedtext);
 			}
 		}
 		else
 		{
 			newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(chartickStr), 0.0024f, true);
-			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, false, optiontext);
+			Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke, optiontext);
 		}
 
 		Game::Print::drawstring(chartickStr, newXpos, currentOptionY + 0.0056 + menuPos.y);

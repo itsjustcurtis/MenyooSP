@@ -154,7 +154,7 @@ public:
 	static INT optionSelectionHistory[100];
 	static INT pendingSubmenu;
 	static int nextDeferredActionTime;
-	static bool usingControllerInput, usingMouseInput, centerTitleText, centerOptionText, centerBreakText, useGradientBackgrounds, drawSeparatorLine, enableGlareEffect;
+	static bool usingControllerInput, usingMouseInput, centerTitleText, centerOptionText, centerBreakText, useGradientBackgrounds, drawSeparatorLine, enableGlareEffect, optionTextStroke;
 	static Scaleform scaleform_menuGlare, instructional_buttons;
 	static std::vector<Scaleform_IbT> vIB;
 	static std::function<void()> OnSubBack;

@@ -40,6 +40,8 @@ namespace sub
 		AddToggle("Centre Options", Menu::centerOptionText);
 		AddToggle("Centre Breaks", Menu::centerBreakText);
 		AddOptionDescription("Centres the text of section headings.");
+		AddToggle("Option Text Stroke", Menu::optionTextStroke);
+		AddOptionDescription("Draws an black outline around option text for better readability.");
 		AddToggle("Reset Player Model Upon Death (SP)", checkSelfDeathModel);
 		AddOptionDescription("Restores a story character model if you die as a custom model.");
 		AddToggle("Sync Menyoo With Config File", bSyncWithConfig, MenuConfig::SaveConfig, MenuConfig::SaveConfig);

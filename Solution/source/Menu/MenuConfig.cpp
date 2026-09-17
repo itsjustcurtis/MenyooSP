@@ -110,6 +110,7 @@ void MenuConfig::ConfigRead()
 	Menu::centerTitleText = ini.GetBoolValue(section_settings.c_str(), "centre_title", Menu::centerTitleText);
 	Menu::centerOptionText = ini.GetBoolValue(section_settings.c_str(), "centre_options", Menu::centerOptionText);
 	Menu::centerBreakText = ini.GetBoolValue(section_settings.c_str(), "centre_breaks", Menu::centerBreakText);
+	Menu::optionTextStroke = ini.GetBoolValue(section_settings.c_str(), "option_text_stroke", Menu::optionTextStroke);
 	Language::configLangName = ini.GetValue(section_settings.c_str(), "language", Language::configLangName.c_str());
 	Language::Init();
 	g_loglevel = ini.GetLongValue(section_settings.c_str(), "log level", g_loglevel);
@@ -376,6 +377,7 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_settings.c_str(), "centre_title", Menu::centerTitleText);
 	ini.SetBoolValue(section_settings.c_str(), "centre_options", Menu::centerOptionText);
 	ini.SetBoolValue(section_settings.c_str(), "centre_breaks", Menu::centerBreakText);
+	ini.SetBoolValue(section_settings.c_str(), "option_text_stroke", Menu::optionTextStroke);
 	ini.SetValue(section_settings.c_str(), "language", Language::configLangName.c_str());
 	ini.SetLongValue(section_settings.c_str(), "log level", g_loglevel);
 
