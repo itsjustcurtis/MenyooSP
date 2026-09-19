@@ -6,9 +6,7 @@
 #include "Scripting/GTAped.h"
 #include "Scripting/GTAentity.h"
 #include "Submenus/Spooner/Submenus.h"
-#include "Util/FileLogger.h"
 #include <algorithm>
-#include <string>
 
 namespace sub::Spooner::Interactables
 {
@@ -97,7 +95,6 @@ namespace sub::Spooner::Interactables
 
 		SET_SYNCHRONIZED_SCENE_HOLD_LAST_FRAME(syncedScene, true);
 		SET_SYNCHRONIZED_SCENE_RATE(syncedScene, stage.SceneRate);
-		// No ATTACH_SYNCHRONIZED_SCENE_TO_ENTITY - permanently removed, this is the actual fix.
 
 		if (!stage.FacialClip.empty())
 		{
@@ -127,8 +124,15 @@ namespace sub::Spooner::Interactables
 
 				EntityManagement::DetachEntity(targetEnt);
 				targetEnt.handle.FreezePosition(false);
-				targetEnt.handle.SetPosition(inst.AnchorPos); // reset to fixed anchor each stage, no drift possible
-				targetEnt.handle.SetRotation(inst.AnchorRot);
+
+				if (p.Target == AnimTarget::PrimaryProp)
+				{
+					// Cash genuinely starts on the table - anchor reset is correct here.
+					targetEnt.handle.SetPosition(inst.AnchorPos);
+					targetEnt.handle.SetRotation(inst.AnchorRot);
+				}
+				// ExtraProp (bag) is left wherever it already is - it starts with the
+				// player, not the table, so forcing it to the anchor was the bug.
 
 				ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(
 					targetEnt.handle.Handle(), syncedScene,
@@ -141,9 +145,6 @@ namespace sub::Spooner::Interactables
 
 	static void ActivateInteractable(InteractableInstance& inst)
 	{
-		GTAped myPedInit = PLAYER_PED_ID();
-		Vector3 startPos = myPedInit.GetPosition();
-
 		inst.Ent.handle.FreezePosition(false);
 
 		STREAMING::REQUEST_ANIM_DICT(inst.Def->AnimDict.c_str());
@@ -186,31 +187,12 @@ namespace sub::Spooner::Interactables
 
 			if (inst.bActivated)
 			{
-				// Per-frame trace window - fires for the first ~60 frames after each StartStage
-				if (inst.LogFramesRemaining > 0)
-				{
-					Vector3 p = myPed.GetPosition();
-					Vector3 vel = myPed.GetVelocity();
-					float speed = sqrtf(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
-
-					addlog(ige::LogType::LOG_TRACE, "[frame -" + std::to_string(inst.LogFramesRemaining) + "] pos=(" +
-						std::to_string(p.x) + "," + std::to_string(p.y) + "," + std::to_string(p.z) +
-						") vel=(" + std::to_string(vel.x) + "," + std::to_string(vel.y) + "," + std::to_string(vel.z) +
-						") speed=" + std::to_string(speed) +
-						" scenePhase=" + std::to_string(inst.SyncedScene != -1 ? GET_SYNCHRONIZED_SCENE_PHASE(inst.SyncedScene) : -1.0f), __FILENAME__);
-
-					inst.LogFramesRemaining--;
-				}
-
 				const InteractableStage& stage = inst.Def->Stages[inst.CurrentStage];
 				bool sceneFinished = (inst.SyncedScene == -1) || GET_SYNCHRONIZED_SCENE_PHASE(inst.SyncedScene) >= 0.99f;
 				bool timedOut = GET_GAME_TIMER() - inst.ActivationTime >= (DWORD)stage.MaxDurationMs;
 
 				if (sceneFinished || timedOut)
 				{
-					addlog(ige::LogType::LOG_TRACE, "Stage " + std::to_string(inst.CurrentStage) + " ending. sceneFinished=" +
-						std::to_string(sceneFinished) + " timedOut=" + std::to_string(timedOut), __FILENAME__);
-
 					if (inst.CurrentStage + 1 < inst.Def->Stages.size())
 					{
 						inst.CurrentStage++;
