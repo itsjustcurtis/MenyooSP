@@ -1,14 +1,14 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "..\..\Natives\natives.h"
-#include "..\..\Natives\natives2.h"
-#include "..\..\Util\GTAmath.h"
+#include "Natives/natives.h"
+#include "Natives/natives2.h"
+#include "Util/GTAmath.h"
 #include "Submenus/Spooner/SpoonerEntity.h"
 
 namespace sub::Spooner::Interactables
 {
-	enum class AnimTarget { Prop, Player };
+	enum class AnimTarget { Player, PrimaryProp, ExtraProp };
 
 	struct SceneParticipant
 	{
@@ -23,9 +23,18 @@ namespace sub::Spooner::Interactables
 		float MoverBlendDelta = 0.0f;
 		int IkFlags = 0;
 
-		// Only used when Target == Prop (PLAY_SYNCHRONIZED_ENTITY_ANIM)
+		// Only used when Target == PrimaryProp or ExtraProp (PLAY_SYNCHRONIZED_ENTITY_ANIM)
 		Any PropFlags = 0;
 		float PlaybackRate = 1.0f;
+
+		// Only used when Target == ExtraProp - index into Def->ExtraProps / Instance->ExtraEnts
+		int ExtraPropIndex = 0;
+	};
+
+	struct ExtraPropDef
+	{
+		std::string Label;
+		Hash PropModel;
 	};
 
 	struct InteractableStage
@@ -33,25 +42,30 @@ namespace sub::Spooner::Interactables
 		std::vector<SceneParticipant> Participants;
 		int MaxDurationMs = 6000;
 		float SceneRate = 1.0f;
+		std::string FacialClip;
 	};
 
 	struct InteractableDefinition
 	{
 		std::string Label;
-		Hash PropModel;
+		Hash PropModel; // primary prop (cash) - spawned at world-placement time
+		std::vector<ExtraPropDef> ExtraProps; // spawned at activation time (e.g. bag)
 		std::string AnimDict;
 		std::vector<InteractableStage> Stages;
 	};
 
 	struct InteractableInstance
 	{
-		SpoonerEntity Ent;
+		SpoonerEntity Ent; // primary prop
+		std::vector<SpoonerEntity> ExtraEnts; // parallel to Def->ExtraProps
 		const InteractableDefinition* Def = nullptr;
 		bool bActivated = false;
 		int SyncedScene = -1;
 		bool bRagdollDisabled = false;
 		DWORD ActivationTime = 0;
 		size_t CurrentStage = 0;
+		Vector3 AnchorPos;
+		Vector3 AnchorRot;
 	};
 
 	extern std::vector<InteractableDefinition> vInteractables;

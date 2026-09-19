@@ -1,10 +1,14 @@
 #include "SpoonerInteractables.h"
-#include "..\..\Menu\Menu.h"
+#include "Menu/Menu.h"
 #include "Scripting/Game.h"
-#include "..\..\Scripting\Model.h"
+#include "Scripting/Model.h"
 #include "Submenus/Spooner/EntityManagement.h"
 #include "Scripting/GTAped.h"
+#include "Scripting/GTAentity.h"
+#include "Submenus/Spooner/Submenus.h"
+#include "Util/FileLogger.h"
 #include <algorithm>
+#include <string>
 
 namespace sub::Spooner::Interactables
 {
@@ -13,31 +17,41 @@ namespace sub::Spooner::Interactables
 		{
 			"Grab Cash",
 			GET_HASH_KEY("h4_prop_h4_cash_stack_01a"),
+			{
+				{ "Duffel Bag", GET_HASH_KEY("ch_p_m_bag_var01_arm_s") }
+			},
 			"anim@scripted@player@mission@tun_table_grab@cash@",
 			{
-
-			{
-				{ { AnimTarget::Player, "enter", 1000.0f, -8.0f, 0, 0, 0.0f, 0 } },
-				6000,
-				1.0f
-			},
-
-		{
-			{
-				{ AnimTarget::Player, "grab",      1000.0f, -8.0f, 0, 0, 0.0f, 0 },
-				{ AnimTarget::Prop,   "grab_cash",  1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1.0f }
-			},
-			6000,
-			1.0f
+				{
+					{
+						{ AnimTarget::Player,    "enter",     4.0f, -4.0f, 0, 0, 0.0f, 0 },
+						{ AnimTarget::ExtraProp,  "enter_bag", 4.0f, -4.0f, 0, 0, 0.0f, 0, 0, 1.0f, 0 }
+					},
+					6000,
+					1.0f,
+					"enter_facial"
+				},
+				{
+					{
+						{ AnimTarget::Player,      "grab",      4.0f, -4.0f, 0, 0, 0.0f, 0 },
+						{ AnimTarget::PrimaryProp, "grab_cash", 4.0f, -4.0f, 0, 0, 0.0f, 0, 0, 1.0f },
+						{ AnimTarget::ExtraProp,   "grab_bag",  4.0f, -4.0f, 0, 0, 0.0f, 0, 0, 1.0f, 0 }
+					},
+					30000,
+					1.0f,
+					"grab_facial"
+				},
+				{
+					{
+						{ AnimTarget::Player,    "exit",     4.0f, -4.0f, 0, 0, 0.0f, 0 },
+						{ AnimTarget::ExtraProp,  "exit_bag", 4.0f, -4.0f, 0, 0, 0.0f, 0, 0, 1.0f, 0 }
+					},
+					6000,
+					1.0f,
+					"exit_facial"
+				}
+			}
 		},
-
-		{
-			{ { AnimTarget::Player, "exit", 1000.0f, -8.0f, 0, 0, 0.0f, 0 } },
-			6000,
-			1.0f
-		}
-	}
-},
 	};
 
 	std::vector<InteractableInstance> vActiveInteractables;
@@ -45,12 +59,14 @@ namespace sub::Spooner::Interactables
 	SpoonerEntity SpawnInteractable(const InteractableDefinition& def)
 	{
 		SpoonerEntity ent = EntityManagement::AddProp(def.PropModel, def.Label);
-		if (!ent.Handle.Exists())
+		if (!ent.handle.Exists())
 			return SpoonerEntity();
 
 		InteractableInstance inst;
 		inst.Ent = ent;
 		inst.Def = &def;
+		inst.AnchorPos = ent.handle.GetPosition();
+		inst.AnchorRot = ent.handle.GetRotation();
 		vActiveInteractables.push_back(inst);
 
 		return ent;
@@ -60,10 +76,16 @@ namespace sub::Spooner::Interactables
 	{
 		const InteractableStage& stage = inst.Def->Stages[stageIndex];
 
-		Vector3 pos = inst.Ent.Handle.Position_get();
-		Vector3 rot = inst.Ent.Handle.Rotation_get();
+		GTAped myPed = PLAYER_PED_ID();
 
-		int syncedScene = CREATE_SYNCHRONIZED_SCENE(pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, 2);
+		// Manually place the player relative to the fixed anchor - we no longer
+		// rely on any scene-attach mechanism to do this for us.
+		Vector3 forward = Vector3(sinf(-inst.AnchorRot.z * 3.14159f / 180.0f), cosf(-inst.AnchorRot.z * 3.14159f / 180.0f), 0.0f);
+		Vector3 standPos = inst.AnchorPos - (forward * 1.0f); // 1m in front - tune once you can see it in-game
+		myPed.SetPosition(standPos);
+		myPed.SetHeading(inst.AnchorRot.z);
+
+		int syncedScene = CREATE_SYNCHRONIZED_SCENE(inst.AnchorPos.x, inst.AnchorPos.y, inst.AnchorPos.z, inst.AnchorRot.x, inst.AnchorRot.y, inst.AnchorRot.z, 2);
 		inst.SyncedScene = syncedScene;
 		inst.ActivationTime = GET_GAME_TIMER();
 
@@ -75,13 +97,18 @@ namespace sub::Spooner::Interactables
 
 		SET_SYNCHRONIZED_SCENE_HOLD_LAST_FRAME(syncedScene, true);
 		SET_SYNCHRONIZED_SCENE_RATE(syncedScene, stage.SceneRate);
+		// No ATTACH_SYNCHRONIZED_SCENE_TO_ENTITY - permanently removed, this is the actual fix.
+
+		if (!stage.FacialClip.empty())
+		{
+			PED::PLAY_FACIAL_ANIM(myPed.Handle(), stage.FacialClip.c_str(), inst.Def->AnimDict.c_str());
+		}
 
 		for (auto& p : stage.Participants)
 		{
 			if (p.Target == AnimTarget::Player)
 			{
-				GTAped myPed = PLAYER_PED_ID();
-				myPed.CanRagdoll_set(false);
+				myPed.SetCanRagdoll(false);
 				SET_PED_RAGDOLL_ON_COLLISION(myPed.Handle(), false);
 				inst.bRagdollDisabled = true;
 
@@ -92,10 +119,19 @@ namespace sub::Spooner::Interactables
 					p.Flags, p.RagdollBlockingFlags, p.MoverBlendDelta, p.IkFlags
 				);
 			}
-			else // Prop
+			else // PrimaryProp or ExtraProp
 			{
+				SpoonerEntity& targetEnt = (p.Target == AnimTarget::PrimaryProp)
+					? inst.Ent
+					: inst.ExtraEnts[p.ExtraPropIndex];
+
+				EntityManagement::DetachEntity(targetEnt);
+				targetEnt.handle.FreezePosition(false);
+				targetEnt.handle.SetPosition(inst.AnchorPos); // reset to fixed anchor each stage, no drift possible
+				targetEnt.handle.SetRotation(inst.AnchorRot);
+
 				ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(
-					inst.Ent.Handle.Handle(), syncedScene,
+					targetEnt.handle.Handle(), syncedScene,
 					p.ClipName.c_str(), inst.Def->AnimDict.c_str(),
 					p.BlendIn, p.BlendOut, p.PropFlags, p.PlaybackRate
 				);
@@ -105,10 +141,30 @@ namespace sub::Spooner::Interactables
 
 	static void ActivateInteractable(InteractableInstance& inst)
 	{
+		GTAped myPedInit = PLAYER_PED_ID();
+		Vector3 startPos = myPedInit.GetPosition();
+
+		inst.Ent.handle.FreezePosition(false);
+
 		STREAMING::REQUEST_ANIM_DICT(inst.Def->AnimDict.c_str());
 		int waitCount = 0;
 		while (!STREAMING::HAS_ANIM_DICT_LOADED(inst.Def->AnimDict.c_str()) && waitCount++ < 500)
 			WAIT(0);
+
+		GTAped myPed = PLAYER_PED_ID();
+		int rootBone = myPed.GetBoneIndex(Bone::SKEL_ROOT);
+
+		inst.ExtraEnts.clear();
+		for (auto& extraDef : inst.Def->ExtraProps)
+		{
+			SpoonerEntity extraEnt = EntityManagement::AddProp(extraDef.PropModel, extraDef.Label);
+			if (extraEnt.handle.Exists())
+			{
+				extraEnt.handle.SetIsCollisionEnabled(false);
+				EntityManagement::AttachEntity(extraEnt, myPed, rootBone, Vector3(), Vector3());
+			}
+			inst.ExtraEnts.push_back(extraEnt);
+		}
 
 		inst.CurrentStage = 0;
 		StartStage(inst, 0);
@@ -121,21 +177,40 @@ namespace sub::Spooner::Interactables
 			return;
 
 		GTAped myPed = PLAYER_PED_ID();
-		Vector3 myPos = myPed.Position_get();
+		Vector3 myPos = myPed.GetPosition();
 
 		for (auto& inst : vActiveInteractables)
 		{
-			if (!inst.Ent.Handle.Exists())
+			if (!inst.Ent.handle.Exists())
 				continue;
 
 			if (inst.bActivated)
 			{
+				// Per-frame trace window - fires for the first ~60 frames after each StartStage
+				if (inst.LogFramesRemaining > 0)
+				{
+					Vector3 p = myPed.GetPosition();
+					Vector3 vel = myPed.GetVelocity();
+					float speed = sqrtf(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
+
+					addlog(ige::LogType::LOG_TRACE, "[frame -" + std::to_string(inst.LogFramesRemaining) + "] pos=(" +
+						std::to_string(p.x) + "," + std::to_string(p.y) + "," + std::to_string(p.z) +
+						") vel=(" + std::to_string(vel.x) + "," + std::to_string(vel.y) + "," + std::to_string(vel.z) +
+						") speed=" + std::to_string(speed) +
+						" scenePhase=" + std::to_string(inst.SyncedScene != -1 ? GET_SYNCHRONIZED_SCENE_PHASE(inst.SyncedScene) : -1.0f), __FILENAME__);
+
+					inst.LogFramesRemaining--;
+				}
+
 				const InteractableStage& stage = inst.Def->Stages[inst.CurrentStage];
 				bool sceneFinished = (inst.SyncedScene == -1) || GET_SYNCHRONIZED_SCENE_PHASE(inst.SyncedScene) >= 0.99f;
 				bool timedOut = GET_GAME_TIMER() - inst.ActivationTime >= (DWORD)stage.MaxDurationMs;
 
 				if (sceneFinished || timedOut)
 				{
+					addlog(ige::LogType::LOG_TRACE, "Stage " + std::to_string(inst.CurrentStage) + " ending. sceneFinished=" +
+						std::to_string(sceneFinished) + " timedOut=" + std::to_string(timedOut), __FILENAME__);
+
 					if (inst.CurrentStage + 1 < inst.Def->Stages.size())
 					{
 						inst.CurrentStage++;
@@ -147,24 +222,30 @@ namespace sub::Spooner::Interactables
 
 						if (inst.bRagdollDisabled)
 						{
-							myPed.CanRagdoll_set(true);
+							myPed.SetCanRagdoll(true);
 							SET_PED_RAGDOLL_ON_COLLISION(myPed.Handle(), true);
 							inst.bRagdollDisabled = false;
 						}
 
 						EntityManagement::DeleteEntity(inst.Ent);
+						for (auto& extraEnt : inst.ExtraEnts)
+						{
+							if (extraEnt.handle.Exists())
+								EntityManagement::DeleteEntity(extraEnt);
+						}
+						inst.ExtraEnts.clear();
 					}
 				}
 
 				continue;
 			}
 
-			Vector3 entPos = inst.Ent.Handle.Position_get();
+			Vector3 entPos = inst.Ent.handle.GetPosition();
 			float dist = GET_DISTANCE_BETWEEN_COORDS(myPos.x, myPos.y, myPos.z, entPos.x, entPos.y, entPos.z, true);
 
 			if (dist <= InteractRange)
 			{
-				Game::Print::setupdraw(GTAfont::Arial, Vector2(0, 0.4f), false, true, false, RGBA(255, 255, 255, 190));
+				Game::Print::SetupDraw(GTAfont::Arial, Vector2(0, 0.4f), false, true, false, RGBA(255, 255, 255, 190));
 				Game::Print::drawstring("Press ~b~[E]~s~ to interact.", NULL, 0.1f);
 
 				if (PAD::IS_CONTROL_JUST_PRESSED(0, INPUT_CONTEXT))
@@ -176,7 +257,7 @@ namespace sub::Spooner::Interactables
 
 		vActiveInteractables.erase(
 			std::remove_if(vActiveInteractables.begin(), vActiveInteractables.end(),
-				[](const InteractableInstance& inst) { return !inst.Ent.Handle.Exists(); }),
+				[](const InteractableInstance& inst) { return !inst.Ent.handle.Exists(); }),
 			vActiveInteractables.end()
 		);
 	}

@@ -1,0 +1,4 @@
+/* Visual Studio Settings File */
+{
+  "cmake.general.useCMakePresets": "always"
+}

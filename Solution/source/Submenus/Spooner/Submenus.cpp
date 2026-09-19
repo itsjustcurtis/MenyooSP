@@ -4614,6 +4614,7 @@ namespace sub
 			AddOption("Object", null, nullFunc, SUB::SPOONER_SPAWN_PROP);
 			AddOption("Ped", null, nullFunc, SUB::SPOONER_SPAWN_PED);
 			AddOption("Vehicle", null, nullFunc, SUB::SPOONER_SPAWN_VEHICLE);
+			AddOption("Interactable", null, nullFunc, SUB::SPOONER_SPAWN_INTERACTABLES);
 		}
 
 		namespace ObjectSearch
@@ -5247,14 +5248,14 @@ namespace sub
 			AddVehicleCategoryOption("Trains", Indices::TRAIN);
 
 			AddBreak("---Others---");
-			AddvcatOption_("Emergency", Indices::EMERGENCY);
-			AddvcatOption_("Military", Indices::MILITARY);
-			AddvcatOption_("Motorcycles", Indices::MOTORCYCLE);
-			AddvcatOption_("Bicycles", Indices::BICYCLE);
-			AddvcatOption_("Planes", Indices::PLANE);
-			AddvcatOption_("Helicopters", Indices::HELICOPTER);
-			AddvcatOption_("Boats", Indices::BOAT);
-			AddvcatOption_("Others", Indices::OTHER);
+			AddVehicleCategoryOption("Emergency", Indices::EMERGENCY);
+			AddVehicleCategoryOption("Military", Indices::MILITARY);
+			AddVehicleCategoryOption("Motorcycles", Indices::MOTORCYCLE);
+			AddVehicleCategoryOption("Bicycles", Indices::BICYCLE);
+			AddVehicleCategoryOption("Planes", Indices::PLANE);
+			AddVehicleCategoryOption("Helicopters", Indices::HELICOPTER);
+			AddVehicleCategoryOption("Boats", Indices::BOAT);
+			AddVehicleCategoryOption("Others", Indices::OTHER);
 
 			bool bInputPressed = false;
 			AddOption("INPUT MODEL", bInputPressed); if (bInputPressed)
@@ -5998,6 +5999,7 @@ REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES,                       	sub::Spoo
 REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT,             	sub::Spooner::Submenus::Sub_SpawnProp_Favourites_CatSelect)
 REGISTER_SUBMENU(SPOONER_SPAWN_PED,                                   	sub::Spooner::Submenus::Sub_SpawnPed)
 REGISTER_SUBMENU(SPOONER_SPAWN_VEHICLE,                               	sub::Spooner::Submenus::Sub_SpawnVehicle)
+REGISTER_SUBMENU(SPOONER_SPAWN_INTERACTABLES,                          	sub::Spooner::Submenus::Sub_SpawnInteractables)
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS,                               	sub::Spooner::Submenus::Sub_ManageMarkers)
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_REMOVAL,                       	sub::Spooner::Submenus::Sub_ManageMarkers_Removal)
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER,                      	sub::Spooner::Submenus::Sub_ManageMarkers_InMarker)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../MinHook/include/MinHook.h"
+#include "MinHook.h"
 
 class Hook
 {
