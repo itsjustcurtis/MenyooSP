@@ -262,6 +262,7 @@ void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), vo
 void AddTexter(const std::string& text, int selectedindex, const std::vector<std::string>& textarray, bool &A_PRESS = null, bool &RIGHT_PRESS = null, bool &LEFT_PRESS = null, bool gxt = 0);
 
 int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts);
+int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts, bool &pressed);
 
 // Returns true when the value changed this frame
 template<typename T>

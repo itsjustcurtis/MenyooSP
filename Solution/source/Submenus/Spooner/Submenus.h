@@ -12,6 +12,7 @@
 #include <tuple>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "..\..\Util\GTAmath.h"
 #include "SpoonerEntity.h"
@@ -45,6 +46,13 @@ namespace sub
 			void Clear();
 			void DestroyPivot();
 			void CreatePivot();
+			struct EntityState { bool collision; bool frozen; bool dynamic; };
+			extern std::unordered_map<int, EntityState> g_savedEntityStates;
+			void SaveEntityState(const SpoonerEntity& entity);
+			void RestoreEntityState(SpoonerEntity& entity);
+			void RestoreAllEntityStates();
+			void DiscardEntityState(GTAentity handle);
+			void ApplySavedEntityState(GTAentity origHandle, GTAentity newHandle);
 		}
 
 		void HandleKeyboardPlacementInput(Vector3& position, Vector3& rotation);

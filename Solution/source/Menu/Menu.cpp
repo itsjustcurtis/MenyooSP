@@ -1771,13 +1771,18 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 	}
 
 }
-int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts)
+int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts, bool &pressed)
 {
-	bool input = false, right = false, left = false;
-	AddTexter(label, currentIdx, opts, input, right, left);
+	bool right = false, left = false;
+	AddTexter(label, currentIdx, opts, pressed, right, left);
 	if (right && currentIdx < (int)opts.size() - 1) currentIdx++;
 	if (left && currentIdx > 0) currentIdx--;
 	return currentIdx;
+}
+int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts)
+{
+	bool discarded = false;
+	return AddTexterCycler(label, currentIdx, opts, discarded);
 }
 void AddTexter(const std::string& text, int selectedindex, const std::vector<std::string>& textarray, bool& A_PRESS, bool& RIGHT_PRESS, bool& LEFT_PRESS, bool gxt)
 {

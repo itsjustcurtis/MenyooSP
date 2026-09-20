@@ -108,6 +108,62 @@ namespace sub
 		namespace MultiSelect
 		{
 			std::vector<SpoonerEntity> MultiSelect::g_selectedEntities;
+			std::unordered_map<int, EntityState> MultiSelect::g_savedEntityStates;
+
+			void SaveEntityState(const SpoonerEntity& entity)
+			{
+				if (!entity.handle.Exists())
+					return;
+				int h = entity.handle.GetHandle();
+				if (g_savedEntityStates.find(h) != g_savedEntityStates.end())
+					return; // keep the pre-attach state
+				g_savedEntityStates[h] = { entity.handle.GetIsCollisionEnabled(), entity.handle.IsPositionFrozen(), entity.dynamic };
+			}
+			void DiscardEntityState(GTAentity handle)
+			{
+				g_savedEntityStates.erase(handle.GetHandle());
+			}
+			static void ApplyEntityState(GTAentity handle, const EntityState& s)
+			{
+				handle.SetIsCollisionEnabled(s.collision);
+				handle.FreezePosition(s.frozen);
+				handle.SetDynamic(s.dynamic);
+			}
+			static void SyncDynamicFlag(GTAentity handle, bool dynamic)
+			{
+				int idx = EntityManagement::GetEntityIndexInDb(handle);
+				if (idx >= 0)
+					Databases::EntityDb[idx].dynamic = dynamic;
+			}
+			void RestoreEntityState(SpoonerEntity& entity)
+			{
+				auto it = g_savedEntityStates.find(entity.handle.GetHandle());
+				if (it == g_savedEntityStates.end())
+					return;
+				EntityState s = it->second;
+				g_savedEntityStates.erase(it);
+				if (!entity.handle.Exists())
+					return;
+				entity.handle.Detach();
+				ApplyEntityState(entity.handle, s);
+				entity.dynamic = s.dynamic;
+				SyncDynamicFlag(entity.handle, s.dynamic);
+			}
+			void RestoreAllEntityStates()
+			{
+				for (auto& e : MultiSelect::g_selectedEntities)
+					RestoreEntityState(e);
+			}
+			void ApplySavedEntityState(GTAentity origHandle, GTAentity newHandle)
+			{
+				if (!newHandle.Exists())
+					return;
+				auto it = g_savedEntityStates.find(origHandle.GetHandle());
+				if (it == g_savedEntityStates.end())
+					return;
+				ApplyEntityState(newHandle, it->second);
+				SyncDynamicFlag(newHandle, it->second.dynamic);
+			}
 
 			void Add(const SpoonerEntity& entity)
 			{
@@ -125,6 +181,7 @@ namespace sub
 			{
 				if (index < 0 || index >= static_cast<int>(MultiSelect::g_selectedEntities.size()))
 					return;
+				RestoreEntityState(MultiSelect::g_selectedEntities[index]);
 				MultiSelect::g_selectedEntities.erase(MultiSelect::g_selectedEntities.begin() + index);
 			}
 
@@ -134,10 +191,12 @@ namespace sub
 				{
 					if (MultiSelect::g_selectedEntities[i].handle == handle)
 					{
+						RestoreEntityState(MultiSelect::g_selectedEntities[i]);
 						MultiSelect::g_selectedEntities.erase(MultiSelect::g_selectedEntities.begin() + i);
 						return;
 					}
 				}
+				DiscardEntityState(handle);
 			}
 
 			bool IsSelected(GTAentity handle)
@@ -161,16 +220,16 @@ namespace sub
 
 			void Clear()
 			{
+				RestoreAllEntityStates();
 				MultiSelect::g_selectedEntities.clear();
+				MultiSelect::g_savedEntityStates.clear();
 			}
 
 			void DestroyPivot()
 			{
 				if (g_multiSelectPivot.Exists())
 				{
-					for (auto& e : MultiSelect::g_selectedEntities)
-						if (e.handle.Exists())
-							e.handle.Detach();
+					RestoreAllEntityStates();
 					g_multiSelectPivot.Delete();
 				}
 			}
@@ -203,6 +262,7 @@ namespace sub
 				{
 					if (e.handle.Exists())
 					{
+						MultiSelect::SaveEntityState(e);
 						Vector3 relPos = e.handle.GetPosition() - pivotPos;
 						Vector3 relRot = e.handle.GetRotation() - pivotRot;
 						e.handle.AttachTo(g_multiSelectPivot, -1, false, relPos, relRot);
@@ -2205,36 +2265,48 @@ namespace sub
 			AddTitle("Multi-Select");
 			
 			bool bSelectAll = false, bClearAll = false;
-			//if (MultiSelect::g_selectedEntities.size() < Databases::EntityDb.size()) //Commented out these statements as it causes the selection to move up and down when selecting/deselecting entities in the list
+			static const std::vector<std::string> copyModeOptions = { "Selected Only", "Copy With Attachments" };
+			std::string graySelectAllPrefix = MultiSelect::g_selectedEntities.size() < Databases::EntityDb.size() ? "~c~" : "";
+			std::string dbEntityCount = std::to_string(Databases::EntityDb.size());
+			AddOption(graySelectAllPrefix + "Select All (" + dbEntityCount + ")", bSelectAll); if (bSelectAll && MultiSelect::g_selectedEntities.size() < Databases::EntityDb.size())
 			{
-				AddOption("Select All (" + std::to_string(Databases::EntityDb.size()) + ")", bSelectAll); if (bSelectAll)
+				MultiSelect::DestroyPivot();
+				MultiSelect::SelectAll();
+				if (g_multiSelectEditActive)
 				{
-					MultiSelect::DestroyPivot();
-					MultiSelect::SelectAll();
-					if (g_multiSelectEditActive)
-					{
-						selectedEntity = g_multiSelectPrevSelected;
-						g_multiSelectEditActive = false;
-					}
-					*Menu::activeOptionIndex = 1;
-					return;
+					selectedEntity = g_multiSelectPrevSelected;
+					g_multiSelectEditActive = false;
+				}
+				*Menu::activeOptionIndex = 1;
+				return;
+			}
+
+			std::string grayClearPrefix = MultiSelect::g_selectedEntities.empty() ? "~c~" : "";
+			std::string selectedEntityCount = std::to_string(MultiSelect::g_selectedEntities.size());
+			AddOption(grayClearPrefix + "Clear Selection (" + selectedEntityCount + ")", bClearAll); if (bClearAll && !MultiSelect::g_selectedEntities.empty())
+			{
+				MultiSelect::DestroyPivot();
+				MultiSelect::Clear();
+				if (g_multiSelectEditActive)
+				{
+					selectedEntity = g_multiSelectPrevSelected;
+					g_multiSelectEditActive = false;
+				}
+				*Menu::activeOptionIndex = 1;
+				return;
+			}
+			bool bCopyPressed = false;
+			_copyEntTexterValue = (UINT8)AddTexterCycler((MultiSelect::g_selectedEntities.empty() ? "~c~Copy~s~" : "Copy"), _copyEntTexterValue, copyModeOptions, bCopyPressed);
+			AddOptionDescription("Creates a duplicate. Left/right chooses whether attachments are copied too.");
+			if (bCopyPressed)
+			{
+				for (auto& e : MultiSelect::g_selectedEntities)
+				{
+					SpoonerEntity copy = EntityManagement::CopyEntity(e, true, true, _copyEntTexterValue);
+					MultiSelect::ApplySavedEntityState(e.handle, copy.handle);
 				}
 			}
-			//if (!MultiSelect::g_selectedEntities.empty()) //Commented out these statements as it causes the selection to move up and down when selecting/deselecting entities in the list
-			{
-				AddOption("Clear Selection (" + std::to_string(MultiSelect::g_selectedEntities.size()) + ")", bClearAll); if (bClearAll)
-				{
-					MultiSelect::DestroyPivot();
-					MultiSelect::Clear();
-					if (g_multiSelectEditActive)
-					{
-						selectedEntity = g_multiSelectPrevSelected;
-						g_multiSelectEditActive = false;
-					}
-					*Menu::activeOptionIndex = 1;
-					return;
-				}
-			}
+
 			if (!Databases::EntityDb.empty())
 			{
 				AddBreak("---Entities---");
@@ -2377,21 +2449,9 @@ namespace sub
 					}
 				}
 
-				bool bCopyPressed = false, bCopy_plus = false, bCopy_minus = false;
-				AddTexter("Copy", _copyEntTexterValue, std::vector<std::string>{ "Selected Only", "Copy With Attachments" }, bCopyPressed, bCopy_plus, bCopy_minus);
-				AddOptionDescription("Creates a duplicate. Left/right chooses whether attachments are copied too.");
-				if (bCopy_plus) { if (_copyEntTexterValue < 1U) _copyEntTexterValue++; }
-				if (bCopy_minus) { if (_copyEntTexterValue > 0) _copyEntTexterValue--; }
-				if (bCopyPressed)
-				{
-					for (auto& e : MultiSelect::g_selectedEntities)
-					{
-						EntityManagement::CopyEntity(e, true, true, _copyEntTexterValue);
-					}
-				}
-			}
+		}
 
-			// Always show DB entity list with checkboxes
+		// Always show DB entity list with checkboxes
 		}
 
 		void Sub_PedOps()
