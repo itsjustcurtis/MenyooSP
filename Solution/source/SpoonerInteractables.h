@@ -14,21 +14,7 @@ namespace sub::Spooner::Interactables
 	{
 		AnimTarget Target;
 		std::string ClipName;
-		float BlendIn = 8.0f;
-		float BlendOut = -8.0f;
-
-		// Only used when Target == Player (TASK_SYNCHRONIZED_SCENE)
-		int Flags = 0;
-		int RagdollBlockingFlags = 0;
-		float MoverBlendDelta = 0.0f;
-		int IkFlags = 0;
-
-		// Only used when Target == PrimaryProp or ExtraProp (PLAY_SYNCHRONIZED_ENTITY_ANIM)
-		Any PropFlags = 0;
-		float PlaybackRate = 1.0f;
-
-		// Only used when Target == ExtraProp - index into Def->ExtraProps / Instance->ExtraEnts
-		int ExtraPropIndex = 0;
+		int ExtraPropIndex = 0; // only used when Target == ExtraProp
 	};
 
 	struct ExtraPropDef
@@ -43,21 +29,30 @@ namespace sub::Spooner::Interactables
 		int MaxDurationMs = 6000;
 		float SceneRate = 1.0f;
 		std::string FacialClip;
+
+		float BlendIn = 1000.0f;   // p4 for props, speed for player - 1000.0f is the documented "instant" convention
+		float BlendOut = -8.0f;
+		int Flags = 0;
+		int RagdollBlockingFlags = 0;
+		float MoverBlendDelta = 0.0f;
+		int IkFlags = 0;
+		Any PropFlags = 0;
+		float PlaybackRate = 1000.0f; // p7 - the missing half of the convention, was stuck at 1.0f this whole session
 	};
 
 	struct InteractableDefinition
 	{
 		std::string Label;
-		Hash PropModel; // primary prop (cash) - spawned at world-placement time
-		std::vector<ExtraPropDef> ExtraProps; // spawned at activation time (e.g. bag)
+		Hash PropModel;
+		std::vector<ExtraPropDef> ExtraProps;
 		std::string AnimDict;
 		std::vector<InteractableStage> Stages;
 	};
 
 	struct InteractableInstance
 	{
-		SpoonerEntity Ent; // primary prop
-		std::vector<SpoonerEntity> ExtraEnts; // parallel to Def->ExtraProps
+		SpoonerEntity Ent;
+		std::vector<SpoonerEntity> ExtraEnts;
 		const InteractableDefinition* Def = nullptr;
 		bool bActivated = false;
 		int SyncedScene = -1;

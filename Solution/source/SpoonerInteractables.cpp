@@ -22,31 +22,28 @@ namespace sub::Spooner::Interactables
 			{
 				{
 					{
-						{ AnimTarget::Player,    "enter",     4.0f, -4.0f, 0, 0, 0.0f, 0 },
-						{ AnimTarget::ExtraProp,  "enter_bag", 4.0f, -4.0f, 0, 0, 0.0f, 0, 0, 1.0f, 0 }
+						{ AnimTarget::ExtraProp, "enter_bag" },
+						{ AnimTarget::Player,    "enter" }
 					},
-					6000,
-					1.0f,
-					"enter_facial"
+					6000, 1.0f, "enter_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
 				},
 				{
 					{
-						{ AnimTarget::Player,      "grab",      4.0f, -4.0f, 0, 0, 0.0f, 0 },
-						{ AnimTarget::PrimaryProp, "grab_cash", 4.0f, -4.0f, 0, 0, 0.0f, 0, 0, 1.0f },
-						{ AnimTarget::ExtraProp,   "grab_bag",  4.0f, -4.0f, 0, 0, 0.0f, 0, 0, 1.0f, 0 }
+						{ AnimTarget::PrimaryProp, "grab_cash" },
+						{ AnimTarget::ExtraProp,   "grab_bag" },
+						{ AnimTarget::Player,      "grab" }
 					},
-					30000,
-					1.0f,
-					"grab_facial"
+					30000, 1.0f, "grab_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
 				},
 				{
 					{
-						{ AnimTarget::Player,    "exit",     4.0f, -4.0f, 0, 0, 0.0f, 0 },
-						{ AnimTarget::ExtraProp,  "exit_bag", 4.0f, -4.0f, 0, 0, 0.0f, 0, 0, 1.0f, 0 }
+						{ AnimTarget::ExtraProp, "exit_bag" },
+						{ AnimTarget::Player,    "exit" }
 					},
-					6000,
-					1.0f,
-					"exit_facial"
+					6000, 1.0f, "exit_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
 				}
 			}
 		},
@@ -76,10 +73,8 @@ namespace sub::Spooner::Interactables
 
 		GTAped myPed = PLAYER_PED_ID();
 
-		// Manually place the player relative to the fixed anchor - we no longer
-		// rely on any scene-attach mechanism to do this for us.
 		Vector3 forward = Vector3(sinf(-inst.AnchorRot.z * 3.14159f / 180.0f), cosf(-inst.AnchorRot.z * 3.14159f / 180.0f), 0.0f);
-		Vector3 standPos = inst.AnchorPos - (forward * 1.0f); // 1m in front - tune once you can see it in-game
+		Vector3 standPos = inst.AnchorPos - (forward * 1.0f);
 		myPed.SetPosition(standPos);
 		myPed.SetHeading(inst.AnchorRot.z);
 
@@ -112,8 +107,8 @@ namespace sub::Spooner::Interactables
 				TASK::TASK_SYNCHRONIZED_SCENE(
 					myPed.Handle(), syncedScene,
 					inst.Def->AnimDict.c_str(), p.ClipName.c_str(),
-					p.BlendIn, p.BlendOut,
-					p.Flags, p.RagdollBlockingFlags, p.MoverBlendDelta, p.IkFlags
+					stage.BlendIn, stage.BlendOut,
+					stage.Flags, stage.RagdollBlockingFlags, stage.MoverBlendDelta, stage.IkFlags
 				);
 			}
 			else // PrimaryProp or ExtraProp
@@ -127,17 +122,14 @@ namespace sub::Spooner::Interactables
 
 				if (p.Target == AnimTarget::PrimaryProp)
 				{
-					// Cash genuinely starts on the table - anchor reset is correct here.
 					targetEnt.handle.SetPosition(inst.AnchorPos);
 					targetEnt.handle.SetRotation(inst.AnchorRot);
 				}
-				// ExtraProp (bag) is left wherever it already is - it starts with the
-				// player, not the table, so forcing it to the anchor was the bug.
 
 				ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(
 					targetEnt.handle.Handle(), syncedScene,
 					p.ClipName.c_str(), inst.Def->AnimDict.c_str(),
-					p.BlendIn, p.BlendOut, p.PropFlags, p.PlaybackRate
+					stage.BlendIn, stage.BlendOut, stage.PropFlags, stage.PlaybackRate
 				);
 			}
 		}
