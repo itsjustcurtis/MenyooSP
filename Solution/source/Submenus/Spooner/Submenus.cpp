@@ -2266,7 +2266,7 @@ namespace sub
 			
 			bool bSelectAll = false, bClearAll = false;
 			static const std::vector<std::string> copyModeOptions = { "Selected Only", "Copy With Attachments" };
-			std::string graySelectAllPrefix = MultiSelect::g_selectedEntities.size() < Databases::EntityDb.size() ? "~c~" : "";
+			std::string graySelectAllPrefix = MultiSelect::g_selectedEntities.size() < Databases::EntityDb.size() ? "" : "~c~";
 			std::string dbEntityCount = std::to_string(Databases::EntityDb.size());
 			AddOption(graySelectAllPrefix + "Select All (" + dbEntityCount + ")", bSelectAll); if (bSelectAll && MultiSelect::g_selectedEntities.size() < Databases::EntityDb.size())
 			{
