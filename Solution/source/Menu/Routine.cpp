@@ -3651,7 +3651,7 @@ void Menu::loops()
 	bool gameIsPaused = IS_PAUSE_MENU_ACTIVE() != 0;
 
 	// Apply default outfit on first load
-	if (!GET_IS_LOADING_SCREEN_ACTIVE() && !defaultPedSet)
+	if (!defaultPedSet && IsGameReadyForDeferredInit())
 	{
 		sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
 		sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);
