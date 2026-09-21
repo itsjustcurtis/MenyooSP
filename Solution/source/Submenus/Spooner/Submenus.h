@@ -39,6 +39,9 @@ namespace sub
 		namespace MultiSelect
 		{
 			extern std::vector<SpoonerEntity> g_selectedEntities;
+			extern bool g_bulkEditActive;
+			extern SpoonerEntity g_prevSelected;
+			extern GTAentity g_groupPivot;
 			void Add(const SpoonerEntity& entity);
 			void Remove(int index);
 			void Remove(GTAentity handle);

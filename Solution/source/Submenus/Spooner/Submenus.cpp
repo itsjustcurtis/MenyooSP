@@ -102,13 +102,13 @@ namespace sub
 		static FavPropCache s_favPropCache;
 		static std::string s_favPropSearchStr;
 
-		bool g_multiSelectEditActive = false;
-		SpoonerEntity g_multiSelectPrevSelected;
-		GTAentity g_multiSelectPivot;
 		namespace MultiSelect
 		{
-			std::vector<SpoonerEntity> MultiSelect::g_selectedEntities;
-			std::unordered_map<int, EntityState> MultiSelect::g_savedEntityStates;
+			std::vector<SpoonerEntity> g_selectedEntities;
+			std::unordered_map<int, EntityState> g_savedEntityStates;
+			bool g_bulkEditActive = false;
+			SpoonerEntity g_prevSelected;
+			GTAentity g_groupPivot;
 
 			void SaveEntityState(const SpoonerEntity& entity)
 			{
@@ -227,10 +227,10 @@ namespace sub
 
 			void DestroyPivot()
 			{
-				if (g_multiSelectPivot.Exists())
+				if (MultiSelect::g_groupPivot.Exists())
 				{
 					RestoreAllEntityStates();
-					g_multiSelectPivot.Delete();
+					MultiSelect::g_groupPivot.Delete();
 				}
 			}
 
@@ -251,13 +251,13 @@ namespace sub
 
 				centroid /= static_cast<float>(count);
 				GTAprop prop = World::CreateProp(GTAmodel::Model(0x3A49EBD1), centroid, Vector3(), false, false);
-				g_multiSelectPivot = GTAentity(prop.Handle());
-				g_multiSelectPivot.SetAlpha(0);
-				SET_ENTITY_COLLISION(g_multiSelectPivot.Handle(), false, false);
-				g_multiSelectPivot.FreezePosition(true);
+				MultiSelect::g_groupPivot = GTAentity(prop.Handle());
+				MultiSelect::g_groupPivot.SetAlpha(0);
+				SET_ENTITY_COLLISION(MultiSelect::g_groupPivot.Handle(), false, false);
+				MultiSelect::g_groupPivot.FreezePosition(true);
 
-				Vector3 pivotPos = g_multiSelectPivot.GetPosition();
-				Vector3 pivotRot = g_multiSelectPivot.GetRotation();
+				Vector3 pivotPos = MultiSelect::g_groupPivot.GetPosition();
+				Vector3 pivotRot = MultiSelect::g_groupPivot.GetRotation();
 				for (auto& e : MultiSelect::g_selectedEntities)
 				{
 					if (e.handle.Exists())
@@ -265,7 +265,7 @@ namespace sub
 						MultiSelect::SaveEntityState(e);
 						Vector3 relPos = e.handle.GetPosition() - pivotPos;
 						Vector3 relRot = e.handle.GetRotation() - pivotRot;
-						e.handle.AttachTo(g_multiSelectPivot, -1, false, relPos, relRot);
+						e.handle.AttachTo(MultiSelect::g_groupPivot, -1, false, relPos, relRot);
 					}
 				}
 			}
@@ -2232,20 +2232,20 @@ namespace sub
 					EntityManagement::ShowArrowAboveEntity(entity.handle, RGBA(127, 0, 255, 200));
 			}
 
-			if (!g_multiSelectEditActive)
+			if (!MultiSelect::g_bulkEditActive)
 			{
-				g_multiSelectPrevSelected = selectedEntity;
-				g_multiSelectEditActive = true;
+				MultiSelect::g_prevSelected = selectedEntity;
+				MultiSelect::g_bulkEditActive = true;
 			}
 
 			// Create pivot at centroid if entities are selected but no pivot exists yet
-			if (!g_multiSelectPivot.Exists() && !MultiSelect::g_selectedEntities.empty())
+			if (!MultiSelect::g_groupPivot.Exists() && !MultiSelect::g_selectedEntities.empty())
 				MultiSelect::CreatePivot();
 
 			// Point gizmo at pivot
-			if (g_multiSelectPivot.Exists())
+			if (MultiSelect::g_groupPivot.Exists())
 			{
-				selectedEntity.handle = g_multiSelectPivot;
+				selectedEntity.handle = MultiSelect::g_groupPivot;
 				selectedEntity.attachmentArgs.isAttached = false;
 			}
 
@@ -2253,10 +2253,10 @@ namespace sub
 			if (Menu::OnSubBack == nullptr)
 			{
 				Menu::OnSubBack = []() {
-					if (g_multiSelectEditActive)
+					if (MultiSelect::g_bulkEditActive)
 					{
-						selectedEntity = g_multiSelectPrevSelected;
-						g_multiSelectEditActive = false;
+						selectedEntity = MultiSelect::g_prevSelected;
+						MultiSelect::g_bulkEditActive = false;
 					}
 					MultiSelect::DestroyPivot();
 				};
@@ -2272,10 +2272,10 @@ namespace sub
 			{
 				MultiSelect::DestroyPivot();
 				MultiSelect::SelectAll();
-				if (g_multiSelectEditActive)
+				if (MultiSelect::g_bulkEditActive)
 				{
-					selectedEntity = g_multiSelectPrevSelected;
-					g_multiSelectEditActive = false;
+					selectedEntity = MultiSelect::g_prevSelected;
+					MultiSelect::g_bulkEditActive = false;
 				}
 				*Menu::activeOptionIndex = 1;
 				return;
@@ -2287,10 +2287,10 @@ namespace sub
 			{
 				MultiSelect::DestroyPivot();
 				MultiSelect::Clear();
-				if (g_multiSelectEditActive)
+				if (MultiSelect::g_bulkEditActive)
 				{
-					selectedEntity = g_multiSelectPrevSelected;
-					g_multiSelectEditActive = false;
+					selectedEntity = MultiSelect::g_prevSelected;
+					MultiSelect::g_bulkEditActive = false;
 				}
 				*Menu::activeOptionIndex = 1;
 				return;
@@ -2342,12 +2342,12 @@ namespace sub
 
 
 			// Display pivot position and rotation and allow editing of all selected entities
-			if (!MultiSelect::g_selectedEntities.empty() && g_multiSelectPivot.Exists())
+			if (!MultiSelect::g_selectedEntities.empty() && MultiSelect::g_groupPivot.Exists())
 			{
 				bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
 				bool bDelete = false;
-				Vector3 pivotPos = g_multiSelectPivot.GetPosition();
-				Vector3 pivotRot = g_multiSelectPivot.GetRotation();
+				Vector3 pivotPos = MultiSelect::g_groupPivot.GetPosition();
+				Vector3 pivotRot = MultiSelect::g_groupPivot.GetRotation();
 				Vector3 basePos = pivotPos;
 				Vector3 baseRot = pivotRot;
 
@@ -2389,14 +2389,14 @@ namespace sub
 				// Apply pivot pos/rot to pivot itself
 				if (pivotPos.x != basePos.x || pivotPos.y != basePos.y || pivotPos.z != basePos.z)
 				{
-					if (isOnTheLine) g_multiSelectPivot.RequestControl();
-					g_multiSelectPivot.SetPosition(SpoonerMode::SnapPos(pivotPos));
+					if (isOnTheLine) MultiSelect::g_groupPivot.RequestControl();
+					MultiSelect::g_groupPivot.SetPosition(SpoonerMode::SnapPos(pivotPos));
 				}
 				if (pivotRot.x != baseRot.x || pivotRot.y != baseRot.y || pivotRot.z != baseRot.z)
 				{
 					WrapAngle(pivotRot.x); WrapAngle(pivotRot.y); WrapAngle(pivotRot.z);
-					if (isOnTheLine) g_multiSelectPivot.RequestControl();
-					g_multiSelectPivot.SetRotation(SpoonerMode::SnapRot(pivotRot));
+					if (isOnTheLine) MultiSelect::g_groupPivot.RequestControl();
+					MultiSelect::g_groupPivot.SetRotation(SpoonerMode::SnapRot(pivotRot));
 				}
 
 				// Apply opacity delta to all selected entities
