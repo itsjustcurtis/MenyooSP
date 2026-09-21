@@ -139,7 +139,11 @@ void MenuInput::UpdateDeltaCursorNormal()
 bool titleBarStripeVisible;
 bool numberInputActive = false;
 bool menuHasNotOpened = true;
-bool ignoreMenuToggleUntilRelease = false;
+bool suppressMenuToggleUntilRelease = false;
+
+static bool deferredMenuInitDone = false;
+static DWORD nextDeferredInitCheckTimeMs = 0;
+static constexpr DWORD kDeferredInitRetryDelayMs = 1000;
 
 Vector2 menuPos;
 Vector2 g_deltaCursorNormal;
@@ -178,7 +182,7 @@ UINT8 Menu::activeBreakScrollDirection = 0;
 INT16 Menu::menuHistoryIndex = 0;
 INT Menu::submenuHistory[100] = {};
 INT Menu::optionSelectionHistory[100] = {};
-INT Menu::pendingSubmenu = 0;
+INT Menu::pendingSubmenu = -1;
 int Menu::nextDeferredActionTime = 0;
 bool Menu::usingControllerInput = 0, Menu::usingMouseInput = 0;
 bool Menu::centerTitleText = 1, Menu::centerOptionText = 0, Menu::centerBreakText = 1,
@@ -525,17 +529,16 @@ bool Menu::isBinds()
 	// Open menu - RB + Left / F8
 	UINT8 index1 = menubindsGamepad.first < 50 ? 0 : 2;
 	UINT8 index2 = menubindsGamepad.second < 50 ? 0 : 2;
-	// fixes a bug that occured when the menu is initializing and user presses F8 multiple times
-	if (ignoreMenuToggleUntilRelease)
+	if (suppressMenuToggleUntilRelease)
 	{
-		bool toggleHeld = usingControllerInput
+		const bool toggleHeld = usingControllerInput
 			? (IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) || IS_DISABLED_CONTROL_PRESSED(index2, menubindsGamepad.second))
 			: IsKeyDown(menuToggleKey);
 		if (!toggleHeld)
 		{
 			if (!usingControllerInput)
 				ResetKeyState(menuToggleKey);
-			ignoreMenuToggleUntilRelease = false;
+			suppressMenuToggleUntilRelease = false;
 		}
 		return false;
 	}
@@ -545,24 +548,50 @@ bool Menu::isBinds()
 	else 
 		return IsKeyJustUp(menuToggleKey); // F8
 }
+bool Menu::IsGameReadyForDeferredInit()
+{
+	if (GET_IS_LOADING_SCREEN_ACTIVE())
+		return false;
+	if (GET_IS_INITIAL_LOADING_SCREEN_ACTIVE())
+		return false;
+	if (IS_PAUSE_MENU_ACTIVE())
+		return false;
+	if (!IS_PLAYER_PLAYING(PLAYER_ID()))
+		return false;
+	const Ped playerPed = PLAYER_PED_ID();
+	if (playerPed == 0 || !DOES_ENTITY_EXIST(playerPed))
+		return false;
+	return true;
+}
+
+void Menu::TickDeferredMenuInit()
+{
+	if (deferredMenuInitDone)
+		return;
+	const DWORD nowMs = GET_GAME_TIMER();
+	if (nowMs < nextDeferredInitCheckTimeMs)
+		return;
+	nextDeferredInitCheckTimeMs = nowMs + kDeferredInitRetryDelayMs;
+	if (!IsGameReadyForDeferredInit())
+		return;
+	if (menuHasNotOpened)
+		justopened();
+	if (!GTAmemory::TryInitEnhancedPools())
+		return;
+	deferredMenuInitDone = true;
+	addlog(ige::LogType::LOG_INIT, "Deferred menu init done");
+}
+
 void Menu::while_closed()
 {
 	if (isBinds())
 	{
-
 		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, opening Menyoo");
-		if (menuHasNotOpened) {
-			justopened();
-			GTAmemory::InitEnhancedPools();
-			ignoreMenuToggleUntilRelease = true;
-		}
-		else
-			addlog(ige::LogType::LOG_TRACE, "Menu has been opened before, skipping initialization");
-
 
 		Game::Sound::PlayFrontend("FocusIn", "HintCamSounds");
 
 		activeSubmenu = lastOpenedSubmenu;
+		suppressMenuToggleUntilRelease = true;
 		addlog(ige::LogType::LOG_TRACE, "Setting current submenu to lastOpenedSubmenu: " + std::to_string(lastOpenedSubmenu));
 		if (activeSubmenu == SUB::MAINMENU)
 		{

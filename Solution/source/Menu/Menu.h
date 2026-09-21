@@ -173,6 +173,8 @@ public:
 	static void sub_handler();
 	static void submenu_switch();
 	static void justopened();
+	static bool IsGameReadyForDeferredInit();
+	static void TickDeferredMenuInit();
 
 	static void SetInputMethods();
 	static void DisableControls();
