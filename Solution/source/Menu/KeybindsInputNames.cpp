@@ -33,7 +33,7 @@ namespace Keybinds
 
 		// Keycap width prefix for the instructional_buttons scaleform: everything after the
 		// prefix is rendered as literal text inside keycap art of the matching width, so the
-		// label must be a single token (no spaces) and the prefix must fit its length.
+		// label must fit the cap width chosen by its length.
 		std::string KeycapPrefix(size_t labelLength)
 		{
 			if (labelLength <= 2) return "t_";
@@ -49,9 +49,15 @@ namespace Keybinds
 				case VirtualKey::Back: return "BACKSPACE";
 				case VirtualKey::Tab: return "TAB";
 				case VirtualKey::Return: return "ENTER";
-				case VirtualKey::Shift: case VirtualKey::LeftShift: case VirtualKey::RightShift: return "SHIFT";
-				case VirtualKey::Control: case VirtualKey::LeftControl: case VirtualKey::RightControl: return "CTRL";
-				case VirtualKey::Menu: case VirtualKey::LeftMenu: case VirtualKey::RightMenu: return "ALT";
+				case VirtualKey::Shift: return "SHIFT";
+				case VirtualKey::LeftShift: return "L SHIFT";
+				case VirtualKey::RightShift: return "R SHIFT";
+				case VirtualKey::Control: return "CTRL";
+				case VirtualKey::LeftControl: return "L CTRL";
+				case VirtualKey::RightControl: return "R CTRL";
+				case VirtualKey::Menu: return "ALT";
+				case VirtualKey::LeftMenu: return "L ALT";
+				case VirtualKey::RightMenu: return "R ALT";
 				case VirtualKey::Pause: return "PAUSE";
 				case VirtualKey::CapsLock: return "CAPSLOCK";
 				case VirtualKey::Escape: return "ESC";
