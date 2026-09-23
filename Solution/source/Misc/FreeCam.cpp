@@ -19,7 +19,6 @@
 #include "..\Util\GTAmath.h"
 #include "..\Util\keyboard.h"
 #include "..\Scripting\Camera.h"
-#include "..\Scripting\CustomHelpText.h"
 #include "..\Scripting\enums.h"
 #include "..\Scripting\Game.h"
 #include "..\Scripting\GameplayCamera.h"
@@ -319,22 +318,11 @@ namespace FreeCamMode
 				AdjustSpeed(scroll);
 		}
 
-		void ShowHelp()
+		void DrawHelpBindRows()
 		{
-			if (Menu::usingControllerInput)
-			{
-				Game::CustomHelpText::ShowTimedText(oss_ << "FreeCam:~n~~INPUT_MOVE_UD~ = " << Game::GetGXTEntry("ITEM_MOV_CAM")
-					<< "~n~~INPUT_LOOK_LR~ = " << Game::GetGXTEntry("ITEM_MOVE") << "~n~~INPUT_FRONTEND_RT~/~INPUT_FRONTEND_LT~ = " << "Ascend/Descend"
-					<< "~n~" << Keybinds::GetGlyph("freecam_hasten", Keybinds::Context::Gamepad) << " = " << "Hasten", 6000);
-			}
-			else
-			{
-				Game::CustomHelpText::ShowTimedText(oss_ << "FreeCam:~n~~INPUT_MOVE_UD~/~INPUT_MOVE_LR~ = " << Game::GetGXTEntry("ITEM_MOV_CAM")
-					<< "~n~~INPUT_LOOK_LR~ = " << Game::GetGXTEntry("ITEM_MOVE") << "~n~~INPUT_PARACHUTE_BRAKE_RIGHT~/~INPUT_PARACHUTE_BRAKE_LEFT~ = " << "Ascend/Descend"
-					<< "~n~" << Keybinds::GetGlyph("freecam_hasten", Keybinds::Context::Keyboard) << " = " << "Hasten"
-					<< "~n~" << Keybinds::GetGlyph("freecam_slow", Keybinds::Context::Keyboard) << " = " << "Slow Down"
-					<< "~n~" << Keybinds::GetGlyph("freecam_height_lock", Keybinds::Context::Keyboard) << " = " << "Height Lock", 6000);
-			}
+			Keybinds::AddBindIB("freecam_hasten", "Hasten");
+			Keybinds::AddBindIB("freecam_slow", "Slow Down");
+			Keybinds::AddBindIB("freecam_height_lock", "Height Lock");
 		}
 	}
 
@@ -373,8 +361,6 @@ namespace FreeCamMode
 		state.camera.SetFieldOfView(MenuConfig::FreeCam::defaultFov);
 		state.camera.SetDepthOfFieldStrength(0.0f);
 		World::SetRenderingCamera(state.camera);
-
-		ShowHelp();
 	}
 
 	void Stop()
@@ -433,6 +419,7 @@ namespace FreeCamMode
 
 		SetConflictingControls(false);
 		ApplyEntityOverrides();
+		DrawHelpBindRows();
 
 		// wardrobe front view owns the view; don't move or rotate behind it
 		if (!sub::WardrobeCamera::IsBusy())

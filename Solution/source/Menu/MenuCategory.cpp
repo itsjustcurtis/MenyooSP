@@ -108,9 +108,7 @@ namespace MenuCategory
 		categoryHeaderLabels.push_back(label);
 
 		if ((std::max)(categoryHeaderPositions.size(), s_lastCategoryCount) > 1)
-			AddOptionDescription(Menu::usingControllerInput
-				? "Press to expand or collapse. Press L3 to jump to another category."
-				: "Press to expand or collapse. Press G to jump to another category.");
+			AddOptionDescription("Press to expand or collapse. Press the shown key to jump to another category.");
 		else
 			AddOptionDescription("Press to expand or collapse.");
 

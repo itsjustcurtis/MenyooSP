@@ -83,7 +83,7 @@ namespace sub
 		AddOptionDescription("Turn individual game ped config flags on or off.");
 		AddOption("TriggerFX", null, nullFunc, SUB::PTFXSUB);
 		AddOption("Breathe Stuff", null, nullFunc, SUB::BREATHESTUFF);
-		AddOptionDescription("Breathe particle effects out of your mouth. Hold J (LS) to use.");
+		AddOptionDescription("Breathe particle effects out of your mouth while holding the bound key, once enabled.");
 		AddOption("Ghost Rider Mode", null, nullFunc, SUB::GHOSTRIDERMODE);
 
 		AddOption("Opacity (Local)", goToAlphaLevel, nullFunc, SUB::ENTITYALPHALEVEL);
@@ -120,7 +120,7 @@ namespace sub
 		AddLocal("Smash Ability", SmashAbility::g_smashAbility.Enabled(), SmashAbility::ToggleOnOff, SmashAbility::ToggleOnOff);
 		AddOptionDescription("Hold Jump to use a ground-smash ability.");
 		AddToggle("Fly Manual", superman, supermanOn);
-		AddOptionDescription("While skydiving: Numpad 7/1 (RT/LT) up/down, Numpad + (RB) boost, Numpad - (A) brake.");
+		AddOptionDescription("While skydiving: ascend, descend, boost forward and hover with the shown keys. Rebind them in Settings > Keybinds.");
 		AddToggle("Fly Auto", supermanAuto, supermanAutoOn);
 		AddOptionDescription("While skydiving, you're pushed forward and upward automatically.");
 		AddToggle("Ignored By Everyone", ignoredByEveryone, null, ignoredByEveryoneOff);
@@ -260,33 +260,12 @@ namespace sub
 			}
 		}
 
-		if (supermanOn) 
-		{
-			if (Menu::usingControllerInput)
-			{
-				Game::Print::PrintBottomLeft("RT for Up. LT for Down. RB for Boost. A for Brake.");
-			}
-			else 
-			{
-				Game::Print::PrintBottomLeft("Num7 for Up. Num1 for Down. NumPlus for Boost. NumMinus for Brake.");
-			}
-			return;
-		}
-
 		if (supermanAutoOn) 
 		{
 			Vector3 Pos = GET_ENTITY_COORDS(g_activePedHandle, 1);
 			CREATE_AMBIENT_PICKUP(PICKUP_PARACHUTE, Pos.x, Pos.y, Pos.z, 0, 300, 1, 0, 1);
 			TASK_PARACHUTE(g_activePedHandle, true, false);
 			APPLY_FORCE_TO_ENTITY(PLAYER_PED_ID(), 1, 0.0f, 0.0f, 10.0f, 0.0, 0.0, 0.0, 1, 1, 1, 1, 0, 1);
-			if (Menu::usingControllerInput)
-			{
-				Game::Print::PrintBottomLeft("Press ~b~A~s~ for temporary brake.");
-			}
-			else 
-			{
-				Game::Print::PrintBottomLeft("Press ~b~NUMPLUS~s~ for temporary brake.");
-			}
 			return;
 		}
 

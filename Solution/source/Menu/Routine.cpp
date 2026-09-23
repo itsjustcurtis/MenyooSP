@@ -1940,6 +1940,11 @@ void SetLocalSupermanManual()
 
 	if (isInParaFreeFall)
 	{
+		Keybinds::AddBindIB("superman_ascend", "Up");
+		Keybinds::AddBindIB("superman_descend", "Down");
+		Keybinds::AddBindIB("superman_boost", "Boost");
+		Keybinds::AddBindIB("superman_freeze", "Brake");
+
 		if (Keybinds::IsHeld("superman_boost"))
 		{
 			APPLY_FORCE_TO_ENTITY(playerPed, 1, 0.0, 45.0, 0.0, 0.0, 0.0, 0.0, 1, 1, 1, 1, 0, 1);
@@ -1989,6 +1994,7 @@ void SetPedSupermanAuto(Ped ped)
 		if (ped == PLAYER_PED_ID())
 		{
 			DISABLE_CONTROL_ACTION(2, INPUT_PARACHUTE_DEPLOY, TRUE);
+			Keybinds::AddBindIB("superman_freeze", "Temporary Brake");
 			if (Keybinds::IsHeld("superman_freeze"))
 			{
 				FREEZE_ENTITY_POSITION(ped, true);
@@ -2110,6 +2116,8 @@ void SetLocalCarJump()
 void SetLocalCarHydraulics()
 {
 	GTAvehicle vehicle = g_myVeh;
+
+	Keybinds::AddBindIB("vehicle_hydraulics", "Hydraulics");
 
 	if (Keybinds::IsHeld("vehicle_hydraulics") && vehicle.IsOnAllWheels())
 	{
@@ -2615,6 +2623,27 @@ void SetVehicleWeaponLines()
 
 void SetVehicleWeapons()
 {
+	const bool anyVehicleWeapon = vehicleRPG
+		|| vehicleFireworks
+		|| vehicleGuns
+		|| vehicleSnowballs
+		|| vehicleBalls
+		|| vehicleWaterHydrant
+		|| vehicleFlameLeak
+		|| vehicleLaserGreen
+		|| vehicleLaserRed
+		|| vehicleTurretsValkyrie
+		|| vehicleFlaregun
+		|| vehicleHeavySniper
+		|| vehicleTazerWeapon
+		|| vehicleMolotovWeapon
+		|| vehicleCombatPDW;
+
+	if (anyVehicleWeapon)
+	{
+		Keybinds::AddBindIB("vehicle_weapons_fire", "Fire");
+	}
+
 	StoreVehicleWeaponPos(g_myVeh);
 	if (vehicleWeaponLines)
 	{
@@ -2623,21 +2652,7 @@ void SetVehicleWeapons()
 
 	if (Keybinds::IsHeld("vehicle_weapons_fire"))
 	{
-		if (vehicleRPG
-			|| vehicleFireworks
-			|| vehicleGuns
-			|| vehicleSnowballs
-			|| vehicleBalls
-			|| vehicleWaterHydrant
-			|| vehicleFlameLeak
-			|| vehicleLaserGreen
-			|| vehicleLaserRed
-			|| vehicleTurretsValkyrie
-			|| vehicleFlaregun
-			|| vehicleHeavySniper
-			|| vehicleTazerWeapon
-			|| vehicleMolotovWeapon
-			|| vehicleCombatPDW)
+		if (anyVehicleWeapon)
 			CLEAR_AREA_OF_PROJECTILES(vehicleWeaponsOriginR.x, vehicleWeaponsOriginR.y, vehicleWeaponsOriginR.z, 8.0f, 0);
 
 		// RPG
@@ -3591,9 +3606,13 @@ static void TickVehicleEffects(bool gameIsPaused)
 	// Vehicle controls (only when game is not paused)
 	if (!gameIsPaused)
 	{
-		if (raceBoost && Keybinds::IsHeld("vehicle_boost"))
+		if (raceBoost)
 		{
-			SetSelfVehicleBoost();
+			Keybinds::AddBindIB("vehicle_boost", "Boost");
+			if (Keybinds::IsHeld("vehicle_boost"))
+			{
+				SetSelfVehicleBoost();
+			}
 		}
 
 		if (carJump != 0)
