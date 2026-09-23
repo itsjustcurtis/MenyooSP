@@ -31,22 +31,42 @@ struct {
 } keyStates[KEYS_SIZE];
 
 
+static DWORD ResolveModifierSide(DWORD key, BYTE scanCode, BOOL isExtended, BOOL isWithAlt)
+{
+	if (key == VirtualKey::Control
+		&& (isWithAlt || get_key_pressed(VirtualKey::Menu) || get_key_pressed(VirtualKey::LeftMenu)
+			|| get_key_pressed(VirtualKey::RightMenu)))
+		return VirtualKey::RightMenu; // AltGr / right-Alt
+	if (key == VirtualKey::Control)
+	{
+		if (scanCode == 0x1D && isExtended) return VirtualKey::RightControl;
+		if (scanCode == 0x1D) return VirtualKey::LeftControl;
+		return VirtualKey::Control;
+	}
+	if (key == VirtualKey::Menu)
+	{
+		if (scanCode == 0x38 && isExtended) return VirtualKey::RightMenu;
+		if (scanCode == 0x38) return VirtualKey::LeftMenu;
+		return VirtualKey::Menu;
+	}
+	if (key == VirtualKey::Shift)
+	{
+		if (scanCode == 0x36) return VirtualKey::RightShift;
+		if (scanCode == 0x2A) return VirtualKey::LeftShift;
+		return VirtualKey::Shift;
+	}
+	return key;
+}
+
 void OnKeyboardMessage(DWORD key, WORD repeats, BYTE scanCode, BOOL isExtended, BOOL isWithAlt, BOOL wasDownBefore, BOOL isUpNow)
 {
+	key = ResolveModifierSide(key, scanCode, isExtended, isWithAlt);
 	if (key < KEYS_SIZE)
 	{
 		keyStates[key].time = GetTickCount();
 		keyStates[key].isWithAlt = isWithAlt;
 		keyStates[key].wasDownBefore = wasDownBefore;
 		keyStates[key].isUpNow = isUpNow;
-
-		// AltGr layouts (Polish Programmers) synthesize a right-Alt press as a Control key with
-		// the Alt modifier held; mirror it into the right-Alt slot so press/release edges and
-		// holds see it. A bare Alt arrives as Menu and is left untouched.
-		if (key == VirtualKey::Control
-			&& (isWithAlt || get_key_pressed(VirtualKey::Menu) || get_key_pressed(VirtualKey::LeftMenu)
-				|| get_key_pressed(VirtualKey::RightMenu)))
-			keyStates[VirtualKey::RightMenu] = keyStates[key];
 	}
 }
 
@@ -69,13 +89,7 @@ bool IsKeyJustUp(DWORD key, bool exclusive)
 void ResetKeyState(DWORD key)
 {
 	if (key < KEYS_SIZE)
-	{
 		memset(&keyStates[key], 0, sizeof(keyStates[0]));
-		// the AltGr mirror shares the Control event's lifecycle; clear both so no stale
-		// edge lingers after a combo partner is consumed.
-		if (key == VirtualKey::Control)
-			memset(&keyStates[VirtualKey::RightMenu], 0, sizeof(keyStates[0]));
-	}
 }
 
 
