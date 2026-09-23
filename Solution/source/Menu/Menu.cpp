@@ -307,27 +307,31 @@ void Menu::DisableControls()
 	DISABLE_CONTROL_ACTION(0, INPUT_VEH_PUSHBIKE_SPRINT, 1);
 	DISABLE_CONTROL_ACTION(0, INPUT_VEH_PUSHBIKE_PEDAL, 1);
 }
+void Menu::RequestMenuTextures()
+{
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("MenyooExtras")) REQUEST_STREAMED_TEXTURE_DICT("MenyooExtras", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu")) REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendsalon")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendsalon", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendfashion", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_midfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_midfashion", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tattoos")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tattoos", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tattoos3")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tattoos3", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_conveniencestore")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_conveniencestore", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_carmod")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_carmod", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_gunclub")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_gunclub", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_movie_masks")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_movie_masks", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("director_editor_title")) REQUEST_STREAMED_TEXTURE_DICT("director_editor_title", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_carmod2")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_carmod2", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_supermod")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_supermod", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tennis")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tennis", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("dock_dlc_banner")) REQUEST_STREAMED_TEXTURE_DICT("dock_dlc_banner", 0);
+}
 void Menu::base()
 {
 	//GET_ACTUAL_SCREEN_RESOLUTION(&Game::defaultScreenRes.first, &Game::defaultScreenRes.second);
 	if (Menu::activeSubmenu != SUB::CLOSED)
 	{
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("MenyooExtras")) REQUEST_STREAMED_TEXTURE_DICT("MenyooExtras", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu")) REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendsalon")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendsalon", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendfashion", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_midfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_midfashion", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tattoos")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tattoos", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tattoos3")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tattoos3", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_conveniencestore")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_conveniencestore", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_carmod")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_carmod", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_gunclub")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_gunclub", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_movie_masks")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_movie_masks", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("director_editor_title")) REQUEST_STREAMED_TEXTURE_DICT("director_editor_title", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_carmod2")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_carmod2", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_supermod")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_supermod", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tennis")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tennis", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("dock_dlc_banner")) REQUEST_STREAMED_TEXTURE_DICT("dock_dlc_banner", 0);
+		RequestMenuTextures();
 		background();
 		titlebox_draw();
 		optionhi();

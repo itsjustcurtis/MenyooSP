@@ -175,6 +175,7 @@ public:
 	static void SetInputMethods();
 	static void DisableControls();
 	static void base();
+	static void RequestMenuTextures();
 	static void titlebox_draw();
 	static void background();
 	static void optionhi();
