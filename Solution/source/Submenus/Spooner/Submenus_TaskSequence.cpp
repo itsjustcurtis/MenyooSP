@@ -12,6 +12,7 @@
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\Keybinds.h"
 #include "..\..\Menu\MenuCategory.h"
 #include "..\..\Menu\Routine.h"
 
@@ -445,16 +446,8 @@ namespace sub::Spooner
 					if (Menu::IsLastDrawnOptionSelected())
 					{
 						bool bRemoveCoordPressed = false;
-						if (Menu::usingControllerInput)
-						{
-							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove coord");
-							bRemoveCoordPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-						}
-						else
-						{
-							Menu::add_IB(VirtualKey::B, "Remove coord");
-							bRemoveCoordPressed = IsKeyJustUp(VirtualKey::B);
-						}
+						Keybinds::AddBindIB("menu_action", "Remove coord");
+						bRemoveCoordPressed = Keybinds::WasPressedThisFrame("menu_action");
 						if (bRemoveCoordPressed)
 						{
 							cit = tskPtr->route.erase(cit);
@@ -806,23 +799,11 @@ namespace sub::Spooner
 					if (Menu::IsLastDrawnOptionSelected())
 					{
 						bool bIsAFav = IsAnimationAFavourite(selectedDict.first, current);
-						if (Menu::usingControllerInput)
-						{
-							Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+						Keybinds::AddBindIB("menu_action", bIsAFav, "Remove from favourites", "Add to favourites");
 
-							if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-							{
-								!bIsAFav ? AddAnimationToFavourites(selectedDict.first, current) : RemoveAnimationFromFavourites(selectedDict.first, current);
-							}
-						}
-						else
+						if (Keybinds::WasPressedThisFrame("menu_action"))
 						{
-							Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-
-							if (IsKeyJustUp(VirtualKey::B))
-							{
-								!bIsAFav ? AddAnimationToFavourites(selectedDict.first, current) : RemoveAnimationFromFavourites(selectedDict.first, current);
-							}
+							!bIsAFav ? AddAnimationToFavourites(selectedDict.first, current) : RemoveAnimationFromFavourites(selectedDict.first, current);
 						}
 					}
 				}
@@ -1788,26 +1769,13 @@ namespace sub::Spooner
 				{
 					bool bRemoveTaskPressed = false;
 					char bMoveTaskPressed = 0i8;
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
-						bRemoveTaskPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
+					Keybinds::AddBindIB("menu_action", "Remove");
+					bRemoveTaskPressed = Keybinds::WasPressedThisFrame("menu_action");
 
-						Menu::add_IB(INPUT_FRONTEND_RIGHT, std::string());
-						Menu::add_IB(INPUT_FRONTEND_LEFT, "Move");
-						bMoveTaskPressed = MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Left) ? -1
-							: MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Right) ? 1 : 0;
-					}
-					else
-					{
-						Menu::add_IB(VirtualKey::B, "Remove");
-						bRemoveTaskPressed = IsKeyJustUp(VirtualKey::B);
-
-						Menu::add_IB(INPUT_FRONTEND_RIGHT, std::string());
-						Menu::add_IB(INPUT_FRONTEND_LEFT, "Move");
-						bMoveTaskPressed = MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Left) ? -1
-							: MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Right) ? 1 : 0;
-					}
+					Menu::add_IB(INPUT_FRONTEND_RIGHT, std::string());
+					Menu::add_IB(INPUT_FRONTEND_LEFT, "Move");
+					bMoveTaskPressed = MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Left) ? -1
+						: MenuPressTimer::IsButtonHeldOrTapped(MenuPressTimer::Button::Right) ? 1 : 0;
 					if (bRemoveTaskPressed) // Remove task
 					{
 						taskSequence.RemoveTask(i);

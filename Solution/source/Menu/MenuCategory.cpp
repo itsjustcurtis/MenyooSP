@@ -30,6 +30,7 @@ These can be used to implement custom category navigation if desired. Take a loo
 #include "submenu_enum.h"
 #include "MenuCategory.h"
 #include "Menu.h"
+#include "Keybinds.h"
 #include "..\Util\keyboard.h"
 #include "..\Natives\natives2.h"
 
@@ -117,23 +118,12 @@ namespace MenuCategory
 		{
 			if (!categoryNavigationHintAdded)
 			{
-				if (Menu::usingControllerInput)
-					Menu::add_IB(INPUT_SPECIAL_ABILITY, "Navigate categories"); // XBOX "l3" (left stick click)
-				else
-					Menu::add_IB(VirtualKey::G, "Navigate categories");
+				Keybinds::AddBindIB("category_jump", "Navigate categories");
 				categoryNavigationHintAdded = true;
 			}
 
-			if (Menu::usingControllerInput)
-			{
-				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SPECIAL_ABILITY)) // XBOX "l3" (left stick click)
-					Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
-			}
-			else
-			{
-				if (IsKeyJustUp(VirtualKey::G))
-					Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
-			}
+		if (Keybinds::WasPressedThisFrame("category_jump"))
+			Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
 		}
 
 		return expanded;

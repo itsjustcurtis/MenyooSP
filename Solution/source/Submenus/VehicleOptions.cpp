@@ -9,6 +9,7 @@
 */
 #include "VehicleOptions.h"
 #include "VehicleModShop.h"
+#include "..\Menu\Keybinds.h"
 #include "..\Util\FileLogger.h"
 
 namespace sub
@@ -168,8 +169,8 @@ namespace sub
 		AddOptionDescription("Holds the current speed.");
 		AddLocal("Tow Mode (ALPHA)", VehicleTow::g_vehicleTow.Enabled(), VehicleTow::ToggleOnOff, VehicleTow::ToggleOnOff);
 		AddOptionDescription("Park in front of a vehicle to tow it with a rope. Instructions appear on screen.");
-		AddToggle("Race Boost On Horn", raceBoost, boostOn);
-		AddOptionDescription("Hold horn for a speed boost.");
+		AddToggle("Vehicle Boost", raceBoost, boostOn);
+		AddOptionDescription("Hold the boost key for a speed boost. Rebind it in Settings > Keybinds.");
 		AddToggle("Infinite Native Boost (for e.g. Oppressor)", unlimitedVehicleBoost);
 		AddOptionDescription("Keeps rocket boost full on vehicles that have one (e.g. Oppressor, Voltic). Hold horn.");
 		AddToggle("SuprKar Mode", superCarMode, superCarModeOn, superCarModeOff);
@@ -437,9 +438,9 @@ namespace sub
 			return;
 		}
 
-		if (boostOn) 
+		if (boostOn)
 		{
-			Game::Print::PrintBottomLeft("Use the horn for a boost.");
+			Game::Print::PrintBottomLeft("Hold ~b~" + Keybinds::GetGlyph("vehicle_boost") + "~s~ for a boost.");
 			return;
 		}
 

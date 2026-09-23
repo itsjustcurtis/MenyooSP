@@ -25,6 +25,7 @@
 #include "Language.h"
 #include "..\Util\FileLogger.h"
 #include "..\Menu\Menu.h"
+#include "..\Menu\Keybinds.h"
 #include "..\Submenus\PedAnimation.h"
 
 #include <Windows.h>
@@ -165,11 +166,6 @@ RGBA optionbreaks(255, 255, 255, 240);
 RGBA optioncount(255, 255, 255, 255);
 RGBA selectionhi(255, 255, 255, 211);
 RGBA _globalPedTrackers_Col(0, 255, 255, 205);
-
-std::pair<UINT16, UINT16> menubindsGamepad = { INPUT_FRONTEND_RB, INPUT_FRONTEND_LEFT };
-UINT16 menuToggleKey = VirtualKey::F8;
-UINT16 respawnKey = INPUT_LOOK_BEHIND;
-UINT16 stopAnimationKey = VirtualKey::J;
 
 UINT16 Menu::activeSubmenu = 0, Menu::lastOpenedSubmenu = SUB::MAINMENU;
 INT Menu::selectedOptionIndex = 0, * Menu::activeOptionIndex = &selectedOptionIndex;
@@ -526,27 +522,18 @@ void Menu::draw_description()
 }
 bool Menu::isBinds()
 {
-	// Open menu - RB + Left / F8
-	UINT8 index1 = menubindsGamepad.first < 50 ? 0 : 2;
-	UINT8 index2 = menubindsGamepad.second < 50 ? 0 : 2;
+	// Open menu - combination of two buttons, or a single button when no combo is bound.
+	const Keybinds::KeybindEntry* entry = Keybinds::FindEntry("menu_open");
+	if (entry == nullptr) return false;
+
 	if (suppressMenuToggleUntilRelease)
 	{
-		const bool toggleHeld = usingControllerInput
-			? (IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) || IS_DISABLED_CONTROL_PRESSED(index2, menubindsGamepad.second))
-			: IsKeyDown(menuToggleKey);
-		if (!toggleHeld)
-		{
-			if (!usingControllerInput)
-				ResetKeyState(menuToggleKey);
+		if (!entry->IsHeld(Keybinds::Context::Auto))
 			suppressMenuToggleUntilRelease = false;
-		}
 		return false;
 	}
 
-	if (usingControllerInput)
-		return IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, menubindsGamepad.second);
-	else 
-		return IsKeyJustUp(menuToggleKey); // F8
+	return entry->WasPressedThisFrame(Keybinds::Context::Auto);
 }
 bool Menu::IsGameReadyForDeferredInit()
 {
@@ -625,6 +612,16 @@ void Menu::while_opened()
 	if (!HAS_THIS_ADDITIONAL_TEXT_LOADED("MOD_MNU", 2)) REQUEST_ADDITIONAL_TEXT("MOD_MNU", 2);
 	DisableControls();
 	//set_THEPHONEDOWN();
+
+	if (Keybinds::IsRebinding())
+	{
+		if (Keybinds::IsKeybindSubmenu())
+			Keybinds::RebindTick();
+		else
+			Keybinds::CancelRebind();
+		return; // swallow all navigation while capturing
+	}
+
 	set_opened_IB();
 
 	if (totalOptionCount > 0)
@@ -666,7 +663,7 @@ void Menu::while_opened()
 }
 bool Menu::isStopAnimBinds()
 {
-	return IsKeyJustUp(stopAnimationKey); // J
+	return Keybinds::WasPressedThisFrame("stop_animation");
 }
 void Menu::while_stopanim()
 {
@@ -834,17 +831,33 @@ void Menu::add_IB(ScaleformButton button_id, std::string string_val)
 {
 	vIB.push_back({ int(button_id) + 1000, (string_val), false });
 }
+void Menu::add_IB(ControllerInput button_id, ControllerInput button2_id, std::string string_val)
+{
+	vIB.push_back({ button_id, (string_val), false, button2_id });
+}
+void Menu::add_IB(VirtualKey::VirtualKey button_id, VirtualKey::VirtualKey button2_id, std::string string_val)
+{
+	vIB.push_back({ button_id, (string_val), true, button2_id });
+}
 std::string Menu::get_key_IB(const Scaleform_IbT& ib)
 {
 	if (ib.button == -3)
 		return "";
 
-	if (!ib.isKey)
+	// '%' packs several keycaps into one slot. The scaleform draws them in reverse string
+	// order, so a combo's second member leads the id.
+	if (ib.isKey)
+	{
+		if (ib.button2 == -1)
+			return Keybinds::KeyboardKeyIbId((UINT16)ib.button);
+		return Keybinds::KeyboardKeyIbId((UINT16)ib.button2) + "%"
+			+ Keybinds::KeyboardKeyIbId((UINT16)ib.button);
+	}
+
+	if (ib.button2 == -1)
 		return GET_CONTROL_INSTRUCTIONAL_BUTTONS_STRING(2, ib.button, 1);
-
-	std::string bs = "t_" + VkCodeToStr(ib.button);
-
-	return bs;
+	return std::string(GET_CONTROL_INSTRUCTIONAL_BUTTONS_STRING(2, ib.button2, 1)) + "%"
+		+ GET_CONTROL_INSTRUCTIONAL_BUTTONS_STRING(2, ib.button, 1);
 }
 void Menu::draw_IB()
 {
@@ -882,8 +895,16 @@ void Menu::draw_IB()
 		{
 			instructional_buttons.PushString2(get_key_IB(vIB[i]));
 			instructional_buttons.PushTextComponent(vIB[i].text);
-			instructional_buttons.PushBoolean(true);
-			instructional_buttons.PushInteger(vIB[i].button);
+			if (vIB[i].isKey)
+			{
+				instructional_buttons.PushBoolean(false);
+				instructional_buttons.PushInteger(-1);
+			}
+			else
+			{
+				instructional_buttons.PushBoolean(true);
+				instructional_buttons.PushInteger(vIB[i].button);
+			}
 		}
 		instructional_buttons.PopFunction();
 	}
@@ -1816,6 +1837,35 @@ int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<
 void AddTexter(const std::string& text, int selectedindex, const std::vector<std::string>& textarray, bool& A_PRESS, bool& RIGHT_PRESS, bool& LEFT_PRESS, bool gxt)
 {
 	AddTexter<std::vector<std::string>>(text, selectedindex, textarray, A_PRESS, RIGHT_PRESS, LEFT_PRESS, gxt);
+}
+
+void AddKeybindOption(const std::string& label, const std::string& bindText, const std::string& description, bool& A_PRESS, bool capturingThis)
+{
+	null = 0;
+	AddOption(label, null, nullFunc, -1, false, false);
+
+	if (currentOptionY < 0.6325f && currentOptionY > 0.1425f)
+	{
+		std::string shownText = bindText;
+		if (capturingThis)
+			shownText = (GetTickCount() / 400) % 2 ? "Press a key..." : "";
+		else if (bindText.empty())
+			shownText = "None";
+
+		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke,
+			Menu::IsLastDrawnOptionSelected() ? selectedtext : optiontext);
+		FLOAT newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(shownText), 0.0024f, true);
+		Game::Print::drawstring(shownText, newXpos, currentOptionY + 0.0056f + menuPos.y);
+	}
+
+	AddOptionDescription(description);
+
+	if (Menu::IsLastDrawnOptionSelected())
+	{
+		if (&A_PRESS != &null)
+			Menu::add_IB(INPUT_CELLPHONE_SELECT, "Input");
+		if (null) A_PRESS = true;
+	}
 }
 
 

@@ -12,6 +12,7 @@
 #include "..\macros.h"
 
 #include "..\Menu\Menu.h"
+#include "..\Menu\Keybinds.h"
 #include "..\Menu\Routine.h"
 
 #include "..\Natives\natives2.h"
@@ -1041,30 +1042,15 @@ namespace sub
 
 					if (Menu::IsLastDrawnOptionSelected())
 					{
-						if (Menu::usingControllerInput)
-						{
-							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
+						Keybinds::AddBindIB("menu_action", "Remove");
 
-							if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-							{
-								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
-								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteWeapons).c_str());
-								if (Menu::IsSelectionAtBottom()) Menu::Up();
-								return; // Yeah
-							}
-						}
-						else
+						if (Keybinds::WasPressedThisFrame("menu_action"))
 						{
-							Menu::add_IB(VirtualKey::B, "Remove");
-
-							if (IsKeyJustUp(VirtualKey::B))
-							{
-								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
-								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteWeapons).c_str());
-								if (Menu::IsSelectionAtBottom())
-									Menu::Up();
-								return; // Yeah
-							}
+							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
+							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlFavouriteWeapons).c_str());
+							if (Menu::IsSelectionAtBottom())
+								Menu::Up();
+							return; // Yeah
 						}
 					}
 				}
@@ -1161,39 +1147,19 @@ namespace sub
 				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsAFav = WeaponFavourites_catind::IsWeaponAFavourite(thisWeaponInfo.weaponHash);
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+					Keybinds::AddBindIB("menu_action", bIsAFav, "Remove from favourites", "Add to favourites");
 
-						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-						{
-							!bIsAFav ?
-								WeaponFavourites_catind::AddWeaponToFavourites(thisWeaponInfo.weaponHash, Game::InputBox("", 28U, "Enter custom name:", GetWeaponLabel(thisWeaponInfo.weaponHash, true)))
-								: WeaponFavourites_catind::RemoveWeaponFromFavourites(thisWeaponInfo.weaponHash);
-							/*if (!bIsAFav)
-							{
-							OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteWeaponSelected, std::string(), 28U, "Enter custom name:", get_weapon_label(thisWeaponInfo.weaponHash, true));
-							OnscreenKeyboard::State::arg1._uint = thisWeaponInfo.weaponHash;
-							}
-							else WeaponFavourites_catind::RemoveWeaponFromFavourites(thisWeaponInfo.weaponHash);*/
-						}
-					}
-					else
+					if (Keybinds::WasPressedThisFrame("menu_action"))
 					{
-						Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-
-						if (IsKeyJustUp(VirtualKey::B))
+						!bIsAFav ?
+							WeaponFavourites_catind::AddWeaponToFavourites(thisWeaponInfo.weaponHash, Game::InputBox("", 28U, "Enter custom name:", GetWeaponLabel(thisWeaponInfo.weaponHash, true)))
+							: WeaponFavourites_catind::RemoveWeaponFromFavourites(thisWeaponInfo.weaponHash);
+						/*if (!bIsAFav)
 						{
-							!bIsAFav ?
-								WeaponFavourites_catind::AddWeaponToFavourites(thisWeaponInfo.weaponHash, Game::InputBox("", 28U, "Enter custom name:", GetWeaponLabel(thisWeaponInfo.weaponHash, true)))
-								: WeaponFavourites_catind::RemoveWeaponFromFavourites(thisWeaponInfo.weaponHash);
-							/*if (!bIsAFav)
-							{
-							OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteWeaponSelected, std::string(), 28U, "Enter custom name:", get_weapon_label(thisWeaponInfo.weaponHash, true));
-							OnscreenKeyboard::State::arg1._uint = thisWeaponInfo.weaponHash;
-							}
-							else WeaponFavourites_catind::RemoveWeaponFromFavourites(thisWeaponInfo.weaponHash);*/
+						OnscreenKeyboard::State::Set(OnscreenKeyboard::Purpose::FavouriteWeaponSelected, std::string(), 28U, "Enter custom name:", get_weapon_label(thisWeaponInfo.weaponHash, true));
+						OnscreenKeyboard::State::arg1._uint = thisWeaponInfo.weaponHash;
 						}
+						else WeaponFavourites_catind::RemoveWeaponFromFavourites(thisWeaponInfo.weaponHash);*/
 					}
 				}
 

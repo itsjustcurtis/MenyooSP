@@ -12,6 +12,7 @@
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\Keybinds.h"
 #include "..\..\Menu\Routine.h"
 
 #include "..\..\Natives\natives2.h"
@@ -349,31 +350,15 @@ namespace sub::TeleportLocations_catind
 
 					if (Menu::IsLastDrawnOptionSelected())
 					{
-						if (Menu::usingControllerInput)
-						{
-							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
+						Keybinds::AddBindIB("menu_action", "Remove");
 
-							if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-							{
-								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
-								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (Menu::IsSelectionAtBottom())
-									Menu::Up();
-								return; // Yeah
-							}
-						}
-						else
+						if (Keybinds::WasPressedThisFrame("menu_action"))
 						{
-							Menu::add_IB(VirtualKey::B, "Remove");
-
-							if (IsKeyJustUp(VirtualKey::B))
-							{
-								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
-								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (Menu::IsSelectionAtBottom())
-									Menu::Up();
-								return; // Yeah
-							}
+							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
+							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
+							if (Menu::IsSelectionAtBottom())
+								Menu::Up();
+							return; // Yeah
 						}
 					}
 
