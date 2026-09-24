@@ -13,6 +13,7 @@
 
 #include "Menu.h"
 #include "Routine.h"
+#include "Keybinds.h"
 #include "Language.h"
 
 #include "..\Util\ExePath.h"
@@ -99,11 +100,6 @@ void MenuConfig::ConfigRead()
 	MenuConfig::bSaveAtIntervals = ini.GetBoolValue(section_settings.c_str(), "sync_with_config_at_intervals", MenuConfig::bSaveAtIntervals);
 	MenuConfig::bShowNotificationBackground = ini.GetBoolValue(section_settings.c_str(), "show_notification_background", MenuConfig::bShowNotificationBackground);
 	checkSelfDeathModel = ini.GetBoolValue(section_settings.c_str(), "DeathModelReset", checkSelfDeathModel);
-	menuToggleKey = ini.GetLongValue(section_settings.c_str(), "open_key", menuToggleKey);
-	menubindsGamepad.first = ini.GetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
-	menubindsGamepad.second = ini.GetLongValue(section_settings.c_str(), "open_button_for_gamepad_2", menubindsGamepad.second);
-	respawnKey = ini.GetLongValue(section_settings.c_str(), "manual_respawn_button", respawnKey);
-	stopAnimationKey = ini.GetLongValue(section_settings.c_str(), "stop_animation_key", stopAnimationKey);
 	menuPos.x = ini.GetDoubleValue(section_settings.c_str(), "menuPosX", (menuPos.x + 0.0598f) * 100); menuPos.x = menuPos.x / 100 - 0.0598f;
 	menuPos.y = ini.GetDoubleValue(section_settings.c_str(), "menuPosY", (menuPos.y + 0.074f) * 100); menuPos.y = menuPos.y / 100 - 0.074f;
 	Menu::enableGlareEffect = ini.GetBoolValue(section_settings.c_str(), "Titlebox_Globe", Menu::enableGlareEffect);
@@ -117,9 +113,6 @@ void MenuConfig::ConfigRead()
 
 
 	std::string section_general = "general";/////////
-
-
-	BindNoClip = ini.GetLongValue(section_general.c_str(), "FreeCamButton", BindNoClip);
 
 
 	std::string section_colours = "colours";/////////
@@ -189,9 +182,6 @@ void MenuConfig::ConfigRead()
 
 	std::string section_spooner = "object-spooner";/////////
 
-	sub::Spooner::SpoonerMode::bindsKeyboard = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeHotkey", sub::Spooner::SpoonerMode::bindsKeyboard);
-	sub::Spooner::SpoonerMode::bindsGamepad.first = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_1", sub::Spooner::SpoonerMode::bindsGamepad.first);
-	sub::Spooner::SpoonerMode::bindsGamepad.second = ini.GetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_2", sub::Spooner::SpoonerMode::bindsGamepad.second);
 	sub::Spooner::Settings::bInvertScrollSensitivity = ini.GetBoolValue(section_spooner.c_str(), "InvertScrollSensitivity", sub::Spooner::Settings::bInvertScrollSensitivity);
 	sub::Spooner::Settings::bShowModelPreviews = ini.GetBoolValue(section_spooner.c_str(), "ShowModelPreviews", sub::Spooner::Settings::bShowModelPreviews);
 	sub::Spooner::Settings::bShowBoxAroundSelectedEntity = ini.GetBoolValue(section_spooner.c_str(), "ShowBoxAroundSelectedEntity", sub::Spooner::Settings::bShowBoxAroundSelectedEntity);
@@ -353,6 +343,8 @@ void MenuConfig::ConfigRead()
     FreeCam::maxSpeed = (float)ini.GetDoubleValue(section_freecam.c_str(), "max_speed", FreeCam::maxSpeed);
     FreeCam::minFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "min_fov", FreeCam::minFov);
     FreeCam::maxFov = (float)ini.GetDoubleValue(section_freecam.c_str(), "max_fov", FreeCam::maxFov);
+
+	Keybinds::Load();
 }
 
 void MenuConfig::SaveConfig()
@@ -366,11 +358,6 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_settings.c_str(), "sync_with_config_at_intervals", MenuConfig::bSaveAtIntervals);
 	ini.SetBoolValue(section_settings.c_str(), "show_notification_background", MenuConfig::bShowNotificationBackground);
 	ini.SetBoolValue(section_settings.c_str(), "DeathModelReset", checkSelfDeathModel);
-	ini.SetLongValue(section_settings.c_str(), "open_key", menuToggleKey);
-	ini.SetLongValue(section_settings.c_str(), "open_button_for_gamepad_1", menubindsGamepad.first);
-	ini.SetLongValue(section_settings.c_str(), "open_button_for_gamepad_2", menubindsGamepad.second);
-	ini.SetLongValue(section_settings.c_str(), "manual_respawn_button", respawnKey);
-	ini.SetLongValue(section_settings.c_str(), "stop_animation_key", stopAnimationKey);
 	ini.SetDoubleValue(section_settings.c_str(), "menuPosX", (menuPos.x + 0.0598f) * 100);
 	ini.SetDoubleValue(section_settings.c_str(), "menuPosY", (menuPos.y + 0.074f) * 100);
 	ini.SetBoolValue(section_settings.c_str(), "Titlebox_Globe", Menu::enableGlareEffect);
@@ -383,9 +370,6 @@ void MenuConfig::SaveConfig()
 
 
 	std::string section_general = "general";/////////
-
-
-	ini.SetLongValue(section_general.c_str(), "FreeCamButton", BindNoClip);
 
 
 	std::string section_colours = "colours";/////////
@@ -454,9 +438,6 @@ void MenuConfig::SaveConfig()
 
 	std::string section_spooner = "object-spooner";/////////
 
-	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeHotkey", sub::Spooner::SpoonerMode::bindsKeyboard);
-	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_1", sub::Spooner::SpoonerMode::bindsGamepad.first);
-	ini.SetLongValue(section_spooner.c_str(), "SpoonerModeGamepadBind_2", sub::Spooner::SpoonerMode::bindsGamepad.second);
 	ini.SetBoolValue(section_spooner.c_str(), "InvertScrollSensitivity", sub::Spooner::Settings::bInvertScrollSensitivity);
 	ini.SetBoolValue(section_spooner.c_str(), "ShowModelPreviews", sub::Spooner::Settings::bShowModelPreviews);
 	ini.SetBoolValue(section_spooner.c_str(), "ShowBoxAroundSelectedEntity", sub::Spooner::Settings::bShowBoxAroundSelectedEntity);
@@ -614,6 +595,23 @@ void MenuConfig::SaveConfig()
     ini.SetDoubleValue(section_freecam.c_str(), "max_speed", FreeCam::maxSpeed);
     ini.SetDoubleValue(section_freecam.c_str(), "min_fov", FreeCam::minFov);
     ini.SetDoubleValue(section_freecam.c_str(), "max_fov", FreeCam::maxFov);
+
+	// Keybinds now live in menyooStuff\Keybinds.xml; clear the legacy ini keys that used to hold them.
+	const char* legacyBinds[][2] = {
+		{ "settings", "open_key" }, { "settings", "open_button_for_gamepad_1" }, { "settings", "open_button_for_gamepad_2" },
+		{ "settings", "manual_respawn_button" }, { "settings", "stop_animation_key" },
+		{ "settings", "tp_to_wp_key" }, { "settings", "tp_to_wp_pad" },
+		{ "settings", "category_nav_key" }, { "settings", "category_nav_pad" },
+		{ "general", "FreeCamButton" }, { "general", "tow_key" }, { "general", "tow_pad" },
+		{ "general", "MenuActionHotkey" }, { "general", "FreeCamPad_1" }, { "general", "FreeCamPad_2" },
+		{ "object-spooner", "SpoonerModeHotkey" }, { "object-spooner", "SpoonerModeGamepadBind_1" }, { "object-spooner", "SpoonerModeGamepadBind_2" },
+		{ "object-spooner", "SpoonerMarkerHotkey" }, { "object-spooner", "SpoonerMarkerPad" },
+		{ "object-spooner", "SpoonerEditModeHotkey" }, { "object-spooner", "SpoonerEditCopyHotkey" },
+		{ "object-spooner", "SpoonerEditTransformHotkey" }, { "object-spooner", "SpoonerEditCamLockHotkey" },
+		{ "object-spooner", "SpoonerEditLocalSpaceHotkey" },
+	};
+	for (auto& key : legacyBinds)
+		ini.Delete(key[0], key[1]);
 
 	ini.SaveFile((GetPathffA(Pathff::Main, true) + "menyooConfig.ini").c_str());
 }

@@ -25,6 +25,7 @@
 #include "Language.h"
 #include "..\Util\FileLogger.h"
 #include "..\Menu\Menu.h"
+#include "..\Menu\Keybinds.h"
 #include "..\Submenus\PedAnimation.h"
 
 #include <Windows.h>
@@ -139,7 +140,11 @@ void MenuInput::UpdateDeltaCursorNormal()
 bool titleBarStripeVisible;
 bool numberInputActive = false;
 bool menuHasNotOpened = true;
-bool ignoreMenuToggleUntilRelease = false;
+bool suppressMenuToggleUntilRelease = false;
+
+static bool deferredMenuInitDone = false;
+static DWORD nextDeferredInitCheckTimeMs = 0;
+static constexpr DWORD kDeferredInitRetryDelayMs = 1000;
 
 Vector2 menuPos;
 Vector2 g_deltaCursorNormal;
@@ -162,11 +167,6 @@ RGBA optioncount(255, 255, 255, 255);
 RGBA selectionhi(255, 255, 255, 211);
 RGBA _globalPedTrackers_Col(0, 255, 255, 205);
 
-std::pair<UINT16, UINT16> menubindsGamepad = { INPUT_FRONTEND_RB, INPUT_FRONTEND_LEFT };
-UINT16 menuToggleKey = VirtualKey::F8;
-UINT16 respawnKey = INPUT_LOOK_BEHIND;
-UINT16 stopAnimationKey = VirtualKey::J;
-
 UINT16 Menu::activeSubmenu = 0, Menu::lastOpenedSubmenu = SUB::MAINMENU;
 INT Menu::selectedOptionIndex = 0, * Menu::activeOptionIndex = &selectedOptionIndex;
 INT Menu::selectedOptionWithBreaks = 0;
@@ -178,7 +178,7 @@ UINT8 Menu::activeBreakScrollDirection = 0;
 INT16 Menu::menuHistoryIndex = 0;
 INT Menu::submenuHistory[100] = {};
 INT Menu::optionSelectionHistory[100] = {};
-INT Menu::pendingSubmenu = 0;
+INT Menu::pendingSubmenu = -1;
 int Menu::nextDeferredActionTime = 0;
 bool Menu::usingControllerInput = 0, Menu::usingMouseInput = 0;
 bool Menu::centerTitleText = 1, Menu::centerOptionText = 0, Menu::centerBreakText = 1,
@@ -307,27 +307,31 @@ void Menu::DisableControls()
 	DISABLE_CONTROL_ACTION(0, INPUT_VEH_PUSHBIKE_SPRINT, 1);
 	DISABLE_CONTROL_ACTION(0, INPUT_VEH_PUSHBIKE_PEDAL, 1);
 }
+void Menu::RequestMenuTextures()
+{
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("MenyooExtras")) REQUEST_STREAMED_TEXTURE_DICT("MenyooExtras", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu")) REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendsalon")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendsalon", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendfashion", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_midfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_midfashion", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tattoos")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tattoos", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tattoos3")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tattoos3", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_conveniencestore")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_conveniencestore", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_carmod")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_carmod", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_gunclub")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_gunclub", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_movie_masks")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_movie_masks", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("director_editor_title")) REQUEST_STREAMED_TEXTURE_DICT("director_editor_title", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_carmod2")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_carmod2", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_supermod")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_supermod", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tennis")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tennis", 0);
+	if (!HAS_STREAMED_TEXTURE_DICT_LOADED("dock_dlc_banner")) REQUEST_STREAMED_TEXTURE_DICT("dock_dlc_banner", 0);
+}
 void Menu::base()
 {
 	//GET_ACTUAL_SCREEN_RESOLUTION(&Game::defaultScreenRes.first, &Game::defaultScreenRes.second);
 	if (Menu::activeSubmenu != SUB::CLOSED)
 	{
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("MenyooExtras")) REQUEST_STREAMED_TEXTURE_DICT("MenyooExtras", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("CommonMenu")) REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendsalon")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendsalon", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_highendfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_highendfashion", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_midfashion")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_midfashion", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tattoos")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tattoos", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tattoos3")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tattoos3", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_conveniencestore")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_conveniencestore", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_carmod")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_carmod", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_gunclub")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_gunclub", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_movie_masks")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_movie_masks", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("director_editor_title")) REQUEST_STREAMED_TEXTURE_DICT("director_editor_title", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_carmod2")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_carmod2", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_supermod")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_supermod", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("shopui_title_tennis")) REQUEST_STREAMED_TEXTURE_DICT("shopui_title_tennis", 0);
-		if (!HAS_STREAMED_TEXTURE_DICT_LOADED("dock_dlc_banner")) REQUEST_STREAMED_TEXTURE_DICT("dock_dlc_banner", 0);
+		RequestMenuTextures();
 		background();
 		titlebox_draw();
 		optionhi();
@@ -522,47 +526,63 @@ void Menu::draw_description()
 }
 bool Menu::isBinds()
 {
-	// Open menu - RB + Left / F8
-	UINT8 index1 = menubindsGamepad.first < 50 ? 0 : 2;
-	UINT8 index2 = menubindsGamepad.second < 50 ? 0 : 2;
-	// fixes a bug that occured when the menu is initializing and user presses F8 multiple times
-	if (ignoreMenuToggleUntilRelease)
+	// Open menu - combination of two buttons, or a single button when no combo is bound.
+	const Keybinds::KeybindEntry* entry = Keybinds::FindEntry("menu_open");
+	if (entry == nullptr) return false;
+
+	if (suppressMenuToggleUntilRelease)
 	{
-		bool toggleHeld = usingControllerInput
-			? (IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) || IS_DISABLED_CONTROL_PRESSED(index2, menubindsGamepad.second))
-			: IsKeyDown(menuToggleKey);
-		if (!toggleHeld)
-		{
-			if (!usingControllerInput)
-				ResetKeyState(menuToggleKey);
-			ignoreMenuToggleUntilRelease = false;
-		}
+		if (!entry->IsHeld(Keybinds::Context::Auto))
+			suppressMenuToggleUntilRelease = false;
 		return false;
 	}
 
-	if (usingControllerInput)
-		return IS_DISABLED_CONTROL_PRESSED(index1, menubindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, menubindsGamepad.second);
-	else 
-		return IsKeyJustUp(menuToggleKey); // F8
+	return entry->WasPressedThisFrame(Keybinds::Context::Auto);
 }
+bool Menu::IsGameReadyForDeferredInit()
+{
+	if (GET_IS_LOADING_SCREEN_ACTIVE())
+		return false;
+	if (GET_IS_INITIAL_LOADING_SCREEN_ACTIVE())
+		return false;
+	if (IS_PAUSE_MENU_ACTIVE())
+		return false;
+	if (!IS_PLAYER_PLAYING(PLAYER_ID()))
+		return false;
+	const Ped playerPed = PLAYER_PED_ID();
+	if (playerPed == 0 || !DOES_ENTITY_EXIST(playerPed))
+		return false;
+	return true;
+}
+
+void Menu::TickDeferredMenuInit()
+{
+	if (deferredMenuInitDone)
+		return;
+	const DWORD nowMs = GET_GAME_TIMER();
+	if (nowMs < nextDeferredInitCheckTimeMs)
+		return;
+	nextDeferredInitCheckTimeMs = nowMs + kDeferredInitRetryDelayMs;
+	if (!IsGameReadyForDeferredInit())
+		return;
+	if (menuHasNotOpened)
+		justopened();
+	if (!GTAmemory::TryInitEnhancedPools())
+		return;
+	deferredMenuInitDone = true;
+	addlog(ige::LogType::LOG_INIT, "Deferred menu init done");
+}
+
 void Menu::while_closed()
 {
 	if (isBinds())
 	{
-
 		addlog(ige::LogType::LOG_TRACE, "Binds Pressed, opening Menyoo");
-		if (menuHasNotOpened) {
-			justopened();
-			GTAmemory::InitEnhancedPools();
-			ignoreMenuToggleUntilRelease = true;
-		}
-		else
-			addlog(ige::LogType::LOG_TRACE, "Menu has been opened before, skipping initialization");
-
 
 		Game::Sound::PlayFrontend("FocusIn", "HintCamSounds");
 
 		activeSubmenu = lastOpenedSubmenu;
+		suppressMenuToggleUntilRelease = true;
 		addlog(ige::LogType::LOG_TRACE, "Setting current submenu to lastOpenedSubmenu: " + std::to_string(lastOpenedSubmenu));
 		if (activeSubmenu == SUB::MAINMENU)
 		{
@@ -596,6 +616,16 @@ void Menu::while_opened()
 	if (!HAS_THIS_ADDITIONAL_TEXT_LOADED("MOD_MNU", 2)) REQUEST_ADDITIONAL_TEXT("MOD_MNU", 2);
 	DisableControls();
 	//set_THEPHONEDOWN();
+
+	if (Keybinds::IsRebinding())
+	{
+		if (Keybinds::IsKeybindSubmenu())
+			Keybinds::RebindTick();
+		else
+			Keybinds::CancelRebind();
+		return; // swallow all navigation while capturing
+	}
+
 	set_opened_IB();
 
 	if (totalOptionCount > 0)
@@ -637,7 +667,7 @@ void Menu::while_opened()
 }
 bool Menu::isStopAnimBinds()
 {
-	return IsKeyJustUp(stopAnimationKey); // J
+	return Keybinds::WasPressedThisFrame("stop_animation");
 }
 void Menu::while_stopanim()
 {
@@ -805,17 +835,33 @@ void Menu::add_IB(ScaleformButton button_id, std::string string_val)
 {
 	vIB.push_back({ int(button_id) + 1000, (string_val), false });
 }
+void Menu::add_IB(ControllerInput button_id, ControllerInput button2_id, std::string string_val)
+{
+	vIB.push_back({ button_id, (string_val), false, button2_id });
+}
+void Menu::add_IB(VirtualKey::VirtualKey button_id, VirtualKey::VirtualKey button2_id, std::string string_val)
+{
+	vIB.push_back({ button_id, (string_val), true, button2_id });
+}
 std::string Menu::get_key_IB(const Scaleform_IbT& ib)
 {
 	if (ib.button == -3)
 		return "";
 
-	if (!ib.isKey)
+	// '%' packs several keycaps into one slot. The scaleform draws them in reverse string
+	// order, so a combo's second member leads the id.
+	if (ib.isKey)
+	{
+		if (ib.button2 == -1)
+			return Keybinds::KeyboardKeyIbId((UINT16)ib.button);
+		return Keybinds::KeyboardKeyIbId((UINT16)ib.button2) + "%"
+			+ Keybinds::KeyboardKeyIbId((UINT16)ib.button);
+	}
+
+	if (ib.button2 == -1)
 		return GET_CONTROL_INSTRUCTIONAL_BUTTONS_STRING(2, ib.button, 1);
-
-	std::string bs = "t_" + VkCodeToStr(ib.button);
-
-	return bs;
+	return std::string(GET_CONTROL_INSTRUCTIONAL_BUTTONS_STRING(2, ib.button2, 1)) + "%"
+		+ GET_CONTROL_INSTRUCTIONAL_BUTTONS_STRING(2, ib.button, 1);
 }
 void Menu::draw_IB()
 {
@@ -853,8 +899,16 @@ void Menu::draw_IB()
 		{
 			instructional_buttons.PushString2(get_key_IB(vIB[i]));
 			instructional_buttons.PushTextComponent(vIB[i].text);
-			instructional_buttons.PushBoolean(true);
-			instructional_buttons.PushInteger(vIB[i].button);
+			if (vIB[i].isKey)
+			{
+				instructional_buttons.PushBoolean(false);
+				instructional_buttons.PushInteger(-1);
+			}
+			else
+			{
+				instructional_buttons.PushBoolean(true);
+				instructional_buttons.PushInteger(vIB[i].button);
+			}
 		}
 		instructional_buttons.PopFunction();
 	}
@@ -1771,17 +1825,51 @@ inline void AddTexter(const std::string& text, int selectedindex, const TA& text
 	}
 
 }
-int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts)
+int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts, bool &pressed)
 {
-	bool input = false, right = false, left = false;
-	AddTexter(label, currentIdx, opts, input, right, left);
+	bool right = false, left = false;
+	AddTexter(label, currentIdx, opts, pressed, right, left);
 	if (right && currentIdx < (int)opts.size() - 1) currentIdx++;
 	if (left && currentIdx > 0) currentIdx--;
 	return currentIdx;
 }
+int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts)
+{
+	bool discarded = false;
+	return AddTexterCycler(label, currentIdx, opts, discarded);
+}
 void AddTexter(const std::string& text, int selectedindex, const std::vector<std::string>& textarray, bool& A_PRESS, bool& RIGHT_PRESS, bool& LEFT_PRESS, bool gxt)
 {
 	AddTexter<std::vector<std::string>>(text, selectedindex, textarray, A_PRESS, RIGHT_PRESS, LEFT_PRESS, gxt);
+}
+
+void AddKeybindOption(const std::string& label, const std::string& bindText, const std::string& description, bool& A_PRESS, bool capturingThis)
+{
+	null = 0;
+	AddOption(label, null, nullFunc, -1, false, false);
+
+	if (currentOptionY < 0.6325f && currentOptionY > 0.1425f)
+	{
+		std::string shownText = bindText;
+		if (capturingThis)
+			shownText = (GetTickCount() / 400) % 2 ? "Press a key..." : "";
+		else if (bindText.empty())
+			shownText = "None";
+
+		Game::Print::SetupDraw(0, Vector2(0.26, 0.26), true, true, Menu::optionTextStroke,
+			Menu::IsLastDrawnOptionSelected() ? selectedtext : optiontext);
+		FLOAT newXpos = get_xcoord_at_menu_rightEdge(Game::Print::GetTextWidth(shownText), 0.0024f, true);
+		Game::Print::drawstring(shownText, newXpos, currentOptionY + 0.0056f + menuPos.y);
+	}
+
+	AddOptionDescription(description);
+
+	if (Menu::IsLastDrawnOptionSelected())
+	{
+		if (&A_PRESS != &null)
+			Menu::add_IB(INPUT_CELLPHONE_SELECT, "Input");
+		if (null) A_PRESS = true;
+	}
 }
 
 

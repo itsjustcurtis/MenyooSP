@@ -18,6 +18,8 @@ namespace sub
 
 		AddTitle("Settings");
 
+		AddOption("Keybinds", null, nullFunc, SUB::SETTINGS_KEYBINDS);
+		
 		bool bChangeLangPressed = false;
 		AddTexter("Language", 0, { Language::GetSelectedLangTitle() }, bChangeLangPressed);
 		if (bChangeLangPressed)
@@ -29,6 +31,7 @@ namespace sub
 		AddOption("Menu Colours", null, nullFunc, SUB::SETTINGS_COLOURS);
 		AddOption("Menu Fonts", null, nullFunc, SUB::SETTINGS_FONTS);
 		AddOption("Menu Position", null, nullFunc, SUB::SETTINGS_MENUPOS);
+		AddOptionDescription("Rebind the keys and buttons used by Menyoo.");
 		AddToggle("Notification Background", MenuConfig::bShowNotificationBackground, MenuConfig::SaveConfig, MenuConfig::SaveConfig);
 		AddToggle("Mouse Support", Menu::usingMouseInput);
 		AddOptionDescription("Navigate the menu with the mouse. Right-click goes back.");

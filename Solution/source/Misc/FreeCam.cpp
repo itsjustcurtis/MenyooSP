@@ -12,13 +12,13 @@
 #include "..\macros.h"
 
 #include "..\Menu\Menu.h"
+#include "..\Menu\Keybinds.h"
 #include "..\Menu\MenuConfig.h"
 #include "..\Menu\Routine.h"
 #include "..\Natives\natives2.h"
 #include "..\Util\GTAmath.h"
 #include "..\Util\keyboard.h"
 #include "..\Scripting\Camera.h"
-#include "..\Scripting\CustomHelpText.h"
 #include "..\Scripting\enums.h"
 #include "..\Scripting\Game.h"
 #include "..\Scripting\GameplayCamera.h"
@@ -148,9 +148,7 @@ namespace FreeCamMode
 
 		bool IsHotkeyPressed()
 		{
-			return Menu::usingControllerInput
-				? IS_CONTROL_PRESSED(2, INPUT_FRONTEND_X) && IS_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LS)
-				: IsKeyJustUp(BindNoClip);
+			return Keybinds::WasPressedThisFrame("no_clip", Menu::usingControllerInput ? Keybinds::Context::Gamepad : Keybinds::Context::Keyboard);
 		}
 
 		void SetConflictingControls(bool enabled)
@@ -186,7 +184,7 @@ namespace FreeCamMode
 			Input input = ReadRotationInput(MenuConfig::FreeCam::rotationSensitivityGamepad);
 
 			float movement = MenuConfig::FreeCam::defaultSpeed * controllerSpeedScale;
-			if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_RB))
+			if (Keybinds::IsHeld("freecam_hasten", Keybinds::Context::Gamepad))
 				movement *= controllerHastenMultiplier;
 
 			input.translation.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movement;
@@ -199,10 +197,10 @@ namespace FreeCamMode
 		{
 			Input input = ReadRotationInput(MenuConfig::FreeCam::rotationSensitivityMouse);
 
-			float movement = IS_DISABLED_CONTROL_PRESSED(0, INPUT_DUCK)
+			float movement = Keybinds::IsHeld("freecam_slow", Keybinds::Context::Keyboard)
 				? MenuConfig::FreeCam::defaultSlowSpeed
 				: MenuConfig::FreeCam::defaultSpeed;
-			if (IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT))
+			if (Keybinds::IsHeld("freecam_hasten", Keybinds::Context::Keyboard))
 				movement *= keyboardSprintMultiplier;
 
 			input.translation.x = GET_DISABLED_CONTROL_NORMAL(0, INPUT_MOVE_LR) * movement;
@@ -306,7 +304,7 @@ namespace FreeCamMode
 			const int scroll = ReadScroll();
 
 			// Space + scroll: FOV
-			if (IsKeyDown(VK_SPACE))
+			if (Keybinds::IsHeld("freecam_fov_mod", Keybinds::Context::Keyboard))
 			{
 				if (scroll != 0)
 					AdjustFov(scroll);
@@ -314,24 +312,17 @@ namespace FreeCamMode
 			}
 
 			// Tab: height lock, scroll: speed
-			if (IsKeyJustUp(VK_TAB))
+			if (Keybinds::WasPressedThisFrame("freecam_height_lock", Keybinds::Context::Keyboard))
 				ToggleHeightLock();
 			if (scroll != 0)
 				AdjustSpeed(scroll);
 		}
 
-		void ShowHelp()
+		void DrawHelpBindRows()
 		{
-			if (Menu::usingControllerInput)
-			{
-				Game::CustomHelpText::ShowTimedText(oss_ << "FreeCam:~n~~INPUT_MOVE_UD~ = " << Game::GetGXTEntry("ITEM_MOV_CAM")
-					<< "~n~~INPUT_LOOK_LR~ = " << Game::GetGXTEntry("ITEM_MOVE") << "~n~~INPUT_FRONTEND_RT~/~INPUT_FRONTEND_LT~ = " << "Ascend/Descend" << "~n~~INPUT_FRONTEND_RB~ = " << "Hasten", 6000);
-			}
-			else
-			{
-				Game::CustomHelpText::ShowTimedText(oss_ << "FreeCam:~n~~INPUT_MOVE_UD~/~INPUT_MOVE_LR~ = " << Game::GetGXTEntry("ITEM_MOV_CAM")
-					<< "~n~~INPUT_LOOK_LR~ = " << Game::GetGXTEntry("ITEM_MOVE") << "~n~~INPUT_PARACHUTE_BRAKE_RIGHT~/~INPUT_PARACHUTE_BRAKE_LEFT~ = " << "Ascend/Descend" << "~n~~INPUT_SPRINT~ = " << "Hasten" << "~n~~INPUT_DUCK~ = " << "Slow Down", 6000);
-			}
+			Keybinds::AddBindIB("freecam_hasten", "Hasten");
+			Keybinds::AddBindIB("freecam_slow", "Slow Down");
+			Keybinds::AddBindIB("freecam_height_lock", "Height Lock");
 		}
 	}
 
@@ -370,8 +361,6 @@ namespace FreeCamMode
 		state.camera.SetFieldOfView(MenuConfig::FreeCam::defaultFov);
 		state.camera.SetDepthOfFieldStrength(0.0f);
 		World::SetRenderingCamera(state.camera);
-
-		ShowHelp();
 	}
 
 	void Stop()
@@ -430,6 +419,7 @@ namespace FreeCamMode
 
 		SetConflictingControls(false);
 		ApplyEntityOverrides();
+		DrawHelpBindRows();
 
 		// wardrobe front view owns the view; don't move or rotate behind it
 		if (!sub::WardrobeCamera::IsBusy())

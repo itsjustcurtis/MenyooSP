@@ -12,6 +12,7 @@
 #include "..\macros.h"
 
 #include "..\Menu\Menu.h"
+#include "..\Menu\Keybinds.h"
 #include "..\Menu\MenuCategory.h"
 #include "..\Menu\submenu_enum.h"
 #include "..\Menu\Routine.h"
@@ -535,44 +536,21 @@ namespace sub
 		if (Menu::IsLastDrawnOptionSelected())
 		{
 			bool isAFavourite = IsAnimationAFavourite(animDict, animName);
-			if (Menu::usingControllerInput)
+			Keybinds::AddBindIB("menu_action", isAFavourite, "Remove from favourites", "Add to favourites");
+			if (Keybinds::WasPressedThisFrame("menu_action"))
 			{
-				Menu::add_IB(INPUT_SCRIPT_RLEFT, (!isAFavourite ? "Add to" : "Remove from") + (std::string)" favourites");
-				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-				{
-					!isAFavourite ? AddAnimationToFavourites(animDict, animName) : RemoveAnimationFromFavourites(animDict, animName);
-				}
-
-				if (isAFavourite)
-				{
-					Menu::add_IB(INPUT_SCRIPT_RUP, "Change category");
-					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RUP))
-					{
-						s_recatState.returnCursor = *Menu::activeOptionIndex;
-						s_recatState.animDict = animDict;
-						s_recatState.animName = animName;
-						Menu::pendingSubmenu = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
-					}
-				}
+				!isAFavourite ? AddAnimationToFavourites(animDict, animName) : RemoveAnimationFromFavourites(animDict, animName);
 			}
-			else
-			{
-				Menu::add_IB(VirtualKey::B, (!isAFavourite ? "Add to" : "Remove from") + (std::string)" favourites");
-				if (IsKeyJustUp(VirtualKey::B))
-				{
-					!isAFavourite ? AddAnimationToFavourites(animDict, animName) : RemoveAnimationFromFavourites(animDict, animName);
-				}
 
-				if (isAFavourite)
+			if (isAFavourite)
+			{
+				Keybinds::AddBindIB("favourite_recategorize", "Change category");
+				if (Keybinds::WasPressedThisFrame("favourite_recategorize"))
 				{
-					Menu::add_IB(VirtualKey::C, "Change category");
-					if (IsKeyJustUp(VirtualKey::C))
-					{
-						s_recatState.returnCursor = *Menu::activeOptionIndex;
-						s_recatState.animDict = animDict;
-						s_recatState.animName = animName;
-						Menu::pendingSubmenu = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
-					}
+					s_recatState.returnCursor = *Menu::activeOptionIndex;
+					s_recatState.animDict = animDict;
+					s_recatState.animName = animName;
+					Menu::pendingSubmenu = SUB::ANIMATIONSUB_FAVOURITES_CATSELECT;
 				}
 			}
 		}

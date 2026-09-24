@@ -15,6 +15,7 @@
 #include "..\Scripting\enums.h"
 #include "..\Scripting\Game.h"
 #include "..\Menu\Menu.h"
+#include "..\Menu\Keybinds.h"
 #include "..\Util\FileLogger.h"
 
 // death model check
@@ -52,20 +53,13 @@ namespace ManualRespawn
 
 	bool ManualRespawn::IsSkipPressed()
 	{
-		return IS_DISABLED_CONTROL_JUST_PRESSED(0, respawnKey) != 0;
+		return Keybinds::WasPressedThisFrame("respawn");
 	}
 
 	inline void ManualRespawn::ShowRespawnHelpText()
 	{
-		std::string bindsname = "button";
-		try { bindsname = ControllerInputs::vNames.at(respawnKey); }
-		catch (...) 
-		{
-			addlog(ige::LogType::LOG_ERROR, "Unable to set new binding name, respawnKey = " + std::to_string(respawnKey));
-		}
-
 		Game::Print::SetupDraw(GTAfont::Arial, Vector2(0, 0.4f), false, true, false, RGBA(255, 255, 255, 190));
-		Game::Print::drawstring("Press ~b~[" + bindsname + "]~s~ to respawn.", NULL, 0.1f);
+		Game::Print::drawstring("Press ~b~[" + Keybinds::GetGlyph("respawn") + "]~s~ to respawn.", NULL, 0.1f);
 	}
 
 	void ManualRespawn::Tick()

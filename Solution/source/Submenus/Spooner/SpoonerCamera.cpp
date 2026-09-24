@@ -8,6 +8,7 @@
 #include "..\PedComponentChanger.h"
 #include "..\..\Menu\Menu.h"
 #include "..\..\Menu\MenuConfig.h"
+#include "..\..\Menu\Keybinds.h"
 #include "..\..\Misc\FreeCam.h"
 #include "..\..\Natives\natives2.h"
 #include "..\..\Util\keyboard.h"
@@ -191,16 +192,8 @@ namespace sub::Spooner::SpoonerCamera
 		if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_VEH_EXIT))
 			SpoonerMode::OpenMenu(SUB::SPOONER_MAIN, 2);
 
-		if (Menu::usingControllerInput)
-		{
-			Menu::add_IB(INPUT_FRONTEND_DOWN, "Place Marker");
-			if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_DOWN))
-				AddMarkerAtAim();
-			return;
-		}
-
-		Menu::add_IB(VirtualKey::M, "Place Marker");
-		if (IsKeyJustUp(VirtualKey::M))
+		Keybinds::AddBindIB("spooner_marker", "Place Marker");
+		if (Keybinds::WasPressedThisFrame("spooner_marker"))
 			AddMarkerAtAim();
 	}
 

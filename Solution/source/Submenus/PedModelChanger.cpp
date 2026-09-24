@@ -12,6 +12,7 @@
 #include "..\macros.h"
 
 #include "..\Menu\Menu.h"
+#include "..\Menu\Keybinds.h"
 #include "..\Menu\Routine.h"
 
 #include "..\Natives\natives2.h"
@@ -109,21 +110,10 @@ namespace sub
 		void ShowInstructionalButton(GTAmodel::Model model)
 		{
 			bool bIsAFav = IsPedAFavourite(model);
-			if (Menu::usingControllerInput)
+			Keybinds::AddBindIB("menu_action", bIsAFav, "Remove from favourites", "Add to favourites");
+			if (Keybinds::WasPressedThisFrame("menu_action"))
 			{
-				Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-				{
-					!bIsAFav ? AddPedToFavourites(model, Game::InputBox("", 28U, "Enter custom name:", GetPedModelLabel(model, true))) : RemovePedFromFavourites(model);
-				}
-			}
-			else
-			{
-				Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-				if (IsKeyJustUp(VirtualKey::B))
-				{
-					!bIsAFav ? AddPedToFavourites(model, Game::InputBox("", 28U, "Enter custom name:", GetPedModelLabel(model, true))) : RemovePedFromFavourites(model);
-				}
+				!bIsAFav ? AddPedToFavourites(model, Game::InputBox("", 28U, "Enter custom name:", GetPedModelLabel(model, true))) : RemovePedFromFavourites(model);
 			}
 		}
 

@@ -91,10 +91,6 @@ extern RGBA optioncount;
 extern RGBA selectionhi;
 extern RGBA _globalPedTrackers_Col;
 
-extern std::pair<UINT16, UINT16> menubindsGamepad;
-extern UINT16 menuToggleKey;
-extern UINT16 respawnKey;
-extern UINT16 stopAnimationKey;
 extern INT8 g_loglevel;
 
 class MenuInput final
@@ -173,10 +169,13 @@ public:
 	static void sub_handler();
 	static void submenu_switch();
 	static void justopened();
+	static bool IsGameReadyForDeferredInit();
+	static void TickDeferredMenuInit();
 
 	static void SetInputMethods();
 	static void DisableControls();
 	static void base();
+	static void RequestMenuTextures();
 	static void titlebox_draw();
 	static void background();
 	static void optionhi();
@@ -204,6 +203,9 @@ public:
 	static void add_IB(ControllerInput button_id, std::string string_val);
 	static void add_IB(VirtualKey::VirtualKey button_id, std::string string_val);
 	static void add_IB(ScaleformButton button_id, std::string string_val);
+	// Two-member combo overloads: both keycaps/button glyphs are drawn in one slot.
+	static void add_IB(ControllerInput button_id, ControllerInput button2_id, std::string string_val);
+	static void add_IB(VirtualKey::VirtualKey button_id, VirtualKey::VirtualKey button2_id, std::string string_val);
 	static std::string get_key_IB(const Scaleform_IbT& ib);
 	static void draw_IB();
 
@@ -262,6 +264,10 @@ void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), vo
 void AddTexter(const std::string& text, int selectedindex, const std::vector<std::string>& textarray, bool &A_PRESS = null, bool &RIGHT_PRESS = null, bool &LEFT_PRESS = null, bool gxt = 0);
 
 int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts);
+int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts, bool &pressed);
+
+// Displays a right-aligned bind key/button and captures a replacement when pressed.
+void AddKeybindOption(const std::string& label, const std::string& bindText, const std::string& description, bool &A_PRESS, bool capturingThis);
 
 // Returns true when the value changed this frame
 template<typename T>

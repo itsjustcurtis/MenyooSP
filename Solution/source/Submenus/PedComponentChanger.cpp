@@ -18,6 +18,7 @@
 #include "..\macros.h"
 
 #include "..\Menu\Menu.h"
+#include "..\Menu\Keybinds.h"
 #include "..\Menu\Routine.h"
 
 #include "..\Memory\GTAmemory.h"
@@ -1064,8 +1065,8 @@ namespace sub
 				}
 			}
 
-			Menu::add_IB(VirtualKey::B, g_tattooPreviewMode ? "Preview: ON " : "Preview: OFF ");
-			bShortcutDecalPreviewPressed = IsKeyJustUp(VirtualKey::B);
+			Keybinds::AddBindIB("menu_action", g_tattooPreviewMode, "Preview: ON ", "Preview: OFF ");
+			bShortcutDecalPreviewPressed = Keybinds::WasPressedThisFrame("menu_action");
 			if (bShortcutDecalPreviewPressed)
 			{
 				g_tattooPreviewMode = !g_tattooPreviewMode;
@@ -1129,8 +1130,8 @@ namespace sub
 				}
 			}
 
-			Menu::add_IB(VirtualKey::B, g_tattooPreviewMode ? "Preview: ON " : "Preview: OFF ");
-			bShortcutDecalPreviewPressed = IsKeyJustUp(VirtualKey::B);
+			Keybinds::AddBindIB("menu_action", g_tattooPreviewMode, "Preview: ON ", "Preview: OFF ");
+			bShortcutDecalPreviewPressed = Keybinds::WasPressedThisFrame("menu_action");
 			if (bShortcutDecalPreviewPressed)
 			{
 				g_tattooPreviewMode = !g_tattooPreviewMode;

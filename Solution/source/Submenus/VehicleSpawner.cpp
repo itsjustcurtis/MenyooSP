@@ -10,6 +10,7 @@
 #include "VehicleSpawner.h"
 #include "..\Util\FileLogger.h"
 #include "..\Util\VehiclePrices.h"
+#include "..\Menu\Keybinds.h"
 
 namespace sub
 {
@@ -1626,21 +1627,10 @@ namespace sub
 				DrawVehicleModelName(vehModel);
 
 				bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(vehModel);
-				if (Menu::usingControllerInput)
+				Keybinds::AddBindIB("menu_action", bIsAFav, "Remove from favourites", "Add to favourites");
+				if (Keybinds::WasPressedThisFrame("menu_action"))
 				{
-					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-					{
-						!bIsAFav ? SpawnVehicleAddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicleRemoveVehicleModelFromFavourites(vehModel);
-					}
-				}
-				else
-				{
-					Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-					if (IsKeyJustUp(VirtualKey::B))
-					{
-						!bIsAFav ? SpawnVehicleAddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicleRemoveVehicleModelFromFavourites(vehModel);
-					}
+					!bIsAFav ? SpawnVehicleAddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicleRemoveVehicleModelFromFavourites(vehModel);
 				}
 			}
 		}
@@ -2060,23 +2050,11 @@ namespace sub
 				DrawVehicleModelName(vehModel);
 
 				bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(vehModel);
-				if (Menu::usingControllerInput)
-				{
-					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+				Keybinds::AddBindIB("menu_action", bIsAFav, "Remove from favourites", "Add to favourites");
 
-					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-					{
-						!bIsAFav ? SpawnVehicleAddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicleRemoveVehicleModelFromFavourites(vehModel);
-					}
-				}
-				else
+				if (Keybinds::WasPressedThisFrame("menu_action"))
 				{
-					Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-
-					if (IsKeyJustUp(VirtualKey::B))
-					{
-						!bIsAFav ? SpawnVehicleAddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicleRemoveVehicleModelFromFavourites(vehModel);
-					}
+					!bIsAFav ? SpawnVehicleAddVehicleModelToFavourites(vehModel, Game::InputBox("", 28U, "Enter custom name:", vehModel.VehicleDisplayName(true))) : SpawnVehicleRemoveVehicleModelFromFavourites(vehModel);
 				}
 			}
 		}
@@ -2271,35 +2249,17 @@ namespace sub
 
 					DrawVehicleModelName(vehModel);
 
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
+					Keybinds::AddBindIB("menu_action", "Remove");
 
-						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-						{
-							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
-							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
-						if (Menu::IsSelectionAtBottom())
-							{
-								Menu::Up();
-							}
-							return; // Yeah
-						}
-					}
-					else
+					if (Keybinds::WasPressedThisFrame("menu_action"))
 					{
-						Menu::add_IB(VirtualKey::B, "Remove");
-
-						if (IsKeyJustUp(VirtualKey::B))
+						nodeLocToLoad.parent().remove_child(nodeLocToLoad);
+						doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
+					if (Menu::IsSelectionAtBottom())
 						{
-							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
-							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlAddedVehicleModels).c_str());
-						if (Menu::IsSelectionAtBottom())
-							{
-								Menu::Up();
-							}
-							return; // Yeah
+							Menu::Up();
 						}
+						return; // Yeah
 					}
 				}
 			}
@@ -2751,42 +2711,20 @@ namespace sub
 
 				const bool bIsAFav = SpawnVehicleIsVehicleModelAFavourite(selectedCategory.values[vehDlcIdToSpawn]);
 
-				if (Menu::usingControllerInput)
-				{
-					Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + std::string(" favourites"));
+				Keybinds::AddBindIB("menu_action", bIsAFav, "Remove from favourites", "Add to favourites");
 
-					if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
+				if (Keybinds::WasPressedThisFrame("menu_action"))
+				{
+					if (!bIsAFav)
 					{
-						if (!bIsAFav)
-						{
-							SpawnVehicleAddVehicleModelToFavourites(
-								selectedCategory.values[vehDlcIdToSpawn],
-								Game::InputBox("", 28U, "Enter custom name:",
-									GTAmodel::Model(selectedCategory.values[vehDlcIdToSpawn]).VehicleDisplayName(true)));
-						}
-						else
-						{
-							SpawnVehicleRemoveVehicleModelFromFavourites(selectedCategory.values[vehDlcIdToSpawn]);
-						}
+						SpawnVehicleAddVehicleModelToFavourites(
+							selectedCategory.values[vehDlcIdToSpawn],
+							Game::InputBox("", 28U, "Enter custom name:",
+								GTAmodel::Model(selectedCategory.values[vehDlcIdToSpawn]).VehicleDisplayName(true)));
 					}
-				}
-				else
-				{
-					Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + std::string(" favourites"));
-
-					if (IsKeyJustUp(VirtualKey::B))
+					else
 					{
-						if (!bIsAFav)
-						{
-							SpawnVehicleAddVehicleModelToFavourites(
-								selectedCategory.values[vehDlcIdToSpawn],
-								Game::InputBox("", 28U, "Enter custom name:",
-									GTAmodel::Model(selectedCategory.values[vehDlcIdToSpawn]).VehicleDisplayName(true)));
-						}
-						else
-						{
-							SpawnVehicleRemoveVehicleModelFromFavourites(selectedCategory.values[vehDlcIdToSpawn]);
-						}
+						SpawnVehicleRemoveVehicleModelFromFavourites(selectedCategory.values[vehDlcIdToSpawn]);
 					}
 				}
 			}

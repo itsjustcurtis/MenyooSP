@@ -12,6 +12,7 @@
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\Keybinds.h"
 #include "..\..\Menu\Routine.h"
 
 #include "..\..\Natives\natives2.h"
@@ -102,12 +103,68 @@ namespace sub
 		static FavPropCache s_favPropCache;
 		static std::string s_favPropSearchStr;
 
-		bool g_multiSelectEditActive = false;
-		SpoonerEntity g_multiSelectPrevSelected;
-		GTAentity g_multiSelectPivot;
 		namespace MultiSelect
 		{
-			std::vector<SpoonerEntity> MultiSelect::g_selectedEntities;
+			std::vector<SpoonerEntity> g_selectedEntities;
+			std::unordered_map<int, EntityState> g_savedEntityStates;
+			bool g_bulkEditActive = false;
+			SpoonerEntity g_prevSelected;
+			GTAentity g_groupPivot;
+
+			void SaveEntityState(const SpoonerEntity& entity)
+			{
+				if (!entity.handle.Exists())
+					return;
+				int h = entity.handle.GetHandle();
+				if (g_savedEntityStates.find(h) != g_savedEntityStates.end())
+					return; // keep the pre-attach state
+				g_savedEntityStates[h] = { entity.handle.GetIsCollisionEnabled(), entity.handle.IsPositionFrozen(), entity.dynamic };
+			}
+			void DiscardEntityState(GTAentity handle)
+			{
+				g_savedEntityStates.erase(handle.GetHandle());
+			}
+			static void ApplyEntityState(GTAentity handle, const EntityState& s)
+			{
+				handle.SetIsCollisionEnabled(s.collision);
+				handle.FreezePosition(s.frozen);
+				handle.SetDynamic(s.dynamic);
+			}
+			static void SyncDynamicFlag(GTAentity handle, bool dynamic)
+			{
+				int idx = EntityManagement::GetEntityIndexInDb(handle);
+				if (idx >= 0)
+					Databases::EntityDb[idx].dynamic = dynamic;
+			}
+			void RestoreEntityState(SpoonerEntity& entity)
+			{
+				auto it = g_savedEntityStates.find(entity.handle.GetHandle());
+				if (it == g_savedEntityStates.end())
+					return;
+				EntityState s = it->second;
+				g_savedEntityStates.erase(it);
+				if (!entity.handle.Exists())
+					return;
+				entity.handle.Detach();
+				ApplyEntityState(entity.handle, s);
+				entity.dynamic = s.dynamic;
+				SyncDynamicFlag(entity.handle, s.dynamic);
+			}
+			void RestoreAllEntityStates()
+			{
+				for (auto& e : MultiSelect::g_selectedEntities)
+					RestoreEntityState(e);
+			}
+			void ApplySavedEntityState(GTAentity origHandle, GTAentity newHandle)
+			{
+				if (!newHandle.Exists())
+					return;
+				auto it = g_savedEntityStates.find(origHandle.GetHandle());
+				if (it == g_savedEntityStates.end())
+					return;
+				ApplyEntityState(newHandle, it->second);
+				SyncDynamicFlag(newHandle, it->second.dynamic);
+			}
 
 			void Add(const SpoonerEntity& entity)
 			{
@@ -125,6 +182,7 @@ namespace sub
 			{
 				if (index < 0 || index >= static_cast<int>(MultiSelect::g_selectedEntities.size()))
 					return;
+				RestoreEntityState(MultiSelect::g_selectedEntities[index]);
 				MultiSelect::g_selectedEntities.erase(MultiSelect::g_selectedEntities.begin() + index);
 			}
 
@@ -134,10 +192,12 @@ namespace sub
 				{
 					if (MultiSelect::g_selectedEntities[i].handle == handle)
 					{
+						RestoreEntityState(MultiSelect::g_selectedEntities[i]);
 						MultiSelect::g_selectedEntities.erase(MultiSelect::g_selectedEntities.begin() + i);
 						return;
 					}
 				}
+				DiscardEntityState(handle);
 			}
 
 			bool IsSelected(GTAentity handle)
@@ -161,17 +221,17 @@ namespace sub
 
 			void Clear()
 			{
+				RestoreAllEntityStates();
 				MultiSelect::g_selectedEntities.clear();
+				MultiSelect::g_savedEntityStates.clear();
 			}
 
 			void DestroyPivot()
 			{
-				if (g_multiSelectPivot.Exists())
+				if (MultiSelect::g_groupPivot.Exists())
 				{
-					for (auto& e : MultiSelect::g_selectedEntities)
-						if (e.handle.Exists())
-							e.handle.Detach();
-					g_multiSelectPivot.Delete();
+					RestoreAllEntityStates();
+					MultiSelect::g_groupPivot.Delete();
 				}
 			}
 
@@ -192,22 +252,30 @@ namespace sub
 
 				centroid /= static_cast<float>(count);
 				GTAprop prop = World::CreateProp(GTAmodel::Model(0x3A49EBD1), centroid, Vector3(), false, false);
-				g_multiSelectPivot = GTAentity(prop.Handle());
-				g_multiSelectPivot.SetAlpha(0);
-				SET_ENTITY_COLLISION(g_multiSelectPivot.Handle(), false, false);
-				g_multiSelectPivot.FreezePosition(true);
+				MultiSelect::g_groupPivot = GTAentity(prop.Handle());
+				MultiSelect::g_groupPivot.SetAlpha(0);
+				SET_ENTITY_COLLISION(MultiSelect::g_groupPivot.Handle(), false, false);
+				MultiSelect::g_groupPivot.FreezePosition(true);
 
-				Vector3 pivotPos = g_multiSelectPivot.GetPosition();
-				Vector3 pivotRot = g_multiSelectPivot.GetRotation();
-				for (auto& e : MultiSelect::g_selectedEntities)
+				Vector3 pivotPos = MultiSelect::g_groupPivot.GetPosition();
+				Vector3 pivotRot = MultiSelect::g_groupPivot.GetRotation();
+				auto attachEntityToPivot = [&](SpoonerEntity& e)
 				{
-					if (e.handle.Exists())
-					{
-						Vector3 relPos = e.handle.GetPosition() - pivotPos;
-						Vector3 relRot = e.handle.GetRotation() - pivotRot;
-						e.handle.AttachTo(g_multiSelectPivot, -1, false, relPos, relRot);
-					}
-				}
+					if (!e.handle.Exists())
+						return;
+					MultiSelect::SaveEntityState(e);
+					Vector3 relPos = e.handle.GetPosition() - pivotPos;
+					Vector3 relRot = e.handle.GetRotation() - pivotRot;
+					e.handle.AttachTo(MultiSelect::g_groupPivot, -1, false, relPos, relRot);
+				};
+				// entities split into two groups: peds and non-peds
+				// this is due to a bug where attaching a ped after an entity that it was previously attached to caused a crash (weird GTA quirk?), so we just attach peds first
+				for (auto& e : MultiSelect::g_selectedEntities)
+					if (e.handle.IsPed())
+						attachEntityToPivot(e);
+				for (auto& e : MultiSelect::g_selectedEntities)
+					if (!e.handle.IsPed())
+						attachEntityToPivot(e);
 			}
 		}
 
@@ -1168,16 +1236,8 @@ namespace sub
 						EntityManagement::ShowArrowAboveEntity(e.handle);
 
 						bool bShortcutDeletePressed;
-						if (Menu::usingControllerInput)
-						{
-							Menu::add_IB(INPUT_SCRIPT_RLEFT, bEntityExists ? "Delete Entity" : "Remove Invalid Entity From DB");
-							bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-						}
-						else
-						{
-							Menu::add_IB(VirtualKey::B, bEntityExists ? "Delete Entity" : "Remove Invalid Entity From DB");
-							bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
-						}
+						Keybinds::AddBindIB("menu_action", bEntityExists, "Delete Entity", "Remove Invalid Entity From DB");
+						bShortcutDeletePressed = Keybinds::WasPressedThisFrame("menu_action");
 
 						if (bShortcutDeletePressed)
 						{
@@ -2172,20 +2232,20 @@ namespace sub
 					EntityManagement::ShowArrowAboveEntity(entity.handle, RGBA(127, 0, 255, 200));
 			}
 
-			if (!g_multiSelectEditActive)
+			if (!MultiSelect::g_bulkEditActive)
 			{
-				g_multiSelectPrevSelected = selectedEntity;
-				g_multiSelectEditActive = true;
+				MultiSelect::g_prevSelected = selectedEntity;
+				MultiSelect::g_bulkEditActive = true;
 			}
 
 			// Create pivot at centroid if entities are selected but no pivot exists yet
-			if (!g_multiSelectPivot.Exists() && !MultiSelect::g_selectedEntities.empty())
+			if (!MultiSelect::g_groupPivot.Exists() && !MultiSelect::g_selectedEntities.empty())
 				MultiSelect::CreatePivot();
 
 			// Point gizmo at pivot
-			if (g_multiSelectPivot.Exists())
+			if (MultiSelect::g_groupPivot.Exists())
 			{
-				selectedEntity.handle = g_multiSelectPivot;
+				selectedEntity.handle = MultiSelect::g_groupPivot;
 				selectedEntity.attachmentArgs.isAttached = false;
 			}
 
@@ -2193,10 +2253,10 @@ namespace sub
 			if (Menu::OnSubBack == nullptr)
 			{
 				Menu::OnSubBack = []() {
-					if (g_multiSelectEditActive)
+					if (MultiSelect::g_bulkEditActive)
 					{
-						selectedEntity = g_multiSelectPrevSelected;
-						g_multiSelectEditActive = false;
+						selectedEntity = MultiSelect::g_prevSelected;
+						MultiSelect::g_bulkEditActive = false;
 					}
 					MultiSelect::DestroyPivot();
 				};
@@ -2205,36 +2265,48 @@ namespace sub
 			AddTitle("Multi-Select");
 			
 			bool bSelectAll = false, bClearAll = false;
-			//if (MultiSelect::g_selectedEntities.size() < Databases::EntityDb.size()) //Commented out these statements as it causes the selection to move up and down when selecting/deselecting entities in the list
+			static const std::vector<std::string> copyModeOptions = { "Selected Only", "Copy With Attachments" };
+			std::string graySelectAllPrefix = MultiSelect::g_selectedEntities.size() < Databases::EntityDb.size() ? "" : "~c~";
+			std::string dbEntityCount = std::to_string(Databases::EntityDb.size());
+			AddOption(graySelectAllPrefix + "Select All (" + dbEntityCount + ")", bSelectAll); if (bSelectAll && MultiSelect::g_selectedEntities.size() < Databases::EntityDb.size())
 			{
-				AddOption("Select All (" + std::to_string(Databases::EntityDb.size()) + ")", bSelectAll); if (bSelectAll)
+				MultiSelect::DestroyPivot();
+				MultiSelect::SelectAll();
+				if (MultiSelect::g_bulkEditActive)
 				{
-					MultiSelect::DestroyPivot();
-					MultiSelect::SelectAll();
-					if (g_multiSelectEditActive)
-					{
-						selectedEntity = g_multiSelectPrevSelected;
-						g_multiSelectEditActive = false;
-					}
-					*Menu::activeOptionIndex = 1;
-					return;
+					selectedEntity = MultiSelect::g_prevSelected;
+					MultiSelect::g_bulkEditActive = false;
+				}
+				*Menu::activeOptionIndex = 1;
+				return;
+			}
+
+			std::string grayClearPrefix = MultiSelect::g_selectedEntities.empty() ? "~c~" : "";
+			std::string selectedEntityCount = std::to_string(MultiSelect::g_selectedEntities.size());
+			AddOption(grayClearPrefix + "Clear Selection (" + selectedEntityCount + ")", bClearAll); if (bClearAll && !MultiSelect::g_selectedEntities.empty())
+			{
+				MultiSelect::DestroyPivot();
+				MultiSelect::Clear();
+				if (MultiSelect::g_bulkEditActive)
+				{
+					selectedEntity = MultiSelect::g_prevSelected;
+					MultiSelect::g_bulkEditActive = false;
+				}
+				*Menu::activeOptionIndex = 1;
+				return;
+			}
+			bool bCopyPressed = false;
+			_copyEntTexterValue = (UINT8)AddTexterCycler((MultiSelect::g_selectedEntities.empty() ? "~c~Copy~s~" : "Copy"), _copyEntTexterValue, copyModeOptions, bCopyPressed);
+			AddOptionDescription("Creates a duplicate. Left/right chooses whether attachments are copied too.");
+			if (bCopyPressed)
+			{
+				for (auto& e : MultiSelect::g_selectedEntities)
+				{
+					SpoonerEntity copy = EntityManagement::CopyEntity(e, true, true, _copyEntTexterValue);
+					MultiSelect::ApplySavedEntityState(e.handle, copy.handle);
 				}
 			}
-			//if (!MultiSelect::g_selectedEntities.empty()) //Commented out these statements as it causes the selection to move up and down when selecting/deselecting entities in the list
-			{
-				AddOption("Clear Selection (" + std::to_string(MultiSelect::g_selectedEntities.size()) + ")", bClearAll); if (bClearAll)
-				{
-					MultiSelect::DestroyPivot();
-					MultiSelect::Clear();
-					if (g_multiSelectEditActive)
-					{
-						selectedEntity = g_multiSelectPrevSelected;
-						g_multiSelectEditActive = false;
-					}
-					*Menu::activeOptionIndex = 1;
-					return;
-				}
-			}
+
 			if (!Databases::EntityDb.empty())
 			{
 				AddBreak("---Entities---");
@@ -2270,12 +2342,12 @@ namespace sub
 
 
 			// Display pivot position and rotation and allow editing of all selected entities
-			if (!MultiSelect::g_selectedEntities.empty() && g_multiSelectPivot.Exists())
+			if (!MultiSelect::g_selectedEntities.empty() && MultiSelect::g_groupPivot.Exists())
 			{
 				bool isOnTheLine = NETWORK_IS_IN_SESSION() != 0;
 				bool bDelete = false;
-				Vector3 pivotPos = g_multiSelectPivot.GetPosition();
-				Vector3 pivotRot = g_multiSelectPivot.GetRotation();
+				Vector3 pivotPos = MultiSelect::g_groupPivot.GetPosition();
+				Vector3 pivotRot = MultiSelect::g_groupPivot.GetRotation();
 				Vector3 basePos = pivotPos;
 				Vector3 baseRot = pivotRot;
 
@@ -2317,14 +2389,14 @@ namespace sub
 				// Apply pivot pos/rot to pivot itself
 				if (pivotPos.x != basePos.x || pivotPos.y != basePos.y || pivotPos.z != basePos.z)
 				{
-					if (isOnTheLine) g_multiSelectPivot.RequestControl();
-					g_multiSelectPivot.SetPosition(SpoonerMode::SnapPos(pivotPos));
+					if (isOnTheLine) MultiSelect::g_groupPivot.RequestControl();
+					MultiSelect::g_groupPivot.SetPosition(SpoonerMode::SnapPos(pivotPos));
 				}
 				if (pivotRot.x != baseRot.x || pivotRot.y != baseRot.y || pivotRot.z != baseRot.z)
 				{
 					WrapAngle(pivotRot.x); WrapAngle(pivotRot.y); WrapAngle(pivotRot.z);
-					if (isOnTheLine) g_multiSelectPivot.RequestControl();
-					g_multiSelectPivot.SetRotation(SpoonerMode::SnapRot(pivotRot));
+					if (isOnTheLine) MultiSelect::g_groupPivot.RequestControl();
+					MultiSelect::g_groupPivot.SetRotation(SpoonerMode::SnapRot(pivotRot));
 				}
 
 				// Apply opacity delta to all selected entities
@@ -2377,21 +2449,9 @@ namespace sub
 					}
 				}
 
-				bool bCopyPressed = false, bCopy_plus = false, bCopy_minus = false;
-				AddTexter("Copy", _copyEntTexterValue, std::vector<std::string>{ "Selected Only", "Copy With Attachments" }, bCopyPressed, bCopy_plus, bCopy_minus);
-				AddOptionDescription("Creates a duplicate. Left/right chooses whether attachments are copied too.");
-				if (bCopy_plus) { if (_copyEntTexterValue < 1U) _copyEntTexterValue++; }
-				if (bCopy_minus) { if (_copyEntTexterValue > 0) _copyEntTexterValue--; }
-				if (bCopyPressed)
-				{
-					for (auto& e : MultiSelect::g_selectedEntities)
-					{
-						EntityManagement::CopyEntity(e, true, true, _copyEntTexterValue);
-					}
-				}
-			}
+		}
 
-			// Always show DB entity list with checkboxes
+		// Always show DB entity list with checkboxes
 		}
 
 		void Sub_PedOps()
@@ -2675,16 +2735,8 @@ namespace sub
 					m.m_selectedInSub = true;
 
 					bool bShortcutDeletePressed;
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Marker");
-						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-					}
-					else
-					{
-						Menu::add_IB(VirtualKey::B, "Delete Marker");
-						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
-					}
+					Keybinds::AddBindIB("menu_action", "Delete Marker");
+					bShortcutDeletePressed = Keybinds::WasPressedThisFrame("menu_action");
 
 					if (bShortcutDeletePressed)
 					{
@@ -3138,16 +3190,8 @@ namespace sub
 					l.m_selectedInSub = true;
 
 					bool bShortcutDeletePressed;
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Light");
-						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-					}
-					else
-					{
-						Menu::add_IB(VirtualKey::B, "Delete Light");
-						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
-					}
+					Keybinds::AddBindIB("menu_action", "Delete Light");
+					bShortcutDeletePressed = Keybinds::WasPressedThisFrame("menu_action");
 
 					if (bShortcutDeletePressed)
 					{
@@ -3459,16 +3503,8 @@ namespace sub
 				if (Menu::IsLastDrawnOptionSelected())
 					{
 						bool bDeletePressed;
-						if (Menu::usingControllerInput)
-						{
-							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Preset");
-							bDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-						}
-						else
-						{
-							Menu::add_IB(VirtualKey::B, "Delete Preset");
-							bDeletePressed = IsKeyJustUp(VirtualKey::B);
-						}
+						Keybinds::AddBindIB("menu_action", "Delete Preset");
+						bDeletePressed = Keybinds::WasPressedThisFrame("menu_action");
 						if (bDeletePressed)
 						{
 							LightManagement::PresetDb.erase(LightManagement::PresetDb.begin() + i);
@@ -3622,16 +3658,8 @@ namespace sub
 					EntityManagement::ShowArrowAboveEntity(ent, RGBA(0, 255, 255, 200));
 
 					bool bShortcutDeletePressed;
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Entity Blip");
-						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-					}
-					else
-					{
-						Menu::add_IB(VirtualKey::B, "Delete Entity Blip");
-						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
-					}
+					Keybinds::AddBindIB("menu_action", "Delete Entity Blip");
+					bShortcutDeletePressed = Keybinds::WasPressedThisFrame("menu_action");
 
 					if (bShortcutDeletePressed)
 						blipIndexInDbToDelete = i;
@@ -3684,16 +3712,8 @@ namespace sub
 					m.m_selectedInSub = true;
 
 					bool bShortcutDeletePressed;
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Coord Blip");
-						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-					}
-					else
-					{
-						Menu::add_IB(VirtualKey::B, "Delete Coord Blip");
-						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
-					}
+					Keybinds::AddBindIB("menu_action", "Delete Coord Blip");
+					bShortcutDeletePressed = Keybinds::WasPressedThisFrame("menu_action");
 
 					if (bShortcutDeletePressed)
 						blipIndexInDbToDelete = i;
@@ -3746,16 +3766,8 @@ namespace sub
 					m.m_selectedInSub = true;
 
 					bool bShortcutDeletePressed;
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Radial Blip");
-						bShortcutDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-					}
-					else
-					{
-						Menu::add_IB(VirtualKey::B, "Delete Radial Blip");
-						bShortcutDeletePressed = IsKeyJustUp(VirtualKey::B);
-					}
+					Keybinds::AddBindIB("menu_action", "Delete Radial Blip");
+					bShortcutDeletePressed = Keybinds::WasPressedThisFrame("menu_action");
 
 					if (bShortcutDeletePressed)
 						blipIndexInDbToDelete = i;
@@ -4632,18 +4644,9 @@ namespace sub
 				{
 					sub::Spooner::SelectedBlip->Icon = icon;
 					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove from favourites");
-						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-							FavouritesManagement::RemoveBlipIconFromFavourites(icon);
-					}
-					else
-					{
-						Menu::add_IB(VirtualKey::B, "Remove from favourites");
-						if (IsKeyJustUp(VirtualKey::B))
-							FavouritesManagement::RemoveBlipIconFromFavourites(icon);
-					}
+					Keybinds::AddBindIB("menu_action", "Remove from favourites");
+					if (Keybinds::WasPressedThisFrame("menu_action"))
+						FavouritesManagement::RemoveBlipIconFromFavourites(icon);
 				}
 			}
 
@@ -4659,18 +4662,9 @@ namespace sub
 				{
 					sub::Spooner::SelectedBlip->Icon = icon;
 					sub::Spooner::BlipCustoms::RefreshBlip(*sub::Spooner::SelectedBlip);
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, "Add to favourites");
-						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-							FavouritesManagement::AddBlipIconToFavourites(icon);
-					}
-					else
-					{
-						Menu::add_IB(VirtualKey::B, "Add to favourites");
-						if (IsKeyJustUp(VirtualKey::B))
-							FavouritesManagement::AddBlipIconToFavourites(icon);
-					}
+					Keybinds::AddBindIB("menu_action", "Add to favourites");
+					if (Keybinds::WasPressedThisFrame("menu_action"))
+						FavouritesManagement::AddBlipIconToFavourites(icon);
 				}
 			}
 		}
@@ -4962,23 +4956,11 @@ namespace sub
 				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsAFav = FavouritesManagement::IsPropAFavourite(modelName, currentModel.hash);
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+					Keybinds::AddBindIB("menu_action", bIsAFav, "Remove from favourites", "Add to favourites");
 
-						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-						{
-							!bIsAFav ? FavouritesManagement::AddPropToFavourites(modelName, currentModel.hash) : FavouritesManagement::RemovePropFromFavourites(modelName, currentModel.hash);
-						}
-					}
-					else
+					if (Keybinds::WasPressedThisFrame("menu_action"))
 					{
-						Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-
-						if (IsKeyJustUp(VirtualKey::B))
-						{
-							!bIsAFav ? FavouritesManagement::AddPropToFavourites(modelName, currentModel.hash) : FavouritesManagement::RemovePropFromFavourites(modelName, currentModel.hash);
-						}
+						!bIsAFav ? FavouritesManagement::AddPropToFavourites(modelName, currentModel.hash) : FavouritesManagement::RemovePropFromFavourites(modelName, currentModel.hash);
 					}
 				}
 			}
@@ -5015,23 +4997,11 @@ namespace sub
 				if (Menu::IsLastDrawnOptionSelected())
 				{
 					bool bIsAFav = FavouritesManagement::IsPropAFavourite(current, currentModel.hash);
-					if (Menu::usingControllerInput)
-					{
-						Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
+					Keybinds::AddBindIB("menu_action", bIsAFav, "Remove from favourites", "Add to favourites");
 
-						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-						{
-							!bIsAFav ? FavouritesManagement::AddPropToFavourites(current, currentModel.hash) : FavouritesManagement::RemovePropFromFavourites(current, currentModel.hash);
-						}
-					}
-					else
+					if (Keybinds::WasPressedThisFrame("menu_action"))
 					{
-						Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-
-						if (IsKeyJustUp(VirtualKey::B))
-						{
-							!bIsAFav ? FavouritesManagement::AddPropToFavourites(current, currentModel.hash) : FavouritesManagement::RemovePropFromFavourites(current, currentModel.hash);
-						}
+						!bIsAFav ? FavouritesManagement::AddPropToFavourites(current, currentModel.hash) : FavouritesManagement::RemovePropFromFavourites(current, currentModel.hash);
 					}
 				}
 			}
@@ -5152,41 +5122,20 @@ namespace sub
 
 						if (Menu::IsLastDrawnOptionSelected())
 						{
-							if (Menu::usingControllerInput)
+							Keybinds::AddBindIB("menu_action", "Remove");
+							if (Keybinds::WasPressedThisFrame("menu_action"))
 							{
-								Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
-								if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-								{
-									FavouritesManagement::RemovePropFromFavourites(prop.modelName, prop.model.hash);
-									s_favPropCache.needsRebuild = true;
-									if (Menu::IsSelectionAtBottom())
-										Menu::Up();
-									return;
-								}
-								Menu::add_IB(INPUT_SCRIPT_RRIGHT, "Change category");
-								if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RRIGHT))
-								{
-									dict = prop.modelName;
-									Menu::pendingSubmenu = SUB::SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT;
-								}
+								FavouritesManagement::RemovePropFromFavourites(prop.modelName, prop.model.hash);
+								s_favPropCache.needsRebuild = true;
+								if (Menu::IsSelectionAtBottom())
+									Menu::Up();
+								return;
 							}
-							else
+							Keybinds::AddBindIB("favourite_recategorize", "Change category");
+							if (Keybinds::WasPressedThisFrame("favourite_recategorize"))
 							{
-								Menu::add_IB(VirtualKey::B, "Remove");
-								if (IsKeyJustUp(VirtualKey::B))
-								{
-									FavouritesManagement::RemovePropFromFavourites(prop.modelName, prop.model.hash);
-									s_favPropCache.needsRebuild = true;
-									if (Menu::IsSelectionAtBottom())
-										Menu::Up();
-									return;
-								}
-								Menu::add_IB(VirtualKey::C, "Change category");
-								if (IsKeyJustUp(VirtualKey::C))
-								{
-									dict = prop.modelName;
-									Menu::pendingSubmenu = SUB::SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT;
-								}
+								dict = prop.modelName;
+								Menu::pendingSubmenu = SUB::SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT;
 							}
 						}
 					}

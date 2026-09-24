@@ -13,6 +13,7 @@
 
 #include "Menu.h"
 #include "MenuConfig.h"
+#include "Keybinds.h"
 #include "../Submenus/Spooner/ImGuiSpooner.h"
 
 #include "..\Util\FileLogger.h"
@@ -103,6 +104,8 @@ bool defaultPedSet = false;
 void Menu::justopened()
 {
 	Game::Print::PrintBottomLeft(oss_ << "Menyoo PC v" << MENYOO_CURRENT_VER_ << " by ItsJustCurtis and MAFINS");
+
+	Menu::RequestMenuTextures();
 
 	SET_AUDIO_FLAG("IsDirectorModeActive", true);
 
@@ -557,10 +560,6 @@ void TickNeonFwkAnim()
 
 // Global state variables
 
-INT16 BindNoClip = VirtualKey::F3;
-
-INT16 bind_no_clip = VirtualKey::F3;
-
 RgbS g_fadedRGB(255, 0, 0), g_neonFade(0, 0, 0), g_neonSlide(0, 0, 0), g_neonHeart(0,0,0), g_neonShift(0, 0, 0);
 bool g_neonFlash = 0;
 int g_neonSpin = 0, g_neonSpinBack = 0;
@@ -844,7 +843,7 @@ void SetPauseMenuTeleToWpCommand()
 		{
 			(Menu::usingControllerInput ? DxHookIMG::teleToWpBoxIconGamepad : DxHookIMG::teleToWpBoxIconKeyboard).Draw(0, Vector2(0.5f, 0.04f), Vector2(0.0943f, 0.016f), 0.0f, RGBA::AllWhite());
 
-			if (Menu::usingControllerInput ? IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_RLEFT) : IsKeyJustUp(VirtualKey::T))
+			if (Keybinds::WasPressedThisFrame("teleport_waypoint"))
 			{
 				sub::TeleportLocations_catind::TeleMethods::ToWaypoint(myPed);
 			}
@@ -1941,23 +1940,28 @@ void SetLocalSupermanManual()
 
 	if (isInParaFreeFall)
 	{
-		if (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RB) || get_key_pressed(VK_ADD))
+		Keybinds::AddBindIB("superman_ascend", "Up");
+		Keybinds::AddBindIB("superman_descend", "Down");
+		Keybinds::AddBindIB("superman_boost", "Boost");
+		Keybinds::AddBindIB("superman_freeze", "Brake");
+
+		if (Keybinds::IsHeld("superman_boost"))
 		{
 			APPLY_FORCE_TO_ENTITY(playerPed, 1, 0.0, 45.0, 0.0, 0.0, 0.0, 0.0, 1, 1, 1, 1, 0, 1);
 		}
 
 		DISABLE_CONTROL_ACTION(2, INPUT_PARACHUTE_DEPLOY, TRUE);
-		if (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RDOWN) || get_key_pressed(VK_SUBTRACT))
+		if (Keybinds::IsHeld("superman_freeze"))
 		{
 			FREEZE_ENTITY_POSITION(playerPed, true);
 		}
-		else if (IS_CONTROL_JUST_RELEASED(2, INPUT_FRONTEND_RDOWN) || IsKeyJustUp(VK_SUBTRACT))
+		else if (Keybinds::WasReleasedThisFrame("superman_freeze"))
 		{
 			FREEZE_ENTITY_POSITION(playerPed, false);
 		}
 	}
 
-	if (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RT) || IsKeyDown(VK_NUMPAD7))
+	if (Keybinds::IsHeld("superman_ascend"))
 	{
 		if (!isInParaFreeFall) 
 		{
@@ -1966,7 +1970,7 @@ void SetLocalSupermanManual()
 		APPLY_FORCE_TO_ENTITY(playerPed, 1, 0.0, 0.0, 13.0, 0.0, 0.0, 0.0, 1, 1, 1, 1, 0, 1);
 	}
 
-	if (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LT) || IsKeyDown(VK_NUMPAD1))
+	if (Keybinds::IsHeld("superman_descend"))
 	{
 		if (!isInParaFreeFall) 
 		{
@@ -1989,29 +1993,13 @@ void SetPedSupermanAuto(Ped ped)
 
 		if (ped == PLAYER_PED_ID())
 		{
-			bool isBrakePressed, isBrakeReleased = false;
-			if (Menu::usingControllerInput)
-			{
-				DISABLE_CONTROL_ACTION(2, INPUT_PARACHUTE_DEPLOY, TRUE);
-				isBrakePressed = IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RDOWN) != 0;
-				if (!isBrakePressed) 
-				{
-					isBrakeReleased = IS_CONTROL_JUST_RELEASED(2, INPUT_FRONTEND_RDOWN) != 0;
-				}
-			}
-			else
-			{
-				isBrakePressed = IsKeyDown(VK_ADD);
-				if (!isBrakePressed) 
-				{
-					isBrakeReleased = IsKeyJustUp(VK_ADD);
-				}
-			}
-			if (isBrakePressed)
+			DISABLE_CONTROL_ACTION(2, INPUT_PARACHUTE_DEPLOY, TRUE);
+			Keybinds::AddBindIB("superman_freeze", "Temporary Brake");
+			if (Keybinds::IsHeld("superman_freeze"))
 			{
 				FREEZE_ENTITY_POSITION(ped, true);
 			}
-			else if (isBrakeReleased)
+			else if (Keybinds::WasReleasedThisFrame("superman_freeze"))
 			{
 				FREEZE_ENTITY_POSITION(ped, false);
 			}
@@ -2129,7 +2117,9 @@ void SetLocalCarHydraulics()
 {
 	GTAvehicle vehicle = g_myVeh;
 
-	if ((Menu::usingControllerInput ? IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : get_key_pressed(VirtualKey::LeftShift)) && vehicle.IsOnAllWheels())
+	Keybinds::AddBindIB("vehicle_hydraulics", "Hydraulics");
+
+	if (Keybinds::IsHeld("vehicle_hydraulics") && vehicle.IsOnAllWheels())
 	{
 		Vector2 normal;
 		if (Menu::usingControllerInput)
@@ -2633,29 +2623,36 @@ void SetVehicleWeaponLines()
 
 void SetVehicleWeapons()
 {
+	const bool anyVehicleWeapon = vehicleRPG
+		|| vehicleFireworks
+		|| vehicleGuns
+		|| vehicleSnowballs
+		|| vehicleBalls
+		|| vehicleWaterHydrant
+		|| vehicleFlameLeak
+		|| vehicleLaserGreen
+		|| vehicleLaserRed
+		|| vehicleTurretsValkyrie
+		|| vehicleFlaregun
+		|| vehicleHeavySniper
+		|| vehicleTazerWeapon
+		|| vehicleMolotovWeapon
+		|| vehicleCombatPDW;
+
+	if (anyVehicleWeapon)
+	{
+		Keybinds::AddBindIB("vehicle_weapons_fire", "Fire");
+	}
+
 	StoreVehicleWeaponPos(g_myVeh);
 	if (vehicleWeaponLines)
 	{
 		SetVehicleWeaponLines();
 	}
 
-	if (Menu::usingControllerInput ? IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : IsKeyDown(VirtualKey::Add))
+	if (Keybinds::IsHeld("vehicle_weapons_fire"))
 	{
-		if (vehicleRPG
-			|| vehicleFireworks
-			|| vehicleGuns
-			|| vehicleSnowballs
-			|| vehicleBalls
-			|| vehicleWaterHydrant
-			|| vehicleFlameLeak
-			|| vehicleLaserGreen
-			|| vehicleLaserRed
-			|| vehicleTurretsValkyrie
-			|| vehicleFlaregun
-			|| vehicleHeavySniper
-			|| vehicleTazerWeapon
-			|| vehicleMolotovWeapon
-			|| vehicleCombatPDW)
+		if (anyVehicleWeapon)
 			CLEAR_AREA_OF_PROJECTILES(vehicleWeaponsOriginR.x, vehicleWeaponsOriginR.y, vehicleWeaponsOriginR.z, 8.0f, 0);
 
 		// RPG
@@ -3609,9 +3606,13 @@ static void TickVehicleEffects(bool gameIsPaused)
 	// Vehicle controls (only when game is not paused)
 	if (!gameIsPaused)
 	{
-		if (raceBoost && IS_CONTROL_PRESSED(2, INPUT_VEH_HORN))
+		if (raceBoost)
 		{
-			SetSelfVehicleBoost();
+			Keybinds::AddBindIB("vehicle_boost", "Boost");
+			if (Keybinds::IsHeld("vehicle_boost"))
+			{
+				SetSelfVehicleBoost();
+			}
 		}
 
 		if (carJump != 0)
@@ -3647,10 +3648,11 @@ static void TickVehicleEffects(bool gameIsPaused)
 
 void Menu::loops()
 {
+	TickDeferredMenuInit();
 	bool gameIsPaused = IS_PAUSE_MENU_ACTIVE() != 0;
 
 	// Apply default outfit on first load
-	if (!GET_IS_LOADING_SCREEN_ACTIVE() && !defaultPedSet)
+	if (!defaultPedSet && IsGameReadyForDeferredInit())
 	{
 		sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
 		sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);

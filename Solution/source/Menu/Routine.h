@@ -57,7 +57,6 @@ void TickNeonSpinAnim();
 void TickNeonFwkAnim();
 void TickNeonHeartbeatAnim();
 
-extern INT16 BindNoClip;
 extern RgbS g_fadedRGB, g_neonFade, g_neonSlide, g_neonHeart, g_neonShift;
 extern bool g_neonFlash;
 extern int g_neonSpin, g_neonSpinBack;
@@ -109,7 +108,6 @@ extern float NormalizeHSV(int h, int s, int v);
 
 
 // String variables used in various submenus for search, storage, etc.
-extern INT16 BindNoClip;
 extern std::string dict;
 extern std::string dict2;
 extern std::string dict3;

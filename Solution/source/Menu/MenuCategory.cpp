@@ -30,6 +30,7 @@ These can be used to implement custom category navigation if desired. Take a loo
 #include "submenu_enum.h"
 #include "MenuCategory.h"
 #include "Menu.h"
+#include "Keybinds.h"
 #include "..\Util\keyboard.h"
 #include "..\Natives\natives2.h"
 
@@ -107,9 +108,7 @@ namespace MenuCategory
 		categoryHeaderLabels.push_back(label);
 
 		if ((std::max)(categoryHeaderPositions.size(), s_lastCategoryCount) > 1)
-			AddOptionDescription(Menu::usingControllerInput
-				? "Press to expand or collapse. Press L3 to jump to another category."
-				: "Press to expand or collapse. Press G to jump to another category.");
+			AddOptionDescription("Press to expand or collapse. Press the shown key to jump to another category.");
 		else
 			AddOptionDescription("Press to expand or collapse.");
 
@@ -117,23 +116,12 @@ namespace MenuCategory
 		{
 			if (!categoryNavigationHintAdded)
 			{
-				if (Menu::usingControllerInput)
-					Menu::add_IB(INPUT_SPECIAL_ABILITY, "Navigate categories"); // XBOX "l3" (left stick click)
-				else
-					Menu::add_IB(VirtualKey::G, "Navigate categories");
+				Keybinds::AddBindIB("category_jump", "Navigate categories");
 				categoryNavigationHintAdded = true;
 			}
 
-			if (Menu::usingControllerInput)
-			{
-				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SPECIAL_ABILITY)) // XBOX "l3" (left stick click)
-					Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
-			}
-			else
-			{
-				if (IsKeyJustUp(VirtualKey::G))
-					Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
-			}
+		if (Keybinds::WasPressedThisFrame("category_jump"))
+			Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
 		}
 
 		return expanded;

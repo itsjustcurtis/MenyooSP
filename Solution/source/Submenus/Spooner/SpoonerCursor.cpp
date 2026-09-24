@@ -8,6 +8,7 @@
 #include "Submenus.h"
 #include "..\PedComponentChanger.h"
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\Keybinds.h"
 #include "..\..\Natives\natives2.h"
 #include "..\..\Natives\types.h"
 #include "..\..\Scripting\Game.h"
@@ -37,38 +38,13 @@ namespace sub::Spooner::SpoonerCursor
 			DWORD lastUpdateTime = 0;
 		};
 
-		struct ShortcutBinding
-		{
-			ControllerInput control;
-			int padIndex;
-		};
+			State state;
 
-		struct ShortcutBindings
-		{
-			ShortcutBinding copy;
-			ShortcutBinding remove;
-			ShortcutBinding addToDb;
-		};
-
-		State state;
-
-		constexpr float dotSize = 0.008f;
+			constexpr float dotSize = 0.008f;
 		constexpr float textY = 0.515f;
 		constexpr float instructionY = 0.54f;
 		const RGBA hoverColour(0, 255, 0, 255);
 		const RGBA holdColour(255, 128, 0, 255);
-
-		const ShortcutBindings& GetShortcutBindings()
-		{
-			static constexpr ShortcutBindings keyboard{ { INPUT_LOOK_BEHIND, 0 }, { INPUT_CREATOR_DELETE, 2 }, { INPUT_FRONTEND_UP, 2 } };
-			static constexpr ShortcutBindings controller{ { INPUT_FRONTEND_RIGHT, 2 }, { INPUT_FRONTEND_LEFT, 2 }, { INPUT_FRONTEND_UP, 2 } };
-			return Menu::usingControllerInput ? controller : keyboard;
-		}
-
-		bool IsJustPressed(const ShortcutBinding& binding)
-		{
-			return IS_DISABLED_CONTROL_JUST_PRESSED(binding.padIndex, binding.control);
-		}
 
 		bool ShouldDraw()
 		{
@@ -232,15 +208,15 @@ namespace sub::Spooner::SpoonerCursor
 			EntityManagement::AddEntityToDb(SpoonerMode::GetEntityPtrValue(target));
 		}
 
-		void AddInstructionalButtons(const ShortcutBindings& bindings, bool isInDb)
+		void AddInstructionalButtons(bool isInDb)
 		{
 			Menu::add_IB(INPUT_CURSOR_CANCEL, "Open property menu");
 			if (!state.dragging)
 				Menu::add_IB(INPUT_CURSOR_ACCEPT, "Move entity around (hold)");
-			Menu::add_IB(bindings.copy.control, "Copy (and add to DB)");
-			Menu::add_IB(bindings.remove.control, "Delete");
+			Keybinds::AddBindIB("spooner_edit_copy", "Copy (and add to DB)");
+			Keybinds::AddBindIB("spooner_cursor_remove", "Delete");
 			if (!isInDb)
-				Menu::add_IB(bindings.addToDb.control, "Add to Database");
+				Keybinds::AddBindIB("spooner_cursor_add_to_db", "Add to Database");
 		}
 
 		void HandleShortcuts(GTAentity target)
@@ -248,14 +224,13 @@ namespace sub::Spooner::SpoonerCursor
 			if (Menu::activeSubmenu != SUB::CLOSED || !target.Exists()) return;
 
 			const bool isInDb = EntityManagement::GetEntityIndexInDb(target) >= 0;
-			const ShortcutBindings& bindings = GetShortcutBindings();
-			AddInstructionalButtons(bindings, isInDb);
+			AddInstructionalButtons(isInDb);
 
-			if (IsJustPressed(bindings.copy))
+			if (Keybinds::WasPressedThisFrame("spooner_edit_copy"))
 				CopyTarget(target, isInDb);
-			else if (IsJustPressed(bindings.remove))
+			else if (Keybinds::WasPressedThisFrame("spooner_cursor_remove"))
 				DeleteTarget(target);
-			else if (!isInDb && IsJustPressed(bindings.addToDb))
+			else if (!isInDb && Keybinds::WasPressedThisFrame("spooner_cursor_add_to_db"))
 				AddTargetToDb(target);
 		}
 

@@ -16,6 +16,7 @@
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\Keybinds.h"
 //#include "..\..\Menu\Routine.h"
 
 #include "..\..\Natives\natives2.h"
@@ -56,9 +57,6 @@ namespace sub::Spooner
 {
 	namespace SpoonerMode
 	{
-		BYTE bindsKeyboard = VirtualKey::F9;
-		std::pair<UINT16, UINT16> bindsGamepad = { INPUT_FRONTEND_RB, INPUT_FRONTEND_RIGHT };
-
 		bool bEnabled = false;
 		bool hasWarned = false;
 		EditingState editingState;
@@ -81,12 +79,7 @@ namespace sub::Spooner
 		static bool IsHotkeyPressed()
 		{
 			if (SpoonerCursor::IsDragging()) return false;
-
-			UINT8 index1 = bindsGamepad.first < 50 ? 0 : 2;
-			UINT8 index2 = bindsGamepad.second < 50 ? 0 : 2;
-			return Menu::usingControllerInput
-				? IS_DISABLED_CONTROL_PRESSED(index1, bindsGamepad.first) && IS_DISABLED_CONTROL_JUST_PRESSED(index2, bindsGamepad.second)
-				: IsKeyJustUp(bindsKeyboard);
+			return Keybinds::WasPressedThisFrame("spooner_mode");
 		}
 
 
@@ -496,13 +489,13 @@ namespace sub::Spooner
 			                 : editingState.precisionScale;
 
 			static DWORD lastSensitivityChange = 0;
-			if ((IsKeyJustUp(VirtualKey::OEMPlus) || (IsKeyJustUp(VirtualKey::Add))) && GetTickCount() - lastSensitivityChange > 200)
+			if (Keybinds::WasPressedThisFrame("spooner_sensitivity_up") && GetTickCount() - lastSensitivityChange > 200)
 			{
 				if (precision < 10.0f) precision *= 10;
 				lastSensitivityChange = GetTickCount();
 				Game::Print::PrintBottomCentre("Sensitivity: ~b~" + std::to_string(precision), 3000);
 			}
-			if ((IsKeyJustUp(VirtualKey::OEMMinus) || (IsKeyJustUp(VirtualKey::Subtract))) && GetTickCount() - lastSensitivityChange > 200)
+			if (Keybinds::WasPressedThisFrame("spooner_sensitivity_down") && GetTickCount() - lastSensitivityChange > 200)
 			{
 				if (precision > 0.0001f) precision /= 10;
 				lastSensitivityChange = GetTickCount();
@@ -544,36 +537,36 @@ namespace sub::Spooner
 
 			if (editingState.mode == eEditMode::Disabled)
 			{
-				Menu::add_IB(VirtualKey::B, "Keyboard Controls");
+				Keybinds::AddBindIB("spooner_edit_mode", "Keyboard Controls");
 			}
 			else if (editingState.mode == eEditMode::Keyboard)
 			{
 				if (editingState.transformMode == eTransformMode::Rotation)
 				{
-					Menu::add_IB(VirtualKey::Subtract, "Sensitivity");
-					Menu::add_IB(VirtualKey::Add, "Sensitivity");
+					Keybinds::AddBindIB("spooner_sensitivity_down", "Sensitivity");
+					Keybinds::AddBindIB("spooner_sensitivity_up", "Sensitivity");
 					Menu::add_IB(VirtualKey::D, "Roll-");
 					Menu::add_IB(VirtualKey::A, "Roll+");
 					Menu::add_IB(VirtualKey::Q, "Yaw-");
 					Menu::add_IB(VirtualKey::E, "Yaw+");
 					Menu::add_IB(VirtualKey::S, "Pitch-");
 					Menu::add_IB(VirtualKey::W, "Pitch+");
-					Menu::add_IB(VirtualKey::R, "Edit Position");
+					Keybinds::AddBindIB("spooner_edit_transform", "Edit Position");
 				}
 				else
 				{
-					Menu::add_IB(VirtualKey::Subtract, "Sensitivity");
-					Menu::add_IB(VirtualKey::Add, "Sensitivity");
+					Keybinds::AddBindIB("spooner_sensitivity_down", "Sensitivity");
+					Keybinds::AddBindIB("spooner_sensitivity_up", "Sensitivity");
 					Menu::add_IB(VirtualKey::Q, "Z-");
 					Menu::add_IB(VirtualKey::E, "Z+");
 					Menu::add_IB(VirtualKey::D, "Y-");
 					Menu::add_IB(VirtualKey::A, "Y+");
 					Menu::add_IB(VirtualKey::S, "X-");
 					Menu::add_IB(VirtualKey::W, "X+");
-					Menu::add_IB(VirtualKey::R, "Edit Rotation");
+					Keybinds::AddBindIB("spooner_edit_transform", "Edit Rotation");
 				}
-				Menu::add_IB(VirtualKey::C, "Copy");
-				Menu::add_IB(VirtualKey::B, "Gizmo Controls");
+				Keybinds::AddBindIB("spooner_edit_copy", "Copy");
+					Keybinds::AddBindIB("spooner_edit_mode", "Gizmo Controls");
 			}
 			else if (editingState.mode == eEditMode::Gizmo)
 			{
@@ -586,11 +579,11 @@ namespace sub::Spooner
 				}
 
 				Menu::add_IB(INPUT_CURSOR_ACCEPT, "Grab axis handle (" + modeName + " Mode)");
-				Menu::add_IB(VirtualKey::R, "Cycle mode");
-				Menu::add_IB(VirtualKey::V, editingState.cameraLocked ? "Unlock camera" : "Lock camera");
-				Menu::add_IB(VirtualKey::L, editingState.localSpace ? "Edit in world space" : "Edit in local space");
-				Menu::add_IB(VirtualKey::C, "Copy");
-				Menu::add_IB(VirtualKey::B, "Disable Controls");
+					Keybinds::AddBindIB("spooner_edit_transform", "Cycle mode");
+				Keybinds::AddBindIB("spooner_camera_lock", editingState.cameraLocked ? "Unlock camera" : "Lock camera");
+				Keybinds::AddBindIB("spooner_local_space", editingState.localSpace ? "Edit in world space" : "Edit in local space");
+				Keybinds::AddBindIB("spooner_edit_copy", "Copy");
+				Keybinds::AddBindIB("spooner_edit_mode", "Disable Controls");
 			}
 		}
 
@@ -598,7 +591,7 @@ namespace sub::Spooner
 		{
 			// toggling between Disabled / Keyboard / Gizmo modes
 			static bool lastBToggle = false;
-			bool currentBToggle = IsKeyJustUp(VirtualKey::B);
+			bool currentBToggle = Keybinds::WasPressedThisFrame("spooner_edit_mode");
 			if (currentBToggle && !lastBToggle)
 			{
 				switch (editingState.mode)
@@ -618,7 +611,7 @@ namespace sub::Spooner
 
 			// toggling between transform modes
 			static bool lastRToggle = false;
-			bool currentRToggle = IsKeyJustUp(VirtualKey::R);
+			bool currentRToggle = Keybinds::WasPressedThisFrame("spooner_edit_transform");
 			if (currentRToggle && !lastRToggle)
 			{
 				if (editingState.mode != eEditMode::Disabled)
@@ -635,19 +628,19 @@ namespace sub::Spooner
 			lastRToggle = currentRToggle;
 
 			// toggling camera lock
-			if (editingState.mode != eEditMode::Disabled && IsKeyJustUp(VirtualKey::V))
+			if (editingState.mode != eEditMode::Disabled && Keybinds::WasPressedThisFrame("spooner_camera_lock"))
 			{
 				editingState.cameraLocked = !editingState.cameraLocked;
 			}
 
 			// toggling world / local space editing
-			if (editingState.mode != eEditMode::Disabled && IsKeyJustUp(VirtualKey::L))
+			if (editingState.mode != eEditMode::Disabled && Keybinds::WasPressedThisFrame("spooner_local_space"))
 			{
 				editingState.localSpace = !editingState.localSpace;
 			}
 
 			// make a quick copy of an entity by clicking C in editing modes
-			if (editingState.mode != eEditMode::Disabled && IsKeyJustUp(VirtualKey::C))
+			if (editingState.mode != eEditMode::Disabled && Keybinds::WasPressedThisFrame("spooner_edit_copy"))
 			{
 				if (selectedEntity.handle.Exists())
 				{

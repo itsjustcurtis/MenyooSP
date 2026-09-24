@@ -25,9 +25,6 @@ namespace sub::Spooner
 
 	namespace SpoonerMode
 	{
-		extern BYTE bindsKeyboard;
-		extern std::pair<UINT16, UINT16> bindsGamepad;
-
 		extern bool bEnabled;
 
 		enum class eEditMode : UINT8 { Disabled, Keyboard, Gizmo };
