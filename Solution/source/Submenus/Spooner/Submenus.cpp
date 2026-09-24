@@ -259,16 +259,23 @@ namespace sub
 
 				Vector3 pivotPos = MultiSelect::g_groupPivot.GetPosition();
 				Vector3 pivotRot = MultiSelect::g_groupPivot.GetRotation();
-				for (auto& e : MultiSelect::g_selectedEntities)
+				auto attachEntityToPivot = [&](SpoonerEntity& e)
 				{
-					if (e.handle.Exists())
-					{
-						MultiSelect::SaveEntityState(e);
-						Vector3 relPos = e.handle.GetPosition() - pivotPos;
-						Vector3 relRot = e.handle.GetRotation() - pivotRot;
-						e.handle.AttachTo(MultiSelect::g_groupPivot, -1, false, relPos, relRot);
-					}
-				}
+					if (!e.handle.Exists())
+						return;
+					MultiSelect::SaveEntityState(e);
+					Vector3 relPos = e.handle.GetPosition() - pivotPos;
+					Vector3 relRot = e.handle.GetRotation() - pivotRot;
+					e.handle.AttachTo(MultiSelect::g_groupPivot, -1, false, relPos, relRot);
+				};
+				// entities split into two groups: peds and non-peds
+				// this is due to a bug where attaching a ped after an entity that it was previously attached to caused a crash (weird GTA quirk?), so we just attach peds first
+				for (auto& e : MultiSelect::g_selectedEntities)
+					if (e.handle.IsPed())
+						attachEntityToPivot(e);
+				for (auto& e : MultiSelect::g_selectedEntities)
+					if (!e.handle.IsPed())
+						attachEntityToPivot(e);
 			}
 		}
 
