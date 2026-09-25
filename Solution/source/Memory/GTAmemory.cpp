@@ -1214,8 +1214,9 @@ void GTAmemory::Init()
 	UINT64 address;
 
 	// Get relative address and add it to the instruction address.
-	// 3 bytes equal the size of the opcode and its first argument. 7 bytes are the length of opcode and all its parameters.
-
+	// 3 bytes equal the size of the opcode and its first argument. 7 bytes are the length of opcode and all its parameters
+	addlog(ige::LogType::LOG_DEBUG, "Starting GTAmemory::Init for " + std::string(g_isEnhanced ? "Enhanced" : "Legacy"));
+	addlog(ige::LogType::LOG_TRACE, "Finding BlipList address");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("48 8d 3d ? ? ? ? 48 8b 04 f7");
 		if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address + 3) + address + 7);
@@ -1224,15 +1225,16 @@ void GTAmemory::Init()
 		address = MemryScan::PatternScanner::FindPattern("3b 35 ? ? ? ? 74 ? 48 81 fd");
 		if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address - 4) + address);
 	}
-
+	addlog(ige::LogType::LOG_TRACE, "Finding _gxtLabelFromHashFuncAddr address");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("41 57 41 56 56 57 53 48 83 ec ? 89 d7 49 89 ce");
 	}
 	else {
 		address = FindPattern("\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x18\x89\x54\x24\x10\x56\x57\x41\x56\x48\x83\xEC\x20\x48\x8B\xD9", "xxxxxxxxxxxxxxxxxxxxxxxxx");
 	}
+	addlog(ige::LogType::LOG_TRACE, "Finding _gxtLabelFromHashFuncAddr address");
 	if (address) _gxtLabelFromHashFuncAddr = reinterpret_cast<char* (__fastcall*)(UINT64, unsigned int)>(address);
-
+	addlog(ige::LogType::LOG_TRACE, "Finding _gxtLabelFromHashAddr1 address");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("85 c0 74 ? 48 8d 0d ? ? ? ? 48 89 da e8");
 	}
@@ -1240,7 +1242,7 @@ void GTAmemory::Init()
 		address = FindPattern("\x84\xC0\x74\x34\x48\x8D\x0D\x00\x00\x00\x00\x48\x8B\xD3", "xxxxxxx????xxx");
 	}
 	if (address) _gxtLabelFromHashAddr1 = *reinterpret_cast<int*>(address + 7) + address + 11;
-
+	addlog(ige::LogType::LOG_TRACE, "Finding entity addresses");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("41 8b 4c 1c ? e8");
 		// This function is not 100% the same as in legacy. The one from legacy was inlined in Enhanced, 
@@ -1310,13 +1312,13 @@ void GTAmemory::Init()
 			_pickupObjectPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 5) + address + 9);
 		}
 	}
-
+	addlog(ige::LogType::LOG_TRACE, "Finding _ptfxAddressFunc address");
 	// This function was inlined in Enhanced, so we reimplement it ourselves.
 	if (!g_isEnhanced) {
 		address = FindPattern("\x74\x21\x48\x8B\x48\x20\x48\x85\xC9\x74\x18\x48\x8B\xD6\xE8", "xxxxxxxxxxxxxxx") - 10;
 		_ptfxAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int*>(address) + address + 4);
 	}
-
+	addlog(ige::LogType::LOG_TRACE, "Finding _addEntityToPoolFunc address");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("56 57 48 83 ec ? 48 89 cf 48 8d 71 ? 8b 15");
 	}
@@ -1326,7 +1328,7 @@ void GTAmemory::Init()
 	if (address) {
 		_addEntityToPoolFunc = reinterpret_cast<int(*)(UINT64)>(address - (g_isEnhanced ? 0 : 0x68));
 	}
-
+	addlog(ige::LogType::LOG_TRACE, "Finding _vehiclePoolAddress address");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("48 8b 05 ? ? ? ? 48 85 c0 74 ? 4c 8b 00");
 	}
@@ -1334,8 +1336,9 @@ void GTAmemory::Init()
 		address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\xF3\x0F\x59\xF6\x48\x8B\x08", "xxx????xxxxxxx");
 	}
 	_vehiclePoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
-
+	addlog(ige::LogType::LOG_TRACE, "Finding Pool addresses");
 	if (!g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Finding _entityPoolAddress address");
 		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_3788_0) {
 			address = FindPattern("\x4C\x8B\x05\x00\x00\x00\x00\x41\x3B\x50\x00\x7D\x00\x49\x8B\x40", "xxx????xxx?x?xxx");
 		}
@@ -1343,17 +1346,17 @@ void GTAmemory::Init()
 			address = FindPattern("\x4C\x8B\x0D\x00\x00\x00\x00\x44\x8B\xC1\x49\x8B\x41\x08", "xxx????xxxxxxx");
 		}
 		_entityPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
-
+		addlog(ige::LogType::LOG_TRACE, "Finding _pedPoolAddress address");
 		address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\x41\x0F\xBF\xC8\x0F\xBF\x40\x10", "xxx????xxxxxxxx");
 		_pedPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
-
+		addlog(ige::LogType::LOG_TRACE, "Finding _objectPoolAddress address");
 		address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\x8B\x78\x10\x85\xFF", "xxx????xxxxx");
 		_objectPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
-
-		address = FindPattern("\x48\x8B\xC8\xEB\x02\x33\xC9\x48\x85\xC9\x74\x26", "xxxxxxxxxxxx") - 9;
-		_cameraPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address) + address + 4);
+		//addlog(ige::LogType::LOG_DEBUG, "Finding _cameraPoolAddress address");
+		//address = FindPattern("\x48\x8B\xC8\xEB\x02\x33\xC9\x48\x85\xC9\x74\x26", "xxxxxxxxxxxx") - 9;
+		//_cameraPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address) + address + 4);  ///crashes in latest build (2.5.0a5.8), but seems to work without it, so we will leave it out for now
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding CreateNmMessageFunc");
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("56 48 83 ec ? 48 89 ce 48 89 11 44 89 41");
@@ -1368,7 +1371,7 @@ void GTAmemory::Init()
 		CreateNmMessageFunc = reinterpret_cast<UINT64(*)(uint64_t, uint64_t, int)>(address);
 	}
 
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding GiveNmMessageFunc");
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("44 8b 89 ? ? ? ? b9");
@@ -1385,7 +1388,7 @@ void GTAmemory::Init()
 			GiveNmMessageFunc = reinterpret_cast<void(*)(uint64_t, void*, uint64_t)>((UINT64*)(*(int*)(address - 0x1E) + address - 0x1A));
 		}
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding SetNmIntAddress");
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("7d ? 45 89 c6 48 89 d7");
@@ -1401,7 +1404,7 @@ void GTAmemory::Init()
 			SetNmIntAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, int)>(address);
 		}
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding SetNmBoolAddress");
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("7d ? 45 89 c6 48 89 d3");
@@ -1418,7 +1421,7 @@ void GTAmemory::Init()
 			SetNmBoolAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, unsigned char)>(address);
 		}
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding SetNmFloatAddress");
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("41 56 56 57 53 48 83 ec ? 0f 29 74 24 20 48 89 ce 48 63 79");
@@ -1430,7 +1433,7 @@ void GTAmemory::Init()
 	{
 		SetNmFloatAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, float)>(address);
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding SetNmStringAddress");
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("41 56 56 57 53 48 83 ec ? 48 89 ce 48 63 79");
@@ -1446,7 +1449,7 @@ void GTAmemory::Init()
 			SetNmStringAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, __int64)>(address - 15);
 		}
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding SetNmVec3Address");
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("0f 29 7c 24 30 0f 29 74 24 20 48 89 ce 48 63 79");
@@ -1463,7 +1466,7 @@ void GTAmemory::Init()
 			SetNmVec3Address = reinterpret_cast<unsigned char(*)(__int64, __int64, float, float, float)>(address);
 		}
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding Checkpoint addresses");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("83 fe ? 75 ? b8 ? ? ? ? 48 8d 0d");
 		if (address)
@@ -1487,7 +1490,7 @@ void GTAmemory::Init()
 		CheckpointHandleAddr = reinterpret_cast<UINT64(*)(UINT64, int)>(*reinterpret_cast<int*>(address - 9) + address - 5);
 		checkpointPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 17) + address + 21);
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding _getHashKey address");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("e8 ? ? ? ? 41 80 bd ? ? ? ? ? 45 0f b7 85");
 		_getHashKey = reinterpret_cast<unsigned int(*)(const char*, unsigned int)>(*reinterpret_cast<int*>(address + 1) + address + 5);
@@ -1496,7 +1499,7 @@ void GTAmemory::Init()
 		address = FindPattern("\x48\x8B\x0B\x33\xD2\xE8\x00\x00\x00\x00\x89\x03", "xxxxxx????xx");
 		_getHashKey = reinterpret_cast<unsigned int(*)(const char*, unsigned int)>(*reinterpret_cast<int*>(address + 6) + address + 10);
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding _readWorldGravityAddress and _writeWorldGravityAddress addresses");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("89 c8 48 8d 0d ? ? ? ? f3 0f 10 04 81 f3 0f 11 05");
 		if (address)
@@ -1512,7 +1515,7 @@ void GTAmemory::Init()
 			_readWorldGravityAddress = reinterpret_cast<float*>(*reinterpret_cast<int*>(address + 19) + address + 23);
 		}
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding _cursorSpriteAddr and _gamePlayCameraAddr addresses");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("89 0d ? ? ? ? 48 8d 0d ? ? ? ? e8 ? ? ? ? 84 c0");
 		if (address)
@@ -1524,7 +1527,7 @@ void GTAmemory::Init()
 		address = FindPattern("\x74\x11\x8B\xD1\x48\x8D\x0D\x00\x00\x00\x00\x45\x33\xC0", "xxxxxxx????xxx");
 		_cursorSpriteAddr = reinterpret_cast<int*>(*reinterpret_cast<int*>(address - 4) + address);
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding _gamePlayCameraAddr address");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("88 05 ? ? ? ? e8 ? ? ? ? 88 05 ? ? ? ? e8");
 		if (address)
@@ -1538,7 +1541,8 @@ void GTAmemory::Init()
 		address = address + *reinterpret_cast<int*>(address) + 4;
 		_gamePlayCameraAddr = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 	}
-
+	
+	addlog(ige::LogType::LOG_DEBUG, "Bypassing model requests block");
 	// Bypass model requests block
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("44 0f b6 b4 24 ? ? ? ? 41 20 f6");
@@ -1551,7 +1555,7 @@ void GTAmemory::Init()
 	}
 
 	//GetModelInfo
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding GetModelInfo address");
 	if (g_isEnhanced) {
 		address = MemryScan::PatternScanner::FindPattern("45 85 d2 74 ? 49 89 d0 4c 8b 1d");
 
@@ -1596,7 +1600,7 @@ void GTAmemory::Init()
 	if (address) {
 		GetModelInfo = (GetModelInfo_t)(address);
 	}
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding ped variation collection addresses");
 	// ==== Ped Variation Collections initialization ====
 	// works only with legacy for now
 	if (!g_isEnhanced) {
@@ -1725,14 +1729,14 @@ void GTAmemory::Init()
 		}
 	}
 	// ==== End of Ped Variation Collections initialization ====
-
+	addlog(ige::LogType::LOG_DEBUG, "Finding SpSnow address");
 	g_spSnow = SpSnow();
 	addlog(ige::LogType::LOG_INIT, "GTAMemory Init Done");
 }
 
 void GTAmemory::InitEnhancedPools() {
 	if (g_isEnhanced) {
-
+		
 		// In Enhanced, the pools are encrypted/obfuscated. Instead of having their pointer stored somewhere, it is constructed at init from different values,
 		// using bit operations. The problem is that menyoo is loaded a bit too early for the initialization to have happened, and so we can't retrieve those values
 		// during GTAmemory init. For that reason, we leave that to the very end, and we keep waiting until the game has started (GameState == 0 (PLAYING)).
@@ -1901,6 +1905,7 @@ void GTAmemory::InitEnhancedPools() {
 
 bool GTAmemory::AreEnhancedPoolsReady()
 {
+	addlog(ige::LogType::LOG_TRACE, "Checking if enhanced pools are ready...");
 	if (!g_isEnhanced)
 		return true;
 	return _entityPoolAddress != nullptr && _vehiclePoolAddress != nullptr && _pedPoolAddress != nullptr && _objectPoolAddress != nullptr && _cameraPoolAddress != nullptr &&
@@ -1909,6 +1914,7 @@ bool GTAmemory::AreEnhancedPoolsReady()
 
 bool GTAmemory::TryInitEnhancedPools()
 {
+	addlog(ige::LogType::LOG_DEBUG, "Trying to initialize enhanced pools...");
 	InitEnhancedPools();
 	return AreEnhancedPoolsReady();
 }
@@ -2471,6 +2477,7 @@ uintptr_t GTAmemory::FindPattern(const char* pattern, const char* mask, const ch
 
 uintptr_t GTAmemory::FindPattern(const char* pattern, const char* mask)
 {
+	addlog(ige::LogType::LOG_TRACE, "Searching for pattern: " + std::string(pattern) + " with mask: " + std::string(mask));
 	MODULEINFO modInfo = g_MainModuleInfo;
 
 	const char* start_offset = reinterpret_cast<const char*>(modInfo.lpBaseOfDll);
