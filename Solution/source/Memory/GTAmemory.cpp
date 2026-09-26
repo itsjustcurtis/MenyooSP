@@ -1608,7 +1608,7 @@ void GTAmemory::Init()
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("8B 51 ? 85 D2 75 ? 33 C0");
 		if (address) {
 			g_collectionInfoHashOffset = *(uint8_t*)(address + 2);
-			addlog(ige::LogType::LOG_DEBUG, "g_collectionInfoHashOffset found at offset: " + std::to_string(g_collectionInfoHashOffset));
+			addlog(ige::LogType::LOG_TRACE, "g_collectionInfoHashOffset found at offset: " + std::to_string(g_collectionInfoHashOffset));
 		}
 		else {
 			addlog(ige::LogType::LOG_ERROR, "g_collectionInfoHashOffset pattern NOT FOUND!");
@@ -1617,7 +1617,7 @@ void GTAmemory::Init()
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("4C 8B 61 ? 48 8B F9 4D 63 E9");
 		if (address) {
 			g_dynamicEntityArchetypeOffset = *(uint8_t*)(address + 3);
-			addlog(ige::LogType::LOG_DEBUG, "g_dynamicEntityArchetypeOffset found at offset: " + std::to_string(g_dynamicEntityArchetypeOffset));
+			addlog(ige::LogType::LOG_TRACE, "g_dynamicEntityArchetypeOffset found at offset: " + std::to_string(g_dynamicEntityArchetypeOffset));
 		}
 		else {
 			addlog(ige::LogType::LOG_ERROR, "g_dynamicEntityArchetypeOffset pattern NOT FOUND!");
@@ -1626,10 +1626,10 @@ void GTAmemory::Init()
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("49 8B 8C 24 ? ? ? ? 49 8B E8");
 		if (address) {
 			g_pedModelInfoVarInfoCollectionOffset = *(int*)(address + 4);
-			addlog(ige::LogType::LOG_DEBUG, "g_pedModelInfoVarInfoCollectionOffset found at offset: " + std::to_string(g_pedModelInfoVarInfoCollectionOffset));
+			addlog(ige::LogType::LOG_TRACE, "g_pedModelInfoVarInfoCollectionOffset found at offset: " + std::to_string(g_pedModelInfoVarInfoCollectionOffset));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_pedModelInfoVarInfoCollectionOffset pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_TRACE, "g_pedModelInfoVarInfoCollectionOffset pattern NOT FOUND!");
 		}
 
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 83 C1 ? E8 ? ? ? ? 48 8D 7F");
@@ -2477,7 +2477,7 @@ uintptr_t GTAmemory::FindPattern(const char* pattern, const char* mask, const ch
 
 uintptr_t GTAmemory::FindPattern(const char* pattern, const char* mask)
 {
-	addlog(ige::LogType::LOG_TRACE, "Searching for pattern: " + std::string(pattern) + " with mask: " + std::string(mask));
+	addlog(ige::LogType::LOG_TRACE, "Searching for above pattern");
 	MODULEINFO modInfo = g_MainModuleInfo;
 
 	const char* start_offset = reinterpret_cast<const char*>(modInfo.lpBaseOfDll);
@@ -2492,6 +2492,7 @@ uintptr_t GTAmemory::FindPattern(const char* pattern, const char* mask)
 		{
 			if (mask[pos + 1] == '\0')
 			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found");
 				return (reinterpret_cast<uintptr_t>(retAddress) - searchLen);
 			}
 
@@ -2502,7 +2503,7 @@ uintptr_t GTAmemory::FindPattern(const char* pattern, const char* mask)
 			pos = 0;
 		}
 	}
-
+	addlog(ige::LogType::LOG_ERROR, "Pattern not found");
 	return 0;
 }
 

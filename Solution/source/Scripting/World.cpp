@@ -38,6 +38,7 @@
 #include "GTAplayer.h"
 #include "Raycast.h"
 #include "Rope.h"
+#include "..\Util\Filelogger.h"
 
 #include "..\Menu\Routine.h"
 
@@ -466,7 +467,7 @@ namespace World
 		}
 
 		model.Load(3000);
-
+		addlog(ige::LogType::LOG_DEBUG, "Spawning vehicle: " + std::to_string(model.hash));
 		GTAentity vehicle = CREATE_VEHICLE(model.hash, position.x, position.y, position.z, heading, 1, 1, 0);
 		if (placeOnGround) vehicle.PlaceOnGround();
 		return vehicle;
