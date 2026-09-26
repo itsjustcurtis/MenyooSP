@@ -70,23 +70,26 @@ CVehicleModelInfo* initVehicleArchetypeEnhanced_stub(uint32_t a1, const char* na
 }
 
 void setupHooks() {
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for vehicle archetype init hook");
 
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: InitVehicleArchetypeEnhanced");
 		auto addr = MemryScan::PatternScanner::FindPattern("e8 ? ? ? ? 43 89 44 2c");
 		if (!addr) {
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetypeEnahnced");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: InitVehicleArchetypeEnhanced");
 			return;
 		}
-		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetypeEnhanced at " + std::to_string(addr));
+		addlog(ige::LogType::LOG_TRACE, "Pattern found: InitVehicleArchetypeEnhanced at " + std::to_string(addr));
 		g_InitVehicleArchetypeEnhanced = HookManager::SetCall(addr, initVehicleArchetypeEnhanced_stub);
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: InitVehicleArchetype");
 		auto addr = GTAmemory::FindPattern("\xE8\x00\x00\x00\x00\x48\x8B\x4D\xE0\x48\x8B\x11", "x????xxxxxxx");
 		if (!addr) {
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find InitVehicleArchetype");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: InitVehicleArchetype");
 			return;
 		}
-		addlog(ige::LogType::LOG_INFO, "Found InitVehicleArchetype at " + std::to_string(addr));
+		addlog(ige::LogType::LOG_TRACE, "Pattern found: InitVehicleArchetype at " + std::to_string(addr));
 		g_InitVehicleArchetype = HookManager::SetCall(addr, initVehicleArchetype_stub);
 	}
 }
@@ -356,186 +359,9 @@ int(*g_GetDlcDrawableIdx)(CPedVariationInfoCollection*, uint32_t, uint32_t);
 int(*g_GetDlcPropIdx)(CPedVariationInfoCollection*, uint32_t, uint32_t);
 uint8_t(*g_GetMaxNumDrawables)(CPedVariationInfo*, uint32_t);
 uint8_t(*g_GetMaxNumProps)(CPedPropInfo*, uint32_t);
-CPedVariationInfo*(*g_GetVariationInfoFromDrawableIdx)(CPedVariationInfoCollection*, uint32_t, uint32_t);
-CPedVariationInfo*(*g_GetVariationInfoFromPropIdx)(CPedVariationInfoCollection*, uint32_t, uint32_t);
-const char*(*g_GetCollectionName)(CPedVariationInfo*);
-
-/*struct EntityPoolTask
-{
-enum class Type
-{
-Ped,
-Object,
-Vehicle,
-Entity,
-PickupObject
-};
-
-EntityPoolTask(Type type) : _type(type), _posCheck(false), _modelCheck(false)
-{
-}
-
-bool CheckEntity(uintptr_t address)
-{
-if (_posCheck)
-{
-float position[3];
-GTAmemory::_entityPositionFunc(address, position);
-
-if (Vector3::Subtract(_position, Vector3(position[0], position[1], position[2])).LengthSquared() > _radiusSquared)
-{
-return false;
-}
-}
-
-if (_modelCheck)
-{
-UINT32 v0 = *reinterpret_cast<UINT32 *>(GTAmemory::_entityModel1Func(*reinterpret_cast<UINT64 *>(address + 32)));
-UINT32 v1 = v0 & 0xFFFF;
-UINT32 v2 = ((v1 ^ v0) & 0x0FFF0000 ^ v1) & 0xDFFFFFFF;
-UINT32 v3 = ((v2 ^ v0) & 0x10000000 ^ v2) & 0x3FFFFFFF;
-const uintptr_t v5 = GTAmemory::_entityModel2Func(reinterpret_cast<uintptr_t>(&v3));
-
-if (!v5)
-{
-return false;
-}
-for (DWORD hash : _modelHashes)
-{
-if (*reinterpret_cast<int *>(v5 + 24) == hash)
-{
-return true;
-}
-}
-return false;
-}
-
-return true;
-}
-
-void Run(std::vector<int>& _handles)
-{
-const uintptr_t EntityPool = *GTAmemory::_entityPoolAddress;
-const uintptr_t VehiclePool = *GTAmemory::_vehiclePoolAddress;
-const uintptr_t PedPool = *GTAmemory::_pedPoolAddress;
-const uintptr_t ObjectPool = *GTAmemory::_objectPoolAddress;
-
-if (EntityPool == 0 || VehiclePool == 0 || PedPool == 0 || ObjectPool == 0)
-{
-return;
-}
-
-switch (_type)
-{
-case Type::Entity:
-case Type::Vehicle:
-{
-const uintptr_t VehiclePoolInfo = *reinterpret_cast<UINT64 *>(VehiclePool);
-for (unsigned int i = 0; i < *reinterpret_cast<UINT32 *>(VehiclePoolInfo + 8); i++)
-{
-if (*reinterpret_cast<UINT32 *>(EntityPool + 16) - (*reinterpret_cast<UINT32 *>(EntityPool + 32) & 0x3FFFFFFF) <= 256)
-{
-break;
-}
-
-if ((*reinterpret_cast<UINT32 *>(*reinterpret_cast<UINT64 *>(VehiclePoolInfo + 48) + 4 * (static_cast<UINT64>(i) >> 5)) >> (i & 0x1F)) & 1)
-{
-const uintptr_t address = *reinterpret_cast<UINT64 *>(i * 8 + *reinterpret_cast<UINT64 *>(VehiclePoolInfo));
-
-if (address && CheckEntity(address))
-{
-_handles.push_back(GTAmemory::_addEntityToPoolFunc(address));
-}
-}
-}
-if (_type != Type::Entity)
-{
-break;
-}
-}
-case Type::Ped:
-{
-for (unsigned int i = 0; i < *reinterpret_cast<UINT32 *>(PedPool + 16); i++)
-{
-if (*reinterpret_cast<UINT32 *>(EntityPool + 16) - (*reinterpret_cast<UINT32 *>(EntityPool + 32) & 0x3FFFFFFF) <= 256)
-{
-break;
-}
-
-if (~(*reinterpret_cast<UINT8 *>(*reinterpret_cast<UINT64 *>(PedPool + 8) + i) >> 7) & 1)
-{
-const uintptr_t address = *reinterpret_cast<UINT64 *>(PedPool) + i * *reinterpret_cast<UINT32 *>(PedPool + 20);
-
-if (address && CheckEntity(address))
-{
-_handles.push_back(GTAmemory::_addEntityToPoolFunc(address));
-}
-}
-}
-if (_type != Type::Entity)
-{
-break;
-}
-}
-case Type::Object:
-{
-for (unsigned int i = 0; i < *reinterpret_cast<UINT32 *>(ObjectPool + 16); i++)
-{
-if (*reinterpret_cast<UINT32 *>(EntityPool + 16) - (*reinterpret_cast<UINT32 *>(EntityPool + 32) & 0x3FFFFFFF) <= 256)
-{
-break;
-}
-
-if (~(*reinterpret_cast<UINT8 *>(*reinterpret_cast<UINT64 *>(ObjectPool + 8) + i) >> 7) & 1)
-{
-const uintptr_t address = *reinterpret_cast<UINT64 *>(ObjectPool) + i * *reinterpret_cast<UINT32 *>(ObjectPool + 20);
-
-if (address && CheckEntity(address))
-{
-_handles.push_back(GTAmemory::_addEntityToPoolFunc(address));
-}
-}
-}
-break;
-}
-case Type::PickupObject:
-{
-if (*GTAmemory::_pickupObjectPoolAddress)
-{
-GenericPool* pickupPool = reinterpret_cast<GenericPool*>(*GTAmemory::_pickupObjectPoolAddress);
-
-for (UINT32 i = 0; i < pickupPool->size; i++)
-{
-//if (entityPool->Full()) { break; }
-if (pickupPool->isValid(i))
-{
-UINT64 address = pickupPool->getAddress(i);
-if (address)
-{
-if (_posCheck)
-{
-float* position = (float*)(address + 0x90);
-if (Vector3::Subtract(_position, Vector3(position[0], position[1], position[2])).LengthSquared() > _radiusSquared)
-{
-continue;
-}
-}
-_handles.push_back(GTAmemory::_addEntityToPoolFunc(address));
-}
-}
-}
-}
-}
-}
-}
-
-EntityPoolTask::Type _type;
-//std::vector<int> _handles;
-bool _posCheck, _modelCheck;
-Vector3 _position;
-float _radiusSquared;
-std::vector<DWORD> _modelHashes;
-};*/
+CPedVariationInfo* (*g_GetVariationInfoFromDrawableIdx)(CPedVariationInfoCollection*, uint32_t, uint32_t);
+CPedVariationInfo* (*g_GetVariationInfoFromPropIdx)(CPedVariationInfoCollection*, uint32_t, uint32_t);
+const char* (*g_GetCollectionName)(CPedVariationInfo*);
 
 class EntityPool
 {
@@ -1216,358 +1042,814 @@ void GTAmemory::Init()
 	// Get relative address and add it to the instruction address.
 	// 3 bytes equal the size of the opcode and its first argument. 7 bytes are the length of opcode and all its parameters
 	addlog(ige::LogType::LOG_DEBUG, "Starting GTAmemory::Init for " + std::string(g_isEnhanced ? "Enhanced" : "Legacy"));
-	addlog(ige::LogType::LOG_TRACE, "Finding BlipList address");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for BlipList address");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: BlipList (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("48 8d 3d ? ? ? ? 48 8b 04 f7");
-		if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: BlipList (Enhanced) at " + std::to_string(address));
+			_blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: BlipList (Enhanced)");
+		}
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: BlipList (Legacy)");
 		address = MemryScan::PatternScanner::FindPattern("3b 35 ? ? ? ? 74 ? 48 81 fd");
-		if (address) _blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address - 4) + address);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: BlipList (Legacy) at " + std::to_string(address));
+			_blipList = reinterpret_cast<BlipList*>(*reinterpret_cast<int*>(address - 4) + address);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: BlipList (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_TRACE, "Finding _gxtLabelFromHashFuncAddr address");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for gxtLabelFromHashFuncAddr");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: gxtLabelFromHashFuncAddr (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("41 57 41 56 56 57 53 48 83 ec ? 89 d7 49 89 ce");
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: gxtLabelFromHashFuncAddr (Legacy)");
 		address = FindPattern("\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x18\x89\x54\x24\x10\x56\x57\x41\x56\x48\x83\xEC\x20\x48\x8B\xD9", "xxxxxxxxxxxxxxxxxxxxxxxxx");
 	}
-	addlog(ige::LogType::LOG_TRACE, "Finding _gxtLabelFromHashFuncAddr address");
-	if (address) _gxtLabelFromHashFuncAddr = reinterpret_cast<char* (__fastcall*)(UINT64, unsigned int)>(address);
-	addlog(ige::LogType::LOG_TRACE, "Finding _gxtLabelFromHashAddr1 address");
+	if (address)
+	{
+		addlog(ige::LogType::LOG_TRACE, "Pattern found: gxtLabelFromHashFuncAddr at " + std::to_string(address));
+		_gxtLabelFromHashFuncAddr = reinterpret_cast<char* (__fastcall*)(UINT64, unsigned int)>(address);
+	}
+	else
+	{
+		addlog(ige::LogType::LOG_ERROR, "Pattern not found: gxtLabelFromHashFuncAddr");
+	}
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for gxtLabelFromHashAddr1");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: gxtLabelFromHashAddr1 (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("85 c0 74 ? 48 8d 0d ? ? ? ? 48 89 da e8");
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: gxtLabelFromHashAddr1 (Legacy)");
 		address = FindPattern("\x84\xC0\x74\x34\x48\x8D\x0D\x00\x00\x00\x00\x48\x8B\xD3", "xxxxxxx????xxx");
 	}
-	if (address) _gxtLabelFromHashAddr1 = *reinterpret_cast<int*>(address + 7) + address + 11;
-	addlog(ige::LogType::LOG_TRACE, "Finding entity addresses");
-	if (g_isEnhanced) {
-		address = MemryScan::PatternScanner::FindPattern("41 8b 4c 1c ? e8");
-		// This function is not 100% the same as in legacy. The one from legacy was inlined in Enhanced, 
-		// so that we can only call the function that returns an entitys address from its guid, but need to implement the vfunc call that comes after it on our own.
-		// That vfunc doesn't always take the same parameters, and it seems to not be necessary for the correct functioning of this function,
-		// so we will leave it out in general, and implement it for some specific functions (see GetPtfxAddress).
-		_entityAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int*>(address + 6) + address + 10);
+	if (address)
+	{
+		addlog(ige::LogType::LOG_TRACE, "Pattern found: gxtLabelFromHashAddr1 at " + std::to_string(address));
+		_gxtLabelFromHashAddr1 = *reinterpret_cast<int*>(address + 7) + address + 11;
+	}
+	else
+	{
+		addlog(ige::LogType::LOG_ERROR, "Pattern not found: gxtLabelFromHashAddr1");
+	}
 
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for entity address functions");
+	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityAddressFunc (Enhanced)");
+		address = MemryScan::PatternScanner::FindPattern("41 8b 4c 1c ? e8");
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityAddressFunc (Enhanced) at " + std::to_string(address));
+			// This function is not 100% the same as in legacy. The one from legacy was inlined in Enhanced, 
+			// so that we can only call the function that returns an entitys address from its guid, but need to implement the vfunc call that comes after it on our own.
+			// That vfunc doesn't always take the same parameters, and it seems to not be necessary for the correct functioning of this function,
+			// so we will leave it out in general, and implement it for some specific functions (see GetPtfxAddress).
+			_entityAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int*>(address + 6) + address + 10);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityAddressFunc (Enhanced)");
+		}
+
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: PlayerAddressFunc (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("89 f1 b2 ? e8 ? ? ? ? 31 c9 48");
-		_playerAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int*>(address + 5) + address + 9);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: PlayerAddressFunc (Enhanced) at " + std::to_string(address));
+			_playerAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int*>(address + 5) + address + 9);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: PlayerAddressFunc (Enhanced)");
+		}
 
 		// entityPositionFunc was inlined in Enhanced. We reimplement it ourselves.
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityPosVFuncSecondArgument (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("0f 84 ? ? ? ? f3 0f 10 bc 24 30 01 00 00");
-		s_entityPosVFuncSecondArgument = (uint64_t)(*(int*)(address - 12) + address - 8);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityPosVFuncSecondArgument (Enhanced) at " + std::to_string(address));
+			s_entityPosVFuncSecondArgument = (uint64_t)(*(int*)(address - 12) + address - 8);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityPosVFuncSecondArgument (Enhanced)");
+		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: PedEntityPosSecondCheckOffset (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("31 c0 80 7f ? ? 48 0f 45 f8 0f 85 ? ? ? ? e9");
-		address = *(int*)(address + 17) + address + 21;
-		s_pedEntityPosSecondCheckOffset = *(int*)(address + 2);
-		address = *(int*)(address + 14) + address + 18;
-		s_pedEntityInVehicleCheckOffset = *(int*)(address + 3);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: PedEntityPosSecondCheckOffset (Enhanced) at " + std::to_string(address));
+			address = *(int*)(address + 17) + address + 21;
+			s_pedEntityPosSecondCheckOffset = *(int*)(address + 2);
+			address = *(int*)(address + 14) + address + 18;
+			s_pedEntityInVehicleCheckOffset = *(int*)(address + 3);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: PedEntityPosSecondCheckOffset (Enhanced)");
+		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityPosFloatsOffset (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("0f 28 8f ? ? ? ? f3 0f 10 b7 ? ? ? ? f3 0f 16 c1");
-		s_entityPosFloatsOffset = *(int*)(address + 3);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityPosFloatsOffset (Enhanced) at " + std::to_string(address));
+			s_entityPosFloatsOffset = *(int*)(address + 3);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityPosFloatsOffset (Enhanced)");
+		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityInternalTypeOffset (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("48 89 d6 0f b6 42 ? 04 ? 3c ? 0f 87 ? ? ? ? e9");
-		address = *(int*)(address + 13) + address + 17;
-		address = *(int*)(address + 1) + address + 5;
-		s_entityInternalTypeOffset = *(byte*)(address + 2);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityInternalTypeOffset (Enhanced) at " + std::to_string(address));
+			address = *(int*)(address + 13) + address + 17;
+			address = *(int*)(address + 1) + address + 5;
+			s_entityInternalTypeOffset = *(byte*)(address + 2);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityInternalTypeOffset (Enhanced)");
+		}
 
-
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityModel1Func (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("0c ? 88 46 ? 48 8b 4e ? e8");
-		_entityModel1Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int*>(address + 10) + address + 14);
-
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityModel1Func (Enhanced) at " + std::to_string(address));
+			_entityModel1Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int*>(address + 10) + address + 14);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityModel1Func (Enhanced)");
+		}
 	}
 	else {
 		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1290_1_STEAM)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityAddressFunc (Legacy, >=1290.1)");
 			address = FindPattern("\xE8\x00\x00\x00\x00\x48\x8B\xD8\x48\x85\xC0\x74\x2E\x48\x83\x3D", "x????xxxxxxxxxxx");
-			_entityAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int*>(address + 1) + address + 5);
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityAddressFunc (Legacy) at " + std::to_string(address));
+				_entityAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int*>(address + 1) + address + 5);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityAddressFunc (Legacy)");
+			}
+
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: PlayerAddressFunc (Legacy, >=1290.1)");
 			address = FindPattern("\xB2\x01\xE8\x00\x00\x00\x00\x48\x85\xC0\x74\x1C\x8A\x88", "xxx????xxxxxxx");
-			_playerAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int*>(address + 3) + address + 7);
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: PlayerAddressFunc (Legacy) at " + std::to_string(address));
+				_playerAddressFunc = reinterpret_cast<uintptr_t(*)(int)>(*reinterpret_cast<int*>(address + 3) + address + 7);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: PlayerAddressFunc (Legacy)");
+			}
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityPositionFunc / EntityModel1Func / EntityModel2Func (Legacy, >=1290.1)");
 			address = FindPattern("\x48\x8B\xDA\xE8\x00\x00\x00\x00\xF3\x0F\x10\x44\x24", "xxxx????xxxxx");
-			_entityPositionFunc = reinterpret_cast<UINT64(*)(UINT64, float*)>(address - 6);
-			address = FindPattern("\x0F\x85\x00\x00\x00\x00\x48\x8B\x4B\x20\xE8\x00\x00\x00\x00\x48\x8B\xC8", "xx????xxxxx????xxx");
-			_entityModel1Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int*>(address + 11) + address + 15);
-			address = FindPattern("\x45\x33\xC9\x3B\x05", "xxxxx");
-			_entityModel2Func = reinterpret_cast<UINT64(*)(UINT64)>(address - 0x46);
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityPositionFunc (Legacy) at " + std::to_string(address));
+				_entityPositionFunc = reinterpret_cast<UINT64(*)(UINT64, float*)>(address - 6);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityPositionFunc (Legacy)");
+			}
 
+			address = FindPattern("\x0F\x85\x00\x00\x00\x00\x48\x8B\x4B\x20\xE8\x00\x00\x00\x00\x48\x8B\xC8", "xx????xxxxx????xxx");
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityModel1Func (Legacy) at " + std::to_string(address));
+				_entityModel1Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int*>(address + 11) + address + 15);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityModel1Func (Legacy)");
+			}
+
+			address = FindPattern("\x45\x33\xC9\x3B\x05", "xxxxx");
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityModel2Func (Legacy) at " + std::to_string(address));
+				_entityModel2Func = reinterpret_cast<UINT64(*)(UINT64)>(address - 0x46);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityModel2Func (Legacy)");
+			}
+
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: PickupObjectPoolAddress (Legacy, >=1290.1)");
 			address = FindPattern("\x4C\x8B\x05\x00\x00\x00\x00\x40\x8A\xF2\x8B\xE9", "xxx????xxxxx");
-			_pickupObjectPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: PickupObjectPoolAddress (Legacy) at " + std::to_string(address));
+				_pickupObjectPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: PickupObjectPoolAddress (Legacy)");
+			}
 		}
 		else
 		{
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityAddressFunc (Legacy, <1290.1)");
 			address = FindPattern("\x33\xFF\xE8\x00\x00\x00\x00\x48\x85\xC0\x74\x58", "xxx????xxxxx");
-			_entityAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int*>(address + 3) + address + 7);
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityAddressFunc (Legacy) at " + std::to_string(address));
+				_entityAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int*>(address + 3) + address + 7);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityAddressFunc (Legacy)");
+			}
+
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: PlayerAddressFunc (Legacy, <1290.1)");
 			address = FindPattern("\xB2\x01\xE8\x00\x00\x00\x00\x33\xC9\x48\x85\xC0\x74\x3B", "xxx????xxxxxxx");
-			_playerAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int*>(address + 3) + address + 7);
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: PlayerAddressFunc (Legacy) at " + std::to_string(address));
+				_playerAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int*>(address + 3) + address + 7);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: PlayerAddressFunc (Legacy)");
+			}
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityPositionFunc (Legacy, <1290.1)");
 			address = FindPattern("\x48\x8B\xC8\xE8\x00\x00\x00\x00\xF3\x0F\x10\x54\x24\x00\xF3\x0F\x10\x4C\x24\x00\xF3\x0F\x10", "xxxx????xxxxx?xxxxx?xxx");
-			_entityPositionFunc = reinterpret_cast<UINT64(*)(UINT64, float*)>(*reinterpret_cast<int*>(address + 4) + address + 8);
-			address = FindPattern("\x25\xFF\xFF\xFF\x3F\x89\x44\x24\x38\xE8\x00\x00\x00\x00\x48\x85\xC0\x74\x03", "xxxxxxxxxx????xxxxx");
-			_entityModel1Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int*>(address - 61) + address - 57);
-			_entityModel2Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int*>(address + 10) + address + 14);
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityPositionFunc (Legacy) at " + std::to_string(address));
+				_entityPositionFunc = reinterpret_cast<UINT64(*)(UINT64, float*)>(*reinterpret_cast<int*>(address + 4) + address + 8);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityPositionFunc (Legacy)");
+			}
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityModel1Func / EntityModel2Func (Legacy, <1290.1)");
+			address = FindPattern("\x25\xFF\xFF\xFF\x3F\x89\x44\x24\x38\xE8\x00\x00\x00\x00\x48\x85\xC0\x74\x03", "xxxxxxxxxx????xxxxx");
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityModel1Func / EntityModel2Func (Legacy) at " + std::to_string(address));
+				_entityModel1Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int*>(address - 61) + address - 57);
+				_entityModel2Func = reinterpret_cast<UINT64(*)(UINT64)>(*reinterpret_cast<int*>(address + 10) + address + 14);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityModel1Func / EntityModel2Func (Legacy)");
+			}
+
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: PickupObjectPoolAddress (Legacy, <1290.1)");
 			address = FindPattern("\x8B\xF0\x48\x8B\x05\x00\x00\x00\x00\xF3\x0F\x59\xF6", "xxxxx????xxxx");
-			_pickupObjectPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 5) + address + 9);
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: PickupObjectPoolAddress (Legacy) at " + std::to_string(address));
+				_pickupObjectPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 5) + address + 9);
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: PickupObjectPoolAddress (Legacy)");
+			}
 		}
 	}
-	addlog(ige::LogType::LOG_TRACE, "Finding _ptfxAddressFunc address");
+
 	// This function was inlined in Enhanced, so we reimplement it ourselves.
 	if (!g_isEnhanced) {
+		addlog(ige::LogType::LOG_DEBUG, "Scanning for _ptfxAddressFunc address");
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: PtfxAddressFunc (Legacy)");
 		address = FindPattern("\x74\x21\x48\x8B\x48\x20\x48\x85\xC9\x74\x18\x48\x8B\xD6\xE8", "xxxxxxxxxxxxxxx") - 10;
-		_ptfxAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int*>(address) + address + 4);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: PtfxAddressFunc (Legacy) at " + std::to_string(address));
+			_ptfxAddressFunc = reinterpret_cast<UINT64(*)(int)>(*reinterpret_cast<int*>(address) + address + 4);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: PtfxAddressFunc (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_TRACE, "Finding _addEntityToPoolFunc address");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for _addEntityToPoolFunc address");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: AddEntityToPoolFunc (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("56 57 48 83 ec ? 48 89 cf 48 8d 71 ? 8b 15");
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: AddEntityToPoolFunc (Legacy)");
 		address = FindPattern("\x48\xF7\xF9\x49\x8B\x48\x08\x48\x63\xD0\xC1\xE0\x08\x0F\xB6\x1C\x11\x03\xD8", "xxxxxxxxxxxxxxxxxxx");
 	}
 	if (address) {
+		addlog(ige::LogType::LOG_TRACE, "Pattern found: AddEntityToPoolFunc at " + std::to_string(address));
 		_addEntityToPoolFunc = reinterpret_cast<int(*)(UINT64)>(address - (g_isEnhanced ? 0 : 0x68));
 	}
-	addlog(ige::LogType::LOG_TRACE, "Finding _vehiclePoolAddress address");
+	else
+	{
+		addlog(ige::LogType::LOG_ERROR, "Pattern not found: AddEntityToPoolFunc");
+	}
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for _vehiclePoolAddress address");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: VehiclePoolAddress (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("48 8b 05 ? ? ? ? 48 85 c0 74 ? 4c 8b 00");
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: VehiclePoolAddress (Legacy)");
 		address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\xF3\x0F\x59\xF6\x48\x8B\x08", "xxx????xxxxxxx");
 	}
-	_vehiclePoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
-	addlog(ige::LogType::LOG_TRACE, "Finding Pool addresses");
+	if (address)
+	{
+		addlog(ige::LogType::LOG_TRACE, "Pattern found: VehiclePoolAddress at " + std::to_string(address));
+		_vehiclePoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+	}
+	else
+	{
+		addlog(ige::LogType::LOG_ERROR, "Pattern not found: VehiclePoolAddress");
+	}
+
 	if (!g_isEnhanced) {
-		addlog(ige::LogType::LOG_TRACE, "Finding _entityPoolAddress address");
+		addlog(ige::LogType::LOG_DEBUG, "Scanning for legacy entity/ped/object pool addresses");
+
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityPoolAddress (Legacy)");
 		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_3788_0) {
 			address = FindPattern("\x4C\x8B\x05\x00\x00\x00\x00\x41\x3B\x50\x00\x7D\x00\x49\x8B\x40", "xxx????xxx?x?xxx");
 		}
 		else {
 			address = FindPattern("\x4C\x8B\x0D\x00\x00\x00\x00\x44\x8B\xC1\x49\x8B\x41\x08", "xxx????xxxxxxx");
 		}
-		_entityPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
-		addlog(ige::LogType::LOG_TRACE, "Finding _pedPoolAddress address");
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityPoolAddress (Legacy) at " + std::to_string(address));
+			_entityPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityPoolAddress (Legacy)");
+		}
+
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: PedPoolAddress (Legacy)");
 		address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\x41\x0F\xBF\xC8\x0F\xBF\x40\x10", "xxx????xxxxxxxx");
-		_pedPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
-		addlog(ige::LogType::LOG_TRACE, "Finding _objectPoolAddress address");
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: PedPoolAddress (Legacy) at " + std::to_string(address));
+			_pedPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: PedPoolAddress (Legacy)");
+		}
+
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: ObjectPoolAddress (Legacy)");
 		address = FindPattern("\x48\x8B\x05\x00\x00\x00\x00\x8B\x78\x10\x85\xFF", "xxx????xxxxx");
-		_objectPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: ObjectPoolAddress (Legacy) at " + std::to_string(address));
+			_objectPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: ObjectPoolAddress (Legacy)");
+		}
 		//addlog(ige::LogType::LOG_DEBUG, "Finding _cameraPoolAddress address");
 		//address = FindPattern("\x48\x8B\xC8\xEB\x02\x33\xC9\x48\x85\xC9\x74\x26", "xxxxxxxxxxxx") - 9;
 		//_cameraPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address) + address + 4);  ///crashes in latest build (2.5.0a5.8), but seems to work without it, so we will leave it out for now
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding CreateNmMessageFunc");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for CreateNmMessageFunc address");
 	if (g_isEnhanced)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: CreateNmMessageFunc (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("56 48 83 ec ? 48 89 ce 48 89 11 44 89 41");
 	}
 	else
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: CreateNmMessageFunc (Legacy)");
 		address = MemryScan::PatternScanner::FindPattern("\x40\x53\x48\x83\xEC\x20\x83\x61\x0C\x00\x44\x89\x41\x08\x49\x63\xC0", "xxxxxxxxxxxxxxxxx");
 	}
 
 	if (address)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Pattern found: CreateNmMessageFunc at " + std::to_string(address));
 		CreateNmMessageFunc = reinterpret_cast<UINT64(*)(uint64_t, uint64_t, int)>(address);
 	}
+	else
+	{
+		addlog(ige::LogType::LOG_ERROR, "Pattern not found: CreateNmMessageFunc");
+	}
 
-	addlog(ige::LogType::LOG_DEBUG, "Finding GiveNmMessageFunc");
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for GiveNmMessageFunc address");
 	if (g_isEnhanced)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GiveNmMessageFunc (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("44 8b 89 ? ? ? ? b9");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: GiveNmMessageFunc (Enhanced) at " + std::to_string(address));
 			GiveNmMessageFunc = reinterpret_cast<void(*)(uint64_t, void*, uint64_t)>(address);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: GiveNmMessageFunc (Enhanced)");
 		}
 	}
 	else
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GiveNmMessageFunc (Legacy)");
 		address = MemryScan::PatternScanner::FindPattern("\x0F\x84\x8B\x00\x00\x00\x48\x8B\x47\x30\x48\x8B\x48\x10\x48\x8B\x51\x20\x80\x7A\x10\x0A", "xxxxxxxxxxxxxxxxxxxxxx");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: GiveNmMessageFunc (Legacy) at " + std::to_string(address));
 			GiveNmMessageFunc = reinterpret_cast<void(*)(uint64_t, void*, uint64_t)>((UINT64*)(*(int*)(address - 0x1E) + address - 0x1A));
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: GiveNmMessageFunc (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding SetNmIntAddress");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for SetNmIntAddress");
 	if (g_isEnhanced)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SetNmIntAddress (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("7d ? 45 89 c6 48 89 d7");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: SetNmIntAddress (Enhanced) at " + std::to_string(address));
 			SetNmIntAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, int)>(address - 20);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: SetNmIntAddress (Enhanced)");
 		}
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SetNmIntAddress (Legacy)");
 		address = MemryScan::PatternScanner::FindPattern("\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x41\x8B\xF8", "xxxx?xxxxxxxxxxxxxxx");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: SetNmIntAddress (Legacy) at " + std::to_string(address));
 			SetNmIntAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, int)>(address);
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: SetNmIntAddress (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding SetNmBoolAddress");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for SetNmBoolAddress");
 	if (g_isEnhanced)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SetNmBoolAddress (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("7d ? 45 89 c6 48 89 d3");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: SetNmBoolAddress (Enhanced) at " + std::to_string(address));
 			SetNmBoolAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, unsigned char)>(address - 20);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: SetNmBoolAddress (Enhanced)");
 		}
 	}
 	else
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SetNmBoolAddress (Legacy)");
 		address = MemryScan::PatternScanner::FindPattern("\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x41\x8A\xF8", "xxxx?xxxxxxxxxxxxxxx");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: SetNmBoolAddress (Legacy) at " + std::to_string(address));
 			SetNmBoolAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, unsigned char)>(address);
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: SetNmBoolAddress (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding SetNmFloatAddress");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for SetNmFloatAddress");
 	if (g_isEnhanced)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SetNmFloatAddress (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("41 56 56 57 53 48 83 ec ? 0f 29 74 24 20 48 89 ce 48 63 79");
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SetNmFloatAddress (Legacy)");
 		address = MemryScan::PatternScanner::FindPattern("\x40\x53\x48\x83\xEC\x30\x48\x8B\xD9\x48\x63\x49\x0C", "xxxxxxxxxxxxx");
 	}
 	if (address)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Pattern found: SetNmFloatAddress at " + std::to_string(address));
 		SetNmFloatAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, float)>(address);
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding SetNmStringAddress");
+	else
+	{
+		addlog(ige::LogType::LOG_ERROR, "Pattern not found: SetNmFloatAddress");
+	}
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for SetNmStringAddress");
 	if (g_isEnhanced)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SetNmStringAddress (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("41 56 56 57 53 48 83 ec ? 48 89 ce 48 63 79");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: SetNmStringAddress (Enhanced) at " + std::to_string(address));
 			SetNmStringAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, __int64)>(address);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: SetNmStringAddress (Enhanced)");
 		}
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SetNmStringAddress (Legacy)");
 		address = MemryScan::PatternScanner::FindPattern("\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x49\x8B\xE8", "xxxxxxxxxxxxxxx");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: SetNmStringAddress (Legacy) at " + std::to_string(address));
 			SetNmStringAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, __int64)>(address - 15);
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: SetNmStringAddress (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding SetNmVec3Address");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for SetNmVec3Address");
 	if (g_isEnhanced)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SetNmVec3Address (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("0f 29 7c 24 30 0f 29 74 24 20 48 89 ce 48 63 79");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: SetNmVec3Address (Enhanced) at " + std::to_string(address));
 			SetNmVec3Address = reinterpret_cast<unsigned char(*)(__int64, __int64, float, float, float)>(address - 15);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: SetNmVec3Address (Enhanced)");
 		}
 	}
 	else
 	{
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SetNmVec3Address (Legacy)");
 		address = MemryScan::PatternScanner::FindPattern("\x40\x53\x48\x83\xEC\x40\x48\x8B\xD9\x48\x63\x49\x0C", "xxxxxxxxxxxxx");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: SetNmVec3Address (Legacy) at " + std::to_string(address));
 			SetNmVec3Address = reinterpret_cast<unsigned char(*)(__int64, __int64, float, float, float)>(address);
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: SetNmVec3Address (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding Checkpoint addresses");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for Checkpoint addresses");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: CheckpointPoolAddress (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("83 fe ? 75 ? b8 ? ? ? ? 48 8d 0d");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: CheckpointPoolAddress (Enhanced) at " + std::to_string(address));
 			checkpointPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 13) + address + 17);
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: CheckpointPoolAddress (Enhanced)");
+		}
+
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: CheckpointBaseAddr (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("48 83 ec ? e8 ? ? ? ? 48 85 c0 74 ? e8 ? ? ? ? 48 8b 80");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: CheckpointBaseAddr (Enhanced) at " + std::to_string(address));
 			CheckpointBaseAddr = reinterpret_cast<UINT64(*)()>(address);
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: CheckpointBaseAddr (Enhanced)");
+		}
+
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: CheckpointHandleAddr (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("74 ? 66 83 78 ? ? 75 ? 48 63 78");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: CheckpointHandleAddr (Enhanced) at " + std::to_string(address));
 			CheckpointHandleAddr = reinterpret_cast<UINT64(*)(UINT64, int)>(*reinterpret_cast<int*>(address - 7) + address - 3);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: CheckpointHandleAddr (Enhanced)");
 		}
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: Checkpoint addresses (Legacy)");
 		address = FindPattern("\x8A\x4C\x24\x60\x8B\x50\x10\x44\x8A\xCE", "xxxxxxxxxx");
-		CheckpointBaseAddr = reinterpret_cast<UINT64(*)()>(*reinterpret_cast<int*>(address - 19) + address - 15);
-		CheckpointHandleAddr = reinterpret_cast<UINT64(*)(UINT64, int)>(*reinterpret_cast<int*>(address - 9) + address - 5);
-		checkpointPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 17) + address + 21);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: Checkpoint addresses (Legacy) at " + std::to_string(address));
+			CheckpointBaseAddr = reinterpret_cast<UINT64(*)()>(*reinterpret_cast<int*>(address - 19) + address - 15);
+			CheckpointHandleAddr = reinterpret_cast<UINT64(*)(UINT64, int)>(*reinterpret_cast<int*>(address - 9) + address - 5);
+			checkpointPoolAddress = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 17) + address + 21);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: Checkpoint addresses (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding _getHashKey address");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for _getHashKey address");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GetHashKey (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("e8 ? ? ? ? 41 80 bd ? ? ? ? ? 45 0f b7 85");
-		_getHashKey = reinterpret_cast<unsigned int(*)(const char*, unsigned int)>(*reinterpret_cast<int*>(address + 1) + address + 5);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: GetHashKey (Enhanced) at " + std::to_string(address));
+			_getHashKey = reinterpret_cast<unsigned int(*)(const char*, unsigned int)>(*reinterpret_cast<int*>(address + 1) + address + 5);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: GetHashKey (Enhanced)");
+		}
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GetHashKey (Legacy)");
 		address = FindPattern("\x48\x8B\x0B\x33\xD2\xE8\x00\x00\x00\x00\x89\x03", "xxxxxx????xx");
-		_getHashKey = reinterpret_cast<unsigned int(*)(const char*, unsigned int)>(*reinterpret_cast<int*>(address + 6) + address + 10);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: GetHashKey (Legacy) at " + std::to_string(address));
+			_getHashKey = reinterpret_cast<unsigned int(*)(const char*, unsigned int)>(*reinterpret_cast<int*>(address + 6) + address + 10);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: GetHashKey (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding _readWorldGravityAddress and _writeWorldGravityAddress addresses");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for world gravity addresses");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: WorldGravityAddresses (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("89 c8 48 8d 0d ? ? ? ? f3 0f 10 04 81 f3 0f 11 05");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: WorldGravityAddresses (Enhanced) at " + std::to_string(address));
 			_readWorldGravityAddress = reinterpret_cast<float*>(*reinterpret_cast<int*>(address + 18) + address + 22);
 			_writeWorldGravityAddress = reinterpret_cast<float*>(*reinterpret_cast<int*>(address + 5) + address + 9);
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: WorldGravityAddresses (Enhanced)");
+		}
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: WorldGravityAddresses (Legacy)");
 		address = FindPattern("\x48\x63\xC1\x48\x8D\x0D\x00\x00\x00\x00\xF3\x0F\x10\x04\x81\xF3\x0F\x11\x05\x00\x00\x00\x00", "xxxxxx????xxxxxxxxx????");
 		if (address) {
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: WorldGravityAddresses (Legacy) at " + std::to_string(address));
 			_writeWorldGravityAddress = reinterpret_cast<float*>(*reinterpret_cast<int*>(address + 6) + address + 10);
 			_readWorldGravityAddress = reinterpret_cast<float*>(*reinterpret_cast<int*>(address + 19) + address + 23);
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: WorldGravityAddresses (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding _cursorSpriteAddr and _gamePlayCameraAddr addresses");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for _cursorSpriteAddr address");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: CursorSpriteAddr (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("89 0d ? ? ? ? 48 8d 0d ? ? ? ? e8 ? ? ? ? 84 c0");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: CursorSpriteAddr (Enhanced) at " + std::to_string(address));
 			_cursorSpriteAddr = reinterpret_cast<int*>(*reinterpret_cast<int*>(address + 2) + address + 6);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: CursorSpriteAddr (Enhanced)");
 		}
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: CursorSpriteAddr (Legacy)");
 		address = FindPattern("\x74\x11\x8B\xD1\x48\x8D\x0D\x00\x00\x00\x00\x45\x33\xC0", "xxxxxxx????xxx");
-		_cursorSpriteAddr = reinterpret_cast<int*>(*reinterpret_cast<int*>(address - 4) + address);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: CursorSpriteAddr (Legacy) at " + std::to_string(address));
+			_cursorSpriteAddr = reinterpret_cast<int*>(*reinterpret_cast<int*>(address - 4) + address);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: CursorSpriteAddr (Legacy)");
+		}
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding _gamePlayCameraAddr address");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for _gamePlayCameraAddr address");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GamePlayCameraAddr (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("88 05 ? ? ? ? e8 ? ? ? ? 88 05 ? ? ? ? e8");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: GamePlayCameraAddr (Enhanced) at " + std::to_string(address));
 			address = (*reinterpret_cast<int*>(address + 18) + address + 22);
 			_gamePlayCameraAddr = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: GamePlayCameraAddr (Enhanced)");
+		}
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GamePlayCameraAddr (Legacy)");
 		address = FindPattern("\x48\x8B\xC7\xF3\x0F\x10\x0D", "xxxxxxx") - 0x1D;
-		address = address + *reinterpret_cast<int*>(address) + 4;
-		_gamePlayCameraAddr = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: GamePlayCameraAddr (Legacy) at " + std::to_string(address));
+			address = address + *reinterpret_cast<int*>(address) + 4;
+			_gamePlayCameraAddr = reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 3) + address + 7);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: GamePlayCameraAddr (Legacy)");
+		}
 	}
-	
-	addlog(ige::LogType::LOG_DEBUG, "Bypassing model requests block");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for model requests block to bypass");
 	// Bypass model requests block
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: ModelRequestsBlock (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("44 0f b6 b4 24 ? ? ? ? 41 20 f6");
-		if (address) memset(reinterpret_cast<void*>(address - 20), 0x90, 20);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: ModelRequestsBlock (Enhanced) at " + std::to_string(address));
+			memset(reinterpret_cast<void*>(address - 20), 0x90, 20);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: ModelRequestsBlock (Enhanced)");
+		}
 	}
 	else {
 		// new pattern that lands outside of the patched bytes, to ensure compatibility with other mods that patch them.
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: ModelRequestsBlock (Legacy)");
 		address = MemryScan::PatternScanner::FindPattern("45 84 e4 74 ? e8 ? ? ? ? 48 85 c0");
-		if (address) memset(reinterpret_cast<void*>(address - 24), 0x90, 24);
+		if (address)
+		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: ModelRequestsBlock (Legacy) at " + std::to_string(address));
+			memset(reinterpret_cast<void*>(address - 24), 0x90, 24);
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: ModelRequestsBlock (Legacy)");
+		}
 	}
 
 	//GetModelInfo
-	addlog(ige::LogType::LOG_DEBUG, "Finding GetModelInfo address");
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for GetModelInfo address");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GetModelInfo (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("45 85 d2 74 ? 49 89 d0 4c 8b 1d");
 
 		if (address) {
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: GetModelInfo (Enhanced) at " + std::to_string(address));
 			address = address - 8;
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo (Enhanced)");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: GetModelInfo (Enhanced)");
 		}
 	}
 	else {
 		if (getGameVersion() <= 57) {
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GetModelInfo (Legacy, <=v57)");
 			address = FindPattern(
 				"\x0F\xB7\x05\x00\x00\x00\x00"
 				"\x45\x33\xC9\x4C\x8B\xDA\x66\x85\xC0"
@@ -1582,166 +1864,190 @@ void GTAmemory::Init()
 				"xx????"
 				"xxxxxxxxxxx");
 
-			if (!address) {
-				addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo");
+			if (address)
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: GetModelInfo (Legacy, <=v57) at " + std::to_string(address));
+			}
+			else {
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: GetModelInfo (Legacy, <=v57)");
 			}
 		}
 		else {
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GetModelInfo (Legacy, v58+)");
 			address = FindPattern("\xEB\x09\x41\x3B\x0A\x74\x54", "xxxxxxx");
 
 			if (address) {
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: GetModelInfo (Legacy, v58+) at " + std::to_string(address));
 				address = address - 0x2C;
 			}
 			else {
-				addlog(ige::LogType::LOG_ERROR, "Couldn't find GetModelInfo (v58+)");
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: GetModelInfo (Legacy, v58+)");
 			}
 		}
 	}
 	if (address) {
 		GetModelInfo = (GetModelInfo_t)(address);
 	}
-	addlog(ige::LogType::LOG_DEBUG, "Finding ped variation collection addresses");
+
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for ped variation collection addresses");
 	// ==== Ped Variation Collections initialization ====
 	// works only with legacy for now
 	if (!g_isEnhanced) {
-		
+
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_collectionInfoHashOffset");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("8B 51 ? 85 D2 75 ? 33 C0");
 		if (address) {
 			g_collectionInfoHashOffset = *(uint8_t*)(address + 2);
-			addlog(ige::LogType::LOG_TRACE, "g_collectionInfoHashOffset found at offset: " + std::to_string(g_collectionInfoHashOffset));
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_collectionInfoHashOffset at offset: " + std::to_string(g_collectionInfoHashOffset));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_collectionInfoHashOffset pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_collectionInfoHashOffset");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_dynamicEntityArchetypeOffset");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("4C 8B 61 ? 48 8B F9 4D 63 E9");
 		if (address) {
 			g_dynamicEntityArchetypeOffset = *(uint8_t*)(address + 3);
-			addlog(ige::LogType::LOG_TRACE, "g_dynamicEntityArchetypeOffset found at offset: " + std::to_string(g_dynamicEntityArchetypeOffset));
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_dynamicEntityArchetypeOffset at offset: " + std::to_string(g_dynamicEntityArchetypeOffset));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_dynamicEntityArchetypeOffset pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_dynamicEntityArchetypeOffset");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_pedModelInfoVarInfoCollectionOffset");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("49 8B 8C 24 ? ? ? ? 49 8B E8");
 		if (address) {
 			g_pedModelInfoVarInfoCollectionOffset = *(int*)(address + 4);
-			addlog(ige::LogType::LOG_TRACE, "g_pedModelInfoVarInfoCollectionOffset found at offset: " + std::to_string(g_pedModelInfoVarInfoCollectionOffset));
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_pedModelInfoVarInfoCollectionOffset at offset: " + std::to_string(g_pedModelInfoVarInfoCollectionOffset));
 		}
 		else {
-			addlog(ige::LogType::LOG_TRACE, "g_pedModelInfoVarInfoCollectionOffset pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_pedModelInfoVarInfoCollectionOffset");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_variationInfoPropInfoOffset");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 83 C1 ? E8 ? ? ? ? 48 8D 7F");
 		if (address) {
 			g_variationInfoPropInfoOffset = *(uint8_t*)(address + 3);
-			addlog(ige::LogType::LOG_DEBUG, "g_variationInfoPropInfoOffset found at offset: " + std::to_string(g_variationInfoPropInfoOffset));
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_variationInfoPropInfoOffset at offset: " + std::to_string(g_variationInfoPropInfoOffset));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_variationInfoPropInfoOffset pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_variationInfoPropInfoOffset");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_GetGlobalDrawableIndex");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 0F B7 41 ? 33 F6 45 8B F1");
 		if (address) {
 			g_GetGlobalDrawableIndex = reinterpret_cast<int(*)(CPedVariationInfoCollection*, int, uint32_t, uint32_t)>(address);
-			addlog(ige::LogType::LOG_DEBUG, "g_GetGlobalDrawableIndex found at: " + std::to_string(address));
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_GetGlobalDrawableIndex at: " + std::to_string(address));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_GetGlobalDrawableIndex pattern NOT_FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_GetGlobalDrawableIndex");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_GetGlobalPropIndex");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 33 FF 45 8B F1");
 		if (address) {
 			g_GetGlobalPropIndex = reinterpret_cast<int(*)(CPedVariationInfoCollection*, int, uint32_t, uint32_t)>(address);
-			addlog(ige::LogType::LOG_DEBUG, "g_GetGlobalPropIndex found at: " + std::to_string(address));
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_GetGlobalPropIndex at: " + std::to_string(address));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "FAIL: g_GetGlobalPropIndex pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_GetGlobalPropIndex");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_GetDlcDrawableIdx");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("E8 ? ? ? ? 44 8B C3 48 8B 5D");
 		if (address) {
 			address = *reinterpret_cast<int*>(address + 1) + address + 5;
 			g_GetDlcDrawableIdx = reinterpret_cast<int(*)(CPedVariationInfoCollection*, uint32_t, uint32_t)>(address);
-			addlog(ige::LogType::LOG_DEBUG, "g_GetDlcDrawableIdx found at: " + std::to_string(address));
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_GetDlcDrawableIdx at: " + std::to_string(address));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_GetDlcDrawableIdx pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_GetDlcDrawableIdx");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_GetDlcPropIdx");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("E8 ? ? ? ? 45 33 F6 44 8B E8 44 38 75");
 		if (address) {
 			address = *reinterpret_cast<int*>(address + 1) + address + 5;
 			g_GetDlcPropIdx = reinterpret_cast<int(*)(CPedVariationInfoCollection*, uint32_t, uint32_t)>(address);
-			addlog(ige::LogType::LOG_DEBUG, "g_GetDlcPropIdx found at: " + std::to_string(address));
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_GetDlcPropIdx at: " + std::to_string(address));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_GetDlcPropIdx pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_GetDlcPropIdx");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_GetMaxNumDrawables");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 89 5C 24 ? 57 48 83 EC ? 8B DA 48 8B F9 E8 ? ? ? ? 48 85 C0 74 ? 8B D3");
 		if (address) {
 			g_GetMaxNumDrawables = reinterpret_cast<uint8_t(*)(CPedVariationInfo*, uint32_t)>(address);
-			addlog(ige::LogType::LOG_DEBUG, "g_GetMaxNumDrawables found at: " + std::to_string(address));
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_GetMaxNumDrawables at: " + std::to_string(address));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_GetMaxNumDrawables pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_GetMaxNumDrawables");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_GetMaxNumProps");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 89 5C 24 ? 0F B7 41 ? 45 33 C0 45 8B C8 45 8B D0 8B D8");
 		if (address) {
 			g_GetMaxNumProps = reinterpret_cast<uint8_t(*)(CPedPropInfo*, uint32_t)>(address);
-			addlog(ige::LogType::LOG_DEBUG, "g_GetMaxNumProps found at: " + std::to_string(address));
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_GetMaxNumProps at: " + std::to_string(address));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_GetMaxNumProps pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_GetMaxNumProps");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_GetVariationInfoFromDrawableIdx");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 56 48 83 EC 20 33 DB 41 8B F0 8B EA 48 8B F9 66 3B 59 08 73 32 48 8B 0F");
 		if (!address) {
 			addlog(ige::LogType::LOG_WARNING, "g_GetVariationInfoFromDrawableIdx new pattern not found, trying legacy pattern...");
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_GetVariationInfoFromDrawableIdx (fallback)");
 			address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 8B C4 48 89 58 ? 48 89 68 ? 48 89 70 ? 48 89 78 ? 41 56 48 83 EC ? 33 DB 41 8B F0 8B EA 48 8B F9 66 3B 59 ? 73 ? 48 8B 0F");
 		}
 		if (address) {
-			g_GetVariationInfoFromDrawableIdx = reinterpret_cast<CPedVariationInfo*(*)(CPedVariationInfoCollection*, uint32_t, uint32_t)>(address);
-			addlog(ige::LogType::LOG_DEBUG, "g_GetVariationInfoFromDrawableIdx found at: " + std::to_string(address));
+			g_GetVariationInfoFromDrawableIdx = reinterpret_cast<CPedVariationInfo * (*)(CPedVariationInfoCollection*, uint32_t, uint32_t)>(address);
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_GetVariationInfoFromDrawableIdx at: " + std::to_string(address));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_GetVariationInfoFromDrawableIdx pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_GetVariationInfoFromDrawableIdx");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_GetVariationInfoFromPropIdx");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 54 41 55 41 56 41 57 48 83 EC ? 0F B7 41 ? 33 DB");
 		if (address) {
-			g_GetVariationInfoFromPropIdx = reinterpret_cast<CPedVariationInfo*(*)(CPedVariationInfoCollection*, uint32_t, uint32_t)>(address);
-			addlog(ige::LogType::LOG_DEBUG, "g_GetVariationInfoFromPropIdx found at: " + std::to_string(address));
+			g_GetVariationInfoFromPropIdx = reinterpret_cast<CPedVariationInfo * (*)(CPedVariationInfoCollection*, uint32_t, uint32_t)>(address);
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_GetVariationInfoFromPropIdx at: " + std::to_string(address));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_GetVariationInfoFromPropIdx pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_GetVariationInfoFromPropIdx");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: g_GetCollectionName");
 		address = (uintptr_t)MemryScan::PatternScanner::FindPattern("8B 51 ? 85 D2 75 ? 33 C0");
 		if (address) {
-			g_GetCollectionName = reinterpret_cast<const char*(*)(CPedVariationInfo*)>(address);
-			addlog(ige::LogType::LOG_DEBUG, "g_GetCollectionName found at: " + std::to_string(address));
+			g_GetCollectionName = reinterpret_cast<const char* (*)(CPedVariationInfo*)>(address);
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: g_GetCollectionName at: " + std::to_string(address));
 		}
 		else {
-			addlog(ige::LogType::LOG_ERROR, "g_GetCollectionName pattern NOT FOUND!");
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: g_GetCollectionName");
 		}
 	}
 	// ==== End of Ped Variation Collections initialization ====
-	addlog(ige::LogType::LOG_DEBUG, "Finding SpSnow address");
+
 	g_spSnow = SpSnow();
 	addlog(ige::LogType::LOG_INIT, "GTAMemory Init Done");
 }
 
 void GTAmemory::InitEnhancedPools() {
 	if (g_isEnhanced) {
-		
+
 		// In Enhanced, the pools are encrypted/obfuscated. Instead of having their pointer stored somewhere, it is constructed at init from different values,
 		// using bit operations. The problem is that menyoo is loaded a bit too early for the initialization to have happened, and so we can't retrieve those values
 		// during GTAmemory init. For that reason, we leave that to the very end, and we keep waiting until the game has started (GameState == 0 (PLAYING)).
 		// This was not a problem with SHVDNE, since NativeMemroy init is only done after the game has started.
+		addlog(ige::LogType::LOG_DEBUG, "Scanning for Enhanced obfuscated entity/ped/object/pickup/camera pool addresses");
+
 		UINT64 address;
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: EntityPoolAddress (Enhanced, obfuscated)");
 		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1013_33) {
 			address = MemryScan::PatternScanner::FindPattern("c9 41 89 c8 49 c1 e8");
 		}
@@ -1750,6 +2056,7 @@ void GTAmemory::InitEnhancedPools() {
 		}
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: EntityPoolAddress (Enhanced, obfuscated) at " + std::to_string(address));
 			bool isInitialized = (*(byte*)(*(int*)(address + 11) + address + 15) & 1) != 0;
 			UINT64 firstValue = *(UINT64*)(*(int*)(address + 29) + address + 33);
 			UINT64 secondValue = *(UINT64*)(*(int*)(address + 18) + address + 22);
@@ -1772,12 +2079,22 @@ void GTAmemory::InitEnhancedPools() {
 				rdx = ~rdx;
 				GTAmemory::_entityPoolAddress = (UINT64*)rdx;
 			}
+			else
+			{
+				addlog(ige::LogType::LOG_DEBUG, "EntityPoolAddress not yet initialized by the game");
+			}
 
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: EntityPoolAddress (Enhanced, obfuscated)");
+		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: PickupObjectPoolAddress (Enhanced, obfuscated)");
 		address = MemryScan::PatternScanner::FindPattern("48 83 ec ? 89 ce 0f b6 05");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: PickupObjectPoolAddress (Enhanced, obfuscated) at " + std::to_string(address));
 			bool isInitialized = (*(byte*)(*(int*)(address + 9) + address + 13) & 1) != 0;
 			uint64_t firstValue = *(uint64_t*)(*(int*)(address + 27) + address + 31);
 			uint64_t secondValue = *(uint64_t*)(*(int*)(address + 16) + address + 20);
@@ -1800,8 +2117,17 @@ void GTAmemory::InitEnhancedPools() {
 				rax = ~rax;
 				GTAmemory::_pickupObjectPoolAddress = (uint64_t*)rax;
 			}
+			else
+			{
+				addlog(ige::LogType::LOG_DEBUG, "PickupObjectPoolAddress not yet initialized by the game");
+			}
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: PickupObjectPoolAddress (Enhanced, obfuscated)");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: PedPoolAddress (Enhanced, obfuscated)");
 		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1013_33) {
 			address = MemryScan::PatternScanner::FindPattern("8b 05 ? ? ? ? 85 c0 0f 8e ? ? ? ? c1 e8 ? 0f b6 0d");
 		}
@@ -1809,6 +2135,7 @@ void GTAmemory::InitEnhancedPools() {
 			address = MemryScan::PatternScanner::FindPattern("48 83 ec ? 83 3d ? ? ? ? ? 0f 84 ? ? ? ? 0f b6 05");
 		}
 		if (address) {
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: PedPoolAddress (Enhanced, obfuscated) at " + std::to_string(address));
 			bool isInitialized = (*(byte*)(*(int*)(address + 20) + address + 24) & 1) != 0;
 			UINT64 firstValue = *(UINT64*)(*(int*)(address + 38) + address + 42);
 			UINT64 secondValue = *(UINT64*)(*(int*)(address + 27) + address + 31);
@@ -1831,11 +2158,21 @@ void GTAmemory::InitEnhancedPools() {
 				rax = ~rax;
 				GTAmemory::_pedPoolAddress = (UINT64*)rax;
 			}
+			else
+			{
+				addlog(ige::LogType::LOG_DEBUG, "PedPoolAddress not yet initialized by the game");
+			}
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: PedPoolAddress (Enhanced, obfuscated)");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: ObjectPoolAddress (Enhanced, obfuscated)");
 		address = MemryScan::PatternScanner::FindPattern("53 48 81 ec ? ? ? ? 0f 29 b4 ? ? ? ? ? 48 89 ce 0f b6 05");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: ObjectPoolAddress (Enhanced, obfuscated) at " + std::to_string(address));
 			bool isInitialized = (*(byte*)(*(int*)(address + 22) + address + 26) & 1) != 0;
 			UINT64 firstValue = *(UINT64*)(*(int*)(address + 40) + address + 44);
 			UINT64 secondValue = *(UINT64*)(*(int*)(address + 29) + address + 33);
@@ -1858,11 +2195,21 @@ void GTAmemory::InitEnhancedPools() {
 				rdx = ~rdx;
 				GTAmemory::_objectPoolAddress = (UINT64*)rdx;
 			}
+			else
+			{
+				addlog(ige::LogType::LOG_DEBUG, "ObjectPoolAddress not yet initialized by the game");
+			}
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: ObjectPoolAddress (Enhanced, obfuscated)");
 		}
 
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: CameraPoolAddress (Enhanced, obfuscated)");
 		address = MemryScan::PatternScanner::FindPattern("48 89 c1 45 31 c0 e8 ? ? ? ? 90 48 83 c4 20 5b 5f 5e");
 		if (address)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: CameraPoolAddress (Enhanced, obfuscated) at " + std::to_string(address));
 			address -= 81;
 			bool isInitialized = (*reinterpret_cast<byte*>(*reinterpret_cast<int*>(address + 3) + address + 7) & 1) != 0;
 			UINT64 firstValue = *reinterpret_cast<UINT64*>(*reinterpret_cast<int*>(address + 21) + address + 25);
@@ -1897,6 +2244,14 @@ void GTAmemory::InitEnhancedPools() {
 				rsi = ~rsi;
 				GTAmemory::_cameraPoolAddress = (UINT64*)rsi;
 			}
+			else
+			{
+				addlog(ige::LogType::LOG_DEBUG, "CameraPoolAddress not yet initialized by the game");
+			}
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: CameraPoolAddress (Enhanced, obfuscated)");
 		}
 
 		g_spSnow = SpSnow();
@@ -1941,41 +2296,58 @@ struct HashNode
 };
 void GTAmemory::GenerateVehicleModelList()
 {
-	addlog(ige::LogType::LOG_DEBUG, "Generating Vehicle Model List. isEnhanced = " + std::to_string(g_isEnhanced));
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for vehicle model list hashes. isEnhanced = " + std::to_string(g_isEnhanced));
 
 	int classOffset;
 	uintptr_t address;
 	HashNode** HashMap;
 	//Zorg
 	if (g_isEnhanced) {
-		addlog(ige::LogType::LOG_TRACE, "Scanning Enhanced Address");
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: VehicleClassOffset (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("0f b6 88 ? ? ? ? 83 e1 ? e9");
 		if (address)
 		{
-			addlog(ige::LogType::LOG_TRACE, "Found Address, scanning for Hashes");
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: VehicleClassOffset (Enhanced) at " + std::to_string(address));
 			classOffset = *(uint*)(address + 3);
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: ModelHashTable (Enhanced)");
 			address = MemryScan::PatternScanner::FindPattern("74 ? 49 89 d0 4c 8b 1d");
 			if (address)
 			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: ModelHashTable (Enhanced) at " + std::to_string(address));
 				modelHashTable = *reinterpret_cast<PUINT64>(*(int*)(address + 8) + address + 12);
 				modelHashEntries = *reinterpret_cast<UINT16*>(address + *(int*)(address - 7) - 3);
 				// Pattern scan to avoid having offsets accross labels.
+				addlog(ige::LogType::LOG_TRACE, "Scanning pattern: ModelNumDerivation (Enhanced)");
 				address = MemryScan::PatternScanner::FindPattern("\x3B\x05\x00\x00\x00\x00\x7D\x00\x48\x8B\x0D", "xx????x?xxx", address, 200); // TODO: use the findpattern with legacy patterns, because it supports a start address.
 				if (address)
 				{
+					addlog(ige::LogType::LOG_TRACE, "Pattern found: ModelNumDerivation (Enhanced) at " + std::to_string(address));
 					modelNum1 = *reinterpret_cast<int*>(*(int*)(address + 2) + address + 6);
 					modelNum2 = *reinterpret_cast<PUINT64>(*(int*)(address + 11) + address + 15);
 					modelNum3 = *reinterpret_cast<PUINT64>(*(int*)(address + 48) + address + 52);
 					modelNum4 = *reinterpret_cast<PUINT64>(*(int*)(address + 33) + address + 37);
 				}
+				else
+				{
+					addlog(ige::LogType::LOG_ERROR, "Pattern not found: ModelNumDerivation (Enhanced)");
+				}
 			}
+			else
+			{
+				addlog(ige::LogType::LOG_ERROR, "Pattern not found: ModelHashTable (Enhanced)");
+			}
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: VehicleClassOffset (Enhanced)");
 		}
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: VehicleModelList (Legacy)");
 		address = FindPattern("\x66\x81\xF9\x00\x00\x74\x10\x4D\x85\xC0", "xxx??xxxxx");
 		if (address) {
-			addlog(ige::LogType::LOG_TRACE, "Found Address, scanning for Hashes");
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: VehicleModelList (Legacy) at " + std::to_string(address));
 			address = address - 0x21;
 			//UINT64 baseFuncAddr = *reinterpret_cast<int*>(address - 0x21) + address - 0x1D;
 			UINT64 baseFuncAddr = address + *reinterpret_cast<int*>(address) + 0x4;
@@ -1989,9 +2361,18 @@ void GTAmemory::GenerateVehicleModelList()
 
 			modelHashTable = *reinterpret_cast<PUINT64>(*reinterpret_cast<int*>(baseFuncAddr + 0x24) + baseFuncAddr + 0x28);
 		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: VehicleModelList (Legacy)");
+		}
 	}
 
-	addlog(ige::LogType::LOG_TRACE, "Patterns Scanned Success");
+	if (!address)
+	{
+		addlog(ige::LogType::LOG_ERROR, "Aborting vehicle model list generation, required pattern(s) missing");
+		return;
+	}
+
 	HashMap = reinterpret_cast<HashNode**>(modelHashTable);
 	//I know 0x20 items are defined but there are only 0x16 vehicle classes.
 	//But keeping it at 0x20 is just being safe as the & 0x1F in theory supports up to 0x20
@@ -2020,7 +2401,7 @@ void GTAmemory::GenerateVehicleModelList()
 			}
 		}
 	}
-	addlog(ige::LogType::LOG_TRACE, "Exiting GenerateVehicleModelList()");
+	addlog(ige::LogType::LOG_DEBUG, "Vehicle model list generated");
 }
 
 bool GTAmemory::IsModelAPed(unsigned int modelHash)
@@ -2071,14 +2452,18 @@ std::vector<GTAmemory::GXT2Entry> GTAmemory::_vecGXT2Entries;
 void GTAmemory::LoadGlobalGXTEntries()
 {
 	UINT64 address;
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for global GXT text block address");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GlobalTextBlockAddr (Enhanced)");
 		address = MemryScan::PatternScanner::FindPattern("48 8d 0d ? ? ? ? 4c 89 f2 e8 ? ? ? ? 8b 17");
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: GlobalTextBlockAddr (Legacy)");
 		address = FindPattern("\x84\xC0\x74\x34\x48\x8D\x0D\x00\x00\x00\x00\x48\x8B\xD3", "xxxxxxx????xxx");
 	}
 	if (address)
 	{
+		addlog(ige::LogType::LOG_TRACE, "Pattern found: GlobalTextBlockAddr at " + std::to_string(address));
 		if (g_isEnhanced) {
 			address = *reinterpret_cast<int*>(address + 3) + address + 7;
 		}
@@ -2098,6 +2483,10 @@ void GTAmemory::LoadGlobalGXTEntries()
 
 			_vecGXT2Entries.push_back({ labelHash, strOffset });
 		}
+	}
+	else
+	{
+		addlog(ige::LogType::LOG_ERROR, "Pattern not found: GlobalTextBlockAddr");
 	}
 }
 void GTAmemory::EditGXTLabel(DWORD labelHash, LPCSTR string)
@@ -2417,46 +2806,6 @@ void GTAmemory::SetWorldGravity(float value)
 	SET_GRAVITY_LEVEL(0);
 }
 
-/*void GTAmemory::GetVehicleHandles(std::vector<Entity>& result)
-{
-	Entity* entities = new Entity[poolCount_vehicles];
-	int count = worldGetAllVehicles(entities, poolCount_vehicles);
-	for (int i = 0; i < count; i++)
-	{
-		//if (IS_ENTITY_A_VEHICLE(entities[i]))
-		result.push_back(entities[i]);
-	}
-	delete[] entities;
-}
-void GTAmemory::GetPedHandles(std::vector<Entity>& result)
-{
-	Entity* entities = new Entity[poolCount_peds];
-	int count = worldGetAllPeds(entities, poolCount_peds);
-	for (int i = 0; i < count; i++)
-	{
-		//if (IS_ENTITY_A_PED(entities[i]))
-		result.push_back(entities[i]);
-	}
-	delete[] entities;
-}
-void GTAmemory::GetPropHandles(std::vector<Entity>& result)
-{
-	Entity* entities = new Entity[poolCount_objects];
-	int count = worldGetAllObjects(entities, poolCount_objects);
-	for (int i = 0; i < count; i++)
-	{
-		//if (IS_ENTITY_AN_OBJECT(entities[i]))
-		result.push_back(entities[i]);
-	}
-	delete[] entities;
-}
-void GTAmemory::GetEntityHandles(std::vector<Entity>& result)
-{
-	GTAmemory::GetVehicleHandles(result);
-	GTAmemory::GetPedHandles(result);
-	GTAmemory::GetPropHandles(result);
-}*/
-
 uintptr_t GTAmemory::FindPattern(const char* pattern, const char* mask, const char* startAddress, size_t size) {
 	const char* address_end = startAddress + size;
 	const auto mask_length = static_cast<size_t>(strlen(mask) - 1);
@@ -2528,6 +2877,35 @@ void SpSnow::EnableSnow(bool bEnable)
 
 	static auto addrEnhanced = MemryScan::PatternScanner::FindPattern("48 89 f9 e8 ? ? ? ? e9 ? ? ? ? 83 f8");
 
+	static bool s_snowPatternsLogged = false;
+	if (!s_snowPatternsLogged)
+	{
+		s_snowPatternsLogged = true;
+		addlog(ige::LogType::LOG_DEBUG, "Scanning for snow toggle patterns");
+		if (g_isEnhanced)
+		{
+			if (addrEnhanced) addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowToggle (Enhanced) at " + std::to_string(addrEnhanced));
+			else addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowToggle (Enhanced)");
+		}
+		else
+		{
+			if (addr1) addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowToggle_addr1 (Legacy) at " + std::to_string(addr1));
+			else addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowToggle_addr1 (Legacy)");
+
+			if (addr2) addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowToggle_addr2 (Legacy) at " + std::to_string(addr2));
+			else addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowToggle_addr2 (Legacy)");
+
+			if (addr12) addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowToggle_addr12 (Legacy fallback) at " + std::to_string(addr12));
+			else addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowToggle_addr12 (Legacy fallback)");
+
+			if (addr13) addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowToggle_addr13 (Legacy fallback) at " + std::to_string(addr13));
+			else addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowToggle_addr13 (Legacy fallback)");
+
+			if (addr22) addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowToggle_addr22 (Legacy fallback) at " + std::to_string(addr22));
+			else addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowToggle_addr22 (Legacy fallback)");
+		}
+	}
+
 	const bool isMinGameVersion3095 = GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_3095_0;
 
 	if (!g_isEnhanced) {
@@ -2538,6 +2916,7 @@ void SpSnow::EnableSnow(bool bEnable)
 			{
 				if (!addr13)
 				{
+					addlog(ige::LogType::LOG_ERROR, "Snow toggle patterns not found; snow is not compatible with this GTA version");
 					BEGIN_TEXT_COMMAND_PRINT("STRING");
 					ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME("~r~Error:~s~ Snow is not compatible with this GTA Version.");
 					END_TEXT_COMMAND_PRINT(2000, 1);
@@ -2561,6 +2940,7 @@ void SpSnow::EnableSnow(bool bEnable)
 		{
 			if (!addr22)
 			{
+				addlog(ige::LogType::LOG_ERROR, "Snow toggle pattern (addr2) not found; snow is not compatible with this GTA version");
 				BEGIN_TEXT_COMMAND_PRINT("STRING");
 				ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME("~r~Error:~s~ Snow is not compatible with this GTA Version.");
 				END_TEXT_COMMAND_PRINT(2000, 1);
@@ -2579,6 +2959,7 @@ void SpSnow::EnableSnow(bool bEnable)
 	// Initialize
 	if (!this->bInitialized)
 	{
+		addlog(ige::LogType::LOG_DEBUG, "Scanning for snow tracks patterns");
 		if (g_isEnhanced) {
 
 			VirtualProtect((void*)(addrEnhanced - 11), 11, PAGE_EXECUTE_READWRITE, nullptr);
@@ -2586,17 +2967,25 @@ void SpSnow::EnableSnow(bool bEnable)
 			VirtualProtect((void*)(addrEnhanced - 24), 7, PAGE_EXECUTE_READWRITE, nullptr);
 			memcpy(&original2EnhancedSnow, (void*)(addrEnhanced - 24), 7);
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SnowTracks_traxv_call (Enhanced)");
 			this->traxv_call = MemryScan::PatternScanner::FindPattern("0f b6 15 ? ? ? ? 00 d2 08 c2 88 91");
-			if (this->traxv_call == NULL) this->tracks_available = false;
+			if (this->traxv_call == NULL) { this->tracks_available = false; addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowTracks_traxv_call (Enhanced)"); }
+			else addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowTracks_traxv_call (Enhanced) at " + std::to_string(this->traxv_call));
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SnowTracks_traxvt (Enhanced)");
 			this->traxvt = MemryScan::PatternScanner::FindPattern("b8 ? ? ? ? 44 0f 44 f8 48 8b 86");
-			if (this->traxvt == NULL) this->tracks_available = false;
+			if (this->traxvt == NULL) { this->tracks_available = false; addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowTracks_traxvt (Enhanced)"); }
+			else addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowTracks_traxvt (Enhanced) at " + std::to_string(this->traxvt));
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SnowTracks_traxp_call (Enhanced)");
 			this->traxp_call = MemryScan::PatternScanner::FindPattern("0f b6 05 ? ? ? ? 0f b6 91");
-			if (this->traxp_call == NULL) this->tracks_available = false;
+			if (this->traxp_call == NULL) { this->tracks_available = false; addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowTracks_traxp_call (Enhanced)"); }
+			else addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowTracks_traxp_call (Enhanced) at " + std::to_string(this->traxp_call));
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SnowTracks_traxpt (Enhanced)");
 			this->traxpt = MemryScan::PatternScanner::FindPattern("b8 ? ? ? ? 44 89 f9 0f 45 c8 41 83 ff");
-			if (this->traxpt == NULL) this->tracks_available = false;
+			if (this->traxpt == NULL) { this->tracks_available = false; addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowTracks_traxpt (Enhanced)"); }
+			else addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowTracks_traxpt (Enhanced) at " + std::to_string(this->traxpt));
 
 			if (this->tracks_available)
 			{
@@ -2613,22 +3002,35 @@ void SpSnow::EnableSnow(bool bEnable)
 			if (!isMinGameVersion3095) memcpy(&original1, (void*)addr1, 13);
 			memcpy(&original2, (void*)(addr2 - 14), 14);
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SnowTracks_traxv_call (Legacy)");
 			this->traxv_call = MemryScan::PatternScanner::FindPattern("\x40\x38\x3D\x00\x00\x00\x00\x48\x8B\x42\x20", "xxx????xxxx");
-			if (this->traxv_call == NULL) this->tracks_available = false;
+			if (this->traxv_call == NULL) { this->tracks_available = false; addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowTracks_traxv_call (Legacy)"); }
+			else addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowTracks_traxv_call (Legacy) at " + std::to_string(this->traxv_call));
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SnowTracks_traxvt (Legacy)");
 			this->traxvt = MemryScan::PatternScanner::FindPattern("B9 ? ? ? ? 84 C0 44 0F 44 F1 48 8b 83");
-			if (this->traxvt == NULL) this->tracks_available = false;
+			if (this->traxvt == NULL) { this->tracks_available = false; addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowTracks_traxvt (Legacy)"); }
+			else addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowTracks_traxvt (Legacy) at " + std::to_string(this->traxvt));
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SnowTracks_traxp_call (Legacy)");
 			this->traxp_call = MemryScan::PatternScanner::FindPattern("80 3D ? ? ? ? ? 48 8B D9 74 37");
-			if (this->traxp_call == NULL) this->tracks_available = false;
+			if (this->traxp_call == NULL) { this->tracks_available = false; addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowTracks_traxp_call (Legacy)"); }
+			else addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowTracks_traxp_call (Legacy) at " + std::to_string(this->traxp_call));
 
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SnowTracks_traxpt (Legacy)");
 			this->traxpt = MemryScan::PatternScanner::FindPattern("\xB9\x00\x00\x00\x00\x84\xC0\x0F\x44\xD9\x48\x8B\x4F\x30", "x????xxxxxxxxx");
 			if (this->traxpt == NULL)
 			{
 				// The first pattern can't be found in newer legacy builds. Not sure starting from which version though.
 				// For that reason, if we don't find it, we look for the new one. (so that we don't break Menyoo for older versions)
+				addlog(ige::LogType::LOG_TRACE, "Scanning pattern: SnowTracks_traxpt (Legacy fallback)");
 				this->traxpt = MemryScan::PatternScanner::FindPattern("bb ? ? ? ? 48 8b 4f ? 48 81 c1");
-				if (this->traxpt == NULL) this->tracks_available = false;
+				if (this->traxpt == NULL) { this->tracks_available = false; addlog(ige::LogType::LOG_ERROR, "Pattern not found: SnowTracks_traxpt (Legacy fallback)"); }
+				else addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowTracks_traxpt (Legacy fallback) at " + std::to_string(this->traxpt));
+			}
+			else
+			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: SnowTracks_traxpt (Legacy) at " + std::to_string(this->traxpt));
 			}
 
 			if (this->tracks_available)
@@ -2894,14 +3296,17 @@ void GeneralGlobalHax::EnableBlockedMpVehiclesInSp()
 		}
 	}
 
+	addlog(ige::LogType::LOG_DEBUG, "Scanning code pages for the blocked-MP-vehicles-in-SP pattern");
 	for (int i = 0; i < shopController->CodePageCount(); i++)
 	{
 		int size = shopController->GetCodePageSize(i);
 		if (size)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: BlockedMpVehiclesInSp in code page " + std::to_string(i));
 			uintptr_t address = GTAmemory::FindPattern(pattern, mask, (const char*)shopController->GetCodePageAddress(i), size);
 			if (address)
 			{
+				addlog(ige::LogType::LOG_TRACE, "Pattern found: BlockedMpVehiclesInSp at " + std::to_string(address) + " (code page " + std::to_string(i) + ")");
 				int globalindex = *(int*)(address + offset) & 0xFFFFFF;
 				addlog(ige::LogType::LOG_INFO, "Setting Global Variable " + std::to_string(globalindex) + " to true");
 				*GTAmemory::GetGlobalPtr<INT32>(globalindex) = 1;
@@ -2910,7 +3315,7 @@ void GeneralGlobalHax::EnableBlockedMpVehiclesInSp()
 		}
 	}
 
-	addlog(ige::LogType::LOG_ERROR, "Global Variable not found, check game version >= 1.0.678.1");
+	addlog(ige::LogType::LOG_ERROR, "Pattern not found: BlockedMpVehiclesInSp (check game version >= 1.0.678.1)");
 }
 
 // from EnableMPCars by drp4lyf
@@ -2920,24 +3325,26 @@ bool GTAmemory::FindShopController() {
 
 bool GTAmemory::FindScript(int hash) {
 	__int64 patternAddr;
+	addlog(ige::LogType::LOG_DEBUG, "Scanning for script table address");
 	if (g_isEnhanced) {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: ScriptTableAddress (Enhanced)");
 		patternAddr = MemryScan::PatternScanner::FindPattern("48 03 05 ? ? ? ? 4c 85 c0 0f 84 ? ? ? ? e9");
 	}
 	else {
+		addlog(ige::LogType::LOG_TRACE, "Scanning pattern: ScriptTableAddress (Legacy)");
 		patternAddr = FindPattern("\x48\x03\x15\x00\x00\x00\x00\x4C\x23\xC2\x49\x8B\x08", "xxx????xxxxxx");
 	}
 
 	if (!patternAddr) {
-		addlog(ige::LogType::LOG_ERROR, "ERROR: finding address 1");
-		addlog(ige::LogType::LOG_ERROR, "Aborting...");
+		addlog(ige::LogType::LOG_ERROR, "Pattern not found: ScriptTableAddress; aborting script lookup");
 		return false;
 	}
+	addlog(ige::LogType::LOG_TRACE, "Pattern found: ScriptTableAddress at " + std::to_string(patternAddr));
 	scriptTable = (ScriptTable*)(patternAddr + *(int*)(patternAddr + 3) + 7);
 
 	ScriptTableItem* Item = scriptTable->FindScript(hash);
 	if (Item == NULL) {
-		addlog(ige::LogType::LOG_ERROR, "ERROR: finding script shop_controller ");
-		addlog(ige::LogType::LOG_ERROR, "Aborting...");
+		addlog(ige::LogType::LOG_ERROR, "Script not found for hash " + std::to_string(hash) + "; aborting");
 		return false;
 	}
 	while (!Item->IsLoaded())
@@ -2954,16 +3361,24 @@ void** GeneralGlobalHax::WorldPtrPtr()
 	static DWORD64 __dwWorldPtrAddr = 0x0U;
 	if (!__dwWorldPtrAddr)
 	{
+		addlog(ige::LogType::LOG_DEBUG, "Scanning for world pointer address");
 		if (g_isEnhanced) {
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: WorldPtrAddr (Enhanced)");
 			__dwWorldPtrAddr = MemryScan::PatternScanner::FindPattern("48 8b 05 ? ? ? ? 48 8b 40 ? 48 85 c0 0f 84 ? ? ? ? 0f 28 b0");
 		}
 		else {
+			addlog(ige::LogType::LOG_TRACE, "Scanning pattern: WorldPtrAddr (Legacy)");
 			__dwWorldPtrAddr = MemryScan::PatternScanner::FindPattern("48 8B 05 ? ? ? ? 45 ? ? ? ? 48 8B 48 08 48 85 C9 74 07");
 		}
 
 		if (__dwWorldPtrAddr)
 		{
+			addlog(ige::LogType::LOG_TRACE, "Pattern found: WorldPtrAddr at " + std::to_string(__dwWorldPtrAddr));
 			__dwWorldPtrAddr = __dwWorldPtrAddr + *reinterpret_cast<int*>(__dwWorldPtrAddr + 3) + 7;
+		}
+		else
+		{
+			addlog(ige::LogType::LOG_ERROR, "Pattern not found: WorldPtrAddr");
 		}
 	}
 	return reinterpret_cast<void**>(__dwWorldPtrAddr);
@@ -3119,7 +3534,7 @@ GTAmemory::DrawableCollectionData GTAmemory::BuildDrawableCollectionData(int ped
 	result.currentLocalIdx = -1;
 
 	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromDrawableIdx ||
-	    !g_GetDlcDrawableIdx || !g_GetCollectionName)
+		!g_GetDlcDrawableIdx || !g_GetCollectionName)
 		return result;
 
 	auto collection = GetPedVariationInfoCollection(pedHandle);
@@ -3147,11 +3562,11 @@ GTAmemory::DrawableCollectionData GTAmemory::BuildDrawableCollectionData(int ped
 			[&](const RawColl& rc) { return rc.name == nameStr; });
 		if (it == raw.end())
 		{
-			raw.push_back({nameStr, g, {{local, g}}});
+			raw.push_back({ nameStr, g, {{local, g}} });
 		}
 		else
 		{
-			it->entries.push_back({local, g});
+			it->entries.push_back({ local, g });
 		}
 	}
 
@@ -3190,7 +3605,7 @@ GTAmemory::DrawableCollectionData GTAmemory::BuildPropCollectionData(int pedHand
 	result.currentLocalIdx = -1;
 
 	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromPropIdx ||
-	    !g_GetDlcPropIdx || !g_GetCollectionName)
+		!g_GetDlcPropIdx || !g_GetCollectionName)
 		return result;
 
 	auto collection = GetPedVariationInfoCollection(pedHandle);
@@ -3218,11 +3633,11 @@ GTAmemory::DrawableCollectionData GTAmemory::BuildPropCollectionData(int pedHand
 			[&](const RawColl& rc) { return rc.name == nameStr; });
 		if (it == raw.end())
 		{
-			raw.push_back({nameStr, g, {{local, g}}});
+			raw.push_back({ nameStr, g, {{local, g}} });
 		}
 		else
 		{
-			it->entries.push_back({local, g});
+			it->entries.push_back({ local, g });
 		}
 	}
 
@@ -3257,7 +3672,7 @@ GTAmemory::DrawableCollectionData GTAmemory::BuildPropCollectionData(int pedHand
 std::string GTAmemory::GetPedDrawableCollectionString(int pedHandle, int componentId)
 {
 	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromDrawableIdx ||
-	    !g_GetDlcDrawableIdx || !g_GetCollectionName)
+		!g_GetDlcDrawableIdx || !g_GetCollectionName)
 		return "invalid";
 
 	auto collection = GetPedVariationInfoCollection(pedHandle);
@@ -3279,7 +3694,7 @@ std::string GTAmemory::GetPedDrawableCollectionString(int pedHandle, int compone
 std::string GTAmemory::GetPedPropCollectionString(int pedHandle, int anchorPoint)
 {
 	if (!GTAmemory::_entityAddressFunc || !g_GetVariationInfoFromPropIdx ||
-	    !g_GetDlcPropIdx || !g_GetCollectionName)
+		!g_GetDlcPropIdx || !g_GetCollectionName)
 		return "invalid";
 
 	auto collection = GetPedVariationInfoCollection(pedHandle);
