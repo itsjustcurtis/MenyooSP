@@ -298,7 +298,9 @@ namespace sub::TeleportLocations_catind
 			}
 
 			bool bCreateOfficePressed = false;
-			AddOption("Build Office Garage", bCreateOfficePressed); if (bCreateOfficePressed)
+			AddOption("Build Office Garage", bCreateOfficePressed);
+			AddOptionDescription("Loads the garage with the options above and teleports you inside.");
+			if (bCreateOfficePressed)
 			{
 				DO_SCREEN_FADE_OUT(50);
 				CreateOfficeGarage(currentGarageInfo);

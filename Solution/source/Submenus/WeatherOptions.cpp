@@ -31,6 +31,7 @@ namespace sub
 
 		AddTitle("Weather");
 		AddTickol("Reset Weather", true, clearWeatherOverride, clearWeatherOverride, TICKOL::CROSS); 
+		AddOptionDescription("Returns to the game's natural weather cycle.");
 		if (clearWeatherOverride)
 		{
 			World::ClearWeatherOverride();
@@ -47,12 +48,16 @@ namespace sub
 		}
 		
 		AddLocal("Snow On Terrain", g_spSnow.IsSnow(), spSnowOn, spSnowOff);
+		AddOptionDescription("Covers the ground in snow.");
 		AddNumber("Wind Speed", windSpeed, 2, null, windSpeedPlus, windSpeedMinus);
 		AddNumber("Ocean Wave Strength", wavesHeight, 2, null, wavesHeightPlus, wavesHeightMinus);
 		AddNumber("Rain Puddles Multiplier", g_rainFXIntensity, 2, null, rainFXPlus, rainFXMinus);
+		AddOptionDescription("How much water collects on the ground.");
 		AddNumber("Gravity", gravityMultiplier, 2, null, gravityLevelPlus, gravityLevelMinus);
+		AddOptionDescription("World gravity for all entities.");
 		AddOption("Clouds", null, nullFunc, SUB::CLOUDOPS);
 		AddOption("Water Hack (For Waves At Beaches)", null, nullFunc, SUB::WATERHACK);
+		AddOptionDescription("Raises the water level locally to create waves.");
 
 
 		if (spSnowOn || spSnowOff) 

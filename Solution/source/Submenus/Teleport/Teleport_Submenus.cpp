@@ -12,6 +12,7 @@
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\Keybinds.h"
 #include "..\..\Menu\Routine.h"
 
 #include "..\..\Natives\natives2.h"
@@ -81,8 +82,10 @@ namespace sub::TeleportLocations_catind
 			AddTitle("Locations");
 
 			AddOption("Forward", null, TeleMethods::ToForward241);
+			AddOptionDescription("Teleports you a few metres forward.");
 			AddOption("Waypoint", null, TeleMethods::ToWaypoint241);
 			AddOption("Mission Objective", null, TeleMethods::ToMissionBlip241);
+			AddOptionDescription("Teleports to the current mission objective blip.");
 			AddOption("Map Blips", null, nullFunc, SUB::TELEPORTOPS_BLIPLIST);
 
 			AddBreak("---Ready To Go---");
@@ -109,7 +112,9 @@ namespace sub::TeleportLocations_catind
 
 			AddBreak("---IPLs---");
 			AddOption("Load IPL", null, LoadIpl);
+			AddOptionDescription("Enter a map data (IPL) name to load it.");
 			AddOption("Unload IPL", null, UnloadIpl);
+			AddOptionDescription("Enter a map data (IPL) name to unload it.");
 		}
 		void Sub_CustomCoords()
 		{
@@ -128,6 +133,7 @@ namespace sub::TeleportLocations_catind
 
 			AddTitle("Custom Coordinates");
 			AddOption("Update to current", update);
+			AddOptionDescription("Fills X/Y/Z with your current position.");
 			AddNumber("  X", _customTeleLoc.x, 4, x_custom, x_plus, x_minus);
 			AddNumber("  Y", _customTeleLoc.y, 4, y_custom, y_plus, y_minus);
 			AddNumber("  Z", _customTeleLoc.z, 4, z_custom, z_plus, z_minus);
@@ -344,31 +350,15 @@ namespace sub::TeleportLocations_catind
 
 					if (Menu::IsLastDrawnOptionSelected())
 					{
-						if (Menu::usingControllerInput)
-						{
-							Menu::add_IB(INPUT_SCRIPT_RLEFT, "Remove");
+						Keybinds::AddBindIB("menu_action", "Remove");
 
-							if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-							{
-								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
-								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (Menu::IsSelectionAtBottom())
-									Menu::Up();
-								return; // Yeah
-							}
-						}
-						else
+						if (Keybinds::WasPressedThisFrame("menu_action"))
 						{
-							Menu::add_IB(VirtualKey::B, "Remove");
-
-							if (IsKeyJustUp(VirtualKey::B))
-							{
-								nodeLocToLoad.parent().remove_child(nodeLocToLoad);
-								doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
-								if (Menu::IsSelectionAtBottom())
-									Menu::Up();
-								return; // Yeah
-							}
+							nodeLocToLoad.parent().remove_child(nodeLocToLoad);
+							doc.save_file((const char*)(GetPathffA(Pathff::Main, true) + xmlSavedMapLocations).c_str());
+							if (Menu::IsSelectionAtBottom())
+								Menu::Up();
+							return; // Yeah
 						}
 					}
 

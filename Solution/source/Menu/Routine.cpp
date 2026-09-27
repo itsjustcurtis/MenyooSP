@@ -13,6 +13,7 @@
 
 #include "Menu.h"
 #include "MenuConfig.h"
+#include "Keybinds.h"
 #include "../Submenus/Spooner/ImGuiSpooner.h"
 
 #include "..\Util\FileLogger.h"
@@ -43,6 +44,7 @@
 
 #include "..\Misc\FlameThrower.h"
 #include "..\Misc\FpsCounter.h"
+#include "..\Misc\FreeCam.h"
 #include "..\Misc\Gta2Cam.h"
 #include "..\Misc\JumpAroundMode.h"
 #include "..\Misc\MagnetGun.h"
@@ -102,6 +104,8 @@ bool defaultPedSet = false;
 void Menu::justopened()
 {
 	Game::Print::PrintBottomLeft(oss_ << "Menyoo PC v" << MENYOO_CURRENT_VER_ << " by ItsJustCurtis and MAFINS");
+
+	Menu::RequestMenuTextures();
 
 	SET_AUDIO_FLAG("IsDirectorModeActive", true);
 
@@ -271,6 +275,7 @@ void TickMenyooConfig()
 		}
 		g_MenyooConfigTick = GetTickCount();
 	}
+	MenuConfig::FlushPendingSave();
 	firstTick = false;
 }
 
@@ -555,10 +560,6 @@ void TickNeonFwkAnim()
 
 // Global state variables
 
-INT16 BindNoClip = VirtualKey::F3;
-
-INT16 bind_no_clip = VirtualKey::F3;
-
 RgbS g_fadedRGB(255, 0, 0), g_neonFade(0, 0, 0), g_neonSlide(0, 0, 0), g_neonHeart(0,0,0), g_neonShift(0, 0, 0);
 bool g_neonFlash = 0;
 int g_neonSpin = 0, g_neonSpinBack = 0;
@@ -678,8 +679,6 @@ bool explosiveMelee = false;
 bool superJump = false;
 bool selfRefillHealthInCover = false;
 bool playerInvincibility = false;
-bool noClip = false;
-bool noClipToggle = false; 
 bool superRun = false;
 bool bDisplayXyzhCoords = false; 
 bool ignoredByEveryone = false; 
@@ -756,14 +755,6 @@ float forgeDist = 6.0f;
 float g_forgeGunPrecision = 0.2f;
 float g_forgeGunShootForce = 300.0f;
 bool objectSpawnForgeAssistance = false;
-
-DWORD g_lastSpeedDisplayTime = 0;
-DWORD g_lastFOVDisplayTime = 0;
-float g_lastSpeedValue = 0.0f;
-float g_lastFOVValue = 0.0f;
-
-DWORD g_lastHeightLockMessageTime = 0;
-const char* g_lastHeightLockMessage = nullptr;
 
 bool g_unlockMaxIDs = false;
 UINT8 max_shapeAndSkinIDs = 46;
@@ -852,7 +843,7 @@ void SetPauseMenuTeleToWpCommand()
 		{
 			(Menu::usingControllerInput ? DxHookIMG::teleToWpBoxIconGamepad : DxHookIMG::teleToWpBoxIconKeyboard).Draw(0, Vector2(0.5f, 0.04f), Vector2(0.0943f, 0.016f), 0.0f, RGBA::AllWhite());
 
-			if (Menu::usingControllerInput ? IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_RLEFT) : IsKeyJustUp(VirtualKey::T))
+			if (Keybinds::WasPressedThisFrame("teleport_waypoint"))
 			{
 				sub::TeleportLocations_catind::TeleMethods::ToWaypoint(myPed);
 			}
@@ -1842,265 +1833,6 @@ void SetPedSeatbeltOff(Ped ped)
 	SET_PED_CONFIG_FLAG(ped, ePedConfigFlags::WillFlyThruWindscreen, true);
 }
 
-bool bitNoclipAlreadyInvisible = true;
-bool bitNoclipAlreadyCollision = true;
-bool bitNoclipShowHelp = true;
-Camera g_cam_noClip;
-bool g_freecamHeightLocked = false;  
-float g_freecamLockedHeight = 0.0f;
-float g_freecamSpeed = MenuConfig::FreeCam::defaultSpeed; // Modify the default value
-
-void SetNoclipOff1()
-{
-	GTAentity myPed = PLAYER_PED_ID();
-	GTAentity ent = IS_PED_IN_ANY_VEHICLE(myPed.Handle(), false) ? GET_VEHICLE_PED_IS_IN(myPed.Handle(), false) : myPed;
-
-	ent.RequestControl();
-	ent.SetVisible(!bitNoclipAlreadyInvisible);
-	ent.SetIsCollisionEnabled(bitNoclipAlreadyCollision);
-	ent.FreezePosition(false);
-	ENABLE_CONTROL_ACTION(2, INPUT_VEH_HORN, TRUE);
-	ENABLE_CONTROL_ACTION(2, INPUT_LOOK_BEHIND, TRUE);
-	ENABLE_CONTROL_ACTION(2, INPUT_VEH_LOOK_BEHIND, TRUE);
-	ENABLE_CONTROL_ACTION(2, INPUT_SELECT_WEAPON, TRUE);
-	bitNoclipShowHelp = true;
-}
-void SetNoclipOff2()
-{
-	auto& cam = g_cam_noClip;
-	if (cam.Exists())
-	{
-		cam.SetActive(false);
-		cam.Destroy();
-		World::SetRenderingCamera(0);
-	}
-}
-void SetNoclip()
-{
-	if (sub::Spooner::SpoonerMode::bEnabled)
-	{
-		return;
-	}
-
-	auto& cam = g_cam_noClip;
-	GTAentity myPed = PLAYER_PED_ID();
-	GTAplayer myPlayer = PLAYER_ID();
-	GTAentity ent = IS_PED_IN_ANY_VEHICLE(myPed.Handle(), false) ? GET_VEHICLE_PED_IS_IN(myPed.Handle(), false) : myPed;
-
-	if (ent.Exists())
-	{
-		if (Menu::usingControllerInput ? (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_X) && IS_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_LS)) : IsKeyJustUp(BindNoClip))
-		{
-			noClipToggle = !noClipToggle;
-			if (!noClipToggle)
-			{
-				SetNoclipOff1();
-			}
-			else
-			{
-				if (bitNoclipShowHelp)
-				{
-					bitNoclipShowHelp = false;
-					if (Menu::usingControllerInput)
-					{
-						Game::CustomHelpText::ShowTimedText(oss_ << "FreeCam:~n~~INPUT_MOVE_UD~ = " << Game::GetGXTEntry("ITEM_MOV_CAM")
-							<< "~n~~INPUT_LOOK_LR~ = " << Game::GetGXTEntry("ITEM_MOVE") << "~n~~INPUT_FRONTEND_RT~/~INPUT_FRONTEND_LT~ = " << "Ascend/Descend" << "~n~~INPUT_FRONTEND_RB~ = " << "Hasten", 6000);
-					}
-					else 
-					{
-						Game::CustomHelpText::ShowTimedText(oss_ << "FreeCam:~n~~INPUT_MOVE_UD~/~INPUT_MOVE_LR~ = " << Game::GetGXTEntry("ITEM_MOV_CAM")
-							<< "~n~~INPUT_LOOK_LR~ = " << Game::GetGXTEntry("ITEM_MOVE") << "~n~~INPUT_PARACHUTE_BRAKE_RIGHT~/~INPUT_PARACHUTE_BRAKE_LEFT~ = " << "Ascend/Descend" << "~n~~INPUT_SPRINT~ = " << "Hasten", 6000);
-					}
-					bitNoclipShowHelp = false;
-				}
-				bitNoclipAlreadyInvisible = !ent.IsVisible();
-				bitNoclipAlreadyCollision = ent.GetIsCollisionEnabled();
-			}
-		}
-
-		if (!noClipToggle)
-		{
-			SetNoclipOff2();
-			return;
-		}
-
-		DISABLE_CONTROL_ACTION(2, INPUT_VEH_HORN, TRUE);
-		DISABLE_CONTROL_ACTION(2, INPUT_LOOK_BEHIND, TRUE);
-		DISABLE_CONTROL_ACTION(2, INPUT_VEH_LOOK_BEHIND, TRUE);
-		DISABLE_CONTROL_ACTION(2, INPUT_SELECT_WEAPON, TRUE);
-		DISABLE_CONTROL_ACTION(2, INPUT_VEH_ACCELERATE, TRUE);
-		DISABLE_CONTROL_ACTION(2, INPUT_VEH_BRAKE, TRUE);
-		DISABLE_CONTROL_ACTION(2, INPUT_VEH_RADIO_WHEEL, TRUE);
-
-		const Vector3& entPos = ent.GetPosition();
-		const Vector3& camOffset = Vector3();
-
-		if (!cam.Exists())
-		{
-			ent.RequestControl();
-			cam = World::CreateCamera();
-			cam.SetPosition(GameplayCamera::GetPosition());
-			cam.SetRotation(GameplayCamera::GetRotation());
-			cam.AttachTo(ent, camOffset);
-			cam.SetFieldOfView(MenuConfig::FreeCam::defaultFov); // Use configured FOV
-			cam.SetDepthOfFieldStrength(0.0f);
-			World::SetRenderingCamera(cam);
-		}
-
-		ent.RequestControl();
-		ent.FreezePosition(true);
-		ent.SetIsCollisionEnabled(false);
-		ent.SetVisible(false);
-		myPed.SetVisible(false);
-
-		Vector3 nextRot = cam.GetRotation() - Vector3(GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_UD), 0, GET_DISABLED_CONTROL_NORMAL(0, INPUT_LOOK_LR)) * (Menu::usingControllerInput ? 2.5f : 11.0f);
-		nextRot.y = 0.0f; // No roll
-		ent.SetRotation(Vector3(0, 0, nextRot.z));
-		cam.SetRotation(nextRot);
-		if (!myPlayer.IsFreeAiming() && !myPlayer.IsTargetingAnything())
-		{
-			SET_GAMEPLAY_CAM_RELATIVE_HEADING(0.0f);
-		}
-
-		if (Menu::usingControllerInput)
-		{
-			DISABLE_CONTROL_ACTION(0, INPUT_VEH_HORN, TRUE);
-
-			if (ent == myPed)
-			{
-				if (GET_PED_STEALTH_MOVEMENT(myPed.Handle()))
-				{
-					SET_PED_STEALTH_MOVEMENT(myPed.Handle(), false, 0);
-				}
-				if (GET_PED_COMBAT_MOVEMENT(myPed.Handle()))
-				{
-					SET_PED_COMBAT_MOVEMENT(myPed.Handle(), 0);
-				}
-			}
-
-			float noclipPrecisionLevel = IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_RB) ? 1.8f : 0.8f;
-			Vector3 offset;
-			offset.x = GET_CONTROL_NORMAL(0, INPUT_MOVE_LR) * noclipPrecisionLevel;
-			offset.y = -GET_CONTROL_NORMAL(0, INPUT_MOVE_UD) * noclipPrecisionLevel;
-			offset.z = (GET_DISABLED_CONTROL_NORMAL(2, INPUT_FRONTEND_RT) - GET_DISABLED_CONTROL_NORMAL(2, INPUT_FRONTEND_LT)) * noclipPrecisionLevel;
-			if (!offset.IsZero())
-			{
-				ent.SetPosition(cam.GetOffsetInWorldCoords(offset - camOffset));
-			}
-
-		}
-		else
-		{
-			// TAB to toggle height lock
-			if (!IsKeyDown(VK_SPACE))
-			{
-				if (IsKeyJustUp(VK_TAB))
-				{
-					g_freecamHeightLocked = !g_freecamHeightLocked;
-					if (g_freecamHeightLocked)
-					{
-						g_freecamLockedHeight = ent.GetPosition().z;
-						g_lastHeightLockMessage = "Height Locked";
-					}
-					else
-					{
-						g_lastHeightLockMessage = "Height Unlocked";
-					}
-					g_lastHeightLockMessageTime = GetTickCount();
-				}
-
-				// Mouse wheel to adjust speed
-				if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
-				{
-					g_freecamSpeed = min(g_freecamSpeed + MenuConfig::FreeCam::speedAdjustStep, MenuConfig::FreeCam::maxSpeed);
-					MenuConfig::FreeCam::defaultSpeed = g_freecamSpeed;
-					MenuConfig::SaveConfig();
-					g_lastSpeedValue = g_freecamSpeed;
-					g_lastSpeedDisplayTime = GetTickCount();
-				}
-				if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))
-				{
-					g_freecamSpeed = max(g_freecamSpeed - MenuConfig::FreeCam::speedAdjustStep, MenuConfig::FreeCam::minSpeed);
-					MenuConfig::FreeCam::defaultSpeed = g_freecamSpeed;
-					MenuConfig::SaveConfig();
-					g_lastSpeedValue = g_freecamSpeed;
-					g_lastSpeedDisplayTime = GetTickCount();
-				}
-
-				if (GetTickCount() - g_lastSpeedDisplayTime < 1000)
-				{
-					Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
-					Game::Print::DrawString(oss_ << "FreeCam Speed: " << g_lastSpeedValue, 0.5f, 0.95f);
-				}
-			}
-
-			float currentSpeed = IS_DISABLED_CONTROL_PRESSED(2, INPUT_VEH_ATTACK2) ? MenuConfig::FreeCam::defaultSlowSpeed : g_freecamSpeed;
-			float noclipPrecisionLevel = IS_DISABLED_CONTROL_PRESSED(0, INPUT_SPRINT) ? currentSpeed * 2.0f : currentSpeed;
-
-			Vector3 offset;
-			offset.x = GET_CONTROL_NORMAL(0, INPUT_MOVE_LR) * noclipPrecisionLevel;
-			offset.y = -GET_CONTROL_NORMAL(0, INPUT_MOVE_UD) * noclipPrecisionLevel;
-
-			if (g_freecamHeightLocked)
-			{
-				float zOffset = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? noclipPrecisionLevel : IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -noclipPrecisionLevel : 0.0f;
-				if (zOffset != 0.0f)
-				{
-					g_freecamLockedHeight += zOffset;
-				}
-
-				Vector3 newPos = cam.GetOffsetInWorldCoords(offset - camOffset);
-				newPos.z = g_freecamLockedHeight;
-				ent.SetPosition(newPos);
-			}
-			else
-			{
-				offset.z = IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_RIGHT) ? noclipPrecisionLevel : IS_DISABLED_CONTROL_PRESSED(2, INPUT_PARACHUTE_BRAKE_LEFT) ? -noclipPrecisionLevel : 0.0f;
-				if (!offset.IsZero())
-				{
-					ent.SetPosition(cam.GetOffsetInWorldCoords(offset - camOffset));
-				}
-			}
-
-			// Space + scroll wheel to control camera FOV
-			if (IsKeyDown(VK_SPACE))
-			{
-				float currentFov = cam.GetFieldOfView();
-				if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_UP))
-				{
-					currentFov = min(currentFov + MenuConfig::FreeCam::fovAdjustStep, MenuConfig::FreeCam::maxFov);
-					cam.SetFieldOfView(currentFov);
-					MenuConfig::FreeCam::defaultFov = currentFov;
-					MenuConfig::SaveConfig();
-					g_lastFOVValue = currentFov;
-					g_lastFOVDisplayTime = GetTickCount();
-				}
-				if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_SCROLL_DOWN))
-				{
-					currentFov = max(currentFov - MenuConfig::FreeCam::fovAdjustStep, MenuConfig::FreeCam::minFov);
-					cam.SetFieldOfView(currentFov);
-					MenuConfig::FreeCam::defaultFov = currentFov;
-					MenuConfig::SaveConfig();
-					g_lastFOVValue = currentFov;
-					g_lastFOVDisplayTime = GetTickCount();
-				}
-
-				if (GetTickCount() - g_lastFOVDisplayTime < 1000)
-				{
-					Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
-					Game::Print::DrawString(oss_ << "Camera FOV: " << g_lastFOVValue, 0.5f, 0.95f);
-				}
-			}
-		}
-	}
-
-	// Height lock status display
-	if (g_lastHeightLockMessage != nullptr && GetTickCount() - g_lastHeightLockMessageTime < 1000)
-	{
-		Game::Print::SetupDraw(GTAfont::Impact, Vector2(0.4f, 0.4f), true, false, false);
-		Game::Print::drawstring(g_lastHeightLockMessage, 0.5f, 0.95f);
-	}
-}
 
 void SetLocalButtonSuperRun()
 {
@@ -2208,23 +1940,28 @@ void SetLocalSupermanManual()
 
 	if (isInParaFreeFall)
 	{
-		if (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RB) || get_key_pressed(VK_ADD))
+		Keybinds::AddBindIB("superman_ascend", "Up");
+		Keybinds::AddBindIB("superman_descend", "Down");
+		Keybinds::AddBindIB("superman_boost", "Boost");
+		Keybinds::AddBindIB("superman_freeze", "Brake");
+
+		if (Keybinds::IsHeld("superman_boost"))
 		{
 			APPLY_FORCE_TO_ENTITY(playerPed, 1, 0.0, 45.0, 0.0, 0.0, 0.0, 0.0, 1, 1, 1, 1, 0, 1);
 		}
 
 		DISABLE_CONTROL_ACTION(2, INPUT_PARACHUTE_DEPLOY, TRUE);
-		if (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RDOWN) || get_key_pressed(VK_SUBTRACT))
+		if (Keybinds::IsHeld("superman_freeze"))
 		{
 			FREEZE_ENTITY_POSITION(playerPed, true);
 		}
-		else if (IS_CONTROL_JUST_RELEASED(2, INPUT_FRONTEND_RDOWN) || IsKeyJustUp(VK_SUBTRACT))
+		else if (Keybinds::WasReleasedThisFrame("superman_freeze"))
 		{
 			FREEZE_ENTITY_POSITION(playerPed, false);
 		}
 	}
 
-	if (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RT) || IsKeyDown(VK_NUMPAD7))
+	if (Keybinds::IsHeld("superman_ascend"))
 	{
 		if (!isInParaFreeFall) 
 		{
@@ -2233,7 +1970,7 @@ void SetLocalSupermanManual()
 		APPLY_FORCE_TO_ENTITY(playerPed, 1, 0.0, 0.0, 13.0, 0.0, 0.0, 0.0, 1, 1, 1, 1, 0, 1);
 	}
 
-	if (IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LT) || IsKeyDown(VK_NUMPAD1))
+	if (Keybinds::IsHeld("superman_descend"))
 	{
 		if (!isInParaFreeFall) 
 		{
@@ -2256,29 +1993,13 @@ void SetPedSupermanAuto(Ped ped)
 
 		if (ped == PLAYER_PED_ID())
 		{
-			bool isBrakePressed, isBrakeReleased = false;
-			if (Menu::usingControllerInput)
-			{
-				DISABLE_CONTROL_ACTION(2, INPUT_PARACHUTE_DEPLOY, TRUE);
-				isBrakePressed = IS_CONTROL_PRESSED(2, INPUT_FRONTEND_RDOWN) != 0;
-				if (!isBrakePressed) 
-				{
-					isBrakeReleased = IS_CONTROL_JUST_RELEASED(2, INPUT_FRONTEND_RDOWN) != 0;
-				}
-			}
-			else
-			{
-				isBrakePressed = IsKeyDown(VK_ADD);
-				if (!isBrakePressed) 
-				{
-					isBrakeReleased = IsKeyJustUp(VK_ADD);
-				}
-			}
-			if (isBrakePressed)
+			DISABLE_CONTROL_ACTION(2, INPUT_PARACHUTE_DEPLOY, TRUE);
+			Keybinds::AddBindIB("superman_freeze", "Temporary Brake");
+			if (Keybinds::IsHeld("superman_freeze"))
 			{
 				FREEZE_ENTITY_POSITION(ped, true);
 			}
-			else if (isBrakeReleased)
+			else if (Keybinds::WasReleasedThisFrame("superman_freeze"))
 			{
 				FREEZE_ENTITY_POSITION(ped, false);
 			}
@@ -2396,7 +2117,9 @@ void SetLocalCarHydraulics()
 {
 	GTAvehicle vehicle = g_myVeh;
 
-	if ((Menu::usingControllerInput ? IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : get_key_pressed(VirtualKey::LeftShift)) && vehicle.IsOnAllWheels())
+	Keybinds::AddBindIB("vehicle_hydraulics", "Hydraulics");
+
+	if (Keybinds::IsHeld("vehicle_hydraulics") && vehicle.IsOnAllWheels())
 	{
 		Vector2 normal;
 		if (Menu::usingControllerInput)
@@ -2900,29 +2623,36 @@ void SetVehicleWeaponLines()
 
 void SetVehicleWeapons()
 {
+	const bool anyVehicleWeapon = vehicleRPG
+		|| vehicleFireworks
+		|| vehicleGuns
+		|| vehicleSnowballs
+		|| vehicleBalls
+		|| vehicleWaterHydrant
+		|| vehicleFlameLeak
+		|| vehicleLaserGreen
+		|| vehicleLaserRed
+		|| vehicleTurretsValkyrie
+		|| vehicleFlaregun
+		|| vehicleHeavySniper
+		|| vehicleTazerWeapon
+		|| vehicleMolotovWeapon
+		|| vehicleCombatPDW;
+
+	if (anyVehicleWeapon)
+	{
+		Keybinds::AddBindIB("vehicle_weapons_fire", "Fire");
+	}
+
 	StoreVehicleWeaponPos(g_myVeh);
 	if (vehicleWeaponLines)
 	{
 		SetVehicleWeaponLines();
 	}
 
-	if (Menu::usingControllerInput ? IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : IsKeyDown(VirtualKey::Add))
+	if (Keybinds::IsHeld("vehicle_weapons_fire"))
 	{
-		if (vehicleRPG
-			|| vehicleFireworks
-			|| vehicleGuns
-			|| vehicleSnowballs
-			|| vehicleBalls
-			|| vehicleWaterHydrant
-			|| vehicleFlameLeak
-			|| vehicleLaserGreen
-			|| vehicleLaserRed
-			|| vehicleTurretsValkyrie
-			|| vehicleFlaregun
-			|| vehicleHeavySniper
-			|| vehicleTazerWeapon
-			|| vehicleMolotovWeapon
-			|| vehicleCombatPDW)
+		if (anyVehicleWeapon)
 			CLEAR_AREA_OF_PROJECTILES(vehicleWeaponsOriginR.x, vehicleWeaponsOriginR.y, vehicleWeaponsOriginR.z, 8.0f, 0);
 
 		// RPG
@@ -3356,7 +3086,9 @@ float NormalizeHSV(int h, int s, int v)
 
 static void TickSubsystems()
 {
+	sub::WardrobeCamera::Tick();
 	sub::Spooner::SpoonerMode::Tick();
+	FreeCamMode::Tick();
 	sub::GhostRiderMode::Tick();
 	sub::VehicleAutoDrive::Tick();
 	sub::GravityGun_catind::Tick();
@@ -3579,11 +3311,6 @@ static void TickPlayerAbilities()
 	if (superJump)
 	{
 		SET_SUPER_JUMP_THIS_FRAME(myPlayer);
-	}
-
-	if (noClip)
-	{
-		SetNoclip();
 	}
 
 	if (superRun)
@@ -3879,9 +3606,13 @@ static void TickVehicleEffects(bool gameIsPaused)
 	// Vehicle controls (only when game is not paused)
 	if (!gameIsPaused)
 	{
-		if (raceBoost && IS_CONTROL_PRESSED(2, INPUT_VEH_HORN))
+		if (raceBoost)
 		{
-			SetSelfVehicleBoost();
+			Keybinds::AddBindIB("vehicle_boost", "Boost");
+			if (Keybinds::IsHeld("vehicle_boost"))
+			{
+				SetSelfVehicleBoost();
+			}
 		}
 
 		if (carJump != 0)
@@ -3917,10 +3648,11 @@ static void TickVehicleEffects(bool gameIsPaused)
 
 void Menu::loops()
 {
+	TickDeferredMenuInit();
 	bool gameIsPaused = IS_PAUSE_MENU_ACTIVE() != 0;
 
 	// Apply default outfit on first load
-	if (!GET_IS_LOADING_SCREEN_ACTIVE() && !defaultPedSet)
+	if (!defaultPedSet && IsGameReadyForDeferredInit())
 	{
 		sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", true, false, false, false, false, false);
 		sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), "menyooStuff/defaultPed.xml", false, true, true, true, true, true);

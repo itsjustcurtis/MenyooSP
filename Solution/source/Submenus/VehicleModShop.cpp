@@ -650,8 +650,10 @@ namespace sub
 
 		AddBreak("---Collateral---");
 		AddNumber("Paint Fade", paintFade, 2, null, paintFade_plus, paintFade_minus);
+		AddOptionDescription("How worn and faded the paint looks.");
 		AddNumber("Dirt Level", dirtLevel, 2, null, dirtLevel_plus, dirtLevel_minus);
 		AddNumber("CarVariation Colours", carvarcol, 0, carvarcol_input, carvarcol_plus, carvarcol_minus);
+		AddOptionDescription("Colour combinations built into this model. Clears custom colours.");
 
 
 		if (set_mspaints_index_3) {
@@ -824,11 +826,15 @@ namespace sub
 		AddOption("Classic", null, nullFunc, SUB::MSPAINTS2_NORMAL, true, true); // CMOD_COL1_1
 		AddOption("Matte", null, nullFunc, SUB::MSPAINTS2_MATTE, true, true); // CMOD_COL1_5
 		AddOption("Metallic", null, nullFunc, SUB::MSPAINTS2_METALLIC, true, true); // CMOD_COL1_3
+		AddOptionDescription("Standard metallic car paints.");
 		AddOption("Metal", null, nullFunc, SUB::MSPAINTS2_METAL, true, true); // CMOD_COL1_4
+		AddOptionDescription("Brushed and bare metal finishes, like steel, aluminium and gold.");
 		if(g_isEnhanced||IS_DLC_PRESENT(GET_HASH_KEY("spchameleon")))
 			AddOption("Chameleon", null, nullFunc, SUB::MSPAINTS2_CHAMELEON, true, true); // CMOD_COL1_4
 		AddOption("Utility", null, nullFunc, SUB::MSPAINTS2_UTIL);
+		AddOptionDescription("Unpainted utility-vehicle finishes.");
 		AddOption("Worn", null, nullFunc, SUB::MSPAINTS2_WORN);
+		AddOptionDescription("Weathered, aged paint finishes.");
 
 		if (s_selectedPaintPart < 10)
 		{
@@ -836,6 +842,7 @@ namespace sub
 		}
 
 		AddOption("Random Index", MSPaints_RIndex);
+		AddOptionDescription("Applies a random paint from this category.");
 
 		std::string painttypeswitch;
 		if (s_selectedPaintPart == 1 || s_selectedPaintPart == 2)
@@ -846,6 +853,7 @@ namespace sub
 				AddPresetColourOptionsPreview(s_selectedPaintPart == 1 ? vehicle.GetCustomPrimaryColour() : s_selectedPaintPart == 2 ? vehicle.GetCustomSecondaryColour() : RgbS(0, 0, 0));
 			s_selectedPaintPart == 1 ? painttypeswitch = "Secondary" : painttypeswitch = "Primary";
 			AddOption("Copy to " + painttypeswitch, copypaint);
+			AddOptionDescription("Copies this paint to the other (primary/secondary) layer.");
 		}
 
 		if (MSPaints_RIndex) {
@@ -1320,6 +1328,7 @@ namespace sub
 		AddNumber("Blue", ms_paints_rgb_b, 0, ms_paints_rgb_b_custom, ms_paints_rgb_b_plus, ms_paints_rgb_b_minus);
 		if (ms_paints_rgb_a != -1) AddNumber("Opacity", ms_paints_rgb_a, 0, ms_paints_rgb_a_custom, ms_paints_rgb_a_plus, ms_paints_rgb_a_minus);
 		AddTexter("HUD Colour", settingsHUDColor, HudColour::vHudColours, settings_hud_c_custom, settings_hud_c_plus, settings_hud_c_minus);
+		AddOptionDescription("Picks a colour from the game's HUD colour presets.");
 		AddOption("~b~Input~s~ Hex Code", ms_paints_hexinput);
 
 		AddBreak("---Presets---");
@@ -1864,6 +1873,7 @@ namespace sub
 		}
 		AddOption(Game::GetGXTEntry("CMOD_COL0_3", "Emblem"), null, nullFunc, SUB::MS_EMBLEM, true, false); // Crew Emblems CMOD_COL0_3
 		AddOption("Remove Vehicle Components and Extras", null, nullFunc, SUB::MSREMOVABLECOMPONENTS, true);
+		AddOptionDescription("Break or remove doors, wheels and windows, and toggle extras.");
 		//AddOption(Game::GetGXTEntry("CMOD_MOD_GLD2", "Extras"), SubMS_Extra, nullFunc, -1, true, false); // Extras CMOD_MOD_GLD2  //Removed to make way for Remove Vehicle Components
 		if (GET_VEHICLE_LIVERY_COUNT(s_selectedVehicleHandle) > 0)
 			AddNumber(Game::GetGXTEntry("CMOD_COL0_4", "Livery"), ms_livery, 0, null, ms_livery_plus, ms_livery_minus);
@@ -1872,6 +1882,7 @@ namespace sub
 		AddLocal(Game::GetGXTEntry("CMOD_MOD_TUR", "Turbo"), IS_TOGGLE_MOD_ON(s_selectedVehicleHandle, VehicleMod::Turbo), ms_turbo_toggle, ms_turbo_toggle); // Turbo
 		AddLocal(Game::GetGXTEntry("CMOD_LGT_1", "Xenon Lights"), IS_TOGGLE_MOD_ON(s_selectedVehicleHandle, VehicleMod::XenonHeadlights), ms_lights_toggle, ms_lights_toggle); // Xenon lights
 		AddLocal("Lower Suspension", lowersuspension, MSLowerSuspension_, MSLowerSuspension_); // Tuners Lower Suspension
+		AddOptionDescription("Lowers the ride height (Tuners-style).");
 
 		if (GTAmemory::GetGameVersion() >= eGameVersion::VER_1_0_1604_0_STEAM && vehicle.IsToggleModOn(VehicleMod::XenonHeadlights))
 		{ // Xenon Headlight Colours
@@ -1917,18 +1928,24 @@ namespace sub
 		}
 
 		AddNumber(Game::GetGXTEntry("CMOD_MOD_LGT_H", "Headlights") + " Intensity", headLightsMultVal, 2, ms_light_int_1, ms_light_int_plus, ms_light_int_minus);
+		AddOptionDescription("Headlight brightness multiplier.");
 		AddTexter(Game::GetGXTEntry("CMOD_MOD_PLA", "Plate") + " " + Game::GetGXTEntry("FMMC_MTYPE", "Type"), veh_plate_current, ms_vPlateTypeNames, null, veh_plate_plus, veh_plate_minus);
 		AddTexter(Game::GetGXTEntry("CMOD_MOD_18_D", "Plate Text"), 0, std::vector<std::string>{ms_plateText}, veh_plate_text_set);
 		AddOption(Game::GetGXTEntry("CMM_MOD_G3", "Engine") + " " + Game::GetGXTEntry("VEUI_AUD_TIT", "Sound"), null, nullFunc, SUB::MSENGINESOUND);
 		AddNumber("Horse Power Multiplier", rpmMultVal, 2, rpm_input, rpm_plus, rpm_minus);
+		AddOptionDescription("Multiplies engine power.");
 		AddNumber("Torque Multiplier", torqueMultVal, 2, torque_input, torque_plus, torque_minus);
+		AddOptionDescription("Multiplies engine torque (acceleration pull).");
 		AddNumber(Game::GetGXTEntry("FMMC_VEHST_0", "Top Speed") + " (Kmph)", maxSpeedMultVal * 3.6f, 0, maxSpeed_input, maxSpeed_plus, maxSpeed_minus);
+		AddOptionDescription("Maximum speed limit for this vehicle.");
 		AddOption(Game::GetGXTEntry("CMOD_MOD_LGT", "Lights"), null, nullFunc, SUB::MSLIGHTS);
 		bool bEngineOnTogglePressed = false; AddTickol(Game::GetGXTEntry("CMM_MOD_G3", "Engine"), vehicle.GetEngineRunning(), bEngineOnTogglePressed, bEngineOnTogglePressed, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bEngineOnTogglePressed) vehicle.SetEngineRunning(!vehicle.GetEngineRunning());
 
 		if (Static_12_veh_model.IsPlane()) {
 			AddOption("Plane Aileron On", aileron_on);
+			AddOptionDescription("Enables the plane's aileron flaps.");
 			AddOption("Plane Aileron Off", aileron_off);
+			AddOptionDescription("Disables the plane's aileron flaps.");
 		}
 
 		if (vehicle.GetHasSiren())
@@ -1939,7 +1956,9 @@ namespace sub
 		}
 
 		AddOption("Random Upgrades", veh_static12_autoUpgrade);
+		AddOptionDescription("Applies random mods to every slot and makes the tyres bulletproof.");
 		AddOption("Return to Stock", veh_static12_stockParts);
+		AddOptionDescription("Removes all mods and restores normal tyres.");
 
 		if (GET_VEHICLE_MOD_KIT != 0)
 		{
@@ -2760,8 +2779,10 @@ namespace sub
 		}
 
 		AddLocal("CMOD_TYR_1", ms_custom_tyres, MSWheelsCustomTyres_, MSWheelsCustomTyres_, true); // Custom Tyres
+		AddOptionDescription("Uses the custom tyre style for the current wheels.");
 		AddLocal("CMOD_TYR_2", GET_VEHICLE_TYRES_CAN_BURST(s_selectedVehicleHandle) == FALSE, MSWheelsBPTyresOn_, MSWheelsBPTyresOn_, true); // Bulletproof Tyres
 		AddLocal("Drift Tyres", GET_DRIFT_TYRES_SET(s_selectedVehicleHandle), MSWheelsDriftTyresOn_, MSWheelsDriftTyresOn_, true); // Drift Tyres
+		AddOptionDescription("Low-grip tyres for drifting.");
 
 		AddOption(Game::GetGXTEntry("CMOD_MOD_TYR3", "Tire Smoke Colour"), set_msrgb_index_4, nullFunc, SUB::MSPAINTS_RGB);
 		if (Menu::IsLastDrawnOptionSelected())
@@ -3195,11 +3216,11 @@ namespace sub
 			ReapplyCachedParts(vehicle, cache);
 			const bool hasDoors = !vehicle.Doors_get().empty();
 
-			if (hasDoors && MenuCategory::AddCategory("� ~b~Doors~s~"))
+			if (hasDoors && MenuCategory::AddCategory("— ~b~Doors~s~"))
 				AddDoorOptions(vehicle);
-			if (HasExtras(vehicle) && MenuCategory::AddCategory("� ~b~Extras~s~"))
+			if (HasExtras(vehicle) && MenuCategory::AddCategory("— ~b~Extras~s~"))
 				AddExtraOptions(vehicle);
-			if (vehicle.Model().IsHeli() && MenuCategory::AddCategory("� ~b~Helicopter Parts~s~"))
+			if (vehicle.Model().IsHeli() && MenuCategory::AddCategory("— ~b~Helicopter Parts~s~"))
 			{
 				bool pressed = false;
 				AddTickol("Break Rudder", false, pressed, pressed, TICKOL::CROSS);
@@ -3209,7 +3230,7 @@ namespace sub
 					SET_VEHICLE_RUDDER_BROKEN(vehicle.Handle(), true);
 				}
 			}
-			if (MenuCategory::AddCategory("� ~b~Tyres~s~"))
+			if (MenuCategory::AddCategory("— ~b~Tyres~s~"))
 				AddTyreOptions(vehicle);
 		}
 	}
@@ -3274,6 +3295,7 @@ namespace sub
 
 			bool msWindows_mode_plus = false, msWindows_mode_minus = false;
 			AddTexter("Action", msWindows_mode, msWindows_mode_names, null, msWindows_mode_plus, msWindows_mode_minus);
+			AddOptionDescription("What pressing a window does: open, close, break, fix or remove.");
 			if (msWindows_mode_plus) { if (msWindows_mode < msWindows_mode_names.size() - 1) msWindows_mode++; }
 			if (msWindows_mode_minus) { if (msWindows_mode > 0) msWindows_mode--; }
 
@@ -3403,6 +3425,7 @@ namespace sub
 		std::vector<std::string> vActionNames{ "Open/Close", "", "Close", "", "Remove", "", "Fix", "" };
 		bool bAction_plus = false, bAction_minus = false;
 		AddTexter("Action", action, vActionNames, null, bAction_plus, bAction_minus);
+		AddOptionDescription("What pressing a door does: open/close, remove or fix.");
 		if (bAction_plus) { if (action < vActionNames.size() - 1) action++; while (!vActionNames[action].length()) { action++; if (action >= vActionNames.size()) { action = 0; } } }
 		if (bAction_minus) { if (action > 0) action--; while (!vActionNames[action].length()) { action--; if (action < 0) { action = (UINT8)(vActionNames.size() - 1); } } }
 
@@ -3551,9 +3574,12 @@ namespace sub
 
 
 		AddToggle("Neon RGB", loop_neon_rgb);
+		AddOptionDescription("Cycles the neon colour.");
 
 		AddTexter("Neon Fade", loop_neon_fade, NEON_FADE, null, neon_fade_plus, neon_fade_minus);
+		AddOptionDescription("Fading animation pattern for neons.");
 		AddTexter("Neon Flash", loop_neon_flash, NEON_FLASH, null, neon_flash_plus, neon_flash_minus);
+		AddOptionDescription("Flashing animation pattern for neons.");
 
 
 		if (neon_fade_plus)
@@ -3587,7 +3613,10 @@ namespace sub
 
 
 		if (loop_neon_flash > 0 || loop_neon_fade > 0)
+		{
 			AddNumber("Animation Speed (ms)", loop_neon_delay, 0, neon_delay_input, neon_delay_plus, neon_delay_minus);
+			AddOptionDescription("Time per step of the neon animation. Lower is faster.");
+		}
 
 		if (neon_delay_plus && loop_neon_delay < 10000) loop_neon_delay += 50;
 		if (neon_delay_minus && loop_neon_delay > 50) loop_neon_delay -= 50;

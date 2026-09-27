@@ -171,6 +171,7 @@ namespace sub
 		{
 			AddTitle("Ghost Rider Mode");
 			AddLocal("Toggle", g_ghostRiderMode.Enabled(), ToggleOnOff, ToggleOnOff);
+			AddOptionDescription("Flaming skull and fire effects on you and your ride.");
 			AddOption("Apply Outfit (With Flames)", null, ApplyGhostRiderOutfit);
 			AddOption("Spawn Ride (With Flames)", null, SpawnGhostRiderRide);
 		}

@@ -82,4 +82,9 @@ namespace sub
 
 		void GameCamOptionsMenu();
 	}
+
+	namespace FreeCamSettings
+	{
+		void FreeCamSettingsMenu();
+	}
 }

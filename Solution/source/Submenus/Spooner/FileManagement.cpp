@@ -1424,7 +1424,7 @@ namespace sub::Spooner
 		{
 			addlog(ige::LogType::LOG_INFO,  "Saving Spooner database to xml file " + filePath);
 
-			auto& spoocam = SpoonerMode::spoonerModeCamera;
+			auto& spoocam = SpoonerCamera::camera;
 			GTAentity myPed = PLAYER_PED_ID();
 			pugi::xml_node nodeNote;
 			pugi::xml_node nodeAudioFile;

@@ -9,6 +9,8 @@
 */
 #include "PtfxSubs.h"
 
+#include "..\Menu\Keybinds.h"
+
 namespace sub
 {
 	namespace PtfxSubs
@@ -3368,6 +3370,7 @@ namespace sub
             std::string pageLabel = "Page " + std::to_string(ptfxPage + 1) + " / " + std::to_string(totalPages);
             AddTitle("FX - " + pageLabel);
             AddNumber("Items Per Page", ITEMS_PER_PAGE, 0, null, itemCountPlus, itemCountMinus);
+            AddOptionDescription("How many effects are listed per page.");
             AddOption("Favourites", detectKeypress, nullFunc, SUB::PTFX_FAVORITES);
             if (detectKeypress)
             {
@@ -3378,11 +3381,13 @@ namespace sub
             {
             case SUB::PLAYEROPS: case SUB::SPOONER_SELECTEDENTITYOPS:
                 AddOption("Loop On Entity", null, nullFunc, SUB::PTFXSUB);
+                AddOptionDescription("Effects that play continuously on the entity.");
                 break;
             case SUB::PTFXSUB:
             {
                 bool bPressedClear = false;
                 AddOption("Clear On All Entities", bPressedClear); 
+                AddOptionDescription("Stops all looping effects.");
                 if (bPressedClear)
                 {
                     fxLoops.clear();
@@ -3418,16 +3423,8 @@ namespace sub
                     {
                         favouritesLoaded = false;
                     }
-                    if (Menu::usingControllerInput)
-                    {
-                        Menu::add_IB(INPUT_SCRIPT_RLEFT, IsAlreadyFavorite(current) ? "Remove From Favourites" : "Add To Favourites");
-                        bShortcutToggleFavesPressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-                    }
-                    else
-                    {
-                        Menu::add_IB(VirtualKey::B, IsAlreadyFavorite(current) ? "Remove From Favourites" : "Add To Favourites");
-                        bShortcutToggleFavesPressed = IsKeyJustUp(VirtualKey::B);
-                    }
+                    Keybinds::AddBindIB("menu_action", IsAlreadyFavorite(current), "Remove From Favourites", "Add To Favourites");
+                        bShortcutToggleFavesPressed = Keybinds::WasPressedThisFrame("menu_action");
 
                     if (bShortcutToggleFavesPressed)
                     {

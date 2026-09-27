@@ -8,6 +8,7 @@
 * (at your option) any later version.
 */
 #include "BreatheStuff.h"
+#include "..\Menu\Keybinds.h"
 
 namespace sub
 {
@@ -27,7 +28,7 @@ namespace sub
 		{
 			PTFX::LoopedPTFX& ptfx = g_breatheStuffPTFX;
 
-			if (Menu::usingControllerInput ? !IS_CONTROL_PRESSED(2, INPUT_FRONTEND_LS) : !IsKeyDown(VirtualKey::J))
+			if (!Keybinds::IsHeld("breathe_ptfx"))
 			{
 				if (ptfx.Exists())
 				{
@@ -310,7 +311,7 @@ namespace sub
 			{
 				if (playerBreatheStuff == BreathePtfxType::None && type != BreathePtfxType::None)
 				{
-					Game::Print::PrintBottomLeft(oss_ << "Hold " << "~b~" << (Menu::usingControllerInput ? "LS" : "J") << "~s~" << " to breathe out stuff!");
+					Game::Print::PrintBottomLeft(oss_ << "Hold " << "~b~" << Keybinds::GetGlyph("breathe_ptfx") << "~s~" << " to breathe out stuff!");
 				}
 
 				if (g_breatheStuffPTFX.Exists())

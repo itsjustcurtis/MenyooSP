@@ -16,25 +16,13 @@
 
 //#include "..\..\Natives\natives2.h"
 
-#include <string>
-#include <vector>
-#include <Windows.h>
-
 namespace sub::Spooner
 {
-	//enum class eSpoonerModeMode : UINT8 { GroundEase, Precision };
-	const std::vector<std::string> spoonerModeModeNames{ "Surface Ease", "Precision" };
-
 	namespace Settings
 	{
 //#define GTA_MAX_ENTITIES 2048
 
-		float cameraMovementSensitivityKeyboard = 0.33f;
-		float cameraRotationSensitivityMouse = 6.5f;
-		float cameraMovementSensitivityGamepad = 0.9f;
-		float cameraRotationSensitivityGamepad = 1.4f;
-
-		eSpoonerModeMode spoonerModeMode = eSpoonerModeMode::GroundEase;
+		bool bInvertScrollSensitivity = false; // false = left multiplies Scroll Sensitivity, true = right multiplies
 
 		bool bShowModelPreviews = true;
 		bool bDisplaySpoonerInfo = true;

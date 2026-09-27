@@ -30,9 +30,11 @@ These can be used to implement custom category navigation if desired. Take a loo
 #include "submenu_enum.h"
 #include "MenuCategory.h"
 #include "Menu.h"
+#include "Keybinds.h"
 #include "..\Util\keyboard.h"
 #include "..\Natives\natives2.h"
 
+#include <algorithm>
 #include <vector>
 #include <map>
 
@@ -46,6 +48,8 @@ static int pendingCategoryIndex = -1;
 // Frame tracking for auto-clearing per-frame state
 static DWORD s_lastFrameTick = 0;
 static bool categoryNavigationHintAdded = false;
+// Category count from the previous frame, so the first header of a frame knows whether navigation is available
+static size_t s_lastCategoryCount = 0;
 
 // Persistent expanded state, keyed on "activeSubmenu:label"
 static std::map<std::string, bool> s_expandedState;
@@ -60,6 +64,8 @@ namespace MenuCategory
 {
 	void ResetCategoryState()
 	{
+		if (!categoryHeaderPositions.empty())
+			s_lastCategoryCount = categoryHeaderPositions.size();
 		categoryHeaderPositions.clear();
 		categoryHeaderLabels.clear();
 
@@ -75,6 +81,8 @@ namespace MenuCategory
 		DWORD now = GetTickCount();
 		if (now != s_lastFrameTick)
 		{
+			if (!categoryHeaderPositions.empty())
+				s_lastCategoryCount = categoryHeaderPositions.size();
 			categoryHeaderPositions.clear();
 			categoryHeaderLabels.clear();
 			categoryNavigationHintAdded = false;
@@ -99,27 +107,21 @@ namespace MenuCategory
 		categoryHeaderPositions.push_back(Menu::currentOptionCount);
 		categoryHeaderLabels.push_back(label);
 
+		if ((std::max)(categoryHeaderPositions.size(), s_lastCategoryCount) > 1)
+			AddOptionDescription("Press to expand or collapse. Press the shown key to jump to another category.");
+		else
+			AddOptionDescription("Press to expand or collapse.");
+
 		if (categoryHeaderPositions.size() > 1)
 		{
 			if (!categoryNavigationHintAdded)
 			{
-				if (Menu::usingControllerInput)
-					Menu::add_IB(INPUT_SPECIAL_ABILITY, "Navigate categories"); // XBOX "l3" (left stick click)
-				else
-					Menu::add_IB(VirtualKey::G, "Navigate categories");
+				Keybinds::AddBindIB("category_jump", "Navigate categories");
 				categoryNavigationHintAdded = true;
 			}
 
-			if (Menu::usingControllerInput)
-			{
-				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SPECIAL_ABILITY)) // XBOX "l3" (left stick click)
-					Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
-			}
-			else
-			{
-				if (IsKeyJustUp(VirtualKey::G))
-					Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
-			}
+		if (Keybinds::WasPressedThisFrame("category_jump"))
+			Menu::pendingSubmenu = SUB::CATEGORYNAVIGATOR;
 		}
 
 		return expanded;
