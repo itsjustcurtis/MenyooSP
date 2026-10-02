@@ -7,37 +7,76 @@
 #include "Scripting/GTAentity.h"
 #include "Submenus/Spooner/Submenus.h"
 #include <algorithm>
+#include <cstdlib>
 
 namespace sub::Spooner::Interactables
 {
+	static const Hash CashStack = GET_HASH_KEY("h4_prop_h4_cash_stack_01a");
+	static const Hash WeedStack = GET_HASH_KEY("h4_prop_h4_weed_stack_01a");
+	static const Hash GoldStack = GET_HASH_KEY("h4_prop_h4_gold_stack_01a");
+	static const Hash CokeStack = GET_HASH_KEY("h4_prop_h4_coke_stack_01a");
+	static const Hash BagFallback = GET_HASH_KEY("h4_p_h4_m_bag_var22_arm_s");
+
+	static const Hash ContainerClosed = GET_HASH_KEY("m23_2_prop_m32_container_01a");
+	static const Hash ContainerOpened = GET_HASH_KEY("m23_2_prop_m32_container_01b");
+
+	static const Hash Container_MW_Closed = GET_HASH_KEY("m23_1_prop_m31_container_01a");
+	static const Hash Container_MW_Opened = GET_HASH_KEY("m23_1_prop_m31_container_01b");
+
+	static const Hash BagPro2 = GET_HASH_KEY("p_ld_heist_bag_s_pro2_s");
+	static const Hash BagVar01 = GET_HASH_KEY("ch_p_m_bag_var01_arm_s");
+	static const Hash BagVar02 = GET_HASH_KEY("ch_p_m_bag_var02_arm_s");
+	static const Hash BagVar04 = GET_HASH_KEY("ch_p_m_bag_var04_arm_s");
+	static const Hash BagVar05 = GET_HASH_KEY("ch_p_m_bag_var05_arm_s");
+	static const Hash BagVar06 = GET_HASH_KEY("ch_p_m_bag_var06_arm_s");
+	static const Hash BagVar07 = GET_HASH_KEY("ch_p_m_bag_var07_arm_s");
+	static const Hash BagVar08 = GET_HASH_KEY("ch_p_m_bag_var08_arm_s");
+	static const Hash BagVar09 = GET_HASH_KEY("ch_p_m_bag_var09_arm_s");
+	static const Hash BagVar10 = GET_HASH_KEY("ch_p_m_bag_var10_arm_s");
+	static const Hash BagVar22 = GET_HASH_KEY("xm3_p_xm3_m_bag_var22_arm_s");
+	static const Hash BagVar22_Green = GET_HASH_KEY("m23_2_p_m32_m_bag_var22_arm_s_g");
+
+	static const Hash TrContainer01a = GET_HASH_KEY("tr_prop_tr_container_01a");
+	static const Hash TrContainer01b = GET_HASH_KEY("tr_prop_tr_container_01b");
+	static const Hash TrContainer01c = GET_HASH_KEY("tr_prop_tr_container_01c");
+	static const Hash TrContainer01d = GET_HASH_KEY("tr_prop_tr_container_01d");
+	static const Hash TrContainer01e = GET_HASH_KEY("tr_prop_tr_container_01e");
+	static const Hash TrContainer01f = GET_HASH_KEY("tr_prop_tr_container_01f");
+	static const Hash TrContainer01g = GET_HASH_KEY("tr_prop_tr_container_01g");
+	static const Hash TrContainer01h = GET_HASH_KEY("tr_prop_tr_container_01h");
+	static const Hash TrContainer01i = GET_HASH_KEY("tr_prop_tr_container_01i");
+	static const Hash TrGrinder01a = GET_HASH_KEY("tr_prop_tr_grinder_01a");
+	static const Hash TrLock01a = GET_HASH_KEY("tr_prop_tr_lock_01a");
+	static const Hash TrContCollision = GET_HASH_KEY("tr_prop_tr_cont_coll_01a");
+
 	static const std::vector<KnownBagVariant> vKnownBagVariants =
 	{
-		{ 5, 40, -1, GET_HASH_KEY("p_ld_heist_bag_s_pro2_s") },
-		{ 5, 41, -1, GET_HASH_KEY("p_ld_heist_bag_s_pro2_s") },
+		{ 5, 40, -1, BagPro2 },
+		{ 5, 41, -1, BagPro2 },
 
-		{ 5, 81, 0,  GET_HASH_KEY("ch_p_m_bag_var02_arm_s") },
-		{ 5, 81, 2,  GET_HASH_KEY("xm3_p_xm3_m_bag_var22_arm_s") },
-		{ 5, 81, 4,  GET_HASH_KEY("m23_2_p_m23_m_bag_var22_arm_s_g") },
-		{ 5, 81, 8,  GET_HASH_KEY("ch_p_m_bag_var04_arm_s") },
-		{ 5, 81, 9,  GET_HASH_KEY("ch_p_m_bag_var01_arm_s") },
-		{ 5, 81, 10, GET_HASH_KEY("ch_p_m_bag_var08_arm_s") },
-		{ 5, 81, 11, GET_HASH_KEY("ch_p_m_bag_var09_arm_s") },
-		{ 5, 81, 12, GET_HASH_KEY("ch_p_m_bag_var06_arm_s") },
-		{ 5, 81, 13, GET_HASH_KEY("ch_p_m_bag_var05_arm_s") },
-		{ 5, 81, 14, GET_HASH_KEY("ch_p_m_bag_var10_arm_s") },
-		{ 5, 81, 15, GET_HASH_KEY("ch_p_m_bag_var07_arm_s") },
+		{ 5, 81, 0,  BagVar02 },
+		{ 5, 81, 2,  BagVar22 },
+		{ 5, 81, 4,  BagVar22_Green },
+		{ 5, 81, 8,  BagVar04 },
+		{ 5, 81, 9,  BagVar01 },
+		{ 5, 81, 10, BagVar08 },
+		{ 5, 81, 11, BagVar09 },
+		{ 5, 81, 12, BagVar06 },
+		{ 5, 81, 13, BagVar05 },
+		{ 5, 81, 14, BagVar10 },
+		{ 5, 81, 15, BagVar07 },
 
-		{ 5, 82, 0,  GET_HASH_KEY("ch_p_m_bag_var02_arm_s") },
-		{ 5, 82, 2,  GET_HASH_KEY("xm3_p_xm3_m_bag_var22_arm_s") },
-		{ 5, 82, 4,  GET_HASH_KEY("m23_2_p_m23_m_bag_var22_arm_s_g") },
-		{ 5, 82, 8,  GET_HASH_KEY("ch_p_m_bag_var04_arm_s") },
-		{ 5, 82, 9,  GET_HASH_KEY("ch_p_m_bag_var01_arm_s") },
-		{ 5, 82, 10, GET_HASH_KEY("ch_p_m_bag_var08_arm_s") },
-		{ 5, 82, 11, GET_HASH_KEY("ch_p_m_bag_var09_arm_s") },
-		{ 5, 82, 12, GET_HASH_KEY("ch_p_m_bag_var06_arm_s") },
-		{ 5, 82, 13, GET_HASH_KEY("ch_p_m_bag_var05_arm_s") },
-		{ 5, 82, 14, GET_HASH_KEY("ch_p_m_bag_var10_arm_s") },
-		{ 5, 82, 15, GET_HASH_KEY("ch_p_m_bag_var07_arm_s") },
+		{ 5, 82, 0,  BagVar02 },
+		{ 5, 82, 2,  BagVar22 },
+		{ 5, 82, 4,  BagVar22_Green },
+		{ 5, 82, 8,  BagVar04 },
+		{ 5, 82, 9,  BagVar01 },
+		{ 5, 82, 10, BagVar08 },
+		{ 5, 82, 11, BagVar09 },
+		{ 5, 82, 12, BagVar06 },
+		{ 5, 82, 13, BagVar05 },
+		{ 5, 82, 14, BagVar10 },
+		{ 5, 82, 15, BagVar07 },
 	};
 
 	struct WornBagInfo { bool Found = false; int Slot = -1; int DrawableId = -1; int TextureId = -1; };
@@ -88,13 +127,158 @@ namespace sub::Spooner::Interactables
 			+ Vector3(0.0f, 0.0f, inst.Def->PlayerStandOffset.z);
 	}
 
+	static void SpawnContainerPersistentProps(InteractableInstance& inst)
+	{
+		inst.ExtraEnts.resize(inst.Def->ExtraProps.size());
+
+		for (size_t i = 0; i < inst.Def->ExtraProps.size(); i++)
+		{
+			const auto& extraDef = inst.Def->ExtraProps[i];
+			if (!extraDef.SpawnAtPlacement)
+				continue;
+
+			SpoonerEntity extraEnt = EntityManagement::AddProp(extraDef.PropModel, extraDef.Label);
+			if (extraEnt.handle.Exists())
+			{
+				extraEnt.handle.SetIsCollisionEnabled(false);
+				if (extraDef.StartInvisible)
+					extraEnt.handle.SetVisible(false);
+
+				EntityManagement::AttachEntity(extraEnt, inst.Ent.handle, 0, extraDef.AttachOffset, extraDef.AttachRotation);
+				EntityManagement::RemoveEntityFromDb(extraEnt);
+			}
+			inst.ExtraEnts[i] = extraEnt;
+		}
+	}
+
 	std::vector<InteractableDefinition> vInteractables =
 	{
 		{
 			"Grab Cash",
-			GET_HASH_KEY("h4_prop_h4_cash_stack_01a"),
+			CashStack,
+			{},
 			{
-				{ "Duffel Bag", GET_HASH_KEY("h4_p_h4_m_bag_var22_arm_s"), true }
+				{ "Duffel Bag", BagFallback, true }
+			},
+			"anim@scripted@player@mission@tun_table_grab@cash@",
+			{
+				{
+					{
+						{ AnimTarget::ExtraProp, "enter_bag" },
+						{ AnimTarget::Player,    "enter" }
+					},
+					6000, 1.0f, "enter_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+				},
+				{
+					{
+						{ AnimTarget::PrimaryProp, "grab_cash" },
+						{ AnimTarget::ExtraProp,   "grab_bag" },
+						{ AnimTarget::Player,      "grab" }
+					},
+					30000, 1.0f, "grab_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+				},
+				{
+					{
+						{ AnimTarget::ExtraProp, "exit_bag" },
+						{ AnimTarget::Player,    "exit" }
+					},
+					6000, 1.0f, "exit_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+				}
+			},
+			BagOpenState::NoChange,
+			true,{},
+			Vector3(0.0f, -0.85f, 0.10f), 0.0f,
+			0.50f
+		},
+				{
+			"Grab Weed",
+			WeedStack,
+			{},
+			{
+				{ "Duffel Bag", BagFallback, true }
+			},
+			"anim@scripted@player@mission@tun_table_grab@cash@",
+			{
+				{
+					{
+						{ AnimTarget::ExtraProp, "enter_bag" },
+						{ AnimTarget::Player,    "enter" }
+					},
+					6000, 1.0f, "enter_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+				},
+				{
+					{
+						{ AnimTarget::PrimaryProp, "grab_cash" },
+						{ AnimTarget::ExtraProp,   "grab_bag" },
+						{ AnimTarget::Player,      "grab" }
+					},
+					30000, 1.0f, "grab_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+				},
+				{
+					{
+						{ AnimTarget::ExtraProp, "exit_bag" },
+						{ AnimTarget::Player,    "exit" }
+					},
+					6000, 1.0f, "exit_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+				}
+			},
+			BagOpenState::NoChange,
+			true,{},
+			Vector3(0.0f, -0.85f, 0.10f), 0.0f,
+			0.50f
+		},
+						{
+			"Grab Gold",
+			GoldStack,
+			{},
+			{
+				{ "Duffel Bag", BagFallback, true }
+			},
+			"anim@scripted@player@mission@tun_table_grab@gold@",
+			{
+				{
+					{
+						{ AnimTarget::ExtraProp, "enter_bag" },
+						{ AnimTarget::Player,    "enter" }
+					},
+					6000, 1.0f, "enter_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+				},
+				{
+					{
+						{ AnimTarget::PrimaryProp, "grab_gold" },
+						{ AnimTarget::ExtraProp,   "grab_bag" },
+						{ AnimTarget::Player,      "grab" }
+					},
+					30000, 1.0f, "grab_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+				},
+				{
+					{
+						{ AnimTarget::ExtraProp, "exit_bag" },
+						{ AnimTarget::Player,    "exit" }
+					},
+					6000, 1.0f, "exit_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+				}
+			},
+			BagOpenState::NoChange,
+			true,{},
+			Vector3(0.0f, -0.85f, 0.10f), 0.0f,
+			0.50f
+		},
+		{
+			"Grab Cocaine",
+			CokeStack,
+			{},
+			{
+				{ "Duffel Bag", BagFallback, true }
 			},
 			"anim@scripted@player@mission@tun_table_grab@cash@",
 			{
@@ -131,14 +315,18 @@ namespace sub::Spooner::Interactables
 		},
 		{
 			"Open Container",
-			GET_HASH_KEY("m23_2_prop_m32_container_01a"),
+			ContainerClosed,
+			{},
 			{
 				{
 					"Opened Container",
-					GET_HASH_KEY("m23_2_prop_m32_container_01b"),
+					ContainerOpened,
 					false,
 					ExtraPropAttachTarget::PrimaryProp,
-					true
+					true,
+					false,              // SpawnAtPlacement
+					AttachBone::Default,
+					false               // DeleteOnComplete - false: must persist via FinalPropStates, not be deleted
 				}
 			},
 			"anim@scripted@freemode@ig1_open_container@no_tools@male@",
@@ -161,13 +349,97 @@ namespace sub::Spooner::Interactables
 			Vector3(0.0f, -3.90f, 1.25f), 0.0f,
 			0.50f
 		},
+{
+	"Open Container (Angle Grinder)",
+	TrContainer01a,
+	{
+		TrContainer01a, TrContainer01b, TrContainer01c, TrContainer01d, TrContainer01e,
+		TrContainer01f, TrContainer01g, TrContainer01h, TrContainer01i
+	},
+	{
+		{ "Duffel Bag", BagFallback, true, ExtraPropAttachTarget::Player, false, false, AttachBone::Default, true },
+
+		{ "Angle Grinder", TrGrinder01a, false, ExtraPropAttachTarget::Player, false, false, AttachBone::LeftHand, true },
+
+		{ "Lock", TrLock01a, false, ExtraPropAttachTarget::PrimaryProp, false, true, AttachBone::Default, false, true,
+			Vector3(0.0f, -1.8130f, 1.2000f), Vector3() },
+
+		{ "Container Collision", TrContCollision, false, ExtraPropAttachTarget::PrimaryProp, true, true, AttachBone::Default, false }
+	},
+	"anim@scripted@player@mission@tunf_train_ig1_container_p1@male@",
+	{
+		{
+			{
+				{ AnimTarget::Player,      "action" },
+				{ AnimTarget::PrimaryProp, "action_container" },
+				{ AnimTarget::ExtraProp,   "action_bag",           0 },
+				{ AnimTarget::ExtraProp,   "action_angle_grinder", 1 },
+				{ AnimTarget::ExtraProp,   "action_lock",          2 }
+			},
+			30000, 1.0f, "",
+			1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+		}
+	},
+	BagOpenState::NoChange,
+	false,
+	{
+		{ AnimTarget::PrimaryProp, 0, 255, false, true },
+		{ AnimTarget::ExtraProp,   3, 0,   true,  false }
+	},
+	Vector3(0.0f, -2.35f, 1.0f), 0.0f,
+	0.50f,
+	&SpawnContainerPersistentProps
+},
+{
+			"Open Container (Keypad)",
+			Container_MW_Closed,
+			{},
+			{
+				{
+					"Opened Container",
+					Container_MW_Opened,
+					false,
+					ExtraPropAttachTarget::PrimaryProp,
+					true,
+					false,
+					AttachBone::Default,
+					false
+				}
+			},
+			"anim@scripted@freemode@ig1_open_container@male@",
+			{
+				{
+					{
+						{ AnimTarget::Player,      "action" },
+						{ AnimTarget::PrimaryProp, "action_container" }
+					},
+					6000, 1.0f, "action_facial",
+					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
+				}
+			},
+			BagOpenState::NoChange,
+			false,
+			{
+				{ AnimTarget::PrimaryProp, 0, 0,   false, false },
+				{ AnimTarget::ExtraProp,   0, 255, true,  true }
+			},
+			Vector3(0.0f, -3.90f, 1.25f), 0.0f,
+			0.50f
+},
 	};
 
 	std::vector<InteractableInstance> vActiveInteractables;
 
 	SpoonerEntity SpawnInteractable(const InteractableDefinition& def)
 	{
-		SpoonerEntity ent = EntityManagement::AddProp(def.PropModel, def.Label);
+		Hash modelToSpawn = def.PropModel;
+		if (!def.PropModelVariants.empty())
+		{
+			int idx = rand() % (int)def.PropModelVariants.size();
+			modelToSpawn = def.PropModelVariants[idx];
+		}
+
+		SpoonerEntity ent = EntityManagement::AddProp(modelToSpawn, def.Label);
 		if (!ent.handle.Exists())
 			return SpoonerEntity();
 
@@ -176,8 +448,14 @@ namespace sub::Spooner::Interactables
 		inst.Def = &def;
 		inst.AnchorPos = ent.handle.GetPosition();
 		inst.AnchorRot = ent.handle.GetRotation();
-		vActiveInteractables.push_back(inst);
+		inst.ExtraRuntime.resize(def.ExtraProps.size());
 
+		if (def.SpawnPersistentProps != nullptr)
+		{
+			def.SpawnPersistentProps(inst);
+		}
+
+		vActiveInteractables.push_back(inst);
 		return ent;
 	}
 
@@ -187,15 +465,7 @@ namespace sub::Spooner::Interactables
 
 		GTAped myPed = PLAYER_PED_ID();
 
-		// Player placement: local offset (right, forward, up) rotated by the anchor's heading.
-		float headingRad = -inst.AnchorRot.z * 3.14159f / 180.0f;
-		Vector3 forward = Vector3(sinf(headingRad), cosf(headingRad), 0.0f);
-		Vector3 right = Vector3(cosf(headingRad), -sinf(headingRad), 0.0f); // unverified handedness - tune in-game if left/right is flipped
-
 		Vector3 standPos = GetInteractPosition(inst);
-		myPed.SetPosition(standPos);
-		myPed.SetHeading(inst.AnchorRot.z + inst.Def->PlayerHeadingOffset);
-
 		myPed.SetPosition(standPos);
 		myPed.SetHeading(inst.AnchorRot.z + inst.Def->PlayerHeadingOffset);
 
@@ -268,7 +538,7 @@ namespace sub::Spooner::Interactables
 		if (!STREAMING::HAS_ANIM_DICT_LOADED(inst.Def->AnimDict.c_str()))
 		{
 			Game::Print::PrintBottomCentre("~r~Error:~s~ Anim dict failed to load.");
-			return; // abort cleanly - never place the player or start a broken task
+			return;
 		}
 
 		GTAped myPed = PLAYER_PED_ID();
@@ -291,9 +561,18 @@ namespace sub::Spooner::Interactables
 			}
 		}
 
-		inst.ExtraEnts.clear();
-		for (auto& extraDef : inst.Def->ExtraProps)
+		if (inst.ExtraEnts.size() != inst.Def->ExtraProps.size())
 		{
+			inst.ExtraEnts.resize(inst.Def->ExtraProps.size());
+			inst.ExtraRuntime.resize(inst.Def->ExtraProps.size());
+		}
+
+		for (size_t i = 0; i < inst.Def->ExtraProps.size(); i++)
+		{
+			const auto& extraDef = inst.Def->ExtraProps[i];
+			if (extraDef.SpawnAtPlacement)
+				continue; // already spawned in SpawnInteractable
+
 			Hash modelToSpawn = extraDef.MatchWornComponent
 				? ResolveWornBagModel(wornBag, extraDef.PropModel)
 				: extraDef.PropModel;
@@ -311,15 +590,21 @@ namespace sub::Spooner::Interactables
 				GTAentity attachTarget = (extraDef.AttachTarget == ExtraPropAttachTarget::PrimaryProp)
 					? inst.Ent.handle
 					: (GTAentity)myPed;
-				int attachBone = (extraDef.AttachTarget == ExtraPropAttachTarget::PrimaryProp) ? 0 : rootBone;
 
-				EntityManagement::AttachEntity(extraEnt, attachTarget, attachBone, Vector3(), Vector3());
+				int defaultBone = (extraDef.AttachTarget == ExtraPropAttachTarget::PrimaryProp) ? 0 : rootBone;
+				int attachBone = defaultBone;
+				if (extraDef.AttachTarget == ExtraPropAttachTarget::Player)
+				{
+					if (extraDef.BoneOverride == AttachBone::LeftHand)
+						attachBone = myPed.GetBoneIndex(Bone::LeftHand);
+					else if (extraDef.BoneOverride == AttachBone::RightHand)
+						attachBone = myPed.GetBoneIndex(Bone::RightHand);
+				}
 
-				// Keep it out of the visible entity database - our own ExtraEnts
-				// tracking is the sole owner of its lifecycle from here on.
+				EntityManagement::AttachEntity(extraEnt, attachTarget, attachBone, extraDef.AttachOffset, extraDef.AttachRotation);
 				EntityManagement::RemoveEntityFromDb(extraEnt);
 			}
-			inst.ExtraEnts.push_back(extraEnt);
+			inst.ExtraEnts[i] = extraEnt;
 		}
 
 		inst.CurrentStage = 0;
@@ -349,7 +634,7 @@ namespace sub::Spooner::Interactables
 			}
 
 			if (inst.bCleanupDone)
-				continue; // already finished - stop touching this instance forever
+				continue;
 
 			if (inst.bActivated)
 			{
@@ -422,13 +707,53 @@ namespace sub::Spooner::Interactables
 									targetEnt.handle.SetVisible(finalState.Visible);
 								}
 							}
+
+							if (EntityManagement::GetEntityIndexInDb(inst.Ent.handle) < 0)
+							{
+								EntityManagement::AddEntityToDb(inst.Ent, true);
+							}
+
+							for (size_t i = 0; i < inst.Def->ExtraProps.size(); i++)
+							{
+								if (inst.Def->ExtraProps[i].DeleteOnComplete &&
+									i < inst.ExtraEnts.size() && inst.ExtraEnts[i].handle.Exists())
+								{
+									EntityManagement::DeleteEntity(inst.ExtraEnts[i]);
+								}
+							}
 						}
 
-						inst.bCleanupDone = true; // NEW - stops this branch from ever running again for this instance
+						inst.bCleanupDone = true;
 					}
 				}
 
 				continue;
+			}
+
+			inst.AnchorPos = inst.Ent.handle.GetPosition();
+			inst.AnchorRot = inst.Ent.handle.GetRotation();
+
+			for (size_t i = 0; i < inst.Def->ExtraProps.size() && i < inst.ExtraEnts.size(); i++)
+			{
+				if (!inst.Def->ExtraProps[i].FreezeAtSpawn)
+					continue;
+
+				SpoonerEntity& extraEnt = inst.ExtraEnts[i];
+				if (!extraEnt.handle.Exists())
+					continue;
+
+				ExtraPropRuntime& runtime = inst.ExtraRuntime[i];
+				if (!runtime.Captured)
+				{
+					runtime.FrozenPos = extraEnt.handle.GetPosition();
+					runtime.FrozenRot = extraEnt.handle.GetRotation();
+					runtime.Captured = true;
+				}
+				else
+				{
+					extraEnt.handle.SetPosition(runtime.FrozenPos);
+					extraEnt.handle.SetRotation(runtime.FrozenRot);
+				}
 			}
 
 			Vector3 entPos = GetInteractPosition(inst);
@@ -444,12 +769,12 @@ namespace sub::Spooner::Interactables
 					ActivateInteractable(inst);
 				}
 			}
-		}
 
 		vActiveInteractables.erase(
 			std::remove_if(vActiveInteractables.begin(), vActiveInteractables.end(),
-				[](const InteractableInstance& inst) { return !inst.Ent.handle.Exists() || inst.bCleanupDone; }),
+				[](const InteractableInstance& inst) { return !inst.Ent.handle.Exists(); }),
 			vActiveInteractables.end()
 		);
 	}
+}
 }

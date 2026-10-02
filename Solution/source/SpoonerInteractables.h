@@ -11,6 +11,11 @@ namespace sub::Spooner::Interactables
 	enum class AnimTarget { Player, PrimaryProp, ExtraProp };
 	enum class BagOpenState { NoChange, Opened, Closed };
 	enum class ExtraPropAttachTarget { Player, PrimaryProp };
+	enum class AttachBone { Default, LeftHand, RightHand };
+
+	struct InteractableInstance; // forward declaration - needed by the function-pointer typedef below
+
+	using SpawnPersistentPropsFn = void(*)(InteractableInstance&);
 
 	struct SceneParticipant
 	{
@@ -26,6 +31,12 @@ namespace sub::Spooner::Interactables
 		bool MatchWornComponent = false;
 		ExtraPropAttachTarget AttachTarget = ExtraPropAttachTarget::Player;
 		bool StartInvisible = false;
+		bool SpawnAtPlacement = false; // marker only - actual spawning now happens via SpawnPersistentPropsFn
+		AttachBone BoneOverride = AttachBone::Default;
+		bool DeleteOnComplete = true;
+		bool FreezeAtSpawn = false;
+		Vector3 AttachOffset = Vector3();
+		Vector3 AttachRotation = Vector3();
 	};
 
 	struct PropEndState
@@ -58,6 +69,7 @@ namespace sub::Spooner::Interactables
 	{
 		std::string Label;
 		Hash PropModel;
+		std::vector<Hash> PropModelVariants;
 		std::vector<ExtraPropDef> ExtraProps;
 		std::string AnimDict;
 		std::vector<InteractableStage> Stages;
@@ -68,13 +80,23 @@ namespace sub::Spooner::Interactables
 
 		Vector3 PlayerStandOffset = Vector3(0.0f, -1.0f, 0.0f);
 		float PlayerHeadingOffset = 0.0f;
-		float InteractRange = 2.5f;
+		float InteractRange = 0.50f;
+
+		SpawnPersistentPropsFn SpawnPersistentProps = nullptr; // NEW - set only by interactables with placement-time props
+	};
+
+	struct ExtraPropRuntime
+	{
+		Vector3 FrozenPos;
+		Vector3 FrozenRot;
+		bool Captured = false;
 	};
 
 	struct InteractableInstance
 	{
 		SpoonerEntity Ent;
 		std::vector<SpoonerEntity> ExtraEnts;
+		std::vector<ExtraPropRuntime> ExtraRuntime;
 		const InteractableDefinition* Def = nullptr;
 		bool bActivated = false;
 		bool bCleanupDone = false;
@@ -106,8 +128,6 @@ namespace sub::Spooner::Interactables
 
 	extern std::vector<InteractableDefinition> vInteractables;
 	extern std::vector<InteractableInstance> vActiveInteractables;
-
-	constexpr float InteractRange = 2.5f;
 
 	SpoonerEntity SpawnInteractable(const InteractableDefinition& def);
 	Vector3 GetInteractPosition(const InteractableInstance& inst);
