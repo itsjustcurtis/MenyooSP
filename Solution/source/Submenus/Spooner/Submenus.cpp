@@ -5263,17 +5263,30 @@ namespace sub
 				EntityManagement::InputEntityIntoDb(EntityType::VEHICLE);
 			}
 		}
-
 		void Sub_SpawnInteractables()
 		{
 			AddTitle("Spawn Interactable");
 
-			for (auto& def : sub::Spooner::Interactables::vInteractables)
+			static std::vector<const Interactables::InteractableDefinition*> sortedDefs;
+			if (sortedDefs.size() != Interactables::vInteractables.size())
+			{
+				sortedDefs.clear();
+				for (auto& d : Interactables::vInteractables)
+					sortedDefs.push_back(&d);
+
+				std::sort(sortedDefs.begin(), sortedDefs.end(),
+					[](const Interactables::InteractableDefinition* a, const Interactables::InteractableDefinition* b)
+					{
+						return a->Label < b->Label;
+					});
+			}
+
+			for (auto* def : sortedDefs)
 			{
 				bool bPressed = false;
-				AddOption(def.Label, bPressed); if (bPressed)
+				AddOption(def->Label, bPressed); if (bPressed)
 				{
-					sub::Spooner::Interactables::SpawnInteractable(def);
+					sub::Spooner::Interactables::SpawnInteractable(*def);
 				}
 			}
 			AddOption("Debug", null, nullFunc, SUB::SPOONER_SPAWN_INTERACTABLES_DEBUG);

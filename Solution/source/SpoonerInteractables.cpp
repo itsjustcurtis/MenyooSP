@@ -7,19 +7,26 @@
 #include "Scripting/GTAentity.h"
 #include "Submenus/Spooner/Submenus.h"
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
+#include <Scripting/CustomHelpText.h>
 
 namespace sub::Spooner::Interactables
 {
+		// ========================================================================
+		//  1. MODEL HASHES
+		// ========================================================================
 	static const Hash CashStack = GET_HASH_KEY("h4_prop_h4_cash_stack_01a");
 	static const Hash WeedStack = GET_HASH_KEY("h4_prop_h4_weed_stack_01a");
 	static const Hash GoldStack = GET_HASH_KEY("h4_prop_h4_gold_stack_01a");
 	static const Hash CokeStack = GET_HASH_KEY("h4_prop_h4_coke_stack_01a");
+	static const Hash BookStack = GET_HASH_KEY("m24_2_prop_m42_book_stack_01a");
+	static const Hash ServerStack = GET_HASH_KEY("m24_2_prop_m42_server_stack_01a");
+	static const Hash HarddriveStack = GET_HASH_KEY("m24_2_prop_m42_harddrive_stack_01a");
 	static const Hash BagFallback = GET_HASH_KEY("h4_p_h4_m_bag_var22_arm_s");
 
 	static const Hash ContainerClosed = GET_HASH_KEY("m23_2_prop_m32_container_01a");
 	static const Hash ContainerOpened = GET_HASH_KEY("m23_2_prop_m32_container_01b");
-
 	static const Hash Container_MW_Closed = GET_HASH_KEY("m23_1_prop_m31_container_01a");
 	static const Hash Container_MW_Opened = GET_HASH_KEY("m23_1_prop_m31_container_01b");
 
@@ -49,6 +56,47 @@ namespace sub::Spooner::Interactables
 	static const Hash TrLock01a = GET_HASH_KEY("tr_prop_tr_lock_01a");
 	static const Hash TrContCollision = GET_HASH_KEY("tr_prop_tr_cont_coll_01a");
 
+	static const Hash ElectricBox1 = GET_HASH_KEY("h4_prop_h4_elecbox_01a");
+	static const Hash ElectricBox2 = GET_HASH_KEY("m24_2_prop_m42_elecbox_01a");
+
+	static const Hash Lever1 = GET_HASH_KEY("m23_1_prop_m31_lever_box_01a");
+	static const Hash Lever2 = GET_HASH_KEY("h4_prop_h4_lever_box_01a");
+	static const Hash Lever3 = GET_HASH_KEY("m23_2_prop_m32_lever_box_01a");
+
+	static const Hash DisplayCase1 = GET_HASH_KEY("h4_prop_h4_glass_disp_01a");
+	static const Hash DisplayCase2 = GET_HASH_KEY("h4_prop_h4_glass_disp_01b");
+	static const Hash DisplayCase3 = GET_HASH_KEY("h4_prop_h4_glass_cut_01a");
+	static const Hash PlasmaCutter = GET_HASH_KEY("h4_prop_h4_cutter_01a");
+
+	static const Hash PericoTarget1A = GET_HASH_KEY("h4_prop_h4_diamond_01a");
+	static const Hash PericoTarget1B = GET_HASH_KEY("h4_prop_h4_diamond_disp_01a");
+	static const Hash PericoTarget2A = GET_HASH_KEY("h4_prop_h4_necklace_01a");
+	static const Hash PericoTarget2B = GET_HASH_KEY("h4_prop_h4_neck_disp_01a");
+	static const Hash PericoTarget3 = GET_HASH_KEY("h4_prop_h4_t_bottle_01a");
+	static const Hash PericoTarget4 = GET_HASH_KEY("h4_prop_h4_t_bottle_02a");
+	static const Hash PericoTarget5 = GET_HASH_KEY("h4_prop_h4_t_bottle_02b");
+	static const Hash PericoTarget6 = GET_HASH_KEY("h4_prop_h4_art_pant_01a");
+
+	static const Hash Laptop = GET_HASH_KEY("prop_laptop_01a");
+	static const Hash Guitar = GET_HASH_KEY("prop_acc_guitar_01");
+	static const Hash GuitarStand = GET_HASH_KEY("sf_prop_sf_acc_stand_01a");
+
+	static const Hash FuseBox = GET_HASH_KEY("reh_prop_reh_b_computer_04a");
+	static const Hash FuseBoxOpen = GET_HASH_KEY("reh_prop_reh_b_computer_04b");
+	static const Hash FuseFresh = GET_HASH_KEY("reh_prop_reh_fuse_01a");
+	static const Hash FuseBlown = GET_HASH_KEY("reh_prop_reh_fuse_01b");
+
+	static const Hash PowerBox = GET_HASH_KEY("xm_prop_x17_powerbox_01");
+
+	static const Hash ClipboardSchedule = GET_HASH_KEY("tr_prop_tr_clipboard_sh_01a");
+	static const Hash ClipboardSchedule2 = GET_HASH_KEY("tr_prop_tr_clipboard_sh_01a");
+
+	static const Hash ServerCleanStack = GET_HASH_KEY("tr_prop_tr_corp_servercln_01a");
+	static const Hash ServerDrive = GET_HASH_KEY("m24_2_prop_m42_serverdrive_01a");
+
+	// ========================================================================
+	//  2. WORN-BAG MATCHING (slot 9 = Story Mode TASK, slot 5 = Online HAND)
+	// ========================================================================
 	static const std::vector<KnownBagVariant> vKnownBagVariants =
 	{
 		{ 5, 40, -1, BagPro2 },
@@ -79,6 +127,16 @@ namespace sub::Spooner::Interactables
 		{ 5, 82, 15, BagVar07 },
 	};
 
+	static const std::vector<BagDrawablePair> vBagDrawablePairs =
+	{
+		{ 9, 1,  2 },
+		{ 9, 12, 11 },
+		{ 5, 41, 40 },
+		{ 5, 45, 44 },
+		{ 5, 81, 82 },
+		{ 5, 86, 85 },
+	};
+
 	struct WornBagInfo { bool Found = false; int Slot = -1; int DrawableId = -1; int TextureId = -1; };
 
 	static WornBagInfo DetectWornBag(GTAped& myPed)
@@ -105,16 +163,9 @@ namespace sub::Spooner::Interactables
 		return fallbackModel;
 	}
 
-	static const std::vector<BagDrawablePair> vBagDrawablePairs =
-	{
-		{ 9, 1,  2 },
-		{ 9, 12, 11 },
-		{ 5, 41, 40 },
-		{ 5, 45, 44 },
-		{ 5, 81, 82 },
-		{ 5, 86, 85 },
-	};
-
+	// ========================================================================
+	//  3. SHARED HELPERS
+	// ========================================================================
 	Vector3 GetInteractPosition(const InteractableInstance& inst)
 	{
 		float headingRad = -inst.AnchorRot.z * 3.14159f / 180.0f;
@@ -126,6 +177,17 @@ namespace sub::Spooner::Interactables
 			+ (forward * inst.Def->PlayerStandOffset.y)
 			+ Vector3(0.0f, 0.0f, inst.Def->PlayerStandOffset.z);
 	}
+
+	static Vector3 GetSceneOrigin(const InteractableInstance& inst)
+	{
+		const Vector3& o = inst.Def->SceneOriginOffset;
+		const float headingRad = -inst.AnchorRot.z * 3.14159f / 180.0f;
+		const Vector3 forward = Vector3(sinf(headingRad), cosf(headingRad), 0.0f);
+		const Vector3 right = Vector3(cosf(headingRad), -sinf(headingRad), 0.0f);
+
+		return inst.AnchorPos + (right * o.x) + (forward * o.y) + Vector3(0.0f, 0.0f, o.z);
+	}
+
 
 	static void SpawnContainerPersistentProps(InteractableInstance& inst)
 	{
@@ -151,285 +213,859 @@ namespace sub::Spooner::Interactables
 		}
 	}
 
+	static int CreateScene(const InteractableInstance& inst, const InteractableStage& stage, bool holdLastFrame, bool applySceneOffset = true)
+	{
+		const Vector3 origin = applySceneOffset ? GetSceneOrigin(inst) : inst.AnchorPos;
+		const float yaw = inst.AnchorRot.z + (applySceneOffset ? inst.Def->SceneHeadingOffset : 0.0f);
+
+		int scene = CREATE_SYNCHRONIZED_SCENE(origin.x, origin.y, origin.z,
+			inst.AnchorRot.x, inst.AnchorRot.y, yaw, 2);
+		if (scene == -1)
+			return -1;
+
+		SET_SYNCHRONIZED_SCENE_HOLD_LAST_FRAME(scene, holdLastFrame);
+		SET_SYNCHRONIZED_SCENE_RATE(scene, stage.SceneRate);
+
+		if (stage.LoopUntilInteract)
+			SET_SYNCHRONIZED_SCENE_LOOPED(scene, true);
+
+		return scene;
+	}
+
+	static void PlayPropParticipant(InteractableInstance& inst, const SceneParticipant& p, int syncedScene, const InteractableStage& stage)
+	{
+		SpoonerEntity& targetEnt = (p.Target == AnimTarget::PrimaryProp)
+			? inst.Ent
+			: inst.ExtraEnts[p.ExtraPropIndex];
+
+		EntityManagement::DetachEntity(targetEnt);
+		targetEnt.handle.FreezePosition(false);
+
+		if (p.Target == AnimTarget::PrimaryProp)
+		{
+			targetEnt.handle.SetPosition(inst.AnchorPos);
+			targetEnt.handle.SetRotation(inst.AnchorRot);
+		}
+
+		ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(
+			targetEnt.handle.Handle(), syncedScene,
+			p.ClipName.c_str(), inst.Def->AnimDict.c_str(),
+			stage.BlendIn, stage.BlendOut, stage.PropFlags, stage.PlaybackRate
+		);
+	}
+
+	// ========================================================================
+	//  4A. DISPLAY CASE HOOKS
+	//      Extra slots: 0 Bag, 1 Cutter, 2 Display Case (Opened), 3 Glass Piece, 4 Treasure (Display), 5 Treasure (Item)
+	//      Stages:      0 enter, 1 cutting_loop, 2-4 overheat 1-3, 5 success
+	// ========================================================================
+	struct TreasureOption { Hash Outer; Hash Inner; };
+
+	static const std::vector<TreasureOption> vTreasureOptions =
+	{
+		{ PericoTarget1B, PericoTarget1A },
+		{ PericoTarget2B, PericoTarget2A },
+		{ PericoTarget3,  0 },
+		{ PericoTarget4,  0 },
+		{ PericoTarget5,  0 },
+		{ PericoTarget6,  0 },
+	};
+
+	static void SpawnDisplayCasePersistentProps(InteractableInstance& inst)
+	{
+		inst.ExtraEnts.resize(inst.Def->ExtraProps.size());
+		inst.ExtraRuntime.resize(inst.Def->ExtraProps.size());
+
+		{
+			const auto& def2 = inst.Def->ExtraProps[2];
+			SpoonerEntity e = EntityManagement::AddProp(def2.PropModel, def2.Label);
+			if (e.handle.Exists())
+			{
+				e.handle.SetIsCollisionEnabled(false);
+				e.handle.SetVisible(false);
+				EntityManagement::AttachEntity(e, inst.Ent.handle, 0, def2.AttachOffset, def2.AttachRotation);
+				EntityManagement::RemoveEntityFromDb(e);
+			}
+			inst.ExtraEnts[2] = e;
+		}
+
+		int pick = rand() % (int)vTreasureOptions.size();
+		const auto& option = vTreasureOptions[pick];
+		Vector3 offset(0.0f, 0.0f, 1.0300f);
+
+		SpoonerEntity outerEnt = EntityManagement::AddProp(option.Outer, "Treasure (Display)");
+		if (outerEnt.handle.Exists())
+		{
+			outerEnt.handle.SetIsCollisionEnabled(false);
+			EntityManagement::AttachEntity(outerEnt, inst.Ent.handle, 0, offset, Vector3());
+			EntityManagement::RemoveEntityFromDb(outerEnt);
+		}
+		inst.ExtraEnts[4] = outerEnt;
+
+		if (option.Inner != 0 && outerEnt.handle.Exists())
+		{
+			SpoonerEntity innerEnt = EntityManagement::AddProp(option.Inner, "Treasure (Item)");
+			if (innerEnt.handle.Exists())
+			{
+				innerEnt.handle.SetIsCollisionEnabled(false);
+				EntityManagement::AttachEntity(innerEnt, outerEnt.handle, 0, Vector3(), Vector3());
+				EntityManagement::RemoveEntityFromDb(innerEnt);
+			}
+			inst.ExtraEnts[5] = innerEnt;
+		}
+	}
+
+	static void OnStageStart_DisplayCase(InteractableInstance& inst, size_t stageIndex)
+	{
+		if (stageIndex != 5) return;
+
+		inst.Ent.handle.SetAlpha(0);
+
+		if (inst.ExtraEnts[2].handle.Exists())
+		{
+			inst.ExtraEnts[2].handle.SetAlpha(255);
+			inst.ExtraEnts[2].handle.SetVisible(true);
+		}
+
+		const auto& def3 = inst.Def->ExtraProps[3];
+		SpoonerEntity e3 = EntityManagement::AddProp(def3.PropModel, def3.Label);
+		if (e3.handle.Exists())
+		{
+			e3.handle.SetIsCollisionEnabled(false);
+			GTAped myPed = PLAYER_PED_ID();
+			int wristBone = myPed.GetBoneIndex(Bone::RightWrist);
+			EntityManagement::AttachEntity(e3, myPed, wristBone, def3.AttachOffset, def3.AttachRotation);
+			EntityManagement::RemoveEntityFromDb(e3);
+		}
+		inst.ExtraEnts[3] = e3;
+	}
+
+	static void TryPickupDisplayCaseTreasure(InteractableInstance& inst)
+	{
+		if (inst.bTreasurePickedUp)
+			return;
+
+		bool isDuo = inst.ExtraEnts.size() > 5 && inst.ExtraEnts[5].handle.Exists();
+		int itemIndex = isDuo ? 5 : 4;
+
+		if ((size_t)itemIndex >= inst.ExtraEnts.size() || !inst.ExtraEnts[itemIndex].handle.Exists())
+			return;
+
+		GTAped myPed = PLAYER_PED_ID();
+		int wristBone = myPed.GetBoneIndex(Bone::LeftWrist);
+
+		Vector3 wristPos = myPed.GetBoneCoord(wristBone);
+		Vector3 treasurePos = inst.ExtraEnts[itemIndex].handle.GetPosition();
+
+		float distance = GET_DISTANCE_BETWEEN_COORDS(
+			wristPos.x, wristPos.y, wristPos.z,
+			treasurePos.x, treasurePos.y, treasurePos.z,
+			true
+		);
+
+		if (distance > 0.86f)
+			return;
+
+		SpoonerEntity& treasure = inst.ExtraEnts[itemIndex];
+
+		EntityManagement::DetachEntity(treasure);
+		treasure.handle.FreezePosition(false);
+		EntityManagement::AttachEntity(treasure, myPed, wristBone, Vector3(), Vector3());
+		EntityManagement::RemoveEntityFromDb(treasure);
+
+		inst.bTreasurePickedUp = true;
+	}
+
+	static void OnStageTick_DisplayCase(InteractableInstance& inst, size_t stageIndex)
+	{
+		if (stageIndex == 5)
+			TryPickupDisplayCaseTreasure(inst);
+	}
+
+	static size_t GetNextStage_DisplayCase(InteractableInstance& inst, size_t currentStage)
+	{
+		if (currentStage == 0)
+			return 1;
+
+		if (currentStage == 1)
+		{
+			if (inst.OverheatCount < 3)
+			{
+				int roll = rand() % 100;
+				if (roll < 20)
+				{
+					size_t overheatStage = 2 + inst.OverheatCount;
+					inst.OverheatCount++;
+					return overheatStage;
+				}
+			}
+
+			return 5;
+		}
+
+		if (currentStage >= 2 && currentStage <= 4)
+			return 1;
+
+		return (size_t)inst.Def->Stages.size();
+	}
+
+	static void CustomCleanup_DisplayCase(InteractableInstance& inst)
+	{
+		if (inst.ExtraEnts.size() > 5 && inst.ExtraEnts[5].handle.Exists())
+		{
+			EntityManagement::DeleteEntity(inst.ExtraEnts[5]);
+		}
+		else if (inst.ExtraEnts.size() > 4 && inst.ExtraEnts[4].handle.Exists())
+		{
+			EntityManagement::DeleteEntity(inst.ExtraEnts[4]);
+		}
+	}
+
+	// ========================================================================
+	//  4B. GUITAR HOOKS
+	// ========================================================================
+	static void OnStageStart_Guitar(InteractableInstance& inst, size_t stageIndex)
+	{
+		if (stageIndex != 0) return;
+
+		inst.Ent.handle.SetAlpha(0);
+		inst.Ent.handle.SetIsCollisionEnabled(false);
+
+		const auto& heldDef = inst.Def->ExtraProps[0];
+		SpoonerEntity held = EntityManagement::AddProp(heldDef.PropModel, heldDef.Label);
+		if (held.handle.Exists())
+		{
+			held.handle.SetIsCollisionEnabled(false);
+			GTAped myPed = PLAYER_PED_ID();
+			int bone = ResolveAttachBoneIndex(myPed, heldDef.BoneOverride, myPed.GetBoneIndex(Bone::SKEL_ROOT));
+			EntityManagement::AttachEntity(held, myPed, bone, heldDef.AttachOffset, heldDef.AttachRotation);
+			EntityManagement::RemoveEntityFromDb(held);
+		}
+		inst.ExtraEnts[0] = held;
+	}
+
+	static void OnStageStart_Clipboard(InteractableInstance& inst, size_t stageIndex)
+	{
+		if (stageIndex != 0)
+			return;
+
+		inst.Ent.handle.SetAlpha(0);
+		inst.Ent.handle.SetIsCollisionEnabled(false);
+
+		const auto& clipboardDef = inst.Def->ExtraProps[0];
+
+		SpoonerEntity clipboard = EntityManagement::AddProp(
+			clipboardDef.PropModel,
+			clipboardDef.Label
+		);
+
+		if (clipboard.handle.Exists())
+		{
+			clipboard.handle.SetIsCollisionEnabled(false);
+
+			GTAped myPed = PLAYER_PED_ID();
+			int wristBone = myPed.GetBoneIndex(Bone::LeftWrist);
+
+			EntityManagement::AttachEntity(
+				clipboard,
+				myPed,
+				wristBone,
+				clipboardDef.AttachOffset,
+				clipboardDef.AttachRotation
+			);
+
+			EntityManagement::RemoveEntityFromDb(clipboard);
+		}
+
+		inst.ExtraEnts[0] = clipboard;
+	}
+
+	// ========================================================================
+//  4C. FIX BREAKER
+//      Extra prop indices: 0-3 = blown fuse in slot 1-4, 4-7 = fresh fuse in slot 1-4.
+//      Stage indices:      0 = open the box, 1-4 = replace the fuse in that slot, 5 = success.
+//      Flow: the first interaction plays stage 0 and ends. The box is then left alone in its held scene
+//      (same as the Angle Grinder container) until the next interaction, which resumes at ResumeStage
+//      and runs through to success.
+// ========================================================================
+	static const char* const BreakerAnimDict = "anim@scripted@ulp_missions@fuse@male@";
+	static const size_t StageOpen = 0;
+	static const size_t StageSuccess = 5;
+	static const int BreakerStageTimeoutMs = 20000;
+	static const DWORD BreakerSettleMs = 1500;
+
+	static int BlownExtraIndex(int slot) { return slot - 1; }
+	static int FreshExtraIndex(int slot) { return 4 + (slot - 1); }
+
+	struct FusePose { int ExtraIndex; std::string Clip; };
+
+	static std::string FuseReplaceClip(int step, bool broken, int slot)
+	{
+		if (step == 1 && broken && slot == 4)
+			return "replace_fuse_01_broken_fuse_4";
+
+		return "replace_fuse_0" + std::to_string(step) + (broken ? "_broken_fuse_" : "_fresh_fuse_") + std::to_string(slot);
+	}
+
+	static std::vector<FusePose> GetBreakerFusePoses(const InteractableInstance& inst, size_t stage)
+	{
+		std::vector<FusePose> poses;
+		const int step = (int)stage;
+
+		for (int slot = 1; slot <= 4; slot++)
+		{
+			const bool blown = (inst.FuseBlownMask & (1 << (slot - 1))) != 0;
+			const std::string s = std::to_string(slot);
+
+			if (stage == StageOpen)
+			{
+				if (blown) poses.push_back({ BlownExtraIndex(slot), "enter_broken_fuse_" + s });
+				else       poses.push_back({ FreshExtraIndex(slot), "success_fresh_fuse_" + s });
+			}
+			else if (stage == StageSuccess)
+			{
+				poses.push_back({ FreshExtraIndex(slot), "success_fresh_fuse_" + s });
+				if (blown)
+					poses.push_back({ BlownExtraIndex(slot), "" });
+			}
+			else if (slot < step)
+			{
+				poses.push_back({ FreshExtraIndex(slot), FuseReplaceClip(step, false, slot) });
+				if (blown)
+					poses.push_back({ BlownExtraIndex(slot), "" });
+			}
+			else if (slot == step)
+			{
+				poses.push_back({ BlownExtraIndex(slot), FuseReplaceClip(step, true,  slot) });
+				poses.push_back({ FreshExtraIndex(slot), FuseReplaceClip(step, false, slot) });
+			}
+			else if (blown)
+			{
+				if (step == 2 && slot == 4)
+					poses.push_back({ BlownExtraIndex(slot), "" });
+				else
+					poses.push_back({ BlownExtraIndex(slot), FuseReplaceClip(step, true, slot) });
+			}
+			else
+			{
+				poses.push_back({ FreshExtraIndex(slot), "success_fresh_fuse_" + s });
+			}
+		}
+		return poses;
+	}
+
+	static void ApplyBreakerFuseVisibility(InteractableInstance& inst, const std::vector<FusePose>& poses)
+	{
+		for (size_t i = 0; i < inst.ExtraEnts.size(); i++)
+		{
+			if (!inst.ExtraEnts[i].handle.Exists())
+				continue;
+
+			bool wanted = std::any_of(poses.begin(), poses.end(),
+				[i](const FusePose& p) { return p.ExtraIndex == (int)i; });
+			inst.ExtraEnts[i].handle.SetVisible(wanted);
+		}
+	}
+
+	static size_t NextBlownStage(int blownMask, int afterSlot)
+	{
+		for (int slot = afterSlot + 1; slot <= 4; slot++)
+		{
+			if (blownMask & (1 << (slot - 1)))
+				return (size_t)slot;
+		}
+		return StageSuccess;
+	}
+
+	static std::vector<ExtraPropDef> MakeBreakerFuseExtras()
+	{
+		std::vector<ExtraPropDef> extras;
+		for (int i = 0; i < 8; i++)
+		{
+			const bool blown = i < 4;
+			const std::string label = std::string(blown ? "Blown Fuse " : "Fresh Fuse ") + std::to_string((i % 4) + 1);
+			extras.push_back(ExtraProp(label.c_str(), blown ? FuseBlown : FuseFresh)
+				.AttachToPrimaryProp()
+				.StartsHidden()
+				.SpawnsAtPlacement()
+				.KeepWhenDone()
+				.Build());
+		}
+		return extras;
+	}
+
+	static std::vector<InteractableStage> MakeBreakerStages()
+	{
+		auto makeStage = [](const char* playerClip, const char* boxClip)
+			{
+				return Stage(BreakerStageTimeoutMs)
+					.PlayerClip(playerClip)
+					.PrimaryPropClip(boxClip)
+					.PauseOnEnd()
+					.Build();
+			};
+
+		std::vector<InteractableStage> stages;
+		stages.push_back(makeStage("enter", "enter_fusebox"));
+		stages.push_back(makeStage("replace_fuse_01", "replace_fuse_01_fusebox"));
+		stages.push_back(makeStage("replace_fuse_02", "replace_fuse_02_fusebox"));
+		stages.push_back(makeStage("replace_fuse_03", "replace_fuse_03_fusebox"));
+		stages.push_back(makeStage("replace_fuse_04", "replace_fuse_04_fusebox"));
+		stages.push_back(makeStage("success", "success_fusebox"));
+		return stages;
+	}
+
+	static void ResolveParticipants_Breaker(InteractableInstance& inst, size_t stageIndex, std::vector<SceneParticipant>& participants)
+	{
+		for (auto& pose : GetBreakerFusePoses(inst, stageIndex))
+		{
+			if (pose.Clip.empty())
+				continue;
+			participants.push_back({ AnimTarget::ExtraProp, pose.Clip, pose.ExtraIndex });
+		}
+	}
+
+	static void OnStageStart_Breaker(InteractableInstance& inst, size_t stageIndex)
+	{
+		ApplyBreakerFuseVisibility(inst, GetBreakerFusePoses(inst, stageIndex));
+	}
+
+	static size_t GetNextStage_Breaker(InteractableInstance& inst, size_t currentStage)
+	{
+		if (currentStage == StageOpen)
+		{
+			inst.bAnchorLocked = true;
+			inst.ResumeStage = NextBlownStage(inst.FuseBlownMask, 0);
+			return inst.Def->Stages.size();
+		}
+
+		if (currentStage >= StageSuccess)
+			return inst.Def->Stages.size();
+
+		return NextBlownStage(inst.FuseBlownMask, (int)currentStage);
+	}
+
+	static void CustomCleanup_Breaker(InteractableInstance& inst)
+	{
+		if (inst.CurrentStage == StageSuccess)
+			inst.bCleanupDone = true;
+	}
+
+	static bool PinBreakerOpen(InteractableInstance& inst)
+	{
+		const InteractableStage& stage = inst.Def->Stages[StageOpen];
+		const char* dict = inst.Def->AnimDict.c_str();
+
+		STREAMING::REQUEST_ANIM_DICT(dict);
+		int waitCount = 0;
+		while (!STREAMING::HAS_ANIM_DICT_LOADED(dict) && waitCount++ < 500)
+			WAIT(0);
+
+		if (!STREAMING::HAS_ANIM_DICT_LOADED(dict))
+			return false;
+
+		int scene = CreateScene(inst, stage, true);
+		if (scene == -1)
+			return false;
+
+		std::vector<FusePose> poses = GetBreakerFusePoses(inst, StageOpen);
+		ApplyBreakerFuseVisibility(inst, poses);
+
+		PlayPropParticipant(inst, { AnimTarget::PrimaryProp, "enter_fusebox" }, scene, stage);
+		for (auto& pose : poses)
+		{
+			if (pose.Clip.empty())
+				continue;
+			PlayPropParticipant(inst, { AnimTarget::ExtraProp, pose.Clip, pose.ExtraIndex }, scene, stage);
+		}
+
+		inst.Ent.handle.SetIsCollisionEnabled(true);
+		inst.bAnchorLocked = true;
+		return true;
+	}
+
+	static void OnIdleTick_Breaker(InteractableInstance& inst)
+	{
+		if (inst.ResumeStage == 0 || inst.bAnchorLocked)
+			return;
+
+		const Vector3 pos = inst.Ent.handle.GetPosition();
+		const Vector3 rot = inst.Ent.handle.GetRotation();
+		const bool moved =
+			fabsf(pos.x - inst.AnchorPos.x) > 0.005f || fabsf(pos.y - inst.AnchorPos.y) > 0.005f || fabsf(pos.z - inst.AnchorPos.z) > 0.005f ||
+			fabsf(rot.x - inst.AnchorRot.x) > 0.1f || fabsf(rot.y - inst.AnchorRot.y) > 0.1f || fabsf(rot.z - inst.AnchorRot.z) > 0.1f;
+
+		const DWORD now = GET_GAME_TIMER();
+		if (moved || inst.BreakerSettleStart == 0)
+		{
+			inst.BreakerSettleStart = now;
+			return;
+		}
+
+		if (now - inst.BreakerSettleStart < BreakerSettleMs)
+			return;
+
+		if (!PinBreakerOpen(inst))
+			inst.BreakerSettleStart = now;
+	}
+
+	static void SpawnBreaker(InteractableInstance& inst, int blownMask, bool preOpened)
+	{
+		SpawnContainerPersistentProps(inst);
+		inst.FuseBlownMask = blownMask;
+		inst.ResumeStage = preOpened ? NextBlownStage(blownMask, 0) : 0;
+	}
+
+	static void SpawnBreaker_PreOpened(InteractableInstance& inst) { SpawnBreaker(inst, 0xF, true); }
+	static void SpawnBreaker_AllBlown(InteractableInstance& inst) { SpawnBreaker(inst, 0xF, false); }
+
+	// ========================================================================
+	//  5. DEFINITIONS
+	//     Adding a new grab stack is one line in vInteractables, e.g.
+	//         MakeGrabStack("Grab Diamonds", DiamondStack, GrabGoldDict, "grab_gold"),
+	// ========================================================================
+	static const char* const GrabCashDict = "anim@scripted@player@mission@tun_table_grab@cash@";
+	static const char* const GrabGoldDict = "anim@scripted@player@mission@tun_table_grab@gold@";
+
+	static Interactable MakeGrabStack(const char* label, Hash stackModel, const char* animDict, const char* stackClip)
+	{
+		return Interactable(label, stackModel)
+			.AnimDict(animDict)
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "enter_bag")
+				.PlayerClip("enter")
+				.Facial("enter_facial"))
+			.AddStage(Stage(30000)
+				.PrimaryPropClip(stackClip)
+				.ExtraPropClip(0, "grab_bag")
+				.PlayerClip("grab")
+				.Facial("grab_facial"))
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "exit_bag")
+				.PlayerClip("exit")
+				.Facial("exit_facial"))
+			.DeletePropsWhenDone()
+			.StandOffset(0.0f, -0.85f, 0.10f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene();
+	}
+
+	static Interactable MakeGrabClipboard(const char* label, Hash model)
+	{
+		return Interactable("Grab Clipboard", ClipboardSchedule)
+			.AnimDict("anim@heists@prison_heiststation@")
+			.AddExtraProp(ExtraProp("Grabbed Clipboard", ClipboardSchedule2)
+				.AttachToPlayer(AttachBone::LeftWrist)
+				.SpawnedByHook())
+			.AddStage(Stage(30000)
+				.PrimaryPropClip("pickup_bus_schedule_schedule")
+				.PlayerClip("pickup_bus_schedule"))
+			.DeletePropsWhenDone()
+			.StandOffset(0.0f, 0.0f, 0.10f)
+			.InteractRange(1.0f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene()
+			.KeepPlayerWhereTheyStand()
+			.PlayerUsesTaskPlayAnim()
+			.OnStageStart(&OnStageStart_Clipboard);
+	}
+
+	static Interactable MakePullHardDrive()
+	{
+		return Interactable("Pull Hard Drive", ServerCleanStack)
+			.AnimDict("anim@scripted@player@fix_club_ig1_hdd_remove@male@")
+			.AddExtraProp(ExtraProp("Server Drive", ServerDrive)
+				.AttachToPrimaryProp(Vector3(0.0f, -0.2700f, 0.9000f))
+				.SpawnsAtPlacement()
+				.PinnedUntilActivated()
+				.DeleteWhenDone())
+			.AddStage(Stage(30000)
+				.PlayerClip("action")
+				.PrimaryPropClip("action_server")
+				.ExtraPropClip(0, "action_drive")
+				.Facial("action_facial")
+				.Blend(16.0f, -16.0f))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -1.0f, 1.0f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, -0.3f, 0.8f)
+			.PrimaryPropIgnoresSceneOrigin()
+			.PlayerAlsoPlaysEntityAnim()
+			.UnarmedDuringScene()
+			.OnSpawn(&SpawnContainerPersistentProps);
+			// Thanks to HKH for the help on this one!
+	}
+
+	static Interactable MakeOpenContainer(const char* label, Hash closedModel, Hash openedModel, const char* animDict)
+	{
+		return Interactable(label, closedModel)
+			.AddExtraProp(ExtraProp("Opened Container", openedModel)
+				.AttachToPrimaryProp()
+				.StartsHidden()
+				.KeepWhenDone())
+			.AnimDict(animDict)
+			.AddStage(Stage(6000)
+				.PlayerClip("action")
+				.PrimaryPropClip("action_container")
+				.Facial("action_facial"))
+			.KeepPropsWhenDone()
+			.AddEndState(EndState::Primary().Alpha(0).Collision(CollisionState::Off))
+			.AddEndState(EndState::Extra(0).Alpha(255).Collision(CollisionState::On).Visibility(VisibilityState::Shown))
+			.StandOffset(0.0f, -3.90f, 1.25f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene();
+	}
+
+	// Extra slots: 0 Bag, 1 Grinder, 2 Lock, 3 Collision proxy.
+	static Interactable MakeAngleGrinderContainer()
+	{
+		return Interactable("Open Container (Angle Grinder)", TrContainer01a)
+			.RandomPrimaryModel({ TrContainer01a, TrContainer01b, TrContainer01c, TrContainer01d, TrContainer01e,
+								  TrContainer01f, TrContainer01g, TrContainer01h, TrContainer01i })
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddExtraProp(ExtraProp("Angle Grinder", TrGrinder01a).AttachToPlayer(AttachBone::LeftWrist))
+			.AddExtraProp(ExtraProp("Lock", TrLock01a)
+				.AttachToPrimaryProp(Vector3(0.0f, -1.8130f, 1.2000f))
+				.SpawnsAtPlacement()
+				.KeepWhenDone()
+				.PinnedUntilActivated())
+			.AddExtraProp(ExtraProp("Container Collision", TrContCollision)
+				.AttachToPrimaryProp()
+				.StartsHidden()
+				.SpawnsAtPlacement()
+				.KeepWhenDone())
+			.AnimDict("anim@scripted@player@mission@tunf_train_ig1_container_p1@male@")
+			.AddStage(Stage(30000)
+				.PlayerClip("action")
+				.PrimaryPropClip("action_container")
+				.ExtraPropClip(0, "action_bag")
+				.ExtraPropClip(1, "action_angle_grinder")
+				.ExtraPropClip(2, "action_lock"))
+			.KeepPropsWhenDone()
+			.AddEndState(EndState::Primary().Alpha(255).Collision(CollisionState::Off).Visibility(VisibilityState::Shown))
+			.AddEndState(EndState::Extra(3).Alpha(0).Collision(CollisionState::On).Visibility(VisibilityState::Hidden))
+			.StandOffset(0.0f, -2.35f, 1.0f)
+			.InteractRange(0.50f)
+			.OnSpawn(&SpawnContainerPersistentProps)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene();
+	}
+
+	static Interactable MakeElectricBox(const char* label, Hash model)
+	{
+		return Interactable(label, model)
+			.AnimDict("anim@scripted@heist@ig9_control_tower@male@")
+			.AddStage(Stage(6000).PlayerClip("enter").PrimaryPropClip("enter_electric_box"))
+			.AddStage(Stage(30000).PlayerClip("loop").PrimaryPropClip("loop_electric_box").Facial("loop_facial"))
+			.AddStage(Stage(6000).PlayerClip("exit").PrimaryPropClip("exit_electric_box"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -1.0f, 1.25f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene();
+	}
+
+	static Interactable MakeLever(const char* label, Hash model, float standZ)
+	{
+		return Interactable(label, model)
+			.AnimDict("anim@scripted@heist@ig2_hand_lever@male@")
+			.AddStage(Stage(6000).PlayerClip("enter").PrimaryPropClip("enter_lever").Facial("enter_male_facial"))
+			.AddStage(Stage(6000).PlayerClip("exit").PrimaryPropClip("exit_lever").Facial("exit_male_facial"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -0.65f, standZ)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene();
+	}
+
+	static Interactable MakePowerBox(const char* label, Hash model)
+	{
+		return Interactable(label, model)
+			.AnimDict("anim@gangops@hanger@fuse_box@")
+			.AddStage(Stage(6000).PlayerClip("switch_on").PrimaryPropClip("switch_on_box"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -0.85f, 0.0f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene();
+	}
+
+	static Stage MakeOverheatStage(int n)
+	{
+		const std::string base = "overheat_react_0" + std::to_string(n);
+		return Stage(6000)
+			.PlayerClip(base.c_str())
+			.PrimaryPropClip((base + "_glass_display").c_str())
+			.ExtraPropClip(1, (base + "_cutter").c_str())
+			.ExtraPropClip(0, (base + "_bag").c_str())
+			.Facial((base + "_facial").c_str());
+	}
+
+	// 0 Bag, 1 Cutter, 2 Display Case (Opened), 3 Glass Piece, 4 Treasure (Display), 5 Treasure (Item).
+	static Interactable MakeDisplayCase()
+	{
+		return Interactable("Cut Open Display Case", DisplayCase1)
+			.AnimDict("anim@scripted@heist@ig16_glass_cut@male@")
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddExtraProp(ExtraProp("Plasma Cutter", PlasmaCutter).AttachToPlayer(AttachBone::RightWrist))
+			.AddExtraProp(ExtraProp("Display Case (Opened)", DisplayCase2)
+				.AttachToPrimaryProp().StartsHidden().KeepWhenDone().PinnedUntilActivated().SpawnedByHook())
+			.AddExtraProp(ExtraProp("Glass Piece", DisplayCase3)
+				.AttachToPlayer(AttachBone::RightWrist).SpawnedByHook())
+			.AddExtraProp(ExtraProp("Treasure (Display)", PericoTarget1B)
+				.AttachToPrimaryProp().KeepWhenDone().PinnedUntilActivated().SpawnedByHook())
+			.AddExtraProp(ExtraProp("Treasure (Item)", PericoTarget1A)
+				.AttachToPrimaryProp().KeepWhenDone().PinnedUntilActivated().SpawnedByHook())
+			.AddStage(Stage(6000)
+				.PlayerClip("enter")
+				.PrimaryPropClip("enter_glass_display")
+				.ExtraPropClip(1, "enter_cutter")
+				.ExtraPropClip(0, "enter_bag")
+				.Facial("enter_facial"))
+			.AddStage(Stage(2000)
+				.PlayerClip("cutting_loop")
+				.PrimaryPropClip("cutting_loop_glass_display")
+				.ExtraPropClip(1, "cutting_loop_cutter")
+				.ExtraPropClip(0, "cutting_loop_bag")
+				.Facial("cutting_loop_facial"))
+			.AddStage(MakeOverheatStage(1))
+			.AddStage(MakeOverheatStage(2))
+			.AddStage(MakeOverheatStage(3))
+			.AddStage(Stage(10000)
+				.PlayerClip("success")
+				.ExtraPropClip(1, "success_cutter")
+				.ExtraPropClip(0, "success_bag")
+				.ExtraPropClip(2, "success_glass_display_cut")
+				.ExtraPropClip(3, "success_glass_piece")
+				.Facial("success_facial"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -1.0f, 1.0f)
+			.InteractRange(0.50f)
+			.OnSpawn(&SpawnDisplayCasePersistentProps)
+			.OnStageStart(&OnStageStart_DisplayCase)
+			.PickNextStage(&GetNextStage_DisplayCase)
+			.OnCleanup(&CustomCleanup_DisplayCase)
+			.OnStageTick(&OnStageTick_DisplayCase)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene();
+	}
+
+	static Interactable MakeLaptop()
+	{
+		return Interactable("Use Laptop", Laptop)
+			.AnimDict("anim@amb@warehouse@laptop@")
+			.AddStage(Stage(6000).PlayerClip("enter"))
+			.AddStage(Stage(NoTimeout).PlayerClip("idle_a").LoopsUntilInteract())
+			.AddStage(Stage(6000).PlayerClip("exit"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -1.0f, 0.0f)
+			.InteractRange(0.50f)
+			.Repeatable()
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene();
+	}
+
+	static Interactable MakeGuitar()
+	{
+		return Interactable("Play Guitar", GuitarStand)
+			.AddExtraProp(ExtraProp("Held Guitar", Guitar)
+				.AttachToPlayer(AttachBone::LeftWrist)
+				.SpawnedByHook())
+			.AnimDict("amb@world_human_musician@guitar@male@base")
+			.AddStage(Stage(NoTimeout)
+				.PlayerClip("base")
+				.LoopsUntilInteract()
+				.PlayerUsesTaskPlayAnim(PlayAnimFlag_Loop))
+			.KeepPropsWhenDone()
+			.AddEndState(EndState::Primary().Alpha(255).Collision(CollisionState::On).Visibility(VisibilityState::Shown))
+			.StandOffset(0.0f, -0.65f, 0.70f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene()
+			.OnStageStart(&OnStageStart_Guitar)
+			.Repeatable()
+			.KeepPlayerWhereTheyStand()
+			.PlayerUsesTaskPlayAnim();
+	}
+
+	// Fix Breaker. Stage 0 is built like the Angle Grinder container's single stage: the box rides the player's
+	// held scene and nothing touches it afterwards. The end state keeps the fusebox's collision ON.
+	static Interactable MakeBreaker(const char* label, SpawnPersistentPropsFn spawnFn)
+	{
+		return Interactable(label, FuseBox)
+			.AddExtraProps(MakeBreakerFuseExtras())
+			.AnimDict(BreakerAnimDict)
+			.AddStages(MakeBreakerStages())
+			.KeepPropsWhenDone()
+			.AddEndState(EndState::Primary().Alpha(255).Collision(CollisionState::On).Visibility(VisibilityState::Shown))
+			.StandOffset(0.0f, -1.0f, 1.0f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.UnarmedDuringScene()
+			.Repeatable()
+			.OnSpawn(spawnFn)
+			.OnStageStart(&OnStageStart_Breaker)
+			.PickNextStage(&GetNextStage_Breaker)
+			.OnCleanup(&CustomCleanup_Breaker)
+			.ResolveParticipants(&ResolveParticipants_Breaker)
+			.OnIdleTick(&OnIdleTick_Breaker);
+	}
+
 	std::vector<InteractableDefinition> vInteractables =
 	{
-		{
-			"Grab Cash",
-			CashStack,
-			{},
-			{
-				{ "Duffel Bag", BagFallback, true }
-			},
-			"anim@scripted@player@mission@tun_table_grab@cash@",
-			{
-				{
-					{
-						{ AnimTarget::ExtraProp, "enter_bag" },
-						{ AnimTarget::Player,    "enter" }
-					},
-					6000, 1.0f, "enter_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				},
-				{
-					{
-						{ AnimTarget::PrimaryProp, "grab_cash" },
-						{ AnimTarget::ExtraProp,   "grab_bag" },
-						{ AnimTarget::Player,      "grab" }
-					},
-					30000, 1.0f, "grab_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				},
-				{
-					{
-						{ AnimTarget::ExtraProp, "exit_bag" },
-						{ AnimTarget::Player,    "exit" }
-					},
-					6000, 1.0f, "exit_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				}
-			},
-			BagOpenState::NoChange,
-			true,{},
-			Vector3(0.0f, -0.85f, 0.10f), 0.0f,
-			0.50f
-		},
-				{
-			"Grab Weed",
-			WeedStack,
-			{},
-			{
-				{ "Duffel Bag", BagFallback, true }
-			},
-			"anim@scripted@player@mission@tun_table_grab@cash@",
-			{
-				{
-					{
-						{ AnimTarget::ExtraProp, "enter_bag" },
-						{ AnimTarget::Player,    "enter" }
-					},
-					6000, 1.0f, "enter_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				},
-				{
-					{
-						{ AnimTarget::PrimaryProp, "grab_cash" },
-						{ AnimTarget::ExtraProp,   "grab_bag" },
-						{ AnimTarget::Player,      "grab" }
-					},
-					30000, 1.0f, "grab_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				},
-				{
-					{
-						{ AnimTarget::ExtraProp, "exit_bag" },
-						{ AnimTarget::Player,    "exit" }
-					},
-					6000, 1.0f, "exit_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				}
-			},
-			BagOpenState::NoChange,
-			true,{},
-			Vector3(0.0f, -0.85f, 0.10f), 0.0f,
-			0.50f
-		},
-						{
-			"Grab Gold",
-			GoldStack,
-			{},
-			{
-				{ "Duffel Bag", BagFallback, true }
-			},
-			"anim@scripted@player@mission@tun_table_grab@gold@",
-			{
-				{
-					{
-						{ AnimTarget::ExtraProp, "enter_bag" },
-						{ AnimTarget::Player,    "enter" }
-					},
-					6000, 1.0f, "enter_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				},
-				{
-					{
-						{ AnimTarget::PrimaryProp, "grab_gold" },
-						{ AnimTarget::ExtraProp,   "grab_bag" },
-						{ AnimTarget::Player,      "grab" }
-					},
-					30000, 1.0f, "grab_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				},
-				{
-					{
-						{ AnimTarget::ExtraProp, "exit_bag" },
-						{ AnimTarget::Player,    "exit" }
-					},
-					6000, 1.0f, "exit_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				}
-			},
-			BagOpenState::NoChange,
-			true,{},
-			Vector3(0.0f, -0.85f, 0.10f), 0.0f,
-			0.50f
-		},
-		{
-			"Grab Cocaine",
-			CokeStack,
-			{},
-			{
-				{ "Duffel Bag", BagFallback, true }
-			},
-			"anim@scripted@player@mission@tun_table_grab@cash@",
-			{
-				{
-					{
-						{ AnimTarget::ExtraProp, "enter_bag" },
-						{ AnimTarget::Player,    "enter" }
-					},
-					6000, 1.0f, "enter_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				},
-				{
-					{
-						{ AnimTarget::PrimaryProp, "grab_cash" },
-						{ AnimTarget::ExtraProp,   "grab_bag" },
-						{ AnimTarget::Player,      "grab" }
-					},
-					30000, 1.0f, "grab_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				},
-				{
-					{
-						{ AnimTarget::ExtraProp, "exit_bag" },
-						{ AnimTarget::Player,    "exit" }
-					},
-					6000, 1.0f, "exit_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				}
-			},
-			BagOpenState::NoChange,
-			true,{},
-			Vector3(0.0f, -0.85f, 0.10f), 0.0f,
-			0.50f
-		},
-		{
-			"Open Container",
-			ContainerClosed,
-			{},
-			{
-				{
-					"Opened Container",
-					ContainerOpened,
-					false,
-					ExtraPropAttachTarget::PrimaryProp,
-					true,
-					false,              // SpawnAtPlacement
-					AttachBone::Default,
-					false               // DeleteOnComplete - false: must persist via FinalPropStates, not be deleted
-				}
-			},
-			"anim@scripted@freemode@ig1_open_container@no_tools@male@",
-			{
-				{
-					{
-						{ AnimTarget::Player,      "action" },
-						{ AnimTarget::PrimaryProp, "action_container" }
-					},
-					6000, 1.0f, "action_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				}
-			},
-			BagOpenState::NoChange,
-			false,
-			{
-				{ AnimTarget::PrimaryProp, 0, 0,   false, false },
-				{ AnimTarget::ExtraProp,   0, 255, true,  true }
-			},
-			Vector3(0.0f, -3.90f, 1.25f), 0.0f,
-			0.50f
-		},
-{
-	"Open Container (Angle Grinder)",
-	TrContainer01a,
-	{
-		TrContainer01a, TrContainer01b, TrContainer01c, TrContainer01d, TrContainer01e,
-		TrContainer01f, TrContainer01g, TrContainer01h, TrContainer01i
-	},
-	{
-		{ "Duffel Bag", BagFallback, true, ExtraPropAttachTarget::Player, false, false, AttachBone::Default, true },
+		MakeGrabStack("Grab Cash",       CashStack,      GrabCashDict, "grab_cash"),
+		MakeGrabStack("Grab Weed",       WeedStack,      GrabCashDict, "grab_cash"),
+		MakeGrabStack("Grab Gold",       GoldStack,      GrabGoldDict, "grab_gold"),
+		MakeGrabStack("Grab Cocaine",    CokeStack,      GrabCashDict, "grab_cash"),
+		MakeGrabStack("Grab Books",      BookStack,      GrabGoldDict, "grab_gold"),
+		MakeGrabStack("Grab Servers",    ServerStack,    GrabGoldDict, "grab_gold"),
+		MakeGrabStack("Grab Hard Drives", HarddriveStack, GrabGoldDict, "grab_gold"),
 
-		{ "Angle Grinder", TrGrinder01a, false, ExtraPropAttachTarget::Player, false, false, AttachBone::LeftHand, true },
+		MakeOpenContainer("Open Container",          ContainerClosed,     ContainerOpened,     "anim@scripted@freemode@ig1_open_container@no_tools@male@"),
+		MakeAngleGrinderContainer(),
+		MakeOpenContainer("Open Container (Keypad)", Container_MW_Closed, Container_MW_Opened, "anim@scripted@freemode@ig1_open_container@male@"),
 
-		{ "Lock", TrLock01a, false, ExtraPropAttachTarget::PrimaryProp, false, true, AttachBone::Default, false, true,
-			Vector3(0.0f, -1.8130f, 1.2000f), Vector3() },
+		MakeElectricBox("Use Electric Box 1", ElectricBox1),
+		MakeElectricBox("Use Electric Box 2", ElectricBox2),
 
-		{ "Container Collision", TrContCollision, false, ExtraPropAttachTarget::PrimaryProp, true, true, AttachBone::Default, false }
-	},
-	"anim@scripted@player@mission@tunf_train_ig1_container_p1@male@",
-	{
-		{
-			{
-				{ AnimTarget::Player,      "action" },
-				{ AnimTarget::PrimaryProp, "action_container" },
-				{ AnimTarget::ExtraProp,   "action_bag",           0 },
-				{ AnimTarget::ExtraProp,   "action_angle_grinder", 1 },
-				{ AnimTarget::ExtraProp,   "action_lock",          2 }
-			},
-			30000, 1.0f, "",
-			1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-		}
-	},
-	BagOpenState::NoChange,
-	false,
-	{
-		{ AnimTarget::PrimaryProp, 0, 255, false, true },
-		{ AnimTarget::ExtraProp,   3, 0,   true,  false }
-	},
-	Vector3(0.0f, -2.35f, 1.0f), 0.0f,
-	0.50f,
-	&SpawnContainerPersistentProps
-},
-{
-			"Open Container (Keypad)",
-			Container_MW_Closed,
-			{},
-			{
-				{
-					"Opened Container",
-					Container_MW_Opened,
-					false,
-					ExtraPropAttachTarget::PrimaryProp,
-					true,
-					false,
-					AttachBone::Default,
-					false
-				}
-			},
-			"anim@scripted@freemode@ig1_open_container@male@",
-			{
-				{
-					{
-						{ AnimTarget::Player,      "action" },
-						{ AnimTarget::PrimaryProp, "action_container" }
-					},
-					6000, 1.0f, "action_facial",
-					1000.0f, -8.0f, 0, 0, 0.0f, 0, 0, 1000.0f
-				}
-			},
-			BagOpenState::NoChange,
-			false,
-			{
-				{ AnimTarget::PrimaryProp, 0, 0,   false, false },
-				{ AnimTarget::ExtraProp,   0, 255, true,  true }
-			},
-			Vector3(0.0f, -3.90f, 1.25f), 0.0f,
-			0.50f
-},
+		MakeLever("Flip Lever 1", Lever1,  0.0f),
+		MakeLever("Flip Lever 2", Lever2,  0.0f),
+		MakeLever("Flip Lever 3", Lever3, -0.15f),
+
+		MakePowerBox("Flip Lever 4", PowerBox),
+
+		MakeDisplayCase(),
+		MakeLaptop(),
+		MakeGuitar(),
+
+		MakeBreaker("Fix Breaker (Pre-Opened)", &SpawnBreaker_PreOpened),
+		MakeBreaker("Fix Breaker",  &SpawnBreaker_AllBlown),
+
+		MakeGrabClipboard("Grab Clipboard", ClipboardSchedule),
+
+		MakePullHardDrive(),
 	};
 
 	std::vector<InteractableInstance> vActiveInteractables;
 
+	// ========================================================================
+	//  6. ENGINE
+	// ========================================================================
 	SpoonerEntity SpawnInteractable(const InteractableDefinition& def)
 	{
 		Hash modelToSpawn = def.PropModel;
@@ -459,35 +1095,98 @@ namespace sub::Spooner::Interactables
 		return ent;
 	}
 
+	static bool IsStageFinished(const InteractableInstance& inst, const InteractableStage& stage)
+	{
+		DWORD elapsed = GET_GAME_TIMER() - inst.ActivationTime;
+		bool timedOut = stage.MaxDurationMs > 0 && elapsed >= (DWORD)stage.MaxDurationMs;
+
+		if (inst.Def->PlayerAnim == PlayerAnimMethod::TaskPlayAnim)
+		{
+			if (timedOut)
+				return true;
+			if (elapsed < 500)
+				return false;
+
+			for (auto& p : stage.Participants)
+			{
+				if (p.Target == AnimTarget::Player)
+					return !IS_ENTITY_PLAYING_ANIM(PLAYER_PED_ID(), inst.Def->AnimDict.c_str(), p.ClipName.c_str(), 3);
+			}
+			return true;
+		}
+
+		bool sceneFinished = (inst.SyncedScene == -1) || GET_SYNCHRONIZED_SCENE_PHASE(inst.SyncedScene) >= 0.99f;
+		return sceneFinished || timedOut;
+	}
+
 	static void StartStage(InteractableInstance& inst, size_t stageIndex)
 	{
+		if (inst.Def->OnStageStart)
+			inst.Def->OnStageStart(inst, stageIndex);
+
 		const InteractableStage& stage = inst.Def->Stages[stageIndex];
+
+		std::vector<SceneParticipant> participants = stage.Participants;
+		if (inst.Def->ResolveParticipants)
+			inst.Def->ResolveParticipants(inst, stageIndex, participants);
 
 		GTAped myPed = PLAYER_PED_ID();
 
-		Vector3 standPos = GetInteractPosition(inst);
-		myPed.SetPosition(standPos);
-		myPed.SetHeading(inst.AnchorRot.z + inst.Def->PlayerHeadingOffset);
-
-		int syncedScene = CREATE_SYNCHRONIZED_SCENE(inst.AnchorPos.x, inst.AnchorPos.y, inst.AnchorPos.z, inst.AnchorRot.x, inst.AnchorRot.y, inst.AnchorRot.z, 2);
-		inst.SyncedScene = syncedScene;
-		inst.ActivationTime = GET_GAME_TIMER();
-
-		if (syncedScene == -1)
+		if (inst.Def->RepositionPlayer && inst.Def->Approach == ApproachMethod::Teleport)
 		{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ Failed to create synced scene.");
-			return;
+			Vector3 standPos = GetInteractPosition(inst);
+			myPed.SetPosition(standPos);
+			myPed.SetHeading(inst.AnchorRot.z + inst.Def->PlayerHeadingOffset);
 		}
 
-		SET_SYNCHRONIZED_SCENE_HOLD_LAST_FRAME(syncedScene, true);
-		SET_SYNCHRONIZED_SCENE_RATE(syncedScene, stage.SceneRate);
+		const bool playerUsesTaskPlayAnim = inst.Def->PlayerAnim == PlayerAnimMethod::TaskPlayAnim;
+		const bool stageHasProps = std::any_of(participants.begin(), participants.end(),
+			[](const SceneParticipant& p) { return p.Target != AnimTarget::Player; });
+		const bool needsScene = !playerUsesTaskPlayAnim || stageHasProps;
+
+		const bool propsGetOwnScene = stageHasProps && !playerUsesTaskPlayAnim && !stage.PauseOnEnd;
+
+		inst.ActivationTime = GET_GAME_TIMER();
+		inst.SyncedScene = -1;
+
+		int playerScene = -1;
+		int propScene = -1;
+		int primaryScene = -1;
+
+		if (needsScene)
+		{
+			const bool firstSceneHolds = playerUsesTaskPlayAnim ? stage.PauseOnEnd : true;
+			playerScene = CreateScene(inst, stage, firstSceneHolds);
+			propScene = playerScene;
+
+			if (playerScene != -1 && propsGetOwnScene)
+				propScene = CreateScene(inst, stage, false);
+
+			primaryScene = propScene;
+			if (playerScene != -1 && inst.Def->PrimaryPropKeepsOwnOrigin)
+				primaryScene = CreateScene(inst, stage, stage.PauseOnEnd, false);
+
+			inst.SyncedScene = playerScene;
+
+			if (playerScene == -1 || propScene == -1 || primaryScene == -1)
+			{
+				Game::Print::PrintBottomCentre("~r~Error:~s~ Failed to create synced scene.");
+				return;
+			}
+		}
+
+		if (stage.LoopUntilInteract)
+		{
+			Game::CustomHelpText::ShowTimedText(oss_ << "Press ~INPUT_CONTEXT~ again to stop.", 4000);
+			SET_AUDIO_FLAG("IsDirectorModeActive", true);
+		}
 
 		if (!stage.FacialClip.empty())
 		{
 			PED::PLAY_FACIAL_ANIM(myPed.Handle(), stage.FacialClip.c_str(), inst.Def->AnimDict.c_str());
 		}
 
-		for (auto& p : stage.Participants)
+		for (auto& p : participants)
 		{
 			if (p.Target == AnimTarget::Player)
 			{
@@ -495,52 +1194,96 @@ namespace sub::Spooner::Interactables
 				SET_PED_RAGDOLL_ON_COLLISION(myPed.Handle(), false);
 				inst.bRagdollDisabled = true;
 
-				TASK::TASK_SYNCHRONIZED_SCENE(
-					myPed.Handle(), syncedScene,
-					inst.Def->AnimDict.c_str(), p.ClipName.c_str(),
-					stage.BlendIn, stage.BlendOut,
-					stage.Flags, stage.RagdollBlockingFlags, stage.MoverBlendDelta, stage.IkFlags
-				);
+				if (playerUsesTaskPlayAnim)
+				{
+					TASK_PLAY_ANIM(
+						myPed.Handle(),
+						inst.Def->AnimDict.c_str(), p.ClipName.c_str(),
+						stage.BlendIn, stage.BlendOut,
+						stage.PlayAnim.DurationMs, stage.PlayAnim.Flag, stage.PlayAnim.PlaybackRate,
+						stage.PlayAnim.LockPos, stage.PlayAnim.LockPos, stage.PlayAnim.LockPos
+					);
+				}
+				else
+				{
+					TASK::TASK_SYNCHRONIZED_SCENE(
+						myPed.Handle(), playerScene,
+						inst.Def->AnimDict.c_str(), p.ClipName.c_str(),
+						stage.BlendIn, stage.BlendOut,
+						stage.Flags, stage.RagdollBlockingFlags, stage.MoverBlendDelta, stage.IkFlags
+					);
+
+					if (inst.Def->PlayerAlsoPlaysEntityAnim)
+					{
+						ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(
+							myPed.Handle(), playerScene,
+							p.ClipName.c_str(), inst.Def->AnimDict.c_str(),
+							stage.BlendIn, stage.BlendOut, stage.PropFlags, stage.PlaybackRate
+						);
+					}
+				}
 			}
 			else
 			{
-				SpoonerEntity& targetEnt = (p.Target == AnimTarget::PrimaryProp)
-					? inst.Ent
-					: inst.ExtraEnts[p.ExtraPropIndex];
-
-				EntityManagement::DetachEntity(targetEnt);
-				targetEnt.handle.FreezePosition(false);
-
-				if (p.Target == AnimTarget::PrimaryProp)
-				{
-					targetEnt.handle.SetPosition(inst.AnchorPos);
-					targetEnt.handle.SetRotation(inst.AnchorRot);
-				}
-
-				ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(
-					targetEnt.handle.Handle(), syncedScene,
-					p.ClipName.c_str(), inst.Def->AnimDict.c_str(),
-					stage.BlendIn, stage.BlendOut, stage.PropFlags, stage.PlaybackRate
-				);
+				PlayPropParticipant(inst, p, (p.Target == AnimTarget::PrimaryProp) ? primaryScene : propScene, stage);
 			}
 		}
 	}
 
-	static void ActivateInteractable(InteractableInstance& inst)
+	static const char* FirstPlayerClip(const InteractableDefinition& def)
 	{
-		inst.Ent.handle.FreezePosition(false);
+		for (auto& st : def.Stages)
+			for (auto& p : st.Participants)
+				if (p.Target == AnimTarget::Player)
+					return p.ClipName.c_str();
+		return nullptr;
+	}
 
-		STREAMING::REQUEST_ANIM_DICT(inst.Def->AnimDict.c_str());
-		int waitCount = 0;
-		while (!STREAMING::HAS_ANIM_DICT_LOADED(inst.Def->AnimDict.c_str()) && waitCount++ < 500)
-			WAIT(0);
+	static void GetApproachTarget(const InteractableInstance& inst, Vector3& outPos, float& outHeading)
+	{
+		outPos = GetInteractPosition(inst);
+		outHeading = inst.AnchorRot.z + inst.Def->PlayerHeadingOffset;
 
-		if (!STREAMING::HAS_ANIM_DICT_LOADED(inst.Def->AnimDict.c_str()))
+		if (inst.Def->Approach == ApproachMethod::SlideToClipStart)
 		{
-			Game::Print::PrintBottomCentre("~r~Error:~s~ Anim dict failed to load.");
-			return;
+			const char* clip = FirstPlayerClip(*inst.Def);
+			if (clip)
+			{
+				const char* dict = inst.Def->AnimDict.c_str();
+				const Vector3 o = GetSceneOrigin(inst);
+				const Vector3& r = inst.AnchorRot;
+				const float yaw = r.z + inst.Def->SceneHeadingOffset;
+
+				outPos = PED::GET_ANIM_INITIAL_OFFSET_POSITION(dict, clip, o.x, o.y, o.z, r.x, r.y, yaw, 0.0f, 2);
+				outHeading = PED::GET_ANIM_INITIAL_OFFSET_ROTATION(dict, clip, o.x, o.y, o.z, r.x, r.y, yaw, 0.0f, 2).z;
+			}
 		}
 
+		outPos.z += inst.Def->ApproachZOffset;
+	}
+
+	static void StartApproach(InteractableInstance& inst)
+	{
+		GTAped myPed = PLAYER_PED_ID();
+
+		Vector3 mark;
+		float heading;
+		GetApproachTarget(inst, mark, heading);
+
+		ScrHandle seq = 0;
+		OPEN_SEQUENCE_TASK(&seq);
+		TASK::TASK_PED_SLIDE_TO_COORD(0, mark.x, mark.y, mark.z, heading, inst.Def->ApproachSpeed);
+		CLOSE_SEQUENCE_TASK(seq);
+		TASK_PERFORM_SEQUENCE(myPed.Handle(), seq);
+		CLEAR_SEQUENCE_TASK(&seq);
+
+		inst.bActivated = true;
+		inst.Phase = InteractPhase::Approaching;
+		inst.ApproachStartTime = GET_GAME_TIMER();
+	}
+
+	static void BeginScenePlayback(InteractableInstance& inst)
+	{
 		GTAped myPed = PLAYER_PED_ID();
 		int rootBone = myPed.GetBoneIndex(Bone::SKEL_ROOT);
 
@@ -570,8 +1313,8 @@ namespace sub::Spooner::Interactables
 		for (size_t i = 0; i < inst.Def->ExtraProps.size(); i++)
 		{
 			const auto& extraDef = inst.Def->ExtraProps[i];
-			if (extraDef.SpawnAtPlacement)
-				continue; // already spawned in SpawnInteractable
+			if (extraDef.SpawnAtPlacement || extraDef.ManualSpawn)
+				continue;
 
 			Hash modelToSpawn = extraDef.MatchWornComponent
 				? ResolveWornBagModel(wornBag, extraDef.PropModel)
@@ -591,15 +1334,9 @@ namespace sub::Spooner::Interactables
 					? inst.Ent.handle
 					: (GTAentity)myPed;
 
-				int defaultBone = (extraDef.AttachTarget == ExtraPropAttachTarget::PrimaryProp) ? 0 : rootBone;
-				int attachBone = defaultBone;
-				if (extraDef.AttachTarget == ExtraPropAttachTarget::Player)
-				{
-					if (extraDef.BoneOverride == AttachBone::LeftHand)
-						attachBone = myPed.GetBoneIndex(Bone::LeftHand);
-					else if (extraDef.BoneOverride == AttachBone::RightHand)
-						attachBone = myPed.GetBoneIndex(Bone::RightHand);
-				}
+				int attachBone = (extraDef.AttachTarget == ExtraPropAttachTarget::PrimaryProp)
+					? 0
+					: ResolveAttachBoneIndex(myPed, extraDef.BoneOverride, rootBone);
 
 				EntityManagement::AttachEntity(extraEnt, attachTarget, attachBone, extraDef.AttachOffset, extraDef.AttachRotation);
 				EntityManagement::RemoveEntityFromDb(extraEnt);
@@ -607,9 +1344,52 @@ namespace sub::Spooner::Interactables
 			inst.ExtraEnts[i] = extraEnt;
 		}
 
-		inst.CurrentStage = 0;
-		StartStage(inst, 0);
+		size_t startStage = (inst.ResumeStage < inst.Def->Stages.size()) ? inst.ResumeStage : 0;
+		inst.CurrentStage = startStage;
+		StartStage(inst, startStage);
 		inst.bActivated = true;
+		inst.Phase = InteractPhase::Playing;
+	}
+
+	static void ActivateInteractable(InteractableInstance& inst)
+	{
+		bool primaryAnimates = false;
+		for (auto& st : inst.Def->Stages)
+			for (auto& p : st.Participants)
+				if (p.Target == AnimTarget::PrimaryProp) { primaryAnimates = true; break; }
+
+		if (primaryAnimates)
+			inst.Ent.handle.FreezePosition(false);
+
+		STREAMING::REQUEST_ANIM_DICT(inst.Def->AnimDict.c_str());
+		int waitCount = 0;
+		while (!STREAMING::HAS_ANIM_DICT_LOADED(inst.Def->AnimDict.c_str()) && waitCount++ < 500)
+			WAIT(0);
+
+		if (!STREAMING::HAS_ANIM_DICT_LOADED(inst.Def->AnimDict.c_str()))
+		{
+			Game::Print::PrintBottomCentre("~r~Error:~s~ Anim dict failed to load.");
+			return;
+		}
+
+		GTAped myPed = PLAYER_PED_ID();
+
+		if (inst.Def->UnarmedDuringScene && !inst.bWeaponHolstered)
+		{
+			Hash current = 0;
+			GET_CURRENT_PED_WEAPON(myPed.Handle(), &current, true);
+			inst.PreviousWeapon = current;
+			SET_CURRENT_PED_WEAPON(myPed.Handle(), WEAPON_UNARMED, true);
+			inst.bWeaponHolstered = true;
+		}
+
+		if (inst.Def->Approach != ApproachMethod::Teleport)
+		{
+			StartApproach(inst);
+			return;
+		}
+
+		BeginScenePlayback(inst);
 	}
 
 	void Tick()
@@ -619,6 +1399,7 @@ namespace sub::Spooner::Interactables
 
 		GTAped myPed = PLAYER_PED_ID();
 		Vector3 myPos = myPed.GetPosition();
+		bool bAnyInstanceDead = false;
 
 		for (auto& inst : vActiveInteractables)
 		{
@@ -630,6 +1411,7 @@ namespace sub::Spooner::Interactables
 						EntityManagement::DeleteEntity(extraEnt);
 				}
 				inst.ExtraEnts.clear();
+				bAnyInstanceDead = true;
 				continue;
 			}
 
@@ -638,16 +1420,56 @@ namespace sub::Spooner::Interactables
 
 			if (inst.bActivated)
 			{
-				const InteractableStage& stage = inst.Def->Stages[inst.CurrentStage];
-				bool sceneFinished = (inst.SyncedScene == -1) || GET_SYNCHRONIZED_SCENE_PHASE(inst.SyncedScene) >= 0.99f;
-				bool timedOut = GET_GAME_TIMER() - inst.ActivationTime >= (DWORD)stage.MaxDurationMs;
-
-				if (sceneFinished || timedOut)
+				if (inst.Phase == InteractPhase::Approaching)
 				{
-					if (inst.CurrentStage + 1 < inst.Def->Stages.size())
+					const DWORD elapsed = GET_GAME_TIMER() - inst.ApproachStartTime;
+					const bool arrived = elapsed > 100 && GET_SEQUENCE_PROGRESS(myPed.Handle()) == -1;
+
+					if (arrived || elapsed > (DWORD)inst.Def->ApproachTimeoutMs)
 					{
-						inst.CurrentStage++;
-						StartStage(inst, inst.CurrentStage);
+						if (!arrived)
+						{
+							Vector3 mark;
+							float heading;
+							GetApproachTarget(inst, mark, heading);
+							mark.z -= inst.Def->ApproachZOffset;
+							CLEAR_PED_TASKS_IMMEDIATELY(myPed.Handle());
+							myPed.SetPosition(mark);
+							myPed.SetHeading(heading);
+						}
+						BeginScenePlayback(inst);
+					}
+					continue;
+				}
+
+				if (inst.Def->OnStageTick)
+					inst.Def->OnStageTick(inst, inst.CurrentStage);
+
+				const InteractableStage& stage = inst.Def->Stages[inst.CurrentStage];
+
+				bool stageShouldEnd;
+				if (stage.LoopUntilInteract)
+				{
+					bool pastGracePeriod = (GET_GAME_TIMER() - inst.ActivationTime) > 500;
+					stageShouldEnd = pastGracePeriod && PAD::IS_CONTROL_JUST_PRESSED(0, INPUT_CONTEXT);
+					if (stageShouldEnd)
+						SET_AUDIO_FLAG("IsDirectorModeActive", false);
+				}
+				else
+				{
+					stageShouldEnd = IsStageFinished(inst, stage);
+				}
+
+				if (stageShouldEnd)
+				{
+					size_t nextStage = inst.Def->GetNextStage
+						? inst.Def->GetNextStage(inst, inst.CurrentStage)
+						: inst.CurrentStage + 1;
+
+					if (nextStage < inst.Def->Stages.size())
+					{
+						inst.CurrentStage = nextStage;
+						StartStage(inst, nextStage);
 					}
 					else
 					{
@@ -658,6 +1480,12 @@ namespace sub::Spooner::Interactables
 							myPed.SetCanRagdoll(true);
 							SET_PED_RAGDOLL_ON_COLLISION(myPed.Handle(), true);
 							inst.bRagdollDisabled = false;
+						}
+
+						if (inst.bWeaponHolstered)
+						{
+							SET_CURRENT_PED_WEAPON(myPed.Handle(), inst.PreviousWeapon, true);
+							inst.bWeaponHolstered = false;
 						}
 
 						if (inst.WornBagSlot != -1)
@@ -723,15 +1551,34 @@ namespace sub::Spooner::Interactables
 							}
 						}
 
-						inst.bCleanupDone = true;
+						if (inst.Def->CustomCleanup)
+							inst.Def->CustomCleanup(inst);
+
+						inst.Phase = InteractPhase::Idle;
+
+						if (inst.Def->Repeatable)
+						{
+							inst.bActivated = false;
+							inst.CurrentStage = 0;
+						}
+						else
+						{
+							inst.bCleanupDone = true;
+						}
 					}
 				}
 
 				continue;
 			}
 
-			inst.AnchorPos = inst.Ent.handle.GetPosition();
-			inst.AnchorRot = inst.Ent.handle.GetRotation();
+			if (inst.Def->OnIdleTick)
+				inst.Def->OnIdleTick(inst);
+
+			if (!inst.bAnchorLocked)
+			{
+				inst.AnchorPos = inst.Ent.handle.GetPosition();
+				inst.AnchorRot = inst.Ent.handle.GetRotation();
+			}
 
 			for (size_t i = 0; i < inst.Def->ExtraProps.size() && i < inst.ExtraEnts.size(); i++)
 			{
@@ -756,25 +1603,34 @@ namespace sub::Spooner::Interactables
 				}
 			}
 
-			Vector3 entPos = GetInteractPosition(inst);
-			float dist = GET_DISTANCE_BETWEEN_COORDS(myPos.x, myPos.y, myPos.z, entPos.x, entPos.y, entPos.z, true);
+			const Vector3 entPos = GetInteractPosition(inst);
+			const float range = inst.Def->InteractRange;
+			const float dx = myPos.x - entPos.x;
+			const float dy = myPos.y - entPos.y;
+			const float dz = myPos.z - entPos.z;
 
-			if (dist <= inst.Def->InteractRange)
+			if ((dx * dx + dy * dy + dz * dz) <= range * range)
 			{
-				Game::Print::SetupDraw(GTAfont::Arial, Vector2(0, 0.4f), false, true, false, RGBA(255, 255, 255, 190));
-				Game::Print::drawstring("Press ~b~[E]~s~ to interact.", NULL, 0.1f);
+				Game::CustomHelpText::ShowTimedText("Press ~INPUT_CONTEXT~ to interact.", 4000);
 
 				if (PAD::IS_CONTROL_JUST_PRESSED(0, INPUT_CONTEXT))
 				{
 					ActivateInteractable(inst);
 				}
 			}
+			else
+			{
+				inst.bHasPlayedInteractSound = false;
+			}
+		}
 
-		vActiveInteractables.erase(
-			std::remove_if(vActiveInteractables.begin(), vActiveInteractables.end(),
-				[](const InteractableInstance& inst) { return !inst.Ent.handle.Exists(); }),
-			vActiveInteractables.end()
-		);
+		if (bAnyInstanceDead)
+		{
+			vActiveInteractables.erase(
+				std::remove_if(vActiveInteractables.begin(), vActiveInteractables.end(),
+					[](const InteractableInstance& i) { return !i.Ent.handle.Exists(); }),
+				vActiveInteractables.end()
+			);
+		}
 	}
-}
 }
