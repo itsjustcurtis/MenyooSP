@@ -210,9 +210,16 @@ namespace sub::Spooner::SpoonerCursor
 
 		void AddInstructionalButtons(bool isInDb)
 		{
-			Menu::add_IB(INPUT_CURSOR_CANCEL, "Open property menu");
-			if (!state.dragging)
-				Menu::add_IB(INPUT_CURSOR_ACCEPT, "Move entity around (hold)");
+			if (Menu::usingControllerInput) {
+				Menu::add_IB(INPUT_FRONTEND_RT, "Open property menu");
+				if (!state.dragging)
+					Menu::add_IB(INPUT_FRONTEND_LT, "Move entity around (hold)");
+			}
+			else {
+				Menu::add_IB(INPUT_CURSOR_CANCEL, "Open property menu");
+				if (!state.dragging)
+					Menu::add_IB(INPUT_CURSOR_ACCEPT, "Move entity around (hold)");
+			}
 			Keybinds::AddBindIB("spooner_edit_copy", "Copy (and add to DB)");
 			Keybinds::AddBindIB("spooner_cursor_remove", "Delete");
 			if (!isInDb)
@@ -243,7 +250,7 @@ namespace sub::Spooner::SpoonerCursor
 			}
 
 			GTAentity target = GetTargetEntity(hoveredEntity);
-			if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_CURSOR_CANCEL) && target.Exists())
+			if ((IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_CURSOR_CANCEL) || IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_RT)) && target.Exists())
 			{
 				if (!state.dragging)
 					SpoonerMode::SetAsSelectedEntity(target);
@@ -251,12 +258,12 @@ namespace sub::Spooner::SpoonerCursor
 				return;
 			}
 
-			if (!state.dragging && hoveredEntity.Exists() && IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_ACCEPT))
+			if (!state.dragging && hoveredEntity.Exists() && (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_ACCEPT) || IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LT)))
 				BeginDrag(hoveredEntity);
 
 			if (state.dragging)
 			{
-				if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_ACCEPT))
+				if (IS_DISABLED_CONTROL_PRESSED(2, INPUT_CURSOR_ACCEPT) || IS_DISABLED_CONTROL_PRESSED(2, INPUT_FRONTEND_LT))
 					UpdateDrag();
 				else
 					EndDrag();
@@ -314,7 +321,7 @@ namespace sub::Spooner::SpoonerCursor
 			Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.35f, 0.35f), true, false, true, RGBA(255, 255, 255, textAlpha));
 			Game::Print::drawstring(state.hoveredEntityName, 0.5f, textY);
 			Game::Print::SetupDraw(GTAfont::Arial, Vector2(0.22f, 0.22f), true, false, true, RGBA(195, 195, 195, static_cast<UINT8>(textAlpha * 0.75f)));
-			Game::Print::drawstring("Right click to manage this entity", 0.5f, instructionY);
+			Menu::usingControllerInput ? Game::Print::drawstring("Right trigger to manage this entity", 0.5f, instructionY) : Game::Print::drawstring("Right click to manage this entity", 0.5f, instructionY);
 		}
 	}
 
