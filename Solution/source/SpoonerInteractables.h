@@ -15,7 +15,7 @@ namespace sub::Spooner::Interactables
 	// ========================================================================
 	//  1. ENUMS & NAMED CONSTANTS
 	// ========================================================================
-	enum class AnimTarget { Player, PrimaryProp, ExtraProp };
+	enum class AnimTarget { Player, PrimaryProp, ExtraProp, PlayerWeapon };
 	enum class BagOpenState { NoChange, Opened, Closed };
 	enum class ExtraPropAttachTarget { Player, PrimaryProp };
 	enum class AttachBone { Default, LeftWrist, RightWrist };
@@ -64,6 +64,7 @@ namespace sub::Spooner::Interactables
 		Vector3 AttachOffset = Vector3();
 		Vector3 AttachRotation = Vector3();
 		bool ManualSpawn = false;
+		std::vector<Hash> PropModelVariants;
 	};
 
 	struct PropEndState
@@ -148,6 +149,7 @@ namespace sub::Spooner::Interactables
 		bool PlayerAlsoPlaysEntityAnim = false;
 		bool UnarmedDuringScene = false;
 		bool PrimaryPropKeepsOwnOrigin = false;
+		Hash SceneWeapon = 0;
 	};
 
 	struct ExtraPropRuntime
@@ -232,6 +234,7 @@ namespace sub::Spooner::Interactables
 		ExtraProp& PinnedUntilActivated() { d.FreezeAtSpawn = true; return *this; }
 		ExtraProp& DeleteWhenDone() { d.DeleteOnComplete = true; return *this; }
 		ExtraProp& KeepWhenDone() { d.DeleteOnComplete = false; return *this; }
+		ExtraProp& RandomExtraModel(std::initializer_list<Hash> models) { d.PropModelVariants.assign(models); return *this; }
 
 		ExtraPropDef Build() const { return d; }
 	private:
@@ -250,6 +253,7 @@ namespace sub::Spooner::Interactables
 			s.Participants.push_back({ AnimTarget::ExtraProp, clip, extraPropIndex });
 			return *this;
 		}
+		Stage& PlayerWeaponClip(const char* clip) { s.Participants.push_back({ AnimTarget::PlayerWeapon, clip, 0 }); return *this; }
 		Stage& Facial(const char* clip) { s.FacialClip = clip; return *this; }
 		Stage& SceneRate(float rate) { s.SceneRate = rate; return *this; }
 		Stage& Blend(float blendIn, float blendOut) { s.BlendIn = blendIn; s.BlendOut = blendOut; return *this; }
@@ -345,6 +349,8 @@ namespace sub::Spooner::Interactables
 		Interactable& PlayerAlsoPlaysEntityAnim() { d.PlayerAlsoPlaysEntityAnim = true; return *this; }
 		Interactable& UnarmedDuringScene() { d.UnarmedDuringScene = true; return *this; }
 		Interactable& PrimaryPropIgnoresSceneOrigin() { d.PrimaryPropKeepsOwnOrigin = true; return *this; }
+
+		Interactable& EquipDuringScene(Hash weapon) { d.SceneWeapon = weapon; return *this; }
 
 		InteractableDefinition Build() const { return d; }
 		operator InteractableDefinition() const { return d; }

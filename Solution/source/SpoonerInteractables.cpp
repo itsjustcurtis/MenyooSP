@@ -94,6 +94,35 @@ namespace sub::Spooner::Interactables
 	static const Hash ServerCleanStack = GET_HASH_KEY("tr_prop_tr_corp_servercln_01a");
 	static const Hash ServerDrive = GET_HASH_KEY("m24_2_prop_m42_serverdrive_01a");
 
+	static const Hash PaintingCase = GET_HASH_KEY("ch_prop_ch_sec_cabinet_02a");
+	static const Hash PaintingDiamondCasino01a = GET_HASH_KEY("ch_prop_vault_painting_01a");
+	static const Hash PaintingDiamondCasino01b = GET_HASH_KEY("ch_prop_vault_painting_01b");
+	static const Hash PaintingDiamondCasino01c = GET_HASH_KEY("ch_prop_vault_painting_01c");
+	static const Hash PaintingDiamondCasino01d = GET_HASH_KEY("ch_prop_vault_painting_01d");
+	static const Hash PaintingDiamondCasino01e = GET_HASH_KEY("ch_prop_vault_painting_01e");
+	static const Hash PaintingDiamondCasino01f = GET_HASH_KEY("ch_prop_vault_painting_01f");
+	static const Hash PaintingDiamondCasino01g = GET_HASH_KEY("ch_prop_vault_painting_01g");
+	static const Hash PaintingDiamondCasino01h = GET_HASH_KEY("ch_prop_vault_painting_01h");
+	static const Hash PaintingDiamondCasino01i = GET_HASH_KEY("ch_prop_vault_painting_01i");
+	static const Hash PaintingCayoPerico01a = GET_HASH_KEY("h4_prop_h4_painting_01a");
+	static const Hash PaintingCayoPerico01b = GET_HASH_KEY("h4_prop_h4_painting_01b");
+	static const Hash PaintingCayoPerico01c = GET_HASH_KEY("h4_prop_h4_painting_01c");
+	static const Hash PaintingCayoPerico01d = GET_HASH_KEY("h4_prop_h4_painting_01d");
+	static const Hash PaintingCayoPerico01e = GET_HASH_KEY("h4_prop_h4_painting_01e");
+	static const Hash PaintingCayoPerico01f = GET_HASH_KEY("h4_prop_h4_painting_01f");
+	static const Hash PaintingCayoPerico01g = GET_HASH_KEY("h4_prop_h4_painting_01g");
+	static const Hash PaintingCayoPerico01h = GET_HASH_KEY("h4_prop_h4_painting_01h");
+	static const Hash PaintingBottomDollar01a = GET_HASH_KEY("m24_1_prop_m41_painting_01a");
+	static const Hash PaintingBottomDollar01b = GET_HASH_KEY("m24_1_prop_m41_painting_01b");
+	static const Hash PaintingBottomDollar01c = GET_HASH_KEY("m24_1_prop_m41_painting_01c");
+	static const Hash PaintingBottomDollar01d = GET_HASH_KEY("m24_1_prop_m41_painting_01d");
+
+	static const Hash TrolleyCash = GET_HASH_KEY("hei_prop_hei_cash_trolly_01");
+	static const Hash TrolleyCashDiamondCasino = GET_HASH_KEY("ch_prop_ch_cash_trolly_01b");
+	static const Hash TrolleyDiamond = GET_HASH_KEY("ch_prop_diamond_trolly_01b");
+	static const Hash TrolleyGold = GET_HASH_KEY("ch_prop_gold_trolly_01c");
+	static const Hash TrolleyGoldDiamondCasino = GET_HASH_KEY("ch_prop_gold_trolly_01b");
+
 	// ========================================================================
 	//  2. WORN-BAG MATCHING (slot 9 = Story Mode TASK, slot 5 = Online HAND)
 	// ========================================================================
@@ -188,6 +217,12 @@ namespace sub::Spooner::Interactables
 		return inst.AnchorPos + (right * o.x) + (forward * o.y) + Vector3(0.0f, 0.0f, o.z);
 	}
 
+	static Hash PickExtraModel(const ExtraPropDef& def)
+	{
+		if (!def.PropModelVariants.empty())
+			return def.PropModelVariants[rand() % (int)def.PropModelVariants.size()];
+		return def.PropModel;
+	}
 
 	static void SpawnContainerPersistentProps(InteractableInstance& inst)
 	{
@@ -199,7 +234,7 @@ namespace sub::Spooner::Interactables
 			if (!extraDef.SpawnAtPlacement)
 				continue;
 
-			SpoonerEntity extraEnt = EntityManagement::AddProp(extraDef.PropModel, extraDef.Label);
+			SpoonerEntity extraEnt = EntityManagement::AddProp(PickExtraModel(extraDef), extraDef.Label);
 			if (extraEnt.handle.Exists())
 			{
 				extraEnt.handle.SetIsCollisionEnabled(false);
@@ -249,6 +284,19 @@ namespace sub::Spooner::Interactables
 
 		ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(
 			targetEnt.handle.Handle(), syncedScene,
+			p.ClipName.c_str(), inst.Def->AnimDict.c_str(),
+			stage.BlendIn, stage.BlendOut, stage.PropFlags, stage.PlaybackRate
+		);
+	}
+
+	static void PlayWeaponParticipant(InteractableInstance& inst, const SceneParticipant& p, int syncedScene, const InteractableStage& stage)
+	{
+		GTAentity weapon = GET_CURRENT_PED_WEAPON_ENTITY_INDEX(PLAYER_PED_ID(), 0);
+		if (!weapon.Exists())
+			return;
+
+		ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(
+			weapon.Handle(), syncedScene,
 			p.ClipName.c_str(), inst.Def->AnimDict.c_str(),
 			stage.BlendIn, stage.BlendOut, stage.PropFlags, stage.PlaybackRate
 		);
@@ -749,7 +797,6 @@ namespace sub::Spooner::Interactables
 			.StandOffset(0.0f, -0.85f, 0.10f)
 			.InteractRange(0.50f)
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
 			.UnarmedDuringScene();
 	}
 
@@ -767,14 +814,42 @@ namespace sub::Spooner::Interactables
 			.StandOffset(0.0f, 0.0f, 0.10f)
 			.InteractRange(1.0f)
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
+			.PrimaryPropIgnoresSceneOrigin()
 			.UnarmedDuringScene()
 			.KeepPlayerWhereTheyStand()
 			.PlayerUsesTaskPlayAnim()
 			.OnStageStart(&OnStageStart_Clipboard);
 	}
 
-	static Interactable MakePullHardDrive()
+	static Interactable MakePullHardDrive1()
+	{
+		return Interactable("Pull Hard Drive (With Bag)", ServerCleanStack)
+			.AnimDict("anim@scripted@player@mission@tun_bunk_ig1_hdd_server@male@")
+			.AddExtraProp(ExtraProp("Server Drive", ServerDrive)
+				.AttachToPrimaryProp(Vector3(0.0f, -0.2700f, 0.9000f))
+				.SpawnsAtPlacement()
+				.PinnedUntilActivated()
+				.DeleteWhenDone())
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddStage(Stage(30000)
+				.PlayerClip("action")
+				.ExtraPropClip(0, "action_drive")
+				.ExtraPropClip(1, "action_bag")
+				.Facial("action_facial")
+				.Blend(16.0f, -16.0f))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -1.0f, 1.0f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, -0.3f, 0.7f)
+			.PrimaryPropIgnoresSceneOrigin()
+			.PlayerAlsoPlaysEntityAnim()
+			.UnarmedDuringScene()
+			.OnSpawn(&SpawnContainerPersistentProps);
+			// Big thanks to HKH for the help on this one!
+	}
+
+	static Interactable MakePullHardDrive2()
 	{
 		return Interactable("Pull Hard Drive", ServerCleanStack)
 			.AnimDict("anim@scripted@player@fix_club_ig1_hdd_remove@male@")
@@ -798,7 +873,6 @@ namespace sub::Spooner::Interactables
 			.PlayerAlsoPlaysEntityAnim()
 			.UnarmedDuringScene()
 			.OnSpawn(&SpawnContainerPersistentProps);
-			// Thanks to HKH for the help on this one!
 	}
 
 	static Interactable MakeOpenContainer(const char* label, Hash closedModel, Hash openedModel, const char* animDict)
@@ -819,7 +893,6 @@ namespace sub::Spooner::Interactables
 			.StandOffset(0.0f, -3.90f, 1.25f)
 			.InteractRange(0.50f)
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
 			.UnarmedDuringScene();
 	}
 
@@ -855,7 +928,6 @@ namespace sub::Spooner::Interactables
 			.InteractRange(0.50f)
 			.OnSpawn(&SpawnContainerPersistentProps)
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
 			.UnarmedDuringScene();
 	}
 
@@ -870,7 +942,6 @@ namespace sub::Spooner::Interactables
 			.StandOffset(0.0f, -1.0f, 1.25f)
 			.InteractRange(0.50f)
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
 			.UnarmedDuringScene();
 	}
 
@@ -884,7 +955,6 @@ namespace sub::Spooner::Interactables
 			.StandOffset(0.0f, -0.65f, standZ)
 			.InteractRange(0.50f)
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
 			.UnarmedDuringScene();
 	}
 
@@ -897,7 +967,6 @@ namespace sub::Spooner::Interactables
 			.StandOffset(0.0f, -0.85f, 0.0f)
 			.InteractRange(0.50f)
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
 			.UnarmedDuringScene();
 	}
 
@@ -910,6 +979,35 @@ namespace sub::Spooner::Interactables
 			.ExtraPropClip(1, (base + "_cutter").c_str())
 			.ExtraPropClip(0, (base + "_bag").c_str())
 			.Facial((base + "_facial").c_str());
+	}
+
+	static const char* const StealPaintingDict = "anim_heist@hs3f@ig11_steal_painting@male@";
+	struct StealPaintingLayout
+	{
+		const char* PrimarySuffix;
+		int BagSlot;
+		int PaintingSlot;
+	};
+
+	static const StealPaintingLayout StealPaintingOnWall = { "ch_prop_vault_painting_01a", 0, -1 };
+	static const StealPaintingLayout StealPaintingInCase = { "ch_prop_ch_sec_cabinet_02a", 0, 1 };
+
+	static Stage MakeStealPaintingStage(const std::string& version, const char* action,
+		const StealPaintingLayout& layout = StealPaintingOnWall)
+	{
+		const std::string base = version + "_" + action;
+
+		Stage stage = Stage(30000)
+			.PlayerClip(base.c_str())
+			.PrimaryPropClip((base + "_" + layout.PrimarySuffix).c_str())
+			.ExtraPropClip(layout.BagSlot, (base + "_hei_p_m_bag_var22_arm_s").c_str())
+			.PlayerWeaponClip((base + "_w_me_switchblade").c_str())
+			.PauseOnEnd();
+
+		if (layout.PaintingSlot >= 0)
+			stage.ExtraPropClip(layout.PaintingSlot, (base + "_ch_prop_vault_painting_01a").c_str());
+
+		return stage;
 	}
 
 	// 0 Bag, 1 Cutter, 2 Display Case (Opened), 3 Glass Piece, 4 Treasure (Display), 5 Treasure (Item).
@@ -958,7 +1056,6 @@ namespace sub::Spooner::Interactables
 			.OnCleanup(&CustomCleanup_DisplayCase)
 			.OnStageTick(&OnStageTick_DisplayCase)
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
 			.UnarmedDuringScene();
 	}
 
@@ -974,7 +1071,6 @@ namespace sub::Spooner::Interactables
 			.InteractRange(0.50f)
 			.Repeatable()
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
 			.UnarmedDuringScene();
 	}
 
@@ -994,7 +1090,6 @@ namespace sub::Spooner::Interactables
 			.StandOffset(0.0f, -0.65f, 0.70f)
 			.InteractRange(0.50f)
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
 			.UnarmedDuringScene()
 			.OnStageStart(&OnStageStart_Guitar)
 			.Repeatable()
@@ -1015,7 +1110,6 @@ namespace sub::Spooner::Interactables
 			.StandOffset(0.0f, -1.0f, 1.0f)
 			.InteractRange(0.50f)
 			.SlideToMark(8.0f, -1.0f)
-			.SceneOrigin(0.0f, 0.0f, 0.8f)
 			.UnarmedDuringScene()
 			.Repeatable()
 			.OnSpawn(spawnFn)
@@ -1024,6 +1118,226 @@ namespace sub::Spooner::Interactables
 			.OnCleanup(&CustomCleanup_Breaker)
 			.ResolveParticipants(&ResolveParticipants_Breaker)
 			.OnIdleTick(&OnIdleTick_Breaker);
+	}
+
+	static Interactable MakeStealPainting1()
+	{
+		const std::string version = "ver_01";
+
+		return Interactable("Steal Painting (Diamond Casino) 1", PaintingDiamondCasino01a)
+			.RandomPrimaryModel({ PaintingDiamondCasino01a, PaintingDiamondCasino01b, PaintingDiamondCasino01c,
+								  PaintingDiamondCasino01d, PaintingDiamondCasino01e, PaintingDiamondCasino01f,
+								  PaintingDiamondCasino01g, PaintingDiamondCasino01h, PaintingDiamondCasino01i })
+			.AnimDict(StealPaintingDict)
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddStage(MakeStealPaintingStage(version, "top_left_enter"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_top_left_to_right"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_right_top_to_bottom"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_bottom_right_to_left"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_left_top_to_bottom"))
+			.AddStage(MakeStealPaintingStage(version, "with_painting_exit"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -0.55f, 0.20f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, -1.0f)
+			.PlayerAlsoPlaysEntityAnim()
+			.EquipDuringScene(WEAPON_SWITCHBLADE);
+	}
+
+	static Interactable MakeStealPainting2()
+	{
+		const std::string version = "ver_02";
+
+		return Interactable("Steal Painting (Diamond Casino) 2", PaintingCase)
+			.AnimDict(StealPaintingDict)
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddExtraProp(ExtraProp("Painting", PaintingDiamondCasino01a)
+				.RandomExtraModel({ PaintingDiamondCasino01a, PaintingDiamondCasino01b, PaintingDiamondCasino01c,
+									PaintingDiamondCasino01d, PaintingDiamondCasino01e, PaintingDiamondCasino01f,
+									PaintingDiamondCasino01g, PaintingDiamondCasino01h, PaintingDiamondCasino01i })
+				.AttachToPrimaryProp(Vector3(0.0f, 0.5700f, 1.1800f))
+				.SpawnsAtPlacement()
+				.KeepWhenDone())
+			.AddStage(MakeStealPaintingStage(version, "top_left_enter", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_top_left_to_right", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_right_top_to_bottom", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_bottom_right_to_left", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_left_top_to_bottom", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "with_painting_exit", StealPaintingInCase))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -0.55f, 1.20f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.EquipDuringScene(WEAPON_SWITCHBLADE)
+			.OnSpawn(&SpawnContainerPersistentProps);
+	}
+
+	static Interactable MakeStealPainting3()
+	{
+		const std::string version = "ver_01";
+
+		return Interactable("Steal Painting (Cayo Perico) 1", PaintingCayoPerico01a)
+			.RandomPrimaryModel({ PaintingCayoPerico01a, PaintingCayoPerico01b, PaintingCayoPerico01c,
+								  PaintingCayoPerico01d, PaintingCayoPerico01e, PaintingCayoPerico01f,
+								  PaintingCayoPerico01g, PaintingCayoPerico01h })
+			.AnimDict(StealPaintingDict)
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddStage(MakeStealPaintingStage(version, "top_left_enter"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_top_left_to_right"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_right_top_to_bottom"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_bottom_right_to_left"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_left_top_to_bottom"))
+			.AddStage(MakeStealPaintingStage(version, "with_painting_exit"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -0.55f, 0.20f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, -1.0f)
+			.PlayerAlsoPlaysEntityAnim()
+			.EquipDuringScene(WEAPON_SWITCHBLADE);
+	}
+
+	static Interactable MakeStealPainting4()
+	{
+		const std::string version = "ver_02";
+
+		return Interactable("Steal Painting (Cayo Perico) 2", PaintingCase)
+			.AnimDict(StealPaintingDict)
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddExtraProp(ExtraProp("Painting", PaintingCayoPerico01a)
+				.RandomExtraModel({ PaintingCayoPerico01a, PaintingCayoPerico01b, PaintingCayoPerico01c,
+								  PaintingCayoPerico01d, PaintingCayoPerico01e, PaintingCayoPerico01f,
+								  PaintingCayoPerico01g, PaintingCayoPerico01h })
+				.AttachToPrimaryProp(Vector3(0.0f, 0.5700f, 1.1800f))
+				.SpawnsAtPlacement()
+				.KeepWhenDone())
+			.AddStage(MakeStealPaintingStage(version, "top_left_enter", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_top_left_to_right", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_right_top_to_bottom", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_bottom_right_to_left", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_left_top_to_bottom", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "with_painting_exit", StealPaintingInCase))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -0.55f, 1.20f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.EquipDuringScene(WEAPON_SWITCHBLADE)
+			.OnSpawn(&SpawnContainerPersistentProps);
+	}
+
+	static Interactable MakeStealPainting5()
+	{
+		const std::string version = "ver_01";
+
+		return Interactable("Steal Painting (Bottom Dollar Bounties) 1", PaintingBottomDollar01a)
+			.RandomPrimaryModel({ PaintingBottomDollar01a, PaintingBottomDollar01b, PaintingBottomDollar01c,
+								  PaintingBottomDollar01d })
+			.AnimDict(StealPaintingDict)
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddStage(MakeStealPaintingStage(version, "top_left_enter"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_top_left_to_right"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_right_top_to_bottom"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_bottom_right_to_left"))
+			.AddStage(MakeStealPaintingStage(version, "cutting_left_top_to_bottom"))
+			.AddStage(MakeStealPaintingStage(version, "with_painting_exit"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -0.55f, 0.20f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, -1.0f)
+			.PlayerAlsoPlaysEntityAnim()
+			.EquipDuringScene(WEAPON_SWITCHBLADE);
+	}
+
+	static Interactable MakeStealPainting6()
+	{
+		const std::string version = "ver_02";
+
+		return Interactable("Steal Painting (Bottom Dollar Bounties) 2", PaintingCase)
+			.AnimDict(StealPaintingDict)
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddExtraProp(ExtraProp("Painting", PaintingBottomDollar01a)
+				.RandomExtraModel({ PaintingBottomDollar01a, PaintingBottomDollar01b, PaintingBottomDollar01c,
+								  PaintingBottomDollar01d })
+				.AttachToPrimaryProp(Vector3(0.0f, 0.5700f, 1.1800f))
+				.SpawnsAtPlacement()
+				.KeepWhenDone())
+			.AddStage(MakeStealPaintingStage(version, "top_left_enter", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_top_left_to_right", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_right_top_to_bottom", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_bottom_right_to_left", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "cutting_left_top_to_bottom", StealPaintingInCase))
+			.AddStage(MakeStealPaintingStage(version, "with_painting_exit", StealPaintingInCase))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -0.55f, 1.20f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.EquipDuringScene(WEAPON_SWITCHBLADE)
+			.OnSpawn(&SpawnContainerPersistentProps);
+	}
+
+	static Interactable MakeGrabCashFromTrolley1()
+	{
+		return Interactable("Grab Cash From Trolley 1", TrolleyCash)
+			.AnimDict("anim@heists@ornate_bank@grab_cash")
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "bag_intro")
+				.PlayerClip("intro"))
+			.AddStage(Stage(30000)
+				.PrimaryPropClip("cart_cash_dissapear")
+				.ExtraPropClip(0, "bag_grab")
+				.PlayerClip("grab"))
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "bag_exit")
+				.PlayerClip("exit"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, 0.85f, 0.65f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f);
+	}
+
+	static Interactable MakeGrabCashFromTrolley2()
+	{
+		return Interactable("Grab Cash From Trolley 2", TrolleyCashDiamondCasino)
+			.AnimDict("anim@heists@ornate_bank@grab_cash")
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "bag_intro")
+				.PlayerClip("intro"))
+			.AddStage(Stage(30000)
+				.PrimaryPropClip("cart_cash_dissapear")
+				.ExtraPropClip(0, "bag_grab")
+				.PlayerClip("grab"))
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "bag_exit")
+				.PlayerClip("exit"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, 0.85f, 0.65f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f);
+	}
+
+	static Interactable MakeGrabDiamondFromTrolley1()
+	{
+		return Interactable("Grab Diamond From Trolley", TrolleyDiamond)
+			.AnimDict("anim@heists@ornate_bank@grab_cash")
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "bag_intro")
+				.PlayerClip("intro"))
+			.AddStage(Stage(60000)
+				.PrimaryPropClip("cart_cash_dissapear")
+				.ExtraPropClip(0, "bag_grab")
+				.PlayerClip("grab"))
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "bag_exit")
+				.PlayerClip("exit"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, 0.85f, 0.65f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f);
 	}
 
 	std::vector<InteractableDefinition> vInteractables =
@@ -1058,7 +1372,19 @@ namespace sub::Spooner::Interactables
 
 		MakeGrabClipboard("Grab Clipboard", ClipboardSchedule),
 
-		MakePullHardDrive(),
+		MakePullHardDrive1(),
+		MakePullHardDrive2(),
+
+		MakeStealPainting1(),
+		MakeStealPainting2(),
+		MakeStealPainting3(),
+		MakeStealPainting4(),
+		MakeStealPainting5(),
+		MakeStealPainting6(),
+
+		MakeGrabDiamondFromTrolley1(),
+		MakeGrabCashFromTrolley1(),
+		MakeGrabCashFromTrolley2(),
 	};
 
 	std::vector<InteractableInstance> vActiveInteractables;
@@ -1223,6 +1549,10 @@ namespace sub::Spooner::Interactables
 					}
 				}
 			}
+			else if (p.Target == AnimTarget::PlayerWeapon)
+			{
+				PlayWeaponParticipant(inst, p, propScene, stage);
+			}
 			else
 			{
 				PlayPropParticipant(inst, p, (p.Target == AnimTarget::PrimaryProp) ? primaryScene : propScene, stage);
@@ -1318,7 +1648,7 @@ namespace sub::Spooner::Interactables
 
 			Hash modelToSpawn = extraDef.MatchWornComponent
 				? ResolveWornBagModel(wornBag, extraDef.PropModel)
-				: extraDef.PropModel;
+				: PickExtraModel(extraDef);
 
 			SpoonerEntity extraEnt = EntityManagement::AddProp(modelToSpawn, extraDef.Label);
 			if (extraEnt.handle.Exists())
@@ -1374,13 +1704,28 @@ namespace sub::Spooner::Interactables
 
 		GTAped myPed = PLAYER_PED_ID();
 
-		if (inst.Def->UnarmedDuringScene && !inst.bWeaponHolstered)
+		const Hash sceneWeapon = (inst.Def->SceneWeapon != 0)
+			? inst.Def->SceneWeapon
+			: (inst.Def->UnarmedDuringScene ? (Hash)WEAPON_UNARMED : 0);
+
+		if (sceneWeapon != 0 && !inst.bWeaponHolstered)
 		{
 			Hash current = 0;
 			GET_CURRENT_PED_WEAPON(myPed.Handle(), &current, true);
 			inst.PreviousWeapon = current;
-			SET_CURRENT_PED_WEAPON(myPed.Handle(), WEAPON_UNARMED, true);
+
+			if (sceneWeapon != WEAPON_UNARMED)
+				GIVE_WEAPON_TO_PED(myPed.Handle(), sceneWeapon, 1, true, false);
+
+			SET_CURRENT_PED_WEAPON(myPed.Handle(), sceneWeapon, true);
 			inst.bWeaponHolstered = true;
+
+			if (inst.Def->SceneWeapon != 0)
+			{
+				int weaponWait = 0;
+				while (!GTAentity(GET_CURRENT_PED_WEAPON_ENTITY_INDEX(myPed.Handle(), 0)).Exists() && weaponWait++ < 60)
+					WAIT(0);
+			}
 		}
 
 		if (inst.Def->Approach != ApproachMethod::Teleport)
