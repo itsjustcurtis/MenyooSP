@@ -140,10 +140,53 @@ namespace ManualRespawn
 			sub::ComponentChangerOutfit::Create(PLAYER_PED_ID(), ofn);
 
 
+			addlog(ige::LogType::LOG_INFO, std::string("DeathModelReset: ") + (is_death ? "death" : "arrest") + " on custom model " + std::to_string(model.hash));
+
 			if (is_death)
 				WAIT(8500); // wait until screen turns black
 			else // is_arrest
-				WAIT(10000); // wait until screen turns black
+			{
+				// An arrest can start and then be aborted (player drives off or fights back). Swapping the model then
+				// made the resurrection wait below spin forever and froze the whole menu, so only swap once the arrest
+				// goes ahead (screen fades, or it is still in progress after the original 10 s), and leave everything
+				// untouched if the player has been fully free for 3 s.
+				DWORD start = GetTickCount(), freeSince = 0;
+				int lastState = -1;
+				for (;;)
+				{
+					WAIT(100);
+					DWORD elapsed = GetTickCount() - start;
+					bool arresting = IS_PLAYER_BEING_ARRESTED(player.Handle(), true) != 0;
+					bool arrestingAny = IS_PLAYER_BEING_ARRESTED(player.Handle(), false) != 0;
+					bool controlOn = player.IsControlOn();
+					bool dead = playerPed.IsDead();
+					bool fading = IS_SCREEN_FADING_OUT() != 0 || IS_SCREEN_FADED_OUT() != 0;
+					int state = (arresting ? 1 : 0) | (arrestingAny ? 2 : 0) | (controlOn ? 4 : 0) | (dead ? 8 : 0) | (fading ? 16 : 0);
+					if (state != lastState)
+					{
+						addlog(ige::LogType::LOG_INFO, "DeathModelReset: +" + std::to_string(elapsed) + "ms arresting=" + std::to_string(arresting) + " any=" + std::to_string(arrestingAny)
+							+ " control=" + std::to_string(controlOn) + " dead=" + std::to_string(dead) + " fading=" + std::to_string(fading) + " sinceArrest=" + std::to_string(GET_TIME_SINCE_LAST_ARREST()));
+						lastState = state;
+					}
+					if (fading || dead)
+						break;
+					if (!arresting && !arrestingAny && controlOn)
+					{
+						if (freeSince == 0)
+							freeSince = GetTickCount();
+						else if (GetTickCount() - freeSince > 3000)
+						{
+							addlog(ige::LogType::LOG_INFO, "DeathModelReset: arrest aborted, model left unchanged");
+							return;
+						}
+					}
+					else
+						freeSince = 0;
+					if (elapsed >= 10000 && freeSince == 0)
+						break;
+				}
+				addlog(ige::LogType::LOG_INFO, "DeathModelReset: arrest going ahead after " + std::to_string(GetTickCount() - start) + "ms, swapping to Michael");
+			}
 
 			// load a default model
 			orig_model = PedHash::Michael;
@@ -152,16 +195,21 @@ namespace ManualRespawn
 			SET_PED_DEFAULT_COMPONENT_VARIATION(PLAYER_PED_ID());
 			orig_model.Unload();
 
-			// wait until player has resurrected
+			// wait until player has resurrected, but never block the menu tick indefinitely
+			const DWORD maxWaitMs = 60000;
+			DWORD waitStart = GetTickCount();
 			if (is_death)
-				while (GET_TIME_SINCE_LAST_DEATH() <= 0 || GET_TIME_SINCE_LAST_DEATH() > 6000)
+				while ((GET_TIME_SINCE_LAST_DEATH() <= 0 || GET_TIME_SINCE_LAST_DEATH() > 6000) && GetTickCount() - waitStart < maxWaitMs)
 					WAIT(0);
 			else
-				while (GET_TIME_SINCE_LAST_ARREST() <= 0 || GET_TIME_SINCE_LAST_ARREST() > 6000)
+				while ((GET_TIME_SINCE_LAST_ARREST() <= 0 || GET_TIME_SINCE_LAST_ARREST() > 6000) && GetTickCount() - waitStart < maxWaitMs)
 					WAIT(0);
+			addlog(ige::LogType::LOG_INFO, "DeathModelReset: resurrection wait " + std::to_string(GetTickCount() - waitStart) + "ms");
 
-			while (!player.IsControlOn())
+			waitStart = GetTickCount();
+			while (!player.IsControlOn() && GetTickCount() - waitStart < maxWaitMs)
 				WAIT(0);
+			addlog(ige::LogType::LOG_INFO, "DeathModelReset: control wait " + std::to_string(GetTickCount() - waitStart) + "ms, restoring model");
 
 			// change back the model
 			sub::ComponentChangerOutfit::Apply(PLAYER_PED_ID(), ofn, true, true, true, true, true, false);
