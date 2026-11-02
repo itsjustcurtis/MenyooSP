@@ -13,7 +13,7 @@
 ## Community
 
 - [Discord](https://discord.gg/v29AwqAemT)
-- [Patreon](https://www.patreon.com/c/ItsJustCurtis)
+- [Patreon](http://patreon.com/ItsJustCurtis?utm_source=Github&utm_medium=ReadMe&utm_campaign=Menyoo)
 
 ## Requirements
 - [OpenIV and its ASI Loader](https://openiv.com/)
