@@ -337,6 +337,7 @@ namespace sub::TeleportLocations_catind
 			TeleLocation("Bank (Blaine County)", -109.299f, 6464.035f, 31.627f),
 			TeleLocation("Bank (North Yankton)", 5309.519f, -5212.375f, 83.522f, IplNames::vNorthYankton,{}),
 			TeleLocation("Bank Vault", 255.851f, 217.030f, 101.683f),
+			TeleLocation("Biker Clubhouse",  984.155f, -95.366f, 75.932f,{"bkr_bi_hw1_13_int"},{}, true, false, true),
 			TeleLocation("Car Showroom", -57.6615f, -1097.595f, 26.4224f,{ "shutter_open"_sv, "csr_inMission"_sv, "shr_int"_sv, "v_carshowroom"_sv },{ "shutter_closed"_sv, "fakeint"_sv }),
 			TeleLocation("Cluckin' Bell Factory", -70.0624f, 6263.53f, 31.0909f,{ "CS1_02_cf_onmission1"_sv, "CS1_02_cf_onmission2"_sv, "CS1_02_cf_onmission3"_sv, "CS1_02_cf_onmission4"_sv },{ "CS1_02_cf_offmission"_sv }),
 			TeleLocation("Darnell Bros. Garment Factory", 712.7159f, -962.9055f, 30.3953f,{ "id2_14_during1"_sv, "bnkheist_apt_norm"_sv, "bnkheist_apt_dest"_sv },{}), // both norm and dest?

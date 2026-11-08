@@ -91,10 +91,6 @@ extern RGBA optioncount;
 extern RGBA selectionhi;
 extern RGBA _globalPedTrackers_Col;
 
-extern std::pair<UINT16, UINT16> menubindsGamepad;
-extern UINT16 menuToggleKey;
-extern UINT16 respawnKey;
-extern UINT16 stopAnimationKey;
 extern INT8 g_loglevel;
 
 class MenuInput final
@@ -154,10 +150,11 @@ public:
 	static INT optionSelectionHistory[100];
 	static INT pendingSubmenu;
 	static int nextDeferredActionTime;
-	static bool usingControllerInput, usingMouseInput, centerTitleText, centerOptionText, centerBreakText, useGradientBackgrounds, drawSeparatorLine, enableGlareEffect;
+	static bool usingControllerInput, usingMouseInput, centerTitleText, centerOptionText, centerBreakText, useGradientBackgrounds, drawSeparatorLine, enableGlareEffect, optionTextStroke;
 	static Scaleform scaleform_menuGlare, instructional_buttons;
 	static std::vector<Scaleform_IbT> vIB;
 	static std::function<void()> OnSubBack;
+	static std::string selectedOptionDescription;
 
 
 	static inline void Tick()
@@ -172,13 +169,17 @@ public:
 	static void sub_handler();
 	static void submenu_switch();
 	static void justopened();
+	static bool IsGameReadyForDeferredInit();
+	static void TickDeferredMenuInit();
 
 	static void SetInputMethods();
 	static void DisableControls();
 	static void base();
+	static void RequestMenuTextures();
 	static void titlebox_draw();
 	static void background();
 	static void optionhi();
+	static void draw_description();
 	static bool isBinds();
 	static void while_closed();
 	static void while_opened();
@@ -202,6 +203,9 @@ public:
 	static void add_IB(ControllerInput button_id, std::string string_val);
 	static void add_IB(VirtualKey::VirtualKey button_id, std::string string_val);
 	static void add_IB(ScaleformButton button_id, std::string string_val);
+	// Two-member combo overloads: both keycaps/button glyphs are drawn in one slot.
+	static void add_IB(ControllerInput button_id, ControllerInput button2_id, std::string string_val);
+	static void add_IB(VirtualKey::VirtualKey button_id, VirtualKey::VirtualKey button2_id, std::string string_val);
 	static std::string get_key_IB(const Scaleform_IbT& ib);
 	static void draw_IB();
 
@@ -245,6 +249,8 @@ void AddTitle(std::string text);
 void AddOption(std::string text, bool &option_code_bool = null, void(&callback)() = nullFunc, int submenu_index = -1, bool show_arrow = 0, bool gxt = 0);
 inline void AddOption(std::ostream& os, bool &option_code_bool = null, void(&callback)() = nullFunc, int submenu_index = -1, bool show_arrow = 0, bool gxt = 0);
 void OptionStatus(BOOL status);
+// Attaches a description to the option added just before this call; shown below the menu while that option is selected
+void AddOptionDescription(const std::string& text);
 void AddToggle(const std::string& text, bool &loop_variable, bool &extra_option_code_ON = null, bool &extra_option_code_OFF = null, bool gxt = 0);
 void AddToggle(const std::string& text, bool &loop_variable, void(&callback_ON)(), void(&callback_OFF)(), bool gxt = 0);
 void AddLocal(const std::string& text, BOOL condition, bool &option_code_ON, bool &option_code_OFF, bool gxt = 0);
@@ -258,11 +264,17 @@ void AddTickol(const std::string& text, BOOL condition, void(&callback_ON)(), vo
 void AddTexter(const std::string& text, int selectedindex, const std::vector<std::string>& textarray, bool &A_PRESS = null, bool &RIGHT_PRESS = null, bool &LEFT_PRESS = null, bool gxt = 0);
 
 int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts);
+int AddTexterCycler(const std::string& label, int currentIdx, const std::vector<std::string>& opts, bool &pressed);
 
+// Displays a right-aligned bind key/button and captures a replacement when pressed.
+void AddKeybindOption(const std::string& label, const std::string& bindText, const std::string& description, bool &A_PRESS, bool capturingThis);
+
+// Returns true when the value changed this frame
 template<typename T>
-void AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool gxt = 0, bool wrap = false);
+bool AddNumberStepper(const std::string& text, T &value, __int8 decimal_places, double step_size, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool gxt = 0, bool wrap = false);
 template<typename T>
-void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool gxt = 0);
+// invert: false = right multiplies / left divides, true = left multiplies / right divides
+void AddNumberMultiplier(const std::string& text, T &value, __int8 decimal_places, double multiplier, std::optional<double> min = std::nullopt, std::optional<double> max = std::nullopt, bool invert = false, bool gxt = 0);
 
 void AddPresetColourOptionsPreviews(UINT8 const r, UINT8 const g, UINT8 const b);
 void AddPresetColourOptionsPreview(const RgbS& rgb);

@@ -182,7 +182,7 @@ namespace sub
             ShellExecuteA(
                 nullptr,
                 "open",
-                "https://www.patreon.com/cw/ItsJustCurtis",
+                "https://www.patreon.com/cw/ItsJustCurtis?utm_source=GTA5exe&utm_medium=Menyoo&utm_campaign=InGame",
                 nullptr,
                 nullptr,
                 SW_SHOWNORMAL

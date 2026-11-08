@@ -88,6 +88,7 @@ namespace sub::Spooner
 
 			bool relationshipStringPlus = false, relationshipStringMinus = false;
 			AddTexter("Relationship", 0, relationshipStringVec, null, relationshipStringPlus, relationshipStringMinus);
+			AddOptionDescription("The ped's relationship group, which controls who it's friendly or hostile to.");
 			if (relationshipStringPlus)
 			{
 				Hash currHash;

@@ -516,6 +516,7 @@ namespace sub::TeleportLocations_catind
 			{
 				bool bPlus = false, bMinus = false;
 				AddTexter("Shell", 0, std::vector<std::string>{currentMansionInfo.shellType == 0 ? "Generic" : "Private"}, null, bPlus, bMinus);
+				AddOptionDescription("Generic or Private mansion layout.");
 				if (bPlus && currentMansionInfo.shellType < 1)
 				{
 					currentMansionInfo.shellType++;
@@ -535,6 +536,7 @@ namespace sub::TeleportLocations_catind
 			{
 				bool bPlus = false, bMinus = false;
 				AddTexter("Railings", 0, std::vector<std::string>{currentMansionInfo.railingsType == 0 ? "M" : "P"}, null, bPlus, bMinus);
+				AddOptionDescription("Railing style variant.");
 				if (bPlus && currentMansionInfo.railingsType < 1)
 				{
 					currentMansionInfo.railingsType++;
@@ -595,6 +597,7 @@ namespace sub::TeleportLocations_catind
 			{
 				int oldTint = currentMansionInfo.mansionTint;
 				AddNumberStepper("Tint", currentMansionInfo.mansionTint, 0, 1.0, 0, 3);
+				AddOptionDescription("Interior colour tint (0-3).");
 				if (currentMansionInfo.mansionTint != oldTint)
 				{
 					Vector3 pos = currentMansionInfo.location->posMain;

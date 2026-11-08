@@ -401,6 +401,7 @@ namespace sub::TeleportLocations_catind
 		{
 			AddTitle("Cayo Perico");
 			AddToggle("Cayo Perico Enabled", bCayoPericoEnabled, _EnableIsland, _DisableIsland);
+			AddOptionDescription("Loads the island into the map.");
 			AddBreak("---Locations---");
 			for (auto& loc : vCayoPericoLocations)
 			{

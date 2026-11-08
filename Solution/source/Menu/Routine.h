@@ -57,7 +57,6 @@ void TickNeonSpinAnim();
 void TickNeonFwkAnim();
 void TickNeonHeartbeatAnim();
 
-extern INT16 BindNoClip;
 extern RgbS g_fadedRGB, g_neonFade, g_neonSlide, g_neonHeart, g_neonShift;
 extern bool g_neonFlash;
 extern int g_neonSpin, g_neonSpinBack;
@@ -109,7 +108,6 @@ extern float NormalizeHSV(int h, int s, int v);
 
 
 // String variables used in various submenus for search, storage, etc.
-extern INT16 BindNoClip;
 extern std::string dict;
 extern std::string dict2;
 extern std::string dict3;
@@ -179,8 +177,6 @@ extern bool explosiveMelee;
 extern bool superJump;
 extern bool selfRefillHealthInCover;
 extern bool playerInvincibility;
-extern bool noClip;
-extern bool noClipToggle;
 extern bool superRun;
 extern bool bDisplayXyzhCoords;
 extern bool ignoredByEveryone;
@@ -296,11 +292,6 @@ void SetPedNoRagdollOff(Ped ped);
 void SetPedSeatbeltOn(Ped ped);
 void SetPedSeatbeltOff(Ped ped);
 
-extern bool bitNoclipAlreadyInvisible, bitNoclipAlreadyCollision, bitNoclipShowHelp;
-extern Camera g_cam_noClip;
-void SetNoclipOff1();
-void SetNoclipOff2();
-void SetNoclip();
 void SetLocalButtonSuperRun();
 void SetSelfRefillHealthWhenInCover();
 void xyzhDrawFloat(float text, float x_coord, float y_coord);

@@ -55,6 +55,7 @@ namespace sub
 		AddTitle(g_playerName); // Title = player name
 		AddOption("Set Waypoint To Player", setWaypoint);
 		AddLocal(spectatePlayerStr, spectatePlayer == g_activePlayerId, spectateOn, spectateOff); // Spectate Player
+		AddOptionDescription("Watch this player through their camera.");
 
 		if (spectateOn)
 		{

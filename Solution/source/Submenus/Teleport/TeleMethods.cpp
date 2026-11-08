@@ -77,8 +77,8 @@ void TeleportNetPed(GTAentity ped, float X, float Y, float Z, bool bWait, bool b
 
 	if (ped.Equals(myPed) || ped.Equals(myVeh))
 	{
-		if (sub::Spooner::SpoonerMode::spoonerModeCamera.Exists())
-			sub::Spooner::SpoonerMode::spoonerModeCamera.SetPosition(X, Y, Z + 3.0f);
+		if (sub::Spooner::SpoonerCamera::camera.Exists())
+			sub::Spooner::SpoonerCamera::camera.SetPosition(X, Y, Z + 3.0f);
 	}
 
 	//LOAD_ALL_OBJECTS_NOW();

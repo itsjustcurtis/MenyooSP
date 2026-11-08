@@ -9,27 +9,15 @@
 */
 #pragma once
 
-#include <string>
-#include <vector>
 #include <Windows.h>
-
-typedef unsigned char UINT8;
 
 namespace sub::Spooner
 {
-	enum class eSpoonerModeMode : UINT8 { GroundEase, Precision };
-	extern const std::vector<std::string> spoonerModeModeNames;
-
 	namespace Settings
 	{
 #define GTA_MAX_ENTITIES 2048
 
-		extern float cameraMovementSensitivityKeyboard;
-		extern float cameraRotationSensitivityMouse;
-		extern float cameraMovementSensitivityGamepad;
-		extern float cameraRotationSensitivityGamepad;
-
-		extern eSpoonerModeMode spoonerModeMode;
+		extern bool bInvertScrollSensitivity;
 
 		extern bool bShowModelPreviews;
 		extern bool bDisplaySpoonerInfo;

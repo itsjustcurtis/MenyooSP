@@ -20,6 +20,7 @@
 #include "GTAped.h"
 #include "GTAplayer.h"
 #include "..\Menu\Menu.h"
+#include "..\Menu\MenuConfig.h"
 
 #include <string>
 #include <sstream>
@@ -736,8 +737,11 @@ namespace Game
 			const float panelY = 1.0f - notificationBottomMargin - notification.panelHeight + verticalOffset;
 			const float textX = panelX + stripeWidth + leftPadding;
 
-			DRAW_RECT(panelX + panelWidth / 2.0f, panelY + notification.panelHeight / 2.0f, panelWidth, notification.panelHeight, BG.R, BG.G, BG.B, ApplyOpacity(BG.A, progress), false);
-			DRAW_RECT(panelX + stripeWidth / 2.0f, panelY + notification.panelHeight / 2.0f, stripeWidth, notification.panelHeight, titlebox.R, titlebox.G, titlebox.B, ApplyOpacity(titlebox.A, progress), false);
+			if (MenuConfig::bShowNotificationBackground)
+			{
+				DRAW_RECT(panelX + panelWidth / 2.0f, panelY + notification.panelHeight / 2.0f, panelWidth, notification.panelHeight, BG.R, BG.G, BG.B, ApplyOpacity(BG.A, progress), false);
+				DRAW_RECT(panelX + stripeWidth / 2.0f, panelY + notification.panelHeight / 2.0f, stripeWidth, notification.panelHeight, titlebox.R, titlebox.G, titlebox.B, ApplyOpacity(titlebox.A, progress), false);
+			}
 
 			float descriptionY = panelY + topPadding;
 			if (notification.title.has_value())
@@ -749,7 +753,7 @@ namespace Game
 
 			for (const auto& line : notification.descriptionLines)
 			{
-				Print::SetupDraw(font_options, Vector2(descriptionTextScale, descriptionTextScale), false, false, false, { optiontext.R, optiontext.G, optiontext.B, static_cast<UINT8>(ApplyOpacity(optiontext.A, progress)) }, { 0.0f, textX + textWidth });
+				Print::SetupDraw(font_options, Vector2(descriptionTextScale, descriptionTextScale), false, false, true, { optiontext.R, optiontext.G, optiontext.B, static_cast<UINT8>(ApplyOpacity(optiontext.A, progress)) }, { 0.0f, textX + textWidth });
 				Print::drawstring(line, textX, descriptionY);
 				descriptionY += descriptionLineHeight;
 			}

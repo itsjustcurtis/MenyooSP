@@ -239,6 +239,7 @@ namespace sub
 		{
 			AddTitle("Animal Riding");
 			AddLocal("Toggle", AnimalRiding::g_animalRidingMode.Enabled(), AnimalRiding::ToggleOnOff, AnimalRiding::ToggleOnOff);
+			AddOptionDescription("Aim at an animal and press the prompt to ride it.");
 
 			AddBreak("---Spawn A Ride---");
 			for (auto& a : vAnimals)
@@ -252,6 +253,7 @@ namespace sub
 
 			AddBreak("---Animal Data---");
 			AddOption("Reload Data From File", null, PopulateAnimals);
+			AddOptionDescription("Re-reads the animal list file.");
 		}
 	}
 }

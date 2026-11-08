@@ -185,6 +185,7 @@ namespace sub
         AddOption("Bodyguard List", null, nullFunc, SUB::BODYGUARD_LIST);
 
         AddNumber("Default Health", sub::BodyguardMenu::health, 0, bHealth_input, bHealth_plus, bHealth_minus);
+        AddOptionDescription("Health for newly spawned bodyguards.");
         if (bHealth_plus && sub::BodyguardMenu::health < INT_MAX) ++sub::BodyguardMenu::health;
         if (bHealth_minus && sub::BodyguardMenu::health > 0) --sub::BodyguardMenu::health;
         if (bHealth_input)
@@ -198,6 +199,7 @@ namespace sub
         }
 
         AddNumber("Default Armor", sub::BodyguardMenu::armor, 0, bArmor_input, bArmor_plus, bArmor_minus);
+        AddOptionDescription("Armour for newly spawned bodyguards.");
         if (bArmor_plus && sub::BodyguardMenu::armor < INT_MAX) ++sub::BodyguardMenu::armor;
         if (bArmor_minus && sub::BodyguardMenu::armor > 0) --sub::BodyguardMenu::armor;
         if (bArmor_input)
@@ -211,6 +213,7 @@ namespace sub
         }
 
         AddToggle("Godmode", sub::BodyguardMenu::godmode);
+        AddOptionDescription("New bodyguards are invincible.");
 
         if (oldGodmode != sub::BodyguardMenu::godmode)
         {
@@ -226,6 +229,7 @@ namespace sub
         }
 
         AddTexter("Bodyguard Blip", 0, { blipOptions[blipIndex].second }, bBlipInput, bIcon_Plus, bIcon_Minus);
+        AddOptionDescription("Map blip style for bodyguards.");
 
         if (bIcon_Plus) 
         {
@@ -245,6 +249,7 @@ namespace sub
         }
 
 		AddTexter("Formation", 0, { formationOptions[formationIndex].second }, bFormationInput, bForm_Plus, bForm_Minus);
+		AddOptionDescription("How bodyguards position themselves around you.");
 
         if (bForm_Plus)
         {
@@ -266,6 +271,7 @@ namespace sub
         }
 
         AddOption("Bring Bodyguards To Self", bTeleportBodyguards);
+        AddOptionDescription("Teleports all bodyguards to you.");
 
         if (bTeleportBodyguards)
         {

@@ -146,7 +146,9 @@ namespace sub::TeleportLocations_catind
 			}
 
 			bool bCreateWarehousePressed = false;
-			AddOption("Build Warehouse", bCreateWarehousePressed); if (bCreateWarehousePressed)
+			AddOption("Build Warehouse", bCreateWarehousePressed);
+			AddOptionDescription("Loads the warehouse with the options above and teleports you inside.");
+			if (bCreateWarehousePressed)
 			{
 				DO_SCREEN_FADE_OUT(50);
 				CreateWarehouse(currentWarehouseInfo);

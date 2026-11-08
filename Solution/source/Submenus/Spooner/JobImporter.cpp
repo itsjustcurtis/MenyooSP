@@ -555,6 +555,7 @@ namespace sub::Spooner::JobBrowser
 
         bool bDownload = false;
         AddOption("Download and Save", bDownload);  //could prob add more options like adding to bookmarks, spawning without saving, maybe clone to your own jobs.
+        AddOptionDescription("Saves the job's props as a Spooner file.");
         if (bDownload)
         {
             if (!isDownloading)
@@ -1059,6 +1060,7 @@ namespace sub::Spooner::JobImporter
         AddTitle("Job Importer");
 
         AddToggle("Preview Images", savePreviewImage);
+        AddOptionDescription("Downloads and shows each job's preview image.");
 
         AddOption("Bookmarked Jobs", null, nullFunc, SUB::SPOONER_JOBBROWSER);
         AddOption("My Content", null, nullFunc, SUB::SPOONER_JOBBROWSER_MYCONTENT);
@@ -1069,6 +1071,7 @@ namespace sub::Spooner::JobImporter
 
         bool bLoadFromUrl = false;
         AddOption("Load From URL", bLoadFromUrl);
+        AddOptionDescription("Imports a job from a Rockstar Social Club URL. The clipboard is used as the default.");
         if (bLoadFromUrl)
         {
             std::string defaultUrl = jobImporterUrl.empty() ? GetClipboardText() : jobImporterUrl;

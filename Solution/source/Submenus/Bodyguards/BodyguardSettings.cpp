@@ -1,6 +1,7 @@
 #include "BodyguardSettings.h"
 #include "BodyguardManagement.h"
 #include "../../Menu/Menu.h"
+#include "../../Menu/Keybinds.h"
 #include "../../Natives/natives.h"
 #include "../../Natives/natives2.h"
 
@@ -50,16 +51,8 @@ namespace sub::BodyguardMenu
                 sub::BodyguardMenu::BodyguardManagement::ShowArrowAboveEntity(bg.Handle);
 
                 bool bDeletePressed = false;
-                if (Menu::usingControllerInput)
-                {
-                    Menu::add_IB(INPUT_SCRIPT_RLEFT, "Delete Bodyguard");
-                    bDeletePressed = IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT) != 0;
-                }
-                else
-                {
-                    Menu::add_IB(VirtualKey::B, "Delete Bodyguard");
-                    bDeletePressed = IsKeyJustUp(VirtualKey::B);
-                }
+                Keybinds::AddBindIB("menu_action", "Delete Bodyguard");
+                bDeletePressed = Keybinds::WasPressedThisFrame("menu_action");
 
                 if (bDeletePressed)
                 {

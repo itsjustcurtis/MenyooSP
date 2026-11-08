@@ -407,6 +407,7 @@ namespace sub
 			AddBreak("---Achievements---");
 			bool unlockAllAchievements = false;
 			AddOption("Unlock All Achievements", unlockAllAchievements); 
+			AddOptionDescription("Unlocks every game achievement. This can't be undone.");
 			if (unlockAllAchievements)
 			{
 				int numAchievements = 78;

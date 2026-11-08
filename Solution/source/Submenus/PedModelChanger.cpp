@@ -12,6 +12,7 @@
 #include "..\macros.h"
 
 #include "..\Menu\Menu.h"
+#include "..\Menu\Keybinds.h"
 #include "..\Menu\Routine.h"
 
 #include "..\Natives\natives2.h"
@@ -109,21 +110,10 @@ namespace sub
 		void ShowInstructionalButton(GTAmodel::Model model)
 		{
 			bool bIsAFav = IsPedAFavourite(model);
-			if (Menu::usingControllerInput)
+			Keybinds::AddBindIB("menu_action", bIsAFav, "Remove from favourites", "Add to favourites");
+			if (Keybinds::WasPressedThisFrame("menu_action"))
 			{
-				Menu::add_IB(INPUT_SCRIPT_RLEFT, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-				if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_SCRIPT_RLEFT))
-				{
-					!bIsAFav ? AddPedToFavourites(model, Game::InputBox("", 28U, "Enter custom name:", GetPedModelLabel(model, true))) : RemovePedFromFavourites(model);
-				}
-			}
-			else
-			{
-				Menu::add_IB(VirtualKey::B, (!bIsAFav ? "Add to" : "Remove from") + (std::string)" favourites");
-				if (IsKeyJustUp(VirtualKey::B))
-				{
-					!bIsAFav ? AddPedToFavourites(model, Game::InputBox("", 28U, "Enter custom name:", GetPedModelLabel(model, true))) : RemovePedFromFavourites(model);
-				}
+				!bIsAFav ? AddPedToFavourites(model, Game::InputBox("", 28U, "Enter custom name:", GetPedModelLabel(model, true))) : RemovePedFromFavourites(model);
 			}
 		}
 
@@ -369,6 +359,7 @@ namespace sub
 		AddOption("~b~Search~s~ Peds", null, nullFunc, SUB::MODELCHANGER_SEARCH);
 		AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
 		AddOption("Randomize Ped Variation", modelChangerRandomPedVariation);
+		AddOptionDescription("Randomizes clothing and features for the current model.");
 
 		AddBreak("---Categories---");
 		AddOption("Player", null, nullFunc, SUB::MODELCHANGER_PLAYER);
@@ -385,9 +376,13 @@ namespace sub
 
 		AddBreak("---Scenario---");
 		AddOption("Scenario Females", null, nullFunc, SUB::MODELCHANGER_SCENARIOFEMALES);
+		AddOptionDescription("Peds used by world scenarios, such as workers and joggers.");
 		AddOption("Scenario Males", null, nullFunc, SUB::MODELCHANGER_SCENARIOMALES);
+		AddOptionDescription("Peds used by world scenarios, such as workers and joggers.");
 		AddOption("Story Scenario Females", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOFEMALES);
+		AddOptionDescription("Scenario peds from story mode.");
 		AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
+		AddOptionDescription("Scenario peds from story mode.");
 		AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
 		AddOption("~b~Input~s~ Model", modelChangerInput);
 
