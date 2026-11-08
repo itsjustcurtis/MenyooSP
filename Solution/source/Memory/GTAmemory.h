@@ -457,6 +457,7 @@ public:
 	static void InitEnhancedPools();
 	static bool AreEnhancedPoolsReady();
 	static bool TryInitEnhancedPools();
+	static int GetFreePoolSlots(int entityType);
 
 	// Unknown_Modder
 	struct GXT2Entry

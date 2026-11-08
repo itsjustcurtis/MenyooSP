@@ -2695,6 +2695,46 @@ void GTAmemory::GetPedHandles(std::vector<Entity>& result, const Vector3& positi
 	pool.Run(result);
 }
 
+// pool stuff not entirely needed anymore so previews don't go over although added a 400 object cap rn anyway
+int GTAmemory::GetFreePoolSlots(int entityType)
+{
+	auto countGeneric = [](auto* pool) -> int
+	{
+		if (!pool)
+			return -1;
+		int used = 0;
+		for (UINT32 i = 0; i < pool->size; i++)
+			if (pool->isValid(i))
+				used++;
+		return static_cast<int>(pool->size) - used;
+	};
+	switch (entityType)
+	{
+	case 1:
+		if (g_isEnhanced)
+			return _pedPoolAddress ? countGeneric(reinterpret_cast<GenericPoolEnhanced*>(_pedPoolAddress)) : -1;
+		return _pedPoolAddress && *_pedPoolAddress ? countGeneric(reinterpret_cast<GenericPool*>(*_pedPoolAddress)) : -1;
+	case 3:
+		if (g_isEnhanced)
+			return _objectPoolAddress ? countGeneric(reinterpret_cast<GenericPoolEnhanced*>(_objectPoolAddress)) : -1;
+		return _objectPoolAddress && *_objectPoolAddress ? countGeneric(reinterpret_cast<GenericPool*>(*_objectPoolAddress)) : -1;
+	case 2:
+		if (!_vehiclePoolAddress || !*_vehiclePoolAddress)
+			return -1;
+		if (g_isEnhanced)
+		{
+			auto pool = *reinterpret_cast<VehiclePoolEnhanced**>(*_vehiclePoolAddress);
+			return pool ? countGeneric(pool) : -1;
+		}
+		else
+		{
+			auto pool = *reinterpret_cast<VehiclePool**>(*_vehiclePoolAddress);
+			return pool ? countGeneric(pool) : -1;
+		}
+	}
+	return -1;
+}
+
 void GTAmemory::GetPropHandles(std::vector<Entity>& result)
 {
 	EntityPoolTask(EntityPoolTask::Type::Prop).Run(result);

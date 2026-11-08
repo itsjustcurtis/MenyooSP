@@ -38,6 +38,7 @@
 #include "..\Misc\VehicleFly.h"
 #include "..\Submenus\TimeOptions.h"
 #include "..\Submenus\VehicleOptions.h"
+#include "..\Submenus\VehiclePreview3D.h"
 
 #include <Windows.h>
 #include <simpleini\SimpleIni.h>
@@ -299,6 +300,14 @@ void MenuConfig::ConfigRead()
 	g_addBlip = ini.GetBoolValue(section_haxValues.c_str(), "add_blip_to_vehicle", g_addBlip);
 	g_warpNear = ini.GetBoolValue(section_haxValues.c_str(), "warp_vehicle_nearby", g_warpNear);
 	g_spawnVehicleDrawBMPs = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_previews", g_spawnVehicleDrawBMPs);
+	VehiclePreview3D::g_enabled = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_3d_previews", VehiclePreview3D::g_enabled);
+	VehiclePreview3D::g_zoom = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_zoom", VehiclePreview3D::g_zoom);
+	VehiclePreview3D::g_spinSpeed = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_spin_speed", VehiclePreview3D::g_spinSpeed);
+	VehiclePreview3D::g_boxHeight = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_box_height", VehiclePreview3D::g_boxHeight);
+	VehiclePreview3D::g_boxWidth = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_box_width", VehiclePreview3D::g_boxWidth);
+	VehiclePreview3D::g_lightIntensity = (float)ini.GetDoubleValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_light_intensity", VehiclePreview3D::g_lightIntensity);
+	VehiclePreview3D::g_scaleLighting = ini.GetBoolValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_scale_lighting", VehiclePreview3D::g_scaleLighting);
+	VehiclePreview3D::g_mapPreviews = ini.GetBoolValue(section_haxValues.c_str(), "spooner_enable_3d_previews", VehiclePreview3D::g_mapPreviews);
 	g_spawnVehiclePlateText = ini.GetValue(section_haxValues.c_str(), "vehicle_spawner_plate_text", g_spawnVehiclePlateText.c_str());
 	g_spawnVehiclePlateTexterValue = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_text_texter_value", g_spawnVehiclePlateTexterValue);
 	g_spawnVehiclePlateType = ini.GetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_type", g_spawnVehiclePlateType);
@@ -554,6 +563,14 @@ void MenuConfig::SaveConfig()
 	ini.SetBoolValue(section_haxValues.c_str(), "add_blip_to_vehicle", g_addBlip);
 	ini.SetBoolValue(section_haxValues.c_str(), "warp_vehicle_nearby", g_warpNear);
 	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_previews", g_spawnVehicleDrawBMPs);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_enable_3d_previews", VehiclePreview3D::g_enabled);
+	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_zoom", VehiclePreview3D::g_zoom);
+	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_spin_speed", VehiclePreview3D::g_spinSpeed);
+	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_box_height", VehiclePreview3D::g_boxHeight);
+	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_box_width", VehiclePreview3D::g_boxWidth);
+	ini.SetDoubleValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_light_intensity", VehiclePreview3D::g_lightIntensity);
+	ini.SetBoolValue(section_haxValues.c_str(), "vehicle_spawner_3d_preview_scale_lighting", VehiclePreview3D::g_scaleLighting);
+	ini.SetBoolValue(section_haxValues.c_str(), "spooner_enable_3d_previews", VehiclePreview3D::g_mapPreviews);
 	ini.SetValue(section_haxValues.c_str(), "vehicle_spawner_plate_text", g_spawnVehiclePlateText.c_str());
 	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_text_texter_value", g_spawnVehiclePlateTexterValue);
 	ini.SetLongValue(section_haxValues.c_str(), "vehicle_spawner_plate_type", g_spawnVehiclePlateType);
