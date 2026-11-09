@@ -33,9 +33,6 @@ namespace BlipIcon {
 	const std::map<int, std::string> vNames
 	{
 		{ BlipIcon::Standard, "Standard" },
-		{ BlipIcon::Enemy, "Enemy" },
-		{ BlipIcon::Friend, "Friend" },
-		{ BlipIcon::VIP, "VIP" },
 		//{ BlipIcon::BigBlip, "BigBlip" },
 		{ BlipIcon::PoliceOfficer, "PoliceOfficer" },
 		{ BlipIcon::PoliceArea, "PoliceArea" },
@@ -201,6 +198,7 @@ namespace BlipIcon {
 		{ BlipIcon::PropertyManagement, "PropertyManagement" },
 		{ BlipIcon::GangHighlight, "GangHighlight" },
 		{ BlipIcon::Altruist, "Altruist" },
+		{ BlipIcon::Enemy, "Enemy" },
 		{ BlipIcon::OnMission, "OnMission" },
 		{ BlipIcon::CashPickup, "CashPickup" },
 		{ BlipIcon::Chop, "Chop" },
@@ -209,6 +207,7 @@ namespace BlipIcon {
 		{ BlipIcon::CashPickupVagos, "CashPickupVagos" },
 		{ BlipIcon::CashPickupPolice, "CashPickupPolice" },
 		{ BlipIcon::Hooker, "Hooker" },
+		{ BlipIcon::Friend, "Friend" },
 		{ BlipIcon::CustodyDropoff, "CustodyDropoff" },
 		{ BlipIcon::OnMissionPolice, "OnMissionPolice" },
 		{ BlipIcon::OnMissionLost, "OnMissionLost" },
@@ -351,6 +350,7 @@ namespace BlipIcon {
 		{ BlipIcon::Truck, "Truck" },
 		{ BlipIcon::SpecialCargo, "SpecialCargo" },
 		{ BlipIcon::Trailer, "Trailer" },
+		{ BlipIcon::VIP, "VIP" },
 		{ BlipIcon::Cargobob, "Cargobob" },
 		{ BlipIcon::AreaCutline, "AreaCutline" },
 		{ BlipIcon::Jammed, "Jammed" },

@@ -5265,7 +5265,7 @@ namespace sub
 		}
 		void Sub_SpawnInteractables()
 		{
-			AddTitle("Spawn Interactable");
+			AddTitle("Spawn Interactable (ALPHA)");
 
 			static std::vector<const Interactables::InteractableDefinition*> sortedDefs;
 			if (sortedDefs.size() != Interactables::vInteractables.size())

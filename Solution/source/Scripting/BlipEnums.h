@@ -27,9 +27,6 @@ namespace BlipIcon {
 		///<summary>The default English text for this value is "Destination".</summary>
 		BigBlip = 2,
 		///<summary>The default English text for this value is "Police".</summary>
-		Enemy = 270,
-		Friend = 280,
-		VIP = 480,
 		PoliceOfficer = 3,
 		///<summary>When this value is set, the blip will flash. The default English text for this value is "Objective".</summary>
 		PoliceArea = 4,
@@ -216,6 +213,7 @@ namespace BlipIcon {
 		PropertyManagement = 267,
 		GangHighlight = 268,
 		Altruist = 269,
+		Enemy = 270,
 		OnMission = 271,
 		CashPickup = 272,
 		Chop = 273,
@@ -225,6 +223,7 @@ namespace BlipIcon {
 		CashPickupPolice = 278,
 		///<summary>The default English text for this value is "Drop Off Hooker".</summary>
 		Hooker = 279,
+		Friend = 280,
 		CustodyDropoff = 285,
 		OnMissionPolice = 286,
 		OnMissionLost = 287,
@@ -389,7 +388,8 @@ namespace BlipIcon {
 		Truck,
 		SpecialCargo,
 		Trailer,
-		Cargobob,
+		VIP = 480,
+		Cargobob = 481,
 		AreaCutline,
 		Jammed,
 		Ghost,

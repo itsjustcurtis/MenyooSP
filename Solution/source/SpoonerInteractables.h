@@ -48,6 +48,7 @@ namespace sub::Spooner::Interactables
 		AnimTarget Target;
 		std::string ClipName;
 		int ExtraPropIndex = 0;
+		std::string AnimDict;
 	};
 
 	struct ExtraPropDef
@@ -65,6 +66,8 @@ namespace sub::Spooner::Interactables
 		Vector3 AttachRotation = Vector3();
 		bool ManualSpawn = false;
 		std::vector<Hash> PropModelVariants;
+		int PrimaryAttachBone = 0;
+		bool Dynamic = false;
 	};
 
 	struct PropEndState
@@ -102,6 +105,7 @@ namespace sub::Spooner::Interactables
 		bool LoopUntilInteract = false;
 		PlayAnimSettings PlayAnim;
 		bool PauseOnEnd = true;
+		std::vector<int> DetachExtraProps;
 	};
 
 	using SpawnPersistentPropsFn = void(*)(InteractableInstance&);
@@ -188,6 +192,10 @@ namespace sub::Spooner::Interactables
 		DWORD ApproachStartTime = 0;
 		Hash PreviousWeapon = 0;
 		bool bWeaponHolstered = false;
+		std::vector<Hash> ExtraModelOverride;
+
+		std::vector<std::string> ExtraAnimDicts;
+		int VariantIndex = -1;
 	};
 
 	struct KnownBagVariant
@@ -235,6 +243,8 @@ namespace sub::Spooner::Interactables
 		ExtraProp& DeleteWhenDone() { d.DeleteOnComplete = true; return *this; }
 		ExtraProp& KeepWhenDone() { d.DeleteOnComplete = false; return *this; }
 		ExtraProp& RandomExtraModel(std::initializer_list<Hash> models) { d.PropModelVariants.assign(models); return *this; }
+		ExtraProp& AttachAtOrigin() { d.PrimaryAttachBone = -1; return *this; }
+		ExtraProp& Dynamic() { d.Dynamic = true; return *this; }
 
 		ExtraPropDef Build() const { return d; }
 	private:
@@ -246,14 +256,14 @@ namespace sub::Spooner::Interactables
 	public:
 		explicit Stage(int maxDurationMs) { s.MaxDurationMs = maxDurationMs; }
 
-		Stage& PlayerClip(const char* clip) { s.Participants.push_back({ AnimTarget::Player, clip, 0 }); return *this; }
-		Stage& PrimaryPropClip(const char* clip) { s.Participants.push_back({ AnimTarget::PrimaryProp, clip, 0 }); return *this; }
-		Stage& ExtraPropClip(int extraPropIndex, const char* clip)
+		Stage& PlayerClip(const char* clip, const char* dict = nullptr) { s.Participants.push_back({ AnimTarget::Player, clip, 0, dict ? dict : "" }); return *this; }
+		Stage& PrimaryPropClip(const char* clip, const char* dict = nullptr) { s.Participants.push_back({ AnimTarget::PrimaryProp, clip, 0, dict ? dict : "" }); return *this; }
+		Stage& ExtraPropClip(int extraPropIndex, const char* clip, const char* dict = nullptr)
 		{
-			s.Participants.push_back({ AnimTarget::ExtraProp, clip, extraPropIndex });
+			s.Participants.push_back({ AnimTarget::ExtraProp, clip, extraPropIndex, dict ? dict : "" });
 			return *this;
 		}
-		Stage& PlayerWeaponClip(const char* clip) { s.Participants.push_back({ AnimTarget::PlayerWeapon, clip, 0 }); return *this; }
+		Stage& PlayerWeaponClip(const char* clip, const char* dict = nullptr) { s.Participants.push_back({ AnimTarget::PlayerWeapon, clip, 0, dict ? dict : "" }); return *this; }
 		Stage& Facial(const char* clip) { s.FacialClip = clip; return *this; }
 		Stage& SceneRate(float rate) { s.SceneRate = rate; return *this; }
 		Stage& Blend(float blendIn, float blendOut) { s.BlendIn = blendIn; s.BlendOut = blendOut; return *this; }
@@ -265,6 +275,11 @@ namespace sub::Spooner::Interactables
 			s.PlayAnim.Flag = flag;
 			s.PlayAnim.DurationMs = durationMs;
 			s.PlayAnim.PlaybackRate = playbackRate;
+			return *this;
+		}
+		Stage& DetachExtraProp(int extraPropIndex)
+		{
+			s.DetachExtraProps.push_back(extraPropIndex);
 			return *this;
 		}
 

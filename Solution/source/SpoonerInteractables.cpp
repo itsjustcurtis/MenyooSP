@@ -56,6 +56,10 @@ namespace sub::Spooner::Interactables
 	static const Hash TrLock01a = GET_HASH_KEY("tr_prop_tr_lock_01a");
 	static const Hash TrContCollision = GET_HASH_KEY("tr_prop_tr_cont_coll_01a");
 
+	static const Hash SmallContainer = GET_HASH_KEY("m25_1_prop_m51_containersmall_01b");
+	static const Hash ChainLock = GET_HASH_KEY("h4_prop_h4_chain_lock_01a");
+	static const Hash BoltCutters = GET_HASH_KEY("h4_prop_h4_bolt_cutter_01a");
+
 	static const Hash ElectricBox1 = GET_HASH_KEY("h4_prop_h4_elecbox_01a");
 	static const Hash ElectricBox2 = GET_HASH_KEY("m24_2_prop_m42_elecbox_01a");
 
@@ -122,6 +126,32 @@ namespace sub::Spooner::Interactables
 	static const Hash TrolleyDiamond = GET_HASH_KEY("ch_prop_diamond_trolly_01b");
 	static const Hash TrolleyGold = GET_HASH_KEY("ch_prop_gold_trolly_01c");
 	static const Hash TrolleyGoldDiamondCasino = GET_HASH_KEY("ch_prop_gold_trolly_01b");
+
+	static const Hash JewelCabinet = GET_HASH_KEY("p_new_j_counter_02");
+	static const Hash JewelCabGlass = GET_HASH_KEY("p_counter_02_glass");
+	static const Hash JewelCabStart1 = GET_HASH_KEY("des_jewel_cab_start");
+	static const Hash JewelCabStart2 = GET_HASH_KEY("des_jewel_cab2_start");
+	static const Hash JewelCabStart3 = GET_HASH_KEY("des_jewel_cab3_start");
+	static const Hash JewelCabStart4 = GET_HASH_KEY("des_jewel_cab4_start");
+	static const Hash JewelCabEnd1 = GET_HASH_KEY("des_jewel_cab_end");
+	static const Hash JewelCabEnd2 = GET_HASH_KEY("des_jewel_cab2_end");
+	static const Hash JewelCabEnd3 = GET_HASH_KEY("des_jewel_cab3_end");
+	static const Hash JewelCabEnd4 = GET_HASH_KEY("des_jewel_cab4_end");
+	static const Hash JewelCabRoot1 = GET_HASH_KEY("des_jewel_cab_root");
+	static const Hash JewelCabRootB1 = GET_HASH_KEY("des_jewel_cab_root2");
+	static const Hash JewelCabRoot2 = GET_HASH_KEY("des_jewel_cab2_root");
+	static const Hash JewelCabRootB2 = GET_HASH_KEY("des_jewel_cab2_rootb");
+	static const Hash JewelCabRoot3 = GET_HASH_KEY("des_jewel_cab3_root");
+	static const Hash JewelCabRootB3 = GET_HASH_KEY("des_jewel_cab3_rootb");
+	static const Hash JewelCabRoot4 = GET_HASH_KEY("des_jewel_cab4_root");
+	static const Hash JewelCabRootB4 = GET_HASH_KEY("des_jewel_cab4_rootb");
+
+	static const Hash VendingMachineEcola = GET_HASH_KEY("prop_vend_soda_01");
+	static const Hash VendingMachineSprunk = GET_HASH_KEY("prop_vend_soda_02");
+	static const Hash VendingMachineJunk = GET_HASH_KEY("sf_prop_sf_vend_drink_01a");
+	static const Hash SodaCanEcola = GET_HASH_KEY("prop_ecola_can");
+	static const Hash SodaCanSprunk = GET_HASH_KEY("prop_ld_can_01b");
+	static const Hash SodaCanJunk = GET_HASH_KEY("sf_prop_sf_can_01a");
 
 	// ========================================================================
 	//  2. WORN-BAG MATCHING (slot 9 = Story Mode TASK, slot 5 = Online HAND)
@@ -217,11 +247,80 @@ namespace sub::Spooner::Interactables
 		return inst.AnchorPos + (right * o.x) + (forward * o.y) + Vector3(0.0f, 0.0f, o.z);
 	}
 
-	static Hash PickExtraModel(const ExtraPropDef& def)
+	static const char* ParticipantDict(const InteractableInstance& inst, const SceneParticipant& p)
 	{
+		return p.AnimDict.empty() ? inst.Def->AnimDict.c_str() : p.AnimDict.c_str();
+	}
+
+	static void RequireAnimDict(InteractableInstance& inst, const std::string& dict)
+	{
+		if (dict.empty() || std::find(inst.ExtraAnimDicts.begin(), inst.ExtraAnimDicts.end(), dict) != inst.ExtraAnimDicts.end())
+			return;
+
+		inst.ExtraAnimDicts.push_back(dict);
+		STREAMING::REQUEST_ANIM_DICT(dict.c_str());
+	}
+
+	static std::vector<std::string> CollectAnimDicts(const InteractableInstance& inst)
+	{
+		std::vector<std::string> dicts;
+		auto add = [&dicts](const std::string& d)
+			{
+				if (!d.empty() && std::find(dicts.begin(), dicts.end(), d) == dicts.end())
+					dicts.push_back(d);
+			};
+
+		add(inst.Def->AnimDict);
+		for (auto& st : inst.Def->Stages)
+			for (auto& p : st.Participants)
+				add(p.AnimDict);
+		for (auto& d : inst.ExtraAnimDicts)
+			add(d);
+		return dicts;
+	}
+
+	static bool LoadAnimDicts(const std::vector<std::string>& dicts)
+	{
+		for (auto& d : dicts)
+			STREAMING::REQUEST_ANIM_DICT(d.c_str());
+
+		for (int waitCount = 0; waitCount < 500; waitCount++)
+		{
+			bool allLoaded = true;
+			for (auto& d : dicts)
+			{
+				if (!STREAMING::HAS_ANIM_DICT_LOADED(d.c_str()))
+				{
+					allLoaded = false;
+					break;
+				}
+			}
+			if (allLoaded)
+				return true;
+			WAIT(0);
+		}
+		return false;
+	}
+
+	static Hash PickExtraModel(const InteractableInstance& inst, size_t index)
+	{
+		if (index < inst.ExtraModelOverride.size() && inst.ExtraModelOverride[index] != 0)
+			return inst.ExtraModelOverride[index];
+
+		const ExtraPropDef& def = inst.Def->ExtraProps[index];
 		if (!def.PropModelVariants.empty())
 			return def.PropModelVariants[rand() % (int)def.PropModelVariants.size()];
 		return def.PropModel;
+	}
+
+	static void ApplyExtraDynamic(SpoonerEntity& extra, const ExtraPropDef& def)
+	{
+		if (!def.Dynamic || !extra.handle.Exists())
+			return;
+
+		extra.handle.SetDynamic(true);
+		extra.handle.FreezePosition(false);
+		extra.dynamic = true;
 	}
 
 	static void SpawnContainerPersistentProps(InteractableInstance& inst)
@@ -234,15 +333,16 @@ namespace sub::Spooner::Interactables
 			if (!extraDef.SpawnAtPlacement)
 				continue;
 
-			SpoonerEntity extraEnt = EntityManagement::AddProp(PickExtraModel(extraDef), extraDef.Label);
+			SpoonerEntity extraEnt = EntityManagement::AddProp(PickExtraModel(inst, i), extraDef.Label);
 			if (extraEnt.handle.Exists())
 			{
 				extraEnt.handle.SetIsCollisionEnabled(false);
 				if (extraDef.StartInvisible)
 					extraEnt.handle.SetVisible(false);
 
-				EntityManagement::AttachEntity(extraEnt, inst.Ent.handle, 0, extraDef.AttachOffset, extraDef.AttachRotation);
+				EntityManagement::AttachEntity(extraEnt, inst.Ent.handle, extraDef.PrimaryAttachBone, extraDef.AttachOffset, extraDef.AttachRotation);
 				EntityManagement::RemoveEntityFromDb(extraEnt);
+				ApplyExtraDynamic(extraEnt, extraDef);
 			}
 			inst.ExtraEnts[i] = extraEnt;
 		}
@@ -269,6 +369,9 @@ namespace sub::Spooner::Interactables
 
 	static void PlayPropParticipant(InteractableInstance& inst, const SceneParticipant& p, int syncedScene, const InteractableStage& stage)
 	{
+		if (p.Target == AnimTarget::ExtraProp && (size_t)p.ExtraPropIndex >= inst.ExtraEnts.size())
+			return;
+
 		SpoonerEntity& targetEnt = (p.Target == AnimTarget::PrimaryProp)
 			? inst.Ent
 			: inst.ExtraEnts[p.ExtraPropIndex];
@@ -284,7 +387,7 @@ namespace sub::Spooner::Interactables
 
 		ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(
 			targetEnt.handle.Handle(), syncedScene,
-			p.ClipName.c_str(), inst.Def->AnimDict.c_str(),
+			p.ClipName.c_str(), ParticipantDict(inst, p),
 			stage.BlendIn, stage.BlendOut, stage.PropFlags, stage.PlaybackRate
 		);
 	}
@@ -297,9 +400,23 @@ namespace sub::Spooner::Interactables
 
 		ENTITY::PLAY_SYNCHRONIZED_ENTITY_ANIM(
 			weapon.Handle(), syncedScene,
-			p.ClipName.c_str(), inst.Def->AnimDict.c_str(),
+			p.ClipName.c_str(), ParticipantDict(inst, p),
 			stage.BlendIn, stage.BlendOut, stage.PropFlags, stage.PlaybackRate
 		);
+	}
+
+	static int PlaySideScene(InteractableInstance& inst, const std::vector<SceneParticipant>& participants, bool applySceneOffset = false)
+	{
+		const InteractableStage& stage = inst.Def->Stages[inst.CurrentStage];
+
+		const int scene = CreateScene(inst, stage, true, applySceneOffset);
+		if (scene == -1)
+			return -1;
+
+		for (auto& p : participants)
+			PlayPropParticipant(inst, p, scene, stage);
+
+		return scene;
 	}
 
 	// ========================================================================
@@ -766,6 +883,116 @@ namespace sub::Spooner::Interactables
 
 	static void SpawnBreaker_PreOpened(InteractableInstance& inst) { SpawnBreaker(inst, 0xF, true); }
 	static void SpawnBreaker_AllBlown(InteractableInstance& inst) { SpawnBreaker(inst, 0xF, false); }
+
+	// ========================================================================
+//  4D. JEWEL CABINET HOOKS
+//      Extra slots: 0 Extra Glass, 1 Start, 2 End, 3 Root, 4 Root B
+//      Flow: Start is deleted at the smash; Root + Root B appear and play their clips; End takes over when finished.
+// ========================================================================
+	struct JewelCabVariant
+	{
+		Hash Start, End, Root, RootB;
+		const char* Dict;
+		const char* RootClip;
+		const char* RootBClip;
+	};
+
+	static const std::vector<JewelCabVariant> vJewelCabVariants =
+	{
+		{ JewelCabStart1, JewelCabEnd1, JewelCabRoot1, JewelCabRootB1, "des_jewel_cab",  "des_jewel_cab_root",  "des_jewel_cab_root2" },
+		{ JewelCabStart2, JewelCabEnd2, JewelCabRoot2, JewelCabRootB2, "des_jewel_cab2", "des_jewel_cab2_root", "des_jewel_cab2_rootb" },
+		{ JewelCabStart3, JewelCabEnd3, JewelCabRoot3, JewelCabRootB3, "des_jewel_cab3", "des_jewel_cab3_root", "des_jewel_cab3_rootb" },
+	};
+
+	static const size_t JewelSlotStart = 1;
+	static const size_t JewelSlotEnd = 2;
+	static const size_t JewelSlotRoot = 3;
+	static const size_t JewelSlotRootB = 4;
+	static const float JewelSmashPhase = 0.1f;
+
+	static const int JewelAttachBone = -1;
+
+	static void AttachToPrimaryExactly(InteractableInstance& inst, SpoonerEntity& extra)
+	{
+		EntityManagement::AttachEntity(extra, inst.Ent.handle, JewelAttachBone, Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, 0.0f));
+		EntityManagement::RemoveEntityFromDb(extra);
+	}
+
+	static void SpawnJewelCabinetGroup(InteractableInstance& inst)
+	{
+		if (inst.Def->ExtraProps.size() <= JewelSlotRootB)
+			return;
+
+		inst.VariantIndex = rand() % (int)vJewelCabVariants.size();
+		const JewelCabVariant& v = vJewelCabVariants[inst.VariantIndex];
+
+		RequireAnimDict(inst, v.Dict);
+
+		const Hash models[] = { inst.Def->ExtraProps[0].PropModel, v.Start, v.End, v.Root, v.RootB };
+
+		inst.ExtraEnts.resize(inst.Def->ExtraProps.size());
+		inst.ExtraRuntime.resize(inst.Def->ExtraProps.size());
+
+		for (size_t i = 0; i <= JewelSlotRootB; i++)
+		{
+			const auto& extraDef = inst.Def->ExtraProps[i];
+
+			SpoonerEntity e = EntityManagement::AddProp(models[i], extraDef.Label);
+			if (e.handle.Exists())
+			{
+				e.handle.SetIsCollisionEnabled(false);
+				if (extraDef.StartInvisible)
+					e.handle.SetVisible(false);
+			}
+			inst.ExtraEnts[i] = e;
+		}
+
+		for (size_t i = 0; i <= JewelSlotRootB; i++)
+		{
+			if (inst.ExtraEnts[i].handle.Exists())
+				AttachToPrimaryExactly(inst, inst.ExtraEnts[i]);
+		}
+	}
+
+	static void OnStageTick_JewelCabinet(InteractableInstance& inst, size_t stageIndex)
+	{
+		if (stageIndex != 0 || inst.SyncedScene == -1 || inst.VariantIndex < 0 || inst.ExtraEnts.size() <= JewelSlotRootB)
+			return;
+
+		SpoonerEntity& startProp = inst.ExtraEnts[JewelSlotStart];
+		if (!startProp.handle.Exists())
+			return;
+
+		if (GET_SYNCHRONIZED_SCENE_PHASE(inst.SyncedScene) < JewelSmashPhase)
+			return;
+
+		const JewelCabVariant& v = vJewelCabVariants[inst.VariantIndex];
+
+		EntityManagement::DeleteEntity(startProp);
+
+		for (size_t slot : { JewelSlotRoot, JewelSlotRootB })
+		{
+			SpoonerEntity& e = inst.ExtraEnts[slot];
+			if (e.handle.Exists())
+			{
+				e.handle.SetVisible(true);
+				e.handle.SetAlpha(255);
+			}
+		}
+
+		PlaySideScene(inst, {
+			{ AnimTarget::ExtraProp, v.RootClip,  (int)JewelSlotRoot,  v.Dict },
+			{ AnimTarget::ExtraProp, v.RootBClip, (int)JewelSlotRootB, v.Dict } });
+	}
+
+	static void CustomCleanup_JewelCabinet(InteractableInstance& inst)
+	{
+		if (inst.ExtraEnts.size() > JewelSlotEnd && inst.ExtraEnts[JewelSlotEnd].handle.Exists())
+		{
+			inst.ExtraEnts[JewelSlotEnd].handle.SetVisible(true);
+			inst.ExtraEnts[JewelSlotEnd].handle.SetAlpha(255);
+		}
+	}
 
 	// ========================================================================
 	//  5. DEFINITIONS
@@ -1321,7 +1548,7 @@ namespace sub::Spooner::Interactables
 
 	static Interactable MakeGrabDiamondFromTrolley1()
 	{
-		return Interactable("Grab Diamond From Trolley", TrolleyDiamond)
+		return Interactable("Grab Diamonds From Trolley", TrolleyDiamond)
 			.AnimDict("anim@heists@ornate_bank@grab_cash")
 			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
 			.AddStage(Stage(6000)
@@ -1338,6 +1565,135 @@ namespace sub::Spooner::Interactables
 			.StandOffset(0.0f, 0.85f, 0.65f)
 			.InteractRange(0.50f)
 			.SlideToMark(8.0f, -1.0f);
+	}
+
+	static Interactable MakeGrabGoldFromTrolley1()
+	{
+		return Interactable("Grab Gold From Trolley", TrolleyGold)
+			.AnimDict("anim@heists@ornate_bank@grab_cash")
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "bag_intro")
+				.PlayerClip("intro"))
+			.AddStage(Stage(60000)
+				.PrimaryPropClip("cart_cash_dissapear")
+				.ExtraPropClip(0, "bag_grab")
+				.PlayerClip("grab"))
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "bag_exit")
+				.PlayerClip("exit"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, 0.85f, 0.65f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f);
+	}
+
+	static Interactable MakeGrabGoldFromTrolley2()
+	{
+		return Interactable("Grab Gold From Trolley", TrolleyGoldDiamondCasino)
+			.AnimDict("anim@heists@ornate_bank@grab_cash")
+			.AddExtraProp(ExtraProp("Duffel Bag", BagFallback).MatchWornBag().AttachToPlayer())
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "bag_intro")
+				.PlayerClip("intro"))
+			.AddStage(Stage(60000)
+				.PrimaryPropClip("cart_cash_dissapear")
+				.ExtraPropClip(0, "bag_grab")
+				.PlayerClip("grab"))
+			.AddStage(Stage(6000)
+				.ExtraPropClip(0, "bag_exit")
+				.PlayerClip("exit"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, 0.85f, 0.65f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f);
+	}
+
+	static Interactable MakeSmashOpenJewelCabinet()
+	{
+		return Interactable("Smash Open Jewel Cabinet", JewelCabinet)
+			.AnimDict("anim@scripted@kortz@ig10_meth_smash_glass@male@")
+			.AddExtraProp(ExtraProp("Extra Glass", JewelCabGlass).SpawnedByHook().KeepWhenDone())
+			.AddExtraProp(ExtraProp("Glass", JewelCabStart1).SpawnedByHook())
+			.AddExtraProp(ExtraProp("Smashed Glass", JewelCabEnd1).StartsHidden().SpawnedByHook().KeepWhenDone())
+			.AddExtraProp(ExtraProp("Root", JewelCabRoot1).StartsHidden().SpawnedByHook())
+			.AddExtraProp(ExtraProp("Root B", JewelCabRootB1).StartsHidden().SpawnedByHook())
+			.AddStage(Stage(30000)
+				.PlayerClip("smash_case_a")
+				.Facial("smash_case_a_facial"))
+			.KeepPropsWhenDone()
+			.StandOffset(0.0f, -0.80f, 0.55f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, 0.0f, -0.6f)
+			.OnSpawn(&SpawnJewelCabinetGroup)
+			.OnStageTick(&OnStageTick_JewelCabinet)
+			.OnCleanup(&CustomCleanup_JewelCabinet);
+	}
+
+	static Interactable MakeVendingMachine1()
+	{
+		return Interactable("Drink Ecola Can", VendingMachineEcola)
+			.AnimDict("mini@sprunk")
+			.AddStage(Stage(60000)
+				.PlayerClip("plyr_buy_drink_pt1"))
+			.AddExtraProp(ExtraProp("Soda Can", SodaCanEcola)
+				.AttachToPlayer(AttachBone::RightWrist))
+			.AddEndState(EndState::Extra(0).Collision(CollisionState::On))
+			.AddStage(Stage(60000)
+				.PlayerClip("plyr_buy_drink_pt2"))
+			.AddStage(Stage(60000)
+				.PlayerClip("plyr_buy_drink_pt3")
+				.DetachExtraProp(0))
+			.StandOffset(0.0f, -0.85f, 0.15f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, -1.0f, 0.01f)
+			.KeepPropsWhenDone()
+			.Repeatable();
+	}
+
+	static Interactable MakeVendingMachine2()
+	{
+		return Interactable("Drink Sprunk Can", VendingMachineSprunk)
+			.AnimDict("mini@sprunk")
+			.AddStage(Stage(60000)
+				.PlayerClip("plyr_buy_drink_pt1"))
+			.AddExtraProp(ExtraProp("Soda Can", SodaCanSprunk)
+				.AttachToPlayer(AttachBone::RightWrist))
+			.AddStage(Stage(60000)
+				.PlayerClip("plyr_buy_drink_pt2"))
+			.AddStage(Stage(60000)
+				.PlayerClip("plyr_buy_drink_pt3")
+				.DetachExtraProp(0))
+			.StandOffset(0.0f, -0.85f, 0.15f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, -1.0f, 0.01f)
+			.KeepPropsWhenDone()
+			.Repeatable();
+	}
+
+	static Interactable MakeVendingMachine3()
+	{
+		return Interactable("Drink Junk Can", VendingMachineJunk)
+			.AnimDict("mini@sprunk")
+			.AddStage(Stage(60000)
+				.PlayerClip("plyr_buy_drink_pt1"))
+			.AddExtraProp(ExtraProp("Soda Can", SodaCanJunk)
+				.AttachToPlayer(AttachBone::RightWrist))
+			.AddStage(Stage(60000)
+				.PlayerClip("plyr_buy_drink_pt2"))
+			.AddStage(Stage(60000)
+				.PlayerClip("plyr_buy_drink_pt3")
+				.DetachExtraProp(0))
+			.AddEndState(EndState::Extra(0).Collision(CollisionState::On))
+			.StandOffset(0.0f, -0.85f, 1.0f)
+			.InteractRange(0.50f)
+			.SlideToMark(8.0f, -1.0f)
+			.SceneOrigin(0.0f, -1.0f, 1.0f)
+			.KeepPropsWhenDone()
+			.Repeatable();
 	}
 
 	std::vector<InteractableDefinition> vInteractables =
@@ -1385,6 +1741,14 @@ namespace sub::Spooner::Interactables
 		MakeGrabDiamondFromTrolley1(),
 		MakeGrabCashFromTrolley1(),
 		MakeGrabCashFromTrolley2(),
+		MakeGrabGoldFromTrolley1(),
+		MakeGrabGoldFromTrolley2(),
+
+		MakeSmashOpenJewelCabinet(),
+
+		MakeVendingMachine1(),
+		MakeVendingMachine2(),
+		MakeVendingMachine3(),
 	};
 
 	std::vector<InteractableInstance> vActiveInteractables;
@@ -1436,7 +1800,7 @@ namespace sub::Spooner::Interactables
 			for (auto& p : stage.Participants)
 			{
 				if (p.Target == AnimTarget::Player)
-					return !IS_ENTITY_PLAYING_ANIM(PLAYER_PED_ID(), inst.Def->AnimDict.c_str(), p.ClipName.c_str(), 3);
+					return !IS_ENTITY_PLAYING_ANIM(PLAYER_PED_ID(), ParticipantDict(inst, p), p.ClipName.c_str(), 3);
 			}
 			return true;
 		}
@@ -1451,6 +1815,25 @@ namespace sub::Spooner::Interactables
 			inst.Def->OnStageStart(inst, stageIndex);
 
 		const InteractableStage& stage = inst.Def->Stages[stageIndex];
+
+		for (int extraIndex : stage.DetachExtraProps)
+		{
+			if (extraIndex < 0 ||
+				static_cast<size_t>(extraIndex) >= inst.ExtraEnts.size())
+				continue;
+
+			SpoonerEntity& extraEnt = inst.ExtraEnts[extraIndex];
+
+			if (!extraEnt.handle.Exists())
+				continue;
+
+			ENTITY::DETACH_ENTITY(extraEnt.handle.Handle(), true, true);
+
+			if (EntityManagement::GetEntityIndexInDb(extraEnt.handle) < 0)
+			{
+				EntityManagement::AddEntityToDb(extraEnt, true);
+			}
+		}
 
 		std::vector<SceneParticipant> participants = stage.Participants;
 		if (inst.Def->ResolveParticipants)
@@ -1648,7 +2031,7 @@ namespace sub::Spooner::Interactables
 
 			Hash modelToSpawn = extraDef.MatchWornComponent
 				? ResolveWornBagModel(wornBag, extraDef.PropModel)
-				: PickExtraModel(extraDef);
+				: PickExtraModel(inst, i);
 
 			SpoonerEntity extraEnt = EntityManagement::AddProp(modelToSpawn, extraDef.Label);
 			if (extraEnt.handle.Exists())
@@ -1665,11 +2048,12 @@ namespace sub::Spooner::Interactables
 					: (GTAentity)myPed;
 
 				int attachBone = (extraDef.AttachTarget == ExtraPropAttachTarget::PrimaryProp)
-					? 0
+					? extraDef.PrimaryAttachBone
 					: ResolveAttachBoneIndex(myPed, extraDef.BoneOverride, rootBone);
 
 				EntityManagement::AttachEntity(extraEnt, attachTarget, attachBone, extraDef.AttachOffset, extraDef.AttachRotation);
 				EntityManagement::RemoveEntityFromDb(extraEnt);
+				ApplyExtraDynamic(extraEnt, extraDef);
 			}
 			inst.ExtraEnts[i] = extraEnt;
 		}
@@ -1691,12 +2075,7 @@ namespace sub::Spooner::Interactables
 		if (primaryAnimates)
 			inst.Ent.handle.FreezePosition(false);
 
-		STREAMING::REQUEST_ANIM_DICT(inst.Def->AnimDict.c_str());
-		int waitCount = 0;
-		while (!STREAMING::HAS_ANIM_DICT_LOADED(inst.Def->AnimDict.c_str()) && waitCount++ < 500)
-			WAIT(0);
-
-		if (!STREAMING::HAS_ANIM_DICT_LOADED(inst.Def->AnimDict.c_str()))
+		if (!LoadAnimDicts(CollectAnimDicts(inst)))
 		{
 			Game::Print::PrintBottomCentre("~r~Error:~s~ Anim dict failed to load.");
 			return;
