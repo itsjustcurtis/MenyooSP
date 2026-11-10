@@ -14,7 +14,6 @@
 #include "..\Natives\natives2.h"
 #include "..\Scripting\Model.h"
 #include "..\Memory\GTAmemory.h"
-#include "..\Memory\UI3DScene.h"
 #include "..\Util\FileLogger.h"
 #include "..\Menu\Menu.h"
 #include "VehicleSpawner.h"

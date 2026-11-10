@@ -31,7 +31,10 @@ public:
 template <typename T>
 void CallHook<T>::remove()
 {
+    DWORD oldProtect;
+    VirtualProtect(reinterpret_cast<void*>(this->address), 5, PAGE_EXECUTE_READWRITE, &oldProtect);
     *reinterpret_cast<int32_t*>(this->address + 1) = static_cast<int32_t>((intptr_t)this->fn - (intptr_t)this->address - 5);
+    VirtualProtect(reinterpret_cast<void*>(this->address), 5, oldProtect, &oldProtect);
 }
 
 template <typename T>
@@ -52,9 +55,14 @@ public:
 
         auto pFunc = AllocateFunctionStub((void*)(hModule), (void*)target, 0);
 
+        DWORD oldProtect;
+        VirtualProtect(reinterpret_cast<void*>(address), 5, PAGE_EXECUTE_READWRITE, &oldProtect);
+
         *reinterpret_cast<BYTE*>(address) = 0xE8;
 
         *reinterpret_cast<int32_t*>(address + 1) = static_cast<int32_t>((intptr_t)pFunc - (intptr_t)address - 5);
+
+        VirtualProtect(reinterpret_cast<void*>(address), 5, oldProtect, &oldProtect);
 
         return new CallHook<T>(address, orig);
     }
