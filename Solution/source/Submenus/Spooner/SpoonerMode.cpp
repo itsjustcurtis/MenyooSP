@@ -36,6 +36,7 @@
 #include "..\..\Scripting\enums.h"
 #include "..\..\Scripting\Game.h"
 #include "BlipCustoms.h"
+#include "../../Submenus/SpoonerInteractables.h"
 
 #include "SpoonerSettings.h"
 #include "EntityManagement.h"
