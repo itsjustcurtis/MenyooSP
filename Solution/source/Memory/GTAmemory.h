@@ -23,6 +23,7 @@
 #include "..\main.h" //getGameVersion getGlobalPtr
 
 //#include <cstddef>
+#include <cstdint>
 #include <vector>
 #include <array>
 #include <Windows.h>
@@ -457,6 +458,7 @@ public:
 	static void InitEnhancedPools();
 	static bool AreEnhancedPoolsReady();
 	static bool TryInitEnhancedPools();
+	static int GetFreePoolSlots(int entityType);
 
 	// Unknown_Modder
 	struct GXT2Entry
@@ -710,6 +712,62 @@ public:
 
 void setupHooks();
 void removeHooks();
+
+namespace UI3DScene
+{
+	struct Addresses
+	{
+		uintptr_t preRenderCall;
+		uintptr_t drawPrepCall;
+		uintptr_t pushPreset;
+		uintptr_t assignToSlot;
+		uintptr_t managerGlobal;
+		uintptr_t drawListManagerGlobal;
+		uintptr_t drawListAlign;
+		uintptr_t drawListAlloc;
+		uintptr_t prepareDraw;
+	};
+	bool Init(const Addresses& addresses);
+	void Shutdown();
+	bool IsReady();
+
+	bool PushPreset(uint32_t presetHash);
+	bool IsPresetActive(uint32_t presetHash);
+
+	bool AssignEntityToSlot(uint32_t presetHash, int slot, void* entity, const float pos[3], const float rot[3], float alpha = 1.0f);
+
+	struct ElementPatch
+	{
+		float pos[3];
+		float rot[3];
+		float rect[4];
+		uint32_t bgColour;
+		float lightIntensity;
+	};
+	bool PatchPresetElement(uint32_t presetHash, int element, const ElementPatch& patch);
+	bool ReadPresetElement(uint32_t presetHash, int element, ElementPatch& out, bool* enabled = nullptr, int* elementCount = nullptr);
+	void RestorePresetPatches();
+
+	void SetLightRigScale(float positionScale, float radiusScale, float coverRadius = 0.0f);
+
+	void SetCameraFov(float fov);
+	float GetOriginalCameraFov();
+
+	bool SetPreviewEntity(void* entity);
+
+	struct ExtraEntity
+	{
+		void* entity;
+		bool isPed;
+		uint8_t alpha;
+	};
+	void SetPreviewExtraEntities(const ExtraEntity* entities, int count);
+
+	void SetPreviewEntityDrawn(bool drawn);
+
+	void SetDefaultDrawParams(uint8_t alphaFade, uint8_t flag);
+	void SetExtraDrawAlpha(uint8_t alphaFade);
+}
 
 
 

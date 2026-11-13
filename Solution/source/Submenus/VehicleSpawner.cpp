@@ -11,6 +11,10 @@
 #include "..\Util\FileLogger.h"
 #include "..\Util\VehiclePrices.h"
 #include "..\Menu\Keybinds.h"
+#include "VehiclePreview3D.h"
+#include "..\Memory\GTAmemory.h"
+
+#include <unordered_map>
 
 namespace sub
 {
@@ -1009,6 +1013,29 @@ namespace sub
 				}
 			}
 		}
+		static float g_previewExtraHeight = 0.0f;
+
+		// The 3D box keeps the image preview's top edge (and the edge next to the menu) and grows from there.
+		struct Preview3DBox { float cx, cy, w, h, extraHeight; };
+		static Preview3DBox ComputePreview3DBox()
+		{
+			const Vector2 res = { 0.1f, 0.0889f };
+			float x_coord = menuPos.x > 0.45f ? menuPos.x - 0.003f : 0.324f + menuPos.x;
+			float y_coord = currentOptionY + 0.044f + menuPos.y;
+			float w0 = res.x + 0.003f, h0 = res.y + 0.003f;
+			float w = w0 * VehiclePreview3D::g_boxWidth;
+			float h = h0 * VehiclePreview3D::g_boxHeight;
+			float top = y_coord - h0 / 2.0f;
+			float cx = menuPos.x > 0.45f ? (x_coord + w0 / 2.0f) - w / 2.0f : (x_coord - w0 / 2.0f) + w / 2.0f;
+			return { cx, top + h / 2.0f, w, h, h - h0 };
+		}
+
+		bool DrawVehicleFilePreview3D(const std::string& filePath)
+		{
+			auto box = ComputePreview3DBox();
+			return VehiclePreview3D::DrawFile(filePath, box.cx, box.cy, box.w, box.h);
+		}
+
 		void DrawVehicleBmp(const GTAmodel::Model& vehModel)
 		{
 			Vector2 res = { 0.1f, 0.0889f };
@@ -1019,6 +1046,16 @@ namespace sub
 			if (menuPos.x > 0.45f)
 			{
 				x_coord = menuPos.x - 0.003f;
+			}
+
+			// Image previews, when enabled, take priority over the 3D preview.
+			g_previewExtraHeight = 0.0f;
+			if (!g_spawnVehicleDrawBMPs)
+			{
+				auto box = ComputePreview3DBox();
+				if (VehiclePreview3D::Draw(vehModel, box.cx, box.cy, box.w, box.h))
+					g_previewExtraHeight = box.extraHeight;
+				return;
 			}
 
 			DRAW_RECT(x_coord, y_coord, res.x + 0.003f, res.y + 0.003f, 0, 0, 0, 212, false);
@@ -1197,7 +1234,8 @@ namespace sub
 			if (menuPos.x > 0.45f)
 				panelX = menuPos.x - 0.003f;
 
-			float panelY = currentOptionY + 0.094f + menuPos.y;
+			float panelY = currentOptionY + 0.094f + menuPos.y + g_previewExtraHeight;
+			g_previewExtraHeight = 0.0f;
 			float panelW = 0.100f;
 			float barH = 0.018f;
 			float barSpacing = 0.0195f;
@@ -1618,7 +1656,7 @@ namespace sub
 
 			if (Menu::IsLastDrawnOptionSelected())
 			{
-				if (g_spawnVehicleDrawBMPs)
+				if (g_spawnVehicleDrawBMPs || VehiclePreview3D::g_enabled)
 				{
 					DrawVehicleBmp(vehModel);
 					DrawVehicleStats(vehModel);
@@ -1681,11 +1719,43 @@ namespace sub
 		AddTexter("Text", plateTexter_value, plateTexter, vehPlateTextSet, vehPlateTextPlus, vehPlateTextMinus);
 
 		AddBreak("---Previews---");
-		AddToggle("Enable Previews", g_spawnVehicleDrawBMPs);
-		AddOptionDescription("Shows a vehicle image while browsing.");
+		AddToggle("Enable Image Previews", g_spawnVehicleDrawBMPs);
+		AddOptionDescription("Shows vehicle images while browsing. Overrides the 3D preview for regular vehicles.");
 		bool reloadPreviewsPressed = false;
-		AddOption("Reload Previews", reloadPreviewsPressed); 
+		AddOption("Reload Previews", reloadPreviewsPressed);
 		AddOptionDescription("Reloads the preview image files.");
+		AddToggle("3D Previews", VehiclePreview3D::g_enabled);
+		AddOptionDescription("Shows a live rotating 3D model of vehicles and saved vehicles.");
+		AddNumberStepper("3D Preview Zoom", VehiclePreview3D::g_zoom, 2, 0.05, 0.3, 3.0);
+		AddNumberStepper("3D Preview Spin Speed", VehiclePreview3D::g_spinSpeed, 0, 5.0, 0.0, 180.0);
+		AddNumberStepper("3D Preview Box Height", VehiclePreview3D::g_boxHeight, 2, 0.2, 1.0, 8.0);
+		AddNumberStepper("3D Preview Box Width", VehiclePreview3D::g_boxWidth, 2, 0.2, 1.0, 6.0);
+		AddNumberStepper("3D Preview Brightness", VehiclePreview3D::g_lightIntensity, 2, 0.25, 0.1, 20.0);
+		AddOptionDescription("Multiplies the preview's light intensity.");
+		AddToggle("3D Preview Scale Lighting", VehiclePreview3D::g_scaleLighting);
+		AddOptionDescription("Spreads the preview lights out and brightens them to fit big builds and maps.");
+
+		AddBreak("---3D Preview Debug---");
+		AddToggle("Use Preset Position", VehiclePreview3D::Debug::useOriginalPosition);
+		AddOptionDescription("Keeps the preset's original camera-space position instead of the computed one.");
+		AddToggle("Move Vehicle To Scene", VehiclePreview3D::Debug::moveEntityToScene);
+		AddOptionDescription("Places the real vehicle at the UI scene's world position (the UI camera sits at world origin).");
+		AddToggle("Bright Background", VehiclePreview3D::Debug::brightBackground);
+		AddOptionDescription("Magenta background to show where the 3D viewport is drawn.");
+		AddNumberStepper("Offset X (right)", VehiclePreview3D::Debug::offset[0], 2, 0.25, -50.0, 50.0);
+		AddNumberStepper("Offset Y (depth)", VehiclePreview3D::Debug::offset[1], 2, 0.25, -50.0, 50.0);
+		AddNumberStepper("Offset Z (up)", VehiclePreview3D::Debug::offset[2], 2, 0.25, -50.0, 50.0);
+		AddNumberStepper("Draw Alpha Param", VehiclePreview3D::Debug::drawAlpha, 0, 15.0, 0.0, 255.0);
+		AddToggle("Draw Attached Peds", VehiclePreview3D::Debug::drawAttachedPeds);
+		AddOptionDescription("Saved-vehicle previews: draw attached peds in the 3D box.");
+		AddToggle("Draw Attached Objects", VehiclePreview3D::Debug::drawAttachedObjects);
+		AddOptionDescription("Saved-vehicle previews: draw attached objects in the 3D box.");
+		AddToggle("Draw Attached Vehicles", VehiclePreview3D::Debug::drawAttachedVehicles);
+		AddOptionDescription("Saved-vehicle previews: draw attached vehicles in the 3D box.");
+		AddNumberStepper("Map Tilt", VehiclePreview3D::Debug::mapTilt, 0, 5.0, -80.0, 80.0);
+		AddOptionDescription("Map previews: tips the map toward the camera so you see its top. Flip the sign if you see the underside.");
+		AddNumberStepper("Light Spread", VehiclePreview3D::Debug::lightSpread, 2, 0.1, 0.1, 4.0);
+		AddOptionDescription("How far the preview lights sit from big builds (with Scale Lighting on).");
 
 		if (reloadPreviewsPressed)
 		{
@@ -2041,7 +2111,7 @@ namespace sub
 
 			if (Menu::IsLastDrawnOptionSelected())
 			{
-				if (g_spawnVehicleDrawBMPs)
+				if (g_spawnVehicleDrawBMPs || VehiclePreview3D::g_enabled)
 				{
 					DrawVehicleBmp(vehModel);
 					DrawVehicleStats(vehModel);
@@ -2241,7 +2311,7 @@ namespace sub
 
 				if (Menu::IsLastDrawnOptionSelected())
 				{
-					if (g_spawnVehicleDrawBMPs)
+					if (g_spawnVehicleDrawBMPs || VehiclePreview3D::g_enabled)
 					{
 						DrawVehicleBmp(vehModel);
 						DrawVehicleStats(vehModel);
@@ -2703,7 +2773,7 @@ namespace sub
 			if (Menu::IsLastDrawnOptionSelected())
 			{
 
-				if (g_spawnVehicleDrawBMPs)
+				if (g_spawnVehicleDrawBMPs || VehiclePreview3D::g_enabled)
 				{
 					VehicleSpawner::DrawVehicleBmp(selectedCategory.values[vehDlcIdToSpawn]);
 					VehicleSpawner::DrawVehicleStats(GTAmodel::Model(selectedCategory.values[vehDlcIdToSpawn]));
@@ -3023,42 +3093,8 @@ namespace sub
 			}
 		}
 
-		void VehicleReadFromFile(std::string filePath, GTAentity ped)
+		void ApplyVehicleXmlProperties(pugi::xml_node nodeVehicle, GTAvehicle ev)
 		{
-			pugi::xml_document doc;
-			if (doc.load_file((const char*)filePath.c_str()).status != pugi::status_ok)
-			{
-				Game::Print::ShowNotification("~r~Error:", "Unable to load file.");
-			}
-
-			GTAentity myPed = PLAYER_PED_ID();
-			GTAentity myVehicle = g_myVeh;
-
-			auto nodeVehicle = doc.child("Vehicle"); // Root
-
-			Model eModel = nodeVehicle.child("ModelHash").text().as_uint();
-			if (!eModel.IsInCdImage())
-			{
-				Game::Print::PrintErrorInvalidModel(std::to_string(eModel.hash));
-				return;
-			}
-			eModel.Load();
-
-			GTAvehicle ev = SpawnVehicle(eModel, ped.Handle(), g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit); // spawn vehicle to commence customisation
-			if (ped.Handle() == myPed.Handle())
-			{
-				g_myVeh = ev.Handle();
-				g_myVehModel = eModel;
-				myVehicle = g_myVeh;
-			}
-			SET_VEHICLE_MOD_KIT(ev.Handle(), 0);
-			SetVehicleMaxUpgrades(ev.Handle(), false, g_spawnVehicleInvincible, g_spawnVehiclePlateType);
-
-			WAIT(100);
-
-			auto nodeVehicleInitialHandle = nodeVehicle.child("InitialHandle");
-			ScrHandle evInitHandle = nodeVehicleInitialHandle.text().as_int();
-
 			ev.SetHasGravity(nodeVehicle.child("HasGravity").text().as_bool(true));
 
 			auto nodeVehicleStuff = nodeVehicle.child("VehicleProperties");
@@ -3232,6 +3268,455 @@ namespace sub
 			int opacityLevel = nodeVehicle.child("OpacityLevel").text().as_int();
 			if (opacityLevel < 255) ev.SetAlpha(opacityLevel);
 			ev.SetLODDistance(nodeVehicle.child("LodDistance").text().as_int());
+		}
+
+		// 3D preview build: the same steps as VehicleReadFromFile, spread over frames so the menu never stops drawing.
+		// Assets are requested ahead and an entity is only spawned once they're loaded (so nothing WAITs), and attaching
+		// happens a frame after spawning (freshly created entities don't attach reliably in the same frame).
+		struct VehiclePreviewBuild::Impl
+		{
+			struct Item
+			{
+				sub::Spooner::SpoonerEntityWithInitHandle e;
+				int spawnFrame = 0;
+				int tries = 0;
+				bool done = false;
+				Vector3 xmlPos;
+				Vector3 xmlRot;
+			};
+
+			std::unique_ptr<pugi::xml_document> doc;
+			pugi::xml_node nodeVehicle;
+			std::vector<pugi::xml_node> nodes;
+			size_t nextNode = 0;
+			Model rootModel;
+			Vector3 spawnPos;
+			Vehicle root = 0;
+			bool hasInitHandles = false;
+			ScrHandle rootInitHandle = 0;
+			// Maps (SpoonerPlacements): the root is a hidden dummy prop at the placements' centre and every free-standing
+			// placement is attached to it at its offset from that centre.
+			bool isMap = false;
+			Vector3 mapCentre;
+			static constexpr size_t kMaxMapEntities = 400;
+			static constexpr int kPoolReserve = 64; // free slots left for the game itself
+			std::string failReason;
+			bool poolFullLogged = false;
+			std::vector<Item> items;
+			std::vector<Entity> attachments;
+			std::unordered_map<int, size_t> itemByInitHandle;
+			size_t firstPendingItem = 0;
+			std::unordered_set<Hash> models;
+			int generation = 0;
+			bool failed = false;
+			bool released = false;
+
+			static constexpr int kMaxSpawnsPerFrame = 8;
+			static constexpr double kSpawnBudgetMs = 4.0;
+			static constexpr size_t kPrefetchAhead = 32;
+			static constexpr int kMaxAttachTries = 6;
+
+			static double NowMs()
+			{
+				static const double msPerTick = [] { LARGE_INTEGER f; QueryPerformanceFrequency(&f); return 1000.0 / static_cast<double>(f.QuadPart); }();
+				LARGE_INTEGER t;
+				QueryPerformanceCounter(&t);
+				return static_cast<double>(t.QuadPart) * msPerTick;
+			}
+
+			static bool RequestAssets(pugi::xml_node node)
+			{
+				bool ready = true;
+				Model m = node.child("ModelHash").text().as_uint();
+				if (!HAS_MODEL_LOADED(m.hash))
+				{
+					REQUEST_MODEL(m.hash);
+					ready = false;
+				}
+				// Not waited on: some models never report collision as loaded.
+				if (!HAS_COLLISION_FOR_MODEL_LOADED(m.hash))
+					REQUEST_COLLISION_FOR_MODEL(m.hash);
+				if (node.child("Type").text().as_int() == (int)EntityType::PED)
+				{
+					auto ps = node.child("PedProperties");
+					auto requestDict = [&](const char* d)
+					{
+						if (!d || !*d) return;
+						if (!HAS_ANIM_DICT_LOADED(d)) { REQUEST_ANIM_DICT(d); ready = false; }
+					};
+					auto requestSet = [&](const char* s)
+					{
+						if (!s || !*s) return;
+						if (!HAS_ANIM_SET_LOADED(s)) { REQUEST_ANIM_SET(s); ready = false; }
+					};
+					for (auto a = ps.child("Animations").first_child(); a; a = a.next_sibling())
+						requestDict(a.child("Dict").text().as_string());
+					if (ps.child("AnimActive").text().as_bool())
+						requestDict(ps.child("AnimDict").text().as_string());
+					requestSet(ps.child("MovementGroupName").text().as_string());
+					requestSet(ps.child("WeaponMovementGroupName").text().as_string());
+				}
+				return ready;
+			}
+
+			static void MakeAttachmentInert(Entity h)
+			{
+				SET_ENTITY_AS_MISSION_ENTITY(h, true, true);
+				SET_ENTITY_INVINCIBLE(h, true);
+				SET_ENTITY_COLLISION(h, false, false);
+				SET_ENTITY_LOD_DIST(h, 0xFFFF);
+			}
+
+			void SpawnRoot()
+			{
+				REQUEST_MODEL(rootModel.hash);
+				if (!HAS_MODEL_LOADED(rootModel.hash))
+					return;
+				if (isMap)
+				{
+					root = CREATE_OBJECT(rootModel.hash, spawnPos.x, spawnPos.y, spawnPos.z, false, false, false);
+					if (!root || !DOES_ENTITY_EXIST(root))
+					{
+						root = 0;
+						failed = true;
+						return;
+					}
+					SET_ENTITY_AS_MISSION_ENTITY(root, true, true);
+					return;
+				}
+				root = CREATE_VEHICLE(rootModel.hash, spawnPos.x, spawnPos.y, spawnPos.z, 0.0f, false, false, false);
+				if (!root || !DOES_ENTITY_EXIST(root))
+				{
+					root = 0;
+					failed = true;
+					return;
+				}
+				GTAvehicle ev(root);
+				SET_ENTITY_AS_MISSION_ENTITY(root, true, true);
+				SET_VEHICLE_MOD_KIT(root, 0);
+				ApplyVehicleXmlProperties(nodeVehicle, ev);
+				if (!nodeVehicle.child("IsVisible").text().as_bool(true))
+					ev.SetVisible(false);
+			}
+
+			void SpawnAttachments()
+			{
+				for (size_t i = nextNode; i < nodes.size() && i < nextNode + kPrefetchAhead; i++)
+					RequestAssets(nodes[i]);
+
+				int spawned = 0;
+				const double start = NowMs();
+				int freeSlots[4] = { -2, -2, -2, -2 }; // per entity type, counted at most once per frame
+				while (nextNode < nodes.size() && spawned < kMaxSpawnsPerFrame && NowMs() - start < kSpawnBudgetMs)
+				{
+					pugi::xml_node node = nodes[nextNode];
+					Model m = node.child("ModelHash").text().as_uint();
+					if (!m.IsInCdImage())
+					{
+						nextNode++;
+						continue;
+					}
+					if (!RequestAssets(node))
+						break; // keep file order
+					// A full entity pool is a hard crash in the game's allocator, so leave room for the game.
+					int type = node.child("Type").text().as_int();
+					if (type >= 1 && type <= 3)
+					{
+						if (freeSlots[type] == -2)
+							freeSlots[type] = GTAmemory::GetFreePoolSlots(type);
+						if (freeSlots[type] >= 0 && freeSlots[type] <= kPoolReserve)
+						{
+							if (!poolFullLogged)
+							{
+								poolFullLogged = true;
+								addlog(ige::LogType::LOG_DEBUG, "VehiclePreview3D: entity pool nearly full, preview stopped at " + std::to_string(items.size()) + " entities");
+							}
+							break;
+						}
+						freeSlots[type]--;
+					}
+					Item it;
+					auto pr = node.child("PositionRotation");
+					it.xmlPos = Vector3(pr.child("X").text().as_float(), pr.child("Y").text().as_float(), pr.child("Z").text().as_float());
+					it.xmlRot = Vector3(pr.child("Pitch").text().as_float(), pr.child("Roll").text().as_float(), pr.child("Yaw").text().as_float());
+					it.e = sub::Spooner::FileManagement::SpawnEntityFromXmlNode(node, models, false);
+					it.spawnFrame = GET_FRAME_COUNT();
+					nextNode++;
+					spawned++;
+					Entity h = it.e.e.handle.Handle();
+					if (!h || !DOES_ENTITY_EXIST(h))
+						continue;
+					MakeAttachmentInert(h);
+					attachments.push_back(h);
+					itemByInitHandle.emplace(it.e.initHandle, items.size());
+					items.push_back(it);
+				}
+			}
+
+			bool FindTarget(const Item& it, GTAentity& target, bool& wait, bool& placeOnRoot)
+			{
+				wait = false;
+				placeOnRoot = false;
+				if (isMap)
+				{
+					if (it.e.e.attachmentArgs.isAttached)
+					{
+						auto found = itemByInitHandle.find(it.e.attachedToHandle);
+						if (found != itemByInitHandle.end())
+						{
+							target = items[found->second].e.e.handle;
+							return true;
+						}
+						// Anything attached to the player, their vehicle or a missing parent goes on the root.
+						Entity h = it.e.attachedToHandle;
+						bool toPlayer = h == PLAYER_PED_ID() || (h != 0 && h == g_myVeh);
+						if (!toPlayer && nextNode < nodes.size())
+						{
+							wait = true;
+							return false;
+						}
+					}
+					target = root;
+					placeOnRoot = true;
+					return true;
+				}
+				if (!hasInitHandles)
+				{
+					target = root;
+					return true;
+				}
+				if (!it.e.e.attachmentArgs.isAttached)
+					return false;
+				if (it.e.attachedToHandle == rootInitHandle)
+				{
+					target = root;
+					return true;
+				}
+				auto found = itemByInitHandle.find(it.e.attachedToHandle);
+				if (found != itemByInitHandle.end())
+				{
+					target = items[found->second].e.e.handle;
+					return true;
+				}
+				wait = nextNode < nodes.size();
+				return false;
+			}
+
+			void AttachPending()
+			{
+				int frame = GET_FRAME_COUNT();
+				while (firstPendingItem < items.size() && items[firstPendingItem].done)
+					firstPendingItem++;
+				for (size_t i = firstPendingItem; i < items.size(); i++)
+				{
+					auto& it = items[i];
+					if (it.done || frame <= it.spawnFrame)
+						continue;
+					Entity h = it.e.e.handle.Handle();
+					if (!DOES_ENTITY_EXIST(h))
+					{
+						it.done = true;
+						continue;
+					}
+					if (it.tries > 0 && IS_ENTITY_ATTACHED(h))
+					{
+						it.done = true;
+						generation++;
+						continue;
+					}
+					if (it.tries >= kMaxAttachTries)
+					{
+						it.done = true;
+						continue;
+					}
+					GTAentity target;
+					bool wait = false, placeOnRoot = false;
+					if (!FindTarget(it, target, wait, placeOnRoot))
+					{
+						if (!wait)
+							it.done = true;
+						continue;
+					}
+					if (target.Handle() != h && DOES_ENTITY_EXIST(target.Handle()))
+					{
+						if (placeOnRoot)
+						{
+							// The root is unrotated at build time, so the world offset/rotation is the attachment offset/rotation.
+							Vector3 offset(it.xmlPos.x - mapCentre.x, it.xmlPos.y - mapCentre.y, it.xmlPos.z - mapCentre.z);
+							sub::Spooner::EntityManagement::AttachEntity(it.e.e, target, 0, offset, it.xmlRot);
+						}
+						else
+							sub::Spooner::EntityManagement::AttachEntity(it.e.e, target, it.e.e.attachmentArgs.boneIndex, it.e.e.attachmentArgs.offset, it.e.e.attachmentArgs.rotation);
+						it.tries++;
+					}
+				}
+			}
+
+			bool IsComplete() const
+			{
+				if (failed || !root || nextNode < nodes.size())
+					return false;
+				for (size_t i = firstPendingItem; i < items.size(); i++)
+					if (!items[i].done) return false;
+				return true;
+			}
+
+			void ReleaseModels()
+			{
+				if (released)
+					return;
+				released = true;
+				for (auto& h : models)
+					Model(h).Unload();
+				rootModel.Unload();
+			}
+		};
+
+		VehiclePreviewBuild::VehiclePreviewBuild() : m(new Impl) {}
+		VehiclePreviewBuild::~VehiclePreviewBuild() { m->ReleaseModels(); }
+
+		bool VehiclePreviewBuild::Begin(const std::string& filePath, const Vector3& spawnPos)
+		{
+			m->doc.reset(new pugi::xml_document);
+			if (m->doc->load_file((const char*)filePath.c_str()).status != pugi::status_ok)
+			{
+				m->failed = true;
+				m->failReason = "file could not be read";
+				return false;
+			}
+			m->spawnPos = spawnPos;
+			if (auto nodeMap = m->doc->child("SpoonerPlacements"))
+			{
+				m->isMap = true;
+				m->rootModel = GET_HASH_KEY("prop_golf_ball");
+				m->hasInitHandles = true;
+				double sum[3] = { 0, 0, 0 };
+				for (auto n = nodeMap.child("Placement"); n; n = n.next_sibling("Placement"))
+				{
+					if (m->nodes.size() >= Impl::kMaxMapEntities)
+					{
+						m->failed = true;
+						m->failReason = "map has more than " + std::to_string(Impl::kMaxMapEntities) + " placements";
+						m->nodes.clear();
+						return false;
+					}
+					auto pr = n.child("PositionRotation");
+					sum[0] += pr.child("X").text().as_float();
+					sum[1] += pr.child("Y").text().as_float();
+					sum[2] += pr.child("Z").text().as_float();
+					m->nodes.push_back(n);
+				}
+				if (m->nodes.empty())
+				{
+					m->failed = true;
+					m->failReason = "map has no placements";
+					return false;
+				}
+				double count = static_cast<double>(m->nodes.size());
+				m->mapCentre = Vector3(static_cast<float>(sum[0] / count), static_cast<float>(sum[1] / count), static_cast<float>(sum[2] / count));
+				REQUEST_MODEL(m->rootModel.hash);
+				return true;
+			}
+			m->nodeVehicle = m->doc->child("Vehicle");
+			m->rootModel = m->nodeVehicle.child("ModelHash").text().as_uint();
+			if (!m->rootModel.IsInCdImage() || !m->rootModel.IsVehicle())
+			{
+				m->failed = true;
+				m->failReason = "not a vehicle or map file";
+				return false;
+			}
+			m->spawnPos = spawnPos;
+			m->hasInitHandles = static_cast<bool>(m->nodeVehicle.child("InitialHandle"));
+			m->rootInitHandle = m->nodeVehicle.child("InitialHandle").text().as_int();
+			for (auto n = m->nodeVehicle.child("SpoonerAttachments").first_child(); n; n = n.next_sibling())
+				m->nodes.push_back(n);
+			REQUEST_MODEL(m->rootModel.hash);
+			return true;
+		}
+
+		void VehiclePreviewBuild::Step()
+		{
+			if (m->failed)
+				return;
+			if (m->IsComplete())
+			{
+				m->ReleaseModels();
+				return;
+			}
+			if (!m->root)
+			{
+				m->SpawnRoot();
+				return;
+			}
+			if (!DOES_ENTITY_EXIST(m->root))
+			{
+				m->failed = true;
+				return;
+			}
+			m->AttachPending();
+			m->SpawnAttachments();
+		}
+
+		bool VehiclePreviewBuild::Failed() const { return m->failed; }
+		bool VehiclePreviewBuild::Complete() const { return m->IsComplete(); }
+		Vehicle VehiclePreviewBuild::Root() const { return m->root; }
+		const std::vector<Entity>& VehiclePreviewBuild::Attachments() const { return m->attachments; }
+		int VehiclePreviewBuild::AttachGeneration() const { return m->generation; }
+		const std::string& VehiclePreviewBuild::FailReason() const { return m->failReason; }
+		bool VehiclePreviewBuild::RootIsDummy() const { return m->isMap; }
+
+		std::vector<Entity> VehiclePreviewBuild::TakeAllEntities()
+		{
+			std::vector<Entity> all = m->attachments;
+			if (m->root)
+				all.push_back(m->root);
+			m->attachments.clear();
+			m->items.clear();
+			m->itemByInitHandle.clear();
+			m->firstPendingItem = 0;
+			m->root = 0;
+			m->nextNode = m->nodes.size();
+			m->ReleaseModels();
+			return all;
+		}
+
+		void VehicleReadFromFile(std::string filePath, GTAentity ped)
+		{
+			pugi::xml_document doc;
+			if (doc.load_file((const char*)filePath.c_str()).status != pugi::status_ok)
+			{
+				Game::Print::ShowNotification("~r~Error:", "Unable to load file.");
+			}
+
+			GTAentity myPed = PLAYER_PED_ID();
+			GTAentity myVehicle = g_myVeh;
+
+			auto nodeVehicle = doc.child("Vehicle"); // Root
+
+			Model eModel = nodeVehicle.child("ModelHash").text().as_uint();
+			if (!eModel.IsInCdImage())
+			{
+				Game::Print::PrintErrorInvalidModel(std::to_string(eModel.hash));
+				return;
+			}
+			eModel.Load();
+
+			GTAvehicle ev = SpawnVehicle(eModel, ped.Handle(), g_spawnVehicleDeleteOld, g_spawnVehicleAutoSit); // spawn vehicle to commence customisation
+			if (ped.Handle() == myPed.Handle())
+			{
+				g_myVeh = ev.Handle();
+				g_myVehModel = eModel;
+				myVehicle = g_myVeh;
+			}
+			SET_VEHICLE_MOD_KIT(ev.Handle(), 0);
+			SetVehicleMaxUpgrades(ev.Handle(), false, g_spawnVehicleInvincible, g_spawnVehiclePlateType);
+
+			WAIT(100);
+
+			auto nodeVehicleInitialHandle = nodeVehicle.child("InitialHandle");
+			ScrHandle evInitHandle = nodeVehicleInitialHandle.text().as_int();
+
+			ApplyVehicleXmlProperties(nodeVehicle, ev);
 
 			bool bDriverIsVisible = ped.IsVisible();
 			bool bVehicleIsVisible = nodeVehicle.child("IsVisible").text().as_bool();
@@ -3651,6 +4136,10 @@ namespace sub
 							_name = filname.substr(0, filname.rfind('.'));
 							Menu::pendingSubmenu = SUB::VEHICLE_SAVER_INITEM;
 							return;
+						}
+						if (Menu::IsLastDrawnOptionSelected() && VehiclePreview3D::g_enabled)
+						{
+							VehicleSpawner::DrawVehicleFilePreview3D(_dir + "\\" + filname);
 						}
 					}
 				}

@@ -61,6 +61,7 @@
 #include "..\Submenus\PedComponentChanger.h"
 #include "..\Submenus\AnimalRiding.h"
 #include "..\Submenus\VehicleSpawner.h"
+#include "..\Submenus\VehiclePreview3D.h"
 #include "..\Menu\FolderPreviewBmps.h"
 #include "..\Submenus\PedSpeech.h"
 #include "..\Submenus\GhostRiderMode.h"
@@ -633,7 +634,7 @@ bool g_vehiclePVOpsName = true;
 
 INT16 g_spawnVehiclePrimaryColor = -3;
 INT16 g_spawnVehicleSecondaryColor = -3;
-bool g_spawnVehicleDrawBMPs = true;
+bool g_spawnVehicleDrawBMPs = false;
 
 FLOAT g_clearAreaRadius = 36.0f;
 FLOAT g_rainFXIntensity = 0.0f;
@@ -3104,6 +3105,7 @@ static void TickSubsystems()
 	RopeGun::g_ropeGun.Tick();
 	sub::AnimalRiding::Tick();
 	GTA2Cam::g_gta2Cam.Tick();
+	VehiclePreview3D::Tick();
 	SetPTFXLopTick();
 }
 
