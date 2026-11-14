@@ -440,6 +440,7 @@ namespace sub::Spooner
 			TickEntityTasks();
 			DrawSpoonerWorldItems();
 			ApplyEntityScales();
+			Interactables::Tick();
 		}
 
 		void TurnOn()
