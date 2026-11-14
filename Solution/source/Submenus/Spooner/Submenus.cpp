@@ -76,6 +76,7 @@
 #include <array>
 #include <pugixml/src/pugixml.hpp>
 #include <dirent\include\dirent.h>
+#include "..\..\Submenus\SpoonerInteractables.h"
 
 namespace sub
 {
@@ -4688,6 +4689,7 @@ namespace sub
 			AddOption("Object", null, nullFunc, SUB::SPOONER_SPAWN_PROP);
 			AddOption("Ped", null, nullFunc, SUB::SPOONER_SPAWN_PED);
 			AddOption("Vehicle", null, nullFunc, SUB::SPOONER_SPAWN_VEHICLE);
+			AddOption("Interactable", null, nullFunc, SUB::SPOONER_SPAWN_INTERACTABLES);
 		}
 
 		namespace ObjectSearch
@@ -5225,7 +5227,6 @@ namespace sub
 		}
 		void Sub_SpawnPed()
 		{
-			bool modelChangerInput = false;
 			AddTitle("Spawn Ped");
 
 			AddOption("Favourites", null, nullFunc, SUB::MODELCHANGER_FAVOURITES);
@@ -5245,10 +5246,6 @@ namespace sub
 			AddOption("Story Scenario Females", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOFEMALES);
 			AddOption("Story Scenario Males", null, nullFunc, SUB::MODELCHANGER_ST_SCENARIOMALES);
 			AddOption("Others", null, nullFunc, SUB::MODELCHANGER_OTHERS);
-			AddOption("~b~Input~s~ Model", modelChangerInput);
-
-			if (modelChangerInput)
-				EntityManagement::InputEntityIntoDb(EntityType::PED);
 		}
 		void Sub_SpawnVehicle()
 		{
@@ -5291,6 +5288,130 @@ namespace sub
 			AddVehicleCategoryOption("Helicopters", Indices::HELICOPTER);
 			AddVehicleCategoryOption("Boats", Indices::BOAT);
 			AddVehicleCategoryOption("Others", Indices::OTHER);
+
+			bool bInputPressed = false;
+			AddOption("INPUT MODEL", bInputPressed); if (bInputPressed)
+			{
+				EntityManagement::InputEntityIntoDb(EntityType::VEHICLE);
+			}
+		}
+		void Sub_SpawnInteractables()
+		{
+			AddTitle("Spawn Interactable (ALPHA)");
+
+			static std::vector<const Interactables::InteractableDefinition*> sortedDefs;
+			if (sortedDefs.size() != Interactables::vInteractables.size())
+			{
+				sortedDefs.clear();
+				for (auto& d : Interactables::vInteractables)
+					sortedDefs.push_back(&d);
+
+				std::sort(sortedDefs.begin(), sortedDefs.end(),
+					[](const Interactables::InteractableDefinition* a, const Interactables::InteractableDefinition* b)
+					{
+						return a->Label < b->Label;
+					});
+			}
+
+			for (auto* def : sortedDefs)
+			{
+				bool bPressed = false;
+				AddOption(def->Label, bPressed); if (bPressed)
+				{
+					sub::Spooner::Interactables::SpawnInteractable(*def);
+				}
+			}
+			AddOption("Debug", null, nullFunc, SUB::SPOONER_SPAWN_INTERACTABLES_DEBUG);
+		}
+
+		static Interactables::InteractableInstance* s_debugSelectedInstance = nullptr;
+
+		void Sub_SpawnInteractables_Debug()
+		{
+			AddTitle("Interactables Debug");
+
+			if (Interactables::vActiveInteractables.empty())
+			{
+				AddOption("~r~No active interactables spawned. Spawn one first.", null);
+				s_debugSelectedInstance = nullptr;
+				return;
+			}
+
+			// Re-validate the selection every frame - it may have finished and been erased.
+			bool stillValid = false;
+			for (auto& inst : Interactables::vActiveInteractables)
+			{
+				if (&inst == s_debugSelectedInstance) { stillValid = true; break; }
+			}
+			if (!stillValid)
+				s_debugSelectedInstance = nullptr;
+
+			if (s_debugSelectedInstance == nullptr)
+			{
+				AddBreak("---Select An Active Instance---");
+				for (auto& inst : Interactables::vActiveInteractables)
+				{
+					bool pressed = false;
+					std::string label = inst.Def->Label + (inst.bActivated ? " (Active)" : " (Waiting)");
+					AddOption(label, pressed);
+					if (pressed)
+						s_debugSelectedInstance = &inst;
+
+					if (Menu::IsLastDrawnOptionSelected())
+						EntityManagement::ShowArrowAboveEntity(inst.Ent.handle, RGBA(127, 0, 255, 200));
+				}
+				return;
+			}
+
+			auto* inst = s_debugSelectedInstance;
+			// Debug tool intentionally mutates the live definition in vInteractables -
+			// inst->Def points directly into that vector's storage.
+			auto* def = const_cast<Interactables::InteractableDefinition*>(inst->Def);
+
+			AddTitle(def->Label + " (Debug)");
+
+			bool backPressed = false;
+			AddOption("<< Back to List", backPressed);
+			if (backPressed) { s_debugSelectedInstance = nullptr; return; }
+
+			Vector3 interactPos = Interactables::GetInteractPosition(*inst);
+			EntityManagement::DrawRadiusDisplayingMarker(interactPos, def->InteractRange, RGBA(0, 255, 0, 130));
+
+			AddBreak("---Trigger Radius---");
+			bool rPlus = false, rMinus = false;
+			AddNumber("Interact Range", def->InteractRange, 2, null, rPlus, rMinus);
+			if (rPlus) { if (def->InteractRange < 50.0f) def->InteractRange += 0.1f; }
+			if (rMinus) { if (def->InteractRange > 0.1f) def->InteractRange -= 0.1f; }
+
+			AddBreak("---Player Stand Offset (local to object)---");
+			bool xPlus = false, xMinus = false, yPlus = false, yMinus = false, zPlus = false, zMinus = false;
+			AddNumber("X (right/left)", def->PlayerStandOffset.x, 2, null, xPlus, xMinus);
+			AddNumber("Y (forward/back)", def->PlayerStandOffset.y, 2, null, yPlus, yMinus);
+			AddNumber("Z (up/down)", def->PlayerStandOffset.z, 2, null, zPlus, zMinus);
+			if (xPlus) def->PlayerStandOffset.x += 0.05f;
+			if (xMinus) def->PlayerStandOffset.x -= 0.05f;
+			if (yPlus) def->PlayerStandOffset.y += 0.05f;
+			if (yMinus) def->PlayerStandOffset.y -= 0.05f;
+			if (zPlus) def->PlayerStandOffset.z += 0.05f;
+			if (zMinus) def->PlayerStandOffset.z -= 0.05f;
+
+			AddBreak("---Player Heading Offset---");
+			bool hPlus = false, hMinus = false;
+			AddNumber("Heading", def->PlayerHeadingOffset, 1, null, hPlus, hMinus);
+			if (hPlus) def->PlayerHeadingOffset += 1.0f;
+			if (hMinus) def->PlayerHeadingOffset -= 1.0f;
+
+			AddBreak("---Reference---");
+			AddOption("~italic~" + interactPos.ToString(), null);
+
+			bool teleportPressed = false;
+			AddOption("Teleport Player Here", teleportPressed);
+			if (teleportPressed)
+			{
+				GTAped myPed = PLAYER_PED_ID();
+				myPed.SetPosition(interactPos);
+				myPed.SetHeading(inst->AnchorRot.z + def->PlayerHeadingOffset);
+			}
 		}
 	}
 
@@ -6014,6 +6135,8 @@ REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES,                       	sub::Spoo
 REGISTER_SUBMENU(SPOONER_SPAWN_PROP_FAVOURITES_CATSELECT,             	sub::Spooner::Submenus::Sub_SpawnProp_Favourites_CatSelect)
 REGISTER_SUBMENU(SPOONER_SPAWN_PED,                                   	sub::Spooner::Submenus::Sub_SpawnPed)
 REGISTER_SUBMENU(SPOONER_SPAWN_VEHICLE,                               	sub::Spooner::Submenus::Sub_SpawnVehicle)
+REGISTER_SUBMENU(SPOONER_SPAWN_INTERACTABLES,							sub::Spooner::Submenus::Sub_SpawnInteractables)
+REGISTER_SUBMENU(SPOONER_SPAWN_INTERACTABLES_DEBUG,						sub::Spooner::Submenus::Sub_SpawnInteractables_Debug)
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS,                               	sub::Spooner::Submenus::Sub_ManageMarkers)
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_REMOVAL,                       	sub::Spooner::Submenus::Sub_ManageMarkers_Removal)
 REGISTER_SUBMENU(SPOONER_MANAGEMARKERS_INMARKER,                      	sub::Spooner::Submenus::Sub_ManageMarkers_InMarker)
