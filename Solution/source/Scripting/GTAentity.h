@@ -209,6 +209,10 @@ public:
 	void AttachPhysicallyTo(GTAentity entity, int boneIndexDoer, int boneIndexGetter, float forceToBreak, Vector3 position1, Vector3 position2, Vector3 rotation);
 	void Detach();
 
+	// atox fixes: manual attach for scaled entities, call UpdateManualAttachments() every tick
+	static void UpdateManualAttachments();
+	static bool GetManualAttachParent(const GTAentity& child, GTAentity& parentOut);
+
 	GTAblip AddBlip();
 
 	void SetMass(float mass);
