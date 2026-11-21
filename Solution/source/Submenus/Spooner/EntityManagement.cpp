@@ -916,6 +916,10 @@ namespace sub::Spooner
 			}
 			}
 			return false;*/
+			// atox fixes: native doesn't know manual attaches
+			if (GTAentity::GetManualAttachParent(from, to))
+				return true;
+
 			if (from.IsAttached())
 			{
 				to = GET_ENTITY_ATTACHED_TO(from.Handle());
