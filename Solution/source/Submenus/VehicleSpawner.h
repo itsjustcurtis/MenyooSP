@@ -42,6 +42,7 @@
 #pragma comment(lib, "Shlwapi.lib")
 #include <string>
 #include <vector>
+#include <memory>
 #include <pugixml\src\pugixml.hpp>
 #include <dirent\include\dirent.h>
 
@@ -77,6 +78,7 @@ namespace sub
 		void AddVehicleCategoryOption(const std::string& text, UINT8 index, bool *extra_option_code = nullptr);
 		std::string GetVehicleClassName(int classId);
 		void DrawVehicleStats(const GTAmodel::Model& vehModel);
+		bool DrawVehicleFilePreview3D(const std::string& filePath);
 
 	}
 
@@ -103,6 +105,25 @@ namespace sub
 
 		void VehicleSaveToFile(std::string filePath, GTAvehicle ev);
 		void VehicleReadFromFile(std::string filePath, GTAentity ped);
+		class VehiclePreviewBuild
+		{
+		public:
+			VehiclePreviewBuild();
+			~VehiclePreviewBuild();
+			bool Begin(const std::string& filePath, const Vector3& spawnPos);
+			void Step();
+			bool Failed() const;
+			bool Complete() const;
+			Vehicle Root() const;
+			const std::vector<Entity>& Attachments() const;
+			int AttachGeneration() const;
+			bool RootIsDummy() const;
+			const std::string& FailReason() const;
+			std::vector<Entity> TakeAllEntities();
+		private:
+			struct Impl;
+			std::unique_ptr<Impl> m;
+		};
 
 		void VehicleSaverMenu();
 		void VehSaverInItemMenu();

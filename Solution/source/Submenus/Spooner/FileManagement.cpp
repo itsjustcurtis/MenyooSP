@@ -616,7 +616,7 @@ namespace sub::Spooner
 			}
 		}
 
-		SpoonerEntityWithInitHandle SpawnEntityFromXmlNode(pugi::xml_node& nodeEntity, std::unordered_set<Hash>& vModelHashes)
+		SpoonerEntityWithInitHandle SpawnEntityFromXmlNode(pugi::xml_node& nodeEntity, std::unordered_set<Hash>& vModelHashes, bool allowWaits)
 		{
 			bool isPtfxLopAdded = false;
 			BOOL bNetworkIsGameInProgress = NETWORK_IS_GAME_IN_PROGRESS();
@@ -730,7 +730,7 @@ namespace sub::Spooner
 				}
 				if (nodeMovGrpName || nodeWmovGrpName)
 				{
-					WAIT(30);
+					if (allowWaits) WAIT(30);
 					const Vector3& coord = ep.GetPosition();
 					SET_ENTITY_COORDS(ep.Handle(), coord.x, coord.y, coord.z + 0.05f, 0, 0, 0, 1);
 					FREEZE_ENTITY_POSITION(ep.Handle(), !bFrozenPos);
@@ -1034,7 +1034,8 @@ namespace sub::Spooner
 			e.e.handle.SetMeleeProof(nodeEntity.child("IsMeleeProof").text().as_bool());
 			e.e.handle.SetOnlyDamagedByPlayer(nodeEntity.child("IsOnlyDamagedByPlayer").text().as_bool());
 
-			eModel.LoadCollision(100);
+			if (allowWaits) eModel.LoadCollision(100);
+			else eModel.LoadCollision();
 			e.e.handle.SetIsCollisionEnabled(!nodeEntity.child("IsCollisionProof").text().as_bool());
 			e.e.handle.SetVisible(nodeEntity.child("IsVisible").text().as_bool());
 

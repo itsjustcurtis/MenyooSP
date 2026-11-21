@@ -54,6 +54,7 @@
 #include "..\..\Submenus\Settings.h"
 #include "..\..\Submenus\PedModelChanger.h"
 #include "..\..\Submenus\VehicleSpawner.h"
+#include "..\..\Submenus\VehiclePreview3D.h"
 #include "..\..\Submenus\VehicleModShop.h"
 #include "..\..\Submenus\PedAnimation.h"
 #include "..\..\Submenus\PedSpeech.h"
@@ -459,6 +460,8 @@ namespace sub
 				}
 			}
 			AddOption("Auto Save Settings", null, nullFunc, SUB::SPOONER_AUTOSAVE);
+			AddToggle("Enable 3D Previews", VehiclePreview3D::g_mapPreviews);
+			AddOptionDescription("Shows a live rotating 3D preview of saved maps while browsing.");
 			/*bool bLoadFromFile = false;
 			AddOption("Load From File", bLoadFromFile); if (bLoadFromFile)
 			{
@@ -596,7 +599,8 @@ namespace sub
 							}
 						}
 
-                        if (isXml && Menu::IsLastDrawnOptionSelected() && !bFilePressed)
+                        if (isXml && Menu::IsLastDrawnOptionSelected() && !bFilePressed
+							&& !(VehiclePreview3D::g_mapPreviews && sub::VehicleSpawner::DrawVehicleFilePreview3D(_dir + "\\" + filname)))
 						{
 							static std::string lastHoveredXml = "";
 							static DxHookIMG::DxTexture hoveredXmlTexture;
@@ -711,7 +715,7 @@ namespace sub
 					mapPreviewTexture.Load(imgPath);
 				}
 			}
-			if (mapPreviewTexture.Exists())
+			if (!(VehiclePreview3D::g_mapPreviews && sub::VehicleSpawner::DrawVehicleFilePreview3D(filePath)) && mapPreviewTexture.Exists())
 			{
 				Vector2 res = { 0.1f, 0.0889f };
 				FLOAT x_coord = 0.324f + menuPos.x;

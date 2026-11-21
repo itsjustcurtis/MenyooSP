@@ -42,7 +42,7 @@ namespace sub::Spooner
 		//bool Delete(const std::string& fileName, std::string extension = ".xml");
 
 		void AddEntityToXmlNode(SpoonerEntity& e, pugi::xml_node& nodeEntity, bool legacyXMLFormat = false);
-		SpoonerEntityWithInitHandle SpawnEntityFromXmlNode(pugi::xml_node& nodeEntity, std::unordered_set<Hash>& vModelHashes);
+		SpoonerEntityWithInitHandle SpawnEntityFromXmlNode(pugi::xml_node& nodeEntity, std::unordered_set<Hash>& vModelHashes, bool allowWaits = true);
 
 		// Shared ped sub-loaders (backward-compatible with old _N and new named format)
 		void LoadPedCompsFromXml(GTAped ep, const pugi::xml_node& nodePedComps);
