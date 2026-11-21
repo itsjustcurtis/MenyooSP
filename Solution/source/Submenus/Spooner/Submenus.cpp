@@ -111,6 +111,26 @@ namespace sub
 			SpoonerEntity g_prevSelected;
 			GTAentity g_groupPivot;
 
+			// saves the entity that was previously selected before bulk edit started, so that it can be restored when bulk edit ends
+			void BeginBulkEdit()
+			{
+				if (g_bulkEditActive)
+					return;
+
+				g_prevSelected = selectedEntity;
+				g_bulkEditActive = true;
+			}
+			
+			// restores the previously selected entity and ends bulk edit mode
+			void EndBulkEdit()
+			{
+				if (!g_bulkEditActive)
+					return;
+
+				selectedEntity = g_prevSelected;
+				g_bulkEditActive = false;
+			}
+
 			void SaveEntityState(const SpoonerEntity& entity)
 			{
 				if (!entity.handle.Exists())
@@ -219,20 +239,18 @@ namespace sub
 				}
 			}
 
-			void Clear()
-			{
-				RestoreAllEntityStates();
-				MultiSelect::g_selectedEntities.clear();
-				MultiSelect::g_savedEntityStates.clear();
-			}
-
 			void DestroyPivot()
 			{
+				RestoreAllEntityStates();
 				if (MultiSelect::g_groupPivot.Exists())
-				{
-					RestoreAllEntityStates();
 					MultiSelect::g_groupPivot.Delete();
-				}
+			}
+
+			void ClearSelection()
+			{
+				DestroyPivot();
+				MultiSelect::g_selectedEntities.clear();
+				EndBulkEdit();
 			}
 
 			void CreatePivot()
@@ -2232,11 +2250,7 @@ namespace sub
 					EntityManagement::ShowArrowAboveEntity(entity.handle, RGBA(127, 0, 255, 200));
 			}
 
-			if (!MultiSelect::g_bulkEditActive)
-			{
-				MultiSelect::g_prevSelected = selectedEntity;
-				MultiSelect::g_bulkEditActive = true;
-			}
+			MultiSelect::BeginBulkEdit();
 
 			// Create pivot at centroid if entities are selected but no pivot exists yet
 			if (!MultiSelect::g_groupPivot.Exists() && !MultiSelect::g_selectedEntities.empty())
@@ -2253,11 +2267,7 @@ namespace sub
 			if (Menu::OnSubBack == nullptr)
 			{
 				Menu::OnSubBack = []() {
-					if (MultiSelect::g_bulkEditActive)
-					{
-						selectedEntity = MultiSelect::g_prevSelected;
-						MultiSelect::g_bulkEditActive = false;
-					}
+					MultiSelect::EndBulkEdit();
 					MultiSelect::DestroyPivot();
 				};
 			}
@@ -2272,11 +2282,7 @@ namespace sub
 			{
 				MultiSelect::DestroyPivot();
 				MultiSelect::SelectAll();
-				if (MultiSelect::g_bulkEditActive)
-				{
-					selectedEntity = MultiSelect::g_prevSelected;
-					MultiSelect::g_bulkEditActive = false;
-				}
+				MultiSelect::EndBulkEdit();
 				*Menu::activeOptionIndex = 1;
 				return;
 			}
@@ -2285,13 +2291,7 @@ namespace sub
 			std::string selectedEntityCount = std::to_string(MultiSelect::g_selectedEntities.size());
 			AddOption(grayClearPrefix + "Clear Selection (" + selectedEntityCount + ")", bClearAll); if (bClearAll && !MultiSelect::g_selectedEntities.empty())
 			{
-				MultiSelect::DestroyPivot();
-				MultiSelect::Clear();
-				if (MultiSelect::g_bulkEditActive)
-				{
-					selectedEntity = MultiSelect::g_prevSelected;
-					MultiSelect::g_bulkEditActive = false;
-				}
+				MultiSelect::ClearSelection();
 				*Menu::activeOptionIndex = 1;
 				return;
 			}
@@ -2383,7 +2383,9 @@ namespace sub
 						if (isOnTheLine) e.handle.RequestControl();
 						EntityManagement::DeleteEntity(e);
 					}
-					MultiSelect::Clear();
+					MultiSelect::ClearSelection();
+					*Menu::activeOptionIndex = 1;
+					return;
 				}
 
 				// Apply pivot pos/rot to pivot itself
@@ -2417,15 +2419,24 @@ namespace sub
 				bool bStartTaskSequences = false;
 				AddOption("Start Task Sequences", bStartTaskSequences); if (bStartTaskSequences)
 				{
+					std::vector<GTAentity> selectedEntityHandles;
+					selectedEntityHandles.reserve(MultiSelect::g_selectedEntities.size());
 					for (auto& e : MultiSelect::g_selectedEntities)
+						selectedEntityHandles.push_back(e.handle);
+
+					MultiSelect::ClearSelection();
+					Game::Print::ShowNotification("Multi-Select", "Selection cleared because it was necessary for task sequences to function properly.");
+
+					for (auto& handle : selectedEntityHandles)
 					{
-						auto eiidb = EntityManagement::GetEntityIndexInDb(e);
-						if (eiidb >= 0)
-						{
-							if (isOnTheLine)
-								e.handle.RequestControl();
-							Databases::EntityDb[eiidb].taskSequence.Start();
-						}
+						if (!handle.Exists())
+							continue;
+						auto entityIndex = EntityManagement::GetEntityIndexInDb(handle);
+						if (entityIndex < 0)
+							continue;
+						if (isOnTheLine)
+							handle.RequestControl();
+						Databases::EntityDb[entityIndex].taskSequence.Start();
 					}
 				}
 

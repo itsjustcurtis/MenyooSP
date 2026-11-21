@@ -42,11 +42,13 @@ namespace sub
 			extern bool g_bulkEditActive;
 			extern SpoonerEntity g_prevSelected;
 			extern GTAentity g_groupPivot;
+			void BeginBulkEdit();
+			void EndBulkEdit();
 			void Add(const SpoonerEntity& entity);
 			void Remove(int index);
 			void Remove(GTAentity handle);
 			bool IsSelected(GTAentity handle);
-			void Clear();
+			void ClearSelection();
 			void DestroyPivot();
 			void CreatePivot();
 			struct EntityState { bool collision; bool frozen; bool dynamic; };
