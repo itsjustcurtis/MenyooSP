@@ -27,8 +27,6 @@
 #include <array>
 #include <string>
 #include <cmath>
-#include <cstdio>
-#include <Windows.h>
 
 typedef unsigned long DWORD;
 
@@ -884,7 +882,7 @@ struct Mat3 { float m[3][3]; };
 
 Mat3 EulerToMatrix(const Vector3 deg);
 Vector3 MatrixToEuler(const Mat3& r);
-Mat3 MulMat(const Mat3& a, const Mat3& b);
+Mat3 operator*(const Mat3& a, const Mat3& b);
 
 
 

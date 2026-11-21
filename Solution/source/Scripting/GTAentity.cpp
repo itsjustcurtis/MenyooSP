@@ -930,7 +930,7 @@ static void UpdateManualAttachmentsImpl()
 			pos = parent.GetOffsetInWorldCoords(a.offset);
 		}
 
-		Mat3 world = MulMat(pr, EulerToMatrix(a.rotation));
+		Mat3 world = pr * EulerToMatrix(a.rotation);
 		MALog("Update:setRotation", a.child, a.parent);
 		child.SetRotation(MatrixToEuler(world)); // rotation resets matrix scale, reapply after
 		MALog("Update:setPosition", a.child, a.parent);

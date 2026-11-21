@@ -30,10 +30,7 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-
 #include <cmath>
-#include <cstdio>
-#include <Windows.h>
 
 #pragma region Vector3
 Vector3::Vector3(float X, float Y, float Z)
@@ -811,7 +808,7 @@ Vector3 MatrixToEuler(const Mat3& r)
 	return Vector3(RadianToDegree(pitch), RadianToDegree(roll), RadianToDegree(yaw));
 }
 
-Mat3 MulMat(const Mat3& a, const Mat3& b)
+Mat3 operator*(const Mat3& a, const Mat3& b)
 {
 	Mat3 r;
 	for (int i = 0; i < 3; ++i)
