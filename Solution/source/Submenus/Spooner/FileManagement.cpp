@@ -819,7 +819,7 @@ namespace sub::Spooner
 
 				SET_VEHICLE_MOD_KIT(ev.Handle(), 0);
 				ev.SetLivery(nodeVehicleStuff.child("Livery").text().as_int()); // Livery should be applied before paint is applied
-				// Colours
+				ev.SetLivery2(nodeVehicleStuff.child("RoofLivery").text().as_int());
 				auto nodeVehicleColours = nodeVehicleStuff.child("Colours");
 				int mod1a = nodeVehicleColours.child("Mod1_a").text().as_int();
 				int mod1b = nodeVehicleColours.child("Mod1_b").text().as_int();

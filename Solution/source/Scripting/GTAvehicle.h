@@ -238,6 +238,9 @@ public:
 	int GetLivery() const;
 	void SetLivery(int liveryIndex);
 	int LiveryCount() const;
+	int GetLivery2() const;
+	void SetLivery2(int liveryIndex);
+	int Livery2Count() const;
 
 	bool GetAlarmActive() const;
 	void SetAlarmActive(bool value);

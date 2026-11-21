@@ -866,13 +866,26 @@ int GTAvehicle::GetLivery() const
 {
 	return GET_VEHICLE_LIVERY(this->mHandle);
 }
+
+int GTAvehicle::GetLivery2() const
+{
+	return GET_VEHICLE_LIVERY2(this->mHandle);
+}
 void GTAvehicle::SetLivery(int liveryIndex)
 {
 	SET_VEHICLE_LIVERY(this->mHandle, liveryIndex);
 }
+void GTAvehicle::SetLivery2(int liveryIndex)
+{
+	SET_VEHICLE_LIVERY2(this->mHandle, liveryIndex);
+}
 int GTAvehicle::LiveryCount() const
 {
 	return GET_VEHICLE_LIVERY_COUNT(this->mHandle);
+}
+int GTAvehicle::Livery2Count() const
+{
+	return GET_VEHICLE_LIVERY2_COUNT(this->mHandle);
 }
 
 bool GTAvehicle::GetAlarmActive() const
@@ -3671,6 +3684,11 @@ GTAvehicle clone_vehicle(GTAvehicle vehicle, GTAentity pedForEmblem)
 	if (newVeh.LiveryCount() > 1 && newVeh.GetLivery() >= 0)
 	{
 		newVeh.SetLivery(vehicle.GetLivery());
+	}
+
+	if (newVeh.Livery2Count() > 1 && newVeh.GetLivery2() >= 0)
+	{
+		newVeh.SetLivery2(vehicle.GetLivery2());
 	}
 
 	newVeh.SetNeonLightsColour(vehicle.GetNeonLightsColour());

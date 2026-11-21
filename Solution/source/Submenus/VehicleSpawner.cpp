@@ -1917,6 +1917,7 @@ namespace sub
 		}
 
 		ev.SetLivery(nodeProps.child("Livery").text().as_int(-1));
+		ev.SetLivery2(nodeProps.child("RoofLivery").text().as_int(-1));
 		ev.SetWheelType(nodeProps.child("WheelType").text().as_int(0));
 		ev.SetWindowTint(nodeProps.child("WindowTint").text().as_int(0));
 		ev.SetCanTyresBurst(!nodeProps.child("BulletProofTyres").text().as_bool(false));
@@ -2956,6 +2957,7 @@ namespace sub
 
 			// Other stuff
 			nodeVehicleStuff.append_child("Livery").text() = ev.GetLivery(); // Livery should be applied before paint is applied
+			nodeVehicleStuff.append_child("RoofLivery").text() = ev.GetLivery2(); // Livery should be applied before paint is applied
 			nodeVehicleStuff.append_child("NumberPlateText").text() = ev.GetNumberPlateText().c_str();
 			nodeVehicleStuff.append_child("NumberPlateIndex").text() = ev.GetNumberPlateTextIndex();
 			nodeVehicleStuff.append_child("WheelType").text() = ev.GetWheelType();
@@ -3101,6 +3103,7 @@ namespace sub
 
 			ev.SetLivery(nodeVehicleStuff.child("Livery").text().as_int()); // Livery should be applied before paint is applied
 																			 // Colours
+			ev.SetLivery2(nodeVehicleStuff.child("RoofLivery").text().as_int());
 			auto nodeVehicleColours = nodeVehicleStuff.child("Colours");
 			int mod1a = nodeVehicleColours.child("Mod1_a").text().as_int();
 			int mod1b = nodeVehicleColours.child("Mod1_b").text().as_int();
