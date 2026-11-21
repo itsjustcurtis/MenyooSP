@@ -26,6 +26,9 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <cmath>
+#include <cstdio>
+#include <Windows.h>
 
 typedef unsigned long DWORD;
 
@@ -875,4 +878,13 @@ void WrapAngle(float& angle);
 
 Vector3 DegreeToRadian(const Vector3& angles);
 float GetHeadingFromCoords(const Vector3& source, const Vector3& target);
+
+// GTA rotation order 2 (ZXY), degrees: x pitch, y roll, z yaw
+struct Mat3 { float m[3][3]; };
+
+Mat3 EulerToMatrix(const Vector3 deg);
+Vector3 MatrixToEuler(const Mat3& r);
+Mat3 MulMat(const Mat3& a, const Mat3& b);
+
+
 

@@ -30,12 +30,6 @@
 #include "Model.h"
 #include "Raycast.h"
 
-#include <string>
-#include <vector>
-#include <cmath>
-#include <cstdio>
-#include <Windows.h>
-
 namespace 
 {
 	inline constexpr UINT64 kEntityFreezeOffset      = 0x2E; // bit 1 = position frozen
@@ -105,51 +99,6 @@ namespace
 	{
 		Vector3 s = e.GetScale();
 		return std::fabs(s.x - 1.0f) > 0.01f || std::fabs(s.y - 1.0f) > 0.01f || std::fabs(s.z - 1.0f) > 0.01f;
-	}
-
-	// GTA rotation order 2 (ZXY), degrees: x pitch, y roll, z yaw
-	struct Mat3 { float m[3][3]; };
-	inline constexpr float kDegToRad = 0.0174532925f;
-	inline constexpr float kRadToDeg = 57.2957795f;
-
-	Mat3 EulerToMatrix(const Vector3& deg)
-	{
-		float cx = std::cos(deg.x * kDegToRad), sx = std::sin(deg.x * kDegToRad);
-		float cy = std::cos(deg.y * kDegToRad), sy = std::sin(deg.y * kDegToRad);
-		float cz = std::cos(deg.z * kDegToRad), sz = std::sin(deg.z * kDegToRad);
-		Mat3 r;
-		r.m[0][0] = cz * cy - sz * sx * sy; r.m[0][1] = -sz * cx; r.m[0][2] = cz * sy + sz * sx * cy;
-		r.m[1][0] = sz * cy + cz * sx * sy; r.m[1][1] =  cz * cx; r.m[1][2] = sz * sy - cz * sx * cy;
-		r.m[2][0] = -cx * sy;               r.m[2][1] =  sx;      r.m[2][2] = cx * cy;
-		return r;
-	}
-
-	Mat3 MulMat(const Mat3& a, const Mat3& b)
-	{
-		Mat3 r;
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
-				r.m[i][j] = a.m[i][0] * b.m[0][j] + a.m[i][1] * b.m[1][j] + a.m[i][2] * b.m[2][j];
-		return r;
-	}
-
-	Vector3 MatrixToEuler(const Mat3& r)
-	{
-		float sx = r.m[2][1];
-		if (sx > 1.0f) sx = 1.0f;
-		if (sx < -1.0f) sx = -1.0f;
-		float pitch = std::asin(sx), yaw, roll;
-		if (std::fabs(sx) < 0.99999f)
-		{
-			yaw = std::atan2(-r.m[0][1], r.m[1][1]);
-			roll = std::atan2(-r.m[2][0], r.m[2][2]);
-		}
-		else
-		{
-			roll = 0.0f;
-			yaw = std::atan2(r.m[1][0], r.m[0][0]);
-		}
-		return Vector3(pitch * kRadToDeg, roll * kRadToDeg, yaw * kRadToDeg);
 	}
 
 	// atox fixes: true = attached manually (scaled), false = use native attach
@@ -963,7 +912,8 @@ static void UpdateManualAttachmentsImpl()
 
 		// atox fixes: natives only, no direct memory reads
 		MALog("Update:parentRotation", a.child, a.parent);
-		Mat3 pr = EulerToMatrix(parent.GetRotation());
+		Vector3 parentRotation = parent.GetRotation();
+		Mat3 pr = EulerToMatrix(parentRotation);
 		MALog("Update:position", a.child, a.parent);
 		Vector3 pos;
 		if (a.bone > 0)
